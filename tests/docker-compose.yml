@@ -1,0 +1,25 @@
+postgres:
+  image: postgres
+  environment:
+    - POSTGRES_DB=postgres_db
+    - POSTGRES_USER=ubuntu
+    - POSTGRES_PASSWORD=ilovetoucan
+  ports:
+    - 5432:5432
+
+mysql:
+  image: mysql
+  environment:
+    - MYSQL_DATABASE=mysql_db
+    - MYSQL_RANDOM_ROOT_PASSWORD=yes
+    - MYSQL_USER=ubuntu
+    - MYSQL_PASSWORD=ilovetoucan
+  ports:
+    - 3306:3306
+  volumes:
+    - ./mysql/fixtures/world.sql:/docker-entrypoint-initdb.d/world.sql
+
+mongo:
+  image: mongo
+  ports:
+    - 27017:27017

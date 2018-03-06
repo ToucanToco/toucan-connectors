@@ -41,6 +41,7 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+.pytest_cache
 nosetests.xml
 coverage.xml
 *.cover
@@ -86,6 +87,10 @@ celerybeat-schedule
 .venv
 venv/
 ENV/
+env
+
+# IDE
+.idea
 
 # Spyder project settings
 .spyderproject
