@@ -1,1 +1,1 @@
-pymysql==0.8.0
+PyMySQL==0.8.0

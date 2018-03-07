@@ -7,7 +7,7 @@ build:
 	eval $(SUB_REQUIREMENTS)
 
 test: build
-	pytest tests
+	PYTHONPATH=. pytest tests/mysql --no-pull -s -v
 
 clean:
 	find . -name "*~" -delete -or -name ".*~" -delete
