@@ -1,6 +1,5 @@
 # coding: utf-8
 import collections
-from os import path
 
 import numpy as np
 import pandas as pd
@@ -13,41 +12,16 @@ from connectors.sql_connector import UnableToConnectToDatabaseException, Invalid
 
 
 @pytest.fixture(scope='module')
-def mysql_server(unused_port, container_starter):
-    print('Fixture mysql_server')
-    tag = 'latest'
-    image = f'mysql:{tag}'
-
-    internal_port = 3306
-    host_port = unused_port()
-    environment = {
-        'MYSQL_DATABASE': 'mysql_db',
-        'MYSQL_RANDOM_ROOT_PASSWORD': 'yes',
-        'MYSQL_USER': 'ubuntu',
-        'MYSQL_PASSWORD': 'ilovetoucan'
-    }
-
-    fixture_sql = path.join(path.dirname(__file__), 'fixtures/world.sql')
-    volume = fixture_sql, '/docker-entrypoint-initdb.d/world.sql'
-
-    params = dict(database='mysql_db',
-                  user='ubuntu',
-                  password='ilovetoucan',
-                  host='127.0.0.1',
-                  port=host_port)
-
-    def check():
-        conn = pymysql.connect(**params)
+def mysql_server(service_container):
+    def check(host_port):
+        conn = pymysql.connect(host='127.0.0.1', port=host_port, database='mysql_db',
+                               user='ubuntu', password='ilovetoucan')
         cur = conn.cursor()
-        cur.execute("SELECT 1;")
+        cur.execute('SELECT 1;')
         cur.close()
         conn.close()
 
-    container = container_starter(image, internal_port, host_port, environment, volume,
-                                  checker_callable=check, skip_exception=pymysql.Error)
-
-    container['params'] = params
-    return container
+    return service_container('mysql', check, pymysql.Error)
 
 
 @pytest.fixture()
@@ -78,8 +52,8 @@ def test_open_connection():
 def test_retrieve_response(connector):
     """ It should connect to the database and retrieve the response to the query """
     with pytest.raises(InvalidSQLQuery):
-        connector.query("")
-    res = connector.query("SELECT Name, CountryCode, Population FROM City LIMIT 2;")
+        connector.query('')
+    res = connector.query('SELECT Name, CountryCode, Population FROM City LIMIT 2;')
     assert isinstance(res, list)
     assert isinstance(res[0], dict)
     assert len(res[0]) == 3
@@ -97,9 +71,9 @@ def test_get_df(connector, mocker):
 
     data_sources_spec = [
         {
-            'domain': "MySQL test",
-            'type': "external_database",
-            'name': "Some MySQL provider",
+            'domain': 'MySQL test',
+            'type': 'external_database',
+            'name': 'Some MySQL provider',
             'table': 'City'
         }
     ]
@@ -109,12 +83,12 @@ def test_get_df(connector, mocker):
 
 
 def test_get_df_db(connector):
-    """ It should extract the table City and make some merge with some foreign key """
+    """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
         {
-            'domain': "MySQL test",
-            'type': "external_database",
-            'name': "Some MySQL provider",
+            'domain': 'MySQL test',
+            'type': 'external_database',
+            'name': 'Some MySQL provider',
             'table': 'City'
         }
     ]
@@ -144,7 +118,7 @@ def test_clean_response(connector, mocker):
         {'name': 'fway', 'age': 13},
         {'name': b'zbruh', 'age': None}
     ]
-    res = connector.query("SELECT name, age from users")
+    res = connector.query('SELECT name, age from users')
     assert len(res) == 2
     assert res[1]['name'] == 'zbruh'
     assert np.isnan(res[1]['age'])

@@ -1,4 +1,6 @@
+docker
 toucan-data-sdk
 pytest
 pytest-mock
 pytest-sugar
+pyyaml
