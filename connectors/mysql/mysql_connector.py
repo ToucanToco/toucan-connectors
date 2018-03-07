@@ -1,18 +1,13 @@
-import logging
 import re
 
+import numpy as np
 import pymysql
 
 from connectors.sql_connector import SQLConnector, InvalidSQLQuery
 
 
 class MySQLConnector(SQLConnector):
-    logger = logging.getLogger(__name__)
-
-    """
-    A back-end connector to retrieve data from a MySQL database
-
-    """
+    """ A back-end connector to retrieve data from a MySQL database """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -30,7 +25,7 @@ class MySQLConnector(SQLConnector):
         self.connection_params['cursorclass'] = pymysql.cursors.DictCursor
         return pymysql.connect(**self.connection_params)
 
-    def query(self, query, fields={}):
+    def query(self, query, fields=None):
         self.open_connection()
         try:
             return self._clean_response(self._retrieve_response(query))

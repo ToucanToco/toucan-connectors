@@ -10,7 +10,7 @@ from connectors.mysql import MySQLConnector
 from connectors.sql_connector import UnableToConnectToDatabaseException, InvalidSQLQuery
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='module', autouse=True)
 def mysql_server(service_container):
     def check(host_port):
         conn = pymysql.connect(host='127.0.0.1', port=host_port, database='mysql_db',

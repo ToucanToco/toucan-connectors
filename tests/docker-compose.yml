@@ -7,7 +7,7 @@ postgres:
   ports:
     - 5432:5432
   volumes:
-    - ./mssql/fixtures/world_postgres.sql:/docker-entrypoint-initdb.d/world.sql
+    - ./postgres/fixtures/world_postgres.sql:/docker-entrypoint-initdb.d/world.sql
 
 mysql:
   image: mysql

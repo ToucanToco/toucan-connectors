@@ -1,19 +1,13 @@
-import logging
 import pymssql
 
-from sql_connector import SQLConnector, InvalidSQLQuery
+from ..sql_connector import SQLConnector, InvalidSQLQuery
 
 
 class MSSQLConnector(SQLConnector):
-    logger = logging.getLogger(__name__)
-
-    """
-    A back-end connector to retrieve data from a MSSQL database
-
-    """
+    """ A back-end connector to retrieve data from a MSSQL database """
 
     def __init__(self, **kwargs):
-        super(MSSQLConnector, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _get_required_args(self):
         return ['host', 'user']
@@ -25,7 +19,7 @@ class MSSQLConnector(SQLConnector):
         self.connection_params['as_dict'] = True
         return pymssql.connect(**self.connection_params)
 
-    def query(self, query, fields={}):
+    def query(self, query, fields=None):
         self.open_connection()
         try:
             return self._df_from_query(query)

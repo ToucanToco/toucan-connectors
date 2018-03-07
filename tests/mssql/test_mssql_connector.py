@@ -11,13 +11,13 @@ def test_missing_server_name():
         MSSQLConnector()
 
 
-def test_missing_dict(self):
+def test_missing_dict():
     """ It should throw a missing connector option error """
-    with self.assertRaises(MissingConnectorOption):
+    with pytest.raises(MissingConnectorOption):
         MSSQLConnector(name='mssql')
 
 
-def test_open_connection(self):
+def test_open_connection():
     """ It should not open a connection """
     with pytest.raises(UnableToConnectToDatabaseException):
         MSSQLConnector(name='mssql', host='lolcathost', db='blah', user='ubuntu',

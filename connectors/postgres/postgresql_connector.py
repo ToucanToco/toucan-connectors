@@ -1,19 +1,12 @@
-import logging
-
 import pandas as pd
 import psycopg2 as pgsql
 
-from connectors.connector import MissingConnectorOption
-from connectors.sql_connector import SQLConnector
-
-logger = logging.getLogger(__name__)
+from connectors.abstract_connector import MissingConnectorOption
+from ..sql_connector import SQLConnector
 
 
 class PostgresConnector(SQLConnector):
-    """
-    A back-end connector to retrieve data from a PostgresSQL database
-
-    """
+    """ A back-end connector to retrieve data from a PostgresSQL database """
 
     def __init__(self, **kwargs):
         super(PostgresConnector, self).__init__(**kwargs)
@@ -56,5 +49,5 @@ class PostgresConnector(SQLConnector):
         self.open_connection()
         query = config['query']
         query_max = len(query) if len(query) < 80 else 80
-        logger.info('{} : executing...'.format(query[:query_max]))
+        self.logger.info('{} : executing...'.format(query[:query_max]))
         return pd.read_sql(query, con=self.connection)

@@ -28,7 +28,7 @@ class AbstractConnector(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def query(self, query, fields={}):
+    def query(self, query, fields=None):
         raise NotImplementedError
 
     @abstractmethod
@@ -36,16 +36,12 @@ class AbstractConnector(metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class MissingConnectorName(Exception):
-    pass
-
-
 class MissingConnectorOption(Exception):
     """ Raised when an option is missing when instantiating a connector """
 
     def __init__(self, connector, option):
         self.option = option
-        self.msg = 'The connector "{}" misses the {} option'.format(connector.name, option)
+        self.msg = f'The connector "{connector.name}" misses the {option} option'
 
     def __str__(self):
         return repr(self.msg)
@@ -60,7 +56,7 @@ class InvalidDataProvider(Exception):
 
     def __init__(self, name):
         self.name = name
-        self.msg = 'No data provider named "{}"'.format(self.name)
+        self.msg = f'No data provider named "{self.name}"'
 
     def __str__(self):
         return repr(self.msg)
