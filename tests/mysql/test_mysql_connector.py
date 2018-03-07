@@ -1,4 +1,3 @@
-# coding: utf-8
 import collections
 
 import numpy as np
@@ -6,7 +5,7 @@ import pandas as pd
 import pymysql
 import pytest
 
-from connectors.connector import MissingConnectorName, MissingConnectorOption
+from connectors.abstract_connector import MissingConnectorName, MissingConnectorOption
 from connectors.mysql import MySQLConnector
 from connectors.sql_connector import UnableToConnectToDatabaseException, InvalidSQLQuery
 

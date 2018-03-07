@@ -1,4 +1,3 @@
-# coding: utf-8
 import logging
 import pymssql
 
@@ -40,8 +39,8 @@ class MSSQLConnector(SQLConnector):
 
     def get_df(self, config):
         """
-
         Returns: DataFrame from provided query
+
         """
         self.open_connection()
         query = config['query']

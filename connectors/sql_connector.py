@@ -1,14 +1,12 @@
-# coding: utf-8
 import collections
 import logging
 from copy import copy
+from abc import abstractmethod
 
-import pandas as pd
-
-from .connector import Connector
+from .abstract_connector import AbstractConnector
 
 
-class SQLConnector(Connector):
+class SQLConnector(AbstractConnector):
     logger = logging.getLogger(__name__)
 
     """
@@ -33,43 +31,6 @@ class SQLConnector(Connector):
         optional_args = [opt for opt in self._get_optional_args() if hasattr(self, opt)]
         required.update({opt: getattr(self, opt) for opt in optional_args})
         return required
-
-    def _changes_normalize_args(self):
-        """
-
-        Returns:
-            dict: empty dict (default method, should be override in subclasses)
-
-        """
-        return {}
-
-    def _normalize_args(self):
-        """
-        Normalize connection params, by either:
-            * renaming keys (if changes = {'db': 'database'})
-            * evaluating a function on values (if changes = {'host': somefunction}).
-
-        Returns:
-            dict: copy of self.connection_params with normalized keys.
-        """
-        normalized = copy(self.connection_params)
-        for k, v in list(self._changes_normalize_args().items()):
-            if isinstance(v, str):
-                normalized[v] = self.connection_params[k]
-                del normalized[k]
-            elif isinstance(v, collections.Callable):
-                normalized[k] = v(self.connection_params)
-
-        return normalized
-
-    def query(self, query, fields={}):
-        self.open_connection()
-        try:
-            return self._clean_response(self._retrieve_response(query))
-        except Exception as e:
-            msg = str(e)
-            self.logger.error(''.join(['query error: ', query, ' <> msg: ', msg]))
-            raise InvalidSQLQuery(msg)
 
     def is_connected(self):
         try:
@@ -96,6 +57,7 @@ class SQLConnector(Connector):
         self.connection = None
         self.logger.info('connection closed')
 
+    @abstractmethod
     def _get_provider_connection(self):
         raise NotImplementedError
 

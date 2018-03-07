@@ -1,8 +1,6 @@
-# coding: utf-8
 import logging
 import re
 
-import numpy as np
 import pymysql
 
 from connectors.sql_connector import SQLConnector, InvalidSQLQuery
@@ -17,7 +15,7 @@ class MySQLConnector(SQLConnector):
     """
 
     def __init__(self, **kwargs):
-        super(MySQLConnector, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.connection_params['conv'] = pymysql.converters.conversions.copy()
         self.connection_params['conv'][246] = float
         self.connection_params['charset'] = kwargs.get('charset', 'utf8mb4')
@@ -31,6 +29,15 @@ class MySQLConnector(SQLConnector):
     def _get_provider_connection(self):
         self.connection_params['cursorclass'] = pymysql.cursors.DictCursor
         return pymysql.connect(**self.connection_params)
+
+    def query(self, query, fields={}):
+        self.open_connection()
+        try:
+            return self._clean_response(self._retrieve_response(query))
+        except Exception as e:  # TODO be more precise in our catching abilites
+            msg = str(e)
+            self.logger.error(''.join(['query error: ', query, ' <> msg: ', msg]))
+            raise InvalidSQLQuery(msg)
 
     def _retrieve_response(self, query):
         num_rows = self.cursor.execute(query)

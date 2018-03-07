@@ -1,16 +1,7 @@
-# coding: utf-8
+from abc import ABCMeta, abstractmethod
 
 
-class Connector(object):
-    """
-    Base class for back-end connectors
-
-    Each subclass must implement _get_required_args method for this parent constructor to validate them
-
-    Args:
-        name (string): name of the connector
-    """
-
+class AbstractConnector(metaclass=ABCMeta):
     def __init__(self, **kwargs):
         if 'name' not in kwargs:
             raise MissingConnectorName
@@ -28,17 +19,25 @@ class Connector(object):
         except NotImplementedError:
             pass
 
+    @abstractmethod
     def _get_required_args(self):
         raise NotImplementedError
 
+    @abstractmethod
     def _get_optional_args(self):
         raise NotImplementedError
 
+    @abstractmethod
     def query(self, query, fields={}):
         raise NotImplementedError
 
+    @abstractmethod
     def is_connected(self):
         raise NotImplementedError
+
+
+class MissingConnectorName(Exception):
+    pass
 
 
 class MissingConnectorOption(Exception):
