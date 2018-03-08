@@ -1,42 +1,51 @@
 import pymssql
 
-from ..sql_connector import SQLConnector, InvalidSQLQuery
+import pandas as pd
+
+from connectors.abstract_connector import AbstractConnector
 
 
-class MSSQLConnector(SQLConnector):
+class MSSQLConnector(AbstractConnector):
     """ A back-end connector to retrieve data from a MSSQL database """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *, host, user,
+                 db=None, password=None, port=None, connect_timeout=None):
+        self.params = {
+            'server': host,
+            'user': user,
+            'database': db,
+            'password': password,
+            'port': port,
+            'login_timeout': connect_timeout,
+            'as_dict': True
+        }
+        # remove None value
+        self.params = {k: v for k, v in self.params.items() if v is not None}
+        self.connection = None
+        self.cursor = None
 
-    def _get_required_args(self):
-        return ['host', 'user']
+    def connect(self):
+        self.connection = pymssql.connect(**self.params)
+        self.cursor = self.connection.cursor()
 
-    def _get_optional_args(self):
-        return ['server', 'password', 'port', 'connect_timeout']
+    def disconnect(self):
+        self.connection.close()
 
-    def _get_provider_connection(self):
-        self.connection_params['as_dict'] = True
-        return pymssql.connect(**self.connection_params)
+    def run_query(self, query):
+        """
+        Args:
+            query: query (SQL) to execute
 
-    def query(self, query, fields=None):
-        self.open_connection()
-        try:
-            return self._df_from_query(query)
-        except Exception as e:
-            try:
-                _, msg = e.args
-            except ValueError:
-                msg = str(e)
-            MSSQLConnector.logger.error(''.join(['query error: ', query, ' <> msg: ', msg]))
-            raise InvalidSQLQuery(msg)
+        Returns: DataFrame
+
+        """
+        return pd.read_sql(query, con=self.connection)
 
     def get_df(self, config):
         """
         Returns: DataFrame from provided query
-
+        
         """
-        self.open_connection()
         query = config['query']
-        MSSQLConnector.logger.info(query + ': executing...')
-        return self._df_from_query(query.encode('utf8'))
+        self.logger.info(f'{query} : executing...')
+        return self.run_query(query.encode('utf8'))

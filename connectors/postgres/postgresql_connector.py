@@ -1,43 +1,40 @@
 import pandas as pd
 import psycopg2 as pgsql
 
-from connectors.abstract_connector import MissingConnectorOption
-from ..sql_connector import SQLConnector
+from connectors.abstract_connector import AbstractConnector
 
 
-class PostgresConnector(SQLConnector):
+class PostgresConnector(AbstractConnector):
     """ A back-end connector to retrieve data from a PostgresSQL database """
 
-    def __init__(self, **kwargs):
-        super(PostgresConnector, self).__init__(**kwargs)
-        self._check_host_or_hostname_in_connection_params()
-
-    def _changes_normalize_args(self):
-        """
-        Map db keyword from etl_config to the expected keyword from the
-        postgressql python library.
-
-        Returns:
-            dict: user keyword: library keyword.
-
-        """
-        return {
-            'db': 'database'
+    def __init__(self, *, user,
+                 host=None, hostname=None, charset=None, db=None, password=None,
+                 port=None, connect_timeout=None):
+        if host is None and hostname is None:
+            raise MissingHostParameter('You need to give a host or a hostname in order to connect')
+        self.params = {
+            'user': user,
+            'host': host,
+            'hostname': hostname,
+            'charset': charset,
+            'database': db,
+            'password': password,
+            'port': port,
+            'connect_timeout': connect_timeout,
         }
+        self.connection = None
+        self.cursor = None
 
-    def _get_required_args(self):
-        return ['user']
+    def connect(self):
+        self.connection = pgsql.connect(**self.params)
+        self.cursor = self.connection.cursor()
 
-    def _get_optional_args(self):
-        return ['host', 'hostname', 'charset', 'db', 'password',
-                'port', 'connect_timeout']
+    def disconnect(self):
+        self.connection.close()
 
-    def _check_host_or_hostname_in_connection_params(self):
-        if 'host' not in self.connection_params and 'hostname' not in self.connection_params:
-            raise MissingConnectorOption(self, 'host or hostname')
-
-    def _get_provider_connection(self):
-        return pgsql.connect(**self.connection_params)
+    def run_query(self, query):
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
 
     def get_df(self, config):
         """
@@ -46,8 +43,11 @@ class PostgresConnector(SQLConnector):
         Returns: DataFrames from config['table'].
 
         """
-        self.open_connection()
         query = config['query']
         query_max = len(query) if len(query) < 80 else 80
-        self.logger.info('{} : executing...'.format(query[:query_max]))
+        self.logger.info(f'{query[:query_max]} : executing...')
         return pd.read_sql(query, con=self.connection)
+
+
+class MissingHostParameter(Exception):
+    """ raised when neither host nor hostname is passed as an argument """
