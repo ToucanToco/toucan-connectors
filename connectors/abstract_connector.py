@@ -1,74 +1,48 @@
+import inspect
 from abc import ABCMeta, abstractmethod
 
 
 class AbstractConnector(metaclass=ABCMeta):
-    def __init__(self, **kwargs):
-        if 'name' not in kwargs:
-            raise MissingConnectorName
-        self.name = kwargs['name']
+    """
+    Mandatory parameters: name, mandatory
+    Optional parameters: optional, host
+    """
 
-        for required_arg in self._get_required_args():
-            if required_arg not in kwargs:
-                raise MissingConnectorOption(self, required_arg)
-            setattr(self, required_arg, kwargs[required_arg])
+    def __new__(cls, *args, **kwargs):
+        if args:
+            raise BadSignature('To create a connector, you must have named parameters only')
+        spec = inspect.getfullargspec(cls.__init__)
+        if spec.varkw:
+            raise BadSignature('All parameters must be explicitly named (kwargs forbidden)')
+        if 'name' not in spec.kwonlyargs:
+            raise BadSignature('"name" is a mandatory parameter')
+        mandatory_params = [p for p in spec.kwonlyargs if p not in spec.kwonlydefaults]
+        model = f'mandary parameters: {mandatory_params}, optional: {spec.kwonlydefaults}'
+        if any(p not in kwargs for p in mandatory_params):
+            raise BadParameters(f'Missing parameters for {cls.__name__} ({model})')
+        if any(p not in spec.kwonlyargs for p in kwargs):
+            raise BadParameters(f'Too many parameters for {cls.__name__} ({model})')
+        return super().__new__(cls)
 
-        try:
-            for optional_arg in self._get_optional_args():
-                if optional_arg in kwargs:
-                    setattr(self, optional_arg, kwargs[optional_arg])
-        except NotImplementedError:
-            pass
+    def __enter__(self):
+        pass
 
-    @abstractmethod
-    def _get_required_args(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def _get_optional_args(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def query(self, query, fields=None):
-        raise NotImplementedError
+    def __exit__(self):
+        pass
 
     @abstractmethod
-    def is_connected(self):
-        raise NotImplementedError
+    def query(self):
+        pass
+
+    @abstractmethod
+    def get_df(self):
+        pass
 
 
-class MissingConnectorOption(Exception):
-    """ Raised when an option is missing when instantiating a connector """
-
-    def __init__(self, connector, option):
-        self.option = option
-        self.msg = f'The connector "{connector.name}" misses the {option} option'
-
-    def __str__(self):
-        return repr(self.msg)
+class BadSignature(Exception):
+    """ Raised when a connector has a bad __init__ method """
 
 
-class MissingConnectorName(Exception):
-    """ Raised when a connector has no given name """
+class BadParameters(Exception):
+    """ Raised when we try to create a connector with bad parameters """
 
-
-class InvalidDataProvider(Exception):
-    """ Raised when a data provider doesn't exist or isn't registered """
-
-    def __init__(self, name):
-        self.name = name
-        self.msg = f'No data provider named "{self.name}"'
-
-    def __str__(self):
-        return repr(self.msg)
-
-
-class InvalidDataProviderSpec(Exception):
-    """ Raised when a data provider configuration is invalid """
-
-
-class InvalidDataProviderType(InvalidDataProviderSpec):
-    """ Raised when no connector exists for a type of data provider """
-
-
-class InvalidDataFrameQueryConfig(Exception):
-    """ Raised when the get_df config has not the expected arguments"""
