@@ -4,6 +4,8 @@ machine:
 
 test:
   override:
+    - pip install -U setuptools
+    - pip install .[test]
     - make test
   post:
     - pip install codecov && codecov --token=30f1dcd4-c43c-4116-a769-575863a0acfd
