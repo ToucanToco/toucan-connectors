@@ -5,6 +5,7 @@ from os import path
 import pytest
 import yaml
 from docker import APIClient
+from slugify import slugify
 
 
 def pytest_addoption(parser):
@@ -52,6 +53,7 @@ def wait_for_container(checker_callable, host_port, image, skip_exception=None):
 def container_starter(request, docker, docker_pull):
     def f(image, internal_port, host_port, env=None, volumes=None, command=None,
           checker_callable=None, skip_exception=None):
+
         if docker_pull:
             print(f'Pulling {image} image')
             docker.pull(image)
@@ -60,9 +62,11 @@ def container_starter(request, docker, docker_pull):
             port_bindings={internal_port: host_port},
             binds=volumes
         )
-        volumes = [vol.split(':')[1] for vol in volumes]
 
-        container_name = f'toucan-connectors-{image.replace(":", "-")}-server'
+        if volumes is not None:
+            volumes = [vol.split(':')[1] for vol in volumes]
+
+        container_name = '-'.join(['toucan', slugify(image), 'server'])
         print(f'Creating {container_name}')
         container = docker.create_container(
             image=image,

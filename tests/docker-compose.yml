@@ -1,13 +1,20 @@
-postgres:
-  image: postgres
+mongo:
+  image: mongo
   environment:
-    - POSTGRES_DB=postgres_db
-    - POSTGRES_USER=ubuntu
-    - POSTGRES_PASSWORD=ilovetoucan
+    - MONGO_INITDB_ROOT_USERNAME=ubuntu
+    - MONGO_INITDB_ROOT_PASSWORD=ilovetoucan
+    - MONGO_INITDB_DATABASE=toucan
   ports:
-    - 5432:5432
-  volumes:
-    - ./postgres/fixtures/world_postgres.sql:/docker-entrypoint-initdb.d/world.sql
+    - 27017:27017
+
+mssql:
+  image: microsoft/mssql-server-linux
+  environment:
+    - ACCEPT_EULA=Y
+    - MSSQL_PID=Developer
+    - SA_PASSWORD=Il0veT0uc@n!
+  ports:
+    - 1433:1433
 
 mysql:
   image: mysql
@@ -21,7 +28,13 @@ mysql:
   volumes:
     - ./mysql/fixtures/world.sql:/docker-entrypoint-initdb.d/world.sql
 
-mongo:
-  image: mongo
+postgres:
+  image: postgres
+  environment:
+    - POSTGRES_DB=postgres_db
+    - POSTGRES_USER=ubuntu
+    - POSTGRES_PASSWORD=ilovetoucan
   ports:
-    - 27017:27017
+    - 5432:5432
+  volumes:
+    - ./postgres/fixtures/world_postgres.sql:/docker-entrypoint-initdb.d/world.sql

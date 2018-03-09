@@ -41,7 +41,8 @@ def test_missing_params():
 def test_open_connection():
     """ It should not open a connection """
     with pytest.raises(UnableToConnectToDatabaseException):
-        MySQLConnector(host='lolcathost', db='sql_db', user='ubuntu', connect_timeout=1).__enter__()
+        MySQLConnector(host='lolcathost', db='mysql_db',
+                       user='ubuntu', connect_timeout=1).__enter__()
 
 
 def test_retrieve_response(connector):

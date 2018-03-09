@@ -2,7 +2,7 @@ import pymssql
 
 import pandas as pd
 
-from connectors.abstract_connector import AbstractConnector
+from connectors.abstract_connector import AbstractConnector, MissingQueryParameter
 
 
 class MSSQLConnector(AbstractConnector):
@@ -32,20 +32,13 @@ class MSSQLConnector(AbstractConnector):
         self.connection.close()
 
     def run_query(self, query):
-        """
-        Args:
-            query: query (SQL) to execute
-
-        Returns: DataFrame
-
-        """
+        """ query and get_df are basically the same and return a df """
         return pd.read_sql(query, con=self.connection)
 
     def get_df(self, config):
-        """
-        Returns: DataFrame from provided query
-        
-        """
+        """ query and get_df are basically the same and return a df """
+        if 'query' not in config:
+            raise MissingQueryParameter('query must be in the config')
         query = config['query']
         self.logger.info(f'{query} : executing...')
         return self.run_query(query.encode('utf8'))

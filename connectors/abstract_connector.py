@@ -48,14 +48,14 @@ class AbstractConnector(metaclass=ABCMeta):
         """ Method to disconnect from the server """
 
     @abstractmethod
-    def run_query(self, query):
+    def run_query(self, *args, **kwargs):
         """ Method to run a query and fetch some data """
 
-    def query(self, query):
+    def query(self, *args, **kwargs):
         try:
-            return self.run_query(query)
+            return self.run_query(*args, **kwargs)
         except Exception as e:
-            self.logger.error(f'query error: {query} <> msg: {e}')
+            self.logger.error(f'Query error: {e}')
             raise InvalidQuery(e)
 
     @abstractmethod
@@ -77,3 +77,7 @@ class UnableToConnectToDatabaseException(Exception):
 
 class InvalidQuery(Exception):
     """ Raised when it fails to query """
+
+
+class MissingQueryParameter(Exception):
+    """ Can be raised if a query has some mandory parameters """
