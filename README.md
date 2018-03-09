@@ -1,3 +1,10 @@
+[![Pypi-v](https://img.shields.io/pypi/v/toucan-connectors.svg)](https://pypi.python.org/pypi/toucan-connectors)
+[![Pypi-pyversions](https://img.shields.io/pypi/pyversions/toucan-connectors.svg)](https://pypi.python.org/pypi/toucan-connectors)
+[![Pypi-l](https://img.shields.io/pypi/l/toucan-connectors.svg)](https://pypi.python.org/pypi/toucan-connectors)
+[![Pypi-wheel](https://img.shields.io/pypi/wheel/toucan-connectors.svg)](https://pypi.python.org/pypi/toucan-connectors)
+[![CircleCI](https://img.shields.io/circleci/project/github/ToucanToco/toucan-connectors.svg)](https://circleci.com/gh/ToucanToco/toucan-connectors)
+[![codecov](https://codecov.io/gh/ToucanToco/toucan-connectors/branch/master/graph/badge.svg)](https://codecov.io/gh/ToucanToco/toucan-connectors)
+
 # Toucan Connectors
 All connectors available
 
