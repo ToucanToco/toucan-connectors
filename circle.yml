@@ -2,6 +2,11 @@ machine:
   python:
     version: 3.6.2
 
+dependencies:
+  pre:
+    - sudo apt-get update
+    - sudo apt-get install freetds-dev
+
 test:
   override:
     - pip install -U setuptools
