@@ -1,8 +1,23 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-.pytest_cache/
 *.py[cod]
 *$py.class
-env
-.idea
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Unit test / coverage reports
+.pytest_cache/
 .coverage
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.idea
