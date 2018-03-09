@@ -1,15 +1,17 @@
 machine:
   python:
     version: 3.6.2
+  services:
+    - docker
 
 dependencies:
   pre:
     - sudo apt-get update
     - sudo apt-get install freetds-dev
+    - docker-compose -f tests/docker-compose.yml build
 
 test:
   override:
-    - pip install -U setuptools
     - pip install .[test]
     - make test
   post:
