@@ -1,13 +1,5 @@
-.DEFAULT_GOAL := build
-PIP_CMD="python3 -m pip install -r"
-SUB_REQUIREMENTS="find connectors/ -type f -name requirements.txt -execdir $(PIP_CMD) requirements.txt \;"
-
-build:
-	eval "$(PIP_CMD) ./test_requirements.txt"
-	eval $(SUB_REQUIREMENTS)
-
-test: build
-	PYTHONPATH=. pytest tests --no-pull -s -v
+test:
+	PYTHONPATH=. pytest tests
 
 clean:
 	find . -name "*~" -delete -or -name ".*~" -delete
@@ -16,3 +8,9 @@ clean:
 	-@docker rmi $$(docker images -q --filter "dangling=true")
 	-@docker rm $$(docker ps -q -f status=exited)
 	-@docker volume ls -qf dangling=true | xargs -r docker volume rm
+
+build:
+	python setup.py sdist bdist_wheel
+
+upload:
+	twine upload dist/*
