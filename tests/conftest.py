@@ -35,16 +35,14 @@ def unused_port():
 
 
 def wait_for_container(checker_callable, host_port, image, skip_exception=None):
-    delay = 0.01
     skip_exception = skip_exception or Exception
-    for i in range(100):
+    for i in range(60):
         try:
             checker_callable(host_port)
             break
         except skip_exception as e:
             print(f'Waiting image to start, last exception: {e}')
-            time.sleep(delay)
-            delay *= 2
+            time.sleep(1)
     else:
         pytest.fail(f'Cannot start {image} server')
 
