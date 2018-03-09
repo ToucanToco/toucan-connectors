@@ -3,11 +3,11 @@ PIP_CMD="python3 -m pip install -r"
 SUB_REQUIREMENTS="find connectors/ -type f -name requirements.txt -execdir $(PIP_CMD) requirements.txt \;"
 
 build:
-	eval "$(PIP_CMD) ./main_requirements.txt"
+	eval "$(PIP_CMD) ./test_requirements.txt"
 	eval $(SUB_REQUIREMENTS)
 
 test: build
-	PYTHONPATH=. pytest tests/mysql --no-pull -s -v
+	PYTHONPATH=. pytest tests --no-pull -s -v
 
 clean:
 	find . -name "*~" -delete -or -name ".*~" -delete
