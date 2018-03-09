@@ -1,5 +1,6 @@
 import socket
 import time
+from contextlib import suppress
 from os import path
 
 import pytest
@@ -83,7 +84,8 @@ def container_starter(request, docker, docker_pull):
             print(f'Stopping {container_name}')
             docker.kill(container=container['Id'])
             print(f'Killing {container_name}')
-            docker.remove_container(container['Id'], v=True)
+            with suppress(Exception):
+                docker.remove_container(container['Id'], v=True)
 
         request.addfinalizer(fin)
         container['port'] = host_port
