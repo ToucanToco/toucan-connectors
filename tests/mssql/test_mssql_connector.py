@@ -28,8 +28,8 @@ def mssql_server(service_container):
         sql_query_path = f'{os.path.dirname(__file__)}/fixtures/world.sql'
         with open(sql_query_path) as f:
             sql_query = f.read()
-            cur.execute(sql_query)
-            conn.commit()
+        cur.execute(sql_query)
+        conn.commit()
 
         cur.close()
         conn.close()
