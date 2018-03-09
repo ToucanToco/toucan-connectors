@@ -12,6 +12,7 @@ dependencies:
 
 test:
   override:
+    - pip install -U setuptools
     - pip install .[test]
     - make test
   post:
