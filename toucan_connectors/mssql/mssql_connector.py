@@ -5,7 +5,7 @@ import pandas as pd
 from toucan_connectors.abstract_connector import AbstractConnector, MissingQueryParameter
 
 
-class MSSQLConnector(AbstractConnector):
+class MSSQLConnector(AbstractConnector, type='MSSQL'):
     """ A back-end connector to retrieve data from a MSSQL database """
 
     def __init__(self, *, host, user,

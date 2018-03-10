@@ -16,8 +16,6 @@ class AbstractConnector(metaclass=ABCMeta):
             raise BadSignature('All parameters must be keywords only (self, *, host, ...)')
         if spec.varkw:
             raise BadSignature('All parameters must be explicitly named (**kwargs forbidden)')
-        # if 'name' not in spec.kwonlyargs:
-        #     raise MissingConnectorName('"name" is a mandatory parameter')
         mandatory_params = [p for p in spec.kwonlyargs if p not in spec.kwonlydefaults]
         model = f'mandary parameters: {mandatory_params}, optional: {spec.kwonlydefaults}'
         if any(p not in kwargs for p in mandatory_params):
@@ -25,6 +23,10 @@ class AbstractConnector(metaclass=ABCMeta):
         if any(p not in spec.kwonlyargs for p in kwargs):
             raise BadParameters(f'Too many parameters for {cls.__name__} ({model})')
         return super().__new__(cls)
+
+    def __init_subclass__(cls, type, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.type = type
 
     def __enter__(self):
         try:

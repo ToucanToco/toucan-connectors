@@ -4,7 +4,7 @@ import psycopg2 as pgsql
 from toucan_connectors.abstract_connector import AbstractConnector
 
 
-class PostgresConnector(AbstractConnector):
+class PostgresConnector(AbstractConnector, type='Postgres'):
     """ A back-end connector to retrieve data from a PostgresSQL database """
 
     def __init__(self, *, user,

@@ -7,8 +7,28 @@ from toucan_connectors.abstract_connector import (
 )
 
 
+def test_mandatory_type():
+    """ It should raise an error as type is mandatory """
+    with pytest.raises(TypeError) as exc_info:
+        class BadConnector(AbstractConnector):
+            def __init__(self, *, host, server=None):
+                self.host = host
+                self.server = server
+
+            def connect(self): pass
+
+            def disconnect(self): pass
+
+            def run_query(self, query): pass
+
+            def get_df(self, config): pass
+
+    assert str(exc_info.value) == "__init_subclass__() missing 1 required " \
+                                  "positional argument: 'type'"
+
+
 def test_keywords_only():
-    class BadConnector(AbstractConnector):
+    class BadConnector(AbstractConnector, type='bad'):
         def __init__(self, host, *, server=None):
             self.host = host
             self.server = server
@@ -27,7 +47,7 @@ def test_keywords_only():
 
 
 def test_kwargs_forbidden():
-    class BadConnector(AbstractConnector):
+    class BadConnector(AbstractConnector, type='bad'):
         def __init__(self, *, host, **kwargs):
             self.host = host
 
@@ -44,26 +64,8 @@ def test_kwargs_forbidden():
     assert str(exc_info.value) == 'All parameters must be explicitly named (**kwargs forbidden)'
 
 
-# def test_mandatory_args():
-#     class BadConnector(AbstractConnector):
-#         def __init__(self, *, host):
-#             self.host = host
-#
-#         def connect(self): pass
-#
-#         def disconnect(self): pass
-#
-#         def run_query(self, query): pass
-#
-#         def get_df(self, config): pass
-#
-#     with pytest.raises(MissingConnectorName) as exc_info:
-#         BadConnector(host='localhost')
-#     assert str(exc_info.value) == '"name" is a mandatory parameter'
-
-
 def test_bad_parameters():
-    class GoodConnector(AbstractConnector):
+    class GoodConnector(AbstractConnector, type='good'):
         def __init__(self, *, name, host, server=None, port=None):
             self.name = name
             self.host = host

@@ -4,7 +4,7 @@ import pymongo
 from toucan_connectors.abstract_connector import AbstractConnector, MissingQueryParameter
 
 
-class MongoConnector(AbstractConnector):
+class MongoConnector(AbstractConnector, type='MongoDB'):
     """ A back-end connector to retrieve data from a MongoDB database """
 
     def __init__(self, *, host, port, database, username=None, password=None):

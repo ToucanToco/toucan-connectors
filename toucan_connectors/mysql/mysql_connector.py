@@ -7,7 +7,7 @@ import pymysql
 from toucan_connectors.abstract_connector import AbstractConnector, InvalidQuery
 
 
-class MySQLConnector(AbstractConnector):
+class MySQLConnector(AbstractConnector, type='MySQL'):
     """ A back-end connector to retrieve data from a MySQL database """
 
     def __init__(self, *, host, user, db,
