@@ -1,6 +1,6 @@
 import pytest
 
-from connectors.abstract_connector import (
+from toucan_connectors.abstract_connector import (
     AbstractConnector,
     BadSignature,
     BadParameters

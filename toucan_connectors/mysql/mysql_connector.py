@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pymysql
 
-from connectors.abstract_connector import AbstractConnector
+from toucan_connectors.abstract_connector import AbstractConnector, InvalidQuery
 
 
 class MySQLConnector(AbstractConnector):
@@ -215,7 +215,7 @@ class MySQLConnector(AbstractConnector):
         elif 'Create View' in keys:
             fetch_all = fetch_all_list[0]['Create View']
         else:
-            raise InvalidSQLQuery(keys)
+            raise InvalidQuery(keys)
         return MySQLConnector.extract_info(fetch_all)
 
     def get_df(self, config):

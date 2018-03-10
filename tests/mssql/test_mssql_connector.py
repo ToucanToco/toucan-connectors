@@ -4,13 +4,13 @@ import pymssql
 import pandas as pd
 import pytest
 
-from connectors.abstract_connector import (
+from toucan_connectors.abstract_connector import (
     BadParameters,
     UnableToConnectToDatabaseException,
     InvalidQuery,
     MissingQueryParameter
 )
-from connectors.mssql import MSSQLConnector
+from toucan_connectors.mssql.mssql_connector import MSSQLConnector
 
 
 @pytest.fixture(scope='module')

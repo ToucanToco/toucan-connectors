@@ -1,7 +1,7 @@
 import pandas as pd
 import psycopg2 as pgsql
 
-from connectors.abstract_connector import AbstractConnector
+from toucan_connectors.abstract_connector import AbstractConnector
 
 
 class PostgresConnector(AbstractConnector):

@@ -2,7 +2,7 @@ import pymssql
 
 import pandas as pd
 
-from connectors.abstract_connector import AbstractConnector, MissingQueryParameter
+from toucan_connectors.abstract_connector import AbstractConnector, MissingQueryParameter
 
 
 class MSSQLConnector(AbstractConnector):

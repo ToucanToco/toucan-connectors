@@ -21,13 +21,17 @@ the `docker-compose.yml`. You can then use the fixture `service_container` to au
 start the docker and shut it down for you!
 
 #### Step 2
-Create a new folder in `connectors` for the new connector. Please expose your connector in
-the `__init__.py` of your folder! It is important to be able to import the new connector
-directly from the directory!
+Create a new folder in `toucan_connectors` for the new connector. Please expose your 
+connector in the `__init__.py` of `toucan_connectors`! It is important to be able to import
+the new connector directly from this directory!
+```python
+with suppress(ImportError):
+    from new_connector import *
+```
 
 #### Step 3
 Add the requirements to the `setup.cfg` in the `[options.extras_require]` section:
-```
+```ini
 new_connector =
     dependency_package1=x.x.x
     dependency_package2==x.x.x

@@ -2,13 +2,12 @@ import pandas as pd
 import psycopg2
 import pytest
 
-from connectors.abstract_connector import (
+from toucan_connectors.abstract_connector import (
     BadParameters,
     UnableToConnectToDatabaseException,
     InvalidQuery
 )
-from connectors.postgres import PostgresConnector
-from connectors.postgres.postgresql_connector import MissingHostParameter
+from toucan_connectors.postgres.postgresql_connector import PostgresConnector, MissingHostParameter
 
 
 @pytest.fixture(scope='module')

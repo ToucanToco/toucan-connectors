@@ -5,12 +5,12 @@ import pandas as pd
 import pymysql
 import pytest
 
-from connectors.abstract_connector import (
+from toucan_connectors.abstract_connector import (
     BadParameters,
     UnableToConnectToDatabaseException,
     InvalidQuery
 )
-from connectors.mysql import MySQLConnector
+from toucan_connectors.mysql.mysql_connector import MySQLConnector
 
 
 @pytest.fixture(scope='module')

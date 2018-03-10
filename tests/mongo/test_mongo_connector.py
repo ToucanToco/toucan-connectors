@@ -1,12 +1,13 @@
 import json
 import os
 
+import pandas as pd
 import pymongo
 import pymongo.errors
 import pytest
 
-from connectors.abstract_connector import MissingQueryParameter
-from connectors.mongo import MongoConnector
+from toucan_connectors.abstract_connector import MissingQueryParameter
+from toucan_connectors.mongo import MongoConnector
 
 
 @pytest.fixture(scope='module')
@@ -29,11 +30,13 @@ def connector(mongo_server):
                           database='toucan', port=mongo_server['port'])
 
 
-def test_missing_collection_param(connector):
-    with connector as mongo_connector:
-        with pytest.raises(MissingQueryParameter) as exc_info:
-            mongo_connector.get_df(config={})
-        assert str(exc_info.value) == '"collection" and "query" are mandatory to get a df'
+def test_uri():
+    mongo_con = MongoConnector(host='localhost', username='mister', password='superpass',
+                               database='mydb', port=1793)
+    assert mongo_con.uri == f'mongodb://mister:superpass@localhost:1793'
+
+    mongo_con = MongoConnector(host='localhost', database='mydb', port=1793)
+    assert mongo_con.uri == f'mongodb://localhost:1793'
 
 
 def test_query(connector):
@@ -52,3 +55,19 @@ def test_query(connector):
         cur = mongo_connector.query(collection='test_col',
                                     query=[{'$match': {'domain': 'domain1'}}])
         assert list(cur) == docs
+
+
+def test_get_df(connector):
+    with connector as mongo_connector:
+        with pytest.raises(MissingQueryParameter) as exc_info:
+            mongo_connector.get_df(config={})
+        assert str(exc_info.value) == '"collection" and "query" are mandatory to get a df'
+
+        df = mongo_connector.get_df({'collection': 'test_col',
+                                     'query': {'domain': 'domain1'}})
+        expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
+                                 'language': ['French', 'English', 'German'],
+                                 'value': [20, 14, 17]})
+        assert df.shape == (3, 5)
+        assert df.columns.tolist() == ['_id', 'country', 'domain', 'language', 'value']
+        assert df[['country', 'language', 'value']].equals(expected)

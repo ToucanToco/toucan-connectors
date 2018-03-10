@@ -1,7 +1,7 @@
 import pandas as pd
 import pymongo
 
-from connectors.abstract_connector import AbstractConnector, MissingQueryParameter
+from toucan_connectors.abstract_connector import AbstractConnector, MissingQueryParameter
 
 
 class MongoConnector(AbstractConnector):
@@ -11,7 +11,7 @@ class MongoConnector(AbstractConnector):
         if username is not None and password is not None:
             self.uri = f'mongodb://{username}:{password}@{host}:{port}'
         else:
-            self.uri = f'mongodb://@{host}:{port}'
+            self.uri = f'mongodb://{host}:{port}'
         self.database = database
         self.client = None
 
