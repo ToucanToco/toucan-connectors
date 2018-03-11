@@ -42,7 +42,7 @@ def wait_for_container(checker_callable, host_port, image, skip_exception=None):
             checker_callable(host_port)
             break
         except skip_exception as e:
-            print(f'Waiting image to start, last exception: {e}')
+            print(f'Waiting for image to start...(last exception: {e})')
             time.sleep(1)
     else:
         pytest.fail(f'Cannot start {image} server')

@@ -21,7 +21,7 @@ class MongoConnector(AbstractConnector, type='MongoDB'):
     def disconnect(self):
         self.client.close()
 
-    def run_query(self, collection, query):
+    def _query(self, collection, query):
         """
         Args:
             query (str, dict or list)
@@ -38,7 +38,7 @@ class MongoConnector(AbstractConnector, type='MongoDB'):
         elif isinstance(query, list):
             return cursor.aggregate(query)
 
-    def get_df(self, config):
+    def _get_df(self, config):
         """
         Args:
             config (dict): The block from ETL config

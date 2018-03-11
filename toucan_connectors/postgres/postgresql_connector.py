@@ -32,11 +32,11 @@ class PostgresConnector(AbstractConnector, type='Postgres'):
     def disconnect(self):
         self.connection.close()
 
-    def run_query(self, query):
+    def _query(self, query):
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def get_df(self, config):
+    def _get_df(self, config):
         """
         Transform a table into a DataFrame and recursively merge tables
         with a foreign key.

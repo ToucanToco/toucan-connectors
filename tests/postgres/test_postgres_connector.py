@@ -24,7 +24,7 @@ def postgres_server(service_container):
 
 
 @pytest.fixture()
-def connector(postgres_server):
+def postgres_connector(postgres_server):
     return PostgresConnector(host='localhost', db='postgres_db', user='ubuntu',
                              password='ilovetoucan', port=postgres_server['port'])
 
@@ -49,18 +49,17 @@ def test_open_connection():
                           connect_timeout=1).__enter__()
 
 
-def test_retrieve_response(connector):
+def test_retrieve_response(postgres_connector):
     """ It should connect to the database and retrieve the response to the query """
-    with connector as postgres_connector:
-        with pytest.raises(InvalidQuery):
-            postgres_connector.query('')
-        res = postgres_connector.query('SELECT Name, CountryCode, Population FROM City LIMIT 2;')
-        assert isinstance(res, list)
-        assert isinstance(res[0], tuple)
-        assert len(res[0]) == 3
+    with pytest.raises(InvalidQuery):
+        postgres_connector.query('')
+    res = postgres_connector.query('SELECT Name, CountryCode, Population FROM City LIMIT 2;')
+    assert isinstance(res, list)
+    assert isinstance(res[0], tuple)
+    assert len(res[0]) == 3
 
 
-def test_get_df(connector, mocker):
+def test_get_df(postgres_connector, mocker):
     """ It should call the sql extractor """
     mocker.patch('pandas.read_sql').return_value = pd.DataFrame({'a': [1, 2], 'b': [3, 4]})
     data_sources_spec = [
@@ -72,12 +71,11 @@ def test_get_df(connector, mocker):
         }
     ]
 
-    with connector as postgres_connector:
-        df = postgres_connector.get_df(data_sources_spec[0])
+    df = postgres_connector.get_df(data_sources_spec[0])
     assert df.shape == (2, 2)
 
 
-def test_get_df_db(connector):
+def test_get_df_db(postgres_connector):
     """ It should extract the table City and make some merge with some foreign key. """
     data_sources_spec = {
         'domain': 'Postgres test',
@@ -87,8 +85,7 @@ def test_get_df_db(connector):
     }
     expected_columns = ['id', 'name', 'countrycode', 'district', 'population']
 
-    with connector as postgres_connector:
-        df = postgres_connector.get_df(data_sources_spec)
+    df = postgres_connector.get_df(data_sources_spec)
 
     assert not df.empty
     assert len(df.columns) == len(expected_columns)

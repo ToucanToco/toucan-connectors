@@ -31,14 +31,14 @@ class MSSQLConnector(AbstractConnector, type='MSSQL'):
     def disconnect(self):
         self.connection.close()
 
-    def run_query(self, query):
+    def _query(self, query):
         """ query and get_df are basically the same and return a df """
         return pd.read_sql(query, con=self.connection)
 
-    def get_df(self, config):
+    def _get_df(self, config):
         """ query and get_df are basically the same and return a df """
         if 'query' not in config:
             raise MissingQueryParameter('query must be in the config')
         query = config['query']
         self.logger.info(f'{query} : executing...')
-        return self.run_query(query.encode('utf8'))
+        return self._query(query.encode('utf8'))

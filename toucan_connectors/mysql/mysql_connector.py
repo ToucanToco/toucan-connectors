@@ -47,7 +47,7 @@ class MySQLConnector(AbstractConnector, type='MySQL'):
                     elt[k] = v.decode('utf8')
         return response
 
-    def run_query(self, query):
+    def _query(self, query):
         num_rows = self.cursor.execute(query)
         response = self.cursor.fetchall() if num_rows > 0 else {}
         return self.clean_response(response)
@@ -218,7 +218,7 @@ class MySQLConnector(AbstractConnector, type='MySQL'):
             raise InvalidQuery(keys)
         return MySQLConnector.extract_info(fetch_all)
 
-    def get_df(self, config):
+    def _get_df(self, config):
         """
         Transform a table into a DataFrame and recursively merge tables
         with a foreign key.

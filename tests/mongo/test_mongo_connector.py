@@ -25,7 +25,7 @@ def mongo_server(service_container):
 
 
 @pytest.fixture()
-def connector(mongo_server):
+def mongo_connector(mongo_server):
     return MongoConnector(host='localhost', username='ubuntu', password='ilovetoucan',
                           database='toucan', port=mongo_server['port'])
 
@@ -39,35 +39,33 @@ def test_uri():
     assert mongo_con.uri == f'mongodb://localhost:1793'
 
 
-def test_query(connector):
-    with connector as mongo_connector:
-        # string query
-        cur = mongo_connector.query(collection='test_col', query='domain1')
-        docs = list(cur)
-        assert len(docs) == 3
-        assert {doc['country'] for doc in docs} == {'France', 'England', 'Germany'}
+def test_query(mongo_connector):
+    # string query
+    cur = mongo_connector.query(collection='test_col', query='domain1')
+    docs = list(cur)
+    assert len(docs) == 3
+    assert {doc['country'] for doc in docs} == {'France', 'England', 'Germany'}
 
-        # dict query (should be the same)
-        cur = mongo_connector.query(collection='test_col', query={'domain': 'domain1'})
-        assert list(cur) == docs
+    # dict query (should be the same)
+    cur = mongo_connector.query(collection='test_col', query={'domain': 'domain1'})
+    assert list(cur) == docs
 
-        # list query (should be the same)
-        cur = mongo_connector.query(collection='test_col',
-                                    query=[{'$match': {'domain': 'domain1'}}])
-        assert list(cur) == docs
+    # list query (should be the same)
+    cur = mongo_connector.query(collection='test_col',
+                                query=[{'$match': {'domain': 'domain1'}}])
+    assert list(cur) == docs
 
 
-def test_get_df(connector):
-    with connector as mongo_connector:
-        with pytest.raises(MissingQueryParameter) as exc_info:
-            mongo_connector.get_df(config={})
-        assert str(exc_info.value) == '"collection" and "query" are mandatory to get a df'
+def test_get_df(mongo_connector):
+    with pytest.raises(MissingQueryParameter) as exc_info:
+        mongo_connector.get_df(config={})
+    assert str(exc_info.value) == '"collection" and "query" are mandatory to get a df'
 
-        df = mongo_connector.get_df({'collection': 'test_col',
-                                     'query': {'domain': 'domain1'}})
-        expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
-                                 'language': ['French', 'English', 'German'],
-                                 'value': [20, 14, 17]})
-        assert df.shape == (3, 5)
-        assert df.columns.tolist() == ['_id', 'country', 'domain', 'language', 'value']
-        assert df[['country', 'language', 'value']].equals(expected)
+    df = mongo_connector.get_df({'collection': 'test_col',
+                                 'query': {'domain': 'domain1'}})
+    expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
+                             'language': ['French', 'English', 'German'],
+                             'value': [20, 14, 17]})
+    assert df.shape == (3, 5)
+    assert df.columns.tolist() == ['_id', 'country', 'domain', 'language', 'value']
+    assert df[['country', 'language', 'value']].equals(expected)

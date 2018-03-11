@@ -19,9 +19,9 @@ def test_mandatory_type():
 
             def disconnect(self): pass
 
-            def run_query(self, query): pass
+            def _query(self, query): pass
 
-            def get_df(self, config): pass
+            def _get_df(self, config): pass
 
     assert str(exc_info.value) == "__init_subclass__() missing 1 required " \
                                   "positional argument: 'type'"
@@ -37,9 +37,9 @@ def test_keywords_only():
 
         def disconnect(self): pass
 
-        def run_query(self, query): pass
+        def _query(self, query): pass
 
-        def get_df(self, config): pass
+        def _get_df(self, config): pass
 
     with pytest.raises(BadSignature) as exc_info:
         BadConnector('zbruh')
@@ -55,9 +55,9 @@ def test_kwargs_forbidden():
 
         def disconnect(self): pass
 
-        def run_query(self, query): pass
+        def _query(self, query): pass
 
-        def get_df(self, config): pass
+        def _get_df(self, config): pass
 
     with pytest.raises(BadSignature) as exc_info:
         BadConnector(name='zbruh', host='localhost')
@@ -76,9 +76,9 @@ def test_bad_parameters():
 
         def disconnect(self): pass
 
-        def run_query(self, query): pass
+        def _query(self, query): pass
 
-        def get_df(self, config): pass
+        def _get_df(self, config): pass
 
     # It should not fail when trying to instanciate these connectors
     GoodConnector(name='ok', host='localhost')

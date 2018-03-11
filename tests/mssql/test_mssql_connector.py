@@ -38,7 +38,7 @@ def mssql_server(service_container):
 
 
 @pytest.fixture()
-def connector(mssql_server):
+def mssql_connector(mssql_server):
     return MSSQLConnector(host='localhost', user='SA', password='Il0veT0uc@n!',
                           port=mssql_server['port'])
 
@@ -55,7 +55,7 @@ def test_open_connection():
         MSSQLConnector(host='lolcathost', db='mssql_db', user='SA', connect_timeout=1).__enter__()
 
 
-def test_retrieve_response(connector):
+def test_retrieve_response(mssql_connector):
     """ It should connect to the database and retrieve the response to the query """
     query = 'SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3'
     expected = pd.DataFrame({'Name': ['Kabul', 'Qandahar', 'Herat'],
@@ -63,18 +63,17 @@ def test_retrieve_response(connector):
     expected['CountryCode'] = 'AFG'
     expected = expected[['Name', 'CountryCode', 'Population']]
     # test query method
-    with connector as mssql_connector:
-        with pytest.raises(InvalidQuery):
-            mssql_connector.query('')
-        # LIMIT 2 is not possible for MSSQL
-        res = mssql_connector.query(query)
-        res['Name'] = res['Name'].str.rstrip()
-        assert res.equals(expected)
+    with pytest.raises(InvalidQuery):
+        mssql_connector.query('')
+    # LIMIT 2 is not possible for MSSQL
+    res = mssql_connector.query(query)
+    res['Name'] = res['Name'].str.rstrip()
+    assert res.equals(expected)
 
-        with pytest.raises(MissingQueryParameter):
-            mssql_connector.get_df(query)
-        with pytest.raises(MissingQueryParameter):
-            mssql_connector.get_df({'other': query})
-        res = mssql_connector.get_df({'query': query})
-        res['Name'] = res['Name'].str.rstrip()
-        assert res.equals(expected)
+    with pytest.raises(MissingQueryParameter):
+        mssql_connector.get_df(query)
+    with pytest.raises(MissingQueryParameter):
+        mssql_connector.get_df({'other': query})
+    res = mssql_connector.get_df({'query': query})
+    res['Name'] = res['Name'].str.rstrip()
+    assert res.equals(expected)

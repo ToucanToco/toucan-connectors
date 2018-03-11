@@ -50,19 +50,24 @@ class AbstractConnector(metaclass=ABCMeta):
         """ Method to disconnect from the server """
 
     @abstractmethod
-    def run_query(self, *args, **kwargs):
+    def _query(self, *args, **kwargs):
         """ Method to run a query and fetch some data """
 
     def query(self, *args, **kwargs):
-        try:
-            return self.run_query(*args, **kwargs)
-        except Exception as e:
-            self.logger.error(f'Query error: {e}')
-            raise InvalidQuery(e)
+        with self:
+            try:
+                return self._query(*args, **kwargs)
+            except Exception as e:
+                self.logger.error(f'Query error: {e}')
+                raise InvalidQuery(e)
 
     @abstractmethod
-    def get_df(self, config):
+    def _get_df(self, config):
         """ Method to get a pandas dataframe """
+
+    def get_df(self, config):
+        with self:
+            return self._get_df(config)
 
 
 class BadSignature(Exception):

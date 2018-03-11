@@ -27,7 +27,7 @@ def mysql_server(service_container):
 
 
 @pytest.fixture()
-def connector(mysql_server):
+def mysql_connector(mysql_server):
     return MySQLConnector(host='localhost', db='mysql_db', user='ubuntu', password='ilovetoucan',
                           port=mysql_server['port'])
 
@@ -45,18 +45,17 @@ def test_open_connection():
                        user='ubuntu', connect_timeout=1).__enter__()
 
 
-def test_retrieve_response(connector):
+def test_retrieve_response(mysql_connector):
     """ It should connect to the database and retrieve the response to the query """
-    with connector as mysql_connector:
-        with pytest.raises(InvalidQuery):
-            mysql_connector.query('')
-        res = mysql_connector.query('SELECT Name, CountryCode, Population FROM City LIMIT 2;')
-        assert isinstance(res, list)
-        assert isinstance(res[0], dict)
-        assert len(res[0]) == 3
+    with pytest.raises(InvalidQuery):
+        mysql_connector.query('')
+    res = mysql_connector.query('SELECT Name, CountryCode, Population FROM City LIMIT 2;')
+    assert isinstance(res, list)
+    assert isinstance(res[0], dict)
+    assert len(res[0]) == 3
 
 
-def test_get_df(connector, mocker):
+def test_get_df(mysql_connector, mocker):
     """ It should call the sql extractor """
     mocker.patch('pandas.read_sql').return_value = pd.DataFrame({'a1': ['a', 'b'], 'b1': [1, 2]},
                                                                 index=['ai', 'bi'])
@@ -72,12 +71,11 @@ def test_get_df(connector, mocker):
         }
     ]
 
-    with connector as mysql_connector:
-        df = mysql_connector.get_df(data_sources_spec[0])
+    df = mysql_connector.get_df(data_sources_spec[0])
     assert df.empty
 
 
-def test_get_df_db(connector):
+def test_get_df_db(mysql_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
         {
@@ -95,8 +93,7 @@ def test_get_df_db(connector):
                         'GNPOld', 'LocalName', 'GovernmentForm', 'HeadOfState',
                         'Capital', 'Code2']
 
-    with connector as mysql_connector:
-        df = mysql_connector.get_df(data_sources_spec[0])
+    df = mysql_connector.get_df(data_sources_spec[0])
 
     assert not df.empty
     assert len(df.columns) == 19
