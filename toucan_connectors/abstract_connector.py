@@ -49,7 +49,6 @@ class AbstractConnector(metaclass=ABCMeta):
     def disconnect(self):
         """ Method to disconnect from the server """
 
-    @abstractmethod
     def _query(self, *args, **kwargs):
         """ Method to run a query and fetch some data """
 

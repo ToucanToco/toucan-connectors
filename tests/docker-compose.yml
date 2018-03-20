@@ -38,3 +38,12 @@ postgres:
     - 5432:5432
   volumes:
     - ./postgres/fixtures/world_postgres.sql:/docker-entrypoint-initdb.d/world.sql
+
+oracle:
+  image: sath89/oracle-12c
+  environment:
+      - ORACLE_SID=xe
+      - ORACLE_PDB=oracle_db
+      - ORACLE_PWD=ilovetoucan
+  ports:
+      - 1521:1521
