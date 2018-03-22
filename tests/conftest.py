@@ -106,8 +106,17 @@ def service_container(unused_port, container_starter):
         volumes = service_conf.get('volumes')
         if volumes is not None:
             volumes = [path.join(path.dirname(__file__), vol) for vol in volumes]
+
+        # if we build a local image, we have a 'build' key instead of 'image'
+        # TODO temporary trick or we normalize this ?
+        try:
+            image = service_conf['image']
+        except KeyError:
+            # image = service_conf['build']
+            image = 'tests_oracle'
+
         params = {
-            'image': service_conf['image'],
+            'image': image,
             'internal_port': service_conf['ports'][0].split(':')[0],
             'host_port': unused_port(),
             'env': service_conf.get('environment'),

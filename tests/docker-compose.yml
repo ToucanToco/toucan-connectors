@@ -1,5 +1,5 @@
 mongo:
-  image: mongo
+  image: docker.io/mongo
   environment:
     - MONGO_INITDB_ROOT_USERNAME=ubuntu
     - MONGO_INITDB_ROOT_PASSWORD=ilovetoucan
@@ -17,7 +17,7 @@ mssql:
     - 1433:1433
 
 mysql:
-  image: mysql
+  image: docker.io/mysql
   environment:
     - MYSQL_DATABASE=mysql_db
     - MYSQL_RANDOM_ROOT_PASSWORD=yes
@@ -29,7 +29,7 @@ mysql:
     - ./mysql/fixtures/world.sql:/docker-entrypoint-initdb.d/world.sql
 
 postgres:
-  image: postgres
+  image: docker.io/postgres
   environment:
     - POSTGRES_DB=postgres_db
     - POSTGRES_USER=ubuntu
@@ -40,7 +40,8 @@ postgres:
     - ./postgres/fixtures/world_postgres.sql:/docker-entrypoint-initdb.d/world.sql
 
 oracle:
-  image: sath89/oracle-12c
+  # image: docker.io/sath89/oracle-12c
+  build: ./oracle
   environment:
       - ORACLE_SID=xe
       - ORACLE_PDB=oracle_db
