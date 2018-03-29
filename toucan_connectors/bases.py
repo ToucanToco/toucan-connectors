@@ -99,3 +99,6 @@ class ToucanConnector(ToucanBase, metaclass=ABCMeta):
 
 class BadParameters(Exception):
     """ Raised when we try to create a connector with wrong parameters """
+
+class UnableToConnectToDatabaseException(Exception):
+    """ Raised when it fails to connect """
