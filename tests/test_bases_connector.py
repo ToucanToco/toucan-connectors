@@ -66,3 +66,19 @@ def test_invalidate():
     with pytest.raises(BadParameters) as e:
         DataConnector.validate({'query': ''})
     assert e.type == BadParameters
+
+
+def test_validate_no_class():
+
+    class DataConnector(ToucanConnector):
+        type = 'MyDB'
+
+        def connect(self): pass
+
+        def disconnect(self): pass
+
+        def get_df(self, data_source): pass
+
+    with pytest.raises(TypeError) as e:
+        DataConnector.validate({'query': ''})
+    assert e.type == TypeError
