@@ -89,7 +89,6 @@ class ToucanConnector(ToucanBase, metaclass=ABCMeta):
             return self.get_df(data_source)
 
     @classmethod
-    @abstractmethod
     def validate(cls, data_source: dict):
         """Validate a data_source for this type of connector """
         try:
