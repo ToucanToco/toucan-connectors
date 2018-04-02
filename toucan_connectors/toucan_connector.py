@@ -1,3 +1,8 @@
+from abc import ABCMeta, abstractmethod
+
+import pandas as pd
+
+
 class MandatoryParameter:
     def __init__(self, class_type):
         self.class_type = class_type
@@ -64,38 +69,30 @@ class Base:
 class ToucanDataSource(Base):
     name: str
     domain: str
-    parent_optional: float = 3.1
 
     def __init_subclass__(cls):
         cls.__annotations__ = {**ToucanDataSource.__annotations__, **cls.__annotations__}
         super().__init_subclass__()
 
 
-class TrucDataSource(ToucanDataSource):
-    database: str
-    query: str
-    optional: int = 3
-    optional2: float = 4.2
-    optional3: str = None
+class ToucanConnector(Base, metaclass=ABCMeta):
+    name: str
 
+    def __new__(cls, *args, **kwargs):
 
-# class ToucanConnector(Base):
-#     name: NonemptyString
-#     pass
-#
-#
-# class TrucConnector(ToucanConnector):
-#     type = 'TrucDB'
-#     data_source_class = TrucDataSource
-#
-#     host: NonemptyString
-#     user: NonemptyString
-#     password: NonemptyString
-#     port: Integer
-#
-#     def connect(self): pass
-#
-#     def disconnect(self): pass
-#
-#     def get_df(self, data_source: TrucDataSource) -> pd.DataFrame:
-#         pass
+        if not hasattr(cls, 'type'):
+            raise TypeError('Connector has no type')
+
+        return super().__new__(cls, *args, **kwargs)
+
+    @abstractmethod
+    def get_df(self, data_source: ToucanDataSource) -> pd.DataFrame:
+        """ Method to get a pandas dataframe """
+
+    @classmethod
+    def validate(cls, data_source: dict):
+        """Validate a data_source for this type of connector """
+        try:
+            cls.data_source_class(**data_source)
+        except AttributeError:
+            raise TypeError('Implement validate or set data_source_class attr')

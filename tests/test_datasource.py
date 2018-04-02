@@ -1,8 +1,9 @@
 from typing import Any
 
+from pydantic import ValidationError
 import pytest
 
-from toucan_connectors.bases import ToucanDataSource, BadParameters
+from toucan_connectors.toucan_pydantic_connector import ToucanDataSource
 
 
 class DataSource(ToucanDataSource):
@@ -25,21 +26,21 @@ def test_instantiation():
 def test_required_arg():
     # error with missing required arg
     data_source = {'name': 'my_name', 'collection': 'my_collection', 'query': {}}
-    with pytest.raises(BadParameters) as e:
+    with pytest.raises(ValidationError) as e:
         DataSource(**data_source)
-    assert e.value.args[0][0][0] == 'domain'
-    assert e.value.args[0][0][2] == 'argument is required'
+    assert 'domain' in e.value.errors_dict
+    assert e.value.errors_dict['domain']['error_msg'] == 'field required'
 
 
 def test_required_arg_wrong_type():
     # error with required arg of wrong type
     data_source = {
-            'domain': 1, 'name': 'my_name',
+            'domain': [], 'name': 'my_name',
             'collection': 'my_collection', 'query': {}}
-    with pytest.raises(BadParameters) as e:
+    with pytest.raises(ValidationError) as e:
         DataSource(**data_source)
-    assert e.value.args[0][0][0] == 'domain'
-    assert e.value.args[0][0][3] == 'wrong type of argument'
+    assert 'domain' in e.value.errors_dict
+    assert e.value.message == 'error validating input'
 
 
 def test_not_required():
@@ -61,18 +62,16 @@ def test_default_override():
 def test_default_override_validated():
     data_source = {
             'domain': 'my_domain', 'name': 'my_name',
-            'collection': 'my_collection', 'query': {}, 'test_default': '1'}
-    with pytest.raises(BadParameters) as e:
+            'collection': 'my_collection', 'query': {}, 'test_default': {}}
+    with pytest.raises(ValidationError):
         DataSource(**data_source)
-    assert e.value.args[0][0][0] == 'test_default'
-    assert e.value.args[0][0][3] == 'wrong type of argument'
 
 
 def test_unknown_arg():
     data_source = {
             'domain': 'my_domain', 'name': 'my_name',
             'collection': 'my_collection', 'query': {}, 'unk': '@'}
-    with pytest.raises(BadParameters) as e:
+    with pytest.raises(ValidationError) as e:
         DataSource(**data_source)
-    assert e.value.args[0][0][0] == 'unk'
-    assert e.value.args[0][0][1] == 'unknown argument'
+    assert 'unk' in e.value.errors_dict
+    assert e.value.errors_dict['unk']['error_type'] == 'Extra'
