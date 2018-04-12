@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class ToucanDataSource(BaseModel):
     domain: str
     name: str
+    type: str = None
 
     class Config:
         ignore_extra = False

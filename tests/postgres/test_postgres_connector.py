@@ -1,13 +1,9 @@
 import pandas as pd
 import psycopg2
+from pydantic.exceptions import ValidationError
 import pytest
 
-from toucan_connectors.abstract_connector import (
-    BadParameters,
-    UnableToConnectToDatabaseException,
-    InvalidQuery
-)
-from toucan_connectors.postgres.postgresql_connector import PostgresConnector, MissingHostParameter
+from toucan_connectors.postgres.postgresql_connector import PostgresConnector, PostgresDataSource
 
 
 @pytest.fixture(scope='module')
@@ -25,54 +21,35 @@ def postgres_server(service_container):
 
 @pytest.fixture()
 def postgres_connector(postgres_server):
-    return PostgresConnector(host='localhost', db='postgres_db', user='ubuntu',
+    return PostgresConnector(name='test', host='localhost', db='postgres_db', user='ubuntu',
                              password='ilovetoucan', port=postgres_server['port'])
 
 
 def test_no_user():
     """ It should raise an error as no user is given """
-    with pytest.raises(BadParameters):
-        PostgresConnector(host='some_host')
-
-
-def test_normalized_args():
-    """ It should raise an error as neither host nor hostname is given """
-    with pytest.raises(MissingHostParameter) as exc_info:
-        PostgresConnector(user='DennisRitchie')
-    assert str(exc_info.value) == 'You need to give a host or a hostname in order to connect'
+    with pytest.raises(ValidationError):
+        PostgresConnector(host='some_host', name='test')
 
 
 def test_open_connection():
     """ It should not open a connection """
-    with pytest.raises(UnableToConnectToDatabaseException):
-        PostgresConnector(host='lolcathost', db='circle_test', user='ubuntu',
-                          connect_timeout=1).__enter__()
+    with pytest.raises(psycopg2.OperationalError):
+        PostgresConnector(name='test', host='lolcathost',
+                db='circle_test', user='ubuntu',
+                connect_timeout=1).get_df({})
+
+
+def test_raise_on_empty_query():
+    with pytest.raises(ValidationError):
+        PostgresDataSource(domaine='test', name='test', query='')
 
 
 def test_retrieve_response(postgres_connector):
     """ It should connect to the database and retrieve the response to the query """
-    with pytest.raises(InvalidQuery):
-        postgres_connector.query('')
-    res = postgres_connector.query('SELECT Name, CountryCode, Population FROM City LIMIT 2;')
-    assert isinstance(res, list)
-    assert isinstance(res[0], tuple)
-    assert len(res[0]) == 3
-
-
-def test_get_df(postgres_connector, mocker):
-    """ It should call the sql extractor """
-    mocker.patch('pandas.read_sql').return_value = pd.DataFrame({'a': [1, 2], 'b': [3, 4]})
-    data_sources_spec = [
-        {
-            'domain': 'Postgres test',
-            'type': 'external_database',
-            'name': 'Some MySQL provider',
-            'query': 'SELECT * FROM city;'
-        }
-    ]
-
-    df = postgres_connector.get_df(data_sources_spec[0])
-    assert df.shape == (2, 2)
+    ds = PostgresDataSource(domain='test', name='test', query='SELECT Name, CountryCode, Population FROM City LIMIT 2;')
+    res = postgres_connector.get_df(ds)
+    assert isinstance(res, pd.DataFrame)
+    assert res.shape == (2, 3)
 
 
 def test_get_df_db(postgres_connector):
@@ -85,7 +62,7 @@ def test_get_df_db(postgres_connector):
     }
     expected_columns = ['id', 'name', 'countrycode', 'district', 'population']
 
-    df = postgres_connector.get_df(data_sources_spec)
+    df = postgres_connector.get_df(PostgresDataSource(**data_sources_spec))
 
     assert not df.empty
     assert len(df.columns) == len(expected_columns)

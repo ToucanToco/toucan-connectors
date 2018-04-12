@@ -1,53 +1,42 @@
 import pandas as pd
 import psycopg2 as pgsql
+from pydantic import constr
 
-from toucan_connectors.abstract_connector import AbstractConnector
-
-
-class PostgresConnector(AbstractConnector, type='Postgres'):
-    """ A back-end connector to retrieve data from a PostgresSQL database """
-
-    def __init__(self, *, user,
-                 host=None, hostname=None, charset=None, db=None, password=None,
-                 port=None, connect_timeout=None):
-        if host is None and hostname is None:
-            raise MissingHostParameter('You need to give a host or a hostname in order to connect')
-        self.params = {
-            'user': user,
-            'host': host,
-            'hostname': hostname,
-            'charset': charset,
-            'database': db,
-            'password': password,
-            'port': port,
-            'connect_timeout': connect_timeout,
-        }
-        self.connection = None
-        self.cursor = None
-
-    def connect(self):
-        self.connection = pgsql.connect(**self.params)
-        self.cursor = self.connection.cursor()
-
-    def disconnect(self):
-        self.connection.close()
-
-    def _query(self, query):
-        self.cursor.execute(query)
-        return self.cursor.fetchall()
-
-    def _get_df(self, config):
-        """
-        Transform a table into a DataFrame and recursively merge tables
-        with a foreign key.
-        Returns: DataFrames from config['table'].
-
-        """
-        query = config['query']
-        query_max = len(query) if len(query) < 80 else 80
-        self.logger.info(f'{query[:query_max]} : executing...')
-        return pd.read_sql(query, con=self.connection)
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
-class MissingHostParameter(Exception):
-    """ raised when neither host nor hostname is passed as an argument """
+class PostgresDataSource(ToucanDataSource):
+    query: constr(min_length=1)
+
+
+class PostgresConnector(ToucanConnector):
+    type = 'Postgres'
+    data_source_model: PostgresDataSource
+
+    user: str
+    host: str = None
+    hostname: str = None
+    charset: str = None
+    db: str = None
+    password: str = None
+    port: int = None
+    connect_timeout: int = None
+
+    def get_df(self, data_source):
+        connection = pgsql.connect(
+            user=self.user,
+            host=self.host if self.host else self.hostname,
+            client_encoding=self.charset,
+            dbname=self.db,
+            password=self.password,
+            port=self.port,
+            connect_timeout=self.connect_timeout
+        )
+        cursor = connection.cursor()
+        query = data_source.query
+
+        df = pd.read_sql(query, con=connection)
+
+        connection.close()
+
+        return df
