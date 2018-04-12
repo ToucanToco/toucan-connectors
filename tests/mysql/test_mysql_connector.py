@@ -5,12 +5,7 @@ import pandas as pd
 import pymysql
 import pytest
 
-from toucan_connectors.abstract_connector import (
-    BadParameters,
-    UnableToConnectToDatabaseException,
-    InvalidQuery
-)
-from toucan_connectors.mysql.mysql_connector import MySQLConnector
+from toucan_connectors.mysql import MySQLConnector, MySQLDataSource
 
 
 @pytest.fixture(scope='module')
@@ -28,31 +23,41 @@ def mysql_server(service_container):
 
 @pytest.fixture()
 def mysql_connector(mysql_server):
-    return MySQLConnector(host='localhost', db='mysql_db', user='ubuntu', password='ilovetoucan',
-                          port=mysql_server['port'])
+    return MySQLConnector(name='mycon', host='localhost', db='mysql_db', port=mysql_server['port'],
+                          user='ubuntu', password='ilovetoucan')
 
 
-def test_missing_params():
-    """ It should throw a BadParameters error """
-    with pytest.raises(BadParameters):
-        MySQLConnector(host='localhost')
+def test_datasource():
+    with pytest.raises(ValueError) as exc_info:
+        MySQLDataSource(name='mycon', domain='mydomain', query='')
+    assert 'query:\n  length less than minimum allowed: 1' in str(exc_info.value)
+
+    with pytest.raises(ValueError) as exc_info:
+        MySQLDataSource(name='mycon', domain='mydomain')
+    assert "'query' or 'table' must be set" in str(exc_info.value)
+
+    with pytest.raises(ValueError) as exc_info:
+        MySQLDataSource(name='mycon', domain='mydomain', query='myquery', table='mytable')
+    assert "Only one of 'query' or 'table' must be set" in str(exc_info.value)
+
+    MySQLDataSource(name='mycon', domain='mydomain', table='mytable')
+    MySQLDataSource(name='mycon', domain='mydomain', query='myquery')
 
 
-def test_open_connection():
-    """ It should not open a connection """
-    with pytest.raises(UnableToConnectToDatabaseException):
-        MySQLConnector(host='lolcathost', db='mysql_db',
-                       user='ubuntu', connect_timeout=1).__enter__()
+def test_connection_params():
+    connector = MySQLConnector(name='my_mysql_con', host='myhost', user='myuser', db='mydb')
+    params = connector.connection_params
+    params.pop('conv')
+    assert params == {'host': 'myhost', 'user': 'myuser', 'database': 'mydb', 'charset': 'utf8mb4',
+                      'cursorclass': pymysql.cursors.DictCursor}
 
-
-def test_retrieve_response(mysql_connector):
-    """ It should connect to the database and retrieve the response to the query """
-    with pytest.raises(InvalidQuery):
-        mysql_connector.query('')
-    res = mysql_connector.query('SELECT Name, CountryCode, Population FROM City LIMIT 2;')
-    assert isinstance(res, list)
-    assert isinstance(res[0], dict)
-    assert len(res[0]) == 3
+    connector = MySQLConnector(name='my_mssql_con', host='myhost', user='myuser', db='mydb',
+                               password='mypass', port=123, charset='utf8', connect_timeout=50)
+    params = connector.connection_params
+    params.pop('conv')
+    assert params == {'host': 'myhost', 'user': 'myuser', 'database': 'mydb', 'charset': 'utf8',
+                      'cursorclass': pymysql.cursors.DictCursor, 'password': 'mypass',
+                      'port': 123, 'connect_timeout': 50}
 
 
 def test_get_df(mysql_connector, mocker):
@@ -71,7 +76,8 @@ def test_get_df(mysql_connector, mocker):
         }
     ]
 
-    df = mysql_connector.get_df(data_sources_spec[0])
+    data_source = MySQLDataSource(**data_sources_spec[0])
+    df = mysql_connector.get_df(data_source)
     assert df.empty
 
 
@@ -93,7 +99,8 @@ def test_get_df_db(mysql_connector):
                         'GNPOld', 'LocalName', 'GovernmentForm', 'HeadOfState',
                         'Capital', 'Code2']
 
-    df = mysql_connector.get_df(data_sources_spec[0])
+    data_source = MySQLDataSource(**data_sources_spec[0])
+    df = mysql_connector.get_df(data_source)
 
     assert not df.empty
     assert len(df.columns) == 19

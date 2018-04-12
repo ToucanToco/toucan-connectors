@@ -1,1 +1,1 @@
-from .postgresql_connector import PostgresConnector
+from .postgresql_connector import PostgresConnector, PostgresDataSource

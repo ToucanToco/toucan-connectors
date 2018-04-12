@@ -48,7 +48,7 @@ def wait_for_container(checker_callable, host_port, image, skip_exception=None):
         pytest.fail(f'Cannot start {image} server')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def container_starter(request, docker, docker_pull):
     def f(image, internal_port, host_port, env=None, volumes=None, command=None,
           checker_callable=None, skip_exception=None):
@@ -97,7 +97,7 @@ def container_starter(request, docker, docker_pull):
     return f
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def service_container(unused_port, container_starter):
     def f(service_name, checker_callable=None, skip_exception=None):
         with open(f'{path.dirname(__file__)}/docker-compose.yml') as docker_comppse_yml:

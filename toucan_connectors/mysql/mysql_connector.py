@@ -3,39 +3,54 @@ import re
 import numpy as np
 import pandas as pd
 import pymysql
+from pydantic import constr
 
-from toucan_connectors.abstract_connector import AbstractConnector, InvalidQuery
+from toucan_connectors.toucan_connector import ToucanDataSource, ToucanConnector
 
 
-class MySQLConnector(AbstractConnector, type='MySQL'):
-    """ A back-end connector to retrieve data from a MySQL database """
+class MySQLDataSource(ToucanDataSource):
+    query: constr(min_length=1) = None
+    table: constr(min_length=1) = None
 
-    def __init__(self, *, host, user, db,
-                 charset='utf8mb4', password=None, port=None, connect_timeout=None):
+    def __init__(self, **data):
+        super().__init__(**data)
+        query = data.get('query')
+        table = data.get('table')
+        if query is None and table is None:
+            raise ValueError("'query' or 'table' must be set")
+        elif query is not None and table is not None:
+            raise ValueError("Only one of 'query' or 'table' must be set")
+
+
+class MySQLConnector(ToucanConnector):
+    type = 'MySQL'
+    data_source_model: MySQLDataSource
+
+    host: str
+    user: str
+    db: str
+    password: str = None
+    port: int = None
+    charset: str = 'utf8mb4'
+    connect_timeout: int = None
+
+    @property
+    def connection_params(self):
         conv = pymysql.converters.conversions.copy()
         conv[246] = float
-        self.params = {
-            'host': host,
-            'user': user,
-            'database': db,
-            'charset': charset,
-            'password': password,
-            'port': port,
-            'connect_timeout': connect_timeout,
+        con_params = {
+            'host': self.host,
+            'user': self.user,
+            'database': self.db,
+            'password': self.password,
+            'port': self.port,
+            'charset': self.charset,
+            'connect_timeout': self.connect_timeout,
             'conv': conv,
             'cursorclass': pymysql.cursors.DictCursor
         }
-        # remove None value
-        self.params = {k: v for k, v in self.params.items() if v is not None}
-        self.connection = None
-        self.cursor = None
-
-    def connect(self):
-        self.connection = pymysql.connect(**self.params)
-        self.cursor = self.connection.cursor()
-
-    def disconnect(self):
-        self.connection.close()
+        # remove None values
+        return {k: v for k, v in con_params.items() if v is not None}
 
     @staticmethod
     def clean_response(response):
@@ -47,14 +62,11 @@ class MySQLConnector(AbstractConnector, type='MySQL'):
                     elt[k] = v.decode('utf8')
         return response
 
-    def _query(self, query):
-        num_rows = self.cursor.execute(query)
-        response = self.cursor.fetchall() if num_rows > 0 else {}
-        return self.clean_response(response)
-
-    def execute_and_fetchall(self, query):
-        self.cursor.execute(query)
-        return self.cursor.fetchall()
+    @staticmethod
+    def execute_and_fetchall(query, connection):
+        cursor = connection.cursor()
+        cursor.execute(query)
+        return cursor.fetchall()
 
     @staticmethod
     def _merge_drop(df, f_df, suffixes, f_key, f_table_key):
@@ -84,16 +96,6 @@ class MySQLConnector(AbstractConnector, type='MySQL'):
             MySQLConnector.logger.info(' no column dropped')
             return tmp_df.drop(f_table_key, axis=1)
         return tmp_df
-
-    def _df_from_query(self, query):
-        """
-        Args:
-            query: query (SQL) to execute
-
-        Returns: DataFrame
-
-        """
-        return pd.read_sql(query, con=self.connection)
 
     @staticmethod
     def extract_info(fetch_all):
@@ -196,7 +198,8 @@ class MySQLConnector(AbstractConnector, type='MySQL'):
             return '', idx_end
         return line[idx_start:idx_end], idx_end
 
-    def get_foreign_key_info(self, table_name):
+    @staticmethod
+    def get_foreign_key_info(table_name, connection):
         """
         Get the foreign key information from a table: foreign key inside the
         table, foreign table, key inside that table.
@@ -207,7 +210,8 @@ class MySQLConnector(AbstractConnector, type='MySQL'):
 
         """
         # TODO: see if there is a more efficient way to do this
-        fetch_all_list = self.execute_and_fetchall(f'show create table {table_name}')
+        fetch_all_query = f'show create table {table_name}'
+        fetch_all_list = MySQLConnector.execute_and_fetchall(fetch_all_query, connection)
 
         keys = list(fetch_all_list[0].keys())
         if 'Create Table' in keys:
@@ -218,30 +222,30 @@ class MySQLConnector(AbstractConnector, type='MySQL'):
             raise InvalidQuery(keys)
         return MySQLConnector.extract_info(fetch_all)
 
-    def _get_df(self, config):
+    def get_df(self, datasource):
         """
         Transform a table into a DataFrame and recursively merge tables
         with a foreign key.
         Returns: DataFrames from config['table'].
-
         """
 
-        # ----- Prepare -----
+        connection = pymysql.connect(**self.connection_params)
 
-        if 'query' in config:
-            query = config['query']
+        # ----- Prepare -----
+        if datasource.query:
+            query = datasource.query
             # Extract table name for logging purpose (see below)
             m = re.search(r"from\s*(?P<table>[^\s]+)\s*(where|order by|group by|limit)?",
                           query, re.I)
             table = m.group('table')
         else:
-            table = config['table']
+            table = datasource.table
             query = f'select * from {table}'
         MySQLConnector.logger.debug(f'Executing query : {query}')
         # list used because we cannot reassign a variable to update the dataframe.
         # After the merge: append the new DataFrame and remove the pop the first
         # element.
-        lres = [(self._df_from_query(query))]
+        lres = [pd.read_sql(query, con=connection)]
         MySQLConnector.logger.info(f'{table} : dumped first DataFrame')
 
         # ----- Merge -----
@@ -250,7 +254,7 @@ class MySQLConnector(AbstractConnector, type='MySQL'):
         # to many columns.
         infos = []
         has_been_merged = {table}
-        foreign_keys_append = self.get_foreign_key_info(table)
+        foreign_keys_append = self.get_foreign_key_info(table, connection)
         if len(foreign_keys_append) > 0:
             for keys in foreign_keys_append:
                 infos.append(keys)
@@ -265,7 +269,7 @@ class MySQLConnector(AbstractConnector, type='MySQL'):
             MySQLConnector.logger.info(f"{table} <> found foreign key: {table_info['f_key']} "
                                        f"inside {table_info['f_table']}")
 
-            f_df = self._df_from_query(f'select * from {table_info["f_table"]}')
+            f_df = pd.read_sql(f'select * from {table_info["f_table"]}', con=connection)
             suffixes = ('_' + table, '_' + table_info['f_table'])
             lres.append(
                 self._merge_drop(lres[0],
@@ -281,9 +285,15 @@ class MySQLConnector(AbstractConnector, type='MySQL'):
             has_been_merged.add(table_info['f_table'])
 
             table = table_info['f_table']
-            foreign_keys_append = self.get_foreign_key_info(table)
+            foreign_keys_append = self.get_foreign_key_info(table, connection)
             if len(foreign_keys_append) > 0:
                 for keys in foreign_keys_append:
                     infos.append(keys)
 
+        connection.close()
+
         return lres.pop()
+
+
+class InvalidQuery(Exception):
+    """raised when a query is invalid"""
