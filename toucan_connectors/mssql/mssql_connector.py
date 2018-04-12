@@ -13,6 +13,7 @@ class MSSQLDataSource(ToucanDataSource):
 class MSSQLConnector(ToucanConnector):
     type = 'MSSQL'
     data_source_model: MSSQLDataSource
+
     host: str
     user: str
     db: str = None
@@ -31,6 +32,7 @@ class MSSQLConnector(ToucanConnector):
             'login_timeout': self.connect_timeout,
             'as_dict': True
         }
+        # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
     def get_df(self, datasource):
