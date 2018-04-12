@@ -22,8 +22,9 @@ class PostgresConnector(ToucanConnector):
     port: int = None
     connect_timeout: int = None
 
-    def get_df(self, data_source):
-        connection = pgsql.connect(
+    @property
+    def connection_params(self):
+        con_params = dict(
             user=self.user,
             host=self.host if self.host else self.hostname,
             client_encoding=self.charset,
@@ -32,10 +33,13 @@ class PostgresConnector(ToucanConnector):
             port=self.port,
             connect_timeout=self.connect_timeout
         )
+        # remove None values
+        return {k: v for k, v in con_params.items() if v is not None}
 
-        query = data_source.query
+    def get_df(self, data_source):
+        connection = pgsql.connect(**self.connection_params)
 
-        df = pd.read_sql(query, con=connection)
+        df = pd.read_sql(data_source.query, con=connection)
 
         connection.close()
 
