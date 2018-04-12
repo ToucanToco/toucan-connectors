@@ -1,1 +1,1 @@
-from .mysql_connector import MySQLConnector
+from .mysql_connector import MySQLDataSource, MySQLConnector
