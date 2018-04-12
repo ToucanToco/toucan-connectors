@@ -1,54 +1,56 @@
+from typing import Union
+
 import pandas as pd
 import pymongo
+from pydantic import validator
 
-from toucan_connectors.abstract_connector import AbstractConnector, MissingQueryParameter
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
-class MongoConnector(AbstractConnector, type='MongoDB'):
+class MongoDataSource(ToucanDataSource):
+    collection: str
+    query: Union[str, dict, list]
+
+
+class MongoConnector(ToucanConnector):
     """ A back-end connector to retrieve data from a MongoDB database """
+    type = 'MongoDB'
+    data_source_model: MongoDataSource
 
-    def __init__(self, *, host, port, database, username=None, password=None):
-        if username is not None and password is not None:
-            self.uri = f'mongodb://{username}:{password}@{host}:{port}'
-        else:
-            self.uri = f'mongodb://{host}:{port}'
-        self.database = database
-        self.client = None
+    host: str
+    port: int
+    database: str
+    username: str = None
+    password: str = None
 
-    def connect(self):
-        self.client = pymongo.MongoClient(self.uri)
+    @validator('password')
+    def password_must_have_a_user(cls, v, values, **kwargs):
+        if values['username'] is None:
+            raise ValueError('username must be set')
+        return v
 
-    def disconnect(self):
-        self.client.close()
+    @property
+    def uri(self):
+        user_pass = ''
+        if self.username is not None:
+            user_pass = self.username
+            if self.password is not None:
+                user_pass += f':{self.password}'
+            user_pass += '@'
+        return ''.join(['mongodb://', user_pass, f'{self.host}:{self.port}'])
 
-    def _query(self, collection, query):
-        """
-        Args:
-            query (str, dict or list)
-            collection (str)
-        Returns:
-            data (pymongo.cursor.Cursor):
-        """
-        cursor = self.client[self.database][collection]
+    def get_df(self, data_source):
+        client = pymongo.MongoClient(self.uri)
 
-        if isinstance(query, str):
-            return cursor.find({'domain': query})
-        elif isinstance(query, dict):
-            return cursor.find(query)
-        elif isinstance(query, list):
-            return cursor.aggregate(query)
-
-    def _get_df(self, config):
-        """
-        Args:
-            config (dict): The block from ETL config
-        Returns:
-            df (DataFrame): A dataframe with the response
-        """
-        if any(s not in config for s in ('collection', 'query')):
-            raise MissingQueryParameter('"collection" and "query" are mandatory to get a df')
-
-        data = self.query(config['collection'], config['query'])
-
+        cursor = client[self.database][data_source.collection]
+        data = None
+        if isinstance(data_source.query, str):
+            data = cursor.find({'domain': data_source.query})
+        elif isinstance(data_source.query, dict):
+            data = cursor.find(data_source.query)
+        elif isinstance(data_source.query, list):
+            data = cursor.aggregate(data_source.query)
         df = pd.DataFrame(list(data))
+
+        client.close()
         return df

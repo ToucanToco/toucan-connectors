@@ -1,1 +1,1 @@
-from .mongo_connector import MongoConnector
+from .mongo_connector import MongoDataSource, MongoConnector

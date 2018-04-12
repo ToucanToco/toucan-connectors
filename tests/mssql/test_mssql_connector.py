@@ -2,15 +2,10 @@ import os
 import pymssql
 
 import pandas as pd
+import pydantic
 import pytest
 
-from toucan_connectors.abstract_connector import (
-    BadParameters,
-    UnableToConnectToDatabaseException,
-    InvalidQuery,
-    MissingQueryParameter
-)
-from toucan_connectors.mssql.mssql_connector import MSSQLConnector
+from toucan_connectors.mssql import MSSQLDataSource, MSSQLConnector
 
 
 @pytest.fixture(scope='module')
@@ -39,41 +34,44 @@ def mssql_server(service_container):
 
 @pytest.fixture()
 def mssql_connector(mssql_server):
-    return MSSQLConnector(host='localhost', user='SA', password='Il0veT0uc@n!',
+    return MSSQLConnector(name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!',
                           port=mssql_server['port'])
 
 
-def test_missing_params():
-    """ It should throw a BadParameters error """
-    with pytest.raises(BadParameters):
-        MSSQLConnector(host='localhost')
+@pytest.fixture()
+def mssql_datasource():
+    def f(query):
+        return MSSQLDataSource(name='mycon', domain='mydomain', query=query)
+
+    return f
 
 
-def test_open_connection():
-    """ It should not open a connection """
-    with pytest.raises(UnableToConnectToDatabaseException):
-        MSSQLConnector(host='lolcathost', db='mssql_db', user='SA', connect_timeout=1).__enter__()
+def test_datasource(mssql_datasource):
+    with pytest.raises(pydantic.exceptions.ValidationError):
+        mssql_datasource(query='')
+    mssql_datasource(query='ok')
 
 
-def test_retrieve_response(mssql_connector):
+def test_connection_params():
+    connector = MSSQLConnector(name='my_mssql_con', host='myhost', user='myuser')
+    assert connector.connection_params == {'server': 'myhost', 'user': 'myuser', 'as_dict': True}
+    connector = MSSQLConnector(name='my_mssql_con', host='myhost', user='myuser',
+                               password='mypass', port=123, connect_timeout=60, db='mydb')
+    assert connector.connection_params == {'server': 'myhost', 'user': 'myuser', 'as_dict': True,
+                                           'password': 'mypass', 'port': 123,
+                                           'login_timeout': 60, 'database': 'mydb'}
+
+
+def test_get_df(mssql_connector, mssql_datasource):
     """ It should connect to the database and retrieve the response to the query """
-    query = 'SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3'
+    datasource = mssql_datasource(query='SELECT Name, CountryCode, Population '
+                                        'FROM City WHERE ID BETWEEN 1 AND 3')
     expected = pd.DataFrame({'Name': ['Kabul', 'Qandahar', 'Herat'],
                              'Population': [1780000, 237500, 186800]})
     expected['CountryCode'] = 'AFG'
     expected = expected[['Name', 'CountryCode', 'Population']]
-    # test query method
-    with pytest.raises(InvalidQuery):
-        mssql_connector.query('')
-    # LIMIT 2 is not possible for MSSQL
-    res = mssql_connector.query(query)
-    res['Name'] = res['Name'].str.rstrip()
-    assert res.equals(expected)
 
-    with pytest.raises(MissingQueryParameter):
-        mssql_connector.get_df(query)
-    with pytest.raises(MissingQueryParameter):
-        mssql_connector.get_df({'other': query})
-    res = mssql_connector.get_df({'query': query})
+    # LIMIT 2 is not possible for MSSQL
+    res = mssql_connector.get_df(datasource)
     res['Name'] = res['Name'].str.rstrip()
     assert res.equals(expected)
