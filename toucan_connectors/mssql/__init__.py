@@ -1,1 +1,1 @@
-from .mssql_connector import MSSQLConnector
+from .mssql_connector import MSSQLDataSource, MSSQLConnector
