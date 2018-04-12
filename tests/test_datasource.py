@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import ValidationError
 import pytest
 
-from toucan_connectors.toucan_pydantic_connector import ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanDataSource
 
 
 class DataSource(ToucanDataSource):
