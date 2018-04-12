@@ -32,7 +32,7 @@ class PostgresConnector(ToucanConnector):
             port=self.port,
             connect_timeout=self.connect_timeout
         )
-        cursor = connection.cursor()
+
         query = data_source.query
 
         df = pd.read_sql(query, con=connection)

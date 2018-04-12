@@ -34,8 +34,11 @@ def test_no_user():
 def test_open_connection():
     """ It should not open a connection """
     with pytest.raises(psycopg2.OperationalError):
-        PostgresConnector(name='test', host='lolcathost',
-                db='circle_test', user='ubuntu',
+        PostgresConnector(
+                name='test',
+                host='lolcathost',
+                db='circle_test',
+                user='ubuntu',
                 connect_timeout=1).get_df({})
 
 
@@ -46,7 +49,10 @@ def test_raise_on_empty_query():
 
 def test_retrieve_response(postgres_connector):
     """ It should connect to the database and retrieve the response to the query """
-    ds = PostgresDataSource(domain='test', name='test', query='SELECT Name, CountryCode, Population FROM City LIMIT 2;')
+    ds = PostgresDataSource(
+            domain='test',
+            name='test',
+            query='SELECT Name, CountryCode, Population FROM City LIMIT 2;')
     res = postgres_connector.get_df(ds)
     assert isinstance(res, pd.DataFrame)
     assert res.shape == (2, 3)
