@@ -6,8 +6,7 @@ import pymongo
 import pymongo.errors
 import pytest
 
-from toucan_connectors.abstract_connector import MissingQueryParameter
-from toucan_connectors.mongo import MongoConnector
+from toucan_connectors.mongo import MongoDataSource, MongoConnector
 
 
 @pytest.fixture(scope='module')
@@ -26,46 +25,47 @@ def mongo_server(service_container):
 
 @pytest.fixture()
 def mongo_connector(mongo_server):
-    return MongoConnector(host='localhost', username='ubuntu', password='ilovetoucan',
-                          database='toucan', port=mongo_server['port'])
+    return MongoConnector(name='mycon', host='localhost', database='toucan',
+                          port=mongo_server['port'], username='ubuntu', password='ilovetoucan')
+
+
+@pytest.fixture()
+def mongo_datasource():
+    def f(collection, query):
+        return MongoDataSource(name='mycon', domain='mydomain', collection=collection, query=query)
+
+    return f
 
 
 def test_uri():
-    mongo_con = MongoConnector(host='localhost', username='mister', password='superpass',
-                               database='mydb', port=1793)
-    assert mongo_con.uri == f'mongodb://mister:superpass@localhost:1793'
-
-    mongo_con = MongoConnector(host='localhost', database='mydb', port=1793)
-    assert mongo_con.uri == f'mongodb://localhost:1793'
-
-
-def test_query(mongo_connector):
-    # string query
-    cur = mongo_connector.query(collection='test_col', query='domain1')
-    docs = list(cur)
-    assert len(docs) == 3
-    assert {doc['country'] for doc in docs} == {'France', 'England', 'Germany'}
-
-    # dict query (should be the same)
-    cur = mongo_connector.query(collection='test_col', query={'domain': 'domain1'})
-    assert list(cur) == docs
-
-    # list query (should be the same)
-    cur = mongo_connector.query(collection='test_col',
-                                query=[{'$match': {'domain': 'domain1'}}])
-    assert list(cur) == docs
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb')
+    assert connector.uri == 'mongodb://myhost:123'
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
+                               username='myuser')
+    assert connector.uri == 'mongodb://myuser@myhost:123'
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
+                               username='myuser', password='mypass')
+    assert connector.uri == 'mongodb://myuser:mypass@myhost:123'
+    with pytest.raises(ValueError) as exc_info:
+        MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
+                       password='mypass')
+    assert 'password:\n  username must be set' in str(exc_info.value)
 
 
-def test_get_df(mongo_connector):
-    with pytest.raises(MissingQueryParameter) as exc_info:
-        mongo_connector.get_df(config={})
-    assert str(exc_info.value) == '"collection" and "query" are mandatory to get a df'
-
-    df = mongo_connector.get_df({'collection': 'test_col',
-                                 'query': {'domain': 'domain1'}})
+def test_get_df(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
+    df = mongo_connector.get_df(datasource)
     expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
                              'language': ['French', 'English', 'German'],
                              'value': [20, 14, 17]})
     assert df.shape == (3, 5)
     assert df.columns.tolist() == ['_id', 'country', 'domain', 'language', 'value']
     assert df[['country', 'language', 'value']].equals(expected)
+
+    datasource = mongo_datasource(collection='test_col', query='domain1')
+    df2 = mongo_connector.get_df(datasource)
+    assert df2.equals(df)
+
+    datasource = mongo_datasource(collection='test_col', query=[{'$match': {'domain': 'domain1'}}])
+    df2 = mongo_connector.get_df(datasource)
+    assert df2.equals(df)
