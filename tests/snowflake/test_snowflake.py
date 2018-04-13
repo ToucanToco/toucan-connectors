@@ -37,3 +37,12 @@ def test_snowflake(mocker):
         'test_query',
         con=snock()
     )
+
+
+def test_missing_cache_file():
+    with pytest.raises(ValueError):
+        SnowflakeConnector(user='', password='', account='', name='',
+                           ocsp_response_cache_filename='/blah')
+
+    SnowflakeConnector(user='', password='', account='', name='',
+                       ocsp_response_cache_filename=__file__)

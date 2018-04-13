@@ -1,8 +1,21 @@
+from os import path
 import pandas as pd
 from pydantic.types import constr
 import snowflake.connector
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+
+
+class Path(str):
+    @classmethod
+    def get_validators(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not path.exists(v):
+            raise ValueError(f'path does not exists: v')
+        return v
 
 
 class SnowflakeDataSource(ToucanDataSource):
@@ -18,7 +31,7 @@ class SnowflakeConnector(ToucanConnector):
     user: str
     password: str
     account: str
-    ocsp_response_cache_filename: str = None
+    ocsp_response_cache_filename: Path = None
 
     def get_df(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         connection = snowflake.connector.connect(
