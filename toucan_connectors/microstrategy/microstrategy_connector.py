@@ -29,8 +29,7 @@ class MicroStrategyConnector(ToucanConnector):
 
     def get_df(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
         """Retrieves cube or report data, flattens return dataframe"""
-        c = Client(self.base_url, self.project_id, self.username,
-                   self.password)
+        c = Client(self.base_url, self.project_id, self.username, self.password)
 
         results = getattr(c, data_source.dataset)(data_source.id)
 
@@ -39,6 +38,5 @@ class MicroStrategyConnector(ToucanConnector):
         metrics = get_metric_names(results)
 
         # get data based on attributes and metrics
-        rows = flatten_json(results['result']['data']['root'], attributes,
-                            metrics)
+        rows = flatten_json(results['result']['data']['root'], attributes, metrics)
         return json_normalize(rows)

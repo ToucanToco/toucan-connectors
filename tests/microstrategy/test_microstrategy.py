@@ -31,7 +31,7 @@ mc = MicroStrategyConnector(
 
 
 @responses.activate
-def test_microstrategy(mocker):
+def test_microstrategy():
     js = json.load(open('tests/microstrategy/fixtures/fixture.json'))
 
     # login
@@ -41,8 +41,7 @@ def test_microstrategy(mocker):
 
     # cube
     responses.add(responses.POST,
-                  'https://demo.microstrategy.com/MicroStrategyLibrary2/api/cubes/'
-                  '6137E0964C68D84F107816AA694C2209/instances?limit=100&offset=0',
+                  'https://demo.microstrategy.com/MicroStrategyLibrary2/api/cubes/6137E0964C68D84F107816AA694C2209/instances?limit=100&offset=0',  # noqa: E501
                   json=js, status=200)
 
     df = mc.get_df(md)
@@ -50,8 +49,7 @@ def test_microstrategy(mocker):
 
     # report
     responses.add(responses.POST,
-                  'https://demo.microstrategy.com/MicroStrategyLibrary2/api/reports/'
-                  'TDjAuKmfGeKnqbxKr1TPfcFr4vBTlWIKDWDvODTSKsQ/instances?limit=100&offset=0',
+                  'https://demo.microstrategy.com/MicroStrategyLibrary2/api/reports/TDjAuKmfGeKnqbxKr1TPfcFr4vBTlWIKDWDvODTSKsQ/instances?limit=100&offset=0',  # noqa: E501
                   json=js, status=200)
 
     df = mc.get_df(mdr)

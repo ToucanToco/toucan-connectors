@@ -19,18 +19,17 @@ def flatten_json(json_root: dict, attributes: dict, metrics: dict) -> list:
     row = {}
     table = []
 
-    def flatten(nodes: dict, attributes: dict, metrics: dict, row: dict,
-                table: list):
+    def flatten(nodes: dict, attributes: dict, metrics: dict, row: dict, table: list):
         """ Recursive function that will traverse JSON to flatten data."""
         if isinstance(nodes, dict):
             for node in nodes:
                 # it appears "depth" is an indicator when data elements are coming
-                if (node == "depth"):
+                if node == "depth":
                     row[attributes[nodes["depth"]]] = nodes["element"]["name"]
                     # also, the "depth" value appears to be associated to the number of attributes,
                     # so we use this to determine when to get the metric data and write the row to
                     # the table
-                    if (nodes["depth"] == (len(attributes) - 1)):
+                    if nodes["depth"] == (len(attributes) - 1):
                         # iterate through metric names to get the values in json
                         for value in metrics.values():
                             row[value] = nodes["metrics"][value]["rv"]
