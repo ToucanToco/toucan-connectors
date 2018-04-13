@@ -9,38 +9,36 @@ from .data import get_attr_names, get_metric_names, flatten_json
 
 
 class Dataset(str, Enum):
-	cube = 'cube'
-	report = 'report'
+    cube = 'cube'
+    report = 'report'
 
 
 class MicroStrategyDataSource(ToucanDataSource):
-	id: str
-	dataset: Dataset
+    id: str
+    dataset: Dataset
 
 
 class MicroStrategyConnector(ToucanConnector):
-	type = 'MicroStrategy'
-	data_source_model: MicroStrategyDataSource
+    type = 'MicroStrategy'
+    data_source_model: MicroStrategyDataSource
 
-	base_url: str
-	username: str
-	password: str
-	project_id: str
+    base_url: str
+    username: str
+    password: str
+    project_id: str
 
-	def get_df(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
-		"""
-        Retrieves cube or report data, flattens and writes to CSV
-        """
-		c = Client(self.base_url, self.project_id, self.username,
-		           self.password)
+    def get_df(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
+        """Retrieves cube or report data, flattens return dataframe"""
+        c = Client(self.base_url, self.project_id, self.username,
+                   self.password)
 
-		results = getattr(c, data_source.dataset)(data_source.id)
+        results = getattr(c, data_source.dataset)(data_source.id)
 
-		# Get a list of attributes and metrics
-		attributes = get_attr_names(results)
-		metrics = get_metric_names(results)
+        # Get a list of attributes and metrics
+        attributes = get_attr_names(results)
+        metrics = get_metric_names(results)
 
-		# get data based on attributes and metrics
-		rows = flatten_json(results['result']['data']['root'], attributes,
-		                    metrics)
-		return json_normalize(rows)
+        # get data based on attributes and metrics
+        rows = flatten_json(results['result']['data']['root'], attributes,
+                            metrics)
+        return json_normalize(rows)
