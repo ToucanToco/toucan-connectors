@@ -5,7 +5,7 @@ import pandas as pd
 import pydantic
 import pytest
 
-from toucan_connectors.mssql import MSSQLDataSource, MSSQLConnector
+from toucan_connectors.mssql.mssql_connector import MSSQLDataSource, MSSQLConnector
 
 
 @pytest.fixture(scope='module')

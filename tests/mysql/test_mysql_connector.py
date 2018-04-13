@@ -5,7 +5,7 @@ import pandas as pd
 import pymysql
 import pytest
 
-from toucan_connectors.mysql import MySQLConnector, MySQLDataSource
+from toucan_connectors.mysql.mysql_connector import MySQLConnector, MySQLDataSource
 
 
 @pytest.fixture(scope='module')
