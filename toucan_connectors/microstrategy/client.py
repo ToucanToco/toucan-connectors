@@ -1,5 +1,4 @@
 import requests
-import json
 
 
 class Client:
@@ -21,7 +20,6 @@ class Client:
                 'X-MSTR-ProjectID': self.project_id}
 
     def query(self, dataset: str, id: str, offset: int, limit: int) -> dict:
-
         params = {'offset': str(offset), 'limit': str(limit)}
 
         url = f'{self.base_url}{dataset}/{id}/instances'
