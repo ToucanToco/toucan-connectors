@@ -21,7 +21,8 @@ the `docker-compose.yml`. You can then use the fixture `service_container` to au
 start the docker and shut it down for you!
 
 #### Step 2
-Create a new folder in `toucan_connectors` for the new connector and create your classes
+Create a new folder `mytype` in `toucan_connectors` for your new connector and
+create your classes
 ```python
 class MyDataSource(ToucanDataSource):
     """Model of my datasource"""
@@ -41,6 +42,11 @@ class MyConnector(ToucanConnector):
         """how to retrieve a dataframe"""
 ```
 
+Please add your connector in `toucan_connectors/__init__.py` :
+```python
+with suppress(ImportError):
+    from .mytype.my_connector import MyConnector
+```
 
 #### Step 3
 Add the requirements to the `setup.cfg` in the `[options.extras_require]` section:
