@@ -6,7 +6,7 @@ import pymongo
 import pymongo.errors
 import pytest
 
-from toucan_connectors.mongo import MongoDataSource, MongoConnector
+from toucan_connectors.mongo.mongo_connector import MongoDataSource, MongoConnector
 
 
 @pytest.fixture(scope='module')

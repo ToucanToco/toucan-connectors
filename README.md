@@ -21,18 +21,31 @@ the `docker-compose.yml`. You can then use the fixture `service_container` to au
 start the docker and shut it down for you!
 
 #### Step 2
-Create a new folder in `toucan_connectors` for the new connector and create your class
+Create a new folder `mytype` in `toucan_connectors` for your new connector and
+create your classes
 ```python
-class NewConnector(AbstractConnector, type='new')
-    ...
-```
-The `type` is mandatory and will be the string used in the ETL config
+class MyDataSource(ToucanDataSource):
+    """Model of my datasource"""
+    query: str
+    
 
-Please expose your connector in the `__init__.py` of `toucan_connectors`!
-It is important to be able to import the new connector directly from this directory!
+class MyConnector(ToucanConnector):
+    """Model of my connector"""
+    type = 'MyType'
+    data_source_model: MyDataSource
+
+    host: str
+    port: int
+    database: str
+    
+    def get_df(self):
+        """how to retrieve a dataframe"""
+```
+
+Please add your connector in `toucan_connectors/__init__.py` :
 ```python
 with suppress(ImportError):
-    from new_connector import *
+    from .mytype.my_connector import MyConnector
 ```
 
 #### Step 3

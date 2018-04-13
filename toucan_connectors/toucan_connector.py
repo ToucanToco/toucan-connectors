@@ -1,3 +1,4 @@
+import logging
 from abc import ABCMeta, abstractmethod
 
 import pandas as pd
@@ -25,6 +26,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         try:
             cls.type = cls.__fields__['type'].default
             cls.data_source_model = cls.__fields__.pop('data_source_model').type_
+            cls.logger = logging.getLogger(cls.__name__)
         except KeyError as e:
             raise TypeError(f'{cls.__name__} has no {e} attribute.')
 
