@@ -1,15 +1,8 @@
-import collections
-import numpy as np
-import pandas as pd
-import cx_Oracle
-import pytest
 import os
 
-from toucan_connectors.abstract_connector import (
-    BadParameters,
-    UnableToConnectToDatabaseException,
-    InvalidQuery
-)
+import cx_Oracle
+import pytest
+
 from toucan_connectors.oracle import OracleConnector
 
 
@@ -39,50 +32,6 @@ def oracle_connector(oracle_server):
                            password='ilovetoucan', db='oracle_db')
 
 
-def test_missing_params():
-    """ It should throw a BadParameters error """
-    with pytest.raises(BadParameters):
-        OracleConnector(user='yo')
-
-
-def test_open_connection():
-    """ It should not open a connection """
-    with pytest.raises(UnableToConnectToDatabaseException):
-        OracleConnector(
-            host='127.0.0.1', user='sys', password='ilovetoucan', db='oracle_db'
-        ).__enter__()
-
-
-def test_retrieve_response(oracle_connector):
-    """ It should connect to the database and retrieve the response to the query """
-    with pytest.raises(InvalidQuery):
-        oracle_connector.query('')
-    res = oracle_connector.query('SELECT Name, CountryCode, Population FROM City LIMIT 2;')
-    assert isinstance(res, list)
-    assert isinstance(res[0], dict)
-    assert len(res[0]) == 3
-
-
-def test_get_df(oracle_connector, mocker):
-    """ It should call the sql extractor """
-    mocker.patch('pandas.read_sql').return_value = pd.DataFrame({'a1': ['a', 'b'], 'b1': [1, 2]},
-                                                                index=['ai', 'bi'])
-    mocker.patch('pandas.DataFrame.merge').return_value = pd.DataFrame()
-    mocker.patch('pandas.DataFrame.drop').return_value = pd.DataFrame()
-
-    data_sources_spec = [
-        {
-            'domain': 'Oracle test',
-            'type': 'external_database',
-            'name': 'Some Oracle provider',
-            'table': 'City'
-        }
-    ]
-
-    df = oracle_connector.get_df(data_sources_spec[0])
-    assert df.empty
-
-
 def test_get_df_db(oracle_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
@@ -110,13 +59,3 @@ def test_get_df_db(oracle_connector):
     assert len(df.columns) == len(expected_columns)
 
     assert len(df[df['Population_City'] > 5000000]) == 24
-
-
-def test_clean_response():
-    """ It should replace None by np.nan and decode bytes data """
-    response = [{'name': 'fway', 'age': 13}, {'name': b'zbruh', 'age': None}]
-    res = OracleConnector.clean_response(response)
-
-    assert len(res) == 2
-    assert res[1]['name'] == 'zbruh'
-    assert np.isnan(res[1]['age'])

@@ -1,44 +1,42 @@
-import pandas as pd
 import cx_Oracle
+import pandas as pd
+# from pydantic import DSN
 
-from toucan_connectors.abstract_connector import AbstractConnector
+
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
-class OracleConnector(AbstractConnector, type='oracle'):
-    """ A back-end connector to retrieve data from a Oracle database """
+class OracleDataSource(ToucanDataSource):
+    query: str
 
-    def __init__(self, *, host, user=None, password=None,
-                 db=None, port=None, mode=None, encoding=None):
-        if host is None:
-            raise MissingHostParameter('You need to give a hostname and a host'
-                                       ' in order to connect')
-        self.params = {
-            'user': user,
-            'password': password,
-            'dsn': f'{host}:{port}/{db}',
-            'mode': mode,
-            'encoding': encoding
+
+class OracleConnector(ToucanConnector):
+    type = 'oracle'
+    data_source_model: OracleDataSource
+
+    #TODO dsn: DSN = None
+    user: str = None
+    password: str = None
+    host: str
+    port: str
+    db: str
+    encoding: str = None
+
+    @property
+    def connection_params(self):
+        con_params = {
+            'user': self.user,
+            'password': self.password,
+            'dsn': f'{self.host}:{self.port}/{self.db}',
+            'encoding': self.encoding
         }
-        self.connection = None
-        self.cursor = None
+        return {k: v for k, v in con_params.items() if v is not None}
 
-    def connect(self):
-        self.connection = cx_Oracle.connect(**self.params)
-        self.cursor = self.connection.cursor()
+    def get_df(self, data_source: OracleDataSource) -> pd.DataFrame:
+        connection = cx_Oracle.connect(**self.connection_params)
 
-    def disconnect(self):
-        self.connection.close()
+        df = pd.read_sql(data_source.query, con=connection)
 
-    def _get_df(self, config):
-        """
-        Transform a table into a DataFrame and recursively merge tables
-        with a foreign key.
-        Returns: DataFrames from config['table'].
+        connection.close()
 
-        """
-        query = config['query']
-        return pd.read_sql(query, con=self.connection)
-
-
-class MissingHostParameter(Exception):
-    """ raised when neither host nor hostname is passed as an argument """
+        return df
