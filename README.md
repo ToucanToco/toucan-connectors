@@ -74,7 +74,6 @@ PYTHONPATH=. python doc/generate.py MyTypeConnector > doc/mytypeconnector.md
 Add the main requirements to the `setup.py` in the `extras_require` dictionary:
 ```ini
 extras_require = {
-    'mongo': ['pymongo>=3.6.1'],
     ...
     'mytype': ['my_dependency_pkg1==x.x.x', 'my_dependency_pkg2>=x.x.x']
 }
