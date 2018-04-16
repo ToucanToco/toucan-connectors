@@ -14,11 +14,18 @@ class Dataset(str, Enum):
 
 
 class MicroStrategyDataSource(ToucanDataSource):
+    """
+    Specify whether you want to use the `cube` or `reports` endpoints and a microstrategy doc id.
+    """
     id: str
     dataset: Dataset
 
 
 class MicroStrategyConnector(ToucanConnector):
+    """
+    Import data from MicroStrategy using the [JSON Data API](http://bit.ly/2HCzf04) for cubes and
+    reports.
+    """
     type = 'MicroStrategy'
     data_source_model: MicroStrategyDataSource
 
