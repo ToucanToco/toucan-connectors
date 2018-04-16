@@ -1,7 +1,6 @@
 import cx_Oracle
 import pandas as pd
-# from pydantic import DSN
-
+from pydantic import DSN
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -14,7 +13,7 @@ class OracleConnector(ToucanConnector):
     type = 'oracle'
     data_source_model: OracleDataSource
 
-    #TODO dsn: DSN = None
+    dsn: DSN = None
     user: str = None
     password: str = None
     host: str
