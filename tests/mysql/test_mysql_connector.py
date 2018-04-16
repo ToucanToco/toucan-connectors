@@ -21,7 +21,7 @@ def mysql_server(service_container):
     return service_container('mysql', check, pymysql.Error)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mysql_connector(mysql_server):
     return MySQLConnector(name='mycon', host='localhost', db='mysql_db', port=mysql_server['port'],
                           user='ubuntu', password='ilovetoucan')
