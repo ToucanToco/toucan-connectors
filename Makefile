@@ -1,6 +1,6 @@
 test:
 	flake8 toucan_connectors tests
-	pytest tests
+	PYTHONPATH=. pytest tests
 
 clean:
 	find . -name "*~" -delete -or -name ".*~" -delete

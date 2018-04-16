@@ -9,10 +9,10 @@ dependencies:
     - sudo apt-get update
     - sudo apt-get install freetds-dev
     - docker-compose -f tests/docker-compose.yml pull
+    - pip install -U setuptools
 
 test:
   override:
-    - pip install -U setuptools
     - pip install -r requirements-testing.txt
     - pip install .[all]
     - make test
