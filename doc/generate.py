@@ -14,10 +14,11 @@ def custom_str(field):
     whitelist = ('type', 'required', 'default')
     m = {
         'type': lambda x: f'{x}',
-        'required': lambda x: 'required' if x else '',
+        'required': lambda x: 'required' if x else None,
         'default': lambda x: f'default to {x}'
     }
-    return f'`{field.name}`: ' + ', '.join(m[k](v) for k, v in field.info.items() if k in whitelist)
+    infos = [m[k](v) for k, v in field.info.items() if k in whitelist]
+    return f'`{field.name}`: ' + ', '.join(x for x in infos if x is not None)
 
 
 def generate(klass):
