@@ -9,7 +9,7 @@ Import data from Snowflake data warehouse.
 * `user`: str, required
 * `password`: str, required
 * `account`: str, required
-* `ocsp_response_cache_filename`: Path, default to None
+* `ocsp_response_cache_filename`: str, path to the location used to strore [ocsp cache] (https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses)
 
 
 ## Data source configuration
@@ -17,5 +17,5 @@ Import data from Snowflake data warehouse.
 * `domain`: str, required
 * `name`: str, required
 * `query`: str, required
-* `database`: str, default to None
-* `warehouse`: str, default to None
+* `database`: str
+* `warehouse`: str
