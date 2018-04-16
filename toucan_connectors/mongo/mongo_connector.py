@@ -8,12 +8,14 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class MongoDataSource(ToucanDataSource):
+    """Supports simple, multiples and aggregation queries as desribed in
+     [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
     collection: str
     query: Union[str, dict, list]
 
 
 class MongoConnector(ToucanConnector):
-    """ A back-end connector to retrieve data from a MongoDB database """
+    """ Retreive data from a [MongoDB](https://www.mongodb.com/) database."""
     type = 'MongoDB'
     data_source_model: MongoDataSource
 

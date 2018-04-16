@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/ToucanToco/toucan-connectors/branch/master/graph/badge.svg)](https://codecov.io/gh/ToucanToco/toucan-connectors)
 
 # Toucan Connectors
-All connectors available
+[Toucan Toco](https://toucantoco.com/fr/) data connectors.
 
 ## Adding a connector
 In order to work you need `Python 3.6` and `pip install -U setuptools`.
@@ -24,21 +24,26 @@ start the docker and shut it down for you!
 Create a new folder `mytype` in `toucan_connectors` for your new connector and
 create your classes
 ```python
-class MyDataSource(ToucanDataSource):
+import pandas as pd
+
+from toucan_connectors import ToucanDataSource, ToucanConnector
+
+
+class MyTypeDataSource(ToucanDataSource):
     """Model of my datasource"""
     query: str
     
 
-class MyConnector(ToucanConnector):
+class MyTypeConnector(ToucanConnector):
     """Model of my connector"""
     type = 'MyType'
-    data_source_model: MyDataSource
+    data_source_model: MyTypeDataSource
 
     host: str
     port: int
     database: str
     
-    def get_df(self):
+    def get_df(self, data_source: MyTypeDataSource) -> pd.DataFrame:
         """how to retrieve a dataframe"""
 ```
 
@@ -46,6 +51,12 @@ Please add your connector in `toucan_connectors/__init__.py` :
 ```python
 with suppress(ImportError):
     from .mytype.my_connector import MyConnector
+```
+
+You can now generate and edit the documentation page for your connector:
+
+```shell
+PYTHONPATH=. python doc/generate.py MyTypeConnector > doc/mytypeconnector.md
 ```
 
 #### Step 3
