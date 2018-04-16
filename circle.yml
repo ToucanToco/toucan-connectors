@@ -13,7 +13,8 @@ dependencies:
 test:
   override:
     - pip install -U setuptools
-    - pip install .[test]
+    - pip install -r requirements-testing.txt
+    - pip install .[all]
     - make test
   post:
     - pip install codecov && codecov --token=3e56598d-bfe8-4741-a973-f4b70bd2c280
