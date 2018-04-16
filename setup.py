@@ -4,6 +4,7 @@ extras_require = {
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
     'mysql': ['PyMySQL>=0.8.0'],
+    'oracle': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'snowflake': ['snowflake-connector-python'],
     'microstrategy': ['requests']
