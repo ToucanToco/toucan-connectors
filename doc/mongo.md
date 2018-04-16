@@ -1,6 +1,6 @@
 # MongoDB connector
 
-Retreive data from a [MongoDB](https://www.mongodb.com/) database.
+Retrieve data from a [MongoDB](https://www.mongodb.com/) database.
 
 ## Connector configuration
 
@@ -9,14 +9,14 @@ Retreive data from a [MongoDB](https://www.mongodb.com/) database.
 * `host`: str, required
 * `port`: int, required
 * `database`: str, required
-* `username`: str, default to None, 
-* `password`: str, default to None, 
+* `username`: str, default to None
+* `password`: str, default to None
 
 
 ## Data source configuration
 
 Supports simple, multiples and aggregation queries as desribed in
-     [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)
+[our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)
 
 * `domain`: str, required
 * `name`: str, required

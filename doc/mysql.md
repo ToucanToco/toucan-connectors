@@ -12,7 +12,7 @@ Import data from MySQL database.
 * `password`: str 
 * `port`: int 
 * `charset`: str, default to utf8mb4
-* `connect_timeout`: int 
+* `connect_timeout`: int
 
 
 ## Data source configuration

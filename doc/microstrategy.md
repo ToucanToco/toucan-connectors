@@ -1,7 +1,7 @@
 # MicroStrategy connector
 
 Import data from MicroStrategy using the [JSON Data API](http://bit.ly/2HCzf04) for cubes and
-    reports.
+reports.
 
 ## Connector configuration
 

@@ -1,4 +1,4 @@
-# Script to gene rate a connector documentation.
+# Script to generate a connector documentation.
 import sys
 from contextlib import suppress
 
