@@ -17,8 +17,8 @@ You can then install:
 You should be able to run basic tests `pytest tests/test_connector.py`
 
 ## Testing a connector
-If you want to run the tests for another connector, you can install the extra dependencies
-(e.g to test MySQL just type `pip install -e ".[mysql]"`)
+If you want to run the tests for another connector, you can install the extra dependencies  
+(e.g to test MySQL just type `pip install -e ".[mysql]"`)  
 Now `pytest tests/mysql` should run all the mysql tests properly.
 
 If you want to run the tests for all the connectors you can add all the dependencies by typing  
