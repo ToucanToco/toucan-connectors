@@ -43,7 +43,7 @@ class MyTypeConnector(ToucanConnector):
     port: int
     database: str
     
-    def get_df(self, data_source:MyTypeDataSource) -> pd.DataFrame:
+    def get_df(self, data_source: MyTypeDataSource) -> pd.DataFrame:
         """how to retrieve a dataframe"""
 ```
 
