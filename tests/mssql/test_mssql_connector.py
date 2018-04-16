@@ -32,13 +32,13 @@ def mssql_server(service_container):
     return service_container('mssql', check_and_feed, pymssql.Error)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mssql_connector(mssql_server):
     return MSSQLConnector(name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!',
                           port=mssql_server['port'])
 
 
-@pytest.fixture()
+@pytest.fixture
 def mssql_datasource():
     def f(query):
         return MSSQLDataSource(name='mycon', domain='mydomain', query=query)

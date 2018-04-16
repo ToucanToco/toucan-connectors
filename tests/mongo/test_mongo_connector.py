@@ -23,13 +23,13 @@ def mongo_server(service_container):
     return service_container('mongo', check_and_feed, pymongo.errors.PyMongoError)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mongo_connector(mongo_server):
     return MongoConnector(name='mycon', host='localhost', database='toucan',
                           port=mongo_server['port'], username='ubuntu', password='ilovetoucan')
 
 
-@pytest.fixture()
+@pytest.fixture
 def mongo_datasource():
     def f(collection, query):
         return MongoDataSource(name='mycon', domain='mydomain', collection=collection, query=query)

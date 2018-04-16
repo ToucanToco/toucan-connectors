@@ -19,7 +19,7 @@ def postgres_server(service_container):
     return service_container('postgres', check, psycopg2.Error)
 
 
-@pytest.fixture()
+@pytest.fixture
 def postgres_connector(postgres_server):
     return PostgresConnector(name='test', host='localhost', db='postgres_db', user='ubuntu',
                              password='ilovetoucan', port=postgres_server['port'])
