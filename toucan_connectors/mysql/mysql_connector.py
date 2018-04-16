@@ -9,6 +9,9 @@ from toucan_connectors.toucan_connector import ToucanDataSource, ToucanConnector
 
 
 class MySQLDataSource(ToucanDataSource):
+    """
+    Either `query` or `table` are required, both at the same time are not supported.
+    """
     query: constr(min_length=1) = None
     table: constr(min_length=1) = None
 
@@ -23,6 +26,9 @@ class MySQLDataSource(ToucanDataSource):
 
 
 class MySQLConnector(ToucanConnector):
+    """
+    Import data from MySQL database.
+    """
     type = 'MySQL'
     data_source_model: MySQLDataSource
 
