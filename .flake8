@@ -1,6 +1,0 @@
-[flake8]
-exclude =
-    __pycache__,
-    __init__.py,
-    env*
-max_line_length = 100

@@ -8,12 +8,23 @@
 # Toucan Connectors
 [Toucan Toco](https://toucantoco.com/fr/) data connectors.
 
-## Adding a connector
-In order to work you need `Python 3.6` and `pip install -U setuptools`.
+## Setup
+In order to work you need `Python 3.6` (consider running `pip install -U pip setuptools` if needed)
 You can then install:
-- the main requirements by typing `pip install .`
-- the test requirements by typing `pip install .[test]`
+- the main dependencies by typing `pip install -e .`
+- the test requirements by typing `pip install -r requirements-testing.txt`
 
+You should be able to run basic tests `pytest tests/test_connector.py`
+
+## Testing a connector
+If you want to run the tests for another connector, you can install the extra dependencies  
+(e.g to test MySQL just type `pip install -e ".[mysql]"`)  
+Now `pytest tests/mysql` should run all the mysql tests properly.
+
+If you want to run the tests for all the connectors you can add all the dependencies by typing  
+`pip install -e ".[all]"` and `make test`
+
+## Adding a connector
 #### Step 1
 Create a new folder in `tests` for the new connector. You can start writing your tests
 before implementing it. Please do not hesitate to add a docker image in
@@ -60,16 +71,11 @@ PYTHONPATH=. python doc/generate.py MyTypeConnector > doc/mytypeconnector.md
 ```
 
 #### Step 3
-Add the requirements to the `setup.cfg` in the `[options.extras_require]` section:
+Add the main requirements to the `setup.py` in the `extras_require` dictionary:
 ```ini
-new_connector =
-    dependency_package1=x.x.x
-    dependency_package2==x.x.x
-    
-test =
+extras_require = {
     ...
-    ...
-    dependency_package1=x.x.x
-    dependency_package2=x.x.x
+    'mytype': ['my_dependency_pkg1==x.x.x', 'my_dependency_pkg2>=x.x.x']
+}
 ```
-and don't forget to upgrade the version !
+If you need to add testing dependencies, add them to the `requirements-testing.txt` file.
