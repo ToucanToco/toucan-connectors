@@ -1,5 +1,7 @@
 # Snowflake connector
 
+Import data from Snowflake data warehouse.
+
 ## Connector configuration
 
 * `type`: `"Snowflake"`
@@ -14,6 +16,6 @@
 
 * `domain`: str, required
 * `name`: str, required
-* `query`: ConstrainedStrValue, required
+* `query`: str, required
 * `database`: str, default to None
 * `warehouse`: str, default to None
