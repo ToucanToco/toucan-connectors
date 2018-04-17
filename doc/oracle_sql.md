@@ -6,7 +6,7 @@ Import data from Oracle SQL database.
 
 * `type`: `"oracle_sql"`
 * `name`: str, required
-* `dsn`: DSN, required
+* `dsn`: str following the DSN pattern, cf. https://en.wikipedia.org/wiki/Data_source_name, required
 * `user`: str, default to None
 * `password`: str, default to None
 * `encoding`: str, default to None
