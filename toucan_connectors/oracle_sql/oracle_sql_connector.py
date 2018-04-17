@@ -23,7 +23,6 @@ class OracleSQLConnector(ToucanConnector):
         con_params = {
             'user': self.user,
             'password': self.password,
-            # 'dsn': f'{self.host}:{self.port}/{self.db}',
             'dsn': self.dsn,
             'encoding': self.encoding
         }
