@@ -5,6 +5,12 @@ from toucan_connectors.oracle_sql.oracle_sql_connector import (
     OracleSQLConnector, OracleSQLDataSource
 )
 
+missing_oracle_lib = False
+try:
+    cx_Oracle.connect()
+except cx_Oracle.DatabaseError as e:
+    missing_oracle_lib = 'DPI-1047' in str(e)
+
 
 @pytest.fixture(scope='module')
 def oracle_server(service_container):
@@ -25,6 +31,7 @@ def oracle_connector(oracle_server):
                               dsn=f'localhost:{oracle_server["port"]}/xe')
 
 
+@pytest.mark.skipif(missing_oracle_lib, reason='requires oracle client library')
 def test_get_df_db(oracle_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
