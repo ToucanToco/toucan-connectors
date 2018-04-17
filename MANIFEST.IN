@@ -1,0 +1,3 @@
+include doc/*.md
+include README.md
+include lib/*
