@@ -1,5 +1,3 @@
-import collections
-
 import cx_Oracle
 import pytest
 
