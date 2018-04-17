@@ -9,6 +9,8 @@ with suppress(ImportError):
 with suppress(ImportError):
     from .mysql.mysql_connector import MySQLConnector
 with suppress(ImportError):
+    from .oracle_sql.oracle_sql_connector import OracleSQLConnector
+with suppress(ImportError):
     from .postgres.postgresql_connector import PostgresConnector
 with suppress(ImportError):
     from .snowflake.snowflake_connector import SnowflakeConnector

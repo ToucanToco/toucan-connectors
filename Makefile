@@ -6,7 +6,7 @@ clean:
 	find . -name "*~" -delete -or -name ".*~" -delete
 	find . -name '*.pyc' -delete
 	find . -name __pycache__ -delete
-	rm -r .pytest_cache
+	rm -rf .pytest_cache
 	rm -rf build dist toucan_connectors.egg-info
 
 docker-clean:

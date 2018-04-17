@@ -1,0 +1,19 @@
+# oracle connector
+
+Import data from Oracle SQL database.
+
+## Connector configuration
+
+* `type`: `"oracle_sql"`
+* `name`: str, required
+* `dsn`: DSN, required
+* `user`: str, default to None
+* `password`: str, default to None
+* `encoding`: str, default to None
+
+
+## Data source configuration
+
+* `domain`: str, required
+* `name`: str, required
+* `query`: str, required

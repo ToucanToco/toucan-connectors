@@ -1,1 +1,1 @@
-from .oracle_connector import OracleConnector
+from .oracle_sql_connector import OracleSQLConnector
