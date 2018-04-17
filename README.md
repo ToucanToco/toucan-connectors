@@ -31,6 +31,8 @@ before implementing it. Please do not hesitate to add a docker image in
 the `docker-compose.yml`. You can then use the fixture `service_container` to automatically
 start the docker and shut it down for you!
 
+:warning: _If you don't have the docker images in local please run pytest with `--pull` to retrieve them_
+
 #### Step 2
 Create a new folder `mytype` in `toucan_connectors` for your new connector and
 create your classes
