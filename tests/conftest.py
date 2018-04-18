@@ -10,13 +10,13 @@ from slugify import slugify
 
 
 def pytest_addoption(parser):
-    parser.addoption('--no-pull', action='store_true', default=False,
-                     help='Do not pull docker images')
+    parser.addoption('--pull', action='store_true', default=False,
+                     help='Pull docker images')
 
 
 @pytest.fixture(scope='session')
 def docker_pull(request):
-    return not request.config.getoption('--no-pull')
+    return request.config.getoption('--pull')
 
 
 @pytest.fixture(scope='session')
@@ -35,9 +35,9 @@ def unused_port():
     return f
 
 
-def wait_for_container(checker_callable, host_port, image, skip_exception=None):
+def wait_for_container(checker_callable, host_port, image, skip_exception=None, timeout=60):
     skip_exception = skip_exception or Exception
-    for i in range(60):
+    for i in range(timeout):
         try:
             checker_callable(host_port)
             break
@@ -51,7 +51,7 @@ def wait_for_container(checker_callable, host_port, image, skip_exception=None):
 @pytest.fixture(scope='module')
 def container_starter(request, docker, docker_pull):
     def f(image, internal_port, host_port, env=None, volumes=None, command=None,
-          checker_callable=None, skip_exception=None):
+          checker_callable=None, skip_exception=None, timeout=None):
 
         if docker_pull:
             print(f'Pulling {image} image')
@@ -91,7 +91,7 @@ def container_starter(request, docker, docker_pull):
         container['port'] = host_port
 
         if checker_callable is not None:
-            wait_for_container(checker_callable, host_port, image, skip_exception)
+            wait_for_container(checker_callable, host_port, image, skip_exception, timeout)
         return container
 
     return f
@@ -99,7 +99,7 @@ def container_starter(request, docker, docker_pull):
 
 @pytest.fixture(scope='module')
 def service_container(unused_port, container_starter):
-    def f(service_name, checker_callable=None, skip_exception=None):
+    def f(service_name, checker_callable=None, skip_exception=None, timeout=60):
         with open(f'{path.dirname(__file__)}/docker-compose.yml') as docker_comppse_yml:
             docker_conf = yaml.load(docker_comppse_yml)
         service_conf = docker_conf[service_name]
@@ -113,8 +113,9 @@ def service_container(unused_port, container_starter):
             'env': service_conf.get('environment'),
             'volumes': volumes,
             'command': service_conf.get('command'),
+            'timeout': timeout,
             'checker_callable': checker_callable,
-            'skip_exception': skip_exception
+            'skip_exception': skip_exception,
         }
 
         return container_starter(**params)

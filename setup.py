@@ -4,6 +4,7 @@ extras_require = {
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
     'mysql': ['PyMySQL>=0.8.0'],
+    'oracle': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'snowflake': ['snowflake-connector-python'],
     'microstrategy': ['requests']
@@ -24,4 +25,5 @@ setup(name='toucan_connectors',
       license='BSD',
       packages=find_packages(),
       install_requires=install_requires,
-      extras_require=extras_require)
+      extras_require=extras_require,
+      include_package_data=True)
