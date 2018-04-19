@@ -22,7 +22,7 @@ def oracle_server(service_container):
         conn.close()
 
     # timeout is set to 5 min as the container takes a very long time to start
-    return service_container('oracle_sql', check, cx_Oracle.Error, timeout=300)
+    return service_container('oraclesql', check, cx_Oracle.Error, timeout=300)
 
 
 @pytest.fixture
