@@ -13,6 +13,8 @@ with suppress(ImportError):
 with suppress(ImportError):
     from .postgres.postgresql_connector import PostgresConnector
 with suppress(ImportError):
+    from .sap_hana.sap_hana_connector import SapHanaConnector
+with suppress(ImportError):
     from .snowflake.snowflake_connector import SnowflakeConnector
 
 from .toucan_connector import ToucanDataSource, ToucanConnector

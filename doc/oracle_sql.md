@@ -1,4 +1,4 @@
-# oracle connector
+# Oracle SQL connector
 
 Import data from Oracle SQL database.
 
