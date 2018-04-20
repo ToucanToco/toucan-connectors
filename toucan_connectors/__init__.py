@@ -1,6 +1,8 @@
 from contextlib import suppress
 
 with suppress(ImportError):
+    from .azure_mssql.azure_mssql_connector import AzureMSSQLConnector
+with suppress(ImportError):
     from .google_cloud_mysql.google_cloud_mysql_connector import GoogleCloudMySQLConnector
 with suppress(ImportError):
     from .microstrategy.microstrategy_connector import MicroStrategyConnector

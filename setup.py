@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 
 extras_require = {
+    'azure_mssql': ['pymssql>=2.1.3'],
     'google_cloud_mysql': ['pymssql>=2.1.3'],
     'microstrategy': ['requests'],
     'mongo': ['pymongo>=3.6.1'],
@@ -19,7 +20,7 @@ install_requires = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.0.9',
+      version='0.0.10',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
