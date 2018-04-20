@@ -19,13 +19,20 @@ install_requires = [
     'pydantic'
 ]
 
+classifiers = [
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python :: 3.6'
+]
+
 setup(name='toucan_connectors',
-      version='0.0.11',
+      version='0.0.12',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
       url='https://github.com/ToucanToco/toucan-connectors',
       license='BSD',
+      classifiers=classifiers,
       packages=find_packages(),
       install_requires=install_requires,
       extras_require=extras_require,
