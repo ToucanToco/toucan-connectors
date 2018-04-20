@@ -1,6 +1,8 @@
 from contextlib import suppress
 
 with suppress(ImportError):
+    from .google_cloud_mysql.google_cloud_mysql_connector import GoogleCloudMySQLConnector
+with suppress(ImportError):
     from .microstrategy.microstrategy_connector import MicroStrategyConnector
 with suppress(ImportError):
     from .mongo.mongo_connector import MongoConnector
