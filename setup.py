@@ -1,13 +1,15 @@
 from setuptools import setup, find_packages
 
 extras_require = {
+    'google_cloud_mysql': ['pymssql>=2.1.3'],
+    'microstrategy': ['requests'],
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
     'mysql': ['PyMySQL>=0.8.0'],
-    'oracle': ['cx_Oracle>=6.2.1'],
+    'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
-    'snowflake': ['snowflake-connector-python'],
-    'microstrategy': ['requests']
+    'sap_hana': ['pyhdb>=0.3.4'],
+    'snowflake': ['snowflake-connector-python']
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
