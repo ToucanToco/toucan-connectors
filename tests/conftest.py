@@ -66,7 +66,7 @@ def container_starter(request, docker, docker_pull):
             volumes = [vol.split(':')[1] for vol in volumes]
 
         container_name = '-'.join(['toucan', slugify(image), 'server'])
-        print(f'Creating {container_name}')
+        print(f'Creating {container_name} on port {host_port}')
         container = docker.create_container(
             image=image,
             name=container_name,
