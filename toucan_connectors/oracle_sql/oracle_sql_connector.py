@@ -31,7 +31,8 @@ class OracleSQLConnector(ToucanConnector):
     def get_df(self, data_source: OracleSQLDataSource) -> pd.DataFrame:
         connection = cx_Oracle.connect(**self.connection_params)
 
-        df = pd.read_sql(data_source.query, con=connection)
+        query = data_source.query[:-1] if data_source.query.endswith(';') else data_source.query
+        df = pd.read_sql(query, con=connection)
 
         connection.close()
 
