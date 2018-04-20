@@ -20,7 +20,7 @@ install_requires = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.0.10',
+      version='0.0.11',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
