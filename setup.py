@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 extras_require = {
     'azure_mssql': ['pymssql>=2.1.3'],
-    'google_cloud_mysql': ['pymssql>=2.1.3'],
+    'google_cloud_mysql': ['PyMySQL>=0.8.0'],
     'microstrategy': ['requests'],
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
