@@ -39,7 +39,7 @@ def test_get_df_db(oracle_connector):
             'domain': 'Oracle test',
             'type': 'external_database',
             'name': 'my_oracle_sql_con',
-            'query': 'SELECT * FROM City'
+            'query': 'SELECT * FROM City;'
         }
     ]
 
