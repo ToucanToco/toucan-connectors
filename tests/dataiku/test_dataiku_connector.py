@@ -5,21 +5,21 @@ from toucan_connectors.dataiku.dataiku_connector import DataikuConnector, Dataik
 
 dc = DataikuConnector(
     name='test',
-    host='http://yandex1.dataiku.com:9200/',
+    host='http://domain.dataiku.com:9876/',
     apiKey='',
     project='TOUCANTOCO'
 )
 
 ds = DataikuDataSource(
     name='test',
-    domain='Leaderboard',
-    dataset='Leaderboard'
+    domain='my_domain',
+    dataset='my_dataset'
 )
 
 
 @responses.activate
 def test_microstrategy():
-    base_url = 'http://yandex1.dataiku.com:9200//dip/publicapi/'
+    base_url = 'http://domain.dataiku.com:9876//dip/publicapi/'
     fmt = '?format=tsv-excel-header'
     responses.add(responses.GET,
                   f'{base_url}projects/{dc.project}/datasets/{ds.dataset}/data/{fmt}',
