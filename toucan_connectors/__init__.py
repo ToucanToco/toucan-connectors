@@ -20,5 +20,7 @@ with suppress(ImportError):
     from .sap_hana.sap_hana_connector import SapHanaConnector
 with suppress(ImportError):
     from .snowflake.snowflake_connector import SnowflakeConnector
+with suppress(ImportError):
+    from .dataiku.dataiku_connector import DataikuConnector
 
 from .toucan_connector import ToucanDataSource, ToucanConnector
