@@ -3,7 +3,7 @@ from io import StringIO
 import dataikuapi
 import pandas as pd
 
-from toucan_connectors import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class DataikuDataSource(ToucanDataSource):

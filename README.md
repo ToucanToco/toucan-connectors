@@ -43,7 +43,8 @@ this [repl](https://repl.it/@piotch/ToucanConnectorBoilerplate).
 ```python
 import pandas as pd
 
-from toucan_connectors import ToucanDataSource, ToucanConnector
+# Careful here you need to import ToucanConnector from the deep path, not the __init__ path.
+from toucan_connectors.toucan_connector import ToucanDataSource, ToucanConnector
 
 
 class MyTypeDataSource(ToucanDataSource):
