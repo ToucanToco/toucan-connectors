@@ -3,7 +3,6 @@ import responses
 
 from toucan_connectors.dataiku.dataiku_connector import DataikuConnector, DataikuDataSource
 
-
 dc = DataikuConnector(
     name='test',
     host='http://yandex1.dataiku.com:9200/',
@@ -24,7 +23,7 @@ def test_microstrategy():
     fmt = '?format=tsv-excel-header'
     responses.add(responses.GET,
                   f'{base_url}projects/{dc.project}/datasets/{ds.dataset}/data/{fmt}',
-                   body='a\tb\n1\t2', status=200)
+                  body='a\tb\n1\t2', status=200)
 
     df = dc.get_df(ds)
     assert df.shape == (1, 2)
