@@ -22,5 +22,7 @@ with suppress(ImportError):
     from .snowflake.snowflake_connector import SnowflakeConnector
 with suppress(ImportError):
     from .dataiku.dataiku_connector import DataikuConnector
+with suppress(ImportError):
+    from .google_spreadsheet.google_spreadsheet_connector import GoogleSpreadsheetConnector
 
 from .toucan_connector import ToucanDataSource, ToucanConnector

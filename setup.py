@@ -11,7 +11,8 @@ extras_require = {
     'postgres': ['psycopg2>=2.7.4'],
     'sap_hana': ['pyhdb>=0.3.4'],
     'snowflake': ['snowflake-connector-python'],
-    'dataiku': ['dataiku-api-client']
+    'dataiku': ['dataiku-api-client'],
+    'google_spreadsheet': ['gspread', 'google-api-python-client'],
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
