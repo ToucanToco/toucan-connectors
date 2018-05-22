@@ -12,7 +12,7 @@ extras_require = {
     'sap_hana': ['pyhdb>=0.3.4'],
     'snowflake': ['snowflake-connector-python'],
     'dataiku': ['dataiku-api-client'],
-    'google_spreadsheet': ['gspread', 'google-api-python-client'],
+    'google_spreadsheet': ['gspread>=3', 'google-api-python-client>=1.6.7'],
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
@@ -28,7 +28,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.0.13',
+      version='0.0.14',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
