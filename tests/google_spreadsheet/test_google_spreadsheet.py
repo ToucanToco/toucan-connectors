@@ -1,4 +1,4 @@
-from toucan_connectors.google_spreadsheet import (
+from toucan_connectors.google_spreadsheet.google_spreadsheet_connector import (
     GoogleSpreadsheetDataSource, GoogleSpreadsheetConnector
 )
 
