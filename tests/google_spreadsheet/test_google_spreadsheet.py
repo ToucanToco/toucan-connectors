@@ -22,7 +22,8 @@ c = GoogleSpreadsheetConnector(
 s = GoogleSpreadsheetDataSource(
     name='test_name',
     domain='test_domain',
-    spreadsheet_id='test'
+    spreadsheet_id='test',
+    load=False,
 )
 
 
