@@ -44,22 +44,52 @@ def generate(klass):
     * `id`: str, required
     * `dataset`: Dataset, required
     """
-    doc = [f'# {klass.type} connector', doc_or_empty(klass), '## Connector configuration']
+    doc = [f'# {klass.type} connector', doc_or_empty(klass), '## Data provider configuration']
 
     li = [f'* `type`: `"{klass.type}"`']
+    schema_cson = {
+        'type': '\'' + klass.type + '\''
+    }
+
     for name, obj in klass.__fields__.items():
         if name == 'type':
             continue
         li.append(f'* {custom_str(obj)}')
+        schema_cson[name] = '<' + name + '>'
+        if obj.info['type'] == 'str':
+            schema_cson[name] =  '\'' + schema_cson[name]  + '\''
+    doc.append('\n'.join(li))
+
+    li = []
+    li.append('```coffee')
+    li.append('DATA_PROVIDERS= [')
+    for key, val in schema_cson.items():
+        li.append(f'  {key}: {val}')
+    li.append(']')
+    li.append('```')
     doc.append('\n'.join(li))
 
     doc.extend(['\n## Data source configuration', doc_or_empty(klass.data_source_model)])
     li = []
+    schema_cson = {
+        'type': '\'' + klass.type + '\''
+    }
     for name, obj in klass.data_source_model.__fields__.items():
         if name == 'type':
             continue
+        schema_cson[name] = '\'<' + name + '>\''
         li.append(f'* {custom_str(obj)}')
     doc.append('\n'.join(li))
+
+    li = []
+    li.append('```coffee')
+    li.append('DATA_SOURCES= [')
+    for key, val in schema_cson.items():
+        li.append(f'  {key}: {val}')
+    li.append(']')
+    li.append('```')
+    doc.append('\n'.join(li))
+
 
     return '\n\n'.join([l for l in doc if l is not None])
 
