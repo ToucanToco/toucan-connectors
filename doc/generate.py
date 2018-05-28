@@ -103,15 +103,27 @@ def generate(klass):
     return '\n\n'.join([l for l in doc if l is not None])
 
 
+def generate_summmary(connectors):
+    doc = ['#Toucan Toco Connectors']
+    for key, value in connectors.items():
+        doc.append(f'* [{key}]({value}.md)')
+    doc = '\n\n'.join([l for l in doc if l is not None])
+    file_name = 'doc/connectors.md'
+    with open(file_name, 'w') as file:
+        file.write(doc)
+
+
 def generate_all_doc():
     path = 'toucan_connectors/'
     connectors = [
         o for o in os.listdir(path)
         if os.path.isdir(os.path.join(path, o))
     ]
+    connectors_ok = {}
     for connector in connectors:
         try:
-            k = getattr(toucan_connectors, snake_to_camel(connector) + 'Connector')
+            c_name = snake_to_camel(connector) + 'Connector'
+            k = getattr(toucan_connectors, c_name)
         except AttributeError as e:
             print(e)
             continue
@@ -119,15 +131,8 @@ def generate_all_doc():
         file_name = os.path.join('doc/', connector + '.md')
         with open(file_name, 'w') as file:
             file.write(doc)
-
-
-def generate_one_doc(connector):
-    k = getattr(toucan_connectors, snake_to_camel(connector) + 'Connector')
-    doc = generate(k)
-    file_name = connector + '.md'
-    with open(file_name, 'w') as file:
-        file.write(doc)
-
+        connectors_ok[c_name] = connector
+    generate_summmary(connectors_ok)
 
 if __name__ == '__main__':
     if len(sys.argv)>1:
@@ -135,4 +140,5 @@ if __name__ == '__main__':
         print(generate(k))
     else:
         generate_all_doc()
+
 
