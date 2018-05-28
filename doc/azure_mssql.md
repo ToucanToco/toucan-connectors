@@ -14,13 +14,15 @@ Import data from Microsoft Azure SQL Server.
 
 ```coffee
 DATA_PROVIDERS= [
-  type: 'AzureMSSQL'
-  name: '<name>'
-  host: '<host>'
-  user: '<user>'
-  password: '<password>'
-  db: '<db>'
-  connect_timeout: <connect_timeout>
+  type:    'AzureMSSQL'
+  name:    '<name>'
+  host:    '<host>'
+  user:    '<user>'
+  password:    '<password>'
+  db:    '<db>'
+  connect_timeout:    <connect_timeout>
+,
+  ...
 ]
 ```
 
@@ -29,13 +31,17 @@ DATA_PROVIDERS= [
 
 * `domain`: str, required
 * `name`: str, required
+* `load`: bool, default to None
 * `query`: ConstrainedStrValue, required
 
 ```coffee
 DATA_SOURCES= [
-  type: 'AzureMSSQL'
-  domain: '<domain>'
-  name: '<name>'
-  query: '<query>'
+  type:    'AzureMSSQL'
+  domain:    '<domain>'
+  name:    '<name>'
+  load:    '<load>'
+  query:    '<query>'
+,
+  ...
 ]
 ```

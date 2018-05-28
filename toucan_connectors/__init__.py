@@ -5,7 +5,7 @@ with suppress(ImportError):
 with suppress(ImportError):
     from .google_cloud_mysql.google_cloud_mysql_connector import GoogleCloudMySQLConnector
 with suppress(ImportError):
-    from .microstrategy.microstrategy_connector import MicroStrategyConnector
+    from .micro_strategy.micro_strategy_connector import MicroStrategyConnector
 with suppress(ImportError):
     from .mongo.mongo_connector import MongoConnector
 with suppress(ImportError):

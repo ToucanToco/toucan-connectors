@@ -2,7 +2,7 @@
 
 Import data from Microsoft SQL Server.
 
-## Connector configuration
+## Data provider configuration
 
 * `type`: `"MSSQL"`
 * `name`: str, required
@@ -13,9 +13,37 @@ Import data from Microsoft SQL Server.
 * `port`: int, default to None
 * `connect_timeout`: int, default to None
 
+```coffee
+DATA_PROVIDERS= [
+  type:    'MSSQL'
+  name:    '<name>'
+  host:    '<host>'
+  user:    '<user>'
+  db:    '<db>'
+  password:    '<password>'
+  port:    <port>
+  connect_timeout:    <connect_timeout>
+,
+  ...
+]
+```
+
 
 ## Data source configuration
 
 * `domain`: str, required
 * `name`: str, required
-* `query`: str (not empty), required
+* `load`: bool, default to None
+* `query`: ConstrainedStrValue, required
+
+```coffee
+DATA_SOURCES= [
+  type:    'MSSQL'
+  domain:    '<domain>'
+  name:    '<name>'
+  load:    '<load>'
+  query:    '<query>'
+,
+  ...
+]
+```

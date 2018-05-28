@@ -1,9 +1,6 @@
 # Dataiku connector
 
-This is a basic connector for [Dataiku](https://www.dataiku.com/) using their 
-[DSS API](https://doc.dataiku.com/dss/2.0/api/index.html).
-
-## Connector configuration
+## Data provider configuration
 
 * `type`: `"Dataiku"`
 * `name`: str, required
@@ -11,9 +8,34 @@ This is a basic connector for [Dataiku](https://www.dataiku.com/) using their
 * `apiKey`: str, required
 * `project`: str, required
 
+```coffee
+DATA_PROVIDERS= [
+  type:    'Dataiku'
+  name:    '<name>'
+  host:    '<host>'
+  apiKey:    '<apiKey>'
+  project:    '<project>'
+,
+  ...
+]
+```
+
 
 ## Data source configuration
 
 * `domain`: str, required
 * `name`: str, required
+* `load`: bool, default to None
 * `dataset`: str, required
+
+```coffee
+DATA_SOURCES= [
+  type:    'Dataiku'
+  domain:    '<domain>'
+  name:    '<name>'
+  load:    '<load>'
+  dataset:    '<dataset>'
+,
+  ...
+]
+```

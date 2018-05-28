@@ -1,8 +1,8 @@
 # MongoDB connector
 
-Retrieve data from a [MongoDB](https://www.mongodb.com/) database.
+Retreive data from a [MongoDB](https://www.mongodb.com/) database.
 
-## Connector configuration
+## Data provider configuration
 
 * `type`: `"MongoDB"`
 * `name`: str, required
@@ -12,13 +12,41 @@ Retrieve data from a [MongoDB](https://www.mongodb.com/) database.
 * `username`: str, default to None
 * `password`: str, default to None
 
+```coffee
+DATA_PROVIDERS= [
+  type:    'MongoDB'
+  name:    '<name>'
+  host:    '<host>'
+  port:    <port>
+  database:    '<database>'
+  username:    '<username>'
+  password:    '<password>'
+,
+  ...
+]
+```
+
 
 ## Data source configuration
 
 Supports simple, multiples and aggregation queries as desribed in
-[our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)
+     [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)
 
 * `domain`: str, required
 * `name`: str, required
+* `load`: bool, default to None
 * `collection`: str, required
-* `query`: `str` (translated to a query `{domain: <value>}`), dict or list, required
+* `query`: typing.Union[str, dict, list], required
+
+```coffee
+DATA_SOURCES= [
+  type:    'MongoDB'
+  domain:    '<domain>'
+  name:    '<name>'
+  load:    '<load>'
+  collection:    '<collection>'
+  query:    '<query>'
+,
+  ...
+]
+```

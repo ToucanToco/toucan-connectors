@@ -18,7 +18,7 @@ ds = DataikuDataSource(
 
 
 @responses.activate
-def test_microstrategy():
+def test_micro_strategy():
     base_url = 'http://domain.dataiku.com:9876//dip/publicapi/'
     fmt = '?format=tsv-excel-header'
     responses.add(responses.GET,

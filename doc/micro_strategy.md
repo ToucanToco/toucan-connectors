@@ -1,9 +1,9 @@
 # MicroStrategy connector
 
 Import data from MicroStrategy using the [JSON Data API](http://bit.ly/2HCzf04) for cubes and
-reports.
+    reports.
 
-## Connector configuration
+## Data provider configuration
 
 * `type`: `"MicroStrategy"`
 * `name`: str, required
@@ -12,6 +12,19 @@ reports.
 * `password`: str, required
 * `project_id`: str, required
 
+```coffee
+DATA_PROVIDERS= [
+  type:    'MicroStrategy'
+  name:    '<name>'
+  base_url:    '<base_url>'
+  username:    '<username>'
+  password:    '<password>'
+  project_id:    '<project_id>'
+,
+  ...
+]
+```
+
 
 ## Data source configuration
 
@@ -19,5 +32,19 @@ Specify whether you want to use the `cube` or `reports` endpoints and a microstr
 
 * `domain`: str, required
 * `name`: str, required
+* `load`: bool, default to None
 * `id`: str, required
-* `dataset`: str, `cube` or `report, required
+* `dataset`: Dataset, required
+
+```coffee
+DATA_SOURCES= [
+  type:    'MicroStrategy'
+  domain:    '<domain>'
+  name:    '<name>'
+  load:    '<load>'
+  id:    '<id>'
+  dataset:    '<dataset>'
+,
+  ...
+]
+```

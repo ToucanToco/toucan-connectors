@@ -1,5 +1,7 @@
 # Script to generate a connector documentation.
 import sys
+import re
+import os
 from contextlib import suppress
 
 import toucan_connectors
@@ -21,13 +23,25 @@ def custom_str(field):
     return f'`{field.name}`: ' + ', '.join(x for x in infos if x is not None)
 
 
+def snake_to_camel(name):
+    name = ''.join(x.capitalize() or '_' for x in name.split('_'))
+    d_replace = {
+        'Mssql': 'MSSQL',
+        'Sql': 'SQL',
+        'sql': 'SQL'
+    }
+    for key, val in d_replace.items():
+        name = name.replace(key, val)
+    return name
+
+
 def generate(klass):
     """
     >>> from toucan_connectors import MicroStrategyConnector
     >>> print(generate(MicroStrategyConnector))
     # MicroStrategy connector
 
-    ## Connector configuration
+    ## Data provider configuration
 
     * `type`: "MicroStrategy"
     * `name`: str, required
@@ -50,7 +64,6 @@ def generate(klass):
     schema_cson = {
         'type': '\'' + klass.type + '\''
     }
-
     for name, obj in klass.__fields__.items():
         if name == 'type':
             continue
@@ -61,12 +74,10 @@ def generate(klass):
     doc.append('\n'.join(li))
 
     li = []
-    li.append('```coffee')
-    li.append('DATA_PROVIDERS= [')
+    li.append('```coffee\nDATA_PROVIDERS= [')
     for key, val in schema_cson.items():
-        li.append(f'  {key}: {val}')
-    li.append(']')
-    li.append('```')
+        li.append(f'  {key}:    {val}')
+    li.append(',\n  ...\n]\n```')
     doc.append('\n'.join(li))
 
     doc.extend(['\n## Data source configuration', doc_or_empty(klass.data_source_model)])
@@ -82,22 +93,46 @@ def generate(klass):
     doc.append('\n'.join(li))
 
     li = []
-    li.append('```coffee')
-    li.append('DATA_SOURCES= [')
+    li.append('```coffee\nDATA_SOURCES= [')
     for key, val in schema_cson.items():
-        li.append(f'  {key}: {val}')
-    li.append(']')
-    li.append('```')
+        li.append(f'  {key}:    {val}')
+    li.append(',\n  ...\n]\n```')
     doc.append('\n'.join(li))
 
 
     return '\n\n'.join([l for l in doc if l is not None])
 
 
+def generate_all_doc():
+    path = 'toucan_connectors/'
+    connectors = [
+        o for o in os.listdir(path)
+        if os.path.isdir(os.path.join(path, o))
+    ]
+    for connector in connectors:
+        try:
+            k = getattr(toucan_connectors, snake_to_camel(connector) + 'Connector')
+        except AttributeError as e:
+            print(e)
+            continue
+        doc = generate(k)
+        file_name = os.path.join('doc/', connector + '.md')
+        with open(file_name, 'w') as file:
+            file.write(doc)
+
+
+def generate_one_doc(connector):
+    k = getattr(toucan_connectors, snake_to_camel(connector) + 'Connector')
+    doc = generate(k)
+    file_name = connector + '.md'
+    with open(file_name, 'w') as file:
+        file.write(doc)
+
+
 if __name__ == '__main__':
-    try:
-        kname = sys.argv[1]
-    except IndexError:
-        raise ValueError('Please provide a connector module name')
-    k = getattr(toucan_connectors, kname)
-    print(generate(k))
+    if len(sys.argv)>1:
+        k = getattr(toucan_connectors, sys.argv[1])
+        print(generate(k))
+    else:
+        generate_all_doc()
+
