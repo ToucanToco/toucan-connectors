@@ -10,7 +10,7 @@ Import data from Microsoft Azure SQL Server.
 * `user`: str, required
 * `password`: str, required
 * `db`: str, required
-* `connect_timeout`: int, default to None
+* `connect_timeout`: int
 
 ```coffee
 DATA_PROVIDERS= [
@@ -31,7 +31,7 @@ DATA_PROVIDERS= [
 
 * `domain`: str, required
 * `name`: str, required
-* `query`: ConstrainedStrValue, required
+* `query`: str (not empty), required
 
 ```coffee
 DATA_SOURCES= [

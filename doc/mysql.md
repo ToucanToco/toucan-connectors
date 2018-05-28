@@ -9,10 +9,10 @@ Import data from MySQL database.
 * `host`: str, required
 * `user`: str, required
 * `db`: str, required
-* `password`: str, default to None
-* `port`: int, default to None
+* `password`: str
+* `port`: int
 * `charset`: str, default to utf8mb4
-* `connect_timeout`: int, default to None
+* `connect_timeout`: int
 
 ```coffee
 DATA_PROVIDERS= [
@@ -37,8 +37,8 @@ Either `query` or `table` are required, both at the same time are not supported.
 
 * `domain`: str, required
 * `name`: str, required
-* `query`: ConstrainedStrValue, default to None
-* `table`: ConstrainedStrValue, default to None
+* `query`: str (not empty)
+* `table`: str (not empty)
 
 ```coffee
 DATA_SOURCES= [

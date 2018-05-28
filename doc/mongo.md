@@ -1,6 +1,6 @@
 # MongoDB connector
 
-Retreive data from a [MongoDB](https://www.mongodb.com/) database.
+Retrieve data from a [MongoDB](https://www.mongodb.com/) database.
 
 ## Data provider configuration
 
@@ -9,8 +9,8 @@ Retreive data from a [MongoDB](https://www.mongodb.com/) database.
 * `host`: str, required
 * `port`: int, required
 * `database`: str, required
-* `username`: str, default to None
-* `password`: str, default to None
+* `username`: str
+* `password`: str
 
 ```coffee
 DATA_PROVIDERS= [

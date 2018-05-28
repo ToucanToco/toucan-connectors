@@ -7,13 +7,13 @@ Import data from PostgreSQL.
 * `type`: `"Postgres"`
 * `name`: str, required
 * `user`: str, required
-* `host`: str, default to None
-* `hostname`: str, default to None
-* `charset`: str, default to None
-* `db`: str, default to None
-* `password`: str, default to None
-* `port`: int, default to None
-* `connect_timeout`: int, default to None
+* `host`: str
+* `hostname`: str
+* `charset`: str
+* `db`: str
+* `password`: str
+* `port`: int
+* `connect_timeout`: int
 
 ```coffee
 DATA_PROVIDERS= [
@@ -37,7 +37,7 @@ DATA_PROVIDERS= [
 
 * `domain`: str, required
 * `name`: str, required
-* `query`: ConstrainedStrValue, required
+* `query`: str (not empty), required
 
 ```coffee
 DATA_SOURCES= [

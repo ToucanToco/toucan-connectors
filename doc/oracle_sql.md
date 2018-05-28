@@ -5,9 +5,9 @@
 * `type`: `"OracleSQL"`
 * `name`: str, required
 * `dsn`: DSN, required
-* `user`: str, default to None
-* `password`: str, default to None
-* `encoding`: str, default to None
+* `user`: str
+* `password`: str
+* `encoding`: str
 
 ```coffee
 DATA_PROVIDERS= [

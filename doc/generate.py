@@ -15,9 +15,9 @@ def doc_or_empty(klass):
 def custom_str(field):
     whitelist = ('type', 'required', 'default')
     m = {
-        'type': lambda x: f'{x}',
+        'type': lambda x: f'{x}' if str(x) is not 'ConstrainedStrValue' else 'str (not empty)',
         'required': lambda x: 'required' if x else None,
-        'default': lambda x: f'default to {x}'
+        'default': lambda x: f'default to {x}' if x is not None else x
     }
     infos = [m[k](v) for k, v in field.info.items() if k in whitelist]
     return f'`{field.name}`: ' + ', '.join(x for x in infos if x is not None)

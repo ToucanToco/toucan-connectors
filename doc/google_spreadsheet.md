@@ -1,5 +1,8 @@
 # GoogleSpreadsheet connector
 
+For authentication, download an authentication file from console.developper.com and use the values here.
+    This is an oauth2 credential file. For more information see this: http://gspread.readthedocs.io/en/latest/oauth2.html
+
 ## Data provider configuration
 
 * `type`: `"GoogleSpreadsheet"`
@@ -24,7 +27,7 @@ DATA_PROVIDERS= [
 * `domain`: str, required
 * `name`: str, required
 * `spreadsheet_id`: str, required
-* `sheetname`: str, default to None
+* `sheetname`: str
 
 ```coffee
 DATA_SOURCES= [

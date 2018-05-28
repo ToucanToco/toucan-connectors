@@ -1,5 +1,7 @@
 # Snowflake connector
 
+Import data from Snowflake data warehouse.
+
 ## Data provider configuration
 
 * `type`: `"Snowflake"`
@@ -7,7 +9,7 @@
 * `user`: str, required
 * `password`: str, required
 * `account`: str, required
-* `ocsp_response_cache_filename`: Path, default to None
+* `ocsp_response_cache_filename`: Path
 
 ```coffee
 DATA_PROVIDERS= [
@@ -27,9 +29,9 @@ DATA_PROVIDERS= [
 
 * `domain`: str, required
 * `name`: str, required
-* `query`: ConstrainedStrValue, required
-* `database`: str, default to None
-* `warehouse`: str, default to None
+* `query`: str (not empty), required
+* `database`: str
+* `warehouse`: str
 
 ```coffee
 DATA_SOURCES= [

@@ -29,7 +29,7 @@ DATA_PROVIDERS= [
 
 * `domain`: str, required
 * `name`: str, required
-* `query`: ConstrainedStrValue, required
+* `query`: str (not empty), required
 
 ```coffee
 DATA_SOURCES= [
