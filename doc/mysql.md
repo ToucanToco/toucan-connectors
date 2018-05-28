@@ -37,7 +37,6 @@ Either `query` or `table` are required, both at the same time are not supported.
 
 * `domain`: str, required
 * `name`: str, required
-* `load`: bool, default to None
 * `query`: ConstrainedStrValue, default to None
 * `table`: ConstrainedStrValue, default to None
 
@@ -46,7 +45,6 @@ DATA_SOURCES= [
   type:    'MySQL'
   domain:    '<domain>'
   name:    '<name>'
-  load:    '<load>'
   query:    '<query>'
   table:    '<table>'
 ,

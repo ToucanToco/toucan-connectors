@@ -1,4 +1,4 @@
-# Toucan Toco Connectors
+# Toucan Connectors
 
 * [GoogleSpreadsheetConnector](google_spreadsheet.md)
 

@@ -25,7 +25,6 @@ DATA_PROVIDERS= [
 
 * `domain`: str, required
 * `name`: str, required
-* `load`: bool, default to None
 * `dataset`: str, required
 
 ```coffee
@@ -33,7 +32,6 @@ DATA_SOURCES= [
   type:    'Dataiku'
   domain:    '<domain>'
   name:    '<name>'
-  load:    '<load>'
   dataset:    '<dataset>'
 ,
   ...

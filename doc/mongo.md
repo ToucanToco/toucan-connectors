@@ -34,7 +34,6 @@ Supports simple, multiples and aggregation queries as desribed in
 
 * `domain`: str, required
 * `name`: str, required
-* `load`: bool, default to None
 * `collection`: str, required
 * `query`: typing.Union[str, dict, list], required
 
@@ -43,7 +42,6 @@ DATA_SOURCES= [
   type:    'MongoDB'
   domain:    '<domain>'
   name:    '<name>'
-  load:    '<load>'
   collection:    '<collection>'
   query:    '<query>'
 ,

@@ -32,7 +32,6 @@ Specify whether you want to use the `cube` or `reports` endpoints and a microstr
 
 * `domain`: str, required
 * `name`: str, required
-* `load`: bool, default to None
 * `id`: str, required
 * `dataset`: Dataset, required
 
@@ -41,7 +40,6 @@ DATA_SOURCES= [
   type:    'MicroStrategy'
   domain:    '<domain>'
   name:    '<name>'
-  load:    '<load>'
   id:    '<id>'
   dataset:    '<dataset>'
 ,

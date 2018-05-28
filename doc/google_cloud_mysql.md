@@ -35,7 +35,6 @@ DATA_PROVIDERS= [
 
 * `domain`: str, required
 * `name`: str, required
-* `load`: bool, default to None
 * `query`: ConstrainedStrValue, required
 
 ```coffee
@@ -43,7 +42,6 @@ DATA_SOURCES= [
   type:    'GoogleCloudMySQL'
   domain:    '<domain>'
   name:    '<name>'
-  load:    '<load>'
   query:    '<query>'
 ,
   ...

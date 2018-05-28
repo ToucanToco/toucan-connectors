@@ -86,7 +86,7 @@ def generate(klass):
         'type': '\'' + klass.type + '\''
     }
     for name, obj in klass.data_source_model.__fields__.items():
-        if name == 'type':
+        if name in ['type', 'load']:
             continue
         schema_cson[name] = '\'<' + name + '>\''
         li.append(f'* {custom_str(obj)}')
@@ -104,7 +104,7 @@ def generate(klass):
 
 
 def generate_summmary(connectors):
-    doc = ['# Toucan Toco Connectors']
+    doc = ['# Toucan Connectors']
     for key, value in connectors.items():
         doc.append(f'* [{key}]({value}.md)')
     doc = '\n\n'.join([l for l in doc if l is not None])

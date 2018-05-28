@@ -23,7 +23,6 @@ DATA_PROVIDERS= [
 
 * `domain`: str, required
 * `name`: str, required
-* `load`: bool, default to None
 * `spreadsheet_id`: str, required
 * `sheetname`: str, default to None
 
@@ -32,7 +31,6 @@ DATA_SOURCES= [
   type:    'GoogleSpreadsheet'
   domain:    '<domain>'
   name:    '<name>'
-  load:    '<load>'
   spreadsheet_id:    '<spreadsheet_id>'
   sheetname:    '<sheetname>'
 ,

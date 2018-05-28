@@ -27,7 +27,6 @@ DATA_PROVIDERS= [
 
 * `domain`: str, required
 * `name`: str, required
-* `load`: bool, default to None
 * `query`: str, required
 
 ```coffee
@@ -35,7 +34,6 @@ DATA_SOURCES= [
   type:    'OracleSQL'
   domain:    '<domain>'
   name:    '<name>'
-  load:    '<load>'
   query:    '<query>'
 ,
   ...
