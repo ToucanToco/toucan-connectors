@@ -37,8 +37,8 @@ Either `query` or `table` are required, both at the same time are not supported.
 
 * `domain`: str, required
 * `name`: str, required
-* `query`: str (not empty)
-* `table`: str (not empty)
+* `query`: str (not empty), required if `table` is not provided. 
+* `table`: str (not empty), required if `query` is not provided, will read the whole table.
 
 ```coffee
 DATA_SOURCES= [

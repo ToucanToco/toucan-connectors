@@ -1,6 +1,6 @@
 # Script to generate a connector documentation.
+import collections
 import sys
-import re
 import os
 from contextlib import suppress
 
@@ -103,8 +103,28 @@ def generate(klass):
     return '\n\n'.join([l for l in doc if l is not None])
 
 
+def get_connectors():
+    path = 'toucan_connectors/'
+    connectors = [
+        o for o in os.listdir(path)
+        if os.path.isdir(os.path.join(path, o)) & (o != '__pycache__')
+    ]
+    connectors_ok = {}
+    for connector in connectors:
+        try:
+            c_name = snake_to_camel(connector) + 'Connector'
+            getattr(toucan_connectors, c_name)
+            connectors_ok[c_name] = connector
+        except AttributeError as e:
+            print(e)
+            continue
+
+    return connectors_ok
+
+
 def generate_summmary(connectors):
     doc = ['# Toucan Connectors']
+    connectors = collections.OrderedDict(sorted(connectors.items()))
     for key, value in connectors.items():
         doc.append(f'* [{key}]({value}.md)')
     doc = '\n\n'.join([l for l in doc if l is not None])
@@ -113,32 +133,22 @@ def generate_summmary(connectors):
         file.write(doc)
 
 
-def generate_all_doc():
-    path = 'toucan_connectors/'
-    connectors = [
-        o for o in os.listdir(path)
-        if os.path.isdir(os.path.join(path, o))
-    ]
-    connectors_ok = {}
-    for connector in connectors:
-        try:
-            c_name = snake_to_camel(connector) + 'Connector'
-            k = getattr(toucan_connectors, c_name)
-        except AttributeError as e:
-            print(e)
-            continue
+def generate_all_doc(connectors):
+    for key, value in connectors.items():
+        k = getattr(toucan_connectors, key)
         doc = generate(k)
-        file_name = os.path.join('doc/', connector + '.md')
+        file_name = os.path.join('doc/', value + '.md')
         with open(file_name, 'w') as file:
             file.write(doc)
-        connectors_ok[c_name] = connector
-    generate_summmary(connectors_ok)
+
 
 if __name__ == '__main__':
+    connectors = get_connectors()
     if len(sys.argv)>1:
         k = getattr(toucan_connectors, sys.argv[1])
         print(generate(k))
     else:
-        generate_all_doc()
+        generate_all_doc(connectors)
+    generate_summmary(connectors)
 
 

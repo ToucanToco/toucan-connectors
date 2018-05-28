@@ -33,7 +33,7 @@ Specify whether you want to use the `cube` or `reports` endpoints and a microstr
 * `domain`: str, required
 * `name`: str, required
 * `id`: str, required
-* `dataset`: Dataset, required
+* `dataset`: str, `cube` or `report, required
 
 ```coffee
 DATA_SOURCES= [

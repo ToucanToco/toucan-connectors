@@ -4,7 +4,7 @@
 
 * `type`: `"OracleSQL"`
 * `name`: str, required
-* `dsn`: DSN, required
+* `dsn`: str following the DSN pattern, cf. https://en.wikipedia.org/wiki/Data_source_name, required
 * `user`: str
 * `password`: str
 * `encoding`: str

@@ -28,7 +28,7 @@ class SnowflakeConnector(ToucanConnector):
     """
     Import data from Snowflake data warehouse.
     """
-    
+
     type = 'Snowflake'
     data_source_model: SnowflakeDataSource
 

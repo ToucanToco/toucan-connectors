@@ -9,7 +9,7 @@ Import data from Snowflake data warehouse.
 * `user`: str, required
 * `password`: str, required
 * `account`: str, required
-* `ocsp_response_cache_filename`: Path
+* `ocsp_response_cache_filename`: * `ocsp_response_cache_filename`: str, path to the location used to store [ocsp cache] (https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses)
 
 ```coffee
 DATA_PROVIDERS= [

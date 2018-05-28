@@ -35,7 +35,7 @@ Supports simple, multiples and aggregation queries as desribed in
 * `domain`: str, required
 * `name`: str, required
 * `collection`: str, required
-* `query`: typing.Union[str, dict, list], required
+* `query`: `str` (translated to a query `{domain: <value>}`), dict or list, required
 
 ```coffee
 DATA_SOURCES= [

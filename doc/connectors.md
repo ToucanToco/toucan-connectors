@@ -1,25 +1,25 @@
 # Toucan Connectors
 
-* [GoogleSpreadsheetConnector](google_spreadsheet.md)
-
-* [PostgresConnector](postgres.md)
+* [AzureMSSQLConnector](azure_mssql.md)
 
 * [DataikuConnector](dataiku.md)
 
-* [MySQLConnector](mysql.md)
+* [GoogleCloudMySQLConnector](google_cloud_mysql.md)
 
-* [MicroStrategyConnector](micro_strategy.md)
-
-* [OracleSQLConnector](oracle_sql.md)
-
-* [MongoConnector](mongo.md)
+* [GoogleSpreadsheetConnector](google_spreadsheet.md)
 
 * [MSSQLConnector](mssql.md)
 
-* [AzureMSSQLConnector](azure_mssql.md)
+* [MicroStrategyConnector](micro_strategy.md)
 
-* [SnowflakeConnector](snowflake.md)
+* [MongoConnector](mongo.md)
 
-* [GoogleCloudMySQLConnector](google_cloud_mysql.md)
+* [MySQLConnector](mysql.md)
+
+* [OracleSQLConnector](oracle_sql.md)
+
+* [PostgresConnector](postgres.md)
 
 * [SapHanaConnector](sap_hana.md)
+
+* [SnowflakeConnector](snowflake.md)
