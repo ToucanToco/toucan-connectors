@@ -104,7 +104,7 @@ def generate(klass):
 
 
 def generate_summmary(connectors):
-    doc = ['#Toucan Toco Connectors']
+    doc = ['# Toucan Toco Connectors']
     for key, value in connectors.items():
         doc.append(f'* [{key}]({value}.md)')
     doc = '\n\n'.join([l for l in doc if l is not None])
