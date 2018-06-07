@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import List
+from typing import List, Union
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from adobe_analytics import Client, ReportDefinition
@@ -7,19 +7,28 @@ from adobe_analytics import Client, ReportDefinition
 
 class AdobeAnalyticsDataSource(ToucanDataSource):
     suite_id: str
-    dimensions: List[str]
-    metrics: List[str]
+
+    dimensions: Union[List[Union[str, dict]], str]
+    metrics: Union[List[str], str]
+    segments: Union[List[str], str] = None
+
     date_from: str
     date_to: str
+    last_days: int = None
+    granularity: str = None
+    source: str = None
 
     @property
     def report_definition(self):
         return ReportDefinition(
-                dimensions=self.dimensions,
-                metrics=self.metrics,
-                date_from=self.date_from,
-                date_to=self.date_to
-            )
+            dimensions=self.dimensions,
+            metrics=self.metrics,
+            date_from=self.date_from,
+            date_to=self.date_to,
+            last_days=self.last_days,
+            granularity=self.granularity,
+            source=self.source
+        )
 
 
 class AdobeAnalyticsConnector(ToucanConnector):
@@ -31,8 +40,5 @@ class AdobeAnalyticsConnector(ToucanConnector):
     endpoint: str = Client.DEFAULT_ENDPOINT
 
     def get_df(self, data_source: AdobeAnalyticsDataSource) -> pd.DataFrame:
-        client = Client(self.username, self.password, self.endpoint)
-        suites = client.suites()
-        suite = suites[data_source.suite_id]
-        dataframe = suite.download(data_source.report_definition)
-        return dataframe
+        suites = Client(self.username, self.password, self.endpoint).suites()
+        return suites[data_source.suite_id].download(data_source.report_definition)
