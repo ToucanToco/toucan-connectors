@@ -13,6 +13,7 @@ extras_require = {
     'snowflake': ['snowflake-connector-python'],
     'dataiku': ['dataiku-api-client'],
     'google_spreadsheet': ['gspread>=3', 'google-api-python-client>=1.6.7'],
+    'adobe': ['adobe']
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
