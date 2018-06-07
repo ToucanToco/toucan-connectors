@@ -1,8 +1,19 @@
+from enum import Enum
+
 import pandas as pd
 from typing import List, Union
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from adobe_analytics import Client, ReportDefinition
+
+
+class Granularity(str, Enum):
+    hour = "hour"
+    day = "day"
+    week = "week"
+    month = "month"
+    quarter = "quarter"
+    year = "year"
 
 
 class AdobeAnalyticsDataSource(ToucanDataSource):
@@ -15,7 +26,7 @@ class AdobeAnalyticsDataSource(ToucanDataSource):
     date_from: str
     date_to: str
     last_days: int = None
-    granularity: str = None
+    granularity: Granularity = None
     source: str = None
 
     @property

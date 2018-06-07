@@ -11,7 +11,8 @@ adobe_datasource = AdobeAnalyticsDataSource(
     dimensions=['dimension_1', 'dimension_2'],
     metrics='metric',
     date_from='2018-06-07',
-    date_to='2018-06-07'
+    date_to='2018-06-07',
+    granularity="day"
 )
 
 adobe_connector = AdobeAnalyticsConnector(
