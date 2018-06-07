@@ -12,7 +12,7 @@ extras_require = {
     'sap_hana': ['pyhdb>=0.3.4'],
     'snowflake': ['snowflake-connector-python'],
     'dataiku': ['dataiku-api-client'],
-    'google_spreadsheet': ['gspread>=3', 'google-api-python-client>=1.6.7'],
+    'google_spreadsheet': ['gspread>=3', 'oauth2client'],
     'adobe': ['adobe_analytics']
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
