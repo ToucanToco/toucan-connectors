@@ -7,8 +7,9 @@ Import data from PostgreSQL.
 * `type`: `"Postgres"`
 * `name`: str, required
 * `user`: str, required
-* `host`: str
-* `hostname`: str
+* `host` or `hostname` : str, required
+  - If you have a host name (eg aeaze.toucan.com), use the `hostname` parameter
+  - If you have an IP address (e.g. 1.2.3.4), use the `host` parameter
 * `charset`: str
 * `db`: str
 * `password`: str
