@@ -32,6 +32,7 @@ class AdobeAnalyticsDataSource(ToucanDataSource):
     @property
     def report_definition(self):
         return ReportDefinition(
+            segments=self.segments,
             dimensions=self.dimensions,
             metrics=self.metrics,
             date_from=self.date_from,
