@@ -13,14 +13,17 @@ class Endpoints(str, Enum):
 
 
 class ToucanTocoDataSource(ToucanDataSource):
+    """
+    Use the `all_small_apps` parameter to get results from an endpoint on all small apps.
+    """
     endpoint: Endpoints
     all_small_apps: bool = False
 
 
-def g(o): return o.get().json()
-
-
 class ToucanTocoConnector(ToucanConnector):
+    """
+    Get data from a Toucan Toco instance, usefull to build analytics applications.
+    """
     type = "ToucanToco"
     data_source_model: ToucanTocoDataSource
 
@@ -29,6 +32,8 @@ class ToucanTocoConnector(ToucanConnector):
     password: str
 
     def get_df(self, data_source: ToucanTocoDataSource) -> pd.DataFrame:
+        def g(o): return o.get().json()
+
         tc = ToucanClient(self.host, auth=(self.username, self.password))
 
         if data_source.all_small_apps:
