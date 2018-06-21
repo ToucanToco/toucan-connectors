@@ -18,15 +18,36 @@ tcd = ToucanTocoDataSource(
     endpoint='small-apps'
 )
 
+tcda = ToucanTocoDataSource(
+    name='test',
+    domain='test',
+    endpoint='config',
+    all_small_apps=True
+)
+
+
+fixtures = {
+    'small_apps': [{'duplicateOf': '', 'id': 'test', 'last_update': '', 'name': '', 'stage': ''}],
+    'config': {'arbitrary': 'object'}
+}
+
 
 @responses.activate
-def test_toucantoco():
+def test_toucantoco_instance():
+    responses.add('GET', 'https://example.com/small-apps', json=fixtures['small_apps'], status=200)
 
-    responses.add('GET', 'https://example.com/small-apps',
-                  json=[{'duplicateOf': '', 'id': '', 'last_update': '', 'name': '', 'stage': ''}],
-                  status=200)
     df = tcc.get_df(tcd)
     assert list(df.columns) == ['duplicateOf', 'id', 'last_update', 'name', 'stage']
+
+
+@responses.activate
+def test_toucantoco_all_small_apps():
+    responses.add('GET', 'https://example.com/small-apps', json=fixtures['small_apps'], status=200)
+    responses.add('GET', 'https://example.com/test/config', json=fixtures['config'], status=200)
+
+    df = tcc.get_df(tcda)
+    assert set(df.columns) == {'small_app', 'response'}
+    assert df.iloc[0]['response'] == fixtures['config']
 
 
 @pytest.mark.skip(reason="This uses a live demo")
@@ -38,4 +59,4 @@ def test_live():
         password='**********'
     )
     df = tcc_live.get_df(tcd)
-    assert list(df.columns) == ['duplicateOf', 'id', 'last_update', 'name', 'stage']
+    assert set(df.columns) == {'duplicateOf', 'id', 'last_update', 'name', 'stage'}
