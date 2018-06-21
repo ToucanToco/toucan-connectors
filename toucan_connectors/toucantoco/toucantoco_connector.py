@@ -17,6 +17,9 @@ class ToucanTocoDataSource(ToucanDataSource):
     all_small_apps: bool = False
 
 
+def g(o): return o.get().json()
+
+
 class ToucanTocoConnector(ToucanConnector):
     type = "ToucanToco"
     data_source_model: ToucanTocoDataSource
@@ -30,10 +33,10 @@ class ToucanTocoConnector(ToucanConnector):
 
         if data_source.all_small_apps:
             ret = []
-            for app in tc['small-apps'].get().json():
+            for app in g(tc['small-apps']):
                 ret.append({'small_app': app['id'],
-                            'response': tc[app['id']][data_source.endpoint].get().json()})
+                            'response': g(tc[app['id']][data_source.endpoint])})
             return pd.DataFrame(ret)
 
         else:
-            return pd.DataFrame(tc[data_source.endpoint].get().json())
+            return pd.DataFrame(g(tc[data_source.endpoint]))
