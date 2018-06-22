@@ -3,22 +3,9 @@ from typing import List
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic import BaseModel
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-
-
-class GoogleCredentials(BaseModel):
-    type: str
-    project_id: str
-    private_key_id: str
-    private_key: str
-    client_email: str
-    client_id: str
-    auth_uri: str
-    token_uri: str
-    auth_provider_x509_cert_url: str
-    client_x509_cert_url: str
+from toucan_connectors.common import GoogleCredentials
 
 
 class GoogleSpreadsheetDataSource(ToucanDataSource):
