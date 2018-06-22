@@ -14,10 +14,10 @@ It provides a high-level interfaces for reporting queries (including Data Wareho
 ```coffee
 DATA_PROVIDERS= [
   type:    'AdobeAnalytics'
-  name:    ''<name>''
-  username:    ''<username>''
-  password:    ''<password>''
-  endpoint:    ''<endpoint>''
+  name:    '<name>'
+  username:    '<username>'
+  password:    '<password>'
+  endpoint:    '<endpoint>'
 ,
   ...
 ]
