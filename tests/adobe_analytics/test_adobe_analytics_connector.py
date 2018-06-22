@@ -1,5 +1,7 @@
-from toucan_connectors.adobe.adobe_connector import AdobeAnalyticsDataSource, \
+from toucan_connectors.adobe_analytics.adobe_analytics_connector import (
+    AdobeAnalyticsDataSource,
     AdobeAnalyticsConnector
+)
 from adobe_analytics import ReportDefinition
 import responses
 

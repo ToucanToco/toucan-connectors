@@ -62,15 +62,15 @@ def generate(klass):
 
     li = [f'* `type`: `"{klass.type}"`']
     schema_cson = {
-        'type': '\'' + klass.type + '\''
+        'type': f"'{klass.type}'"
     }
     for name, obj in klass.__fields__.items():
         if name == 'type':
             continue
         li.append(f'* {custom_str(obj)}')
-        schema_cson[name] = '<' + name + '>'
+        schema_cson[name] = f"'<{name}>'"
         if obj.info['type'] == 'str':
-            schema_cson[name] =  '\'' + schema_cson[name]  + '\''
+            schema_cson[name] =  f"'{schema_cson[name]}'"
     doc.append('\n'.join(li))
 
     li = []
@@ -83,12 +83,12 @@ def generate(klass):
     doc.extend(['\n## Data source configuration', doc_or_empty(klass.data_source_model)])
     li = []
     schema_cson = {
-        'type': '\'' + klass.type + '\''
+        'type': f"'{klass.type}'"
     }
     for name, obj in klass.data_source_model.__fields__.items():
         if name in ['type', 'load']:
             continue
-        schema_cson[name] = '\'<' + name + '>\''
+        schema_cson[name] = f"'<{name}>'"
         li.append(f'* {custom_str(obj)}')
     doc.append('\n'.join(li))
 
@@ -112,7 +112,7 @@ def get_connectors():
     connectors_ok = {}
     for connector in connectors:
         try:
-            c_name = snake_to_camel(connector) + 'Connector'
+            c_name = f'{snake_to_camel(connector)}Connector'
             getattr(toucan_connectors, c_name)
             connectors_ok[c_name] = connector
         except AttributeError as e:
@@ -137,7 +137,7 @@ def generate_all_doc(connectors):
     for key, value in connectors.items():
         k = getattr(toucan_connectors, key)
         doc = generate(k)
-        file_name = os.path.join('doc/', value + '.md')
+        file_name = os.path.join('doc/', f'{value}.md')
         with open(file_name, 'w') as file:
             file.write(doc)
 

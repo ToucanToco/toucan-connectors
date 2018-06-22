@@ -1,5 +1,7 @@
 # Toucan Connectors
 
+* [AdobeAnalyticsConnector](adobe_analytics.md)
+
 * [AzureMSSQLConnector](azure_mssql.md)
 
 * [DataikuConnector](dataiku.md)
