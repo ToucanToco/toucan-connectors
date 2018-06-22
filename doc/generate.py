@@ -69,8 +69,6 @@ def generate(klass):
             continue
         li.append(f'* {custom_str(obj)}')
         schema_cson[name] = f"'<{name}>'"
-        if obj.info['type'] == 'str':
-            schema_cson[name] =  f"{schema_cson[name]}"
     doc.append('\n'.join(li))
 
     li = []
