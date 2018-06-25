@@ -2,7 +2,7 @@
 
 Import data from Google Cloud MySQL database.
 
-## Connector configuration
+## Data provider configuration
 
 * `type`: `"GoogleCloudMySQL"`
 * `name`: str, required
@@ -10,9 +10,25 @@ Import data from Google Cloud MySQL database.
 * `user`: str, required
 * `db`: str, required
 * `password`: str, required
-* `port`: int, default to None
+* `port`: int
 * `charset`: str, default to utf8mb4
-* `connect_timeout`: int, default to None
+* `connect_timeout`: int
+
+```coffee
+DATA_PROVIDERS= [
+  type:    'GoogleCloudMySQL'
+  name:    '<name>'
+  host:    '<host>'
+  user:    '<user>'
+  db:    '<db>'
+  password:    '<password>'
+  port:    <port>
+  charset:    '<charset>'
+  connect_timeout:    <connect_timeout>
+,
+  ...
+]
+```
 
 
 ## Data source configuration
@@ -20,3 +36,14 @@ Import data from Google Cloud MySQL database.
 * `domain`: str, required
 * `name`: str, required
 * `query`: str (not empty), required
+
+```coffee
+DATA_SOURCES= [
+  type:    'GoogleCloudMySQL'
+  domain:    '<domain>'
+  name:    '<name>'
+  query:    '<query>'
+,
+  ...
+]
+```
