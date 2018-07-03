@@ -1,4 +1,5 @@
 from typing import Union
+from urllib.parse import quote_plus
 
 import pandas as pd
 import pymongo
@@ -35,9 +36,9 @@ class MongoConnector(ToucanConnector):
     def uri(self):
         user_pass = ''
         if self.username is not None:
-            user_pass = self.username
+            user_pass = quote_plus(self.username)
             if self.password is not None:
-                user_pass += f':{self.password}'
+                user_pass += f':{quote_plus(self.password)}'
             user_pass += '@'
         return ''.join(['mongodb://', user_pass, f'{self.host}:{self.port}'])
 
