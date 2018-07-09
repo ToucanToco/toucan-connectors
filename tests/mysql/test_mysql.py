@@ -111,6 +111,26 @@ def test_get_df_db(mysql_connector):
     assert len(df[df['Population_City'] > 5000000]) == 24
 
 
+def test_get_df_db_nofollow(mysql_connector):
+    """" It should extract the table City without merges """
+    data_source_spec = {
+        'domain': 'MySQL test',
+        'type': 'external_database',
+        'name': 'Some MySQL provider',
+        'query': 'SELECT * FROM City WHERE Population > %(max_pop)s',
+        'follow_relations': False,
+        'parameters': {'max_pop': 5000000},
+    }
+
+    expected_columns = {'ID', 'Name', 'CountryCode', 'District', 'Population'}
+    data_source = MySQLDataSource(**data_source_spec)
+    df = mysql_connector.get_df(data_source)
+
+    assert not df.empty
+    assert set(df.columns) == expected_columns
+    assert df.shape == (24, 5)
+
+
 def test_clean_response():
     """ It should replace None by np.nan and decode bytes data """
     response = [{'name': 'fway', 'age': 13}, {'name': b'zbruh', 'age': None}]
