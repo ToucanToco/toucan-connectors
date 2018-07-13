@@ -77,7 +77,7 @@ Example:
 ## Data source configuration
 
 * `domain`: str, required
-* `name`: str, required
+* `name`: str, required. Should match the data provider name 
 * `spreadsheet_id`: str, required. Id of the spreadsheet which can be found inside
 the url: https://docs.google.com/spreadsheets/d/<spreadsheet_id_is_here>/edit?pref=2&pli=1#gid=0,
 * `sheetname`: str. By default, the extractor return the first sheet.
