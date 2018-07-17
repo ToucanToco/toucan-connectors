@@ -47,11 +47,9 @@ DATA_SOURCES= [
   type:    'MySQL'
   domain:    '<domain>'
   name:    '<name>'
-  query:    '<query>'
-  table:    '<table>'
-  follow_relations: <follow_relations>
+  query:    'SELECT * FROM city WHERE country = %(country)s'
   parameters:
-    key: '<value>'
+    country: '<value>'
 ,
   ...
 ]
