@@ -19,7 +19,7 @@ class Granularity(str, Enum):
 class AdobeAnalyticsDataSource(ToucanDataSource):
     suite_id: str
 
-    dimensions: Union[List[Union[str, dict]], str]
+    dimensions: Union[List[Union[str, dict]], str] = []
     metrics: Union[List[str], str]
     segments: Union[List[str], str] = None
 
