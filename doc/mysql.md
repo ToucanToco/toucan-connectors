@@ -37,16 +37,19 @@ Either `query` or `table` are required, both at the same time are not supported.
 
 * `domain`: str, required
 * `name`: str, required
-* `query`: str (not empty), required if `table` is not provided. 
+* `query`: str (not empty), required if `table` is not provided.
 * `table`: str (not empty), required if `query` is not provided, will read the whole table.
+* `follow_relations`: bool, default to true. Merges data from foreign key relations.
+* `parameters` dict, optional. Allow to parameterize the query.
 
 ```coffee
 DATA_SOURCES= [
   type:    'MySQL'
   domain:    '<domain>'
   name:    '<name>'
-  query:    '<query>'
-  table:    '<table>'
+  query:    'SELECT * FROM city WHERE country = %(country)s'
+  parameters:
+    country: '<value>'
 ,
   ...
 ]

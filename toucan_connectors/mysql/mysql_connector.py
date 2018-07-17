@@ -14,6 +14,8 @@ class MySQLDataSource(ToucanDataSource):
     """
     query: constr(min_length=1) = None
     table: constr(min_length=1) = None
+    follow_relations: bool = True
+    parameters: dict = None
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -247,11 +249,19 @@ class MySQLConnector(ToucanConnector):
         else:
             table = datasource.table
             query = f'select * from {table}'
+
         MySQLConnector.logger.debug(f'Executing query : {query}')
+        query_params = datasource.parameters or {}
+
+        if not datasource.follow_relations:
+            df = pd.read_sql(query, con=connection, params=query_params)
+            connection.close()
+            return df
+
         # list used because we cannot reassign a variable to update the dataframe.
         # After the merge: append the new DataFrame and remove the pop the first
         # element.
-        lres = [pd.read_sql(query, con=connection)]
+        lres = [pd.read_sql(query, con=connection, params=query_params)]
         MySQLConnector.logger.info(f'{table} : dumped first DataFrame')
 
         # ----- Merge -----
