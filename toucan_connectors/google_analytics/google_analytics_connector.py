@@ -1,16 +1,20 @@
 # https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet
-
 # https://github.com/ToucanToco/keel-billed-v2/blob/api-renault.toucantoco.com/powerstore-analytics/preprocess/augment.py
+
 
 from enum import Enum
 from typing import List
 
+from apiclient.discovery import build
+from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 from pydantic import BaseModel
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.common import GoogleCredentials
 
+API = 'analyticsreporting'
+SCOPE = 'https://www.googleapis.com/auth/analytics.readonly'
 VERSION = 'v4'
 
 
@@ -71,15 +75,14 @@ class Type(str, Enum):
 
 class Dimension(BaseModel):
     name: str
-    histogramBuckets: List[str]
-    pageToken: str = ''
+    histogramBuckets: List[str] = None
 
 
 class DimensionFilter(BaseModel):
     dimensionName: str
     operator: Operator
-    expressions: List[str]
-    caseSensitive: bool
+    expressions: List[str] = None
+    caseSensitive: bool = False
 
     class Config:
         # TODO `not` param is not implemented
@@ -98,8 +101,11 @@ class DateRange(BaseModel):
 
 class Metric(BaseModel):
     expression: str
-    alias: str
-    formattingType: MetricType
+    alias: str = None
+
+    class Config:
+        # TODO `metricType` param is not implemented
+        allow_extra = True
 
 
 class MetricFilter(BaseModel):
@@ -119,51 +125,96 @@ class MetricFilterClause(BaseModel):
 
 class OrderBy(BaseModel):
     fieldName: str
-    orderType: OrderType
-    sortOrder: SortOrder
+    orderType: OrderType = None
+    sortOrder: SortOrder = None
 
 
 class Pivot(BaseModel):
-    dimensions: List[Dimension]
-    dimensionFilterClauses: List[DimensionFilterClause]
-    metrics: List[Metric]
-    startGroup: int
-    maxGroupCount: int
+    dimensions: List[Dimension] = None
+    dimensionFilterClauses: List[DimensionFilterClause] = None
+    metrics: List[Metric] = None
+    startGroup: int = None
+    maxGroupCount: int = None
 
 
 class Cohort(BaseModel):
     name: str
     type: Type
-    dateRage: DateRange
+    dateRage: DateRange = None
 
 
 class CohortGroup(BaseModel):
     cohorts: List[Cohort]
-    lifetimeValue: bool
+    lifetimeValue: bool = False
 
 
-class ReportRequests(BaseModel):
+class ReportRequest(BaseModel):
     viewId: str
-    dateRanges: List[DateRange]
-    samplingLevel: Sampling
-    dimensions: List[Dimension]
-    dimensionFilterClauses: List[DimensionFilterClause]
-    metrics: List[Metric]
-    metricsFilterClauses: List[MetricFilterClause]
+    dateRanges: List[DateRange] = None
+    samplingLevel: Sampling = None
+    dimensions: List[Dimension] = None
+    dimensionFilterClauses: List[DimensionFilterClause] = None
+    metrics: List[Metric] = None
+    metricFilterClauses: List[MetricFilterClause] = None
     filtersExpression: str = ''
     orderBys: List[OrderBy] = []
     # TODO    segment: List[Segment]
-    pivot: List[Pivot]
-    cohortGroup: CohortGroup
+    pivots: List[Pivot] = None
+    cohortGroup: CohortGroup = None
     pageToken: str = ''
     pageSize: int = 10000
-    includeEmptyRows: bool
-    hideTotals: bool
-    hideValueRanges: bool
+    includeEmptyRows: bool = False
+    hideTotals: bool = False
+    hideValueRanges: bool = False
+
+
+def get_dict_from_response(report, request_date_ranges):
+
+    columnHeader = report.get('columnHeader', {})
+    dimensionHeaders = columnHeader.get('dimensions', [])
+    metricHeaders = columnHeader.get('metricHeader', {}).get('metricHeaderEntries', [])
+    rows = report.get('data', {}).get('rows', [])
+
+    all_rows = []
+    for row_index, row in enumerate(rows):
+        dimensions = row.get('dimensions', [])
+        dateRangeValues = row.get('metrics', [])
+
+        for i, values in enumerate(dateRangeValues):
+            for metricHeader, value in zip(metricHeaders, values.get('values')):
+                row_dict = {
+                    'row_index': row_index,
+                    'date_range_id': i,
+                    'metric_name': metricHeader.get('name'),
+                }
+
+                if request_date_ranges and (len(request_date_ranges) >= i):
+                    row_dict['start_date'] = request_date_ranges[i].startDate
+                    row_dict['end_date'] = request_date_ranges[i].endDate
+
+                if metricHeader.get('type') == 'INTEGER':
+                    row_dict['metric_value'] = int(value)
+                elif metricHeader.get('type') == 'FLOAT':
+                    row_dict['metric_value'] = float(value)
+                else:
+                    row_dict['metric_value'] = value
+
+                for dimension_name, dimension_value in zip(dimensionHeaders, dimensions):
+                    row_dict[dimension_name] = dimension_value
+
+                all_rows.append(row_dict)
+
+    return all_rows
+
+
+def get_query_results(service, report_request):
+    response = service.reports().batchGet(
+        body={'reportRequests': report_request.dict()}).execute()
+    return response.get('reports', [])[0]
 
 
 class GoogleAnalyticsDataSource(ToucanDataSource):
-    report_requests = List
+    report_request: ReportRequest
 
 
 class GoogleAnalyticsConnector(ToucanConnector):
@@ -171,7 +222,23 @@ class GoogleAnalyticsConnector(ToucanConnector):
     data_source_model: GoogleAnalyticsDataSource
 
     credentials: GoogleCredentials
-    scope: List[str] = ['https://www.googleapis.com/auth/analytics.readonly']
+    scope: List[str] = [SCOPE]
 
     def get_df(self, data_source: GoogleAnalyticsDataSource) -> pd.DataFrame:
-        pass
+        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
+            self.credentials.dict(), self.scope
+        )
+        service = build(API, VERSION, credentials=credentials)
+        report_request = data_source.report_request
+
+        report = get_query_results(service, report_request)
+        reports_data = [pd.DataFrame(get_dict_from_response(report, report_request.dateRanges))]
+
+        while 'nextPageToken' in report:
+            report_request.pageToken = report['nextPageToken']
+
+            report = get_query_results(service, report_request)
+            reports_data.append(pd.DataFrame(
+                get_dict_from_response(report, report_request.dateRanges)))
+
+        return pd.concat(reports_data)

@@ -12,5 +12,3 @@ class GoogleCredentials(BaseModel):
     token_uri: str
     auth_provider_x509_cert_url: str
     client_x509_cert_url: str
-
-
