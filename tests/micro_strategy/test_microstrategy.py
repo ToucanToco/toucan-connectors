@@ -3,7 +3,7 @@ import json
 import pytest
 import responses
 
-from toucan_connectors.microstrategy.microstrategy_connector import (
+from toucan_connectors.micro_strategy.micro_strategy_connector import (
     MicroStrategyConnector, MicroStrategyDataSource
 )
 
@@ -31,8 +31,8 @@ mc = MicroStrategyConnector(
 
 
 @responses.activate
-def test_microstrategy():
-    js = json.load(open('tests/microstrategy/fixtures/fixture.json'))
+def test_micro_strategy():
+    js = json.load(open('tests/micro_strategy/fixtures/fixture.json'))
 
     # login
     responses.add(responses.POST,
