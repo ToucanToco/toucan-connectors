@@ -6,6 +6,8 @@
 
 * [DataikuConnector](dataiku.md)
 
+* [GoogleAnalyticsConnector](google_analytics.md)
+
 * [GoogleCloudMySQLConnector](google_cloud_mysql.md)
 
 * [GoogleSpreadsheetConnector](google_spreadsheet.md)
@@ -21,7 +23,5 @@
 * [OracleSQLConnector](oracle_sql.md)
 
 * [PostgresConnector](postgres.md)
-
-* [SapHanaConnector](sap_hana.md)
 
 * [SnowflakeConnector](snowflake.md)
