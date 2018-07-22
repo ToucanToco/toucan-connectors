@@ -24,4 +24,6 @@
 
 * [PostgresConnector](postgres.md)
 
+* [SapHanaConnector](sap_hana.md)
+
 * [SnowflakeConnector](snowflake.md)

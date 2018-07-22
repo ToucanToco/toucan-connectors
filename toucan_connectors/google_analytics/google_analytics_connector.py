@@ -1,7 +1,3 @@
-# https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet
-# https://github.com/ToucanToco/keel-billed-v2/blob/api-renault.toucantoco.com/powerstore-analytics/preprocess/augment.py
-
-
 from enum import Enum
 from typing import List
 
