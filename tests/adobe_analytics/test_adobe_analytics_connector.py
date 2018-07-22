@@ -78,6 +78,5 @@ def test_get_df():
                   json=js_report, match_querystring=True)
 
     df = adobe_connector.get_df(adobe_datasource)
-    assert list(df.columns) == ['Date', 'Page Views']
+    assert list(df.columns) == ['Date', 'Page Views', 'suite_id']
     assert df.loc[0]['Page Views'] == '0'
-    assert 'suite_id' in df.columns
