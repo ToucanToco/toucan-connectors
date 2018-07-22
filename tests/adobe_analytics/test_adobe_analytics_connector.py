@@ -81,4 +81,3 @@ def test_get_df():
     assert list(df.columns) == ['Date', 'Page Views']
     assert df.loc[0]['Page Views'] == '0'
     assert 'suite_id' in df.columns
-    

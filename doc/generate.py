@@ -97,7 +97,6 @@ def generate(klass):
     li.append(',\n  ...\n]\n```')
     doc.append('\n'.join(li))
 
-
     return '\n\n'.join([l for l in doc if l is not None])
 
 
@@ -142,11 +141,9 @@ def generate_all_doc(connectors):
 
 if __name__ == '__main__':
     connectors = get_connectors()
-    if len(sys.argv)>1:
+    if len(sys.argv) > 1:
         k = getattr(toucan_connectors, sys.argv[1])
         print(generate(k))
     else:
         generate_all_doc(connectors)
     generate_summmary(connectors)
-
-
