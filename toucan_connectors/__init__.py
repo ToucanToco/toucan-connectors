@@ -5,7 +5,7 @@ with suppress(ImportError):
 with suppress(ImportError):
     from .google_cloud_mysql.google_cloud_mysql_connector import GoogleCloudMySQLConnector
 with suppress(ImportError):
-    from .microstrategy.microstrategy_connector import MicroStrategyConnector
+    from .micro_strategy.micro_strategy_connector import MicroStrategyConnector
 with suppress(ImportError):
     from .mongo.mongo_connector import MongoConnector
 with suppress(ImportError):
@@ -25,7 +25,7 @@ with suppress(ImportError):
 with suppress(ImportError):
     from .google_spreadsheet.google_spreadsheet_connector import GoogleSpreadsheetConnector
 with suppress(ImportError):
-    from .adobe.adobe_connector import AdobeAnalyticsConnector
+    from .adobe_analytics.adobe_analytics_connector import AdobeAnalyticsConnector
 with suppress(ImportError):
     from .toucantoco.toucantoco_connector import ToucanTocoConnector
 

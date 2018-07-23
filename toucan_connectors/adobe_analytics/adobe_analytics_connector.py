@@ -19,7 +19,7 @@ class Granularity(str, Enum):
 class AdobeAnalyticsDataSource(ToucanDataSource):
     suite_id: str
 
-    dimensions: Union[List[Union[str, dict]], str]
+    dimensions: Union[List[Union[str, dict]], str] = []
     metrics: Union[List[str], str]
     segments: Union[List[str], str] = None
 
@@ -57,4 +57,6 @@ class AdobeAnalyticsConnector(ToucanConnector):
 
     def get_df(self, data_source: AdobeAnalyticsDataSource) -> pd.DataFrame:
         suites = Client(self.username, self.password, self.endpoint).suites()
-        return suites[data_source.suite_id].download(data_source.report_definition)
+        df = suites[data_source.suite_id].download(data_source.report_definition)
+        df['suite_id'] = data_source.suite_id
+        return df

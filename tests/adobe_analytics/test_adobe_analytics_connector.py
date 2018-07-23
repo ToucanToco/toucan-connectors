@@ -1,5 +1,7 @@
-from toucan_connectors.adobe.adobe_connector import AdobeAnalyticsDataSource, \
+from toucan_connectors.adobe_analytics.adobe_analytics_connector import (
+    AdobeAnalyticsDataSource,
     AdobeAnalyticsConnector
+)
 from adobe_analytics import ReportDefinition
 import responses
 
@@ -76,5 +78,5 @@ def test_get_df():
                   json=js_report, match_querystring=True)
 
     df = adobe_connector.get_df(adobe_datasource)
-    assert list(df.columns) == ['Date', 'Page Views']
+    assert list(df.columns) == ['Date', 'Page Views', 'suite_id']
     assert df.loc[0]['Page Views'] == '0'
