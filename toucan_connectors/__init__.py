@@ -26,5 +26,7 @@ with suppress(ImportError):
     from .google_spreadsheet.google_spreadsheet_connector import GoogleSpreadsheetConnector
 with suppress(ImportError):
     from .adobe_analytics.adobe_analytics_connector import AdobeAnalyticsConnector
+with suppress(ImportError):
+    from .toucantoco.toucantoco_connector import ToucanTocoConnector
 
 from .toucan_connector import ToucanDataSource, ToucanConnector
