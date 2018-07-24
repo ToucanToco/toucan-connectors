@@ -14,7 +14,7 @@ extras_require = {
     'dataiku': ['dataiku-api-client'],
     'google_spreadsheet': ['gspread>=3', 'oauth2client'],
     'adobe': ['adobe_analytics'],
-    'toucantoco': ['toucan_client']
+    'toucan_toco': ['toucan_client']
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 

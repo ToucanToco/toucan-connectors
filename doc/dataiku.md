@@ -32,7 +32,6 @@ DATA_PROVIDERS= [
 
 ```coffee
 DATA_SOURCES= [
-  type:    'Dataiku'
   domain:    '<domain>'
   name:    '<name>'
   dataset:    '<dataset>'

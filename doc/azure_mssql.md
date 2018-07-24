@@ -35,7 +35,6 @@ DATA_PROVIDERS= [
 
 ```coffee
 DATA_SOURCES= [
-  type:    'AzureMSSQL'
   domain:    '<domain>'
   name:    '<name>'
   query:    '<query>'

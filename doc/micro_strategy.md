@@ -37,7 +37,6 @@ Specify whether you want to use the `cube` or `reports` endpoints and a microstr
 
 ```coffee
 DATA_SOURCES= [
-  type:    'MicroStrategy'
   domain:    '<domain>'
   name:    '<name>'
   id:    '<id>'

@@ -31,7 +31,6 @@ DATA_PROVIDERS= [
 
 ```coffee
 DATA_SOURCES= [
-  type:    'OracleSQL'
   domain:    '<domain>'
   name:    '<name>'
   query:    '<query>'

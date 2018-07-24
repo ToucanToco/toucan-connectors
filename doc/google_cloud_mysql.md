@@ -39,7 +39,6 @@ DATA_PROVIDERS= [
 
 ```coffee
 DATA_SOURCES= [
-  type:    'GoogleCloudMySQL'
   domain:    '<domain>'
   name:    '<name>'
   query:    '<query>'

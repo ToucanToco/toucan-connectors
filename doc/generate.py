@@ -80,9 +80,7 @@ def generate(klass):
 
     doc.extend(['\n## Data source configuration', doc_or_empty(klass.data_source_model)])
     li = []
-    schema_cson = {
-        'type': f"'{klass.type}'"
-    }
+    schema_cson = {}
     for name, obj in klass.data_source_model.__fields__.items():
         if name in ['type', 'load']:
             continue

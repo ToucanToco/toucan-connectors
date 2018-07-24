@@ -85,7 +85,6 @@ the url: https://docs.google.com/spreadsheets/d/<spreadsheet_id_is_here>/edit?pr
 
 ```coffee
 DATA_SOURCES= [
-  type:    'GoogleSpreadsheet'
   domain:    '<domain>'
   name:    '<name>'
   spreadsheet_id:    '<spreadsheet_id>'
