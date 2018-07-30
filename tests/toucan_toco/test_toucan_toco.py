@@ -1,7 +1,7 @@
 import pytest
 import responses
 
-from toucan_connectors.toucantoco.toucantoco_connector import ToucanTocoConnector, \
+from toucan_connectors.toucan_toco.toucan_toco_connector import ToucanTocoConnector, \
     ToucanTocoDataSource
 
 
@@ -41,7 +41,7 @@ def test_toucantoco_instance():
 
 
 @responses.activate
-def test_toucantoco_all_small_apps():
+def test_toucan_toco_all_small_apps():
     responses.add('GET', 'https://example.com/small-apps', json=fixtures['small_apps'], status=200)
     responses.add('GET', 'https://example.com/test/config', json=fixtures['config'], status=200)
 

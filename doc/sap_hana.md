@@ -33,7 +33,6 @@ DATA_PROVIDERS= [
 
 ```coffee
 DATA_SOURCES= [
-  type:    'SapHana'
   domain:    '<domain>'
   name:    '<name>'
   query:    '<query>'

@@ -42,7 +42,6 @@ Supports simple, multiples and aggregation queries as desribed in
 
 ```coffee
 DATA_SOURCES= [
-  type:    'MongoDB'
   domain:    '<domain>'
   name:    '<name>'
   collection:    '<collection>'

@@ -37,7 +37,6 @@ DATA_PROVIDERS= [
 
 ```coffee
 DATA_SOURCES= [
-  type:    'MSSQL'
   domain:    '<domain>'
   name:    '<name>'
   query:    '<query>'

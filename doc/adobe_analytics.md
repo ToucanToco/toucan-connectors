@@ -40,7 +40,6 @@ DATA_PROVIDERS= [
 
 ```coffee
 DATA_SOURCES= [
-  type:    'AdobeAnalytics'
   domain:    '<domain>'
   name:    '<name>'
   suite_id:    '<suite_id>'

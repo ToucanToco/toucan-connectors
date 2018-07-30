@@ -27,3 +27,5 @@
 * [SapHanaConnector](sap_hana.md)
 
 * [SnowflakeConnector](snowflake.md)
+
+* [ToucanTocoConnector](toucan_toco.md)

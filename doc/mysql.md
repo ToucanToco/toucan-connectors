@@ -44,7 +44,6 @@ Either `query` or `table` are required, both at the same time are not supported.
 
 ```coffee
 DATA_SOURCES= [
-  type:    'MySQL'
   domain:    '<domain>'
   name:    '<name>'
   query:    'SELECT * FROM city WHERE country = %(country)s'
