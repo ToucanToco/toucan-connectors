@@ -27,7 +27,6 @@ DATA_PROVIDERS= [
 
 ```coffee
 DATA_SOURCES= [
-  type:    'GoogleAnalytics'
   domain:    '<domain>'
   name:    '<name>'
   report_request:    '<report_request>'
