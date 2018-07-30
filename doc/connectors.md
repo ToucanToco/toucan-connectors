@@ -6,6 +6,8 @@
 
 * [DataikuConnector](dataiku.md)
 
+* [GoogleAnalyticsConnector](google_analytics.md)
+
 * [GoogleCloudMySQLConnector](google_cloud_mysql.md)
 
 * [GoogleSpreadsheetConnector](google_spreadsheet.md)
