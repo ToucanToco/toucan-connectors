@@ -6,6 +6,7 @@ import pymongo
 from pydantic import validator
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.common import apply_parameters_to_query
 
 
 class MongoDataSource(ToucanDataSource):
@@ -13,6 +14,7 @@ class MongoDataSource(ToucanDataSource):
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
     collection: str
     query: Union[str, dict, list]
+    parameters: dict = None
 
 
 class MongoConnector(ToucanConnector):
@@ -47,6 +49,8 @@ class MongoConnector(ToucanConnector):
 
         cursor = client[self.database][data_source.collection]
         data = None
+        data_source.query = apply_parameters_to_query(data_source.query,
+                                                      data_source.parameters)
         if isinstance(data_source.query, str):
             data = cursor.find({'domain': data_source.query})
         elif isinstance(data_source.query, dict):
