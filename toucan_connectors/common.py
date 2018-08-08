@@ -2,6 +2,7 @@ from pydantic import BaseModel
 import json
 import re
 
+
 class GoogleCredentials(BaseModel):
     type: str
     project_id: str
@@ -13,6 +14,7 @@ class GoogleCredentials(BaseModel):
     token_uri: str
     auth_provider_x509_cert_url: str
     client_x509_cert_url: str
+
 
 def apply_parameters_to_query(query, parameters):
     if parameters is None:
