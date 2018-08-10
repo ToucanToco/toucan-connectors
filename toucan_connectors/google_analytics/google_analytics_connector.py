@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import List
 
 from apiclient.discovery import build
@@ -7,66 +6,11 @@ import pandas as pd
 from pydantic import BaseModel
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-from toucan_connectors.common import GoogleCredentials
+from toucan_connectors.common import GoogleCredentials, apply_parameters_to_query
 
 API = 'analyticsreporting'
 SCOPE = 'https://www.googleapis.com/auth/analytics.readonly'
 VERSION = 'v4'
-
-
-class Sampling(str, Enum):
-    SAMPLING_UNSPECIFIED = 'SAMPLING_UNSPECIFIED'
-    DEFAULT = 'DEFAULT'
-    SMALL = 'SMALL'
-    LARGE = 'LARGE'
-
-
-class MetricType(str, Enum):
-    METRIC_TYPE_UNSPECIFIED = 'METRIC_TYPE_UNSPECIFIED'
-    INTEGER = 'INTEGER'
-    FLOAT = 'FLOAT'
-    CURRENCY = 'CURRENCY'
-    PERCENT = 'PERCENT'
-    TIME = 'TIME'
-
-
-class OrderType(str, Enum):
-    ORDER_TYPE_UNSPECIFIED = 'ORDER_TYPE_UNSPECIFIED'
-    VALUE = 'VALUE'
-    DELTA = 'DELTA'
-    SMART = 'SMART'
-    HISTOGRAM_BUCKET = 'HISTOGRAM_BUCKET'
-    DIMENSION_AS_INTEGER = 'DIMENSION_AS_INTEGER'
-
-
-class SortOrder(str, Enum):
-    SORT_ORDER_UNSPECIFIED = 'SORT_ORDER_UNSPECIFIED'
-    ASCENDING = 'ASCENDING'
-    DESCENDING = 'DESCENDING'
-
-
-class FilterLogicalOperator(str, Enum):
-    OPERATOR_UNSPECIFIED = 'OPERATOR_UNSPECIFIED'
-    OR = 'OR'
-    AND = 'AND'
-
-
-class Operator(str, Enum):
-    OPERATOR_UNSPECIFIED = 'OPERATOR_UNSPECIFIED'
-    REGEXP = 'REGEXP'
-    BEGINS_WITH = 'BEGINS_WITH'
-    ENDS_WITH = 'ENDS_WITH'
-    PARTIAL = 'PARTIAL'
-    EXACT = 'EXACT'
-    NUMERIC_EQUAL = 'NUMERIC_EQUAL'
-    NUMERIC_GREATER_THAN = 'NUMERIC_GREATER_THAN'
-    NUMERIC_LESS_THAN = 'NUMERIC_LESS_THAN'
-    IN_LIST = 'IN_LIST'
-
-
-class Type(str, Enum):
-    UNSPECIFIED_COHORT_TYPE = "UNSPECIFIED_COHORT_TYPE"
-    FIRST_VISIT_DATE = "FIRST_VISIT_DATE"
 
 
 class Dimension(BaseModel):
@@ -76,7 +20,7 @@ class Dimension(BaseModel):
 
 class DimensionFilter(BaseModel):
     dimensionName: str
-    operator: Operator
+    operator: str
     expressions: List[str] = None
     caseSensitive: bool = False
 
@@ -86,7 +30,7 @@ class DimensionFilter(BaseModel):
 
 
 class DimensionFilterClause(BaseModel):
-    operator: FilterLogicalOperator
+    operator: str
     filters: List[DimensionFilter]
 
 
@@ -106,7 +50,7 @@ class Metric(BaseModel):
 
 class MetricFilter(BaseModel):
     metricName: str
-    operator: Operator
+    operator: str
     comparisonValue: str
 
     class Config:
@@ -115,14 +59,14 @@ class MetricFilter(BaseModel):
 
 
 class MetricFilterClause(BaseModel):
-    operator: FilterLogicalOperator
+    operator: str
     filters: List[MetricFilter]
 
 
 class OrderBy(BaseModel):
     fieldName: str
-    orderType: OrderType = None
-    sortOrder: SortOrder = None
+    orderType: str = None
+    sortOrder: str = None
 
 
 class Pivot(BaseModel):
@@ -135,7 +79,7 @@ class Pivot(BaseModel):
 
 class Cohort(BaseModel):
     name: str
-    type: Type
+    type: str
     dateRage: DateRange = None
 
 
@@ -147,7 +91,7 @@ class CohortGroup(BaseModel):
 class ReportRequest(BaseModel):
     viewId: str
     dateRanges: List[DateRange] = None
-    samplingLevel: Sampling = None
+    samplingLevel: str = None
     dimensions: List[Dimension] = None
     dimensionFilterClauses: List[DimensionFilterClause] = None
     metrics: List[Metric] = None
@@ -211,6 +155,7 @@ def get_query_results(service, report_request):
 
 class GoogleAnalyticsDataSource(ToucanDataSource):
     report_request: ReportRequest
+    parameters: dict = None
 
 
 class GoogleAnalyticsConnector(ToucanConnector):
@@ -225,8 +170,10 @@ class GoogleAnalyticsConnector(ToucanConnector):
             self.credentials.dict(), self.scope
         )
         service = build(API, VERSION, credentials=credentials)
-        report_request = data_source.report_request
-
+        report_request = ReportRequest(**apply_parameters_to_query(
+            data_source.report_request.dict(),
+            data_source.parameters
+        ))
         report = get_query_results(service, report_request)
         reports_data = [pd.DataFrame(get_dict_from_response(report, report_request.dateRanges))]
 
