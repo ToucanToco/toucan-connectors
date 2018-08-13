@@ -1,11 +1,15 @@
 version: 2
 
 default: &default
-  working_directory: /home/circleci/toucan-connectors
+  working_directory: ~/ToucanToco/toucan-connectors
   docker:
     - image: circleci/python:3.6.2
 
 jobs:
+  build:
+    <<: *default
+    parallelism: 1
+    shell: /bin/bash --login
   setup:
     <<: *default
     steps:
