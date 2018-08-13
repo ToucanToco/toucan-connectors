@@ -10,8 +10,6 @@ jobs:
     <<: *default
     parallelism: 1
     shell: /bin/bash --login
-  setup:
-    <<: *default
     steps:
       - checkout
       - run:
@@ -40,9 +38,6 @@ jobs:
             sudo unzip /tmp/oracle_client_lib.zip -d /opt/oracle
             sudo sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
             sudo ldconfig
-  test_unit:
-    <<: *default
-    steps:
       - run:
           name: Unit tests
           command: |
