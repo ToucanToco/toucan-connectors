@@ -1,0 +1,47 @@
+version: 2
+
+default: &default
+  working_directory: /home/circleci/toucan-connectors
+  docker:
+    - image: circleci/python:3.6.2
+
+jobs:
+  setup:
+    <<: *default
+    steps:
+      - checkout
+      - run:
+          name: Main packages installation
+          command: |
+            sudo apt-get update
+            sudo apt-get install freetds-dev
+      - run:
+          name: Upgrade setuptools
+          command: pip install -U setuptools
+      - run:
+          name: Install Docker Compose
+          command: |
+            curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
+            chmod +x ~/docker-compose
+            sudo mv ~/docker-compose /usr/local/bin/docker-compose
+      - run:
+          name: Pull docker compose stack
+          command: docker-compose -f tests/docker-compose.yml pull
+      - run:
+          name: Special install for Oracle
+          command: |
+            sudo apt-get install libaio1
+            sudo mkdir -p /opt/oracle
+            curl -c /tmp/cookie -L -o /tmp/oracle_client_lib.zip "https://drive.google.com/uc?export=download&id=1prPWRnaVMxDsIiSGJqz0TkFT7wXrCgaO"
+            sudo unzip /tmp/oracle_client_lib.zip -d /opt/oracle
+            sudo sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
+            sudo ldconfig
+  test_unit:
+    <<: *default
+    steps:
+      - run:
+          name: Unit tests
+          command: |
+            pip install -r requirements-testing.txt
+            pip install .[all]
+            make test
