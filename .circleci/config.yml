@@ -19,7 +19,7 @@ jobs:
             sudo apt-get install freetds-dev
       - run:
           name: Upgrade setuptools
-          command: pip install -U setuptools
+          command: sudo pip install -U setuptools
       - run:
           name: Install Docker Compose
           command: |
@@ -41,6 +41,6 @@ jobs:
       - run:
           name: Unit tests
           command: |
-            pip install -r requirements-testing.txt
-            pip install .[all]
-            make test
+            sudo pip install -r requirements-testing.txt
+            sudo pip install .[all]
+            sudo make test
