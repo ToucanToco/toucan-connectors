@@ -18,9 +18,6 @@ jobs:
             sudo apt-get update
             sudo apt-get install freetds-dev
       - run:
-          name: Upgrade setuptools
-          command: sudo pip install -U setuptools
-      - run:
           name: Install Docker Compose
           command: |
             curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
@@ -40,8 +37,14 @@ jobs:
             sudo sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
             sudo ldconfig
       - run:
+          name: Create virtualenv
+          command: |
+            python3 -m venv .venv
+            .venv/bin/python3 -m pip install --upgrade pip setuptools
+            .venv/bin/python3 -m pip install -r requirements-testing.txt
+            .venv/bin/python3 -m pip install .[all]
+      - run:
           name: Unit tests
           command: |
-            sudo pip install -r requirements-testing.txt
-            sudo pip install .[all]
-            sudo make test
+            source .venv/bin/activate
+            make test
