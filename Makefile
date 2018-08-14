@@ -1,11 +1,20 @@
-.PHONY         = set-test-env circleci-test test clean docker-clean build upload list
+.PHONY         = set-test-env circleci-test test clean docker-clean build upload list docker-test docker-run
 .DEFAULT_GOAL := list
+
+sudo = disable # Execute Docker with sudo
 
 ########################################
 
-SHELL         = /bin/bash
-VENV_NAME     = .venv
-CODECOV_TOKEN = 3e56598d-bfe8-4741-a973-f4b70bd2c280
+SHELL          = /bin/bash
+VENV_NAME      = .venv
+CODECOV_TOKEN  = 3e56598d-bfe8-4741-a973-f4b70bd2c280
+DOCKER_COMPOSE = docker-compose
+DOCKER         = docker
+
+ifeq ($(sudo),enable)
+        DOCKER_COMPOSE := sudo -E ${DOCKER_COMPOSE}
+        DOCKER := sudo -E ${DOCKER}
+endif
 
 ########################################
 
@@ -17,11 +26,13 @@ set-test-env:
 	${VENV_NAME}/bin/python3 -m pip install .[all]
 	${VENV_NAME}/bin/python3 -m pip install codecov
 
-test: set-test-env
+test:
 	${VENV_NAME}/bin/flake8 toucan_connectors tests
 	PYTHONPATH=. ${VENV_NAME}/bin/pytest tests
 
-circleci-test: test
+docker-test: docker-run set-test-env test docker-clean
+
+circleci-test: set-test-env test
 	${VENV_NAME}/bin/codecov --token=${CODECOV_TOKEN}
 
 clean:
@@ -31,10 +42,17 @@ clean:
 	rm -rf .pytest_cache
 	rm -rf build dist toucan_connectors.egg-info
 
+docker-run:
+	cd tests && \
+	${DOCKER_COMPOSE} pull && \
+	${DOCKER_COMPOSE} up -d
+
 docker-clean:
-	-@docker rmi $$(docker images -q --filter "dangling=true")
-	-@docker rm $$(docker ps -q -f status=exited)
-	-@docker volume ls -qf dangling=true | xargs -r docker volume rm
+	-@cd tests && \
+	${DOCKER_COMPOSE} down --remove-orphans
+	-@${DOCKER} rmi $$(docker images -q --filter "dangling=true")
+	-@${DOCKER} rm $$(docker ps -q -f status=exited)
+	-@${DOCKER} volume ls -qf dangling=true | xargs -r ${DOCKER} volume rm
 
 build:
 	${VENV_NAME}/bin/python setup.py sdist bdist_wheel
