@@ -33,7 +33,8 @@ test:
 docker-test: docker-run set-test-env test docker-clean
 
 circleci-test: set-test-env test
-	${VENV_NAME}/bin/codecov --token=${CODECOV_TOKEN}
+	source ${VENV_NAME}/bin/activate && \
+	codecov --token=${CODECOV_TOKEN}
 
 clean:
 	find . -name "*~" -delete -or -name ".*~" -delete
