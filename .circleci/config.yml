@@ -43,6 +43,7 @@ jobs:
             .venv/bin/python3 -m pip install --upgrade pip setuptools
             .venv/bin/python3 -m pip install -r requirements-testing.txt
             .venv/bin/python3 -m pip install .[all]
+            .venv/bin/python3 setup.py install
       - run:
           name: Unit tests
           command: |
