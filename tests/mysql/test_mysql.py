@@ -60,6 +60,7 @@ def test_connection_params():
                       'port': 123, 'connect_timeout': 50}
 
 
+@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df(mysql_connector, mocker):
     """ It should call the sql extractor """
     mocker.patch('pandas.read_sql').return_value = pd.DataFrame({'a1': ['a', 'b'], 'b1': [1, 2]},
@@ -81,6 +82,7 @@ def test_get_df(mysql_connector, mocker):
     assert df.empty
 
 
+@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_db(mysql_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
@@ -111,6 +113,7 @@ def test_get_df_db(mysql_connector):
     assert len(df[df['Population_City'] > 5000000]) == 24
 
 
+@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_db_nofollow(mysql_connector):
     """" It should extract the table City without merges """
     data_source_spec = {

@@ -62,6 +62,7 @@ def test_connection_params():
                                            'login_timeout': 60, 'database': 'mydb'}
 
 
+@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df(mssql_connector, mssql_datasource):
     """ It should connect to the database and retrieve the response to the query """
     datasource = mssql_datasource(query='SELECT Name, CountryCode, Population '

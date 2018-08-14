@@ -52,6 +52,7 @@ def test_uri():
     assert 'password:\n  username must be set' in str(exc_info.value)
 
 
+@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df(datasource)

@@ -31,7 +31,7 @@ def oracle_connector(oracle_server):
                               dsn=f'localhost:{oracle_server["port"]}/xe')
 
 
-@pytest.mark.skipif(missing_oracle_lib, reason='requires oracle client library')
+@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_db(oracle_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
