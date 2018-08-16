@@ -12,3 +12,7 @@ def test_apply_parameter_to_query():
     expected = [{'$match': {'domain': 'yo', 'cat': 1}}]
     res = apply_parameters_to_query(query, parameters)
     assert res == expected
+
+    query = [{'$match': {'domain': 'yo', 'cat': 1}}]
+    res = apply_parameters_to_query(query, None)
+    assert res == query
