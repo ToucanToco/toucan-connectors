@@ -67,7 +67,7 @@ def test_mssql_get_df(mocker):
     reasq = mocker.patch('pandas.read_sql')
 
     mssql_connector = MSSQLConnector(name='mycon', host='localhost', user='SA',
-                                    password='Il0veT0uc@n!', port=22)
+                                     password='Il0veT0uc@n!', port=22)
     datasource = MSSQLDataSource(name='mycon', domain='mydomain',
                                  query='SELECT Name, CountryCode, Population '
                                        'FROM City WHERE ID BETWEEN 1 AND 3')
