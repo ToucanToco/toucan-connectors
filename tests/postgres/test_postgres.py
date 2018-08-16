@@ -47,14 +47,16 @@ def test_raise_on_empty_query():
         PostgresDataSource(domaine='test', name='test', query='')
 
 
-def test_postgress_get_df(postgres_connector, postgres_server, mocker):
+def test_postgress_get_df(mocker):
     snock = mocker.patch('psycopg2.connect')
     reasq = mocker.patch('pandas.read_sql')
 
-    ds = PostgresDataSource(
-        domain='test',
-        name='test',
-        query='SELECT Name, CountryCode, Population FROM City LIMIT 2;')
+    postgres_connector = PostgresConnector(name='test', host='localhost',
+                                           db='postgres_db', user='ubuntu',
+                                           password='ilovetoucan', port=22)
+
+    ds = PostgresDataSource(domain='test', name='test',
+                            query='SELECT Name, CountryCode, Population FROM City LIMIT 2;')
     postgres_connector.get_df(ds)
 
     snock.assert_called_once_with(
@@ -62,7 +64,7 @@ def test_postgress_get_df(postgres_connector, postgres_server, mocker):
         dbname='postgres_db',
         user='ubuntu',
         password='ilovetoucan',
-        port=postgres_server['port']
+        port=22
     )
 
     reasq.assert_called_once_with(

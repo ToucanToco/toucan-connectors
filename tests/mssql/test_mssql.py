@@ -74,7 +74,8 @@ def test_mssql_get_df(mocker):
     mssql_connector.get_df(datasource)
 
     snock.assert_called_once_with(
-        host='localhost',
+        as_dict=True,
+        server='localhost',
         user='SA',
         password='Il0veT0uc@n!',
         port=22
