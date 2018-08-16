@@ -62,20 +62,22 @@ def test_connection_params():
                                            'login_timeout': 60, 'database': 'mydb'}
 
 
-def test_mssql_get_df(mssql_connector, mssql_datasource, mssql_server, mocker):
+def test_mssql_get_df(mocker):
     snock = mocker.patch('pymssql.connect')
     reasq = mocker.patch('pandas.read_sql')
 
-    datasource = mssql_datasource(query='SELECT Name, CountryCode, Population '
-                                        'FROM City WHERE ID BETWEEN 1 AND 3')
+    mssql_connector= MSSQLConnector(name='mycon', host='localhost', user='SA',
+                                    password='Il0veT0uc@n!', port=22)
+    datasource = MSSQLDataSource(name='mycon', domain='mydomain',
+                                 query='SELECT Name, CountryCode, Population '
+                                       'FROM City WHERE ID BETWEEN 1 AND 3')
     mssql_connector.get_df(datasource)
 
     snock.assert_called_once_with(
-        as_dict=True,
-        server='localhost',
+        host='localhost',
         user='SA',
         password='Il0veT0uc@n!',
-        port=mssql_server['port']
+        port=22
     )
 
     reasq.assert_called_once_with(
