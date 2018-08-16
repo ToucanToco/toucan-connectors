@@ -66,7 +66,7 @@ def test_mssql_get_df(mocker):
     snock = mocker.patch('pymssql.connect')
     reasq = mocker.patch('pandas.read_sql')
 
-    mssql_connector= MSSQLConnector(name='mycon', host='localhost', user='SA',
+    mssql_connector = MSSQLConnector(name='mycon', host='localhost', user='SA',
                                     password='Il0veT0uc@n!', port=22)
     datasource = MSSQLDataSource(name='mycon', domain='mydomain',
                                  query='SELECT Name, CountryCode, Population '

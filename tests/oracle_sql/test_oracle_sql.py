@@ -35,7 +35,7 @@ def test_mssql_get_df(mocker):
     snock = mocker.patch('cx_Oracle.connect')
     reasq = mocker.patch('pandas.read_sql')
 
-    oracle_connector= OracleSQLConnector(name='my_oracle_sql_con', user='system',
+    oracle_connector = OracleSQLConnector(name='my_oracle_sql_con', user='system',
                                          password='oracle', dsn=f'localhost:22/xe')
     datasource = OracleSQLDataSource(domain= 'Oracle test',
                                      name= 'my_oracle_sql_con', query= 'SELECT * FROM City;')
