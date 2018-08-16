@@ -47,7 +47,7 @@ def test_raise_on_empty_query():
         PostgresDataSource(domaine='test', name='test', query='')
 
 
-def test_snowflake(postgres_connector, postgres_server, mocker):
+def test_postgress_get_df(postgres_connector, postgres_server, mocker):
     snock = mocker.patch('psycopg2.connect')
     reasq = mocker.patch('pandas.read_sql')
 
