@@ -31,7 +31,29 @@ def oracle_connector(oracle_server):
                               dsn=f'localhost:{oracle_server["port"]}/xe')
 
 
-@pytest.mark.skipif(missing_oracle_lib, reason='requires oracle client library')
+def test_mssql_get_df(mocker):
+    snock = mocker.patch('cx_Oracle.connect')
+    reasq = mocker.patch('pandas.read_sql')
+
+    oracle_connector = OracleSQLConnector(name='my_oracle_sql_con', user='system',
+                                          password='oracle', dsn=f'localhost:22/xe')
+    datasource = OracleSQLDataSource(domain='Oracle test', name='my_oracle_sql_con',
+                                     query='SELECT * FROM City;')
+    oracle_connector.get_df(datasource)
+
+    snock.assert_called_once_with(
+        user='system',
+        password='oracle',
+        dsn=f'localhost:22/xe'
+    )
+
+    reasq.assert_called_once_with(
+        'SELECT * FROM City',
+        con=snock()
+    )
+
+
+@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_db(oracle_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [

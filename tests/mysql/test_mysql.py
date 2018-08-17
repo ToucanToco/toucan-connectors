@@ -1,7 +1,6 @@
 import collections
 
 import numpy as np
-import pandas as pd
 import pymysql
 import pytest
 
@@ -60,12 +59,13 @@ def test_connection_params():
                       'port': 123, 'connect_timeout': 50}
 
 
-def test_get_df(mysql_connector, mocker):
+def test_get_df(mocker):
     """ It should call the sql extractor """
-    mocker.patch('pandas.read_sql').return_value = pd.DataFrame({'a1': ['a', 'b'], 'b1': [1, 2]},
-                                                                index=['ai', 'bi'])
-    mocker.patch('pandas.DataFrame.merge').return_value = pd.DataFrame()
-    mocker.patch('pandas.DataFrame.drop').return_value = pd.DataFrame()
+    snock = mocker.patch('pymysql.connect')
+    reasq = mocker.patch('pandas.read_sql')
+    mocker.patch(
+        'toucan_connectors.mysql.mysql_connector.MySQLConnector.get_foreign_key_info'
+    ).return_value = []
 
     data_sources_spec = [
         {
@@ -75,12 +75,34 @@ def test_get_df(mysql_connector, mocker):
             'table': 'City'
         }
     ]
+    mysql_connector = MySQLConnector(name='mycon', host='localhost',
+                                     db='mysql_db', port=22,
+                                     user='ubuntu', password='ilovetoucan')
 
     data_source = MySQLDataSource(**data_sources_spec[0])
-    df = mysql_connector.get_df(data_source)
-    assert df.empty
+    mysql_connector.get_df(data_source)
+
+    conv = pymysql.converters.conversions.copy()
+    conv[246] = float
+    snock.assert_called_once_with(
+        host='localhost',
+        user='ubuntu',
+        database='mysql_db',
+        password='ilovetoucan',
+        port=22,
+        charset='utf8mb4',
+        conv=conv,
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+    reasq.assert_called_once_with(
+        'select * from City',
+        con=snock(),
+        params={}
+    )
 
 
+@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_db(mysql_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
@@ -111,6 +133,7 @@ def test_get_df_db(mysql_connector):
     assert len(df[df['Population_City'] > 5000000]) == 24
 
 
+@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_db_nofollow(mysql_connector):
     """" It should extract the table City without merges """
     data_source_spec = {

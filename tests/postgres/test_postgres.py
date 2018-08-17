@@ -47,6 +47,33 @@ def test_raise_on_empty_query():
         PostgresDataSource(domaine='test', name='test', query='')
 
 
+def test_postgress_get_df(mocker):
+    snock = mocker.patch('psycopg2.connect')
+    reasq = mocker.patch('pandas.read_sql')
+
+    postgres_connector = PostgresConnector(name='test', host='localhost',
+                                           db='postgres_db', user='ubuntu',
+                                           password='ilovetoucan', port=22)
+
+    ds = PostgresDataSource(domain='test', name='test',
+                            query='SELECT Name, CountryCode, Population FROM City LIMIT 2;')
+    postgres_connector.get_df(ds)
+
+    snock.assert_called_once_with(
+        host='localhost',
+        dbname='postgres_db',
+        user='ubuntu',
+        password='ilovetoucan',
+        port=22
+    )
+
+    reasq.assert_called_once_with(
+        'SELECT Name, CountryCode, Population FROM City LIMIT 2;',
+        con=snock()
+    )
+
+
+@pytest.mark.skip(reason="This uses a live instance")
 def test_retrieve_response(postgres_connector):
     """ It should connect to the database and retrieve the response to the query """
     ds = PostgresDataSource(
@@ -58,6 +85,7 @@ def test_retrieve_response(postgres_connector):
     assert res.shape == (2, 3)
 
 
+@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_db(postgres_connector):
     """ It should extract the table City and make some merge with some foreign key. """
     data_sources_spec = {
