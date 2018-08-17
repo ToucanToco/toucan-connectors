@@ -47,16 +47,16 @@ class MongoConnector(ToucanConnector):
     def get_df(self, data_source):
         client = pymongo.MongoClient(self.uri)
 
-        cursor = client[self.database][data_source.collection]
+        col = client[self.database][data_source.collection]
         data = None
         data_source.query = apply_parameters_to_query(data_source.query,
                                                       data_source.parameters)
         if isinstance(data_source.query, str):
-            data = cursor.find({'domain': data_source.query})
+            data = col.find({'domain': data_source.query})
         elif isinstance(data_source.query, dict):
-            data = cursor.find(data_source.query)
+            data = col.find(data_source.query)
         elif isinstance(data_source.query, list):
-            data = cursor.aggregate(data_source.query)
+            data = col.aggregate(data_source.query)
         df = pd.DataFrame(list(data))
 
         client.close()
