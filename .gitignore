@@ -22,3 +22,5 @@ env.bak/
 venv.bak/
 .idea
 .vscode
+
+*.swp

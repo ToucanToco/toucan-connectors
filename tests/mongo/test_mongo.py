@@ -52,7 +52,55 @@ def test_uri():
     assert 'password:\n  username must be set' in str(exc_info.value)
 
 
-def test_get_df(mongo_connector, mongo_datasource):
+def test_get_df(mocker):
+    class MongoMock:
+        def __init__(self, database, collection):
+            self.data = {database: {collection: pymongo.collection.Collection}}
+
+        def __getitem__(self, row):
+            return self.data[row]
+
+        def close(self):
+            pass
+
+    snock = mocker.patch('pymongo.MongoClient')
+    snock.return_value = MongoMock('toucan', 'test_col')
+    find = mocker.patch('pymongo.collection.Collection.find')
+    aggregate = mocker.patch('pymongo.collection.Collection.aggregate')
+
+    mongo_connector = MongoConnector(
+        name='mycon', host='localhost', database='toucan', port=22,
+        username='ubuntu', password='ilovetoucan'
+    )
+
+    datasource = MongoDataSource(
+        name='mycon', domain='mydomain', collection='test_col',
+        query={'domain': 'domain1'}
+    )
+    mongo_connector.get_df(datasource)
+
+    datasource = MongoDataSource(
+        name='mycon', domain='mydomain', collection='test_col', query='domain1'
+    )
+    mongo_connector.get_df(datasource)
+
+    datasource = MongoDataSource(
+        name='mycon', domain='mydomain', collection='test_col',
+        query=[{'$match': {'domain': 'domain1'}}]
+    )
+    mongo_connector.get_df(datasource)
+
+    snock.assert_called_with('mongodb://ubuntu:ilovetoucan@localhost:22')
+    assert snock.call_count == 3
+
+    find.assert_called_with({'domain': 'domain1'})
+    assert find.call_count == 2
+
+    aggregate.assert_called_once_with([{'$match': {'domain': 'domain1'}}])
+
+
+@pytest.mark.skip(reason="This uses a live instance")
+def test_get_df_live(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df(datasource)
     expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
