@@ -93,7 +93,6 @@ def test_get_df(mocker):
         charset='utf8mb4',
         conv=conv,
         cursorclass=pymysql.cursors.DictCursor
-
     )
 
     reasq.assert_called_once_with(
