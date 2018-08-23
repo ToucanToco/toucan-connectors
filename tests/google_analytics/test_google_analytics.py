@@ -70,7 +70,7 @@ def test_live_instance():
                 {
                     "fieldName": "ga:date",
                     "orderType": "VALUE",
-                    "sortOrder": "DESCENDING"
+                    "sortOrder": "%(sortOrder)s"
                 }
             ],
             "dimensions": [
@@ -87,7 +87,8 @@ def test_live_instance():
                 {"expression": "ga:sessions"},
                 {"expression": "ga:sessionDuration"}
             ]
-        }
+        },
+        parameters={'sortOrder': 'DESCENDING'}
     )
 
     df = gac.get_df(gads)
