@@ -19,7 +19,7 @@ class GoogleCredentials(BaseModel):
 
 def nosql_apply_parameters_to_query(query, parameters):
     """
-    WARNIING : DO NOT USE THIS WITH VARIANTS OF SQL
+    WARNING : DO NOT USE THIS WITH VARIANTS OF SQL
     Instead use your client library parameter substitution method.
     https://www.owasp.org/index.php/Query_Parameterization_Cheat_Sheet
     """
