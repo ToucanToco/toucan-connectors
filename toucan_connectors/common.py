@@ -1,6 +1,7 @@
-from pydantic import BaseModel
 import json
 import re
+
+from pydantic import BaseModel
 
 
 class GoogleCredentials(BaseModel):
