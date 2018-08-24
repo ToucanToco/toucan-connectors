@@ -17,9 +17,9 @@ PARAM_PATTERN = '%\(\w*\)s'
 @singledispatch
 def handle_missing_params(d, params):
     """
-    Remove a dictionary key if it's value has a missing parameter.
-    This is used to support the __VOID__ syntax, wich specific to
-    Toucan Toco use of mongo : cf. https://bit.ly/2Ln6rcf
+    Remove a dictionary key if its value has a missing parameter.
+    This is used to support the __VOID__ syntax, which is specific to
+    the use of mongo at Toucan Toco : cf. https://bit.ly/2Ln6rcf
     """
     e = {}
     for k, v in d.items():
