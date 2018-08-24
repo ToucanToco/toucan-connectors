@@ -7,6 +7,7 @@ import pymongo.errors
 import pytest
 
 from toucan_connectors.mongo.mongo_connector import MongoDataSource, MongoConnector
+from toucan_connectors.mongo.mongo_connector import handle_missing_params
 
 
 @pytest.fixture(scope='module')
@@ -117,3 +118,32 @@ def test_get_df_live(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query=[{'$match': {'domain': 'domain1'}}])
     df2 = mongo_connector.get_df(datasource)
     assert df2.equals(df)
+
+
+def test_handle_missing_param():
+    params = {'city': 'Paris'}
+
+    query = {
+        'domain': 'blah',
+        'country': {'$ne': '%(country)s'},
+        'city': '%(city)s'
+    }
+
+    assert handle_missing_params(query, params) == {
+        'domain': 'blah',
+        'country': {},
+        'city': '%(city)s'
+    }
+
+    query = [
+        {'$match': {'country': '%(country)s', 'city': 'Test'}},
+        {'$match': {'b': 1}}
+    ]
+
+    assert handle_missing_params(query, params) == [
+        {'$match': {'city': 'Test'}},
+        {'$match': {'b': 1}}
+    ]
+
+    query = {'code': '%(city)s_%(country)s', 'domain': 'Test'}
+    assert handle_missing_params(query, params) == {'domain': 'Test'}
