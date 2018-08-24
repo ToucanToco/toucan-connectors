@@ -6,7 +6,7 @@ import pandas as pd
 from pydantic import BaseModel
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-from toucan_connectors.common import GoogleCredentials, apply_parameters_to_query
+from toucan_connectors.common import GoogleCredentials, nosql_apply_parameters_to_query
 
 API = 'analyticsreporting'
 SCOPE = 'https://www.googleapis.com/auth/analytics.readonly'
@@ -170,7 +170,7 @@ class GoogleAnalyticsConnector(ToucanConnector):
             self.credentials.dict(), self.scope
         )
         service = build(API, VERSION, credentials=credentials)
-        report_request = ReportRequest(**apply_parameters_to_query(
+        report_request = ReportRequest(**nosql_apply_parameters_to_query(
             data_source.report_request.dict(),
             data_source.parameters
         ))

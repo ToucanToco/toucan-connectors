@@ -16,7 +16,12 @@ class GoogleCredentials(BaseModel):
     client_x509_cert_url: str
 
 
-def apply_parameters_to_query(query, parameters):
+def nosql_apply_parameters_to_query(query, parameters):
+    """
+    WARNIING : DO NOT USE THIS WITH VARIANTS OF SQL
+    Instead use your client library parameter substitution method.
+    https://www.owasp.org/index.php/Query_Parameterization_Cheat_Sheet
+    """
     if parameters is None:
         return query
     parameters = {key: json.dumps(val) for key, val in parameters.items()}
