@@ -15,7 +15,8 @@ extras_require = {
     'google_spreadsheet': ['gspread>=3', 'oauth2client'],
     'google_analytics': ['google-api-python-client'],
     'adobe': ['adobe_analytics'],
-    'toucan_toco': ['toucan_client']
+    'toucan_toco': ['toucan_client'],
+    'hive': ['pyhive[hive]']
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
