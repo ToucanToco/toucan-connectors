@@ -12,6 +12,8 @@
 
 * [GoogleSpreadsheetConnector](google_spreadsheet.md)
 
+* [HiveConnector](hive.md)
+
 * [MSSQLConnector](mssql.md)
 
 * [MicroStrategyConnector](micro_strategy.md)

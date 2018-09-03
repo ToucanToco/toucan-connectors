@@ -30,5 +30,7 @@ with suppress(ImportError):
    from .toucantoco.toucantoco_connector import ToucanTocoConnector
 with suppress(ImportError):
     from .google_analytics.google_analytics_connector import GoogleAnalyticsConnector
+with suppress(ImportError):
+    from .hive.hive_connector import HiveConnector
 
 from .toucan_connector import ToucanDataSource, ToucanConnector
