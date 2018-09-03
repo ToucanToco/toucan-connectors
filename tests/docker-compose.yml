@@ -50,6 +50,4 @@ hive:
   image: gillax/hive
   ports:
     - 10000:10000
-  volumes:
-    - ./hive/bootstrap-hive.sh:/etc/bootstrap-hive.sh
-  command: ["bash", "/etc/bootstrap-hive.sh"]
+  command: ["/bin/bash", "-c", "/etc/bootstrap.sh && hiveserver2"]
