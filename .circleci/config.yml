@@ -42,6 +42,10 @@ jobs:
             sudo sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
             sudo ldconfig
       - run:
+          name: Special install for Hive
+          command: |
+            sudo apt-get install libsasl2-dev
+      - run:
           name: Create virtualenv
           command: |
             make set-test-env
