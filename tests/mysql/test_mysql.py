@@ -102,7 +102,6 @@ def test_get_df(mocker):
     )
 
 
-@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_db(mysql_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
@@ -133,7 +132,6 @@ def test_get_df_db(mysql_connector):
     assert len(df[df['Population_City'] > 5000000]) == 24
 
 
-@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_db_nofollow(mysql_connector):
     """" It should extract the table City without merges """
     data_source_spec = {

@@ -28,6 +28,7 @@ jobs:
       # test
       - run: sudo pip install -r requirements-testing.txt
       - run: sudo pip install .[all]
+      - run: sudo pip install codecov
       - run: flake8 toucan_connectors tests
       - run: pytest tests
       - run: codecov --token=3e56598d-bfe8-4741-a973-f4b70bd2c280

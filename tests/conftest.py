@@ -1,12 +1,11 @@
 import socket
 import time
 from contextlib import suppress
-from os import path, environ
+from os import path
 
 import pytest
 import yaml
 from docker import APIClient
-from docker.tls import TLSConfig
 from slugify import slugify
 
 
@@ -22,14 +21,7 @@ def docker_pull(request):
 
 @pytest.fixture(scope='session')
 def docker():
-    docker_kwargs = {'version': 'auto'}
-    if 'DOCKER_HOST' in environ:
-        docker_kwargs['base_url'] = environ['DOCKER_HOST']
-    if environ.get('DOCKER_TLS_VERIFY', 0) == '1':
-        docker_kwargs['tls'] = TLSConfig((
-            f"{environ['DOCKER_CERT_PATH']}/cert.pem",
-            f"{environ['DOCKER_CERT_PATH']}/key.pem"))
-    docker = APIClient(**docker_kwargs)
+    docker = APIClient(version='auto')
     return docker
 
 
