@@ -1,22 +1,14 @@
 version: 2
 
-default: &default
-  working_directory: ~/ToucanToco/toucan-connectors
-  docker:
-    - image: circleci/python:3.6.2
-
 jobs:
-  build:
-    <<: *default
-    parallelism: 1
-    shell: /bin/bash --login
+  main:
+    docker:
+      - image: circleci/python:3.6
     steps:
       - checkout
-      - run:
-          name: Main packages installation
-          command: |
-            sudo apt-get update
-            sudo apt-get install freetds-dev
+      # prepare
+      - run: sudo apt-get update
+      - run: sudo apt-get install freetds-dev libsasl2-dev
       - run:
           name: Install Docker Compose
           command: |
@@ -24,28 +16,25 @@ jobs:
             chmod +x ~/docker-compose
             sudo mv ~/docker-compose /usr/local/bin/docker-compose
       - setup_remote_docker
-#      - run:
-#          name: Pull docker compose stack
-#          command: docker-compose -f tests/docker-compose.yml pull
-#      - run:
-#          name: Start docker compose stack
-#          command: |
-#            cd tests
-#            docker-compose up -d
-      - run:
-          name: Special install for Oracle
-          command: |
-            sudo apt-get install libaio1
-            sudo mkdir -p /opt/oracle
-            curl -c /tmp/cookie -L -o /tmp/oracle_client_lib.zip "https://drive.google.com/uc?export=download&id=1prPWRnaVMxDsIiSGJqz0TkFT7wXrCgaO"
-            sudo unzip /tmp/oracle_client_lib.zip -d /opt/oracle
-            sudo sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
-            sudo ldconfig
-      - run:
-          name: Create virtualenv
-          command: |
-            make set-test-env
-      - run:
-          name: Unit tests
-          command: |
-            make circleci-test
+      - run: docker-compose -f tests/docker-compose.yml pull
+      - run: sudo pip install --upgrade pip setuptools
+      # oracle dependencies
+      - run: sudo apt-get install libaio1
+      - run: sudo mkdir -p /opt/oracle
+      - run: curl -c /tmp/cookie -L -o /tmp/oracle_client_lib.zip "https://drive.google.com/uc?export=download&id=1prPWRnaVMxDsIiSGJqz0TkFT7wXrCgaO"
+      - run: sudo unzip /tmp/oracle_client_lib.zip -d /opt/oracle
+      - run: sudo sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
+      - run: sudo ldconfig
+      # test
+      - run: sudo pip install -r requirements-testing.txt
+      - run: sudo pip install .[all]
+      - run: flake8 toucan_connectors tests
+      - run: pytest tests
+      - run: codecov --token=3e56598d-bfe8-4741-a973-f4b70bd2c280
+
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - main
