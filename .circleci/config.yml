@@ -39,5 +39,5 @@ jobs:
           name: Pulling all docker images
           command: docker-compose -f tests/docker-compose.yml pull
       - run: flake8 toucan_connectors tests
-      - run: pytest tests
+      - run: PYTHONPATH=. pytest tests
       - run: codecov --token=3e56598d-bfe8-4741-a973-f4b70bd2c280

@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from toucan_connectors.google_analytics.google_analytics_connector import (
     GoogleAnalyticsConnector, GoogleAnalyticsDataSource)
 
@@ -41,6 +43,7 @@ def test_google_analytics(mocker):
     assert df.shape == (3, 11)
 
 
+@pytest.mark.skip(reason="This uses a live instance")
 def test_live_instance():
     gac = GoogleAnalyticsConnector(
         type="GoogleAnalytics",
