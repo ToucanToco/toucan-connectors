@@ -14,7 +14,7 @@ class MySQLDataSource(ToucanDataSource):
     """
     query: constr(min_length=1) = None
     table: constr(min_length=1) = None
-    follow_relations: bool = True
+    follow_relations: bool = False
     parameters: dict = None
 
     def __init__(self, **data):

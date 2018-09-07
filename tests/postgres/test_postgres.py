@@ -73,7 +73,6 @@ def test_postgress_get_df(mocker):
     )
 
 
-@pytest.mark.skip(reason="This uses a live instance")
 def test_retrieve_response(postgres_connector):
     """ It should connect to the database and retrieve the response to the query """
     ds = PostgresDataSource(
@@ -85,7 +84,6 @@ def test_retrieve_response(postgres_connector):
     assert res.shape == (2, 3)
 
 
-@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_db(postgres_connector):
     """ It should extract the table City and make some merge with some foreign key. """
     data_sources_spec = {

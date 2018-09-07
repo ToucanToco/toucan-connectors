@@ -39,7 +39,7 @@ Either `query` or `table` are required, both at the same time are not supported.
 * `name`: str, required
 * `query`: str (not empty), required if `table` is not provided.
 * `table`: str (not empty), required if `query` is not provided, will read the whole table.
-* `follow_relations`: bool, default to true. Merges data from foreign key relations.
+* `follow_relations`: bool, default to false. Merges data from foreign key relations.
 * `parameters` dict, optional. Allow to parameterize the query.
 
 ```coffee

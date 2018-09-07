@@ -29,6 +29,6 @@ def nosql_apply_parameters_to_query(query, parameters):
     if type(query) is str:
         query = query % parameters
     else:
-        query = re.sub('"(%\(\w*\)s)"', '\g<1>', json.dumps(query))
+        query = re.sub(r'"(%\(\w*\)s)"', r'\g<1>', json.dumps(query))
         query = json.loads(query % parameters)
     return query
