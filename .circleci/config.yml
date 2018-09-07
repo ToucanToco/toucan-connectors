@@ -1,41 +1,29 @@
 version: 2
 
 jobs:
-  main:
-    docker:
-      - image: circleci/python:3.6
-      - image: mongo:3.6
-        environment:
-          - MONGO_INITDB_ROOT_USERNAME=ubuntu
-          - MONGO_INITDB_ROOT_PASSWORD=ilovetoucan
-          - MONGO_INITDB_DATABASE=toucan
-        ports:
-          - 27017:27017
+  build:
+    machine: true
+    environment:
+      PYTHON: "3.6"
     steps:
-      # Setup
-      - checkout
+      # ~~ SYSTEM DEPENDENCIES ~~
       - run: sudo apt-get update
-      - run: sudo apt-get install freetds-dev libsasl2-dev libaio1
-      - run: sudo pip install -U pip setuptools
+      - run: sudo apt-get install freetds-dev libsasl2-dev
+      # oracle
+      - run: sudo apt-get install libaio1
+      - run: sudo mkdir -p /opt/oracle
+      - run: curl -c /tmp/cookie -L -o /tmp/oracle_client_lib.zip "https://drive.google.com/uc?export=download&id=1prPWRnaVMxDsIiSGJqz0TkFT7wXrCgaO"
+      - run: sudo unzip /tmp/oracle_client_lib.zip -d /opt/oracle
+      - run: sudo sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
+      - run: sudo ldconfig
+      # ~~ TESTING DEPENDENCIES ~~
+      - checkout
+      - run: docker-compose -f tests/docker-compose.yml pull
+      - run: sudo pip install --upgrade pip setuptools
       - run: sudo pip install -r requirements-testing.txt
       - run: sudo pip install .[all]
       - run: sudo pip install codecov
-      # Docker client
-      - setup_remote_docker
-      - run:
-          name: Install Docker client
-          command: |
-            set -x
-            VER="17.03.0-ce"
-            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            mv /tmp/docker/* /usr/bin
-      # Testing
+      # ~~ TEST ~~
       - run: flake8 toucan_connectors tests
-      - run: pytest tests/mongo
-
-workflows:
-  version: 2
-  build:
-    jobs:
-      - main
+      - run: pytest tests
+      - run: codecov --token=3e56598d-bfe8-4741-a973-f4b70bd2c280
