@@ -230,6 +230,24 @@ class MySQLConnector(ToucanConnector):
             raise InvalidQuery(keys)
         return MySQLConnector.extract_info(fetch_all)
 
+    @staticmethod
+    def decode_df(df):
+        """
+        Used to change bytes columns to string columns
+        (can be moved to be applied for all connectors if needed)
+        It retrieves all the string columns and converts them all together.
+        The string columns become nan columns so we remove them from the result,
+        we keep the rest and insert it back to the dataframe
+        """
+        str_df = (df.select_dtypes([np.object])
+                    .stack()
+                    .str.decode('utf8')
+                    .unstack()
+                    .dropna(axis=1, how='all'))
+        for col in str_df.columns:
+            df[col] = str_df[col]
+        return df
+
     def get_df(self, datasource):
         """
         Transform a table into a DataFrame and recursively merge tables
@@ -255,6 +273,7 @@ class MySQLConnector(ToucanConnector):
 
         if not datasource.follow_relations:
             df = pd.read_sql(query, con=connection, params=query_params)
+            df = self.decode_df(df)
             connection.close()
             return df
 
