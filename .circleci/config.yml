@@ -1,39 +1,17 @@
 version: 2
 
-default: &default
-  working_directory: ~/ToucanToco/toucan-connectors
-  docker:
-    - image: circleci/python:3.6.2
-
 jobs:
   build:
-    <<: *default
-    parallelism: 1
-    shell: /bin/bash --login
+    machine: true
     steps:
       - checkout
       - run:
-          name: Main packages installation
+          name: Install sytem dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install freetds-dev
+            sudo apt-get install freetds-dev libsasl2-dev
       - run:
-          name: Install Docker Compose
-          command: |
-            curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
-            chmod +x ~/docker-compose
-            sudo mv ~/docker-compose /usr/local/bin/docker-compose
-      - setup_remote_docker
-#      - run:
-#          name: Pull docker compose stack
-#          command: docker-compose -f tests/docker-compose.yml pull
-#      - run:
-#          name: Start docker compose stack
-#          command: |
-#            cd tests
-#            docker-compose up -d
-      - run:
-          name: Special install for Oracle
+          name: Install oracle dependencies
           command: |
             sudo apt-get install libaio1
             sudo mkdir -p /opt/oracle
@@ -42,10 +20,24 @@ jobs:
             sudo sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
             sudo ldconfig
       - run:
-          name: Create virtualenv
+          name: Install python 3.6
           command: |
-            make set-test-env
+            sudo add-apt-repository ppa:jonathonf/python-3.6
+            sudo apt-get update
+            sudo apt-get install python3.6
+            sudo apt install python3.6-dev
+            wget https://bootstrap.pypa.io/get-pip.py
+            sudo python3.6 get-pip.py
       - run:
-          name: Unit tests
+          name: Install python librairies
           command: |
-            make circleci-test
+            sudo pip3.6 install --upgrade pip setuptools
+            sudo pip3.6 install -r requirements-testing.txt
+            sudo pip3.6 install .[all]
+            sudo pip3.6 install codecov
+      - run:
+          name: Pulling all docker images
+          command: docker-compose -f tests/docker-compose.yml pull
+      - run: flake8 toucan_connectors tests
+      - run: PYTHONPATH=. pytest tests -s -v --cov-report term-missing --cov=toucan_connectors
+      - run: codecov --token=3e56598d-bfe8-4741-a973-f4b70bd2c280

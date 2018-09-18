@@ -100,7 +100,6 @@ def test_get_df(mocker):
     aggregate.assert_called_once_with([{'$match': {'domain': 'domain1'}}])
 
 
-@pytest.mark.skip(reason="This uses a live instance")
 def test_get_df_live(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df(datasource)

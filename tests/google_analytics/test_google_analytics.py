@@ -1,4 +1,5 @@
 import json
+
 import pytest
 
 from toucan_connectors.google_analytics.google_analytics_connector import (

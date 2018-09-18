@@ -1,6 +1,7 @@
 import collections
 
 import numpy as np
+import pandas as pd
 import pymysql
 import pytest
 
@@ -102,15 +103,15 @@ def test_get_df(mocker):
     )
 
 
-@pytest.mark.skip(reason="This uses a live instance")
-def test_get_df_db(mysql_connector):
+def test_get_df_db_follow(mysql_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
         {
             'domain': 'MySQL test',
             'type': 'external_database',
             'name': 'Some MySQL provider',
-            'table': 'City'
+            'table': 'City',
+            'follow_relations': True
         }
     ]
 
@@ -133,15 +134,13 @@ def test_get_df_db(mysql_connector):
     assert len(df[df['Population_City'] > 5000000]) == 24
 
 
-@pytest.mark.skip(reason="This uses a live instance")
-def test_get_df_db_nofollow(mysql_connector):
+def test_get_df_db(mysql_connector):
     """" It should extract the table City without merges """
     data_source_spec = {
         'domain': 'MySQL test',
         'type': 'external_database',
         'name': 'Some MySQL provider',
         'query': 'SELECT * FROM City WHERE Population > %(max_pop)s',
-        'follow_relations': False,
         'parameters': {'max_pop': 5000000},
     }
 
@@ -162,3 +161,20 @@ def test_clean_response():
     assert len(res) == 2
     assert res[1]['name'] == 'zbruh'
     assert np.isnan(res[1]['age'])
+
+
+def test_decode_df():
+    """It should decode the bytes columns"""
+    df = pd.DataFrame({'date': [b'2013-08-01', b'2013-08-02'],
+                       'country': ['France', 'Germany'],
+                       'number': [1, 2],
+                       'other': [b'pikka', b'chuuu'],
+                       'random': [3, 4]})
+    res = MySQLConnector.decode_df(df)
+    assert res['date'].tolist() == ['2013-08-01', '2013-08-02']
+    assert res['other'].tolist() == ['pikka', 'chuuu']
+    assert res[['country', 'number', 'random']].equals(df[['country', 'number', 'random']])
+
+    df2 = df[['number', 'random']]
+    res = MySQLConnector.decode_df(df2)
+    assert res.equals(df2)

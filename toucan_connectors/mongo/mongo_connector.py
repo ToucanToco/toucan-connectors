@@ -11,7 +11,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.common import nosql_apply_parameters_to_query
 
 
-PARAM_PATTERN = '%\(\w*\)s'
+PARAM_PATTERN = r'%\(\w*\)s'
 
 
 @singledispatch

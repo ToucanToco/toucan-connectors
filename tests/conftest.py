@@ -29,8 +29,7 @@ def docker():
         docker_kwargs['tls'] = TLSConfig((
             f"{environ['DOCKER_CERT_PATH']}/cert.pem",
             f"{environ['DOCKER_CERT_PATH']}/key.pem"))
-    docker = APIClient(**docker_kwargs)
-    return docker
+    return APIClient(**docker_kwargs)
 
 
 @pytest.fixture(scope='session')
