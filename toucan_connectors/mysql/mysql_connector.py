@@ -239,11 +239,14 @@ class MySQLConnector(ToucanConnector):
         The string columns become nan columns so we remove them from the result,
         we keep the rest and insert it back to the dataframe
         """
-        str_df = (df.select_dtypes([np.object])
-                    .stack()
-                    .str.decode('utf8')
-                    .unstack()
-                    .dropna(axis=1, how='all'))
+        str_df = df.select_dtypes([np.object])
+        if str_df.empty:
+            return df
+
+        str_df = (str_df.stack()
+                        .str.decode('utf8')
+                        .unstack()
+                        .dropna(axis=1, how='all'))
         for col in str_df.columns:
             df[col] = str_df[col]
         return df

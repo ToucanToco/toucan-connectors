@@ -174,3 +174,7 @@ def test_decode_df():
     assert res['date'].tolist() == ['2013-08-01', '2013-08-02']
     assert res['other'].tolist() == ['pikka', 'chuuu']
     assert res[['country', 'number', 'random']].equals(df[['country', 'number', 'random']])
+
+    df2 = df[['number', 'random']]
+    res = MySQLConnector.decode_df(df2)
+    assert res.equals(df2)
