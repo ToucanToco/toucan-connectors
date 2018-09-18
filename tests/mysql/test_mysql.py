@@ -1,6 +1,7 @@
 import collections
 
 import numpy as np
+import pandas as pd
 import pymysql
 import pytest
 
@@ -160,3 +161,20 @@ def test_clean_response():
     assert len(res) == 2
     assert res[1]['name'] == 'zbruh'
     assert np.isnan(res[1]['age'])
+
+
+def test_decode_df():
+    """It should decode the bytes columns"""
+    df = pd.DataFrame({'date': [b'2013-08-01', b'2013-08-02'],
+                       'country': ['France', 'Germany'],
+                       'number': [1, 2],
+                       'other': [b'pikka', b'chuuu'],
+                       'random': [3, 4]})
+    res = MySQLConnector.decode_df(df)
+    assert res['date'].tolist() == ['2013-08-01', '2013-08-02']
+    assert res['other'].tolist() == ['pikka', 'chuuu']
+    assert res[['country', 'number', 'random']].equals(df[['country', 'number', 'random']])
+
+    df2 = df[['number', 'random']]
+    res = MySQLConnector.decode_df(df2)
+    assert res.equals(df2)
