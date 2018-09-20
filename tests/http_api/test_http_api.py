@@ -78,7 +78,7 @@ def test_get_df_with_parameters_and_auth(connector, data_source, auth, mocker):
 
 def test_exceptions_not_json():
     connector = HttpAPIConnector(name="myHttpConnector", type="HttpAPI",
-                          baseroute="https://demo.toucantoco.com")
+                                 baseroute="https://demo.toucantoco.com")
     data_source = HttpAPIDataSource(name="myHttpDataSource", domain="my_domain", url="/")
 
     with pytest.raises(ValueError):
