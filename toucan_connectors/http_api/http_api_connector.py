@@ -75,7 +75,7 @@ class HttpAPIConnector(ToucanConnector):
     baseroute: str
     auth : Auth = None
 
-    def _query(self, query):
+    def do_request(self, query, auth):
         """
         Get some json data with an HTTP request and run a jq filter on it.
         Args:
@@ -88,11 +88,9 @@ class HttpAPIConnector(ToucanConnector):
 
         jq_filter = query['filter']
         query = {k: v for k, v in list(query.items()) if k in REQUESTS_PARAMS}
-        query['url'] = '/'.join([
-            self.baseroute.rstrip('/'),
-            query['url'].lstrip('/')
-        ])
-
+        query['url'] = '/'.join([self.baseroute.rstrip('/'), query['url'].lstrip('/')])
+        quert['auth'] = auth
+        
         res = request(**query)
 
         try:
@@ -113,14 +111,12 @@ class HttpAPIConnector(ToucanConnector):
         # generate the request auth object
         if data_source.auth :
             auth = data_source.auth.get_auth()
+            data_source.auth = None
         else :
             auth = None
-        data_source.auth = None
-        query = nosql_apply_parameters_to_query(data_source.dict(), data_source.parameters)
-
-        # inject the request auth object
-        query['auth'] = auth
+                
+        query = nosql_apply_parameters_to_query(
+            data_source.dict(), 
+            data_source.parameters)
         
-        data = self._query(query)
-
-        return pd.DataFrame(data)
+        return pd.DataFrame(self.do_request(query, auth))
