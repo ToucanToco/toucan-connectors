@@ -1,5 +1,3 @@
-module 'toucan_connectors' has no attribute 'HttpApiConnector'
-module 'toucan_connectors' has no attribute 'ToucanTocoConnector'
 # HttpAPI connector
 
 ## Data provider configuration
