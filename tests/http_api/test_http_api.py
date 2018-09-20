@@ -21,7 +21,7 @@ def test_transform_with_jq():
 
 def test_get_df():
     df = HC.get_df(HD)
-    assert df.shape == (500,5)
+    assert df.shape == (500, 5)
 
 
 def test_get_df_with_auth(mocker):
@@ -38,8 +38,8 @@ def test_get_df_with_auth(mocker):
 
 def test_get_df_with_parameters(mocker):
     HD.auth = None
-    HD.parameters = {"first_name" : "raphael"}
-    HD.headers = {"name":"%(first_name)s"}
+    HD.parameters = {"first_name": "raphael"}
+    HD.headers = {"name": "%(first_name)s"}
 
     mocke = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
     mocke.return_value.json.return_value = []
@@ -47,7 +47,7 @@ def test_get_df_with_parameters(mocker):
     HC.get_df(HD)
     _, ke = mocke.call_args
 
-    assert ke["headers"] == {"name":"raphael"}
+    assert ke["headers"] == {"name": "raphael"}
 
 
 def test_get_df_with_parameters_and_auth(mocker):
