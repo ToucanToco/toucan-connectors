@@ -14,6 +14,8 @@
 
 * [HiveConnector](hive.md)
 
+* [HttpAPIConnector](http_api.md)
+
 * [MSSQLConnector](mssql.md)
 
 * [MicroStrategyConnector](micro_strategy.md)
