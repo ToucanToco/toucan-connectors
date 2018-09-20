@@ -32,5 +32,7 @@ with suppress(ImportError):
     from .google_analytics.google_analytics_connector import GoogleAnalyticsConnector
 with suppress(ImportError):
     from .hive.hive_connector import HiveConnector
+with suppress(ImportError):
+    from .http_api.http_api_connector import HttpAPIConnector
 
 from .toucan_connector import ToucanDataSource, ToucanConnector

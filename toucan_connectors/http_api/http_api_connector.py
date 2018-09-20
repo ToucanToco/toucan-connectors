@@ -1,11 +1,17 @@
-import pandas as pd
+from collections import defaultdict
+from enum import Enum
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+import pandas as pd
 from pydantic import BaseModel, Schema
 from typing import List
-import requests
-from collections import defaultdict
 from jq import jq
+
+from requests import request
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from requests_oauthlib import OAuth1
+
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.common import nosql_apply_parameters_to_query
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
@@ -24,7 +30,7 @@ def transform_with_jq(data: object, jq_filter: str) -> list:
     return data
 
 
-class AuthType(BaseModel):
+class AuthType(Enum):
     basic = "basic"
     digest = "digest"
     oauth1 = "oauth1"
@@ -33,6 +39,15 @@ class AuthType(BaseModel):
 class Auth(BaseModel):
     type: AuthType
     args: List[str]
+
+    def get_auth(self):
+        auth_class = {
+            'basic': HTTPBasicAuth,
+            'digest': HTTPDigestAuth,
+            'oauth1': OAuth1,
+        }.get(self.type.value)
+
+        return auth_class(*self.args)
 
 
 class Method(BaseModel):
@@ -49,12 +64,13 @@ class HttpAPIDataSource(ToucanDataSource):
     _json: dict = Schema(None, alias = 'json')
     data: str = None
     filter: str = "."
+    auth: Auth = None
+    parameters: dict = None
 
 
 class HttpAPIConnector(ToucanConnector):
     type = "HttpAPI"
     data_source_model: HttpAPIDataSource
-    
     
     baseroute: str
     auth : Auth = None
@@ -68,7 +84,7 @@ class HttpAPIConnector(ToucanConnector):
             data (list): The response from the API in the form of a list of dict
         """
 
-        REQUESTS_PARAMS = ['url', 'method', 'params', 'data', 'json', 'headers']
+        REQUESTS_PARAMS = ['url', 'method', 'params', 'data', 'json', 'headers', "auth"]
 
         jq_filter = query['filter']
         query = {k: v for k, v in list(query.items()) if k in REQUESTS_PARAMS}
@@ -76,8 +92,8 @@ class HttpAPIConnector(ToucanConnector):
             self.baseroute.rstrip('/'),
             query['url'].lstrip('/')
         ])
-        # query['auth'] = self.get_auth()
-        res = requests.request(**query)
+
+        res = request(**query)
 
         try:
             data = res.json()
@@ -94,18 +110,17 @@ class HttpAPIConnector(ToucanConnector):
 
     def get_df(self, data_source: HttpAPIDataSource) -> pd.DataFrame:
 
-        query = data_source.dict()
+        # generate the request auth object
+        if data_source.auth :
+            auth = data_source.auth.get_auth()
+        else :
+            auth = None
+        data_source.auth = None
+        query = nosql_apply_parameters_to_query(data_source.dict(), data_source.parameters)
+
+        # inject the request auth object
+        query['auth'] = auth
         
-        if hasattr(self, 'template'):
-            for k, v in list(self.template.items()):
-                query[k].update(v)
-                if k in config:
-                    query[k].update(config[k])
         data = self._query(query)
-
-
-
-
-
 
         return pd.DataFrame(data)
