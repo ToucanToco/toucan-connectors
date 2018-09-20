@@ -1,14 +1,14 @@
 from toucan_connectors.http_api.http_api_connector import (
-    HttpAPIConnector, 
-    HttpAPIDataSource, 
-    transform_with_jq, 
-    Auth, 
+    HttpAPIConnector,
+    HttpAPIDataSource,
+    transform_with_jq,
+    Auth,
     HTTPBasicAuth
 )
 
-HC = HttpAPIConnector(name = "myHttpConnector", 
-    type ="HttpAPI", baseroute = "https://jsonplaceholder.typicode.com")
-HD = HttpAPIDataSource(name = "myHttpDataSource", domain = "my_domain", url= "/comments")
+HC = HttpAPIConnector(name="myHttpConnector", type="HttpAPI",
+                      baseroute="https://jsonplaceholder.typicode.com")
+HD = HttpAPIDataSource(name="myHttpDataSource", domain="my_domain", url="/comments")
 AT = Auth(type="basic", args=["username", "password"])
 
 
@@ -29,7 +29,7 @@ def test_get_df_with_auth(mocker):
     mocke = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
     mocke.return_value.json.return_value = []
 
-    df = HC.get_df(HD)
+    HC.get_df(HD)
     _, ke = mocke.call_args
 
     assert ke["auth"].username == 'username'
@@ -44,22 +44,21 @@ def test_get_df_with_parameters(mocker):
     mocke = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
     mocke.return_value.json.return_value = []
 
-    df = HC.get_df(HD)
-    _, ke = mocke.call_args    
+    HC.get_df(HD)
+    _, ke = mocke.call_args
 
     assert ke["headers"] == {"name":"raphael"}
-
 
 
 def test_get_df_with_parameters_and_auth(mocker):
     HD.auth = AT
-    HD.parameters = {"first_name" : "raphael"}
-    HD.headers = {"name":"%(first_name)s"}
+    HD.parameters = {"first_name": "raphael"}
+    HD.headers = {"name": "%(first_name)s"}
 
     mocke = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
     mocke.return_value.json.return_value = []
 
-    df = HC.get_df(HD)
-    _, ke = mocke.call_args    
+    HC.get_df(HD)
+    _, ke = mocke.call_args
 
-    assert ke["headers"] == {"name":"raphael"}
+    assert ke["headers"] == {"name": "raphael"}

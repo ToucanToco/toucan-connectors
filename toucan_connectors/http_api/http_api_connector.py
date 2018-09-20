@@ -1,8 +1,7 @@
-from collections import defaultdict
 from enum import Enum
 
 import pandas as pd
-from pydantic import BaseModel, Schema
+from pydantic import BaseModel
 from typing import List
 from jq import jq
 
@@ -15,16 +14,15 @@ from toucan_connectors.common import nosql_apply_parameters_to_query
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
-    """
-    Our standard way to apply a jq filter on data before it's passed to a pd.DataFrame
-    """
     data = jq(jq_filter).transform(data, multiple_output=True)
 
-    # If the data is already presented as a list of rows,
-    # then undo the nesting caused by "multiple_output" jq option
-    if len(data) == 1 and (isinstance(data[0], list)
-        # detects another valid datastructure [{col1:[value, ...], col2:[value, ...]}]
-        or (isinstance(data[0], dict) and isinstance(list(data[0].values())[0],list))):
+    # jq "multiple outout": the data is already presented as a list of rows
+    multiple_output = len(data) == 1 and (isinstance(data[0], list))
+
+    # another valid datastructure:  [{col1:[value, ...], col2:[value, ...]}]
+    single_cols_dict = (isinstance(data[0], dict) and isinstance(list(data[0].values())[0], list))
+
+    if multiple_output or single_cols_dict:
         return data[0]
 
     return data
@@ -61,19 +59,22 @@ class HttpAPIDataSource(ToucanDataSource):
     method: Method = "GET"
     headers: dict = None
     params: dict = None
-    _json: dict = Schema(None, alias = 'json')
+    _json: dict = None
     data: str = None
     filter: str = "."
     auth: Auth = None
     parameters: dict = None
 
+    class Config:
+        fields = {'_json': {'alias': 'json'}}
+
 
 class HttpAPIConnector(ToucanConnector):
     type = "HttpAPI"
     data_source_model: HttpAPIDataSource
-    
+
     baseroute: str
-    auth : Auth = None
+    auth: Auth = None
 
     def do_request(self, query, auth):
         """
@@ -84,39 +85,38 @@ class HttpAPIConnector(ToucanConnector):
             data (list): The response from the API in the form of a list of dict
         """
 
-        REQUESTS_PARAMS = ['url', 'method', 'params', 'data', 'json', 'headers', "auth"]
+        available_params = ['url', 'method', 'params', 'data', 'json', 'headers', "auth"]
 
         jq_filter = query['filter']
-        query = {k: v for k, v in list(query.items()) if k in REQUESTS_PARAMS}
+        query = {k: v for k, v in list(query.items()) if k in available_params}
         query['url'] = '/'.join([self.baseroute.rstrip('/'), query['url'].lstrip('/')])
-        quert['auth'] = auth
-        
+        query['auth'] = auth
+
         res = request(**query)
 
         try:
             data = res.json()
         except ValueError:
-            logger.error(f'Could not decode "{res.content}"')
+            HttpAPIConnector.logger.error(f'Could not decode "{res.content}"')
             raise
 
         try:
             return transform_with_jq(data, jq_filter)
         except ValueError:
-            logger.error(f'Could not transform {data} using {jq_filter}')
+            HttpAPIConnector.logger.error(f'Could not transform {data} using {jq_filter}')
             raise
-
 
     def get_df(self, data_source: HttpAPIDataSource) -> pd.DataFrame:
 
         # generate the request auth object
-        if data_source.auth :
+        if data_source.auth:
             auth = data_source.auth.get_auth()
             data_source.auth = None
-        else :
+        else:
             auth = None
-                
+
         query = nosql_apply_parameters_to_query(
-            data_source.dict(), 
+            data_source.dict(),
             data_source.parameters)
-        
+
         return pd.DataFrame(self.do_request(query, auth))

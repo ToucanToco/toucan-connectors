@@ -17,7 +17,7 @@ extras_require = {
     'adobe': ['adobe_analytics'],
     'toucan_toco': ['toucan_client'],
     'hive': ['pyhive[hive]'],
-    'http_api':['requests', 'requests_oauthlib']
+    'http_api': ['requests', 'requests_oauthlib', 'jq']
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
