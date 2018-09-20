@@ -81,6 +81,7 @@ class HttpAPIConnector(ToucanConnector):
         Get some json data with an HTTP request and run a jq filter on it.
         Args:
             query (dict): specific infos about the request (url, http headers, etc.)
+            auth: one of request Auth objects
         Returns:
             data (list): The response from the API in the form of a list of dict
         """
