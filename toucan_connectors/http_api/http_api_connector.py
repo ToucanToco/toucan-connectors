@@ -17,10 +17,10 @@ def transform_with_jq(data: object, jq_filter: str) -> list:
     data = jq(jq_filter).transform(data, multiple_output=True)
 
     # jq "multiple outout": the data is already presented as a list of rows
-    multiple_output = len(data) == 1 and (isinstance(data[0], list))
+    multiple_output = len(data) == 1 and isinstance(data[0], list)
 
     # another valid datastructure:  [{col1:[value, ...], col2:[value, ...]}]
-    single_cols_dict = (isinstance(data[0], dict) and isinstance(list(data[0].values())[0], list))
+    single_cols_dict = isinstance(data[0], dict) and isinstance(list(data[0].values())[0], list)
 
     if multiple_output or single_cols_dict:
         return data[0]
@@ -89,7 +89,7 @@ class HttpAPIConnector(ToucanConnector):
         available_params = ['url', 'method', 'params', 'data', 'json', 'headers', "auth"]
 
         jq_filter = query['filter']
-        query = {k: v for k, v in list(query.items()) if k in available_params}
+        query = {k: v for k, v in query.items() if k in available_params}
         query['url'] = '/'.join([self.baseroute.rstrip('/'), query['url'].lstrip('/')])
         query['auth'] = auth
 
