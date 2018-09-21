@@ -16,7 +16,8 @@ extras_require = {
     'google_analytics': ['google-api-python-client'],
     'adobe': ['adobe_analytics'],
     'toucan_toco': ['toucan_client'],
-    'hive': ['pyhive[hive]']
+    'hive': ['pyhive[hive]'],
+    'http_api': ['requests', 'requests_oauthlib', 'jq']
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
@@ -32,7 +33,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.4.1',
+      version='0.5.0',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
