@@ -48,7 +48,7 @@ class Auth(BaseModel):
         return auth_class(*self.args)
 
 
-class Method(BaseModel):
+class Method(Enum):
     GET = "GET"
     POST = "POST"
     PUT = "PUT"
