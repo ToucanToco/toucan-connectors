@@ -28,7 +28,7 @@ def transform_with_jq(data: object, jq_filter: str) -> list:
     return data
 
 
-class AuthType(Enum):
+class AuthType(str, Enum):
     basic = "basic"
     digest = "digest"
     oauth1 = "oauth1"
@@ -48,7 +48,7 @@ class Auth(BaseModel):
         return auth_class(*self.args)
 
 
-class Method(Enum):
+class Method(str, Enum):
     GET = "GET"
     POST = "POST"
     PUT = "PUT"
@@ -56,7 +56,7 @@ class Method(Enum):
 
 class HttpAPIDataSource(ToucanDataSource):
     url: str
-    method: Method = "GET"
+    method: Method = Method.GET
     headers: dict = None
     params: dict = None
     _json: dict = None

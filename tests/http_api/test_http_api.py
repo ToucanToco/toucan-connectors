@@ -90,3 +90,27 @@ def test_exceptions_wrong_filter(connector, data_source):
 
     with pytest.raises(ValueError):
         connector.get_df(data_source)
+
+
+def test_e2e():
+    con_params = {
+        'name': 'open_data_paris',
+        'baseroute': 'https://opendata.paris.fr/api/'
+    }
+    ds_params = {
+        'domain': 'books',
+        'name': 'open_data_paris',
+        'url': "records/1.0/search/",
+        'params': {
+            'dataset': 'les-1000-titres-les-plus-reserves-dans-les-bibliotheques-de-pret',
+            'facet': 'auteur',
+            'sort': 'rang',
+            'rows': 1000
+        },
+        'filter': ".records[].fields"
+    }
+
+    con = HttpAPIConnector(**con_params)
+    ds = HttpAPIDataSource(**ds_params)
+    df = con.get_df(ds)
+    assert df.shape == (1000, 5)
