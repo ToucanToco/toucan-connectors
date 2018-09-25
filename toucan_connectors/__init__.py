@@ -27,7 +27,7 @@ with suppress(ImportError):
 with suppress(ImportError):
     from .adobe_analytics.adobe_analytics_connector import AdobeAnalyticsConnector
 with suppress(ImportError):
-   from .toucantoco.toucantoco_connector import ToucanTocoConnector
+   from .toucan_toco.toucan_toco_connector import ToucanTocoConnector
 with suppress(ImportError):
     from .google_analytics.google_analytics_connector import GoogleAnalyticsConnector
 with suppress(ImportError):
