@@ -38,7 +38,7 @@ def test_get_df(connector, data_source):
 
 
 def test_get_df_with_auth(connector, data_source, auth, mocker):
-    data_source.auth = auth
+    connector.auth = auth
     mocke = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
     mocke.return_value.json.return_value = []
 
@@ -63,7 +63,7 @@ def test_get_df_with_parameters(connector, data_source, mocker):
 
 
 def test_get_df_with_parameters_and_auth(connector, data_source, auth, mocker):
-    data_source.auth = auth
+    connector.auth = auth
     data_source.parameters = {"first_name": "raphael"}
     data_source.headers = {"name": "%(first_name)s"}
 
