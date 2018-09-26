@@ -62,7 +62,6 @@ class HttpAPIDataSource(ToucanDataSource):
     _json: dict = None
     data: str = None
     filter: str = "."
-    auth: Auth = None
     parameters: dict = None
 
     class Config:
@@ -110,9 +109,8 @@ class HttpAPIConnector(ToucanConnector):
     def get_df(self, data_source: HttpAPIDataSource) -> pd.DataFrame:
 
         # generate the request auth object
-        if data_source.auth:
-            auth = data_source.auth.get_auth()
-            data_source.auth = None
+        if self.auth:
+            auth = self.auth.get_auth()
         else:
             auth = None
 
