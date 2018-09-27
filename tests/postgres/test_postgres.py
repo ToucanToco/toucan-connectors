@@ -69,7 +69,8 @@ def test_postgress_get_df(mocker):
 
     reasq.assert_called_once_with(
         'SELECT Name, CountryCode, Population FROM City LIMIT 2;',
-        con=snock()
+        con=snock(),
+        params={}
     )
 
 
@@ -86,16 +87,19 @@ def test_retrieve_response(postgres_connector):
 
 def test_get_df_db(postgres_connector):
     """ It should extract the table City and make some merge with some foreign key. """
-    data_sources_spec = {
+    data_source_spec = {
         'domain': 'Postgres test',
         'type': 'external_database',
         'name': 'Some Postgres provider',
-        'query': 'SELECT * FROM city;'
+        'query': 'SELECT * FROM City WHERE Population > %(max_pop)s',
+        'parameters': {'max_pop': 5000000},
     }
-    expected_columns = ['id', 'name', 'countrycode', 'district', 'population']
-
-    df = postgres_connector.get_df(PostgresDataSource(**data_sources_spec))
+    expected_columns = {'id', 'name', 'countrycode', 'district', 'population'}
+    data_source = PostgresDataSource(**data_source_spec)
+    df = postgres_connector.get_df(data_source)
 
     assert not df.empty
-    assert len(df.columns) == len(expected_columns)
-    assert len(df[df['population'] > 5000000]) == 24
+    # assert len(df.columns) == len(expected_columns)
+    # assert len(df[df['population'] > 5000000]) == 24
+    assert set(df.columns) == expected_columns
+    assert df.shape == (24, 5)

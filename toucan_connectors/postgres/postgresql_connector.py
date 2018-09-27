@@ -7,6 +7,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 class PostgresDataSource(ToucanDataSource):
     query: constr(min_length=1)
+    parameters: dict = None
 
 
 class PostgresConnector(ToucanConnector):
@@ -42,7 +43,8 @@ class PostgresConnector(ToucanConnector):
     def get_df(self, data_source):
         connection = pgsql.connect(**self.connection_params)
 
-        df = pd.read_sql(data_source.query, con=connection)
+        query_params = data_source.parameters or {}
+        df = pd.read_sql(data_source.query, con=connection, params=query_params)
 
         connection.close()
 
