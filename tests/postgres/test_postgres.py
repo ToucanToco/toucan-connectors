@@ -99,7 +99,5 @@ def test_get_df_db(postgres_connector):
     df = postgres_connector.get_df(data_source)
 
     assert not df.empty
-    # assert len(df.columns) == len(expected_columns)
-    # assert len(df[df['population'] > 5000000]) == 24
     assert set(df.columns) == expected_columns
     assert df.shape == (24, 5)
