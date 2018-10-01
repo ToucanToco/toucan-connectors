@@ -82,7 +82,7 @@ def generate(klass):
     li = []
     schema_cson = {}
     for name, obj in klass.data_source_model.__fields__.items():
-        if name in ['type', 'load']:
+        if name in ['type', 'load', 'live_data']:
             continue
         schema_cson[name] = f"'<{name}>'"
         li.append(f'* {custom_str(obj)}')
