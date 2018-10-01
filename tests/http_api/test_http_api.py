@@ -5,7 +5,8 @@ from toucan_connectors.http_api.http_api_connector import (
     HttpAPIDataSource,
     transform_with_jq,
     Auth,
-    HTTPBasicAuth
+    HTTPBasicAuth,
+    Template
 )
 
 
@@ -114,3 +115,42 @@ def test_e2e():
     ds = HttpAPIDataSource(**ds_params)
     df = con.get_df(ds)
     assert df.shape == (1000, 5)
+
+
+def test_get_df_with_json(connector, data_source, mocker):
+    data_source.json = {'a': 1}
+    mock = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
+    mock.return_value.json.return_value = []
+    connector.get_df(data_source)
+    _, ke = mock.call_args
+
+    assert ke['json'] == data_source.json
+
+
+def test_get_df_with_template(data_source, mocker):
+    co = HttpAPIConnector(**{'name': 'test', 'type': 'HttpAPI',
+                             'baseroute': '', 'template': {'headers': {'Authorization': 'XX'}}})
+    mock = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
+    mock.return_value.json.return_value = []
+    co.get_df(data_source)
+    _, ke = mock.call_args
+
+    assert 'Authorization' in ke['headers']
+    assert ke['headers']['Authorization'] == co.template.headers['Authorization']
+
+
+def test_get_df_with_template_overide(data_source, mocker):
+    co = HttpAPIConnector(**{'name': 'test', 'type': 'HttpAPI', 'baseroute': '',
+                             'template': {'headers': {'Authorization': 'XX', 'B': 1}}})
+    data_source.headers = {'Authorization': 'YY'}
+    data_source.json = {'A': 1}
+    mock = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
+    mock.return_value.json.return_value = []
+    co.get_df(data_source)
+    _, ke = mock.call_args
+
+    assert 'Authorization' in ke['headers']
+    assert ke['headers']['Authorization'] == data_source.headers['Authorization']
+    assert 'B' in ke['headers'] and ke['headers']['B']
+    assert 'A' in ke['json'] and ke['json']['A']
+
