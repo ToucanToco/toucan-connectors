@@ -5,8 +5,7 @@ from toucan_connectors.http_api.http_api_connector import (
     HttpAPIDataSource,
     transform_with_jq,
     Auth,
-    HTTPBasicAuth,
-    Template
+    HTTPBasicAuth
 )
 
 
