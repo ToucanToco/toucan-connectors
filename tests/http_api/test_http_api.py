@@ -152,4 +152,3 @@ def test_get_df_with_template_overide(data_source, mocker):
     assert ke['headers']['Authorization'] == data_source.headers['Authorization']
     assert 'B' in ke['headers'] and ke['headers']['B']
     assert 'A' in ke['json'] and ke['json']['A']
-
