@@ -37,6 +37,11 @@ def handle_missing_params(d, params):
     return e
 
 
+@handle_missing_params.register(str)
+def handle_string(s, _):
+    return s
+
+
 @handle_missing_params.register(list)
 def handle_multiple_steps(l, params):
     """
