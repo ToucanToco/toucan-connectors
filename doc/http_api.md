@@ -16,7 +16,7 @@ an example of advanced use of this connector.
 * `baseroute`: str, required
 * `auth`: `{type: "basic|digest|oauth1", args: [...]}` 
     cf. [requests auth](http://docs.python-requests.org/en/master/) doc. 
-* `template`: dict, required. See below.
+* `template`: dict. See below.
 
 ```coffee
 DATA_PROVIDERS= [
@@ -35,7 +35,7 @@ DATA_PROVIDERS= [
 ### Template
 
 You can use this object to avoid repetition in data sources. 
-The values of the three attributes will be used or overided by 
+The values of the three attributes will be used or overriden by 
 all data sources using this provider.
 
 * `json`: dict
@@ -142,8 +142,8 @@ The JSON response looks like this:
 ```
 
 We apply the filter `.records[].fields` which means that for
-every entries in the `records` properity it will extract all the
-properties of the `fields` object. So the we end up with a table of
+every entry in the `records` properity it will extract all the
+properties of the `fields` object. So we end up with a table of
 results looking like this (I'm skipping columns in this example but you
 see the point):
 
