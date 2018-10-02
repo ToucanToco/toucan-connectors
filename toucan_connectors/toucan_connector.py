@@ -9,7 +9,8 @@ class ToucanDataSource(BaseModel):
     domain: str
     name: str
     type: str = None
-    load: bool = None
+    load: bool = True
+    live_data: bool = False
 
     class Config:
         ignore_extra = False
