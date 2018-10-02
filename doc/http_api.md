@@ -35,7 +35,7 @@ DATA_PROVIDERS= [
 ### Template
 
 You can use this object to avoid repetition in data sources. 
-The values of the three attributes will be used or overriden by 
+The values of the three attributes will be used or overridden by 
 all data sources using this provider.
 
 * `json`: dict
