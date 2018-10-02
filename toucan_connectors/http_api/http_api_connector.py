@@ -54,18 +54,21 @@ class Method(str, Enum):
     PUT = "PUT"
 
 
+class Template(BaseModel):
+    headers: dict = None
+    params: dict = None
+    json: dict = None
+
+
 class HttpAPIDataSource(ToucanDataSource):
     url: str
     method: Method = Method.GET
     headers: dict = None
     params: dict = None
-    _json: dict = None
+    json: dict = None
     data: str = None
     filter: str = "."
     parameters: dict = None
-
-    class Config:
-        fields = {'_json': {'alias': 'json'}}
 
 
 class HttpAPIConnector(ToucanConnector):
@@ -74,6 +77,7 @@ class HttpAPIConnector(ToucanConnector):
 
     baseroute: str
     auth: Auth = None
+    template: Template = None
 
     def do_request(self, query, auth):
         """
@@ -85,7 +89,7 @@ class HttpAPIConnector(ToucanConnector):
             data (list): The response from the API in the form of a list of dict
         """
 
-        available_params = ['url', 'method', 'params', 'data', 'json', 'headers', "auth"]
+        available_params = ['url', 'method', 'params', 'data', 'json', 'headers', 'auth']
 
         jq_filter = query['filter']
         query = {k: v for k, v in query.items() if k in available_params}
@@ -117,5 +121,12 @@ class HttpAPIConnector(ToucanConnector):
         query = nosql_apply_parameters_to_query(
             data_source.dict(),
             data_source.parameters)
+
+        if self.template:
+            template = {k: v for k, v in self.template.dict().items() if v}
+            for k in query.keys() & template.keys():
+                if query[k]:
+                    template[k].update(query[k])
+                query[k] = template[k]
 
         return pd.DataFrame(self.do_request(query, auth))
