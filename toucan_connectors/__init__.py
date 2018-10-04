@@ -36,3 +36,5 @@ with suppress(ImportError):
     from .http_api.http_api_connector import HttpAPIConnector
 
 from .toucan_connector import ToucanDataSource, ToucanConnector
+
+AVAILABLE_CONNECTORS = {child.type: child for child in ToucanConnector.__subclasses__()}
