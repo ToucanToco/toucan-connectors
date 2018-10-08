@@ -26,7 +26,11 @@ def test_gbq(mocker):
         name="MyGBQ",
         authentication=my_authentication
     )
-    datasource = GoogleBigQueryDataSource(name='MyGBQ', domain='wiki', query='SELECT * FROM [bigquery-public-data:samples.wikipedia] LIMIT 1000')
+    datasource = GoogleBigQueryDataSource(
+        name='MyGBQ',
+        domain='wiki',
+        query='SELECT * FROM [bigquery-public-data:samples.wikipedia] LIMIT 1000'
+    )
     assert connector.get_df(datasource).equals(mydf)
     args, kwargs = my_read_gbq.call_args
     assert kwargs == {
