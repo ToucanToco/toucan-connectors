@@ -1,4 +1,3 @@
-module 'toucan_connectors' has no attribute 'HttpApiConnector'
 # GoogleBigQuery connector
 
 ## Data provider configuration
