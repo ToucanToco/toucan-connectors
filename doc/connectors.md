@@ -8,6 +8,8 @@
 
 * [GoogleAnalyticsConnector](google_analytics.md)
 
+* [GoogleBigQueryConnector](google_big_query.md)
+
 * [GoogleCloudMySQLConnector](google_cloud_mysql.md)
 
 * [GoogleSpreadsheetConnector](google_spreadsheet.md)
