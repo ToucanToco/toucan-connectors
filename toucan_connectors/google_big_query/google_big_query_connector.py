@@ -21,7 +21,7 @@ class GoogleBigQueryConnector(ToucanConnector):
     type = "GoogleBigQuery"
     data_source_model: GoogleBigQueryDataSource
 
-    authentication: GoogleCredentials
+    credentials: GoogleCredentials
     dialect: Dialect = Dialect.legacy
 
     def get_df(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:
@@ -35,8 +35,8 @@ class GoogleBigQueryConnector(ToucanConnector):
         """
         return pandas_gbq.read_gbq(
             query=data_source.query,
-            project_id=self.authentication.project_id,
-            private_key=json.dumps(self.authentication.dict()),
+            project_id=self.credentials.project_id,
+            private_key=json.dumps(self.credentials.dict()),
             reauth=True,
             dialect=self.dialect
         )

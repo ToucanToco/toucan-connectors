@@ -10,7 +10,7 @@ from toucan_connectors.google_big_query.google_big_query_connector import (
 def test_gbq(mocker):
     my_read_gbq = mocker.patch('pandas_gbq.read_gbq')
     my_read_gbq.return_value = mydf = pd.DataFrame({'a': [1, 1], 'b': [2, 2]})
-    my_authentication = {
+    my_credentials = {
         'type': 'my_type',
         'project_id': 'my_project',
         'private_key_id': 'my_private_id',
@@ -24,7 +24,7 @@ def test_gbq(mocker):
     }
     connector = GoogleBigQueryConnector(
         name="MyGBQ",
-        authentication=my_authentication
+        credentials=my_credentials
     )
     datasource = GoogleBigQueryDataSource(
         name='MyGBQ',
@@ -36,7 +36,7 @@ def test_gbq(mocker):
     assert kwargs == {
         'query': 'SELECT * FROM [bigquery-public-data:samples.wikipedia] LIMIT 1000',
         'project_id': 'my_project',
-        'private_key': json.dumps(my_authentication),
+        'private_key': json.dumps(my_credentials),
         'reauth': True,
         'dialect': 'legacy'
     }
