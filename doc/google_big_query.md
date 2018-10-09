@@ -8,7 +8,7 @@
 * `dialect`: Dialect, default to legacy
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'GoogleBigQuery'
   name:    '<name>'
   credentials:    '<credentials>'
@@ -25,7 +25,7 @@ DATA_PROVIDERS= [
 * `query`: str, required
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   query:    '<query>'

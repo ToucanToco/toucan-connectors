@@ -11,7 +11,7 @@ Get data from a Toucan Toco instance, usefull to build analytics applications.
 * `password`: str, required
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'ToucanToco'
   name:    '<name>'
   host:    '<host>'
@@ -33,7 +33,7 @@ Use the `all_small_apps` parameter to get results from an endpoint on all small 
 * `all_small_apps`: bool, default to False
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   endpoint:    '<endpoint>'

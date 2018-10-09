@@ -16,7 +16,7 @@ Retrieve data from a [MongoDB](https://www.mongodb.com/) database.
 * `password`: str
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'MongoDB'
   name:    '<name>'
   host:    '<host>'
@@ -41,7 +41,7 @@ Supports simple, multiples and aggregation queries as desribed in
 * `query`: `str` (translated to a query `{domain: <value>}`), dict or list, required
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   collection:    '<collection>'

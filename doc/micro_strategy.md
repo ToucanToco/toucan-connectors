@@ -13,7 +13,7 @@ Import data from MicroStrategy using the [JSON Data API](http://bit.ly/2HCzf04) 
 * `project_id`: str, required
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'MicroStrategy'
   name:    '<name>'
   base_url:    '<base_url>'
@@ -36,7 +36,7 @@ Specify whether you want to use the `cube` or `reports` endpoints and a microstr
 * `dataset`: str, `cube` or `report, required
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   id:    '<id>'

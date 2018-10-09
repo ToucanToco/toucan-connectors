@@ -14,7 +14,7 @@
 * `database`: str, default to default
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'Hive'
   name:    '<name>'
   host:    '<host>'
@@ -38,7 +38,7 @@ DATA_PROVIDERS= [
 * `query`: str, required
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   query:    '<query>'

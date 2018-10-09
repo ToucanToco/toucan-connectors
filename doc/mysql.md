@@ -15,7 +15,7 @@ Import data from MySQL database.
 * `connect_timeout`: int
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'MySQL'
   name:    '<name>'
   host:    '<host>'
@@ -43,7 +43,7 @@ Either `query` or `table` are required, both at the same time are not supported.
 * `parameters` dict, optional. Allow to parameterize the query.
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   query:    'SELECT * FROM city WHERE country = %(country)s'

@@ -13,7 +13,7 @@ Import data from Microsoft Azure SQL Server.
 * `connect_timeout`: int
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'AzureMSSQL'
   name:    '<name>'
   host:    '<host>'
@@ -34,7 +34,7 @@ DATA_PROVIDERS= [
 * `query`: str (not empty), required
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   query:    '<query>'

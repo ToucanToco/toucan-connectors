@@ -12,7 +12,7 @@ It provides a high-level interfaces for reporting queries (including Data Wareho
 * `endpoint`: str, default to https://api.omniture.com/admin/1.4/rest/
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'AdobeAnalytics'
   name:    '<name>'
   username:    '<username>'
@@ -39,7 +39,7 @@ DATA_PROVIDERS= [
 * `source`: str
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   suite_id:    '<suite_id>'

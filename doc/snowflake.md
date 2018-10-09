@@ -12,7 +12,7 @@ Import data from Snowflake data warehouse.
 * `ocsp_response_cache_filename`: str, path to the location used to store [ocsp cache] (https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses)
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'Snowflake'
   name:    '<name>'
   user:    '<user>'
@@ -34,7 +34,7 @@ DATA_PROVIDERS= [
 * `warehouse`: str
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   query:    '<query>'

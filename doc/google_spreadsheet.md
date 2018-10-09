@@ -19,6 +19,17 @@
 * `credentials`: [GoogleCredentials](google_credentials.md), required
 * `scope`: str, default to ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets', 'https://spreadsheets.google.com/feeds']
 
+```coffee
+DATA_PROVIDERS: [
+  type:    'GoogleSpreadsheet'
+  name:    '<name>'
+  credentials:    '<credentials>'
+  scope:    '<scope>'
+,
+  ...
+]
+```
+
 ## Data source configuration
 
 * `domain`: str, required
@@ -29,7 +40,7 @@ the url: https://docs.google.com/spreadsheets/d/<spreadsheet_id_is_here>/edit?pr
 
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   spreadsheet_id:    '<spreadsheet_id>'
