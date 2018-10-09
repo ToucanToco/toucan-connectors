@@ -72,7 +72,7 @@ def generate(klass):
     doc.append('\n'.join(li))
 
     li = []
-    li.append('```coffee\nDATA_PROVIDERS= [')
+    li.append('```coffee\nDATA_PROVIDERS: [')
     for key, val in schema_cson.items():
         li.append(f'  {key}:    {val}')
     li.append(',\n  ...\n]\n```')
@@ -89,7 +89,7 @@ def generate(klass):
     doc.append('\n'.join(li))
 
     li = []
-    li.append('```coffee\nDATA_SOURCES= [')
+    li.append('```coffee\nDATA_SOURCES: [')
     for key, val in schema_cson.items():
         li.append(f'  {key}:    {val}')
     li.append(',\n  ...\n]\n```')

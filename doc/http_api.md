@@ -19,7 +19,7 @@ an example of advanced use of this connector.
 * `template`: dict. See below.
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'HttpAPI'
   name:    '<name>'
   baseroute:    '<baseroute>'
@@ -58,7 +58,7 @@ all data sources using this provider.
 * `parameters`: dict
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   url:    '<url>'

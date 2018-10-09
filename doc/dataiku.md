@@ -12,7 +12,7 @@ This is a basic connector for [Dataiku](https://www.dataiku.com/) using their
 * `project`: str, required
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'Dataiku'
   name:    '<name>'
   host:    '<host>'
@@ -31,7 +31,7 @@ DATA_PROVIDERS= [
 * `dataset`: str, required
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   dataset:    '<dataset>'

@@ -12,7 +12,7 @@
 * `encoding`: str
 
 ```coffee
-DATA_PROVIDERS= [
+DATA_PROVIDERS: [
   type:    'OracleSQL'
   name:    '<name>'
   dsn:    <dsn>
@@ -32,7 +32,7 @@ DATA_PROVIDERS= [
 * `query`: str, required
 
 ```coffee
-DATA_SOURCES= [
+DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   query:    '<query>'
