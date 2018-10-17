@@ -37,6 +37,7 @@ DATA_PROVIDERS: [
 * `spreadsheet_id`: str, required. Id of the spreadsheet which can be found inside
 the url: https://docs.google.com/spreadsheets/d/<spreadsheet_id_is_here>/edit?pref=2&pli=1#gid=0,
 * `sheetname`: str. By default, the extractor return the first sheet.
+* `skip_rows`: int, default to 0
 
 
 ```coffee
@@ -45,6 +46,7 @@ DATA_SOURCES: [
   name:    '<name>'
   spreadsheet_id:    '<spreadsheet_id>'
   sheetname:    '<sheetname>'
+  skip_rows:    <skip_rows>
 ,
   ...
 ]

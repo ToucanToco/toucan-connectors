@@ -11,6 +11,7 @@ from toucan_connectors.common import GoogleCredentials
 class GoogleSpreadsheetDataSource(ToucanDataSource):
     spreadsheet_id: str
     sheetname: str = None
+    skip_rows: int = 0
 
 
 class GoogleSpreadsheetConnector(ToucanConnector):
@@ -37,6 +38,7 @@ class GoogleSpreadsheetConnector(ToucanConnector):
         sheets = gc.open_by_key(data_source.spreadsheet_id)
         sheetname = data_source.sheetname
         sheet = sheets.sheet1 if sheetname is None else sheets.worksheet(sheetname)
-        records = sheet.get_all_records()
+        starting_row = 1 + data_source.skip_rows
+        records = sheet.get_all_records(head=starting_row)
         df = pd.DataFrame(records)
         return df
