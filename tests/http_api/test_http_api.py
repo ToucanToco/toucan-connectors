@@ -152,3 +152,29 @@ def test_get_df_with_template_overide(data_source, mocker):
     assert ke['headers']['Authorization'] == data_source.headers['Authorization']
     assert 'B' in ke['headers'] and ke['headers']['B']
     assert 'A' in ke['json'] and ke['json']['A']
+
+
+@pytest.mark.skip(reason="This uses an real api")
+def test_get_df_oauth2_backend():
+
+    data_provider = {
+        'name': 'test',
+        'type': 'HttpAPI',
+        'baseroute': 'https://gateway.eu1.mindsphere.io/api/im/v3',
+        'auth': {
+            'type': 'oauth2_backend',
+            'args': ['https://mscenter.piam.eu1.mindsphere.io/oauth/token',
+                     '<client_id>',
+                     '<client_secret>']
+        }
+    }
+
+    users = {
+        'domain': 'test',
+        'name': 'test',
+        'url': '/Users',
+        'filter': '.resources'}
+
+    co = HttpAPIConnector(**data_provider)
+    df = co.get_df(HttpAPIDataSource(**users))
+    assert "userName" in df
