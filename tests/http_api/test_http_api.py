@@ -1,11 +1,13 @@
+import json
+
 import pytest
+import responses
 
 from toucan_connectors.http_api.http_api_connector import (
     HttpAPIConnector,
     HttpAPIDataSource,
     transform_with_jq,
-    Auth,
-    HTTPBasicAuth
+    Auth
 )
 
 
@@ -37,43 +39,42 @@ def test_get_df(connector, data_source):
     assert df.shape == (500, 5)
 
 
-def test_get_df_with_auth(connector, data_source, auth, mocker):
+@responses.activate
+def test_get_df_with_auth(connector, data_source, auth):
+    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 1}])
+
     connector.auth = auth
-    mocke = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
-    mocke.return_value.json.return_value = []
-
     connector.get_df(data_source)
-    _, ke = mocke.call_args
 
-    assert ke["auth"].username == 'username'
-    assert isinstance(ke["auth"], HTTPBasicAuth)
+    assert 'Authorization' in responses.calls[0].request.headers
+    assert responses.calls[0].request.headers['Authorization'].startswith('Basic')
 
 
+@responses.activate
 def test_get_df_with_parameters(connector, data_source, mocker):
     data_source.parameters = {"first_name": "raphael"}
     data_source.headers = {"name": "%(first_name)s"}
 
-    mock = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
-    mock.return_value.json.return_value = []
+    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 1}])
 
     connector.get_df(data_source)
-    _, ke = mock.call_args
 
-    assert ke["headers"] == {"name": "raphael"}
+    assert 'name' in responses.calls[0].request.headers
+    assert responses.calls[0].request.headers['name'] == 'raphael'
 
 
+@responses.activate
 def test_get_df_with_parameters_and_auth(connector, data_source, auth, mocker):
     connector.auth = auth
     data_source.parameters = {"first_name": "raphael"}
     data_source.headers = {"name": "%(first_name)s"}
 
-    mock = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
-    mock.return_value.json.return_value = []
+    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 1}])
 
     connector.get_df(data_source)
-    _, ke = mock.call_args
 
-    assert ke["headers"] == {"name": "raphael"}
+    assert 'name' in responses.calls[0].request.headers
+    assert responses.calls[0].request.headers['name'] == 'raphael'
 
 
 def test_exceptions_not_json():
@@ -116,42 +117,51 @@ def test_e2e():
     assert df.shape == (1000, 5)
 
 
+@responses.activate
 def test_get_df_with_json(connector, data_source, mocker):
     data_source.json = {'a': 1}
-    mock = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
-    mock.return_value.json.return_value = []
+
+    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 2}])
+
     connector.get_df(data_source)
-    _, ke = mock.call_args
 
-    assert ke['json'] == data_source.json
+    assert responses.calls[0].request.body == b'{"a": 1}'
 
 
+@responses.activate
 def test_get_df_with_template(data_source, mocker):
     co = HttpAPIConnector(**{'name': 'test', 'type': 'HttpAPI',
-                             'baseroute': '', 'template': {'headers': {'Authorization': 'XX'}}})
-    mock = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
-    mock.return_value.json.return_value = []
+                             'baseroute': 'http://example.com',
+                             'template': {'headers': {'Authorization': 'XX'}}})
+
+    responses.add(responses.GET, 'http://example.com/comments', json=[{"a": 2}])
+
     co.get_df(data_source)
-    _, ke = mock.call_args
 
-    assert 'Authorization' in ke['headers']
-    assert ke['headers']['Authorization'] == co.template.headers['Authorization']
+    h = responses.calls[0].request.headers
+    assert 'Authorization' in h
+    assert h['Authorization'] == co.template.headers['Authorization']
 
 
+@responses.activate
 def test_get_df_with_template_overide(data_source, mocker):
-    co = HttpAPIConnector(**{'name': 'test', 'type': 'HttpAPI', 'baseroute': '',
-                             'template': {'headers': {'Authorization': 'XX', 'B': 1}}})
+    co = HttpAPIConnector(**{'name': 'test', 'type': 'HttpAPI',
+                             'baseroute': 'http://example.com',
+                             'template': {'headers': {'Authorization': 'XX', 'B': '1'}}})
+
     data_source.headers = {'Authorization': 'YY'}
     data_source.json = {'A': 1}
-    mock = mocker.patch("toucan_connectors.http_api.http_api_connector.request")
-    mock.return_value.json.return_value = []
-    co.get_df(data_source)
-    _, ke = mock.call_args
 
-    assert 'Authorization' in ke['headers']
-    assert ke['headers']['Authorization'] == data_source.headers['Authorization']
-    assert 'B' in ke['headers'] and ke['headers']['B']
-    assert 'A' in ke['json'] and ke['json']['A']
+    responses.add(responses.GET, 'http://example.com/comments', json=[{"a": 2}])
+
+    co.get_df(data_source)
+
+    h = responses.calls[0].request.headers
+    j = json.loads(responses.calls[0].request.body)
+    assert 'Authorization' in h
+    assert h['Authorization'] == data_source.headers['Authorization']
+    assert 'B' in h and h['B']
+    assert 'A' in j and j['A']
 
 
 @pytest.mark.skip(reason="This uses an real api")
@@ -178,3 +188,34 @@ def test_get_df_oauth2_backend():
     co = HttpAPIConnector(**data_provider)
     df = co.get_df(HttpAPIDataSource(**users))
     assert "userName" in df
+
+
+@responses.activate
+def test_get_df_oauth2_backend_mocked():
+
+    data_provider = {
+        'name': 'test',
+        'type': 'HttpAPI',
+        'baseroute': 'https://gateway.eu1.mindsphere.io/api/im/v3',
+        'auth': {
+            'type': 'oauth2_backend',
+            'args': ['https://mscenter.piam.eu1.mindsphere.io/oauth/token',
+                     '<client_id>',
+                     '<client_secret>']
+        }
+    }
+
+    users = {
+        'domain': 'test',
+        'name': 'test',
+        'url': '/Users'}
+
+    responses.add(responses.POST, 'https://mscenter.piam.eu1.mindsphere.io/oauth/token',
+                  json={'access_token': 'A'})
+    responses.add(responses.GET, 'https://gateway.eu1.mindsphere.io/api/im/v3/Users',
+                  json=[{'A': 1}])
+
+    co = HttpAPIConnector(**data_provider)
+    co.get_df(HttpAPIDataSource(**users))
+
+    assert len(responses.calls) == 2
