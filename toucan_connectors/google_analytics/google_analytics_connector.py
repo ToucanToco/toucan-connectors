@@ -80,12 +80,17 @@ class Pivot(BaseModel):
 class Cohort(BaseModel):
     name: str
     type: str
-    dateRage: DateRange = None
+    dateRange: DateRange = None
 
 
 class CohortGroup(BaseModel):
     cohorts: List[Cohort]
     lifetimeValue: bool = False
+
+
+class Segment(BaseModel):
+    segmentId: str
+    # TODO dynamicSegment: DynamicSegment
 
 
 class ReportRequest(BaseModel):
@@ -98,7 +103,7 @@ class ReportRequest(BaseModel):
     metricFilterClauses: List[MetricFilterClause] = None
     filtersExpression: str = ''
     orderBys: List[OrderBy] = []
-    # TODO    segment: List[Segment]
+    segments: List[Segment]
     pivots: List[Pivot] = None
     cohortGroup: CohortGroup = None
     pageToken: str = ''
