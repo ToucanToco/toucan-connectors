@@ -89,7 +89,7 @@ class CohortGroup(BaseModel):
 
 
 class Segment(BaseModel):
-    segmentId: str
+    segmentId: str = None
     # TODO dynamicSegment: DynamicSegment
 
 
@@ -103,7 +103,7 @@ class ReportRequest(BaseModel):
     metricFilterClauses: List[MetricFilterClause] = None
     filtersExpression: str = ''
     orderBys: List[OrderBy] = []
-    segments: List[Segment]
+    segments: List[Segment] = []
     pivots: List[Pivot] = None
     cohortGroup: CohortGroup = None
     pageToken: str = ''
