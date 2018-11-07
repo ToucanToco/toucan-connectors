@@ -11,6 +11,7 @@ extras_require = {
     'hive': ['pyhive[hive]'],
     'http_api': ['requests', 'requests_oauthlib', 'jq', 'oauthlib'],
     'micro_strategy': ['requests'],
+    'minio': ['minio'],
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
     'mysql': ['PyMySQL>=0.8.0'],
