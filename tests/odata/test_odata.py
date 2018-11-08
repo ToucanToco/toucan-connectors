@@ -2,6 +2,7 @@ import pandas as pd
 
 from toucan_connectors.odata.odata_connector import ODataConnector, ODataDataSource
 
+
 def test_get_df():
     expected_df = pd.DataFrame([
         {'CustomerID': 'FOLIG',
