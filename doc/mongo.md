@@ -1,9 +1,7 @@
 # MongoDB connector
 
 Retrieve data from a [MongoDB](https://www.mongodb.com/) database.
-```eval_rst
-  This is the connector used to retrieve loaded data in Toucan Toco interface.
-```
+This is the connector used to retrieve loaded data in Toucan Toco interface.
 
 ## Data provider configuration
 
