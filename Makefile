@@ -65,9 +65,10 @@ list:
 	@grep '^[^\.#[:space:]].*:' Makefile | \
 		cut -d':' -f1
 
-new_connector:
-	mkdir toucan_connectors/$(name)
-	touch toucan_connectors/$(name)/__init__.py
-	m4 -Dname=$(name) templates/connector.py.m4 > toucan_connectors/$(name)/$(name)_connector.py
-	mkdir tests/$(name)
-	m4 -Dname=$(name) templates/tests.py.m4 > tests/$(name)/test_$(name).py
+new_connector:  # $ make new_connector type=Magento
+	$(eval MODULE=`echo "$(type)" | tr A-Z a-z`)
+	mkdir toucan_connectors/${MODULE}
+	touch toucan_connectors/${MODULE}/__init__.py
+	m4 -Dtype=$(type) templates/connector.py.m4 > toucan_connectors/${MODULE}/${MODULE}_connector.py
+	mkdir tests/${MODULE}
+	m4 -Dtype=$(type) templates/tests.py.m4 > tests/${MODULE}/test_${MODULE}.py

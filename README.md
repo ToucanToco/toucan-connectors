@@ -29,10 +29,11 @@ If you want to run the tests for all the connectors you can add all the dependen
 To generate the connector and test modules from boilerplate, run:  
 
 ```
-$ make new_connector name=mytype
+$ make new_connector type=mytype
 ```
 
-`mytype` here is an example of a system we would like to build a connector for. 
+`mytype` should be the name of a system we would like to build a connector for, 
+such as `MySQL` or `Hive` or `Magento`.
 
 #### Step 1
 Open the folder in `tests` for the new connector. You can start writing your tests
