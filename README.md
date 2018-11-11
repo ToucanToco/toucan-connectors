@@ -25,8 +25,17 @@ If you want to run the tests for all the connectors you can add all the dependen
 `pip install -e ".[all]"` and `make test`
 
 ## Adding a connector
+
+To generate the connector and test modules from boilerplate, run:  
+
+```
+$ make new_connector name=mytype
+```
+
+`mytype` here is an example of a system we would like to build a connector for. 
+
 #### Step 1
-Create a new folder in `tests` for the new connector. You can start writing your tests
+Open the folder in `tests` for the new connector. You can start writing your tests
 before implementing it. Please do not hesitate to add a docker image in
 the `docker-compose.yml`. You can then use the fixture `service_container` to automatically
 start the docker and shut it down for you!
@@ -34,11 +43,8 @@ start the docker and shut it down for you!
 :warning: _If you don't have the docker images in local please run pytest with `--pull` to retrieve them_
 
 #### Step 2
-Create a new folder `mytype` in `toucan_connectors` for your new connector and
+Open the folder `mytype` in `toucan_connectors` for your new connector and
 create your classes
-
-You can generate the basic layout of the connector class using
-this [repl](https://repl.it/@piotch/ToucanConnectorBoilerplate).
 
 ```python
 import pandas as pd

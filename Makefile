@@ -64,3 +64,10 @@ upload:
 list:
 	@grep '^[^\.#[:space:]].*:' Makefile | \
 		cut -d':' -f1
+
+new_connector:
+	mkdir toucan_connectors/$(name)
+	touch toucan_connectors/$(name)/__init__.py
+	m4 -Dname=$(name) templates/connector.py > toucan_connectors/$(name)/$(name)_connector.py
+	mkdir tests/$(name)
+	m4 -Dname=$(name) templates/tests.py > tests/$(name)/test_$(name).py
