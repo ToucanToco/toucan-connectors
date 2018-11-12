@@ -1,3 +1,7 @@
+# Basic support for now, may need to grow up :
+# undelying lib seems fragile and not very usefull,
+# could be tested with a container etc...
+
 from magento.api import API
 import pandas as pd
 
