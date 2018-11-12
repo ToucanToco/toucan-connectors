@@ -8,17 +8,15 @@
 
 * [GoogleAnalyticsConnector](google_analytics.md)
 
-* [GoogleBigQueryConnector](google_big_query.md)
-
 * [GoogleCloudMySQLConnector](google_cloud_mysql.md)
 
 * [GoogleSpreadsheetConnector](google_spreadsheet.md)
 
 * [HiveConnector](hive.md)
 
-* [HttpAPIConnector](http_api.md)
-
 * [MSSQLConnector](mssql.md)
+
+* [MagentoConnector](magento.md)
 
 * [MicroStrategyConnector](micro_strategy.md)
 
