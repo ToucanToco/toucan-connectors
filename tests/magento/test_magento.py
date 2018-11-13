@@ -9,13 +9,11 @@ def test_get_df(mocker):
 
     mocker.patch('toucan_connectors.magento.magento_connector.API.call')
 
-    data_source = MagentoDataSource(**{'domain': 'test', 'name': 'magento',
-                                       'resource_path': 'orders_sale',
-                                       'arguments': [[{'status': 'pending'}]]})
+    data_source = MagentoDataSource(domain='test', name='magento', resource_path='orders_sale',
+                                    arguments=[[{'status': 'pending'}]])
 
-    provider = MagentoConnector(**{
-        'type': 'Magento', 'name': 'magento', 'url': 'https://exemple.com', 'username': 'pierre',
-        'password': 'test'})
+    provider = MagentoConnector(type='Magento', name='magento', url='https://exemple.com',
+                                username='pierre', password='test')
 
     cmock = mocker.patch('toucan_connectors.magento.magento_connector.API')
     cmock.return_value.__enter__.return_value.call.return_value = [[1, 1], [1, 1]]
