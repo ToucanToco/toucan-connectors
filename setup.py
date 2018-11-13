@@ -10,7 +10,6 @@ extras_require = {
     'google_spreadsheet': ['gspread>=3', 'oauth2client'],
     'hive': ['pyhive[hive]'],
     'http_api': ['requests', 'requests_oauthlib', 'jq', 'oauthlib'],
-    'magento': ['magento'],
     'micro_strategy': ['requests'],
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
@@ -35,7 +34,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.8.0',
+      version='0.7.0',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
