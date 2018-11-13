@@ -14,7 +14,7 @@ extras_require = {
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
     'mysql': ['PyMySQL>=0.8.0'],
-    'odata': ['git+https://github.com/tuomur/python-odata.git', 'requests_oauthlib', 'oauthlib'],
+    'odata': ['odata', 'requests_oauthlib', 'oauthlib'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'sap_hana': ['pyhdb>=0.3.4'],
@@ -26,6 +26,10 @@ extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 install_requires = [
     'toucan_data_sdk',
     'pydantic==0.9.1'
+]
+
+dependency_links = [
+    'git+ssh://github.com/tuomur/python-odata.git#egg=odata'
 ]
 
 classifiers = [
