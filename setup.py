@@ -30,7 +30,7 @@ install_requires = [
 ]
 
 dependency_links = [
-    'git+ssh://github.com/tuomur/python-odata.git#egg=odata'
+    'https://github.com/ToucanToco/python-odata/tarball/master#egg=odata'
 ]
 
 classifiers = [
