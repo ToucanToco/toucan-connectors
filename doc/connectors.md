@@ -20,6 +20,8 @@
 
 * [MSSQLConnector](mssql.md)
 
+* [MagentoConnector](magento.md)
+
 * [MicroStrategyConnector](micro_strategy.md)
 
 * [MongoConnector](mongo.md)
