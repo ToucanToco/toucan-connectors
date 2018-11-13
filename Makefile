@@ -64,3 +64,15 @@ upload:
 list:
 	@grep '^[^\.#[:space:]].*:' Makefile | \
 		cut -d':' -f1
+
+new_connector:  # $ make new_connector type=Magento
+ ifeq (${type},)
+	@echo -e "Missing type option:\n\tmake $@ type=Magento"
+	exit 1
+ endif
+	${eval MODULE=`echo "${type}" | tr A-Z a-z`}
+	mkdir toucan_connectors/${MODULE}
+	touch toucan_connectors/${MODULE}/__init__.py
+	m4 -DTYPE=${type} templates/connector.py.m4 > toucan_connectors/${MODULE}/${MODULE}_connector.py
+	mkdir tests/${MODULE}
+	m4 -DTYPE=${type} templates/tests.py.m4 > tests/${MODULE}/test_${MODULE}.py
