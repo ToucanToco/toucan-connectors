@@ -16,7 +16,7 @@
 
 * [HiveConnector](hive.md)
 
-* [HttpAPIConnector](http_api.md)	
+* [HttpAPIConnector](http_api.md)
 
 * [MSSQLConnector](mssql.md)
 
