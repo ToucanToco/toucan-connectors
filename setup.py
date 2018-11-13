@@ -30,7 +30,7 @@ install_requires = [
 ]
 
 dependency_links = [
-    'https://github.com/ToucanToco/python-odata/tarball/master#egg=odata'
+    'https://github.com/ToucanToco/python-odata/tarball/master#egg=odata-0'
 ]
 
 classifiers = [
@@ -50,4 +50,5 @@ setup(name='toucan_connectors',
       packages=find_packages(),
       install_requires=install_requires,
       extras_require=extras_require,
+      dependency_links=dependency_links,
       include_package_data=True)
