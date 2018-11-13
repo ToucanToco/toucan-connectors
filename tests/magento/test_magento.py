@@ -2,8 +2,6 @@
 # I will test this with a container, probably using this
 # https://hub.docker.com/r/magento/magento2devbox-web/
 
-import pytest
-
 from toucan_connectors.magento.magento_connector import MagentoConnector, MagentoDataSource
 
 
