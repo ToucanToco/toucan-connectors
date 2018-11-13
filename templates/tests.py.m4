@@ -1,7 +1,7 @@
 include(`templates/cap.m4')
 import pytest
 
-from toucan_connectors.downcase(type).downcase(type)_connector import cap(type)Connector, cap(type)DataSource
+from toucan_connectors.downcase(TYPE).downcase(TYPE)_connector import cap(TYPE)Connector, cap(TYPE)DataSource
 
 
 def test_get_df():
