@@ -14,6 +14,7 @@ extras_require = {
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
     'mysql': ['PyMySQL>=0.8.0'],
+    'odata': ['git+https://github.com/tuomur/python-odata.git', 'requests_oauthlib', 'oauthlib'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'sap_hana': ['pyhdb>=0.3.4'],
@@ -34,7 +35,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.7.0',
+      version='0.9.0',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',

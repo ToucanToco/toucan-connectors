@@ -1,7 +1,8 @@
 import pandas as pd
-
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from odata import ODataService
+
+from toucan_connectors.common import Auth
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class ODataDataSource(ToucanDataSource):
@@ -13,12 +14,17 @@ class ODataConnector(ToucanConnector):
     type = "OData"
     data_source_model: ODataDataSource
 
-    username: str
-    password: str
     url: str
+    auth: Auth = None
 
     def get_df(self, data_source: ODataDataSource) -> pd.DataFrame:
-        Service = ODataService(self.url, reflect_entities=True)
-        Entities = Service.entities[data_source.entity]
-        data = Service.query(Entities).raw(data_source.query)
+
+        if self.auth:
+            session = self.auth.get_session()
+        else:
+            session = None
+
+        service = ODataService(self.url, reflect_entities=True, session=session)
+        entities = service.entities[data_source.entity]
+        data = service.query(entities).raw(data_source.query)
         return pd.DataFrame(data)
