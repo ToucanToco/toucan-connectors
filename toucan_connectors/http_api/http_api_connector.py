@@ -1,17 +1,13 @@
 from enum import Enum
 
+from jq import jq
 import pandas as pd
 from pydantic import BaseModel
-from typing import List
-from jq import jq
-
 from requests import Session
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
-from requests_oauthlib import OAuth1, OAuth2Session
-from oauthlib.oauth2 import BackendApplicationClient
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.common import nosql_apply_parameters_to_query
+from toucan_connectors.common import Auth
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
@@ -27,45 +23,6 @@ def transform_with_jq(data: object, jq_filter: str) -> list:
         return data[0]
 
     return data
-
-
-def oauth2_backend(token_url, client_id, client_secret):
-    oauthclient = BackendApplicationClient(client_id=client_id)
-    oauthsession = OAuth2Session(client=oauthclient)
-    token = oauthsession.fetch_token(
-        token_url=token_url, client_id=client_id, client_secret=client_secret)
-    return OAuth2Session(client_id=client_id, token=token)
-
-
-class AuthType(str, Enum):
-    basic = "basic"
-    digest = "digest"
-    oauth1 = "oauth1"
-    oauth2_backend = "oauth2_backend"
-
-
-class Auth(BaseModel):
-    type: AuthType
-    args: List[str]
-
-    def get_session(self) -> Session:
-        auth_class = {
-            'basic': HTTPBasicAuth,
-            'digest': HTTPDigestAuth,
-            'oauth1': OAuth1,
-            'oauth2_backend': oauth2_backend
-        }.get(self.type.value)
-
-        auth_instance = auth_class(*self.args)
-
-        # Some authentification mechanisms are built-in a Session...
-        if isinstance(auth_instance, Session):
-            return auth_instance
-
-        # ... but other are just added as the auth attr of the Session
-        session = Session()
-        session.auth = auth_instance
-        return session
 
 
 class Method(str, Enum):

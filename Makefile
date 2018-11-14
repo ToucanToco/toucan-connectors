@@ -23,7 +23,7 @@ set-test-env:
 	${VENV_NAME}/bin/python3 -m pip install --upgrade pip setuptools
 	${VENV_NAME}/bin/python3 setup.py install
 	${VENV_NAME}/bin/python3 -m pip install -r requirements-testing.txt
-	${VENV_NAME}/bin/python3 -m pip install .[all]
+	${VENV_NAME}/bin/python3 -m pip install .[all] --process-dependency-links
 	${VENV_NAME}/bin/python3 -m pip install codecov
 
 test:

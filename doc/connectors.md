@@ -28,6 +28,8 @@
 
 * [MySQLConnector](mysql.md)
 
+* [ODataConnector](odata.md)
+
 * [OracleSQLConnector](oracle_sql.md)
 
 * [PostgresConnector](postgres.md)
