@@ -14,7 +14,8 @@ def test_get_df():
 
     provider = ODataConnector(
         name='test',
-        url='http://services.odata.org/V4/Northwind/Northwind.svc/')
+        url='http://services.odata.org/V4/Northwind/Northwind.svc/',
+        auth={'type': 'basic', 'args': ['u', 'p']})
 
     data_source = ODataDataSource(
         domain='test',
@@ -29,5 +30,11 @@ def test_get_df():
         df = provider.get_df(data_source)
         sl = ['CustomerID', 'EmployeeID', 'Freight']
         assert df[sl].equals(expected_df[sl])
+    except socket.error:
+        pytest.skip('Could not connect to the standard example OData service.')
+
+    provider.auth = None
+    try:
+        provider.get_df(data_source)
     except socket.error:
         pytest.skip('Could not connect to the standard example OData service.')
