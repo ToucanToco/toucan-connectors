@@ -15,7 +15,7 @@ extras_require = {
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
     'mysql': ['PyMySQL>=0.8.0'],
-    'odata': ['odata', 'requests_oauthlib', 'oauthlib'],
+    'odata': ['tctc_odata', 'requests_oauthlib', 'oauthlib'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'sap_hana': ['pyhdb>=0.3.4'],
@@ -29,10 +29,6 @@ install_requires = [
     'pydantic==0.9.1'
 ]
 
-dependency_links = [
-    'https://github.com/ToucanToco/python-odata/tarball/master#egg=odata-0'
-]
-
 classifiers = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: BSD License',
@@ -40,7 +36,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.9.0',
+      version='0.9.1',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
@@ -50,5 +46,4 @@ setup(name='toucan_connectors',
       packages=find_packages(),
       install_requires=install_requires,
       extras_require=extras_require,
-      dependency_links=dependency_links,
       include_package_data=True)
