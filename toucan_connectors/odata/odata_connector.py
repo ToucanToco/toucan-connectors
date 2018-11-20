@@ -14,7 +14,7 @@ class ODataConnector(ToucanConnector):
     type = "OData"
     data_source_model: ODataDataSource
 
-    url: str
+    baseroute: str
     auth: Auth = None
 
     def get_df(self, data_source: ODataDataSource) -> pd.DataFrame:
