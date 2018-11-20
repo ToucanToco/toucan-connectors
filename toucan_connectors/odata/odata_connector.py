@@ -24,7 +24,7 @@ class ODataConnector(ToucanConnector):
         else:
             session = None
 
-        service = ODataService(self.url, reflect_entities=True, session=session)
+        service = ODataService(self.baseroute, reflect_entities=True, session=session)
         entities = service.entities[data_source.entity]
         data = service.query(entities).raw(data_source.query)
         return pd.DataFrame(data)
