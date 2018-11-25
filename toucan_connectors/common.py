@@ -71,7 +71,19 @@ def nosql_apply_parameters_to_query(query, parameters):
     if parameters is None:
         return query
 
-    parameters = {key: json.dumps(val) for key, val in parameters.items()}
-    query = re.sub(r'"(%\(\w*\)s)"', r'\g<1>', json.dumps(query))
-    query = json.loads(query % parameters)
-    return query
+    json_query = json.dumps(query)
+
+    # find which parameters are directly used as value of a key (no interpolation)
+    values_parameters = re.findall(r'"%\((\w*)\)s"', json_query)
+
+    # get the relevant str repr of the parameters according to how they are going to be used
+    json_parameters = {
+        key: json.dumps(val) if key in values_parameters else val
+        for key, val in parameters.items()
+    }
+
+    # change the JSON repr of the query so that parameters used directly are not quoted
+    re_query = re.sub(r'"(%\(\w*\)s)"', r'\g<1>', json_query)
+
+    # now we can safely interpolate the str repr of the query and the parameters
+    return json.loads(re_query % json_parameters)

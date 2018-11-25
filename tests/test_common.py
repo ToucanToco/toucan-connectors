@@ -24,7 +24,11 @@ def test_apply_parameter_to_query_in_expression():
     """
     It sould work when a parameter is in an expression (e.g. OData)
     """
-    query = {'entity': 'books', 'query': {'$filter': "title eq '%(title)s'"}}
-    parameters = {"title": "the overstory"}
-    expected = {'entity': 'books', 'query': {'$filter': "title eq 'the overstory'"}}
+    query = {'entity': 'books', 'query': {
+                '$filter': "title eq '%(title)s'",
+                '$top': "%(top)s"}}
+    parameters = {"title": "the overstory", "top": 3}
+    expected = {'entity': 'books', 'query': {
+                    '$filter': "title eq 'the overstory'",
+                    '$top': 3}}
     assert nosql_apply_parameters_to_query(query, parameters) == expected
