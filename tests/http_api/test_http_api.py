@@ -219,4 +219,3 @@ def test_get_df_oauth2_backend_mocked():
     co.get_df(HttpAPIDataSource(**users))
 
     assert len(responses.calls) == 2
-

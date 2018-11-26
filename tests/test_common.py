@@ -21,8 +21,8 @@ def test_apply_parameter_to_query_int_param():
     parameters = {'param1': 'yo', 'param2': 1}
     expected = [{'$match': {'domain': 'yo', 'cat': 1}}]
     assert nosql_apply_parameters_to_query(query, parameters) == expected
-    
-    
+
+
 def test_apply_parameter_to_query_in_expression():
     """
     It sould work when a parameter is in an expression (e.g. OData)
@@ -35,8 +35,8 @@ def test_apply_parameter_to_query_in_expression():
                     '$filter': "title eq 'the overstory'",
                     '$top': 3}}
     assert nosql_apply_parameters_to_query(query, parameters) == expected
-    
-    
+
+
 @responses.activate
 def test_custom_token_server():
     auth = Auth(type='custom_token_server',
@@ -53,4 +53,3 @@ def test_custom_token_server():
 
     session.auth(TMP())
     assert TMP.headers['Authorization'] == 'Bearer a'
-

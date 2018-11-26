@@ -38,4 +38,3 @@ def test_get_df():
         provider.get_df(data_source)
     except socket.error:
         pytest.skip('Could not connect to the standard example OData service.')
-
