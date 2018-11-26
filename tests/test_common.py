@@ -1,4 +1,6 @@
-from toucan_connectors.common import nosql_apply_parameters_to_query
+import responses
+
+from toucan_connectors.common import Auth, CustomTokenServer, nosql_apply_parameters_to_query
 
 
 def test_apply_parameter_to_query_do_nothing():
@@ -32,3 +34,31 @@ def test_apply_parameter_to_query_in_expression():
                     '$filter': "title eq 'the overstory'",
                     '$top': 3}}
     assert nosql_apply_parameters_to_query(query, parameters) == expected
+
+
+@responses.activate
+def test_custom_token_server():
+    auth = Auth(type='custom_token_server',
+                args=['POST', 'https://example.com'],
+                kwargs={'data': {'user': 'u', 'password ': 'p'}, 'filter': '.token'})
+
+    session = auth.get_session()
+    assert isinstance(session.auth, CustomTokenServer)
+
+    responses.add(responses.POST, 'https://example.com', json={'token': 'a'})
+
+    # dummy request class just to introspect headers
+    class TMP:
+        headers = {}
+
+    session.auth(TMP())
+    assert TMP.headers['Authorization'] == 'Bearer a'
+
+    # custom_token_server with its own auth class
+    responses.add(responses.POST, 'https://example.com', json={'token': 'a'})
+    session = Auth(type='custom_token_server',
+                   args=['POST', 'https://example.com'],
+                   kwargs={'auth': {'type': 'basic', 'args': ['u', 'p']}}).get_session()
+
+    session.auth(TMP())
+    assert responses.calls[1].request.headers['Authorization'].startswith('Basic')

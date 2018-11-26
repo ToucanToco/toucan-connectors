@@ -14,7 +14,7 @@ an example of advanced use of this connector.
 * `type`: `"HttpAPI"`
 * `name`: str, required
 * `baseroute`: str, required
-* `auth`: `{type: "basic|digest|oauth1|oauth2_backend", args: [...]}` 
+* `auth`: `{type: "basic|digest|oauth1|oauth2_backend|custom_token_server", args: [...], kwargs: {...}}` 
     cf. [requests auth](http://docs.python-requests.org/en/master/) and 
     [requests oauthlib](https://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow) doc. 
 * `template`: dict. See below.

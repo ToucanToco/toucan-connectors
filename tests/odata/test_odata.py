@@ -14,7 +14,7 @@ def test_get_df():
 
     provider = ODataConnector(
         name='test',
-        url='http://services.odata.org/V4/Northwind/Northwind.svc/',
+        baseroute='http://services.odata.org/V4/Northwind/Northwind.svc/',
         auth={'type': 'basic', 'args': ['u', 'p']})
 
     data_source = ODataDataSource(
