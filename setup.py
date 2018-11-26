@@ -16,7 +16,7 @@ extras_require = {
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
     'mysql': ['PyMySQL>=0.8.0'],
-    'odata': ['tctc_odata', 'requests_oauthlib', 'jq', 'oauthlib'],
+    'odata': ['jq', 'oauthlib', 'requests_oauthlib', 'tctc_odata'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'sap_hana': ['pyhdb>=0.3.4'],
