@@ -1,13 +1,14 @@
 from setuptools import setup, find_packages
 
+google_credentials_deps = ['requests', 'requests_oauthlib', 'oauthlib']
 extras_require = {
     'adobe': ['adobe_analytics'],
     'azure_mssql': ['pymssql>=2.1.3'],
     'dataiku': ['dataiku-api-client'],
-    'google_analytics': ['google-api-python-client'],
-    'google_big_query': ['pandas_gbq'],
-    'google_cloud_mysql': ['PyMySQL>=0.8.0'],
-    'google_spreadsheet': ['gspread>=3', 'oauth2client'],
+    'google_analytics': google_credentials_deps + ['google-api-python-client', 'oauth2client'],
+    'google_big_query': google_credentials_deps + ['pandas_gbq'],
+    'google_cloud_mysql': google_credentials_deps + ['PyMySQL>=0.8.0'],
+    'google_spreadsheet': google_credentials_deps + ['gspread>=3', 'oauth2client'],
     'hive': ['pyhive[hive]'],
     'http_api': ['requests', 'requests_oauthlib', 'jq', 'oauthlib'],
     'magento': ['magento'],
@@ -36,7 +37,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.9.1',
+      version='0.9.3',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
