@@ -10,7 +10,7 @@ extras_require = {
     'google_cloud_mysql': google_credentials_deps + ['PyMySQL>=0.8.0'],
     'google_spreadsheet': google_credentials_deps + ['gspread>=3', 'oauth2client'],
     'hive': ['pyhive[hive]'],
-    'http_api': ['requests', 'requests_oauthlib', 'jq', 'oauthlib'],
+    'http_api': ['jq', 'oauthlib', 'requests', 'requests_oauthlib'],
     'magento': ['magento'],
     'micro_strategy': ['requests'],
     'mongo': ['pymongo>=3.6.1'],
