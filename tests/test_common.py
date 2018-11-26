@@ -1,3 +1,6 @@
+import responses
+
+from toucan_connectors.common import Auth, CustomTokenServer
 from toucan_connectors.common import nosql_apply_parameters_to_query
 
 
@@ -17,3 +20,21 @@ def test_apply_parameter_to_query():
     query = [{'$match': {'domain': 'yo', 'cat': 1}}]
     res = nosql_apply_parameters_to_query(query, None)
     assert res == query
+
+
+@responses.activate
+def test_custom_token_server():
+    auth = Auth(type='custom_token_server',
+                args=['POST', 'https://example.com'],
+                kwargs={'data': {'user': 'u', 'password ': 'p'}, 'filter': '.token'})
+
+    session = auth.get_session()
+    assert isinstance(session.auth, CustomTokenServer)
+
+    responses.add(responses.POST, 'https://example.com', json={'token': 'a'})
+
+    class TMP:
+        headers = {}
+
+    session.auth(TMP())
+    assert TMP.headers['Authorization'] == 'Bearer a'

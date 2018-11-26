@@ -219,3 +219,35 @@ def test_get_df_oauth2_backend_mocked():
     co.get_df(HttpAPIDataSource(**users))
 
     assert len(responses.calls) == 2
+
+
+def test_get_df_live():
+    provider = HttpAPIConnector(
+        name='test',
+        baseroute='https://platform.uipath.com/odata',
+        auth={
+            'type': 'custom_token_server',
+            'args': ['POST', 'https://platform.uipath.com/api/account/authenticate'],
+            'kwargs': {
+                'data': {
+                    'tenancyName': 'hybridRPA',
+                    'usernameOrEmailAddress': 'admin',
+                    'password': 'coyote123'
+                },
+                'filter': '.result'
+            }
+        }
+    )
+
+    data_source = HttpAPIDataSource(
+        domain='test',
+        name='test',
+        url='/QueueItems',
+        params={
+            "$filter": "QueueDefinitionId eq 45471"
+        },
+        filter='.value'
+    )
+
+    df = provider.get_df(data_source)
+    import ipdb; ipdb.set_trace()
