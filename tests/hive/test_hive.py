@@ -36,3 +36,15 @@ def hive_datasource():
 def test_get_df(hive_connector, hive_datasource):
     df = hive_connector.get_df(hive_datasource)
     assert df['tests.a'].iloc[0] == 12
+
+
+def test_get_df_w_params(hive_connector):
+    datasource = HiveDataSource(name='mycon', domain='mydomain',
+                                query='select * from tests where a = %(i)s',
+                                parameters={'i': 10})
+    df = hive_connector.get_df(datasource)
+    assert df.empty
+
+    datasource.parameters['i'] = 12
+    df = hive_connector.get_df(datasource)
+    assert not df.empty
