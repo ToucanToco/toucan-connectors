@@ -7,6 +7,8 @@ import pandas_gbq
 from toucan_connectors.common import GoogleCredentials
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
+from typing import List
+
 
 class Dialect(str, Enum):
     legacy = 'legacy'
@@ -23,6 +25,7 @@ class GoogleBigQueryConnector(ToucanConnector):
 
     credentials: GoogleCredentials
     dialect: Dialect = Dialect.legacy
+    scopes: List[str] = ["https://www.googleapis.com/auth/bigquery"]
 
     def get_df(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:
         """
@@ -33,10 +36,13 @@ class GoogleBigQueryConnector(ToucanConnector):
             for each query. This is necessary when extracting multiple data to avoid the error:
             [Errno 54] Connection reset by peer
         """
+        credentials = (self.credentials
+                       .get_google_oauth2_credentials()
+                       .with_scopes(self.scopes)
+                       )
         return pandas_gbq.read_gbq(
             query=data_source.query,
             project_id=self.credentials.project_id,
-            private_key=json.dumps(self.credentials.dict()),
-            reauth=True,
+            credentials=credentials,
             dialect=self.dialect
         )
