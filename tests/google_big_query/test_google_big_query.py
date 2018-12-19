@@ -1,5 +1,3 @@
-import json
-
 import pandas as pd
 
 from toucan_connectors.google_big_query.google_big_query_connector import (
