@@ -1,11 +1,10 @@
 import pandas as pd
+from google.oauth2.service_account import Credentials
 
+from toucan_connectors.common import GoogleCredentials
 from toucan_connectors.google_big_query.google_big_query_connector import (
     GoogleBigQueryConnector, GoogleBigQueryDataSource
 )
-
-from toucan_connectors.common import GoogleCredentials
-from google.oauth2.service_account import Credentials
 
 
 def test_gbq(mocker):
@@ -37,10 +36,16 @@ def test_gbq(mocker):
         query='SELECT * FROM [bigquery-public-data:samples.wikipedia] LIMIT 1000'
     )
     assert connector.get_df(datasource).equals(mydf)
+
     args, kwargs = my_read_gbq.call_args
-    assert kwargs['query'] == 'SELECT * FROM [bigquery-public-data:samples.wikipedia] LIMIT 1000'
-    assert kwargs['project_id'] == 'my_project_id'
-    assert kwargs['dialect'] == 'standard'
-    assert isinstance(kwargs['credentials'], Credentials)
-    assert kwargs['credentials'].scopes == ["https://www.googleapis.com/auth/bigquery",
-                                            'https://www.googleapis.com/auth/drive']
+    credentials = kwargs.pop('credentials')
+    assert isinstance(credentials, Credentials)
+    assert credentials.scopes == [
+        'https://www.googleapis.com/auth/bigquery',
+        'https://www.googleapis.com/auth/drive'
+    ]
+    assert kwargs == {
+        'query': 'SELECT * FROM [bigquery-public-data:samples.wikipedia] LIMIT 1000',
+        'project_id': 'my_project_id',
+        'dialect': 'standard'
+    }

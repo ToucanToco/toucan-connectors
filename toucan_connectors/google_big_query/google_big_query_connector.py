@@ -1,12 +1,11 @@
 from enum import Enum
+from typing import List
 
 import pandas as pd
 import pandas_gbq
 
 from toucan_connectors.common import GoogleCredentials
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-
-from typing import List
 
 
 class Dialect(str, Enum):
