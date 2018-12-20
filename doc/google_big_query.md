@@ -6,6 +6,7 @@
 * `name`: str, required
 * `credentials`: [GoogleCredentials](google_credentials.md), required
 * `dialect`: Dialect, default to legacy
+* `scopes`: list(str), default to ["https://www.googleapis.com/auth/bigquery"]
 
 ```coffee
 DATA_PROVIDERS: [
@@ -13,6 +14,7 @@ DATA_PROVIDERS: [
   name:    '<name>'
   credentials:    '<credentials>'
   dialect:    '<dialect>'
+  scopes:    '<scopes>'
 ,
   ...
 ]
