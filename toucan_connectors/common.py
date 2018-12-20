@@ -3,6 +3,7 @@ from enum import Enum
 import json
 import re
 from typing import List
+from google.oauth2.service_account import Credentials
 
 from pydantic import BaseModel
 
@@ -26,6 +27,9 @@ class GoogleCredentials(BaseModel):
     token_uri: str
     auth_provider_x509_cert_url: str
     client_x509_cert_url: str
+
+    def get_google_oauth2_credentials(self):
+        return Credentials.from_service_account_info(self.dict())
 
 
 def oauth2_backend(token_url, client_id, client_secret):
