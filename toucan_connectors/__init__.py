@@ -21,8 +21,6 @@ with suppress(ImportError):
 with suppress(ImportError):
     from .http_api.http_api_connector import HttpAPIConnector
 with suppress(ImportError):
-    from .magento.magento_connector import MagentoConnector
-with suppress(ImportError):
     from .micro_strategy.micro_strategy_connector import MicroStrategyConnector
 with suppress(ImportError):
     from .mongo.mongo_connector import MongoConnector

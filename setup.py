@@ -11,7 +11,6 @@ extras_require = {
     'google_spreadsheet': google_credentials_deps + ['gspread>=3', 'oauth2client'],
     'hive': ['pyhive[hive]'],
     'http_api': ['jq', 'oauthlib', 'requests', 'requests_oauthlib'],
-    'magento': ['magento'],
     'micro_strategy': ['requests'],
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
