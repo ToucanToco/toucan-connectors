@@ -1,3 +1,5 @@
+# Magento connector
+
 After a first expecrience with a customer we realised the Magento
  1.x API seems more suitable for writing e-commerce workflow plugins 
  rather than data analytics applications. 
