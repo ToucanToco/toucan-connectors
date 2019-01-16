@@ -68,6 +68,7 @@ class MongoConnector(ToucanConnector):
     database: str
     username: str = None
     password: str = None
+    ssl: bool = False
 
     @validator('password')
     def password_must_have_a_user(cls, v, values, **kwargs):
@@ -86,7 +87,7 @@ class MongoConnector(ToucanConnector):
         return ''.join(['mongodb://', user_pass, f'{self.host}:{self.port}'])
 
     def get_df(self, data_source):
-        client = pymongo.MongoClient(self.uri)
+        client = pymongo.MongoClient(self.uri, ssl=self.ssl)
 
         col = client[self.database][data_source.collection]
 

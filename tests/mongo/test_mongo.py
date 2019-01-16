@@ -91,7 +91,7 @@ def test_get_df(mocker):
     )
     mongo_connector.get_df(datasource)
 
-    snock.assert_called_with('mongodb://ubuntu:ilovetoucan@localhost:22')
+    snock.assert_called_with('mongodb://ubuntu:ilovetoucan@localhost:22', ssl=False)
     assert snock.call_count == 3
 
     find.assert_called_with({'domain': 'domain1'})
