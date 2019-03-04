@@ -27,7 +27,7 @@ extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
 install_requires = [
     'toucan_data_sdk',
-    'pydantic==0.9.1'
+    'pydantic' # a supprimer quand le sdk aura pydantic dans ses requirements
 ]
 
 classifiers = [

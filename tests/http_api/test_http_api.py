@@ -119,7 +119,7 @@ def test_e2e():
 
 @responses.activate
 def test_get_df_with_json(connector, data_source, mocker):
-    data_source.json = {'a': 1}
+    data_source.json_ = {'a': 1}
 
     responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 2}])
 
@@ -150,7 +150,7 @@ def test_get_df_with_template_overide(data_source, mocker):
                              'template': {'headers': {'Authorization': 'XX', 'B': '1'}}})
 
     data_source.headers = {'Authorization': 'YY'}
-    data_source.json = {'A': 1}
+    data_source.json_ = {'A': 1}
 
     responses.add(responses.GET, 'http://example.com/comments', json=[{"a": 2}])
 

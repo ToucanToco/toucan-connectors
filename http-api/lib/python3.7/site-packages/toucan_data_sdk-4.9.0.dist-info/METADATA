@@ -1,0 +1,28 @@
+Metadata-Version: 2.1
+Name: toucan-data-sdk
+Version: 4.9.0
+Summary: Toucan data SDK
+Home-page: https://github.com/ToucanToco/toucan-data-sdk
+Author: Toucan Toco
+License: BSD
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Dist: engarde
+Requires-Dist: joblib (>=0.12)
+Requires-Dist: pandas (==0.23.4)
+Requires-Dist: python-slugify
+Requires-Dist: scipy
+Requires-Dist: tabulate
+Requires-Dist: toucan-client (==1.0.0)
+Provides-Extra: test
+Requires-Dist: flake8; extra == 'test'
+Requires-Dist: pytest; extra == 'test'
+Requires-Dist: pytest-mock; extra == 'test'
+Requires-Dist: pytest-cov; extra == 'test'
+
+UNKNOWN
+
+

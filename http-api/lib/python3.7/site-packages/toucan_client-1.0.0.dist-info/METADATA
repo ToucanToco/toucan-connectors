@@ -1,0 +1,26 @@
+Metadata-Version: 2.0
+Name: toucan-client
+Version: 1.0.0
+Summary: Toucan API client
+Home-page: https://github.com/ToucanToco/toucan-client
+Author: Toucan Toco
+Author-email: UNKNOWN
+License: BSD
+Description-Content-Type: UNKNOWN
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Requires-Dist: requests
+Provides-Extra: test
+Requires-Dist: pytest; extra == 'test'
+Requires-Dist: pytest-mock; extra == 'test'
+Requires-Dist: pytest-cov; extra == 'test'
+Requires-Dist: pytest-pep8; extra == 'test'
+
+UNKNOWN
+
+

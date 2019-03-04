@@ -1,0 +1,31 @@
+Metadata-Version: 2.0
+Name: engarde
+Version: 0.4.0
+Summary: A python package for defensive data analysis.
+Home-page: https://github.com/tomaugspurger/engarde
+Author: Tom Augspurger
+Author-email: tom.w.augspurger@gmail.com
+License: MIT
+Keywords: data analysis
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: six
+Provides-Extra: dev
+Provides-Extra: test
+Requires-Dist: coverage; extra == 'test'
+Requires-Dist: ipython; extra == 'test'
+Requires-Dist: numpydoc; extra == 'test'
+Requires-Dist: pytest; extra == 'test'
+Requires-Dist: traitlets; extra == 'test'
+
+A python package for defensive data analysis.
+
+

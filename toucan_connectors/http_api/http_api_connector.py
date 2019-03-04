@@ -2,7 +2,7 @@ from enum import Enum
 
 from jq import jq
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, Schema
 from requests import Session
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -34,7 +34,8 @@ class Method(str, Enum):
 class Template(BaseModel):
     headers: dict = None
     params: dict = None
-    json: dict = None
+    json_: dict = Schema(None, alias='json')
+ 
 
 
 class HttpAPIDataSource(ToucanDataSource):
@@ -42,7 +43,7 @@ class HttpAPIDataSource(ToucanDataSource):
     method: Method = Method.GET
     headers: dict = None
     params: dict = None
-    json: dict = None
+    json_: dict = Schema(None, alias='json')
     data: str = None
     filter: str = "."
     parameters: dict = None
@@ -67,6 +68,10 @@ class HttpAPIConnector(ToucanConnector):
         """
         jq_filter = query['filter']
 
+        # handle pydantic upgrade : 
+        query['json'] = query['json_']
+        del query['json_']
+        
         available_params = ['url', 'method', 'params', 'data', 'json', 'headers']
         query = {k: v for k, v in query.items() if k in available_params}
         query['url'] = '/'.join([self.baseroute.rstrip('/'), query['url'].lstrip('/')])
