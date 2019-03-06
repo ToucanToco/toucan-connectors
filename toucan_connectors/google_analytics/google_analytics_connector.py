@@ -26,7 +26,7 @@ class DimensionFilter(BaseModel):
 
     class Config:
         # TODO `not` param is not implemented
-        allow_extra = True
+        extra = 'allow'
 
 
 class DimensionFilterClause(BaseModel):
@@ -45,7 +45,7 @@ class Metric(BaseModel):
 
     class Config:
         # TODO `metricType` param is not implemented
-        allow_extra = True
+        extra = 'allow'
 
 
 class MetricFilter(BaseModel):
@@ -55,7 +55,7 @@ class MetricFilter(BaseModel):
 
     class Config:
         # TODO `not` param is not implemented
-        allow_extra = True
+        extra = 'allow'
 
 
 class MetricFilterClause(BaseModel):

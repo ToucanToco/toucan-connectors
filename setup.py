@@ -27,7 +27,7 @@ extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 install_requires = [
     'cython',
     'toucan_data_sdk',
-    'pydantic==0.9.1'
+    'pydantic'
 ]
 
 classifiers = [

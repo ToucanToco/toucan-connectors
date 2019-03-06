@@ -13,7 +13,7 @@ class ToucanDataSource(BaseModel):
     live_data: bool = False
 
     class Config:
-        ignore_extra = False
+        extra = 'ignore'
         validate_assignment = True
 
 
@@ -21,7 +21,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     name: str
 
     class Config:
-        ignore_extra = False
+        extra = 'ignore'
         validate_assignment = True
 
     def __init_subclass__(cls):
