@@ -16,6 +16,8 @@ You can then install:
 
 You should be able to run basic tests `pytest tests/test_connector.py`
 
+:warning: On macOS,  to test and use `azure_mssql` and `mssql` connector, you must install `freetds` running for instance:  `brew install freetds` :warning:
+
 ## Testing a connector
 If you want to run the tests for another connector, you can install the extra dependencies  
 (e.g to test MySQL just type `pip install -e ".[mysql]"`)  
