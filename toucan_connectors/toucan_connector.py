@@ -13,7 +13,7 @@ class ToucanDataSource(BaseModel):
     live_data: bool = False
 
     class Config:
-        extra = 'ignore'
+        extra = 'forbid'
         validate_assignment = True
 
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
