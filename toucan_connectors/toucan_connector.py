@@ -16,6 +16,7 @@ class ToucanDataSource(BaseModel):
         extra = 'forbid'
         validate_assignment = True
 
+
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
     name: str
 

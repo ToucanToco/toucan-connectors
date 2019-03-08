@@ -28,7 +28,7 @@ def test_required_arg():
     data_source = {'name': 'my_name', 'collection': 'my_collection', 'query': {}}
     with pytest.raises(ValidationError) as e:
         DataSource(**data_source)
-    assert 'domain' in e.value.errors()[0]['loc'] # Are we testing pydantic here ?
+    assert 'domain' in e.value.errors()[0]['loc']  # Are we testing pydantic here ?
     assert e.value.errors()[0]['msg'] == 'field required'
 
 
