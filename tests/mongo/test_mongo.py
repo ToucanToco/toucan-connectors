@@ -50,7 +50,7 @@ def test_uri():
     with pytest.raises(ValueError) as exc_info:
         MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
                        password='mypass')
-    assert 'password:\n  username must be set' in str(exc_info.value)
+    assert 'password\n  username must be set' in str(exc_info.value) # Are we testing pydantic error message ?
 
 
 def test_get_df(mocker):
