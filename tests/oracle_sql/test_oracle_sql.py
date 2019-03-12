@@ -53,6 +53,7 @@ def test_oracle_get_df(mocker):
     )
 
 
+@pytest.mark.skip(reason="Unavailable image")
 def test_get_df_db(oracle_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
