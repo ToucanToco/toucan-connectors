@@ -41,6 +41,7 @@ postgres:
 
 oraclesql:
   image: datagrip/oracle:11.2.0.2-xe
+  shm_size: 1g
   ports:
     - 1521:1521
   volumes:
