@@ -40,7 +40,7 @@ postgres:
     - ./postgres/fixtures/world_postgres.sql:/docker-entrypoint-initdb.d/world.sql
 
 oraclesql:
-  image: datagrip/oracle:11.2
+  image: datagrip/oracle:11.2.0.2-xe
   ports:
     - 1521:1521
   volumes:
