@@ -39,12 +39,12 @@ postgres:
   volumes:
     - ./postgres/fixtures/world_postgres.sql:/docker-entrypoint-initdb.d/world.sql
 
-# oraclesql:
-#   image: sath89/oracle-xe-11g
-#   ports:
-#     - 1521:1521
-#   volumes:
-#     - ./oracle_sql/fixtures/world.sql:/docker-entrypoint-initdb.d/world.sql
+oraclesql:
+  image: datagrip/oracle:11.2
+  ports:
+    - 1521:1521
+  volumes:
+    - ./oracle_sql/fixtures/world.sql:/docker-entrypoint-initdb.d/world.sql
 
 hive:
   image: gillax/hive
