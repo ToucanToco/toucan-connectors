@@ -11,6 +11,7 @@ class ToucanDataSource(BaseModel):
     type: str = None
     load: bool = True
     live_data: bool = False
+    validation: list = None
 
     class Config:
         extra = 'forbid'
