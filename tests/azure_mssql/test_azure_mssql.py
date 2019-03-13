@@ -23,7 +23,7 @@ def test_connection_params():
 
 
 def test_gcmysql_get_df(mocker):
-    snock = mocker.patch('pymssql.connect')
+    snock = mocker.patch('pyodbc.connect')
     reasq = mocker.patch('pandas.read_sql')
 
     mssql_connector = AzureMSSQLConnector(
@@ -38,5 +38,6 @@ def test_gcmysql_get_df(mocker):
         user='ubuntu@localhost',
         database='mssql_db',
         password='ilovetoucan',
-        as_dict=True)
+        driver= '{ODBC Driver 17 for SQL Server}'
+    )
     reasq.assert_called_once_with('my_query', con=snock())

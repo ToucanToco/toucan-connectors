@@ -1,4 +1,4 @@
-import pymssql
+import pyodbc
 import re
 
 import pandas as pd
@@ -32,18 +32,18 @@ class AzureMSSQLConnector(ToucanConnector):
         user = f'{self.user}@{base_host}' if '@' not in self.user else self.user
 
         con_params = {
+            'driver': '{ODBC Driver 17 for SQL Server}',
             'server': f'{base_host}.{CLOUD_HOST}',
             'user': user,
             'database': self.db,
             'password': self.password,
-            'login_timeout': self.connect_timeout,
-            'as_dict': True
+            'timeout': self.connect_timeout
         }
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
     def get_df(self, datasource: AzureMSSQLDataSource) -> pd.DataFrame:
-        connection = pymssql.connect(**self.connection_params)
+        connection = pyodbc.connect(**self.connection_params)
 
         df = pd.read_sql(datasource.query, con=connection)
 
