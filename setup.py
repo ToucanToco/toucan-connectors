@@ -8,6 +8,7 @@ extras_require = {
     'google_analytics': google_credentials_deps + ['google-api-python-client', 'oauth2client'],
     'google_big_query': google_credentials_deps + ['pandas_gbq'],
     'google_cloud_mysql': google_credentials_deps + ['PyMySQL>=0.8.0'],
+    'google_my_business': google_credentials_deps + ['google-api-python-client>=1.7.5'],
     'google_spreadsheet': google_credentials_deps + ['gspread>=3', 'oauth2client'],
     'hive': ['pyhive[hive]'],
     'http_api': ['jq', 'oauthlib', 'requests', 'requests_oauthlib'],
