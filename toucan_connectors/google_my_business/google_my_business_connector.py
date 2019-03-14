@@ -1,6 +1,7 @@
 from typing import List
 
 import pandas as pd
+from pandas.io.json import json_normalize
 from pydantic import BaseModel
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
@@ -74,3 +75,4 @@ class GoogleMyBusinessConnector(ToucanConnector):
         report_insights = service.accounts().locations().reportInsights(
             name=name, body=query
         ).execute()
+        return json_normalize(report_insights)

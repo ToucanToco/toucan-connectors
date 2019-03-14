@@ -4,7 +4,7 @@
 
 * `type`: `"GoogleMyBusiness"`
 * `name`: str, required
-* `credentials`: required
+* `credentials`: required (see "get credentials" section below)
   * `token`: str
   * `refresh_token`: str
   * `token_uri`: str
@@ -55,4 +55,31 @@ DATA_SOURCES: [
 ,
   ...
 ]
+```
+
+
+## Get credentials
+
+First, you will need a valid `client_secret.json` file (you can download it from <INSERT EXPLANATION HERE>).
+
+Then, in a virtualenv with `google_auth_oauthlib` and `google-api-python-client` package, you can use this python code to get your credentials:
+
+```python
+import json
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+
+CLIENT_SECRETS_FILE = "client_secret.json"
+SCOPES = ["https://www.googleapis.com/auth/business.manage"]
+
+flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
+credentials = flow.run_console()
+json_credentials = json.dumps({
+    "token": credentials.token,
+    "refresh_token": credentials.refresh_token,
+    "token_uri": credentials.token_uri,
+    "client_id": credentials.client_id,
+    "client_secret": credentials.client_secret,
+}, indent=2)
+print(json_credentials)
 ```
