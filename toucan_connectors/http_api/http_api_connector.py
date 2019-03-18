@@ -4,6 +4,7 @@ from jq import jq
 import pandas as pd
 from pydantic import BaseModel, Schema
 from requests import Session
+from typing import Union
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.common import nosql_apply_parameters_to_query
@@ -43,7 +44,7 @@ class HttpAPIDataSource(ToucanDataSource):
     headers: dict = None
     params: dict = None
     json_: dict = Schema(None, alias='json')
-    data: str = None
+    data: Union[str, dict] = None
     filter: str = "."
     parameters: dict = None
 
