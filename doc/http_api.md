@@ -53,7 +53,7 @@ all data sources using this provider.
 * `json`: dict
 * `headers`: dict
 * `params`: dict
-* `data`: str
+* `data`: str or dict
 * `filter`: str, [`jq` filter](https://stedolan.github.io/jq/manual/), default to `"."
 * `auth`: Auth
 * `parameters`: dict

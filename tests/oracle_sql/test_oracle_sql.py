@@ -31,7 +31,7 @@ def oracle_connector(oracle_server):
                               dsn=f'localhost:{oracle_server["port"]}/xe')
 
 
-def test_mssql_get_df(mocker):
+def test_oracle_get_df(mocker):
     snock = mocker.patch('cx_Oracle.connect')
     reasq = mocker.patch('pandas.read_sql')
 
@@ -53,6 +53,7 @@ def test_mssql_get_df(mocker):
     )
 
 
+@pytest.mark.skip(reason="Unavailable image")
 def test_get_df_db(oracle_connector):
     """" It should extract the table City and make some merge with some foreign key """
     data_sources_spec = [
