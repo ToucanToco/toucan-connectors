@@ -3,16 +3,16 @@ from enum import Enum
 import json
 import re
 from typing import List
-from google.oauth2.service_account import Credentials
 
+from google.oauth2.service_account import Credentials
 from pydantic import BaseModel
+from requests import Session
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth, AuthBase
+from requests_oauthlib import OAuth1, OAuth2Session
 
 with suppress(ImportError):
     # These requirements are only needed when connectors using http are installed
     from jq import jq
-    from requests import Session
-    from requests.auth import HTTPBasicAuth, HTTPDigestAuth, AuthBase
-    from requests_oauthlib import OAuth1, OAuth2Session
     from oauthlib.oauth2 import BackendApplicationClient
 
 
