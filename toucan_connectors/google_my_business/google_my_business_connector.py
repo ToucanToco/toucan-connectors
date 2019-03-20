@@ -75,4 +75,36 @@ class GoogleMyBusinessConnector(ToucanConnector):
         report_insights = service.accounts().locations().reportInsights(
             name=name, body=query
         ).execute()
-        return json_normalize(report_insights)
+
+        def expand_list_col(df, col):
+            other_cols = set(df.columns) - {col}
+            df2 = df[col].apply(pd.Series)\
+                         .merge(df, left_index=True, right_index=True)\
+                         .drop([col], axis=1)\
+                         .melt(id_vars=other_cols, value_name=col)\
+                         .drop("variable", axis=1)
+            return df2
+
+        def expand_dict_col(df, col):
+            other_cols = set(df.columns) - {col}
+            idx = df[col].dropna().index
+            df2 = json_normalize(df[col].dropna()).set_index(idx)
+            df2.columns = [c.split('.')[-1] for c in df2.columns]
+            del df[col]
+            for c in df2.columns:
+                if c in df.columns:
+                    df[c] = df[c].fillna(df2[c])
+                else:
+                    df[c] = df2[c]
+            return df
+
+        df = pd.DataFrame(report_insights['locationMetrics'])
+
+        if 'metricValues' in df.columns:
+            df = expand_list_col(df, 'metricValues')
+            df = expand_dict_col(df, 'metricValues')
+        if 'dimensionalValues' in df.columns:
+            df = expand_list_col(df, 'dimensionalValues')
+            df = expand_dict_col(df, 'dimensionalValues')
+
+        return df
