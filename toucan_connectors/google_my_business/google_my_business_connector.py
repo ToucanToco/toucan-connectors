@@ -11,7 +11,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 API_SERVICE_NAME = 'mybusiness'
 API_VERSION = 'v4'
-DISCOVERY_URI = f'https://developers.google.com/my-business/samples/{API_SERVICE_NAME}_google_rest_{API_VERSION}.json'
+DISCOVERY_URI = f'https://developers.google.com/my-business/samples/{API_SERVICE_NAME}_google_rest_{API_VERSION}.json'  # noqa: E501
 
 
 class Metric(BaseModel):
@@ -46,7 +46,10 @@ class GoogleMyBusinessConnector(ToucanConnector):
     scopes: List[str] = ["https://www.googleapis.com/auth/business.manage"]
 
     def build_service(self):
-        credentials = Credentials.from_authorized_user_info(self.credentials.dict(), scopes=self.scopes)
+        credentials = Credentials.from_authorized_user_info(
+            self.credentials.dict(),
+            scopes=self.scopes
+        )
         service = build(API_SERVICE_NAME, API_VERSION,
                         credentials=credentials,
                         discoveryServiceUrl=DISCOVERY_URI)
