@@ -1,10 +1,11 @@
 from typing import List
 
 import pandas as pd
-from pandas.io.json import json_normalize
-from pydantic import BaseModel
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
+from jq import jq
+from pandas.io.json import json_normalize
+from pydantic import BaseModel
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -76,35 +77,20 @@ class GoogleMyBusinessConnector(ToucanConnector):
             name=name, body=query
         ).execute()
 
-        def expand_list_col(df, col):
-            other_cols = set(df.columns) - {col}
-            df2 = df[col].apply(pd.Series)\
-                         .merge(df, left_index=True, right_index=True)\
-                         .drop([col], axis=1)\
-                         .melt(id_vars=other_cols, value_name=col)\
-                         .drop("variable", axis=1)
-            return df2
+        location_metrics = report_insights['locationMetrics']
 
-        def expand_dict_col(df, col):
-            other_cols = set(df.columns) - {col}
-            idx = df[col].dropna().index
-            df2 = json_normalize(df[col].dropna()).set_index(idx)
-            df2.columns = [c.split('.')[-1] for c in df2.columns]
-            del df[col]
-            for c in df2.columns:
-                if c in df.columns:
-                    df[c] = df[c].fillna(df2[c])
-                else:
-                    df[c] = df2[c]
-            return df
+        f = """
+            .[] as $in |
+            $in.metricValues[] as $mv |
+            $in | del(.metricValues) as $in2 |
+            $in2 *  if $mv.dimensionalValues != null then
+                      {"metric": $mv.metric} * $mv.dimensionalValues[]
+                    else
+                      {"metric": $mv.metric} * $mv.totalValue
+                    end
+        """
 
-        df = pd.DataFrame(report_insights['locationMetrics'])
-
-        if 'metricValues' in df.columns:
-            df = expand_list_col(df, 'metricValues')
-            df = expand_dict_col(df, 'metricValues')
-        if 'dimensionalValues' in df.columns:
-            df = expand_list_col(df, 'dimensionalValues')
-            df = expand_dict_col(df, 'dimensionalValues')
+        res = jq(f).transform(location_metrics, multiple_output=True)
+        df = json_normalize(res)
 
         return df
