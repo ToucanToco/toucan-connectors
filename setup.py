@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 google_credentials_deps = ['requests', 'requests_oauthlib', 'oauthlib']
 extras_require = {
     'adobe': ['adobe_analytics'],
-    'azure_mssql': ['pymssql>=2.1.3'],
+    'azure_mssql': ['pyodbc'],
     'dataiku': ['dataiku-api-client'],
     'google_analytics': google_credentials_deps + ['google-api-python-client', 'oauth2client'],
     'google_big_query': google_credentials_deps + ['pandas_gbq'],
@@ -36,7 +36,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.10.6',
+      version='0.11.0',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
