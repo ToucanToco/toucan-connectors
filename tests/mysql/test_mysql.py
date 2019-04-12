@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pymysql
 import pytest
+from pydantic import ValidationError
 
 from toucan_connectors.mysql.mysql_connector import MySQLConnector, MySQLDataSource
 
@@ -28,9 +29,8 @@ def mysql_connector(mysql_server):
 
 
 def test_datasource():
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(ValidationError):
         MySQLDataSource(name='mycon', domain='mydomain', query='')
-    assert 'query:\n  length less than minimum allowed: 1' in str(exc_info.value)
 
     with pytest.raises(ValueError) as exc_info:
         MySQLDataSource(name='mycon', domain='mydomain')
