@@ -27,7 +27,7 @@ extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 install_requires = [
     'cython',
     'toucan_data_sdk',
-    'pydantic' #to delete when pydantic is in toucan_data_sdk requirements
+    'pydantic'
 ]
 
 classifiers = [
