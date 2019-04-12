@@ -22,7 +22,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     name: str
 
     class Config:
-        extra = 'ignore'
+        extra = 'forbid'
         validate_assignment = True
 
     def __init_subclass__(cls):
