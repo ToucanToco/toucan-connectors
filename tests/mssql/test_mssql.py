@@ -47,7 +47,7 @@ def mssql_datasource():
 
 
 def test_datasource(mssql_datasource):
-    with pytest.raises(pydantic.exceptions.ValidationError):
+    with pytest.raises(pydantic.ValidationError):
         mssql_datasource(query='')
     mssql_datasource(query='ok')
 

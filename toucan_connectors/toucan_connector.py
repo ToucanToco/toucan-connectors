@@ -14,7 +14,7 @@ class ToucanDataSource(BaseModel):
     validation: list = None
 
     class Config:
-        ignore_extra = False
+        extra = 'forbid'
         validate_assignment = True
 
 
@@ -22,7 +22,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     name: str
 
     class Config:
-        ignore_extra = False
+        extra = 'forbid'
         validate_assignment = True
 
     def __init_subclass__(cls):

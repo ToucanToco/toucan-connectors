@@ -119,7 +119,11 @@ def test_e2e():
 
 @responses.activate
 def test_get_df_with_json(connector, data_source, mocker):
-    data_source.json = {'a': 1}
+    data_source = HttpAPIDataSource(
+        name="myHttpDataSource",
+        domain="my_domain",
+        url="/comments",
+        json={'a': 1})
 
     responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 2}])
 
@@ -149,8 +153,13 @@ def test_get_df_with_template_overide(data_source, mocker):
                              'baseroute': 'http://example.com',
                              'template': {'headers': {'Authorization': 'XX', 'B': '1'}}})
 
-    data_source.headers = {'Authorization': 'YY'}
-    data_source.json = {'A': 1}
+    data_source = HttpAPIDataSource(
+        name="myHttpDataSource",
+        domain="my_domain",
+        url="/comments",
+        json={'A': 1},
+        headers={'Authorization': 'YY'}
+    )
 
     responses.add(responses.GET, 'http://example.com/comments', json=[{"a": 2}])
 
