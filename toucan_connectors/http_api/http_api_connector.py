@@ -2,7 +2,7 @@ from enum import Enum
 
 from jq import jq
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, Schema
 from requests import Session
 from typing import Union
 
@@ -35,7 +35,7 @@ class Method(str, Enum):
 class Template(BaseModel):
     headers: dict = None
     params: dict = None
-    json: dict = None
+    json_: dict = Schema(None, alias='json')
 
 
 class HttpAPIDataSource(ToucanDataSource):
@@ -43,7 +43,7 @@ class HttpAPIDataSource(ToucanDataSource):
     method: Method = Method.GET
     headers: dict = None
     params: dict = None
-    json: dict = None
+    json_: dict = Schema(None, alias='json')
     data: Union[str, dict] = None
     filter: str = "."
     parameters: dict = None
@@ -94,11 +94,11 @@ class HttpAPIConnector(ToucanConnector):
             session = Session()
 
         query = nosql_apply_parameters_to_query(
-            data_source.dict(),
+            data_source.dict(by_alias=True),
             data_source.parameters)
 
         if self.template:
-            template = {k: v for k, v in self.template.dict().items() if v}
+            template = {k: v for k, v in self.template.dict(by_alias=True).items() if v}
             for k in query.keys() & template.keys():
                 if query[k]:
                     template[k].update(query[k])

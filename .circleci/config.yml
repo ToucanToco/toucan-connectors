@@ -9,7 +9,7 @@ jobs:
           name: Install sytem dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install freetds-dev libsasl2-dev
+            sudo apt-get install freetds-dev libsasl2-dev libpq-dev
       - run:
           name: Install oracle dependencies
           command: |
@@ -21,6 +21,13 @@ jobs:
             sudo unzip /tmp/oracle_client_lib.zip -d /opt/oracle
             sudo sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
             sudo ldconfig
+      - run:
+          name: Install azure_mssql dependencies
+          command: |
+            curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+            curl https://packages.microsoft.com/config/ubuntu/14.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+            sudo apt-get update
+            sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev
       - run:
           name: Install python 3.6
           command: |

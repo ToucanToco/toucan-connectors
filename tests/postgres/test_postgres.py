@@ -1,6 +1,6 @@
 import pandas as pd
 import psycopg2
-from pydantic.exceptions import ValidationError
+from pydantic import ValidationError
 import pytest
 
 from toucan_connectors.postgres.postgresql_connector import PostgresConnector, PostgresDataSource

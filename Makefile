@@ -20,7 +20,7 @@ endif
 
 set-test-env:
 	python3 -m venv ${VENV_NAME}
-	${VENV_NAME}/bin/python3 -m pip install --upgrade pip setuptools
+	${VENV_NAME}/bin/python3 -m pip install --upgrade pip setuptools wheel
 	${VENV_NAME}/bin/python3 setup.py install
 	${VENV_NAME}/bin/python3 -m pip install -r requirements-testing.txt
 	${VENV_NAME}/bin/python3 -m pip install .[all]

@@ -28,8 +28,8 @@ def test_required_arg():
     data_source = {'name': 'my_name', 'collection': 'my_collection', 'query': {}}
     with pytest.raises(ValidationError) as e:
         DataSource(**data_source)
-    assert 'domain' in e.value.errors_dict
-    assert e.value.errors_dict['domain']['error_msg'] == 'field required'
+    assert 'domain' in e.value.errors()[0]['loc']  # Are we testing pydantic here ?
+    assert e.value.errors()[0]['msg'] == 'field required'
 
 
 def test_required_arg_wrong_type():
@@ -39,8 +39,8 @@ def test_required_arg_wrong_type():
             'collection': 'my_collection', 'query': {}}
     with pytest.raises(ValidationError) as e:
         DataSource(**data_source)
-    assert 'domain' in e.value.errors_dict
-    assert e.value.message == 'error validating input'
+    assert 'domain' in e.value.errors()[0]['loc']
+    assert e.value.errors()[0]['msg'] == 'str type expected'
 
 
 def test_not_required():
@@ -73,5 +73,5 @@ def test_unknown_arg():
             'collection': 'my_collection', 'query': {}, 'unk': '@'}
     with pytest.raises(ValidationError) as e:
         DataSource(**data_source)
-    assert 'unk' in e.value.errors_dict
-    assert e.value.errors_dict['unk']['error_type'] == 'Extra'
+    assert 'unk' in e.value.errors()[0]['loc']
+    assert e.value.errors()[0]['msg'] == 'extra fields not permitted'
