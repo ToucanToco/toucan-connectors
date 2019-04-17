@@ -38,9 +38,6 @@ class FacebookInsightsConnector(ToucanConnector):
     type = "facebook_insights"
     data_source_model: FacebookInsightsDataSource
 
-    appid: str
-    appsecret: str
-
     def get_df(self, data_source: FacebookInsightsDataSource) -> pd.DataFrame:
         graph = facebook.GraphAPI()
         insights = []
@@ -49,8 +46,10 @@ class FacebookInsightsConnector(ToucanConnector):
                 id=f'{pageid}/insights',
                 metric=data_source.metrics,
                 period=data_source.period,
-                date_preset=data_source.data_preset,
+                date_preset=data_source.date_preset,
                 access_token=pagetoken)
-            insights.append(insight['data'])
-        df = pd.concat(insights, ignore_index=True, sort=False)
+            for data_obj in insight['data']:
+                for insight_value in data_obj.pop('values'):
+                    insights.append({**data_obj, **insight_value})
+        df = pd.DataFrame(insights)
         return df
