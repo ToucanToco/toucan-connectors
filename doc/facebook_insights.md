@@ -4,7 +4,7 @@ Import data from facebook insights API.
 
 ## Data provider configuration
 
-* `type`: `"MySQL"`
+* `type`: `"facebook_insights"`
 * `name`: str, required
 
 ```javascript
