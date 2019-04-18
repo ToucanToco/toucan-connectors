@@ -37,6 +37,43 @@ def elasticsearch(service_container):
     return service_container('elasticsearch', check_and_feed)
 
 
+def test_connector(mocker):
+    class ElasticsearchMock:
+        def search(self, index, body):
+            return {'hits': {'hits': [{'_source': {'yo': 'la'}}]}}
+
+    module = 'toucan_connectors.elasticsearch.elasticsearch_connector'
+    mock_es = mocker.patch(f'{module}.Elasticsearch')
+    mock_es.return_value = ElasticsearchMock()
+
+    con = ElasticsearchConnector(
+        name='test',
+        hosts=[
+            {
+                'url': 'https://toto.com/lu',
+                'username': 'test',
+                'password': 'test',
+                'headers': {'truc': ''}
+            }
+        ]
+    )
+    ds = ElasticsearchDataSource(
+        domain='test',
+        name='test',
+        index='_all',
+        search_method='search',
+        body={
+            "_source": True
+        }
+    )
+    con.get_df(ds)
+    mock_es.assert_called_once_with(
+        [{'host': 'toto.com', 'url_prefix': '/lu', 'port': 443, 'use_ssl': True,
+          'http_auth': 'test:test', 'headers': {'truc': ''}}],
+        send_get_body_as=None
+    )
+
+
 def test_get_df(elasticsearch):
     con = ElasticsearchConnector(
         name='test',
