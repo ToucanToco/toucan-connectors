@@ -38,7 +38,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.12.0',
+      version='0.13.0',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
