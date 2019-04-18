@@ -6,11 +6,15 @@
 
 * [DataikuConnector](dataiku.md)
 
+* [ElasticsearchConnector](elasticsearch.md)
+
 * [GoogleAnalyticsConnector](google_analytics.md)
 
 * [GoogleBigQueryConnector](google_big_query.md)
 
 * [GoogleCloudMySQLConnector](google_cloud_mysql.md)
+
+* [GoogleMyBusinessConnector](google_my_business.md)
 
 * [GoogleSpreadsheetConnector](google_spreadsheet.md)
 
@@ -19,8 +23,6 @@
 * [HttpAPIConnector](http_api.md)
 
 * [MSSQLConnector](mssql.md)
-
-* [MagentoConnector](magento.md)
 
 * [MicroStrategyConnector](micro_strategy.md)
 
