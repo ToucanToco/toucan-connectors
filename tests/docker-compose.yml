@@ -4,8 +4,6 @@ elasticsearch:
       - discovery.type=single-node
     ports:
       - 9200:9200
-    volumes:
-      - ./elasticsearch/fixtures/data:/usr/share/elasticsearch/data
 
 mongo:
   image: mongo
