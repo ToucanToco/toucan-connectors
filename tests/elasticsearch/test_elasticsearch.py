@@ -1,15 +1,49 @@
+import requests
+import pytest
+
 from toucan_connectors.elasticsearch.elasticsearch_connector import (
     ElasticsearchConnector, ElasticsearchDataSource
 )
 
 
-def test_get_df():
+@pytest.fixture(scope='module')
+def elasticsearch(service_container):
+    def check_and_feed(host_port):
+        """
+        This method check that the server is on
+        and feeds the database once it's up
+        """
+        url = f"http://localhost:{host_port}"
+        requests.get(url)
+        # Feed the database
+        requests.put(url + "/company")
+        requests.post(url + "/company/employees/1",
+                      json={
+                          "name": "Toto",
+                          "best_song": "Africa"
+                      })
+        requests.post(url + "/company/employees/2",
+                      json={
+                          "name": "BRMC",
+                          "best_song": "Beat The Devil\'s Tattoo",
+                          "adress": {
+                              "street": "laaa",
+                              "cedex": 15,
+                              "city": "looo"
+                          }
+                      })
+        requests.post(url + "/company/_refresh")
+
+    return service_container('elasticsearch', check_and_feed)
+
+
+def test_get_df(elasticsearch):
     con = ElasticsearchConnector(
         name='test',
         hosts=[
             {
                 'url': 'http://localhost',
-                'port': 9200
+                'port': elasticsearch['port']
             }
         ]
     )
