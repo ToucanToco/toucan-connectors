@@ -9,11 +9,15 @@ with suppress(ImportError):
 with suppress(ImportError):
     from .dataiku.dataiku_connector import DataikuConnector
 with suppress(ImportError):
+    from .elasticsearch.elasticsearch_connector import ElasticsearchConnector
+with suppress(ImportError):
     from .google_analytics.google_analytics_connector import GoogleAnalyticsConnector
 with suppress(ImportError):
     from .google_big_query.google_big_query_connector import GoogleBigQueryConnector
 with suppress(ImportError):
     from .google_cloud_mysql.google_cloud_mysql_connector import GoogleCloudMySQLConnector
+with suppress(ImportError):
+    from .google_my_business.google_my_business_connector import GoogleMyBusinessConnector
 with suppress(ImportError):
     from .google_spreadsheet.google_spreadsheet_connector import GoogleSpreadsheetConnector
 with suppress(ImportError):
