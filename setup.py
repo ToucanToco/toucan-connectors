@@ -6,6 +6,7 @@ extras_require = {
     'azure_mssql': ['pyodbc'],
     'dataiku': ['dataiku-api-client'],
     'elasticsearch': ['elasticsearch'],
+    'facebook': ['facebook-sdk'],
     'google_analytics': google_credentials_deps + ['google-api-python-client', 'oauth2client'],
     'google_big_query': google_credentials_deps + ['pandas_gbq'],
     'google_cloud_mysql': google_credentials_deps + ['PyMySQL>=0.8.0'],
