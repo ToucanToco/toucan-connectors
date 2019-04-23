@@ -5,6 +5,7 @@ extras_require = {
     'adobe': ['adobe_analytics'],
     'azure_mssql': ['pyodbc'],
     'dataiku': ['dataiku-api-client'],
+    'elasticsearch': ['elasticsearch'],
     'google_analytics': google_credentials_deps + ['google-api-python-client', 'oauth2client'],
     'google_big_query': google_credentials_deps + ['pandas_gbq'],
     'google_cloud_mysql': google_credentials_deps + ['PyMySQL>=0.8.0'],
@@ -37,7 +38,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.12.0',
+      version='0.13.0',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
