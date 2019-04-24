@@ -1,43 +1,43 @@
 # Toucan Connectors
 
-* [AdobeAnalyticsConnector](adobe_analytics.md)
+* [AdobeAnalyticsConnector](connectors/adobe_analytics.md)
 
-* [AzureMSSQLConnector](azure_mssql.md)
+* [AzureMSSQLConnector](connectors/azure_mssql.md)
 
-* [DataikuConnector](dataiku.md)
+* [DataikuConnector](connectors/dataiku.md)
 
-* [ElasticsearchConnector](elasticsearch.md)
+* [ElasticsearchConnector](connectors/elasticsearch.md)
 
-* [GoogleAnalyticsConnector](google_analytics.md)
+* [GoogleAnalyticsConnector](connectors/google_analytics.md)
 
-* [GoogleBigQueryConnector](google_big_query.md)
+* [GoogleBigQueryConnector](connectors/google_big_query.md)
 
-* [GoogleCloudMySQLConnector](google_cloud_mysql.md)
+* [GoogleCloudMySQLConnector](connectors/google_cloud_mysql.md)
 
-* [GoogleMyBusinessConnector](google_my_business.md)
+* [GoogleMyBusinessConnector](connectors/google_my_business.md)
 
-* [GoogleSpreadsheetConnector](google_spreadsheet.md)
+* [GoogleSpreadsheetConnector](connectors/google_spreadsheet.md)
 
-* [HiveConnector](hive.md)
+* [HiveConnector](connectors/hive.md)
 
-* [HttpAPIConnector](http_api.md)
+* [HttpAPIConnector](connectors/http_api.md)
 
-* [MSSQLConnector](mssql.md)
+* [MSSQLConnector](connectors/mssql.md)
 
-* [MicroStrategyConnector](micro_strategy.md)
+* [MicroStrategyConnector](connectors/micro_strategy.md)
 
-* [MongoConnector](mongo.md)
+* [MongoConnector](connectors/mongo.md)
 
-* [MySQLConnector](mysql.md)
+* [MySQLConnector](connectors/mysql.md)
 
-* [ODataConnector](odata.md)
+* [ODataConnector](connectors/odata.md)
 
-* [OracleSQLConnector](oracle_sql.md)
+* [OracleSQLConnector](connectors/oracle_sql.md)
 
-* [PostgresConnector](postgres.md)
+* [PostgresConnector](connectors/postgres.md)
 
-* [SapHanaConnector](sap_hana.md)
+* [SapHanaConnector](connectors/sap_hana.md)
 
-* [SnowflakeConnector](snowflake.md)
+* [SnowflakeConnector](connectors/snowflake.md)
 
-* [ToucanTocoConnector](toucan_toco.md)
+* [ToucanTocoConnector](connectors/toucan_toco.md)
