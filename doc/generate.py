@@ -121,7 +121,7 @@ def generate_summmary(connectors):
     doc = ['# Toucan Connectors']
     connectors = collections.OrderedDict(sorted(connectors.items()))
     for key, value in connectors.items():
-        doc.append(f'* [{key}]({value}.md)')
+        doc.append(f'* [{key}](connectors/{value}.md)')
     doc = '\n\n'.join([l for l in doc if l is not None])
     file_name = 'doc/connectors.md'
     with open(file_name, 'w') as file:
@@ -132,7 +132,7 @@ def generate_all_doc(connectors):
     for key, value in connectors.items():
         k = getattr(toucan_connectors, key)
         doc = generate(k)
-        file_name = os.path.join('doc/', f'{value}.md')
+        file_name = os.path.join('doc/connectors/', f'{value}.md')
         with open(file_name, 'w') as file:
             file.write(doc)
 

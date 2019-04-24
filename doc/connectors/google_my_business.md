@@ -60,9 +60,8 @@ DATA_SOURCES: [
 
 ## Get credentials
 
-First, you will need a valid `client_secret.json` file. You can download it from your Google Cloud Platform Console as shown in the screenshot below:
-
-![](./img/google_credentials_screenshot.jpg)
+First, you will need a valid `client_secret.json` file. You can download it from your Google Cloud Platform Console 
+in `API & Services` > `Credentials` > `OAuth 2.0 client IDs.` 
 
 Then, in a virtualenv with `google_auth_oauthlib` and `google-api-python-client` package, you can use this python code to get your credentials:
 
