@@ -40,7 +40,7 @@ class TrelloConnector(ToucanConnector):
     key_id: str = ''
     token: str = ''
 
-    def get(self, path, **customParams):
+    def get_board(self, path, **customParams):
         return requests.get(f'https://api.trello.com/1/boards/{path}', params={
             'key': self.key_id,
             'token': self.token,
@@ -110,26 +110,26 @@ class TrelloConnector(ToucanConnector):
 
         if 'lists' in data_source.fields_list:
             lists = {x['id']: x['name']
-                     for x in self.get(f'{data_source.board_id}/lists', fields='name')}
+                     for x in self.get_board(f'{data_source.board_id}/lists', fields='name')}
         if 'labels' in data_source.fields_list:
             labels = {x['id']: x['name']
-                      for x in self.get(f'{data_source.board_id}/labels', fields='name')}
+                      for x in self.get_board(f'{data_source.board_id}/labels', fields='name')}
         if 'members' in data_source.fields_list:
             members = {x['id']: x['fullName']
-                       for x in self.get(f'{data_source.board_id}/members', fields='fullName')}
+                       for x in self.get_board(f'{data_source.board_id}/members', fields='fullName')}
 
         if data_source.custom_fields:
-            custom_fields = {x['id']: x for x in self.get(
+            custom_fields = {x['id']: x for x in self.get_board(
                 f'{data_source.board_id}/customFields', fields='name')}
 
         # get cards
-        cards_with_id = self.get(f'{data_source.board_id}/cards',
-                                 fields=['name']*('name' in data_source.fields_list)
-                                 + ['url']*('url' in data_source.fields_list)
-                                 + ['idList']*('lists' in data_source.fields_list)
-                                 + ['idMembers']*('members' in data_source.fields_list)
-                                 + ['labels']*('labels' in data_source.fields_list),
-                                 customFieldItems='true' if data_source.custom_fields else 'false')
+        cards_with_id = self.get_board(f'{data_source.board_id}/cards',
+                                       fields=['name']*('name' in data_source.fields_list)
+                                       + ['url']*('url' in data_source.fields_list)
+                                       + ['idList']*('lists' in data_source.fields_list)
+                                       + ['idMembers']*('members' in data_source.fields_list)
+                                       + ['labels']*('labels' in data_source.fields_list),
+                                       customFieldItems='true' if data_source.custom_fields else 'false')
 
         # replace all id in `cards_with_id` by the corresponding readable value
         cards_with_value = [self.replace_id_by_value(card_with_id, lists,

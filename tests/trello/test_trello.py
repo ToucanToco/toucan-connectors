@@ -14,8 +14,8 @@ trello_connector = TrelloConnector(
 )
 
 
-def test_get_method():
-    lists = trello_connector.get(fields='name', path='fhUR3kVQ/lists')
+def test_get_board_method():
+    lists = trello_connector.get_board(fields='name', path='fhUR3kVQ/lists')
 
     assert len(lists) == 2
     assert set(lists[0].keys()) == {'id', 'name'}
