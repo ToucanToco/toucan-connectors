@@ -13,12 +13,6 @@ trello_connector = TrelloConnector(
     token='a6781451b2c641c786b22c8a5cec51d444a132ff1ac7d6f51abb5f8ba15382dc'
 )
 
-trello_data_source = TrelloDataSource(
-    board_id='fhUR3kVQ',
-    name='trello',
-    domain='my_domain',
-)
-
 
 def test_get_method():
     lists = trello_connector.get(fields='name', path='fhUR3kVQ/lists')
@@ -29,7 +23,11 @@ def test_get_method():
 
 
 def test_get_df():
-    df = trello_connector.get_df(trello_data_source)
+    df = trello_connector.get_df(TrelloDataSource(
+        board_id='fhUR3kVQ',
+        name='trello',
+        domain='my_domain',
+    ))
 
     expected_columns = ['Date test', 'Menu deroulant test', 'Nombre test', 'Text test',
                         'case a cocher test', 'id', 'labels', 'lists', 'members', 'name', 'url']
@@ -62,3 +60,15 @@ def test_get_df():
     assert set(df['Menu deroulant test']) == {np.nan, 'A', 'B'}
     assert set(df['Date test']) == {np.nan, '2019-04-10T10:00:00.000Z', '2019-05-03T10:00:00.000Z'}
     assert 2 in set(df['Nombre test'])
+
+
+def test_get_df_with_set_of_fields():
+    df = trello_connector.get_df(TrelloDataSource(
+        board_id='fhUR3kVQ',
+        name='trello',
+        domain='my_domain',
+        custom_fields=False,
+        fields_list=['name', 'members', 'lists']
+    ))
+
+    assert set(df.columns) == {'id', 'name', 'members', 'lists'}

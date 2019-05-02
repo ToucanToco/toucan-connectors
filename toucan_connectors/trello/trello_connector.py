@@ -19,7 +19,6 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class Fields(str, Enum):
-    id = 'id'
     name = 'name'
     url = 'url'
     lists = 'lists'
@@ -29,7 +28,7 @@ class Fields(str, Enum):
 
 class TrelloDataSource(ToucanDataSource):
     board_id: str
-    fields_list: List[Fields] = [Fields.id, Fields.name, Fields.url,
+    fields_list: List[Fields] = [Fields.name, Fields.url,
                                  Fields.lists, Fields.members,  Fields.labels]
     custom_fields: bool = True
 
@@ -62,12 +61,15 @@ class TrelloConnector(ToucanConnector):
         """
         card_with_value = {}
 
-        # no need to translate from id to value
+        # id, name and url fields do not need to translate from id to value
         card_with_value["id"] = card_with_id["id"]
-        card_with_value['name'] = card_with_id['name']
-        card_with_value['url'] = card_with_id['url']
 
-        # need to translate from a id to a value
+        if 'name' in card_with_id.keys():
+            card_with_value['name'] = card_with_id['name']
+        if 'url' in card_with_id.keys():
+            card_with_value['url'] = card_with_id['url']
+
+        # lists, members and labels need to translate from a id to a value
         if lists:
             card_with_value['lists'] = lists[card_with_id['idList']]
         if members:
@@ -75,6 +77,7 @@ class TrelloConnector(ToucanConnector):
         if labels:
             card_with_value['labels'] = [labels[label['id']] for label in card_with_id['labels']]
 
+        # custom fields
         if custom_fields:
             for card_custom_field in card_with_id['customFieldItems']:
                 custom_field = custom_fields[card_custom_field['idCustomField']]
@@ -121,7 +124,8 @@ class TrelloConnector(ToucanConnector):
 
         # get cards
         cards_with_id = self.get(f'{data_source.board_id}/cards',
-                                 fields=['name', 'url']
+                                 fields=['name']*('name' in data_source.fields_list)
+                                 + ['url']*('url' in data_source.fields_list)
                                  + ['idList']*('lists' in data_source.fields_list)
                                  + ['idMembers']*('members' in data_source.fields_list)
                                  + ['labels']*('labels' in data_source.fields_list),
