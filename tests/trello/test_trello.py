@@ -9,8 +9,8 @@ https://trello.com/b/fhUR3kVQ/test-connector-trello-ne-pas-changer
 
 trello_connector = TrelloConnector(
     name='trello',
-    key_id='0e4ed2bf23042d92aea7219b41121ee5',
-    token='a6781451b2c641c786b22c8a5cec51d444a132ff1ac7d6f51abb5f8ba15382dc'
+    key_id='<>',
+    token='<>'
 )
 
 
