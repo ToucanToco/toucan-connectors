@@ -37,8 +37,8 @@ class TrelloConnector(ToucanConnector):
     type = "Trello"
     data_source_model: TrelloDataSource
 
-    key_id: str = ''
-    token: str = ''
+    key_id: str = None
+    token: str = None
 
     def get_board(self, path, **customParams):
         return requests.get(f'https://api.trello.com/1/boards/{path}', params={
