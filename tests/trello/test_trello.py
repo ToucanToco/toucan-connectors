@@ -1,7 +1,9 @@
 from toucan_connectors.trello.trello_connector import TrelloConnector, TrelloDataSource
 import numpy as np
 import responses
-from mock_trello_api_json_responses import mock_trello_api_json_responses
+import json
+
+mock_trello_api_json_responses = json.load(open('tests/trello/fixtures/fixture.json'))
 
 trello_connector = TrelloConnector(
     name='trello',
