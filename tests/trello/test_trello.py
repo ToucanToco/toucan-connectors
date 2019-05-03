@@ -312,11 +312,9 @@ def test_get_df():
         json=mock_trello_api_json_responses['customFields'],
         status=200
     )
-    # import pdb
-    # pdb.set_trace()
     responses.add(
         responses.GET,
-        "https://api.trello.com/1/boards/dsjhdejbdkeb/cards?key=&token=&fields=name&fields=url&fields=idList&fields=labels&fields=idMembers&customFieldItems=true",
+        "https://api.trello.com/1/boards/dsjhdejbdkeb/cards?key=&token=&fields=idList&fields=labels&fields=idMembers&customFieldItems=true",
         json=mock_trello_api_json_responses['cards_1'],
         status=200
     )
@@ -360,13 +358,32 @@ def test_get_df():
     assert 2 in set(df['Nombre test'])
 
 
-# def test_get_df_with_set_of_fields():
-#     df = trello_connector.get_df(TrelloDataSource(
-#         board_id='dsjhdejbdkeb',
-#         name='trello',
-#         domain='my_domain',
-#         custom_fields=False,
-#         fields_list=['name', 'members', 'lists']
-#     ))
+@responses.activate
+def test_get_df_with_set_of_fields():
+    responses.add(
+        responses.GET,
+        f"{baseroute}/lists?" + urlencode({**default, "fields": 'name'}),
+        json=mock_trello_api_json_responses['lists'],
+        status=200
+    )
+    responses.add(
+        responses.GET,
+        f"{baseroute}/members?" + urlencode({**default, "fields": 'fullName'}),
+        json=mock_trello_api_json_responses['members'],
+        status=200
+    )
+    responses.add(
+        responses.GET,
+        "https://api.trello.com/1/boards/dsjhdejbdkeb/cards?key=&token=&fields=idList&fields=idMembers&customFieldItems=false",
+        json=mock_trello_api_json_responses['cards_1'],
+        status=200
+    )
+    df = trello_connector.get_df(TrelloDataSource(
+        board_id='dsjhdejbdkeb',
+        name='trello',
+        domain='my_domain',
+        custom_fields=False,
+        fields_list=['members', 'lists']
+    ))
 
-#     assert set(df.columns) == {'id', 'name', 'members', 'lists'}
+    assert set(df.columns) == {'id', 'name', 'url', 'members', 'lists'}
