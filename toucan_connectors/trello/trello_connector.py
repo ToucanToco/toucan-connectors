@@ -145,6 +145,4 @@ class TrelloConnector(ToucanConnector):
                                                      custom_fields_id_mapping)
                             for card_with_id in cards_with_id]
 
-        data = pd.DataFrame(cards_with_value)
-
-        return data
+        return pd.DataFrame(cards_with_value)
