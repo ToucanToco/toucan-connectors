@@ -46,18 +46,18 @@ class TrelloConnector(ToucanConnector):
             'token': self.token, **customParams
         }).json()
 
-    def replace_id_by_value(self, card_with_id, lists=None, labels=None,
-                            members=None, custom_fields=None):
+    def replace_id_by_value(self, card_with_id, lists_ids_mapping=None, labels_id_mapping=None,
+                            members_id_mapping=None, custom_fields_id_mapping=None):
         """
         `card_with_id` is a dictionary containing all data of a card,
         but with unreadlable id instead of value
         This fonction return `card_with_value` with the same dictionnary
         as `card_with_id` but with readable value
 
-        `lists`: dictionnary of correspondance between list names and ids
-        `labels`: dictionnary of correspondance between label names and ids
-        `members`: dictionnary of correspondance between members names and ids
-        `custom_fields`: dictionnary of correspondance between custom field and there representation
+        `lists_ids_mapping`: dictionnary of correspondance between list names and ids
+        `labels_id_mapping`: dictionnary of correspondance between label names and ids
+        `members_id_mapping`: dictionnary of correspondance between members names and ids
+        `custom_fields_id_mapping`: dictionnary of correspondance between custom field and there representation
         """
         card_with_value = {}
 
@@ -70,17 +70,17 @@ class TrelloConnector(ToucanConnector):
             card_with_value['url'] = card_with_id['url']
 
         # lists, members and labels need to translate from a id to a value
-        if lists:
-            card_with_value['lists'] = lists[card_with_id['idList']]
-        if members:
-            card_with_value['members'] = [members[member] for member in card_with_id['idMembers']]
-        if labels:
-            card_with_value['labels'] = [labels[label['id']] for label in card_with_id['labels']]
+        if lists_ids_mapping:
+            card_with_value['lists'] = lists_ids_mapping[card_with_id['idList']]
+        if members_id_mapping:
+            card_with_value['members'] = [members_id_mapping[member] for member in card_with_id['idMembers']]
+        if labels_id_mapping:
+            card_with_value['labels'] = [labels_id_mapping[label['id']] for label in card_with_id['labels']]
 
         # custom fields
-        if custom_fields:
+        if custom_fields_id_mapping:
             for card_custom_field in card_with_id['customFieldItems']:
-                custom_field = custom_fields[card_custom_field['idCustomField']]
+                custom_field = custom_fields_id_mapping[card_custom_field['idCustomField']]
                 if custom_field['type'] == 'number':
                     card_with_value[custom_field['name']] = float(
                         card_custom_field['value']['number'])
@@ -109,7 +109,7 @@ class TrelloConnector(ToucanConnector):
         # - values: readable value of field
 
         fields_for_request = []
-        lists, labels,  members, custom_fields = None, None, None, None
+        lists_ids_mapping, labels_id_mapping, members_id_mapping, custom_fields_id_mapping = None, None, None, None
 
         if 'name' in data_source.fields_list:
             fields_for_request += ['name']
@@ -117,19 +117,19 @@ class TrelloConnector(ToucanConnector):
             fields_for_request += ['url']
         if 'lists' in data_source.fields_list:
             fields_for_request += ['idList']
-            lists = {x['id']: x['name']
+            lists_ids_mapping = {x['id']: x['name']
                      for x in self.get_board(f'{data_source.board_id}/lists', fields='name')}
         if 'labels' in data_source.fields_list:
             fields_for_request += ['labels']
-            labels = {x['id']: x['name']
+            labels_id_mapping = {x['id']: x['name']
                       for x in self.get_board(f'{data_source.board_id}/labels', fields='name')}
         if 'members' in data_source.fields_list:
             fields_for_request += ['idMembers']
-            members = {x['id']: x['fullName']
+            members_id_mapping = {x['id']: x['fullName']
                        for x in self.get_board(f'{data_source.board_id}/members', fields='fullName')}
 
         if data_source.custom_fields:
-            custom_fields = {x['id']: x for x in self.get_board(
+            custom_fields_id_mapping = {x['id']: x for x in self.get_board(
                 f'{data_source.board_id}/customFields', fields='name')}
 
         # get cards
@@ -140,8 +140,9 @@ class TrelloConnector(ToucanConnector):
         )
 
         # replace all id in `cards_with_id` by the corresponding readable value
-        cards_with_value = [self.replace_id_by_value(card_with_id, lists,
-                                                     labels, members, custom_fields)
+        cards_with_value = [self.replace_id_by_value(card_with_id, lists_ids_mapping,
+                                                     labels_id_mapping, members_id_mapping, 
+                                                     custom_fields_id_mapping)
                             for card_with_id in cards_with_id]
 
         data = pd.DataFrame(cards_with_value)
