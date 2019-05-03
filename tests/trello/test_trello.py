@@ -1,9 +1,6 @@
 from toucan_connectors.trello.trello_connector import TrelloConnector, TrelloDataSource
 import numpy as np
 import responses
-import json
-import requests
-from urllib.parse import urlencode
 from mock_trello_api_json_responses import mock_trello_api_json_responses
 
 trello_connector = TrelloConnector(
