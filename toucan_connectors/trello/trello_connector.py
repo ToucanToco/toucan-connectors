@@ -56,7 +56,7 @@ class TrelloConnector(ToucanConnector):
 
         `lists`: dictionnary of correspondance between list names and ids
         `members`: dictionnary of correspondance between members names and ids
-        `custom_fields`: dictionnary of correspondance between custom field and there representation
+        `custom_fields`: dictionnary of correspondance between custom field and their representation
         """
         card_with_value = {}
 
