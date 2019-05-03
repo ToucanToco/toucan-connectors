@@ -19,6 +19,8 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class Fields(str, Enum):
+    name = 'name'
+    url = 'url'
     lists = 'lists'
     members = 'members'
     labels = 'labels'
@@ -26,7 +28,8 @@ class Fields(str, Enum):
 
 class TrelloDataSource(ToucanDataSource):
     board_id: str
-    fields_list: List[Fields] = [Fields.lists, Fields.members,  Fields.labels]
+    fields_list: List[Fields] = [Fields.name, Fields.url,
+                                 Fields.lists, Fields.members,  Fields.labels]
     custom_fields: bool = True
 
 
@@ -59,8 +62,11 @@ class TrelloConnector(ToucanConnector):
 
         # id, name and url fields do not need to translate from id to value
         card_with_value["id"] = card_with_id["id"]
-        card_with_value['name'] = card_with_id['name']
-        card_with_value['url'] = card_with_id['url']
+
+        if 'name' in card_with_id.keys():
+            card_with_value['name'] = card_with_id['name']
+        if 'url' in card_with_id.keys():
+            card_with_value['url'] = card_with_id['url']
 
         # lists, members and labels need to translate from a id to a value
         if lists:
@@ -103,6 +109,11 @@ class TrelloConnector(ToucanConnector):
 
         fields_for_request = []
         lists, labels,  members, custom_fields = None, None, None, None
+
+        if 'name' in data_source.fields_list:
+            fields_for_request += ['name']
+        if 'url' in data_source.fields_list:
+            fields_for_request += ['url']
         if 'lists' in data_source.fields_list:
             fields_for_request += ['idList']
             lists = {x['id']: x['name']
@@ -126,6 +137,7 @@ class TrelloConnector(ToucanConnector):
             fields=fields_for_request,
             customFieldItems='true' if data_source.custom_fields else 'false'
         )
+
         # replace all id in `cards_with_id` by the corresponding readable value
         cards_with_value = [self.replace_id_by_value(card_with_id, lists,
                                                      labels, members, custom_fields)
