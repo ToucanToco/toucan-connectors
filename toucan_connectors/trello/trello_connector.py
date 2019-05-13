@@ -18,6 +18,19 @@ import warnings
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
+def list_function_handler(card_custom_field, custom_field):
+    list_of_options = {x["id"]: x for x in custom_field['options']}
+    option = list_of_options[card_custom_field['idValue']]
+    return option['value']['text']
+
+CUSTOM_FIELD_TYPE_MAPPING = {
+    'number': lambda x,y : float(x['value']['number']),
+    'text': lambda x, y: x['value']['text'],
+    'date': lambda x, y: (x['value']['date']),
+    'checkbox': lambda x, y: x['value']['checked'] == 'true',
+    'list': list_function_handler
+}
+
 class Fields(str, Enum):
     name = 'name'
     url = 'url'
@@ -81,24 +94,8 @@ class TrelloConnector(ToucanConnector):
         if custom_fields_id_mapping:
             for card_custom_field in card_with_id['customFieldItems']:
                 custom_field = custom_fields_id_mapping[card_custom_field['idCustomField']]
-                if custom_field['type'] == 'number':
-                    card_with_value[custom_field['name']] = float(
-                        card_custom_field['value']['number'])
-                elif custom_field['type'] == 'text':
-                    card_with_value[custom_field['name']] = card_custom_field['value']['text']
-                elif custom_field['type'] == 'date':
-                    card_with_value[custom_field['name']] = card_custom_field['value']['date']
-                elif custom_field['type'] == 'checkbox':
-                    if card_custom_field['value']['checked'] == 'true':
-                        card_with_value[custom_field['name']] = True
-                elif custom_field['type'] == 'list':
-                    list_of_options = {x["id"]: x for x in custom_field['options']}
-                    option = list_of_options[card_custom_field['idValue']]
-                    card_with_value[custom_field['name']] = option['value']['text']
-                else:
-                    warnings.warn(f"""The custom field {custom_field['name']} used into \
-                    your board is of type {custom_field['type']}.
-                    This type is not handled by this app and is simply ignored.""")
+                card_with_value[custom_field['name']] =\
+                    CUSTOM_FIELD_TYPE_MAPPING[custom_field['type']](card_custom_field, custom_field)
 
         return card_with_value
 
