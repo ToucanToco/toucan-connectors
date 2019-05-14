@@ -31,6 +31,8 @@ CUSTOM_FIELD_TYPE_MAPPING = {
     'list': list_function_handler
 }
 
+API_URL = 'https://api.trello.com/1/boards'
+
 class Fields(str, Enum):
     name = 'name'
     url = 'url'
@@ -54,7 +56,7 @@ class TrelloConnector(ToucanConnector):
     token: str = None
 
     def get_board(self, path, **customParams):
-        return requests.get(f'https://api.trello.com/1/boards/{path}', params={
+        return requests.get(f'{API_URL}/{path}', params={
             'key': self.key_id,
             'token': self.token, **customParams
         }).json()
