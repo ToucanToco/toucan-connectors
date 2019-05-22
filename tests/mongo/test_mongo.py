@@ -156,3 +156,13 @@ def test_handle_missing_param():
         {'$match': {'city': 'Test'}},
         {'$project': {'b': {'$divide': ['__VOID__', '$a']}}}
     ]
+
+    query = [
+        {'$match': {'country': '%(country)s', 'city': 'Test'}},
+        {'$project': {'b': {'$divide': ['$a', 1]}}}
+    ]
+
+    assert handle_missing_params(query, params) == [
+        {'$match': {'city': 'Test'}},
+        {'$project': {'b': {'$divide': ['$a', 1]}}}
+    ]
