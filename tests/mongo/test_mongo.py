@@ -6,7 +6,9 @@ import pymongo
 import pymongo.errors
 import pytest
 
-from toucan_connectors.mongo.mongo_connector import MongoDataSource, MongoConnector
+from toucan_connectors.mongo.mongo_connector import (
+    MongoDataSource, MongoConnector, UnkwownMongoCollection
+)
 from toucan_connectors.mongo.mongo_connector import handle_missing_params
 
 
@@ -54,9 +56,19 @@ def test_uri():
 
 
 def test_get_df(mocker):
+    class DatabaseMock:
+        def __init__(self, collection):
+            self.collections = {collection: pymongo.collection.Collection}
+
+        def __getitem__(self, col):
+            return self.collections[col]
+
+        def list_collection_names(self):
+            return self.collections.keys()
+
     class MongoMock:
         def __init__(self, database, collection):
-            self.data = {database: {collection: pymongo.collection.Collection}}
+            self.data = {database: DatabaseMock(collection)}
 
         def __getitem__(self, row):
             return self.data[row]
@@ -117,6 +129,13 @@ def test_get_df_live(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query=[{'$match': {'domain': 'domain1'}}])
     df2 = mongo_connector.get_df(datasource)
     assert df2.equals(df)
+
+
+def test_unknown_collection(mongo_connector, mongo_datasource):
+    with pytest.raises(UnkwownMongoCollection) as exc_info:
+        datasource = mongo_datasource(collection='unknown', query={})
+        mongo_connector.get_df(datasource)
+    assert str(exc_info.value) == "Collection unknown doesn't exist"
 
 
 def test_handle_missing_param():

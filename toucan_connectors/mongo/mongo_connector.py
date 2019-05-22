@@ -77,6 +77,9 @@ class MongoConnector(ToucanConnector):
     def get_df(self, data_source):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
 
+        if data_source.collection not in client[self.database].list_collection_names():
+            raise UnkwownMongoCollection(f'Collection {data_source.collection} doesn\'t exist')
+
         col = client[self.database][data_source.collection]
 
         if isinstance(data_source.query, str):
@@ -93,3 +96,7 @@ class MongoConnector(ToucanConnector):
 
         client.close()
         return df
+
+
+class UnkwownMongoCollection(Exception):
+    """raised when a collection is not in the database"""
