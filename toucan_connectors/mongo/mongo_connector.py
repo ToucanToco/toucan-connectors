@@ -1,4 +1,3 @@
-from functools import singledispatch
 import re
 from typing import Union
 from urllib.parse import quote_plus
@@ -14,40 +13,29 @@ from toucan_connectors.common import nosql_apply_parameters_to_query
 PARAM_PATTERN = r'%\(\w*\)s'
 
 
-@singledispatch
-def handle_missing_params(d, params):
+def handle_missing_params(elt, params):
     """
     Remove a dictionary key if its value has a missing parameter.
     This is used to support the __VOID__ syntax, which is specific to
     the use of mongo at Toucan Toco : cf. https://bit.ly/2Ln6rcf
     """
-    e = {}
-    for k, v in d.items():
-        if isinstance(v, str):
-            matches = re.findall(PARAM_PATTERN, v)
-            missing_params = [m[2:-2] not in params.keys() for m in matches]
-            if any(missing_params):
-                continue
+    if isinstance(elt, dict):
+        e = {}
+        for k, v in elt.items():
+            if isinstance(v, str):
+                matches = re.findall(PARAM_PATTERN, v)
+                missing_params = [m[2:-2] not in params.keys() for m in matches]
+                if any(missing_params):
+                    continue
+                else:
+                    e[k] = v
             else:
-                e[k] = v
-        elif isinstance(v, dict) or isinstance(v, list):
-            e[k] = handle_missing_params(v, params)
-        else:
-            e[k] = v
-    return e
-
-
-@handle_missing_params.register(str)
-def handle_string(s, _):
-    return s
-
-
-@handle_missing_params.register(list)
-def handle_multiple_steps(l, params):
-    """
-    Handle missing parameters in multiple queries and aggregations
-    """
-    return [handle_missing_params(e, params) for e in l]
+                e[k] = handle_missing_params(v, params)
+        return e
+    elif isinstance(elt, list):
+        return [handle_missing_params(e, params) for e in elt]
+    else:
+        return elt
 
 
 class MongoDataSource(ToucanDataSource):
@@ -89,6 +77,9 @@ class MongoConnector(ToucanConnector):
     def get_df(self, data_source):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
 
+        if data_source.collection not in client[self.database].list_collection_names():
+            raise UnkwownMongoCollection(f'Collection {data_source.collection} doesn\'t exist')
+
         col = client[self.database][data_source.collection]
 
         if isinstance(data_source.query, str):
@@ -105,3 +96,7 @@ class MongoConnector(ToucanConnector):
 
         client.close()
         return df
+
+
+class UnkwownMongoCollection(Exception):
+    """raised when a collection is not in the database"""
