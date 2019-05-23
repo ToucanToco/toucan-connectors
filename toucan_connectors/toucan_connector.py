@@ -1,9 +1,13 @@
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Union
+from functools import reduce
+import operator
+from typing import Iterable, Optional, Type, Union
 
 import pandas as pd
 from pydantic import BaseModel
+
+import tenacity as tny
 
 
 class ToucanDataSource(BaseModel):
@@ -19,8 +23,115 @@ class ToucanDataSource(BaseModel):
         validate_assignment = True
 
 
+class RetryPolicy(BaseModel):
+    """Generic "retry" policy management.
+
+    This is just a declarative wrapper around `tenacity.retry` that should
+    ease retry policy definition for most classic use cases.
+
+    It can be instantiated with the following parameters:
+
+    - `retry_on`: the list of expected exception classes that should trigger a retry
+    - `max_attempts`: the maximum number of retries before giving up
+    - `max_delay`: delay, in seconds, above which we should give up
+    - `wait_time`: time, in seconds, between each retry.
+
+    The class also exposes the `retry_decorator` method that is responsible to convert
+    the parameters aforementioned in a corresponding `tenacity.retry` decorator. If
+    you need a really custom retry policy and want to use the full power of the
+    `tenacity` library, you can simply override this method and return your own
+    `tenacity.retry` decorator.
+    """
+    # retry_on: Iterable[BaseException] = ()
+    max_attempts: Optional[int] = 1
+    max_delay: Optional[float] = 0.
+    wait_time: Optional[float] = 0.
+
+    def __init__(self, retry_on=(), **data):
+        super().__init__(**data)
+        self.__dict__['retry_on'] = retry_on
+
+    @property
+    def tny_stop(self):
+        """generate corresponding `stop` parameter for `tenacity.retry`"""
+        stoppers = []
+        if self.max_attempts > 1:
+            stoppers.append(tny.stop_after_attempt(self.max_attempts))
+        if self.max_delay:
+            stoppers.append(tny.stop_after_delay(self.max_delay))
+        if stoppers:
+            return reduce(operator.or_, stoppers)
+        return None
+
+    @property
+    def tny_retry(self):
+        """generate corresponding `retry` parameter for `tenacity.retry`"""
+        if self.retry_on:
+            return tny.retry_if_exception_type(self.retry_on)
+        return None
+
+    @property
+    def tny_wait(self):
+        """generate corresponding `wait` parameter for `tenacity.retry`"""
+        if self.wait_time:
+            return tny.wait_fixed(self.wait_time)
+        return None
+
+    def retry_decorator(self):
+        """build the `tenaticy.retry` decorator corresponding to policy"""
+        tny_kwargs = {}
+        for attr in dir(self):
+            if attr.startswith('tny_'):
+                paramvalue = getattr(self, attr)
+                if paramvalue is not None:
+                    tny_kwargs[attr[4:]] = paramvalue
+        if tny_kwargs:
+            return tny.retry(reraise=True, **tny_kwargs)
+        return None
+
+    def __call__(self, f):
+        """make retry_policy instances behave as `tenacity.retry` decorators"""
+        decorator = self.retry_decorator()
+        if decorator:
+            return decorator(f)
+        return f
+
+
+def decorate_get_df_with_retry(get_df):
+    """wrap `get_df` with the retry policy defined on the connector.
+
+    If the retry policy is None, just leave the `get_df` implementation as is.
+    """
+    def get_df_and_retry(self: ToucanConnector, data_source: ToucanDataSource) -> pd.DataFrame:
+        if self.retry_decorator:
+            return self.retry_decorator(get_df)(self, data_source)
+        else:
+            return get_df(self, data_source)
+    return get_df_and_retry
+
+
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
+    """Abstract base class for all toucan connectors.
+
+    Each concrete connector should implement the `get_df` method that accepts a
+    datasource definition and return the corresponding pandas dataframe. This
+    base class allows to specify a retry policy on the `get_df` method. The
+    default is not to retry on error but you can customize some of connector
+    model parameters to define custom retry policy.
+
+    Model parameters:
+
+
+    - `max_attempts`: the maximum number of retries before giving up
+    - `max_delay`: delay, in seconds, above which we should give up
+    - `wait_time`: time, in seconds, between each retry.
+
+    In order to retry only on some custom exception classes, you can override
+    the `_retry_on` class attribute in your concrete connector class.
+    """
     name: str
+    retry_policy: Optional[RetryPolicy] = RetryPolicy()
+    _retry_on: Iterable[Type[BaseException]] = ()
 
     class Config:
         extra = 'forbid'
@@ -30,9 +141,16 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         try:
             cls.type = cls.__fields__['type'].default
             cls.data_source_model = cls.__fields__.pop('data_source_model').type_
+            # only wrap get_df if the class actually implements it
+            if 'get_df' in cls.__dict__:
+                cls.get_df = decorate_get_df_with_retry(cls.get_df)
             cls.logger = logging.getLogger(cls.__name__)
         except KeyError as e:
             raise TypeError(f'{cls.__name__} has no {e} attribute.')
+
+    @property
+    def retry_decorator(self):
+        return RetryPolicy(**self.retry_policy.dict(), retry_on=self._retry_on)
 
     @abstractmethod
     def get_df(self, data_source: ToucanDataSource) -> pd.DataFrame:

@@ -1,5 +1,9 @@
+from time import time
+
 import pandas as pd
+
 import pytest
+import tenacity as tny
 
 from toucan_connectors.toucan_connector import ToucanConnector, \
     ToucanDataSource
@@ -83,3 +87,64 @@ def test_explain():
 
     res = DataConnector(name='my_name').explain({})
     assert res is None
+
+
+class UnreliableDataConnector(ToucanConnector):
+    type = 'MyUnreliableDB'
+    data_source_model: DataSource
+
+    def get_df(self, data_source, logbook=[]):
+        if len(logbook) < 3:
+            logbook.append(time())
+            raise RuntimeError('try again!')
+        logbook.clear()
+        return 42
+
+
+def test_max_attempt_df():
+    udc = UnreliableDataConnector(name='my_name', retry_policy={
+        'max_attempts': 5
+    })
+    result = udc.get_df({})
+    assert result == 42
+
+
+class CustomPolicyDataConnector(ToucanConnector):
+    type = 'MyUnreliableDB'
+    data_source_model: DataSource
+
+    def get_df(self, data_source, logbook=[]):
+        if len(logbook) < 3:
+            logbook.append(time())
+            raise RuntimeError('try again!')
+        logbook.clear()
+        return 42
+
+    @property
+    def retry_decorator(self):
+        return tny.retry(stop=tny.stop_after_attempt(5))
+
+
+def test_custom_max_attempt_df():
+    udc = CustomPolicyDataConnector(name='my_name')
+    result = udc.get_df({})
+    assert result == 42
+
+
+class CustomRetryOnDataConnector(ToucanConnector):
+    type = 'MyUnreliableDB'
+    data_source_model: DataSource
+    _retry_on = (ValueError,)
+
+    def get_df(self, data_source, logbook=[]):
+        if len(logbook) < 3:
+            logbook.append(time())
+            raise RuntimeError('try again!')
+        logbook.clear()
+        return 42
+
+
+def test_custom_retry_on_df():
+    udc = CustomRetryOnDataConnector(name='my_name')
+    with pytest.raises(RuntimeError):
+        udc.get_df({})

@@ -28,8 +28,9 @@ extras_require = {
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
 install_requires = [
+    'pydantic',
+    'tenacity',
     'toucan_data_sdk',
-    'pydantic'
 ]
 
 classifiers = [
