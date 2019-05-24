@@ -47,9 +47,10 @@ class RetryPolicy(BaseModel):
     max_delay: Optional[float] = 0.
     wait_time: Optional[float] = 0.
 
-    def __init__(self, retry_on=(), **data):
+    def __init__(self, retry_on=(), logger=None, **data):
         super().__init__(**data)
         self.__dict__['retry_on'] = retry_on
+        self.__dict__['logger'] = logger
 
     @property
     def tny_stop(self):
@@ -77,15 +78,27 @@ class RetryPolicy(BaseModel):
             return tny.wait_fixed(self.wait_time)
         return None
 
+    @property
+    def tny_after(self):
+        """generate corresponding `after` parameter for `tenacity.retry`"""
+        if self.logger:
+            return tny.after_log(self.logger, logging.DEBUG)
+        return None
+
     def retry_decorator(self):
         """build the `tenaticy.retry` decorator corresponding to policy"""
         tny_kwargs = {}
         for attr in dir(self):
-            if attr.startswith('tny_'):
+            # the "after" hook is handled separately later to plug it only if
+            # there is an actual retry policy
+            if attr.startswith('tny_') and attr != 'tny_after':
                 paramvalue = getattr(self, attr)
                 if paramvalue is not None:
                     tny_kwargs[attr[4:]] = paramvalue
         if tny_kwargs:
+            # plug the "after" hook if there's one
+            if self.tny_after:
+                tny_kwargs['after'] = self.tny_after
             return tny.retry(reraise=True, **tny_kwargs)
         return None
 
@@ -150,7 +163,9 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     @property
     def retry_decorator(self):
-        return RetryPolicy(**self.retry_policy.dict(), retry_on=self._retry_on)
+        return RetryPolicy(**self.retry_policy.dict(),
+                           retry_on=self._retry_on,
+                           logger=self.logger)
 
     @abstractmethod
     def get_df(self, data_source: ToucanDataSource) -> pd.DataFrame:
