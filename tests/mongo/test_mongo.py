@@ -5,11 +5,15 @@ import pandas as pd
 import pymongo
 import pymongo.errors
 import pytest
+from bson.son import SON
 
 from toucan_connectors.mongo.mongo_connector import (
     MongoDataSource, MongoConnector, UnkwownMongoCollection
 )
-from toucan_connectors.mongo.mongo_connector import handle_missing_params
+from toucan_connectors.mongo.mongo_connector import (
+    handle_missing_params,
+    complete_query
+)
 
 
 @pytest.fixture(scope='module')
@@ -127,9 +131,25 @@ def test_get_df_and_count(mongo_connector, mongo_datasource):
                              'language': ['French'],
                              'value': [20]})
     assert df.shape == (1, 5)
-    assert df.columns.tolist() == ['_id', 'country', 'domain', 'language',
-                                   'value']
     assert df[['country', 'language', 'value']].equals(expected)
+
+
+def test_get_df_and_count_no_limit(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
+    df, count = mongo_connector.get_df_and_count(datasource, limit=None)
+    assert count == 3
+    expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
+                             'language': ['French', 'English', 'German'],
+                             'value': [20, 14, 17]})
+    assert df.shape == (3, 5)
+    assert df[['country', 'language', 'value']].equals(expected)
+
+
+def test_get_df_and_count_empty(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'unknown'})
+    df, count = mongo_connector.get_df_and_count(datasource, limit=1)
+    assert count == 0
+    assert df.shape == (0, 0)
 
 
 def test_explain(mongo_connector, mongo_datasource):
@@ -192,3 +212,11 @@ def test_handle_missing_param():
         {'$match': {'city': 'Test'}},
         {'$project': {'b': {'$divide': ['$a', 1]}}}
     ]
+
+
+def test_complete_query():
+    query = [{'$sort': [{'country': 1}, {'city': 1}]}]
+    assert complete_query(query, {}) == [{'$sort': SON([('country', 1), ('city', 1)])}]
+
+    query = {'city': 'Test'}
+    assert complete_query(query, {}) == [{'$match': {'city': 'Test'}}]

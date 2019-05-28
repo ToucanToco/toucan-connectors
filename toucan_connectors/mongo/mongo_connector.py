@@ -48,6 +48,7 @@ def complete_query(query, parameters):
         query = [{'$match': query}]
 
     for stage in query:
+        # Allow ordered sorts
         if '$sort' in stage and isinstance(stage['$sort'], list):
             stage['$sort'] = SON([x.popitem() for x in stage['$sort']])
 
