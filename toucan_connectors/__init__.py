@@ -44,5 +44,7 @@ with suppress(ImportError):
     from .snowflake.snowflake_connector import SnowflakeConnector
 with suppress(ImportError):
     from .toucan_toco.toucan_toco_connector import ToucanTocoConnector
+with suppress(ImportError):
+    from .toucan_toco.trello_connector import TrelloConnector
 
 AVAILABLE_CONNECTORS = {child.type: child for child in ToucanConnector.__subclasses__()}
