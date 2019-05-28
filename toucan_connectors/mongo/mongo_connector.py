@@ -1,14 +1,16 @@
 import re
+from jq import jq
 from typing import Union
 from urllib.parse import quote_plus
 
 import pandas as pd
 import pymongo
+from bson.son import SON
 from pydantic import validator
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.common import nosql_apply_parameters_to_query
-
+from toucan_connectors.toucan_connector import ToucanConnector, \
+    ToucanDataSource
 
 PARAM_PATTERN = r'%\(\w*\)s'
 
@@ -38,11 +40,25 @@ def handle_missing_params(elt, params):
         return elt
 
 
+def complete_query(query, parameters):
+    query = handle_missing_params(query, parameters)
+    query = nosql_apply_parameters_to_query(query, parameters)
+
+    if isinstance(query, dict):
+        query = [{'$match': query}]
+
+    for stage in query:
+        if '$sort' in stage and isinstance(stage['$sort'], list):
+            stage['$sort'] = SON([x.popitem() for x in stage['$sort']])
+
+    return query
+
+
 class MongoDataSource(ToucanDataSource):
     """Supports simple, multiples and aggregation queries as desribed in
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
     collection: str
-    query: Union[str, dict, list]
+    query: Union[dict, list]
     parameters: dict = None
 
 
@@ -74,28 +90,62 @@ class MongoConnector(ToucanConnector):
             user_pass += '@'
         return ''.join(['mongodb://', user_pass, f'{self.host}:{self.port}'])
 
+    def validate_collection(self, client, collection):
+        if collection not in client[self.database].list_collection_names():
+            raise UnkwownMongoCollection(f'Collection {collection} doesn\'t exist')
+
     def get_df(self, data_source):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-
-        if data_source.collection not in client[self.database].list_collection_names():
-            raise UnkwownMongoCollection(f'Collection {data_source.collection} doesn\'t exist')
-
+        self.validate_collection(client, data_source.collection)
         col = client[self.database][data_source.collection]
 
-        if isinstance(data_source.query, str):
-            data_source.query = {'domain': data_source.query}
-        data_source.query = handle_missing_params(data_source.query, data_source.parameters)
-        data_source.query = nosql_apply_parameters_to_query(data_source.query,
-                                                            data_source.parameters)
-        data = []
-        if isinstance(data_source.query, dict):
-            data = col.find(data_source.query)
-        elif isinstance(data_source.query, list):
-            data = col.aggregate(data_source.query)
+        data_source.query = complete_query(data_source.query,
+                                           data_source.parameters)
+        data = col.aggregate(data_source.query)
         df = pd.DataFrame(list(data))
-
         client.close()
         return df
+
+    def get_df_and_count(self, data_source, limit):
+        if isinstance(data_source.query, dict):
+            data_source.query = [{'$match': data_source.query}]
+
+        if limit is not None:
+            data_source_count = MongoDataSource(**data_source.dict())
+            data_source_count.query.append({'$count': '__count__'})
+            res = self.get_df(data_source_count)
+            if len(res) > 0:
+                count = res.loc[0, '__count__']
+            else:
+                count = 0
+            data_source.query.append({'$limit': limit})
+
+        df = self.get_df(data_source)
+
+        if limit is None:
+            count = len(df)
+
+        return df, count
+
+    def explain(self, data_source):
+        client = pymongo.MongoClient(self.uri, ssl=self.ssl)
+        self.validate_collection(client, data_source.collection)
+
+        data_source.query = complete_query(data_source.query,
+                                           data_source.parameters)
+
+        cursor = client[self.database].command(
+            command="aggregate",
+            value=data_source.collection,
+            pipeline=data_source.query,
+            explain=True
+        )
+
+        f = '''{
+                    details: (. | del(.serverInfo)),
+                    summary: (.executionStats | del(.executionStages, .allPlansExecution))
+                }'''
+        return jq(f).transform(cursor)
 
 
 class UnkwownMongoCollection(Exception):

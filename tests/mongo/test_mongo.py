@@ -78,7 +78,6 @@ def test_get_df(mocker):
 
     snock = mocker.patch('pymongo.MongoClient')
     snock.return_value = MongoMock('toucan', 'test_col')
-    find = mocker.patch('pymongo.collection.Collection.find')
     aggregate = mocker.patch('pymongo.collection.Collection.aggregate')
 
     mongo_connector = MongoConnector(
@@ -93,23 +92,16 @@ def test_get_df(mocker):
     mongo_connector.get_df(datasource)
 
     datasource = MongoDataSource(
-        name='mycon', domain='mydomain', collection='test_col', query='domain1'
-    )
-    mongo_connector.get_df(datasource)
-
-    datasource = MongoDataSource(
         name='mycon', domain='mydomain', collection='test_col',
         query=[{'$match': {'domain': 'domain1'}}]
     )
     mongo_connector.get_df(datasource)
 
     snock.assert_called_with('mongodb://ubuntu:ilovetoucan@localhost:22', ssl=False)
-    assert snock.call_count == 3
+    assert snock.call_count == 2
 
-    find.assert_called_with({'domain': 'domain1'})
-    assert find.call_count == 2
-
-    aggregate.assert_called_once_with([{'$match': {'domain': 'domain1'}}])
+    aggregate.assert_called_with([{'$match': {'domain': 'domain1'}}])
+    assert aggregate.call_count == 2
 
 
 def test_get_df_live(mongo_connector, mongo_datasource):
@@ -122,13 +114,28 @@ def test_get_df_live(mongo_connector, mongo_datasource):
     assert df.columns.tolist() == ['_id', 'country', 'domain', 'language', 'value']
     assert df[['country', 'language', 'value']].equals(expected)
 
-    datasource = mongo_datasource(collection='test_col', query='domain1')
-    df2 = mongo_connector.get_df(datasource)
-    assert df2.equals(df)
-
     datasource = mongo_datasource(collection='test_col', query=[{'$match': {'domain': 'domain1'}}])
     df2 = mongo_connector.get_df(datasource)
     assert df2.equals(df)
+
+
+def test_get_df_and_count(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
+    df, count = mongo_connector.get_df_and_count(datasource, limit=1)
+    assert count == 3
+    expected = pd.DataFrame({'country': ['France'],
+                             'language': ['French'],
+                             'value': [20]})
+    assert df.shape == (1, 5)
+    assert df.columns.tolist() == ['_id', 'country', 'domain', 'language',
+                                   'value']
+    assert df[['country', 'language', 'value']].equals(expected)
+
+
+def test_explain(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
+    res = mongo_connector.explain(datasource)
+    assert list(res.keys()) == ['details', 'summary']
 
 
 def test_unknown_collection(mongo_connector, mongo_datasource):

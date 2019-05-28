@@ -36,3 +36,16 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     @abstractmethod
     def get_df(self, data_source: ToucanDataSource) -> pd.DataFrame:
         """Main method to retrieve a pandas dataframe"""
+
+    def get_df_and_count(self, data_source, limit):
+        """
+        Method to retrieve a part of the data as a pandas dataframe
+        and the total size
+        """
+        df = self.get_df(data_source)
+        count = len(df)
+        return df[:limit], count
+
+    def explain(self, data_source):
+        """Method to give metrics about the query"""
+        return None
