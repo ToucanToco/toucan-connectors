@@ -40,7 +40,7 @@ def handle_missing_params(elt, params):
         return elt
 
 
-def complete_query(query, parameters):
+def normalize_query(query, parameters):
     query = handle_missing_params(query, parameters)
     query = nosql_apply_parameters_to_query(query, parameters)
 
@@ -100,7 +100,7 @@ class MongoConnector(ToucanConnector):
         self.validate_collection(client, data_source.collection)
         col = client[self.database][data_source.collection]
 
-        data_source.query = complete_query(data_source.query,
+        data_source.query = normalize_query(data_source.query,
                                            data_source.parameters)
         data = col.aggregate(data_source.query)
         df = pd.DataFrame(list(data))
@@ -132,7 +132,7 @@ class MongoConnector(ToucanConnector):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
         self.validate_collection(client, data_source.collection)
 
-        data_source.query = complete_query(data_source.query,
+        data_source.query = normalize_query(data_source.query,
                                            data_source.parameters)
 
         cursor = client[self.database].command(

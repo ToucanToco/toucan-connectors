@@ -12,7 +12,7 @@ from toucan_connectors.mongo.mongo_connector import (
 )
 from toucan_connectors.mongo.mongo_connector import (
     handle_missing_params,
-    complete_query
+    normalize_query
 )
 
 
@@ -214,9 +214,9 @@ def test_handle_missing_param():
     ]
 
 
-def test_complete_query():
+def test_normalize_query():
     query = [{'$sort': [{'country': 1}, {'city': 1}]}]
-    assert complete_query(query, {}) == [{'$sort': SON([('country', 1), ('city', 1)])}]
+    assert normalize_query(query, {}) == [{'$sort': SON([('country', 1), ('city', 1)])}]
 
     query = {'city': 'Test'}
-    assert complete_query(query, {}) == [{'$match': {'city': 'Test'}}]
+    assert normalize_query(query, {}) == [{'$match': {'city': 'Test'}}]
