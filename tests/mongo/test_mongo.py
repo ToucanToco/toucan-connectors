@@ -125,31 +125,31 @@ def test_get_df_live(mongo_connector, mongo_datasource):
 
 def test_get_df_and_count(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    df, count = mongo_connector.get_df_and_count(datasource, limit=1)
-    assert count == 3
+    res = mongo_connector.get_df_and_count(datasource, limit=1)
+    assert res['count'] == 3
     expected = pd.DataFrame({'country': ['France'],
                              'language': ['French'],
                              'value': [20]})
-    assert df.shape == (1, 5)
-    assert df[['country', 'language', 'value']].equals(expected)
+    assert res['df'].shape == (1, 5)
+    assert res['df'][['country', 'language', 'value']].equals(expected)
 
 
 def test_get_df_and_count_no_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    df, count = mongo_connector.get_df_and_count(datasource, limit=None)
-    assert count == 3
+    res = mongo_connector.get_df_and_count(datasource, limit=None)
+    assert res['count'] == 3
     expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
                              'language': ['French', 'English', 'German'],
                              'value': [20, 14, 17]})
-    assert df.shape == (3, 5)
-    assert df[['country', 'language', 'value']].equals(expected)
+    assert res['df'].shape == (3, 5)
+    assert res['df'][['country', 'language', 'value']].equals(expected)
 
 
 def test_get_df_and_count_empty(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'unknown'})
-    df, count = mongo_connector.get_df_and_count(datasource, limit=1)
-    assert count == 0
-    assert df.shape == (0, 0)
+    res = mongo_connector.get_df_and_count(datasource, limit=1)
+    assert res['count'] == 0
+    assert res['df'].shape == (0, 0)
 
 
 def test_explain(mongo_connector, mongo_datasource):

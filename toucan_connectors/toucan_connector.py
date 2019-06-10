@@ -1,5 +1,6 @@
 import logging
 from abc import ABCMeta, abstractmethod
+from typing import Union
 
 import pandas as pd
 from pydantic import BaseModel
@@ -37,14 +38,14 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     def get_df(self, data_source: ToucanDataSource) -> pd.DataFrame:
         """Main method to retrieve a pandas dataframe"""
 
-    def get_df_and_count(self, data_source: ToucanDataSource, limit: int):
+    def get_df_and_count(self, data_source: ToucanDataSource, limit: Union[int, None]) -> dict:
         """
         Method to retrieve a part of the data as a pandas dataframe
         and the total size
         """
         df = self.get_df(data_source)
         count = len(df)
-        return df[:limit], count
+        return {'df': df[:limit], 'count': count}
 
     def explain(self, data_source: ToucanDataSource):
         """Method to give metrics about the query"""

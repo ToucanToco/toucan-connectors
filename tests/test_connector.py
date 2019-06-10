@@ -69,8 +69,8 @@ def test_get_df_and_count():
             return pd.DataFrame({'A': [1, 2]})
 
     res = DataConnector(name='my_name').get_df_and_count({}, limit=1)
-    assert all(res[0] == pd.DataFrame({'A': [1]}))
-    assert res[1] == 2
+    assert all(res['df'] == pd.DataFrame({'A': [1]}))
+    assert res['count'] == 2
 
 
 def test_explain():

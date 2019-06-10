@@ -95,45 +95,43 @@ class MongoConnector(ToucanConnector):
         if collection not in client[self.database].list_collection_names():
             raise UnkwownMongoCollection(f'Collection {collection} doesn\'t exist')
 
-    def get_df(self, data_source):
+    def execute_query(self, data_source):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
         self.validate_collection(client, data_source.collection)
         col = client[self.database][data_source.collection]
 
         data_source.query = normalize_query(data_source.query,
-                                           data_source.parameters)
-        data = col.aggregate(data_source.query)
-        df = pd.DataFrame(list(data))
+                                            data_source.parameters)
+        result = col.aggregate(data_source.query)
         client.close()
+        return result
+
+    def get_df(self, data_source):
+        data = self.execute_query(data_source)
+        df = pd.DataFrame(list(data))
         return df
 
     def get_df_and_count(self, data_source, limit):
         if isinstance(data_source.query, dict):
             data_source.query = [{'$match': data_source.query}]
-
         if limit is not None:
-            data_source_count = MongoDataSource(**data_source.dict())
-            data_source_count.query.append({'$count': '__count__'})
-            res = self.get_df(data_source_count)
-            if len(res) > 0:
-                count = res.loc[0, '__count__']
-            else:
-                count = 0
-            data_source.query.append({'$limit': limit})
-
-        df = self.get_df(data_source)
-
-        if limit is None:
+            facet = {"$facet": {'count': [{'$count': 'value'}]}}
+            facet['$facet']['df'] = [{'$limit': limit}]
+            data_source.query.append(facet)
+            res = self.execute_query(data_source).next()
+            count = res['count'][0]['value'] if len(res['count']) > 1 else 0
+            df = pd.DataFrame(res['df'])
+        else:
+            df = self.get_df(data_source)
             count = len(df)
-
-        return df, count
+        return {'df': df, 'count': count}
 
     def explain(self, data_source):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
         self.validate_collection(client, data_source.collection)
 
         data_source.query = normalize_query(data_source.query,
-                                           data_source.parameters)
+                                            data_source.parameters)
 
         cursor = client[self.database].command(
             command="aggregate",
