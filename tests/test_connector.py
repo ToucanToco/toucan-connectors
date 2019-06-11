@@ -1,6 +1,8 @@
+import pandas as pd
 import pytest
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, \
+    ToucanDataSource
 
 
 class DataSource(ToucanDataSource):
@@ -56,3 +58,28 @@ def test_validate():
         'name': 'my_name',
         'domain': 'my_domain'
     })
+
+
+def test_get_df_and_count():
+    class DataConnector(ToucanConnector):
+        type = 'MyDB'
+        data_source_model = 'asd'
+
+        def get_df(self, datasource):
+            return pd.DataFrame({'A': [1, 2]})
+
+    res = DataConnector(name='my_name').get_df_and_count({}, limit=1)
+    assert all(res['df'] == pd.DataFrame({'A': [1]}))
+    assert res['count'] == 2
+
+
+def test_explain():
+    class DataConnector(ToucanConnector):
+        type = 'MyDB'
+        data_source_model = 'asd'
+
+        def get_df(self, datasource):
+            return pd.DataFrame()
+
+    res = DataConnector(name='my_name').explain({})
+    assert res is None
