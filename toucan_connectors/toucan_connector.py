@@ -110,17 +110,31 @@ class RetryPolicy(BaseModel):
         return f
 
 
-def decorate_get_df_with_retry(get_df):
-    """wrap `get_df` with the retry policy defined on the connector.
+def decorate_func_with_retry(func):
+    """wrap `func` with the retry policy defined on the connector.
 
-    If the retry policy is None, just leave the `get_df` implementation as is.
+    If the retry policy is None, just leave the `func` implementation as is.
     """
-    def get_df_and_retry(self: ToucanConnector, data_source: ToucanDataSource) -> pd.DataFrame:
+    def func_and_retry(self: ToucanConnector, data_source: ToucanDataSource) -> pd.DataFrame:
         if self.retry_decorator:
-            return self.retry_decorator(get_df)(self, data_source)
+            return self.retry_decorator(func)(self, data_source)
         else:
-            return get_df(self, data_source)
-    return get_df_and_retry
+            return func(self, data_source)
+    return func_and_retry
+
+
+def tcc_mark(*props):
+    """decorate the function by adding a `__tcc_markers__` set with `prop`"""
+    def decorator(func):
+        if not hasattr(func, '__tcc_markers__'):
+            func.__tcc_markers__ = set()
+        func.__tcc_markers__.update(props)
+        return func
+    return decorator
+
+
+def is_tcc_marked(func, marker):
+    return marker in getattr(func, '__tcc_markers__', ())
 
 
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
@@ -155,8 +169,10 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
             cls.type = cls.__fields__['type'].default
             cls.data_source_model = cls.__fields__.pop('data_source_model').type_
             # only wrap get_df if the class actually implements it
-            if 'get_df' in cls.__dict__:
-                cls.get_df = decorate_get_df_with_retry(cls.get_df)
+            for attrname, attrvalue in cls.__dict__.items():
+                basemethod = getattr(ToucanConnector, attrname, ())
+                if callable(attrvalue) and is_tcc_marked(basemethod, 'retryable'):
+                    setattr(cls, attrname, decorate_func_with_retry(attrvalue))
             cls.logger = logging.getLogger(cls.__name__)
         except KeyError as e:
             raise TypeError(f'{cls.__name__} has no {e} attribute.')
@@ -168,9 +184,11 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
                            logger=self.logger)
 
     @abstractmethod
+    @tcc_mark('retryable')
     def get_df(self, data_source: ToucanDataSource) -> pd.DataFrame:
         """Main method to retrieve a pandas dataframe"""
 
+    @tcc_mark('retryable')
     def get_df_and_count(self, data_source: ToucanDataSource, limit: Union[int, None]) -> dict:
         """
         Method to retrieve a part of the data as a pandas dataframe
@@ -180,6 +198,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         count = len(df)
         return {'df': df[:limit], 'count': count}
 
+    @tcc_mark('retryable')
     def explain(self, data_source: ToucanDataSource):
         """Method to give metrics about the query"""
         return None

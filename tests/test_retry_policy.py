@@ -1,13 +1,34 @@
 import pytest
 from time import time
 
-from toucan_connectors.toucan_connector import RetryPolicy
+from toucan_connectors.toucan_connector import RetryPolicy, is_tcc_marked, tcc_mark
 
 
 def assert_elapsed(start, stop, expected, error_margin=None):
     if error_margin is None:
         error_margin = min(0.1 * expected, 0.1)
     assert (expected - error_margin) <= stop - start <= (expected + error_margin)
+
+
+def test_no_tcc_markers():
+    def f():
+        pass
+    assert not is_tcc_marked(f, 'foo')
+
+
+def test_tcc_markers_new_prop():
+    @tcc_mark('foo')
+    def f():
+        pass
+    assert is_tcc_marked(f, 'foo')
+
+
+def test_tcc_markers_multiple_props():
+    @tcc_mark('foo', 'bar')
+    def f():
+        pass
+    assert is_tcc_marked(f, 'foo')
+    assert is_tcc_marked(f, 'bar')
 
 
 def test_defaut_retry_policy_is_noop():
