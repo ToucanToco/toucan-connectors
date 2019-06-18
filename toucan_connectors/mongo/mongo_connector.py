@@ -91,6 +91,48 @@ class MongoConnector(ToucanConnector):
             user_pass += '@'
         return ''.join(['mongodb://', user_pass, f'{self.host}:{self.port}'])
 
+    @staticmethod
+    def _get_status(hostname_resolved, port_opened=None, host_connection=None,
+                    authenticated=None, database_available=None):
+        return [
+            ('Hostname resolved', hostname_resolved),
+            ('Port opened', port_opened),
+            ('Host connection', host_connection),
+            ('Authenticated', authenticated),
+            ('Database available', database_available)
+        ]
+
+    def get_status(self):
+        # Check hostname
+        hostname_resolved = self.check_hostname(self.host)
+        if not hostname_resolved:
+            return self._get_status(hostname_resolved)
+
+        # Check port
+        port_opened = self.check_port(self.host, self.port)
+        if not port_opened:
+            return self._get_status(hostname_resolved, port_opened)
+
+        # Check databases access
+        client = pymongo.MongoClient(self.uri, ssl=self.ssl, serverSelectionTimeoutMS=500)
+        try:
+            client.server_info()
+            host_connection = True
+            authenticated = True
+        except pymongo.errors.ServerSelectionTimeoutError:
+            host_connection = False
+            return self._get_status(hostname_resolved, port_opened, host_connection)
+        except pymongo.errors.OperationFailure:
+            host_connection = True
+            authenticated = False
+            return self._get_status(hostname_resolved, port_opened, host_connection, authenticated)
+
+        # Check if given database actually exists
+        database_available = self.database in client.list_database_names()
+
+        return self._get_status(hostname_resolved, port_opened, host_connection,
+                                authenticated, database_available)
+
     def validate_collection(self, client, collection):
         if collection not in client[self.database].list_collection_names():
             raise UnkwownMongoCollection(f'Collection {collection} doesn\'t exist')

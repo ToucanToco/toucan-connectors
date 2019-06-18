@@ -220,3 +220,69 @@ def test_normalize_query():
 
     query = {'city': 'Test'}
     assert normalize_query(query, {}) == [{'$match': {'city': 'Test'}}]
+
+
+def test_status_all_good(mongo_connector):
+    assert mongo_connector.get_status() == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', True),
+        ('Authenticated', True),
+        ('Database available', True)
+    ]
+
+
+def test_status_bad_host(mongo_connector):
+    mongo_connector.host = 'localhot'
+    assert mongo_connector.get_status() == [
+        ('Hostname resolved', False),
+        ('Port opened', None),
+        ('Host connection', None),
+        ('Authenticated', None),
+        ('Database available', None)
+    ]
+
+
+def test_status_bad_port(mongo_connector):
+    mongo_connector.port += 1
+    assert mongo_connector.get_status() == [
+        ('Hostname resolved', True),
+        ('Port opened', False),
+        ('Host connection', None),
+        ('Authenticated', None),
+        ('Database available', None)
+    ]
+
+
+def test_status_unreachable(mongo_connector, mocker):
+    mocker.patch('pymongo.MongoClient.server_info',
+                 side_effect=pymongo.errors.ServerSelectionTimeoutError)
+    assert mongo_connector.get_status() == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', False),
+        ('Authenticated', None),
+        ('Database available', None)
+    ]
+
+
+def test_status_bad_username(mongo_connector):
+    mongo_connector.username = 'bibou'
+    assert mongo_connector.get_status() == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', True),
+        ('Authenticated', False),
+        ('Database available', None)
+    ]
+
+
+def test_status_bad_db(mongo_connector):
+    mongo_connector.database = 'nothere'
+    assert mongo_connector.get_status() == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', True),
+        ('Authenticated', True),
+        ('Database available', False)
+    ]
