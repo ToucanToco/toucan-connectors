@@ -60,6 +60,73 @@ def test_connection_params():
                       'port': 123, 'connect_timeout': 50}
 
 
+def test_get_status(mysql_connector):
+    assert mysql_connector.get_status() == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', True),
+        ('Authenticated', True),
+        ('Database access', True)
+    ]
+
+
+def test_get_status_bad_host(mysql_connector):
+    mysql_connector.host = 'localhot'
+    assert mysql_connector.get_status() == [
+        ('Hostname resolved', False),
+        ('Port opened', None),
+        ('Host connection', None),
+        ('Authenticated', None),
+        ('Database access', None)
+    ]
+
+
+def test_get_status_bad_port(mysql_connector):
+    mysql_connector.port += 1
+    assert mysql_connector.get_status() == [
+        ('Hostname resolved', True),
+        ('Port opened', False),
+        ('Host connection', None),
+        ('Authenticated', None),
+        ('Database access', None)
+    ]
+
+
+def test_get_status_bad_connection(mysql_connector, unused_port, mocker):
+    mysql_connector.port = unused_port()
+    mocker.patch('toucan_connectors.mysql.mysql_connector.MySQLConnector.check_port',
+                 return_value=True)
+    assert mysql_connector.get_status() == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', False),
+        ('Authenticated', None),
+        ('Database access', None)
+    ]
+
+
+def test_get_status_bad_authentication(mysql_connector):
+    mysql_connector.user = 'pika'
+    assert mysql_connector.get_status() == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', True),
+        ('Authenticated', False),
+        ('Database access', None)
+    ]
+
+
+def test_get_status_bad_database(mysql_connector):
+    mysql_connector.db = 'pika'
+    assert mysql_connector.get_status() == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', True),
+        ('Authenticated', True),
+        ('Database access', False)
+    ]
+
+
 def test_get_df(mocker):
     """ It should call the sql extractor """
     snock = mocker.patch('pymysql.connect')
