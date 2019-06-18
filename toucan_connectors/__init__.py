@@ -51,3 +51,5 @@ for connector_path, connector_class in ALL_CONNECTORS_MAPPING:
 
 
 AVAILABLE_CONNECTORS = {child.type: child for child in ToucanConnector.__subclasses__()}
+for child in ToucanConnector.__subclasses__():
+    locals()[child.__name__] = child
