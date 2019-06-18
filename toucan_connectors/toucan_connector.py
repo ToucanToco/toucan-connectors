@@ -1,13 +1,13 @@
 import logging
+import operator
+import socket
 from abc import ABCMeta, abstractmethod
 from functools import reduce
-import operator
-from typing import Iterable, Optional, Type, Union
+from typing import Iterable, List, Optional, Tuple, Type, Union
 
 import pandas as pd
-from pydantic import BaseModel
-
 import tenacity as tny
+from pydantic import BaseModel
 
 
 class ToucanDataSource(BaseModel):
@@ -183,3 +183,31 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     def explain(self, data_source: ToucanDataSource):
         """Method to give metrics about the query"""
         return None
+
+    @staticmethod
+    def check_hostname(hostname) -> bool:
+        """Check if a hostname is resolved"""
+        try:
+            socket.gethostbyname(hostname)
+            return True
+        except socket.error:
+            return False
+
+    @staticmethod
+    def check_port(host, port) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            result = s.connect_ex((host, port))
+            return result == 0
+
+    def get_status(self) -> List[Tuple[str, Optional[bool]]]:
+        """
+        Check if connection can be made.
+        Returns [ (<test message>, <status>) ]
+        e.g. [
+          ('hostname resolved', True),
+          ('port opened', False),
+          ('db validation', None),
+          ...
+        ]
+        """
+        return [('connection status', None)]

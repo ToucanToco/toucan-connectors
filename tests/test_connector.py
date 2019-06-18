@@ -89,6 +89,10 @@ def test_explain():
     assert res is None
 
 
+def test_get_status():
+    assert DataConnector(name='my_name').get_status() == [('connection status', None)]
+
+
 class UnreliableDataConnector(ToucanConnector):
     type = 'MyUnreliableDB'
     data_source_model: DataSource
