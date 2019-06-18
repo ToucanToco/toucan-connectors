@@ -1,50 +1,53 @@
-from contextlib import suppress
+import os
+import re
+from importlib import import_module
 
 from .toucan_connector import ToucanDataSource, ToucanConnector
 
-with suppress(ImportError):
-    from .adobe_analytics.adobe_analytics_connector import AdobeAnalyticsConnector
-with suppress(ImportError):
-    from .azure_mssql.azure_mssql_connector import AzureMSSQLConnector
-with suppress(ImportError):
-    from .dataiku.dataiku_connector import DataikuConnector
-with suppress(ImportError):
-    from .elasticsearch.elasticsearch_connector import ElasticsearchConnector
-with suppress(ImportError):
-    from .google_analytics.google_analytics_connector import GoogleAnalyticsConnector
-with suppress(ImportError):
-    from .google_big_query.google_big_query_connector import GoogleBigQueryConnector
-with suppress(ImportError):
-    from .google_cloud_mysql.google_cloud_mysql_connector import GoogleCloudMySQLConnector
-with suppress(ImportError):
-    from .google_my_business.google_my_business_connector import GoogleMyBusinessConnector
-with suppress(ImportError):
-    from .google_spreadsheet.google_spreadsheet_connector import GoogleSpreadsheetConnector
-with suppress(ImportError):
-    from .hive.hive_connector import HiveConnector
-with suppress(ImportError):
-    from .http_api.http_api_connector import HttpAPIConnector
-with suppress(ImportError):
-    from .micro_strategy.micro_strategy_connector import MicroStrategyConnector
-with suppress(ImportError):
-    from .mongo.mongo_connector import MongoConnector
-with suppress(ImportError):
-    from .mssql.mssql_connector import MSSQLConnector
-with suppress(ImportError):
-    from .mysql.mysql_connector import MySQLConnector
-with suppress(ImportError):
-    from .odata.odata_connector import ODataConnector
-with suppress(ImportError):
-    from .oracle_sql.oracle_sql_connector import OracleSQLConnector
-with suppress(ImportError):
-    from .postgres.postgresql_connector import PostgresConnector
-with suppress(ImportError):
-    from .sap_hana.sap_hana_connector import SapHanaConnector
-with suppress(ImportError):
-    from .snowflake.snowflake_connector import SnowflakeConnector
-with suppress(ImportError):
-    from .toucan_toco.toucan_toco_connector import ToucanTocoConnector
-with suppress(ImportError):
-    from .trello.trello_connector import TrelloConnector
+ALL_CONNECTORS_MAPPING = [
+    ('adobe_analytics.adobe_analytics_connector', 'AdobeAnalyticsConnector'),
+    ('azure_mssql.azure_mssql_connector','AzureMSSQLConnector'),
+    ('dataiku.dataiku_connector', 'DataikuConnector'),
+    ('elasticsearch.elasticsearch_connector', 'ElasticsearchConnector'),
+    ('google_analytics.google_analytics_connector', 'GoogleAnalyticsConnector'),
+    ('google_big_query.google_big_query_connector', 'GoogleBigQueryConnector'),
+    ('google_cloud_mysql.google_cloud_mysql_connector', 'GoogleCloudMySQLConnector'),
+    ('google_my_business.google_my_business_connector', 'GoogleMyBusinessConnector'),
+    ('google_spreadsheet.google_spreadsheet_connector', 'GoogleSpreadsheetConnector'),
+    ('hive.hive_connector', 'HiveConnector'),
+    ('http_api.http_api_connector', 'HttpAPIConnector'),
+    ('micro_strategy.micro_strategy_connector', 'MicroStrategyConnector'),
+    ('mongo.mongo_connector', 'MongoConnector'),
+    ('mssql.mssql_connector', 'MSSQLConnector'),
+    ('mysql.mysql_connector', 'MySQLConnector'),
+    ('odata.odata_connector', 'ODataConnector'),
+    ('oracle_sql.oracle_sql_connector', 'OracleSQLConnector'),
+    ('postgres.postgresql_connector', 'PostgresConnector'),
+    ('sap_hana.sap_hana_connector', 'SapHanaConnector'),
+    ('snowflake.snowflake_connector', 'SnowflakeConnector'),
+    ('toucan_toco.toucan_toco_connector', 'ToucanTocoConnector'),
+    ('trello.trello_connector', 'TrelloConnector'),
+]
+HERE = os.path.dirname(__file__)
+
+
+def _import_connector(con_path, con_class):
+    try:
+        mod = import_module(f'.{con_path}', 'toucan_connectors')
+        con_type = getattr(mod, con_class).type
+    except ImportError:
+        # Retrieve the connector type by parsing the file
+        con_file_path = f'{HERE}/{con_path.replace(".", "/")}.py'
+        with open(con_file_path) as f:
+            con_code = f.read()
+        con_type = re.search(con_class + r'\(ToucanConnector\):.*type\s*=\s*[\'"](\w+)[\'"]', con_code, re.S).group(1)
+    return con_type
+
+
+ALL_CONNECTOR_TYPES = []
+for connector_path, connector_class in ALL_CONNECTORS_MAPPING:
+    connector_type = _import_connector(connector_path, connector_class)
+    ALL_CONNECTOR_TYPES.append(connector_type)
+
 
 AVAILABLE_CONNECTORS = {child.type: child for child in ToucanConnector.__subclasses__()}
