@@ -22,14 +22,6 @@ class DataConnector(ToucanConnector):
 
 ################################################
 def test_missing_attributes():
-    # missing type
-    with pytest.raises(TypeError) as exc_info:
-        class MissingDataConnector1(ToucanConnector):
-            data_source_model = DataSource
-
-            def get_df(self, data_source): pass
-    assert str(exc_info.value) == "MissingDataConnector1 has no 'type' attribute."
-
     # missing data_source_model
     with pytest.raises(TypeError) as exc_info:
         class MissingDataConnector2(ToucanConnector):
