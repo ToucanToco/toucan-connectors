@@ -50,7 +50,6 @@ class HttpAPIDataSource(ToucanDataSource):
 
 
 class HttpAPIConnector(ToucanConnector):
-    type = "HttpAPI"
     data_source_model: HttpAPIDataSource
 
     baseroute: str

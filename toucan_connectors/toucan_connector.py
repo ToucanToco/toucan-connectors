@@ -145,6 +145,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     name: str
     retry_policy: Optional[RetryPolicy] = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
+    type: str = None
 
     class Config:
         extra = 'forbid'
@@ -152,7 +153,6 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     def __init_subclass__(cls):
         try:
-            cls.type = cls.__fields__['type'].default
             cls.data_source_model = cls.__fields__.pop('data_source_model').type_
             # only wrap get_df if the class actually implements it
             if 'get_df' in cls.__dict__:

@@ -14,7 +14,6 @@ class PostgresConnector(ToucanConnector):
     """
     Import data from PostgreSQL.
     """
-    type = 'Postgres'
     data_source_model: PostgresDataSource
 
     user: str

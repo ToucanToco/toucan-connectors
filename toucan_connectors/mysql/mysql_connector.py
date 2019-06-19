@@ -32,7 +32,6 @@ class MySQLConnector(ToucanConnector):
     """
     Import data from MySQL database.
     """
-    type = 'MySQL'
     data_source_model: MySQLDataSource
 
     host: str

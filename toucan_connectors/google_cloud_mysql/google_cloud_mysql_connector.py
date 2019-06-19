@@ -13,7 +13,6 @@ class GoogleCloudMySQLConnector(ToucanConnector):
     """
     Import data from Google Cloud MySQL database.
     """
-    type = 'GoogleCloudMySQL'
     data_source_model: GoogleCloudMySQLDataSource
 
     host: str

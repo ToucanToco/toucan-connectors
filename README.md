@@ -66,7 +66,6 @@ class MyTypeDataSource(ToucanDataSource):
 
 class MyTypeConnector(ToucanConnector):
     """Model of my connector"""
-    type = 'MyType'
     data_source_model: MyTypeDataSource
 
     host: str
@@ -77,10 +76,15 @@ class MyTypeConnector(ToucanConnector):
         """how to retrieve a dataframe"""
 ```
 
-Please add your connector in `toucan_connectors/__init__.py` :
+Please add your connector in `toucan_connectors/__init__.py`.
+The key is what we call the `type` of the connector, which 
+is basically like an id used to retrieve it.
 ```python
-with suppress(ImportError):
-    from .mytype.my_connector import MyConnector
+CONNECTORS_CATALOGUE = {
+  ...,
+  'MyType': 'mytype.mytype_connector.MyTypeConnector',
+  ...
+}
 ```
 
 You can now generate and edit the documentation page for your connector:

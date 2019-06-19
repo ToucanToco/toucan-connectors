@@ -35,7 +35,6 @@ class ElasticsearchDataSource(ToucanDataSource):
 
 
 class ElasticsearchConnector(ToucanConnector):
-    type = "elasticsearch"
     data_source_model: ElasticsearchDataSource
     hosts: List[ElasticsearchHost]
     send_get_body_as: str = None

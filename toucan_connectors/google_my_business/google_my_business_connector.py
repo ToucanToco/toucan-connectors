@@ -39,7 +39,6 @@ class GoogleCredentials(BaseModel):
 
 
 class GoogleMyBusinessConnector(ToucanConnector):
-    type = "google_my_business"
     data_source_model: GoogleMyBusinessDataSource
 
     credentials: GoogleCredentials

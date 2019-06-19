@@ -26,7 +26,6 @@ class MicroStrategyConnector(ToucanConnector):
     Import data from MicroStrategy using the [JSON Data API](http://bit.ly/2HCzf04) for cubes and
     reports.
     """
-    type = 'MicroStrategy'
     data_source_model: MicroStrategyDataSource
 
     base_url: str

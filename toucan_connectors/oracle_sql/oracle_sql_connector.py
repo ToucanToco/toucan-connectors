@@ -10,7 +10,6 @@ class OracleSQLDataSource(ToucanDataSource):
 
 
 class OracleSQLConnector(ToucanConnector):
-    type = 'OracleSQL'
     data_source_model: OracleSQLDataSource
 
     dsn: DSN

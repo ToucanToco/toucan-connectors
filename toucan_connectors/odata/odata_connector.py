@@ -11,7 +11,6 @@ class ODataDataSource(ToucanDataSource):
 
 
 class ODataConnector(ToucanConnector):
-    type = "OData"
     data_source_model: ODataDataSource
 
     baseroute: str

@@ -65,7 +65,6 @@ class MongoDataSource(ToucanDataSource):
 
 class MongoConnector(ToucanConnector):
     """ Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
-    type = 'MongoDB'
     data_source_model: MongoDataSource
 
     host: str
