@@ -1,6 +1,6 @@
 import re
 from jq import jq
-from typing import Union
+from typing import Optional, Union
 from urllib.parse import quote_plus
 
 import pandas as pd
@@ -91,46 +91,70 @@ class MongoConnector(ToucanConnector):
         return ''.join(['mongodb://', user_pass, f'{self.host}:{self.port}'])
 
     @staticmethod
-    def _get_status(hostname_resolved, port_opened=None, host_connection=None,
-                    authenticated=None, database_available=None):
-        return [
-            ('Hostname resolved', hostname_resolved),
-            ('Port opened', port_opened),
-            ('Host connection', host_connection),
-            ('Authenticated', authenticated),
-            ('Database available', database_available)
+    def _get_details(index: int, status: Optional[bool]):
+        checks = [
+            'Hostname resolved',
+            'Port opened',
+            'Host connection',
+            'Authenticated',
+            'Database available'
         ]
+        ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
+        new_check = (checks[index], status)
+        not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
+        return ok_checks + [new_check] + not_validated_checks
 
     def get_status(self):
         # Check hostname
-        hostname_resolved = self.check_hostname(self.host)
-        if not hostname_resolved:
-            return self._get_status(hostname_resolved)
+        try:
+            self.check_hostname(self.host)
+        except Exception as e:
+            return {
+                'status': False,
+                'details': self._get_details(0, False),
+                'error': str(e)
+            }
 
         # Check port
-        port_opened = self.check_port(self.host, self.port)
-        if not port_opened:
-            return self._get_status(hostname_resolved, port_opened)
+        try:
+            self.check_port(self.host, self.port)
+        except Exception as e:
+            return {
+                'status': False,
+                'details': self._get_details(1, False),
+                'error': str(e)
+            }
 
         # Check databases access
         client = pymongo.MongoClient(self.uri, ssl=self.ssl, serverSelectionTimeoutMS=500)
         try:
             client.server_info()
-            host_connection = True
-            authenticated = True
-        except pymongo.errors.ServerSelectionTimeoutError:
-            host_connection = False
-            return self._get_status(hostname_resolved, port_opened, host_connection)
-        except pymongo.errors.OperationFailure:
-            host_connection = True
-            authenticated = False
-            return self._get_status(hostname_resolved, port_opened, host_connection, authenticated)
+        except pymongo.errors.ServerSelectionTimeoutError as e:
+            return {
+                'status': False,
+                'details': self._get_details(2, False),
+                'error': str(e)
+            }
+        except pymongo.errors.OperationFailure as e:
+            return {
+                'status': False,
+                'details': self._get_details(3, False),
+                'error': str(e)
+            }
 
         # Check if given database actually exists
-        database_available = self.database in client.list_database_names()
-
-        return self._get_status(hostname_resolved, port_opened, host_connection,
-                                authenticated, database_available)
+        if self.database in client.list_database_names():
+            return {
+                'status': True,
+                'details': self._get_details(4, True),
+                'error': None
+            }
+        else:
+            return {
+                'status': False,
+                'details': self._get_details(4, False),
+                'error': f'Database {self.database!r} does not exist'
+            }
 
     def validate_collection(self, client, collection):
         if collection not in client[self.database].list_collection_names():

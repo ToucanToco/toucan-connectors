@@ -3,7 +3,7 @@ import operator
 import socket
 from abc import ABCMeta, abstractmethod
 from functools import reduce
-from typing import Iterable, List, Optional, Tuple, Type, Union
+from typing import Iterable, Optional, Type, Union
 
 import pandas as pd
 import tenacity as tny
@@ -185,29 +185,38 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         return None
 
     @staticmethod
-    def check_hostname(hostname) -> bool:
+    def check_hostname(hostname):
         """Check if a hostname is resolved"""
-        try:
-            socket.gethostbyname(hostname)
-            return True
-        except socket.error:
-            return False
+        socket.gethostbyname(hostname)
 
     @staticmethod
-    def check_port(host, port) -> bool:
+    def check_port(host, port):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            result = s.connect_ex((host, port))
-            return result == 0
+            s.connect((host, port))
 
-    def get_status(self) -> List[Tuple[str, Optional[bool]]]:
+    def get_status(self) -> dict:
         """
         Check if connection can be made.
-        Returns [ (<test message>, <status>) ]
-        e.g. [
-          ('hostname resolved', True),
-          ('port opened', False),
-          ('db validation', None),
-          ...
-        ]
+        Returns
+        {
+          'status': True/False/None  # the status of the connection (None if no check has been made)
+          'details': [(< type of check >, True/False/None), (...), ...]
+          'error': < error message >  # if a check raised an error, return it
+        }
+        e.g.
+        {
+          'status': False,
+          'details': [
+            ('hostname resolved', True),
+            ('port opened', False,),
+            ('db validation', None),
+            ...
+          ],
+          'error': 'port must be 0-65535'
+        }
         """
-        return [('connection status', None)]
+        return {
+            'status': None,
+            'details': [],
+            'error': None
+        }

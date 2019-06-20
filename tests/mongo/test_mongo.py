@@ -223,66 +223,105 @@ def test_normalize_query():
 
 
 def test_status_all_good(mongo_connector):
-    assert mongo_connector.get_status() == [
-        ('Hostname resolved', True),
-        ('Port opened', True),
-        ('Host connection', True),
-        ('Authenticated', True),
-        ('Database available', True)
-    ]
+    assert mongo_connector.get_status() == {
+        'status': True,
+        'details': [
+            ('Hostname resolved', True),
+            ('Port opened', True),
+            ('Host connection', True),
+            ('Authenticated', True),
+            ('Database available', True)
+        ],
+        'error': None
+    }
 
 
 def test_status_bad_host(mongo_connector):
     mongo_connector.host = 'localhot'
-    assert mongo_connector.get_status() == [
-        ('Hostname resolved', False),
-        ('Port opened', None),
-        ('Host connection', None),
-        ('Authenticated', None),
-        ('Database available', None)
-    ]
+    assert mongo_connector.get_status() == {
+        'status': False,
+        'details': [
+            ('Hostname resolved', False),
+            ('Port opened', None),
+            ('Host connection', None),
+            ('Authenticated', None),
+            ('Database available', None)
+        ],
+        'error': '[Errno -2] Name or service not known'
+    }
 
 
 def test_status_bad_port(mongo_connector):
     mongo_connector.port += 1
-    assert mongo_connector.get_status() == [
-        ('Hostname resolved', True),
-        ('Port opened', False),
-        ('Host connection', None),
-        ('Authenticated', None),
-        ('Database available', None)
-    ]
+    assert mongo_connector.get_status() == {
+        'status': False,
+        'details': [
+            ('Hostname resolved', True),
+            ('Port opened', False),
+            ('Host connection', None),
+            ('Authenticated', None),
+            ('Database available', None)
+        ],
+        'error': '[Errno 61] Connection refused'
+    }
+
+
+def test_status_bad_port2(mongo_connector):
+    mongo_connector.port = 123000
+    assert mongo_connector.get_status() == {
+        'status': False,
+        'details': [
+            ('Hostname resolved', True),
+            ('Port opened', False),
+            ('Host connection', None),
+            ('Authenticated', None),
+            ('Database available', None)
+        ],
+        'error': 'getsockaddrarg: port must be 0-65535.'
+    }
 
 
 def test_status_unreachable(mongo_connector, mocker):
     mocker.patch('pymongo.MongoClient.server_info',
-                 side_effect=pymongo.errors.ServerSelectionTimeoutError)
-    assert mongo_connector.get_status() == [
-        ('Hostname resolved', True),
-        ('Port opened', True),
-        ('Host connection', False),
-        ('Authenticated', None),
-        ('Database available', None)
-    ]
+                 side_effect=pymongo.errors.ServerSelectionTimeoutError('qwe'))
+    assert mongo_connector.get_status() == {
+        'status': False,
+        'details': [
+            ('Hostname resolved', True),
+            ('Port opened', True),
+            ('Host connection', False),
+            ('Authenticated', None),
+            ('Database available', None)
+        ],
+        'error': 'qwe'
+    }
 
 
 def test_status_bad_username(mongo_connector):
     mongo_connector.username = 'bibou'
-    assert mongo_connector.get_status() == [
-        ('Hostname resolved', True),
-        ('Port opened', True),
-        ('Host connection', True),
-        ('Authenticated', False),
-        ('Database available', None)
-    ]
+    assert mongo_connector.get_status() == {
+        'status': False,
+        'details': [
+            ('Hostname resolved', True),
+            ('Port opened', True),
+            ('Host connection', True),
+            ('Authenticated', False),
+            ('Database available', None)
+        ],
+        'error': 'Authentication failed.'
+    }
 
 
 def test_status_bad_db(mongo_connector):
     mongo_connector.database = 'nothere'
-    assert mongo_connector.get_status() == [
-        ('Hostname resolved', True),
-        ('Port opened', True),
-        ('Host connection', True),
-        ('Authenticated', True),
-        ('Database available', False)
-    ]
+    assert mongo_connector.get_status() == {
+        'status': False,
+        'details': [
+            ('Hostname resolved', True),
+            ('Port opened', True),
+            ('Host connection', True),
+            ('Authenticated', True),
+            ('Database available', False)
+        ],
+        'error': "Database 'nothere' does not exist"
+    }

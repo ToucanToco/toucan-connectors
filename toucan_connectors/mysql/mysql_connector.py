@@ -1,10 +1,11 @@
 import re
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 import pymysql
-from pymysql.constants import CR, ER
 from pydantic import constr
+from pymysql.constants import CR, ER
 
 from toucan_connectors.toucan_connector import ToucanDataSource, ToucanConnector
 
@@ -61,59 +62,75 @@ class MySQLConnector(ToucanConnector):
         return {k: v for k, v in con_params.items() if v is not None}
 
     @staticmethod
-    def _get_status(hostname_resolved, port_opened=None, host_connection=None,
-                    authenticated=None, database_access=None):
-        return [
-            ('Hostname resolved', hostname_resolved),
-            ('Port opened', port_opened),
-            ('Host connection', host_connection),
-            ('Authenticated', authenticated),
-            ('Database access', database_access)
+    def _get_details(index: int, status: Optional[bool]):
+        checks = [
+            'Hostname resolved',
+            'Port opened',
+            'Host connection',
+            'Authenticated',
+            'Database access'
         ]
+        ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
+        new_check = (checks[index], status)
+        not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
+        return ok_checks + [new_check] + not_validated_checks
 
     def get_status(self):
         # Check hostname
-        hostname_resolved = self.check_hostname(self.host)
-        if not hostname_resolved:
-            return self._get_status(hostname_resolved)
+        try:
+            self.check_hostname(self.host)
+        except Exception as e:
+            return {
+                'status': False,
+                'details': self._get_details(0, False),
+                'error': str(e)
+            }
 
         # Check port
-        port_opened = self.check_port(self.host, self.port)
-        if not port_opened:
-            return self._get_status(hostname_resolved, port_opened)
+        try:
+            self.check_port(self.host, self.port)
+        except Exception as e:
+            return {
+                'status': False,
+                'details': self._get_details(1, False),
+                'error': str(e)
+            }
 
         # Check basic access
         try:
             pymysql.connect(**self.connection_params)
-            host_connection = True
-            authenticated = True
-            database_access = True
         except pymysql.err.OperationalError as e:
             error_code = e.args[0]
 
             # Can't connect to full URI
             if error_code == CR.CR_CONN_HOST_ERROR:
-                host_connection = False
-                return self._get_status(hostname_resolved, port_opened, host_connection)
-            else:
-                host_connection = True
+                return {
+                    'status': False,
+                    'details': self._get_details(2, False),
+                    'error': e.args[1]
+                }
 
             # Wrong user/password
             if error_code == ER.ACCESS_DENIED_ERROR:
-                authenticated = False
-                return self._get_status(hostname_resolved, port_opened, host_connection,
-                                        authenticated)
-            else:
-                authenticated = True
+                return {
+                    'status': False,
+                    'details': self._get_details(3, False),
+                    'error': e.args[1]
+                }
 
             # Wrong database
             if error_code == ER.DBACCESS_DENIED_ERROR:
-                database_access = False
-            else:
-                database_access = True
-
-        return self._get_status(hostname_resolved, port_opened, host_connection,
-                                authenticated, database_access)
+                return {
+                    'status': False,
+                    'details': self._get_details(4, False),
+                    'error': e.args[1]
+                }
+        else:
+            return {
+                'status': True,
+                'details': self._get_details(4, True),
+                'error': None
+            }
 
     @staticmethod
     def clean_response(response):
