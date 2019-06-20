@@ -79,7 +79,6 @@ class FacebookInsightsDataSource(ToucanDataSource):
 
 
 class FacebookInsightsConnector(ToucanConnector):
-    type = "facebook_insights"
     data_source_model: FacebookInsightsDataSource
 
     def get_df(self, data_source: FacebookInsightsDataSource) -> pd.DataFrame:

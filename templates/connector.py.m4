@@ -9,7 +9,6 @@ class cap(TYPE)DataSource(ToucanDataSource):
 
 
 class cap(TYPE)Connector(ToucanConnector):
-    type = "TYPE"
     data_source_model: cap(TYPE)DataSource
 
     username: str

@@ -10,7 +10,6 @@ class HiveDataSource(ToucanDataSource):
 
 
 class HiveConnector(ToucanConnector):
-    type = "Hive"
     data_source_model: HiveDataSource
 
     host: str

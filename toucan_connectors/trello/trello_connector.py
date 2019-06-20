@@ -51,7 +51,6 @@ class TrelloDataSource(ToucanDataSource):
 
 
 class TrelloConnector(ToucanConnector):
-    type = "Trello"
     data_source_model: TrelloDataSource
 
     key_id: str = None

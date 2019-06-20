@@ -17,7 +17,6 @@ class AzureMSSQLConnector(ToucanConnector):
     """
     Import data from Microsoft Azure SQL Server.
     """
-    type = 'AzureMSSQL'
     data_source_model: AzureMSSQLDataSource
 
     host: str

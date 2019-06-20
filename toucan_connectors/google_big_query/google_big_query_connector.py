@@ -18,7 +18,6 @@ class GoogleBigQueryDataSource(ToucanDataSource):
 
 
 class GoogleBigQueryConnector(ToucanConnector):
-    type = "GoogleBigQuery"
     data_source_model: GoogleBigQueryDataSource
 
     credentials: GoogleCredentials

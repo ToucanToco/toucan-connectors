@@ -15,7 +15,6 @@ class DataikuConnector(ToucanConnector):
     This is a basic connector for [Dataiku](https://www.dataiku.com/) using their
     [DSS API](https://doc.dataiku.com/dss/2.0/api/index.html).
     """
-    type = "Dataiku"
     data_source_model: DataikuDataSource
 
     host: str

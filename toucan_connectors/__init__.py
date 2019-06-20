@@ -1,50 +1,41 @@
-from contextlib import suppress
+from importlib import import_module
 
 from .toucan_connector import ToucanDataSource, ToucanConnector
 
-with suppress(ImportError):
-    from .adobe_analytics.adobe_analytics_connector import AdobeAnalyticsConnector
-with suppress(ImportError):
-    from .azure_mssql.azure_mssql_connector import AzureMSSQLConnector
-with suppress(ImportError):
-    from .dataiku.dataiku_connector import DataikuConnector
-with suppress(ImportError):
-    from .elasticsearch.elasticsearch_connector import ElasticsearchConnector
-with suppress(ImportError):
-    from .google_analytics.google_analytics_connector import GoogleAnalyticsConnector
-with suppress(ImportError):
-    from .google_big_query.google_big_query_connector import GoogleBigQueryConnector
-with suppress(ImportError):
-    from .google_cloud_mysql.google_cloud_mysql_connector import GoogleCloudMySQLConnector
-with suppress(ImportError):
-    from .google_my_business.google_my_business_connector import GoogleMyBusinessConnector
-with suppress(ImportError):
-    from .google_spreadsheet.google_spreadsheet_connector import GoogleSpreadsheetConnector
-with suppress(ImportError):
-    from .hive.hive_connector import HiveConnector
-with suppress(ImportError):
-    from .http_api.http_api_connector import HttpAPIConnector
-with suppress(ImportError):
-    from .micro_strategy.micro_strategy_connector import MicroStrategyConnector
-with suppress(ImportError):
-    from .mongo.mongo_connector import MongoConnector
-with suppress(ImportError):
-    from .mssql.mssql_connector import MSSQLConnector
-with suppress(ImportError):
-    from .mysql.mysql_connector import MySQLConnector
-with suppress(ImportError):
-    from .odata.odata_connector import ODataConnector
-with suppress(ImportError):
-    from .oracle_sql.oracle_sql_connector import OracleSQLConnector
-with suppress(ImportError):
-    from .postgres.postgresql_connector import PostgresConnector
-with suppress(ImportError):
-    from .sap_hana.sap_hana_connector import SapHanaConnector
-with suppress(ImportError):
-    from .snowflake.snowflake_connector import SnowflakeConnector
-with suppress(ImportError):
-    from .toucan_toco.toucan_toco_connector import ToucanTocoConnector
-with suppress(ImportError):
-    from .toucan_toco.trello_connector import TrelloConnector
+CONNECTORS_CATALOGUE = {
+    'AdobeAnalytics': 'adobe_analytics.adobe_analytics_connector.AdobeAnalyticsConnector',
+    'AzureMSSQL': 'azure_mssql.azure_mssql_connector.AzureMSSQLConnector',
+    'Dataiku': 'dataiku.dataiku_connector.DataikuConnector',
+    'elasticsearch': 'elasticsearch.elasticsearch_connector.ElasticsearchConnector',
+    'facebook_insights': 'facebook_insights.facebook_insights_connector.FacebookInsightsConnector',
+    'GoogleAnalytics': 'google_analytics.google_analytics_connector.GoogleAnalyticsConnector',
+    'GoogleBigQuery': 'google_big_query.google_big_query_connector.GoogleBigQueryConnector',
+    'GoogleCloudMySQL': 'google_cloud_mysql.google_cloud_mysql_connector.GoogleCloudMySQLConnector',
+    'google_my_business': 'google_my_business.google_my_business_connector.GoogleMyBusinessConnector',
+    'GoogleSpreadsheet': 'google_spreadsheet.google_spreadsheet_connector.GoogleSpreadsheetConnector',
+    'Hive': 'hive.hive_connector.HiveConnector',
+    'HttpAPI': 'http_api.http_api_connector.HttpAPIConnector',
+    'MicroStrategy': 'micro_strategy.micro_strategy_connector.MicroStrategyConnector',
+    'MongoDB': 'mongo.mongo_connector.MongoConnector',
+    'MSSQL': 'mssql.mssql_connector.MSSQLConnector',
+    'MySQL': 'mysql.mysql_connector.MySQLConnector',
+    'OData': 'odata.odata_connector.ODataConnector',
+    'OracleSQL': 'oracle_sql.oracle_sql_connector.OracleSQLConnector',
+    'Postgres': 'postgres.postgresql_connector.PostgresConnector',
+    'SapHana': 'sap_hana.sap_hana_connector.SapHanaConnector',
+    'Snowflake': 'snowflake.snowflake_connector.SnowflakeConnector',
+    'ToucanToco': 'toucan_toco.toucan_toco_connector.ToucanTocoConnector',
+    'Trello': 'trello.trello_connector.TrelloConnector',
+}
+ALL_CONNECTOR_TYPES = list(CONNECTORS_CATALOGUE)
+AVAILABLE_CONNECTORS = {}
 
-AVAILABLE_CONNECTORS = {child.type: child for child in ToucanConnector.__subclasses__()}
+for connector_type, connector_path in CONNECTORS_CATALOGUE.items():
+    module_path, connector_cls_name = connector_path.rsplit('.', 1)
+    try:
+        mod = import_module(f'.{module_path}', 'toucan_connectors')
+    except ImportError:
+        pass
+    else:
+        connector_cls = getattr(mod, connector_cls_name)
+        AVAILABLE_CONNECTORS[connector_type] = connector_cls

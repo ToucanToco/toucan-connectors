@@ -13,7 +13,6 @@ class SapHanaConnector(ToucanConnector):
     """
     Import data from Sap Hana.
     """
-    type = 'SapHana'
     data_source_model: SapHanaDataSource
 
     host: str

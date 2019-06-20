@@ -164,7 +164,6 @@ class GoogleAnalyticsDataSource(ToucanDataSource):
 
 
 class GoogleAnalyticsConnector(ToucanConnector):
-    type = "GoogleAnalytics"
     data_source_model: GoogleAnalyticsDataSource
 
     credentials: GoogleCredentials

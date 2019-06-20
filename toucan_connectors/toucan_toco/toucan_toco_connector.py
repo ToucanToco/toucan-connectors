@@ -24,7 +24,6 @@ class ToucanTocoConnector(ToucanConnector):
     """
     Get data from a Toucan Toco instance, usefull to build analytics applications.
     """
-    type = "ToucanToco"
     data_source_model: ToucanTocoDataSource
 
     host: str

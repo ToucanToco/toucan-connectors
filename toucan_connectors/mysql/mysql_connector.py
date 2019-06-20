@@ -1,9 +1,11 @@
 import re
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 import pymysql
 from pydantic import constr
+from pymysql.constants import CR, ER
 
 from toucan_connectors.toucan_connector import ToucanDataSource, ToucanConnector
 
@@ -31,7 +33,6 @@ class MySQLConnector(ToucanConnector):
     """
     Import data from MySQL database.
     """
-    type = 'MySQL'
     data_source_model: MySQLDataSource
 
     host: str
@@ -59,6 +60,77 @@ class MySQLConnector(ToucanConnector):
         }
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
+
+    @staticmethod
+    def _get_details(index: int, status: Optional[bool]):
+        checks = [
+            'Hostname resolved',
+            'Port opened',
+            'Host connection',
+            'Authenticated',
+            'Database access'
+        ]
+        ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
+        new_check = (checks[index], status)
+        not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
+        return ok_checks + [new_check] + not_validated_checks
+
+    def get_status(self):
+        # Check hostname
+        try:
+            self.check_hostname(self.host)
+        except Exception as e:
+            return {
+                'status': False,
+                'details': self._get_details(0, False),
+                'error': str(e)
+            }
+
+        # Check port
+        try:
+            self.check_port(self.host, self.port)
+        except Exception as e:
+            return {
+                'status': False,
+                'details': self._get_details(1, False),
+                'error': str(e)
+            }
+
+        # Check basic access
+        try:
+            pymysql.connect(**self.connection_params)
+        except pymysql.err.OperationalError as e:
+            error_code = e.args[0]
+
+            # Can't connect to full URI
+            if error_code == CR.CR_CONN_HOST_ERROR:
+                return {
+                    'status': False,
+                    'details': self._get_details(2, False),
+                    'error': e.args[1]
+                }
+
+            # Wrong user/password
+            if error_code == ER.ACCESS_DENIED_ERROR:
+                return {
+                    'status': False,
+                    'details': self._get_details(3, False),
+                    'error': e.args[1]
+                }
+
+            # Wrong database
+            if error_code == ER.DBACCESS_DENIED_ERROR:
+                return {
+                    'status': False,
+                    'details': self._get_details(4, False),
+                    'error': e.args[1]
+                }
+        else:
+            return {
+                'status': True,
+                'details': self._get_details(4, True),
+                'error': None
+            }
 
     @staticmethod
     def clean_response(response):

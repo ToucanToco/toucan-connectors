@@ -14,7 +14,6 @@ class MSSQLConnector(ToucanConnector):
     """
     Import data from Microsoft SQL Server.
     """
-    type = 'MSSQL'
     data_source_model: MSSQLDataSource
 
     host: str

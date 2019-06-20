@@ -1,6 +1,6 @@
 import re
 from jq import jq
-from typing import Union
+from typing import Optional, Union
 from urllib.parse import quote_plus
 
 import pandas as pd
@@ -65,7 +65,6 @@ class MongoDataSource(ToucanDataSource):
 
 class MongoConnector(ToucanConnector):
     """ Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
-    type = 'MongoDB'
     data_source_model: MongoDataSource
 
     host: str
@@ -90,6 +89,72 @@ class MongoConnector(ToucanConnector):
                 user_pass += f':{quote_plus(self.password)}'
             user_pass += '@'
         return ''.join(['mongodb://', user_pass, f'{self.host}:{self.port}'])
+
+    @staticmethod
+    def _get_details(index: int, status: Optional[bool]):
+        checks = [
+            'Hostname resolved',
+            'Port opened',
+            'Host connection',
+            'Authenticated',
+            'Database available'
+        ]
+        ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
+        new_check = (checks[index], status)
+        not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
+        return ok_checks + [new_check] + not_validated_checks
+
+    def get_status(self):
+        # Check hostname
+        try:
+            self.check_hostname(self.host)
+        except Exception as e:
+            return {
+                'status': False,
+                'details': self._get_details(0, False),
+                'error': str(e)
+            }
+
+        # Check port
+        try:
+            self.check_port(self.host, self.port)
+        except Exception as e:
+            return {
+                'status': False,
+                'details': self._get_details(1, False),
+                'error': str(e)
+            }
+
+        # Check databases access
+        client = pymongo.MongoClient(self.uri, ssl=self.ssl, serverSelectionTimeoutMS=500)
+        try:
+            client.server_info()
+        except pymongo.errors.ServerSelectionTimeoutError as e:
+            return {
+                'status': False,
+                'details': self._get_details(2, False),
+                'error': str(e)
+            }
+        except pymongo.errors.OperationFailure as e:
+            return {
+                'status': False,
+                'details': self._get_details(3, False),
+                'error': str(e)
+            }
+
+        # Check if given database actually exists
+        if self.database in client.list_database_names():
+            return {
+                'status': True,
+                'details': self._get_details(4, True),
+                'error': None
+            }
+        else:
+            return {
+                'status': False,
+                'details': self._get_details(4, False),
+                'error': f'Database {self.database!r} does not exist'
+            }
 
     def validate_collection(self, client, collection):
         if collection not in client[self.database].list_collection_names():

@@ -1,13 +1,13 @@
 import logging
+import operator
+import socket
 from abc import ABCMeta, abstractmethod
 from functools import reduce
-import operator
 from typing import Iterable, Optional, Type, Union
 
 import pandas as pd
-from pydantic import BaseModel
-
 import tenacity as tny
+from pydantic import BaseModel
 
 
 class ToucanDataSource(BaseModel):
@@ -145,6 +145,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     name: str
     retry_policy: Optional[RetryPolicy] = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
+    type: str = None
 
     class Config:
         extra = 'forbid'
@@ -152,7 +153,6 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     def __init_subclass__(cls):
         try:
-            cls.type = cls.__fields__['type'].default
             cls.data_source_model = cls.__fields__.pop('data_source_model').type_
             # only wrap get_df if the class actually implements it
             if 'get_df' in cls.__dict__:
@@ -183,3 +183,40 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     def explain(self, data_source: ToucanDataSource):
         """Method to give metrics about the query"""
         return None
+
+    @staticmethod
+    def check_hostname(hostname):
+        """Check if a hostname is resolved"""
+        socket.gethostbyname(hostname)
+
+    @staticmethod
+    def check_port(host, port):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((host, port))
+
+    def get_status(self) -> dict:
+        """
+        Check if connection can be made.
+        Returns
+        {
+          'status': True/False/None  # the status of the connection (None if no check has been made)
+          'details': [(< type of check >, True/False/None), (...), ...]
+          'error': < error message >  # if a check raised an error, return it
+        }
+        e.g.
+        {
+          'status': False,
+          'details': [
+            ('hostname resolved', True),
+            ('port opened', False,),
+            ('db validation', None),
+            ...
+          ],
+          'error': 'port must be 0-65535'
+        }
+        """
+        return {
+            'status': None,
+            'details': [],
+            'error': None
+        }
