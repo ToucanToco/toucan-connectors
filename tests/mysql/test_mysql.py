@@ -108,17 +108,16 @@ def test_get_status_bad_connection(mysql_connector, unused_port, mocker):
     mysql_connector.port = unused_port()
     mocker.patch('toucan_connectors.mysql.mysql_connector.MySQLConnector.check_port',
                  return_value=True)
-    assert mysql_connector.get_status() == {
-        'status': False,
-        'details': [
-            ('Hostname resolved', True),
-            ('Port opened', True),
-            ('Host connection', False),
-            ('Authenticated', None),
-            ('Database access', None)
-        ],
-        'error': "Can't connect to MySQL server on 'localhost' ([Errno 61] Connection refused)"
-    }
+    status = mysql_connector.get_status()
+    assert status['status'] is False
+    assert status['details'] == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', False),
+        ('Authenticated', None),
+        ('Database access', None)
+    ]
+    assert status['error'].startswith("Can't connect to MySQL server on 'localhost'")
 
 
 def test_get_status_bad_authentication(mysql_connector):

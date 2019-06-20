@@ -82,7 +82,11 @@ def test_explain():
 
 
 def test_get_status():
-    assert DataConnector(name='my_name').get_status() == [('connection status', None)]
+    assert DataConnector(name='my_name').get_status() == {
+        'status': None,
+        'details': [],
+        'error': None
+    }
 
 
 class UnreliableDataConnector(ToucanConnector):

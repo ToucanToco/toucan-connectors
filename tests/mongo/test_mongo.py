@@ -253,17 +253,16 @@ def test_status_bad_host(mongo_connector):
 
 def test_status_bad_port(mongo_connector):
     mongo_connector.port += 1
-    assert mongo_connector.get_status() == {
-        'status': False,
-        'details': [
-            ('Hostname resolved', True),
-            ('Port opened', False),
-            ('Host connection', None),
-            ('Authenticated', None),
-            ('Database available', None)
-        ],
-        'error': '[Errno 61] Connection refused'
-    }
+    status = mongo_connector.get_status()
+    assert status['status'] is False
+    assert status['details'] == [
+        ('Hostname resolved', True),
+        ('Port opened', False),
+        ('Host connection', None),
+        ('Authenticated', None),
+        ('Database available', None)
+    ]
+    assert 'Connection refused' in status['error']
 
 
 def test_status_bad_port2(mongo_connector):
