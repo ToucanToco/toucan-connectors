@@ -166,11 +166,12 @@ class CustomNoRetryOnDataConnector(ToucanConnector):
     type = 'MyUnreliableDB'
     data_source_model: DataSource
 
-    def retry_policy(self):
+    @property
+    def retry_decorator(self):
         return None
 
     def _retrieve_data(self, data_source, logbook=[]):
-        if len(logbook) < 1:
+        if len(logbook) == 0:
             logbook.append(time())
             raise RuntimeError('try again!')
         logbook.clear()
