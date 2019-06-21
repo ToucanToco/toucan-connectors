@@ -1,4 +1,5 @@
 from toucan_connectors.mongo.mongo_translator import MongoExpression
+import pytest
 
 
 def test_mongo_expression():
@@ -22,3 +23,10 @@ def test_mongo_expression():
 
     result = MongoExpression().parse(query)
     assert result == expected
+
+
+def test_mongo_expression_exception():
+    query = '1=="1"'
+    with pytest.raises(Exception) as e:
+        MongoExpression().parse(query)
+    assert 'Missing method for Num' == str(e.value)

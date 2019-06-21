@@ -160,3 +160,24 @@ def test_custom_retry_on_df():
     udc = CustomRetryOnDataConnector(name='my_name')
     with pytest.raises(RuntimeError):
         udc.get_df({})
+
+
+class CustomNoRetryOnDataConnector(ToucanConnector):
+    type = 'MyUnreliableDB'
+    data_source_model: DataSource
+
+    def retry_policy(self):
+        return None
+
+    def _retrieve_data(self, data_source, logbook=[]):
+        if len(logbook) < 1:
+            logbook.append(time())
+            raise RuntimeError('try again!')
+        logbook.clear()
+        return 42
+
+
+def test_no_retry_on_df():
+    udc = CustomNoRetryOnDataConnector(name='my_name')
+    with pytest.raises(RuntimeError):
+        udc.get_df({})

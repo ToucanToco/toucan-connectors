@@ -151,7 +151,7 @@ class AstTranslator(ABC):
 class Expression(AstTranslator, metaclass=ABCMeta):
     @abstractmethod
     def BoolOp(self, op):
-        return
+        """Boolean expressions with or/and """
 
     @abstractmethod
     def And(self, op):
@@ -203,11 +203,9 @@ class Operator(AstTranslator, metaclass=ABCMeta):
 class Column(AstTranslator, metaclass=ABCMeta):
     def Name(self, node):
         """Column name"""
-        return node.id
 
     def Str(self, node):
         """Column name as str"""
-        return node.s
 
 
 class Value(AstTranslator, metaclass=ABCMeta):
