@@ -1,8 +1,20 @@
 import pandas as pd
 from odata import ODataService
+from odata.metadata import MetaData
 
 from toucan_connectors.common import Auth
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+
+
+# monkey patch MetaData's __init__
+# (cf. https://github.com/tuomur/python-odata/issues/22)
+def metadata_init_patched(self, service):
+    self._original_init(service)
+    self.url = service.url.rstrip('/') + '/$metadata'
+
+
+MetaData._original_init = MetaData.__init__
+MetaData.__init__ = metadata_init_patched
 
 
 class ODataDataSource(ToucanDataSource):
