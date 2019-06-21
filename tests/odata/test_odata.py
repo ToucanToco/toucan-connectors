@@ -2,14 +2,16 @@ import socket
 
 import pandas as pd
 import pytest
+from odata.metadata import MetaData
 
 from toucan_connectors.odata.odata_connector import ODataConnector, ODataDataSource
 
 
-def test_get_df():
+def test_get_df(mocker):
     """
     It should make a query to the canonical service and return the right results
     """
+    spy_load_metadata = mocker.spy(MetaData, 'load_document')
     expected_df = pd.read_json('tests/odata/fixtures/records.json', orient='records')
 
     provider = ODataConnector(
@@ -32,6 +34,10 @@ def test_get_df():
         assert df[sl].equals(expected_df[sl])
     except socket.error:
         pytest.skip('Could not connect to the standard example OData service.')
+
+    assert spy_load_metadata.call_count == 1
+    args, _ = spy_load_metadata.call_args
+    assert args[0].url.endswith('/$metadata')
 
     provider.auth = None
     try:
