@@ -17,7 +17,7 @@ class DataConnector(ToucanConnector):
     type = 'MyDB'
     data_source_model: DataSource
 
-    def get_df(self, data_source): pass
+    def _retrieve_data(self, data_source): pass
 
 
 ################################################
@@ -27,7 +27,7 @@ def test_missing_attributes():
         class MissingDataConnector2(ToucanConnector):
             type = 'MyDB'
 
-            def get_df(self, data_source): pass
+            def _retrieve_data(self, data_source): pass
     assert str(exc_info.value) == "MissingDataConnector2 has no 'data_source_model' attribute."
 
 
@@ -56,12 +56,24 @@ def test_validate():
     })
 
 
+def test_get_df_with_permissions():
+    class DataConnector(ToucanConnector):
+        type = 'MyDB'
+        data_source_model = 'asd'
+
+        def _retrieve_data(self, datasource):
+            return pd.DataFrame({'A': [1, 2]})
+
+    df = DataConnector(name='my_name').get_df({'domain': 'yo'}, permissions="A==1")
+    assert all(df == pd.DataFrame({'A': [1]}))
+
+
 def test_get_df_and_count():
     class DataConnector(ToucanConnector):
         type = 'MyDB'
         data_source_model = 'asd'
 
-        def get_df(self, datasource):
+        def _retrieve_data(self, datasource):
             return pd.DataFrame({'A': [1, 2]})
 
     res = DataConnector(name='my_name').get_df_and_count({}, limit=1)
@@ -74,7 +86,7 @@ def test_explain():
         type = 'MyDB'
         data_source_model = 'asd'
 
-        def get_df(self, datasource):
+        def _retrieve_data(self, datasource):
             return pd.DataFrame()
 
     res = DataConnector(name='my_name').explain({})
@@ -93,7 +105,7 @@ class UnreliableDataConnector(ToucanConnector):
     type = 'MyUnreliableDB'
     data_source_model: DataSource
 
-    def get_df(self, data_source, logbook=[]):
+    def _retrieve_data(self, data_source, logbook=[]):
         if len(logbook) < 3:
             logbook.append(time())
             raise RuntimeError('try again!')
@@ -113,7 +125,7 @@ class CustomPolicyDataConnector(ToucanConnector):
     type = 'MyUnreliableDB'
     data_source_model: DataSource
 
-    def get_df(self, data_source, logbook=[]):
+    def _retrieve_data(self, data_source, logbook=[]):
         if len(logbook) < 3:
             logbook.append(time())
             raise RuntimeError('try again!')
@@ -136,7 +148,7 @@ class CustomRetryOnDataConnector(ToucanConnector):
     data_source_model: DataSource
     _retry_on = (ValueError,)
 
-    def get_df(self, data_source, logbook=[]):
+    def _retrieve_data(self, data_source, logbook=[]):
         if len(logbook) < 3:
             logbook.append(time())
             raise RuntimeError('try again!')

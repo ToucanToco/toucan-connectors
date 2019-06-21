@@ -16,7 +16,7 @@ class ODataConnector(ToucanConnector):
     baseroute: str
     auth: Auth = None
 
-    def get_df(self, data_source: ODataDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: ODataDataSource) -> pd.DataFrame:
 
         if self.auth:
             session = self.auth.get_session()

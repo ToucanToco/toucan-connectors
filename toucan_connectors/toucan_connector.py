@@ -1,8 +1,8 @@
 import logging
-import operator
 import socket
 from abc import ABCMeta, abstractmethod
-from functools import reduce
+from functools import reduce, wraps
+import operator
 from typing import Iterable, Optional, Type, Union
 
 import pandas as pd
@@ -110,17 +110,17 @@ class RetryPolicy(BaseModel):
         return f
 
 
-def decorate_get_df_with_retry(get_df):
-    """wrap `get_df` with the retry policy defined on the connector.
-
+def decorate_func_with_retry(func):
+    """wrap `func` with the retry policy defined on the connector.
     If the retry policy is None, just leave the `get_df` implementation as is.
     """
-    def get_df_and_retry(self: ToucanConnector, data_source: ToucanDataSource) -> pd.DataFrame:
+    @wraps(func)
+    def get_func_and_retry(self, *args, **kwargs):
         if self.retry_decorator:
-            return self.retry_decorator(get_df)(self, data_source)
+            return self.retry_decorator(func)(self, *args, **kwargs)
         else:
-            return get_df(self, data_source)
-    return get_df_and_retry
+            return func(self, *args, **kwargs)
+    return get_func_and_retry
 
 
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
@@ -154,9 +154,6 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     def __init_subclass__(cls):
         try:
             cls.data_source_model = cls.__fields__.pop('data_source_model').type_
-            # only wrap get_df if the class actually implements it
-            if 'get_df' in cls.__dict__:
-                cls.get_df = decorate_get_df_with_retry(cls.get_df)
             cls.logger = logging.getLogger(cls.__name__)
         except KeyError as e:
             raise TypeError(f'{cls.__name__} has no {e} attribute.')
@@ -168,19 +165,33 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
                            logger=self.logger)
 
     @abstractmethod
-    def get_df(self, data_source: ToucanDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: ToucanDataSource):
         """Main method to retrieve a pandas dataframe"""
 
-    def get_df_and_count(self, data_source: ToucanDataSource, limit: Union[int, None]) -> dict:
+    @decorate_func_with_retry
+    def get_df(self, data_source: ToucanDataSource,
+               permissions: Union[str, None]=None) -> pd.DataFrame:
+        """
+        Method to retrieve the data as a pandas dataframe
+        filtered by permissions
+        """
+        res = self._retrieve_data(data_source)
+        if permissions is not None:
+            res = res.query(permissions)
+        return res
+
+    def get_df_and_count(self, data_source: ToucanDataSource,
+                         permissions: Union[str, None]=None,
+                         limit: Union[int, None]=None) -> dict:
         """
         Method to retrieve a part of the data as a pandas dataframe
-        and the total size
+        and the total size filtered with permissions
         """
-        df = self.get_df(data_source)
+        df = self.get_df(data_source, permissions)
         count = len(df)
         return {'df': df[:limit], 'count': count}
 
-    def explain(self, data_source: ToucanDataSource):
+    def explain(self, data_source: ToucanDataSource, permissions: Union[str, None]=None):
         """Method to give metrics about the query"""
         return None
 

@@ -27,7 +27,7 @@ class GoogleSpreadsheetConnector(ToucanConnector):
                         'https://www.googleapis.com/auth/spreadsheets',
                         'https://spreadsheets.google.com/feeds']
 
-    def get_df(self, data_source):
+    def _retrieve_data(self, data_source):
         credentials = ServiceAccountCredentials.from_json_keyfile_dict(
             self.credentials.dict(),
             self.scope

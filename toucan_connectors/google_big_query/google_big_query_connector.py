@@ -24,7 +24,7 @@ class GoogleBigQueryConnector(ToucanConnector):
     dialect: Dialect = Dialect.legacy
     scopes: List[str] = ["https://www.googleapis.com/auth/bigquery"]
 
-    def get_df(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:
         """
         Uses Pandas read_gbq method to extract data from Big Query into a dataframe
         See: http://pandas.pydata.org/pandas-docs/stable/generated/pandas.io.gbq.read_gbq.html

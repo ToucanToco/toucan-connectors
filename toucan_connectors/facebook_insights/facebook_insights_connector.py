@@ -81,7 +81,7 @@ class FacebookInsightsDataSource(ToucanDataSource):
 class FacebookInsightsConnector(ToucanConnector):
     data_source_model: FacebookInsightsDataSource
 
-    def get_df(self, data_source: FacebookInsightsDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: FacebookInsightsDataSource) -> pd.DataFrame:
         """Return the concatenated insights for all pages.
 
         Insight values will be flattened in the output dataframe. Here are the

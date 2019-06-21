@@ -30,7 +30,7 @@ class ToucanTocoConnector(ToucanConnector):
     username: str
     password: str
 
-    def get_df(self, data_source: ToucanTocoDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: ToucanTocoDataSource) -> pd.DataFrame:
         def g(o): return o.get().json()
 
         tc = ToucanClient(self.host, auth=(self.username, self.password))

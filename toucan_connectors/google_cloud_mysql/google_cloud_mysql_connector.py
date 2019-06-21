@@ -41,7 +41,7 @@ class GoogleCloudMySQLConnector(ToucanConnector):
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def get_df(self, data_source: GoogleCloudMySQLDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GoogleCloudMySQLDataSource) -> pd.DataFrame:
         connection = pymysql.connect(**self.connection_params)
 
         df = pd.read_sql(data_source.query, con=connection)
