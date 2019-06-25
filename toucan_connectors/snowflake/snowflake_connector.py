@@ -35,7 +35,7 @@ class SnowflakeConnector(ToucanConnector):
     account: str
     ocsp_response_cache_filename: Path = None
 
-    def get_df(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         connection = snowflake.connector.connect(
             user=self.user, password=self.password, account=self.account,
             database=data_source.database, warehouse=data_source.warehouse,

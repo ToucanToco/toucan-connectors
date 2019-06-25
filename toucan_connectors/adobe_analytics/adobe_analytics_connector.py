@@ -54,7 +54,7 @@ class AdobeAnalyticsConnector(ToucanConnector):
     password: str
     endpoint: str = Client.DEFAULT_ENDPOINT
 
-    def get_df(self, data_source: AdobeAnalyticsDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: AdobeAnalyticsDataSource) -> pd.DataFrame:
         suites = Client(self.username, self.password, self.endpoint).suites()
         df = suites[data_source.suite_id].download(data_source.report_definition)
         df['suite_id'] = data_source.suite_id

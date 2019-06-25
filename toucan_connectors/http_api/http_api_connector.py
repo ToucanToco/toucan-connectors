@@ -85,7 +85,7 @@ class HttpAPIConnector(ToucanConnector):
             HttpAPIConnector.logger.error(f'Could not transform {data} using {jq_filter}')
             raise
 
-    def get_df(self, data_source: HttpAPIDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: HttpAPIDataSource) -> pd.DataFrame:
 
         if self.auth:
             session = self.auth.get_session()

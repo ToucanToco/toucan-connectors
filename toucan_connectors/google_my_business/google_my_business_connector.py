@@ -54,7 +54,7 @@ class GoogleMyBusinessConnector(ToucanConnector):
                         discoveryServiceUrl=DISCOVERY_URI)
         return service
 
-    def get_df(self, data_source: GoogleMyBusinessDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GoogleMyBusinessDataSource) -> pd.DataFrame:
         service = self.build_service()
         accounts = service.accounts().list().execute()
         name = accounts['accounts'][0]['name']

@@ -27,7 +27,7 @@ class OracleSQLConnector(ToucanConnector):
         }
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def get_df(self, data_source: OracleSQLDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: OracleSQLDataSource) -> pd.DataFrame:
         connection = cx_Oracle.connect(**self.connection_params)
 
         query = data_source.query[:-1] if data_source.query.endswith(';') else data_source.query

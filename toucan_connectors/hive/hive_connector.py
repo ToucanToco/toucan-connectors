@@ -21,7 +21,7 @@ class HiveConnector(ToucanConnector):
     password: str = None
     database: str = 'default'
 
-    def get_df(self, data_source: HiveDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: HiveDataSource) -> pd.DataFrame:
         cursor = hive.connect(
             host=self.host, port=self.port, username=self.username, database=self.database,
             auth=self.auth, configuration=self.configuration,

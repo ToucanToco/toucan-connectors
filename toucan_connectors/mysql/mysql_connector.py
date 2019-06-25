@@ -323,7 +323,7 @@ class MySQLConnector(ToucanConnector):
             df[col] = str_df[col]
         return df
 
-    def get_df(self, datasource):
+    def _retrieve_data(self, datasource):
         """
         Transform a table into a DataFrame and recursively merge tables
         with a foreign key.

@@ -18,6 +18,7 @@ def test_defaut_retry_policy_is_noop():
 def test_retry_on_single_exception():
     retry_policy = RetryPolicy(retry_on=(KeyError,))
     logbook = []
+
     @retry_policy.retry_decorator()
     def myfunc():
         if not logbook:
@@ -30,6 +31,7 @@ def test_retry_on_single_exception():
 def test_no_retry_on_unexpectd_exception():
     retry_policy = RetryPolicy(retry_on=(KeyError,))
     logbook = []
+
     @retry_policy.retry_decorator()
     def myfunc():
         if not logbook:
@@ -43,6 +45,7 @@ def test_no_retry_on_unexpectd_exception():
 def test_retry_on_multiple_exceptions():
     retry_policy = RetryPolicy(retry_on=(KeyError, ValueError))
     logbook = []
+
     @retry_policy.retry_decorator()
     def myfunc():
         if not logbook:
@@ -58,6 +61,7 @@ def test_retry_on_multiple_exceptions():
 def test_max_attempts():
     retry_policy = RetryPolicy(max_attempts=3)
     logbook = []
+
     @retry_policy.retry_decorator()
     def myfunc(max_attempts):
         if len(logbook) < max_attempts:
@@ -77,6 +81,7 @@ def test_max_attempts():
 def test_max_delay():
     retry_policy = RetryPolicy(max_delay=1)
     logbook = [None]
+
     @retry_policy.retry_decorator()
     def myfunc():
         logbook[0] = time()
@@ -91,6 +96,7 @@ def test_max_delay():
 def test_wait_time():
     retry_policy = RetryPolicy(wait_time=0.5)
     logbook = []
+
     @retry_policy.retry_decorator()
     def myfunc():
         if len(logbook) < 3:
@@ -106,6 +112,7 @@ def test_wait_time():
 def test_mix_attempts_and_max_delay():
     retry_policy = RetryPolicy(wait_time=0.5, max_attempts=10, max_delay=2)
     logbook = []
+
     @retry_policy.retry_decorator()
     def myfunc():
         logbook.append(time())

@@ -33,7 +33,7 @@ class MicroStrategyConnector(ToucanConnector):
     password: str
     project_id: str
 
-    def get_df(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
         """Retrieves cube or report data, flattens return dataframe"""
         c = Client(self.base_url, self.project_id, self.username, self.password)
 

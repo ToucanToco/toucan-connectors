@@ -37,7 +37,7 @@ class MSSQLConnector(ToucanConnector):
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def get_df(self, datasource):
+    def _retrieve_data(self, datasource):
         connection = pymssql.connect(**self.connection_params)
 
         df = pd.read_sql(datasource.query, con=connection)

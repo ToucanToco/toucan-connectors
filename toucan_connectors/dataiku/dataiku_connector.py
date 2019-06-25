@@ -21,7 +21,7 @@ class DataikuConnector(ToucanConnector):
     apiKey: str
     project: str
 
-    def get_df(self, data_source: DataikuDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: DataikuDataSource) -> pd.DataFrame:
         client = dataikuapi.DSSClient(self.host, self.apiKey)
         data_url = f'/projects/{self.project}/datasets/{data_source.dataset}/data/'
         stream = client._perform_raw("GET", data_url, params={"format": "tsv-excel-header"})

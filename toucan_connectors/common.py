@@ -1,7 +1,9 @@
-from contextlib import suppress
-from enum import Enum
+import ast
 import json
 import re
+from abc import ABCMeta, ABC, abstractmethod
+from contextlib import suppress
+from enum import Enum
 from typing import List
 
 from google.oauth2.service_account import Credentials
@@ -127,3 +129,102 @@ def nosql_apply_parameters_to_query(query, parameters):
 
     # now we can safely interpolate the str repr of the query and the parameters
     return json.loads(re_query % json_parameters)
+
+
+class AstTranslator(ABC):
+    def resolve(self, elt):
+        elt_name = elt.__class__.__name__
+        try:
+            method = getattr(self, elt_name)
+        except AttributeError:
+            raise Exception(f'Missing method for {elt_name}')
+        return method
+
+    def translate(self, elt):
+        return self.resolve(elt)(elt)
+
+    def parse(self, expr):
+        ex = ast.parse(expr, mode='eval')
+        return self.translate(ex.body)
+
+
+class Expression(AstTranslator, metaclass=ABCMeta):
+    @abstractmethod
+    def BoolOp(self, op):
+        """Boolean expressions with or/and """
+
+    @abstractmethod
+    def And(self, op):
+        """Boolean operator and """
+
+    @abstractmethod
+    def Or(self, op):
+        """Boolean operator and """
+
+    @abstractmethod
+    def Compare(self, compare):
+        """Expression with left, operator and right elements"""
+
+
+class Operator(AstTranslator, metaclass=ABCMeta):
+    @abstractmethod
+    def Eq(self, node):
+        """Equal operator"""
+
+    @abstractmethod
+    def NotEq(self, node):
+        """Not equal operator"""
+
+    @abstractmethod
+    def In(self, node):
+        """In operator"""
+
+    @abstractmethod
+    def NotIn(self, node):
+        """Not in operator"""
+
+    @abstractmethod
+    def Gt(self, node):
+        """Greater than operator"""
+
+    @abstractmethod
+    def Lt(self, node):
+        """Less than operator"""
+
+    @abstractmethod
+    def GtE(self, node):
+        """Greater than or equal operator"""
+
+    @abstractmethod
+    def LtE(self, node):
+        """Less than or equal operator"""
+
+
+class Column(AstTranslator, metaclass=ABCMeta):
+    def Name(self, node):
+        """Column name"""
+
+    def Str(self, node):
+        """Column name as str"""
+
+
+class Value(AstTranslator, metaclass=ABCMeta):
+    @abstractmethod
+    def Name(self, node):
+        """Var field"""
+
+    @abstractmethod
+    def Str(self, node):
+        """String field"""
+
+    @abstractmethod
+    def Num(self, node):
+        """String field"""
+
+    @abstractmethod
+    def List(self, node):
+        """List field"""
+
+    @abstractmethod
+    def UnaryOp(self, op):
+        """Value with unary operator +/-"""

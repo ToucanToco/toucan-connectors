@@ -169,7 +169,7 @@ class GoogleAnalyticsConnector(ToucanConnector):
     credentials: GoogleCredentials
     scope: List[str] = [SCOPE]
 
-    def get_df(self, data_source: GoogleAnalyticsDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GoogleAnalyticsDataSource) -> pd.DataFrame:
         credentials = ServiceAccountCredentials.from_json_keyfile_dict(
             self.credentials.dict(), self.scope
         )

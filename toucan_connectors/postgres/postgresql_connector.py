@@ -39,7 +39,7 @@ class PostgresConnector(ToucanConnector):
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def get_df(self, data_source):
+    def _retrieve_data(self, data_source):
         connection = pgsql.connect(**self.connection_params)
 
         query_params = data_source.parameters or {}

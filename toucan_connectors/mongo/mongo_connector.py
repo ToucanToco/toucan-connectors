@@ -10,7 +10,8 @@ from pydantic import validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, \
-    ToucanDataSource
+    ToucanDataSource, decorate_func_with_retry
+from toucan_connectors.mongo.mongo_translator import MongoExpression
 
 PARAM_PATTERN = r'%\(\w*\)s'
 
@@ -52,6 +53,16 @@ def normalize_query(query, parameters):
         if '$sort' in stage and isinstance(stage['$sort'], list):
             stage['$sort'] = SON([x.popitem() for x in stage['$sort']])
 
+    return query
+
+
+def apply_permissions(query, permissions):
+    if permissions:
+        permissions = MongoExpression().parse(permissions)
+        if isinstance(query, dict):
+            query = {'$and': [query, permissions]}
+        else:
+            query.append({'$match': permissions})
     return query
 
 
@@ -156,13 +167,13 @@ class MongoConnector(ToucanConnector):
                 'error': f'Database {self.database!r} does not exist'
             }
 
-    def validate_collection(self, client, collection):
+    def _validate_collection(self, client, collection):
         if collection not in client[self.database].list_collection_names():
             raise UnkwownMongoCollection(f'Collection {collection} doesn\'t exist')
 
-    def execute_query(self, data_source):
+    def _execute_query(self, data_source):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-        self.validate_collection(client, data_source.collection)
+        self._validate_collection(client, data_source.collection)
         col = client[self.database][data_source.collection]
 
         data_source.query = normalize_query(data_source.query,
@@ -171,30 +182,41 @@ class MongoConnector(ToucanConnector):
         client.close()
         return result
 
-    def get_df(self, data_source):
-        data = self.execute_query(data_source)
-        df = pd.DataFrame(list(data))
-        return df
+    def _retrieve_data(self, data_source):
+        data = self._execute_query(data_source)
+        return pd.DataFrame(list(data))
 
-    def get_df_and_count(self, data_source, limit):
-        if isinstance(data_source.query, dict):
-            data_source.query = [{'$match': data_source.query}]
+    @decorate_func_with_retry
+    def get_df(self, data_source, permissions=None):
+        data_source.query = apply_permissions(data_source.query, permissions)
+        return self._retrieve_data(data_source)
+
+    @decorate_func_with_retry
+    def get_df_and_count(self, data_source, permissions=None, limit=None):
+        data_source.query = apply_permissions(data_source.query, permissions)
         if limit is not None:
-            facet = {"$facet": {'count': [{'$count': 'value'}]}}
-            facet['$facet']['df'] = [{'$limit': limit}]
+            if isinstance(data_source.query, dict):
+                data_source.query = [{'$match': data_source.query}]
+            facet = {"$facet": {
+                'count': data_source.query.copy(),
+                'df': data_source.query.copy(),
+            }}
+            facet['$facet']['count'].append({'$count': 'value'})
+            facet['$facet']['df'].append({'$limit': limit})
             data_source.query.append(facet)
-            res = self.execute_query(data_source).next()
+            res = self._execute_query(data_source).next()
             count = res['count'][0]['value'] if len(res['count']) > 0 else 0
             df = pd.DataFrame(res['df'])
         else:
-            df = self.get_df(data_source)
+            df = self._retrieve_data(data_source)
             count = len(df)
         return {'df': df, 'count': count}
 
-    def explain(self, data_source):
+    @decorate_func_with_retry
+    def explain(self, data_source, permissions=None):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-        self.validate_collection(client, data_source.collection)
-
+        self._validate_collection(client, data_source.collection)
+        data_source.query = apply_permissions(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query,
                                             data_source.parameters)
 
@@ -209,6 +231,8 @@ class MongoConnector(ToucanConnector):
                     details: (. | del(.serverInfo)),
                     summary: (.executionStats | del(.executionStages, .allPlansExecution))
                 }'''
+        client.close()
+
         return jq(f).transform(cursor)
 
 

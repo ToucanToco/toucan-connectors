@@ -116,7 +116,7 @@ class TrelloConnector(ToucanConnector):
 
         return card_with_value
 
-    def get_df(self, data_source: TrelloDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: TrelloDataSource) -> pd.DataFrame:
         # get board caracteristics
         # the following dictionaries are of the form:
         # - keys: id of field

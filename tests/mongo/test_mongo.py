@@ -123,6 +123,32 @@ def test_get_df_live(mongo_connector, mongo_datasource):
     assert df2.equals(df)
 
 
+def test_get_df_with_permissions(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
+    df = mongo_connector.get_df(datasource, permissions='country=="France"')
+    expected = pd.DataFrame({'country': ['France'],
+                             'language': ['French'],
+                             'value': [20]})
+    assert datasource.query == [{'$match': {'$and': [{'domain': 'domain1'},
+                                                     {'country': 'France'}]}}]
+    assert df.shape == (1, 5)
+    assert df.columns.tolist() == ['_id', 'country', 'domain', 'language', 'value']
+    assert df[['country', 'language', 'value']].equals(expected)
+
+    datasource = mongo_datasource(collection='test_col',
+                                  query=[{'$match': {'domain': 'domain1'}}])
+    df = mongo_connector.get_df(datasource, permissions='country=="France"')
+    expected = pd.DataFrame({'country': ['France'],
+                             'language': ['French'],
+                             'value': [20]})
+    assert datasource.query == [{'$match': {'domain': 'domain1'}},
+                                {'$match': {'country': 'France'}}]
+    assert df.shape == (1, 5)
+    assert df.columns.tolist() == ['_id', 'country', 'domain', 'language',
+                                   'value']
+    assert df[['country', 'language', 'value']].equals(expected)
+
+
 def test_get_df_and_count(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.get_df_and_count(datasource, limit=1)
