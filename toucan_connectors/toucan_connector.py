@@ -170,7 +170,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     @decorate_func_with_retry
     def get_df(self, data_source: ToucanDataSource,
-               permissions: Union[str, None] = None) -> pd.DataFrame:
+               permissions: Optional[str] = None) -> pd.DataFrame:
         """
         Method to retrieve the data as a pandas dataframe
         filtered by permissions
@@ -181,8 +181,8 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         return res
 
     def get_df_and_count(self, data_source: ToucanDataSource,
-                         permissions: Union[str, None] = None,
-                         limit: Union[int, None] = None) -> dict:
+                         permissions: Optional[str] = None,
+                         limit: Optional[int] = None) -> dict:
         """
         Method to retrieve a part of the data as a pandas dataframe
         and the total size filtered with permissions
@@ -191,7 +191,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         count = len(df)
         return {'df': df[:limit], 'count': count}
 
-    def explain(self, data_source: ToucanDataSource, permissions: Union[str, None] = None):
+    def explain(self, data_source: ToucanDataSource, permissions: Optional[str] = None):
         """Method to give metrics about the query"""
         return None
 
