@@ -3,7 +3,7 @@ import socket
 from abc import ABCMeta, abstractmethod
 from functools import reduce, wraps
 import operator
-from typing import Iterable, Optional, Type, Union
+from typing import Iterable, Optional, Type
 
 import pandas as pd
 import tenacity as tny
