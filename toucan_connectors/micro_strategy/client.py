@@ -35,6 +35,22 @@ class Client:
 
         return r.json()
 
+    def list_objects(self, types, id: str, offset: int = 0, limit: int = 100):
+        uri = f'{self.base_url}/searches/results'
+        params = {'type': types, 'offset': str(offset), 'limit': str(limit)}
+        if id:
+            params['name'] = id
+
+        r = requests.get(
+            uri,
+            params=params,
+            headers=self.headers,
+            cookies=self.cookies,
+        )
+        r.raise_for_status()
+
+        return r.json()
+
     def report(self, id: str, viewfilter: dict = None, offset: int = 0, limit: int = 100) -> dict:
         return self.query('reports', id, viewfilter, offset, limit)
 

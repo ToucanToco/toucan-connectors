@@ -14,13 +14,19 @@ from .data import (
 class Dataset(str, Enum):
     cube = 'cube'
     report = 'report'
+    search = 'search'
+
+
+class Subtypes(int, Enum):
+    cube = 776
+    report = 768
 
 
 class MicroStrategyDataSource(ToucanDataSource):
     """
     Specify whether you want to use the `cube` or `reports` endpoints and a microstrategy doc id.
     """
-    id: str
+    id: str = None
     dataset: Dataset
     viewfilter: dict = None
     offset: int = 0
@@ -39,11 +45,28 @@ class MicroStrategyConnector(ToucanConnector):
     password: str
     project_id: str
 
+    def _retrieve_metadata(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
+        client = Client(self.base_url, self.project_id, self.username, self.password)
+
+        results = client.list_objects(
+            [st.value for st in Subtypes],
+            data_source.id,
+            data_source.offset,
+            data_source.limit
+        )
+        df = json_normalize(results['result'])
+        subtypes_mapping = {st.value: st.name for st in Subtypes}
+        df['subtype'] = df['subtype'].replace(subtypes_mapping)
+        return df
+
     def _retrieve_data(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
         """Retrieves cube or report data, flattens return dataframe"""
-        c = Client(self.base_url, self.project_id, self.username, self.password)
+        if data_source.dataset == Dataset.search:
+            return self._retrieve_metadata(data_source)
 
-        query_func = getattr(c, data_source.dataset)
+        client = Client(self.base_url, self.project_id, self.username, self.password)
+
+        query_func = getattr(client, data_source.dataset)
         if not data_source.viewfilter:
             results = query_func(
                 id=data_source.id,
