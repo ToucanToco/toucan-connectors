@@ -5,7 +5,10 @@ from pandas.io.json import json_normalize
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 from .client import Client
-from .data import get_attr_names, get_metric_names, flatten_json
+from .data import (
+    get_attr_names, get_metric_names, flatten_json, get_definition,
+    fill_viewfilter_with_ids
+)
 
 
 class Dataset(str, Enum):
@@ -19,6 +22,9 @@ class MicroStrategyDataSource(ToucanDataSource):
     """
     id: str
     dataset: Dataset
+    viewfilter: dict = None
+    offset: int = 0
+    limit: int = 100
 
 
 class MicroStrategyConnector(ToucanConnector):
@@ -37,7 +43,23 @@ class MicroStrategyConnector(ToucanConnector):
         """Retrieves cube or report data, flattens return dataframe"""
         c = Client(self.base_url, self.project_id, self.username, self.password)
 
-        results = getattr(c, data_source.dataset)(data_source.id)
+        query_func = getattr(c, data_source.dataset)
+        if not data_source.viewfilter:
+            results = query_func(
+                id=data_source.id,
+                offset=data_source.offset,
+                limit=data_source.limit,
+            )
+        else:
+            results = query_func(id=data_source.id, limit=0)
+            dfn = get_definition(results)
+            viewfilter = fill_viewfilter_with_ids(data_source.viewfilter, dfn)
+            results = query_func(
+                id=data_source.id,
+                viewfilter=viewfilter,
+                offset=data_source.offset,
+                limit=data_source.limit,
+            )
 
         # Get a list of attributes and metrics
         attributes = get_attr_names(results)

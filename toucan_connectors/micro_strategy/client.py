@@ -19,18 +19,24 @@ class Client:
                 'Accept': 'application/json',
                 'X-MSTR-ProjectID': self.project_id}
 
-    def query(self, dataset: str, id: str, offset: int, limit: int) -> dict:
-        params = {'offset': str(offset), 'limit': str(limit)}
-
+    def query(self, dataset: str, id: str, viewfilter: dict, offset: int, limit: int) -> dict:
         url = f'{self.base_url}/{dataset}/{id}/instances'
+        params = {'offset': str(offset), 'limit': str(limit)}
+        data = {'viewFilter': viewfilter} if viewfilter else None
 
-        r = requests.post(url, params=params, headers=self.headers, cookies=self.cookies)
+        r = requests.post(
+            url,
+            params=params,
+            json=data,
+            headers=self.headers,
+            cookies=self.cookies,
+        )
         r.raise_for_status()
 
         return r.json()
 
-    def report(self, id: str, offset: int = 0, limit: int = 100) -> dict:
-        return self.query('reports', id, offset, limit)
+    def report(self, id: str, viewfilter: dict = None, offset: int = 0, limit: int = 100) -> dict:
+        return self.query('reports', id, viewfilter, offset, limit)
 
-    def cube(self, id: str, offset: int = 0, limit: int = 100) -> dict:
-        return self.query('cubes', id, offset, limit)
+    def cube(self, id: str, viewfilter: dict = None, offset: int = 0, limit: int = 100) -> dict:
+        return self.query('cubes', id, viewfilter, offset, limit)
