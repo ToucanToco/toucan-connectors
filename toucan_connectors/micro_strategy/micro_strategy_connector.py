@@ -2,6 +2,7 @@ from enum import Enum
 
 import pandas as pd
 from pandas.io.json import json_normalize
+from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 from .client import Client
@@ -31,6 +32,7 @@ class MicroStrategyDataSource(ToucanDataSource):
     viewfilter: dict = None
     offset: int = 0
     limit: int = 100
+    parameters: dict = None
 
 
 class MicroStrategyConnector(ToucanConnector):
@@ -76,6 +78,10 @@ class MicroStrategyConnector(ToucanConnector):
         else:
             results = query_func(id=data_source.id, limit=0)
             dfn = get_definition(results)
+            data_source.viewfilter = nosql_apply_parameters_to_query(
+                data_source.viewfilter,
+                data_source.parameters
+            )
             viewfilter = fill_viewfilter_with_ids(data_source.viewfilter, dfn)
             results = query_func(
                 id=data_source.id,

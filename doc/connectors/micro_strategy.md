@@ -39,6 +39,7 @@ DATA_PROVIDERS: [
 * `viewfilter`: dict
 * `offset`: int, default to 0
 * `limit`: int, default to 100 (set it to `-1` if you want no limit)
+* `parameters` dict, optional. Allow to parameterize the viewfilter.
 
 ```coffee
 DATA_SOURCES: [
