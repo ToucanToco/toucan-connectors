@@ -228,3 +228,24 @@ def test_get_df_oauth2_backend_mocked():
     co.get_df(HttpAPIDataSource(**users))
 
     assert len(responses.calls) == 2
+
+
+def test_with_proxies(mocker):
+    req = mocker.patch('toucan_connectors.http_api.http_api_connector.Session.request')
+    mocker.patch('toucan_connectors.http_api.http_api_connector.transform_with_jq').return_value = [{'a': 1}]
+
+    data_provider = {
+        'name': 'test',
+        'type': 'HttpApi',
+        'baseroute': 'https://example.com'
+    }
+
+    data_source = {
+        'proxies': {'https': 'https://eu1.proxysite.com'},
+        'name': 'test',
+        'domain': 'test_domain',
+        'url': '/endpoint'
+    }
+
+    HttpAPIConnector(**data_provider).get_df(HttpAPIDataSource(**data_source))
+    'proxies' in req.call_args[1]

@@ -36,6 +36,7 @@ class Template(BaseModel):
     headers: dict = None
     params: dict = None
     json_: dict = Schema(None, alias='json')
+    proxies: dict = None
 
 
 class HttpAPIDataSource(ToucanDataSource):
@@ -44,9 +45,11 @@ class HttpAPIDataSource(ToucanDataSource):
     headers: dict = None
     params: dict = None
     json_: dict = Schema(None, alias='json')
+    proxies: dict = None
     data: Union[str, dict] = None
     filter: str = "."
-    parameters: dict = None
+
+    parameters: dict = None  # dictionary of variables for interpolation
 
 
 class HttpAPIConnector(ToucanConnector):
@@ -67,7 +70,7 @@ class HttpAPIConnector(ToucanConnector):
         """
         jq_filter = query['filter']
 
-        available_params = ['url', 'method', 'params', 'data', 'json', 'headers']
+        available_params = ['url', 'method', 'params', 'data', 'json', 'headers', 'proxies']
         query = {k: v for k, v in query.items() if k in available_params}
         query['url'] = '/'.join([self.baseroute.rstrip('/'), query['url'].lstrip('/')])
 
