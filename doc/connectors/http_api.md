@@ -42,6 +42,7 @@ all data sources using this provider.
 * `json`: dict
 * `headers`: dict
 * `params`: dict
+* `proxies`: dict
 
 
 ## Data source configuration
@@ -51,6 +52,7 @@ all data sources using this provider.
 * `url`: str, required
 * `method`: Method, default to GET
 * `json`: dict
+* `proxies`: dict, cf. [`requests` doc](https://2.python-requests.org/en/master/user/advanced/#id10)
 * `headers`: dict
 * `params`: dict
 * `data`: str or dict
