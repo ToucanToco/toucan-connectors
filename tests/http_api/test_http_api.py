@@ -232,7 +232,8 @@ def test_get_df_oauth2_backend_mocked():
 
 def test_with_proxies(mocker):
     req = mocker.patch('toucan_connectors.http_api.http_api_connector.Session.request')
-    mocker.patch('toucan_connectors.http_api.http_api_connector.transform_with_jq').return_value = [{'a': 1}]
+    f = 'toucan_connectors.http_api.http_api_connector.transform_with_jq'
+    mocker.patch(f).return_value = [{'a': 1}]
 
     data_provider = {
         'name': 'test',
