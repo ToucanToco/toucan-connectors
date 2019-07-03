@@ -1,3 +1,79 @@
+from copy import deepcopy
+from functools import singledispatch
+
+
+def get_definition(results):
+    dfn = deepcopy(results['result']['definition'])
+    attrs = dfn['attributes']
+    for attr in dfn['attributes']:
+        if 'forms' in attr:
+            attr['forms'] = {f['name']: f for f in attr['forms']}
+    dfn['attributes'] = {attr['name']: attr for attr in attrs}
+    dfn['metrics'] = {m['name']: m for m in dfn['metrics']}
+    return dfn
+
+
+def fill_viewfilter_with_ids(vf, dfn):
+    def fill_attribute(attr_name):
+        if '@' in attr_name:
+            attr_name, form_name = attr_name.split('@')
+            dfn_attr = dfn['attributes'][attr_name]
+            return {
+                'type': 'form',
+                'attribute': {
+                    'id': dfn_attr['id'],
+                },
+                'form': {
+                    'id': dfn_attr['forms'][form_name]['id'],
+                },
+            }
+        else:
+            dfn_attr = dfn['attributes'][attr_name]
+            return {
+                'type': 'attribute',
+                'id': dfn_attr['id'],
+            }
+
+    def fill_metric(metric_name):
+        dfn_metric = dfn['metrics'][metric_name]
+        return {
+            'type': 'metric',
+            'id': dfn_metric['id'],
+        }
+
+    def fill_constant(constant, data_type):
+        data_type = data_type or ("Char" if isinstance(constant, str) else "Real")
+        return {
+            'type': 'constant',
+            'dataType': data_type,
+            'value': str(constant),
+        }
+
+    @singledispatch
+    def visit(_):
+        pass
+
+    @visit.register(dict)
+    def visit_dict(d: dict):
+        for v in d.values():
+            visit(v)
+        if 'attribute' in d:
+            d.update(**fill_attribute(d.pop('attribute')))
+        elif 'metric' in d:
+            d.update(**fill_metric(d.pop('metric')))
+        elif 'constant' in d:
+            d.update(**fill_constant(d.pop('constant'), d.get('dataType')))
+
+    @visit.register(list)
+    def visit_list(l: list):
+        for e in l:
+            visit(e)
+
+    vf = deepcopy(vf)
+    visit(vf)
+    return vf
+
+
 def get_attr_names(data: dict) -> dict:
     """Retrieves attribute names from returned data."""
     row = {}
