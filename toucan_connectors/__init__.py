@@ -26,6 +26,7 @@ CONNECTORS_CATALOGUE = {
     'Snowflake': 'snowflake.snowflake_connector.SnowflakeConnector',
     'ToucanToco': 'toucan_toco.toucan_toco_connector.ToucanTocoConnector',
     'Trello': 'trello.trello_connector.TrelloConnector',
+    'Wootric': 'wootric.wootric_connector.WootricConnector',
 }
 ALL_CONNECTOR_TYPES = list(CONNECTORS_CATALOGUE)
 AVAILABLE_CONNECTORS = {}
