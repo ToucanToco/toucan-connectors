@@ -28,6 +28,7 @@ extras_require = {
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
 install_requires = [
+    'aiohttp',
     'pydantic',
     'tenacity',
     'toucan_data_sdk',
