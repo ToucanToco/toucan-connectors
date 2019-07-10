@@ -14,5 +14,5 @@ class cap(TYPE)Connector(ToucanConnector):
     username: str
     password: str
 
-    def get_df(self, data_source: cap(TYPE)DataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: cap(TYPE)DataSource) -> pd.DataFrame:
         pass
