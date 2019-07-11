@@ -10,15 +10,15 @@ extras_require = {
     'google_analytics': google_credentials_deps + ['google-api-python-client', 'oauth2client'],
     'google_big_query': google_credentials_deps + ['pandas_gbq'],
     'google_cloud_mysql': google_credentials_deps + ['PyMySQL>=0.8.0'],
-    'google_my_business': google_credentials_deps + ['jq', 'google-api-python-client>=1.7.5'],
+    'google_my_business': google_credentials_deps + ['google-api-python-client>=1.7.5'],
     'google_spreadsheet': google_credentials_deps + ['gspread>=3', 'oauth2client'],
     'hive': ['pyhive[hive]'],
-    'http_api': ['jq', 'oauthlib', 'requests', 'requests_oauthlib'],
+    'http_api': ['oauthlib', 'requests', 'requests_oauthlib'],
     'micro_strategy': ['requests'],
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
     'mysql': ['PyMySQL>=0.8.0'],
-    'odata': ['jq', 'oauthlib', 'requests_oauthlib', 'tctc_odata'],
+    'odata': ['oauthlib', 'requests_oauthlib', 'tctc_odata'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'sap_hana': ['pyhdb>=0.3.4'],
@@ -32,6 +32,7 @@ install_requires = [
     'pydantic',
     'tenacity',
     'toucan_data_sdk',
+    'jq'
 ]
 
 classifiers = [
