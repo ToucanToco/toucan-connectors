@@ -5,7 +5,7 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-from toucan_connectors.common import GoogleCredentials
+from toucan_connectors.google_credentials import GoogleCredentials
 
 
 class GoogleSpreadsheetDataSource(ToucanDataSource):

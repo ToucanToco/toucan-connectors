@@ -1,24 +1,23 @@
 from setuptools import setup, find_packages
 
-google_credentials_deps = ['requests', 'requests_oauthlib', 'oauthlib']
+auth_deps = ['oauthlib', 'requests_oauthlib']
 extras_require = {
     'adobe': ['adobe_analytics'],
     'azure_mssql': ['pyodbc'],
     'dataiku': ['dataiku-api-client'],
     'elasticsearch': ['elasticsearch'],
     'facebook': ['facebook-sdk'],
-    'google_analytics': google_credentials_deps + ['google-api-python-client', 'oauth2client'],
-    'google_big_query': google_credentials_deps + ['pandas_gbq'],
-    'google_cloud_mysql': google_credentials_deps + ['PyMySQL>=0.8.0'],
-    'google_my_business': google_credentials_deps + ['google-api-python-client>=1.7.5'],
-    'google_spreadsheet': google_credentials_deps + ['gspread>=3', 'oauth2client'],
+    'google_analytics': ['google-api-python-client', 'oauth2client'],
+    'google_big_query': ['pandas_gbq'],
+    'google_cloud_mysql': ['PyMySQL>=0.8.0'],
+    'google_my_business': ['google-api-python-client>=1.7.5'],
+    'google_spreadsheet': ['gspread>=3', 'oauth2client'],
     'hive': ['pyhive[hive]'],
-    'http_api': ['oauthlib', 'requests', 'requests_oauthlib'],
-    'micro_strategy': ['requests'],
+    'http_api': auth_deps,
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3'],
     'mysql': ['PyMySQL>=0.8.0'],
-    'odata': ['oauthlib', 'requests_oauthlib', 'tctc_odata'],
+    'odata': auth_deps + ['tctc_odata'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'sap_hana': ['pyhdb>=0.3.4'],
@@ -29,10 +28,11 @@ extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
 install_requires = [
     'aiohttp',
+    'jq',
     'pydantic',
+    'requests',
     'tenacity',
-    'toucan_data_sdk',
-    'jq'
+    'toucan_data_sdk'
 ]
 
 classifiers = [

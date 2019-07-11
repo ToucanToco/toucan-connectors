@@ -1,7 +1,7 @@
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
-from toucan_connectors.common import GoogleCredentials
+from toucan_connectors.google_credentials import GoogleCredentials
 from toucan_connectors.google_big_query.google_big_query_connector import (
     GoogleBigQueryConnector, GoogleBigQueryDataSource
 )

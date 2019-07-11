@@ -6,7 +6,8 @@ import pandas as pd
 from pydantic import BaseModel
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-from toucan_connectors.common import GoogleCredentials, nosql_apply_parameters_to_query
+from toucan_connectors.google_credentials import GoogleCredentials
+from toucan_connectors.common import nosql_apply_parameters_to_query
 
 API = 'analyticsreporting'
 SCOPE = 'https://www.googleapis.com/auth/analytics.readonly'

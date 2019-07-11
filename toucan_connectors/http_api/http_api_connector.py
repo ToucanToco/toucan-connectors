@@ -8,7 +8,7 @@ from typing import Union
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.common import Auth
+from toucan_connectors.auth import Auth
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
