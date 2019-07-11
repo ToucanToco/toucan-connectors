@@ -41,3 +41,5 @@
 * [SnowflakeConnector](connectors/snowflake.md)
 
 * [ToucanTocoConnector](connectors/toucan_toco.md)
+
+* [WootricConnector](connectors/wootric.md)
