@@ -4,7 +4,7 @@ from typing import List
 import pandas as pd
 import pandas_gbq
 
-from toucan_connectors.common import GoogleCredentials
+from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -33,10 +33,8 @@ class GoogleBigQueryConnector(ToucanConnector):
             for each query. This is necessary when extracting multiple data to avoid the error:
             [Errno 54] Connection reset by peer
         """
-        credentials = (self.credentials
-                       .get_google_oauth2_credentials()
-                       .with_scopes(self.scopes)
-                       )
+        credentials = (get_google_oauth2_credentials(self.credentials)
+                       .with_scopes(self.scopes))
         return pandas_gbq.read_gbq(
             query=data_source.query,
             project_id=self.credentials.project_id,

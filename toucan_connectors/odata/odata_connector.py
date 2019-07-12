@@ -2,7 +2,7 @@ import pandas as pd
 from odata import ODataService
 from odata.metadata import MetaData
 
-from toucan_connectors.common import Auth
+from toucan_connectors.auth import Auth
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 

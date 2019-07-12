@@ -1,6 +1,7 @@
 import responses
 
-from toucan_connectors.common import Auth, CustomTokenServer, nosql_apply_parameters_to_query
+from toucan_connectors.auth import Auth, CustomTokenServer
+from toucan_connectors.common import nosql_apply_parameters_to_query
 
 
 def test_apply_parameter_to_query_do_nothing():
