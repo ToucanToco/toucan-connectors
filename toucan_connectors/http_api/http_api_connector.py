@@ -49,8 +49,6 @@ class HttpAPIDataSource(ToucanDataSource):
     data: Union[str, dict] = None
     filter: str = "."
 
-    parameters: dict = None  # dictionary of variables for interpolation
-
 
 class HttpAPIConnector(ToucanConnector):
     data_source_model: HttpAPIDataSource

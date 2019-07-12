@@ -6,7 +6,6 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 class HiveDataSource(ToucanDataSource):
     query: str
-    parameters: dict = None
 
 
 class HiveConnector(ToucanConnector):
