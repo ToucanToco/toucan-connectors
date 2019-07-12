@@ -39,7 +39,7 @@ def nosql_apply_parameters_to_query(query, parameters):
                     for key, value in deepcopy(query).items()}
         elif isinstance(query, list):
             return [_render_query(elt, parameters) for elt in deepcopy(query)]
-        elif isinstance(query, str):
+        elif type(query) is str:
             clean_p = deepcopy(parameters)
             # Add quotes to string parameters to keep type if not complex
             if (re.compile(r"^{{[^({{)}]*}}$").match(query)
