@@ -1,7 +1,7 @@
-import responses
-
-from toucan_connectors.auth import Auth, CustomTokenServer
-from toucan_connectors.common import nosql_apply_parameters_to_query
+from toucan_connectors.common import (
+    nosql_apply_parameters_to_query,
+    render_raw_permissions
+)
 
 
 def test_apply_parameter_to_query_do_nothing():
@@ -13,53 +13,102 @@ def test_apply_parameter_to_query_do_nothing():
     assert res == query
 
 
-def test_apply_parameter_to_query_int_param():
+def test_apply_parameter_to_query():
     """
-    It should work when a paramters is an int
+    It sould work render all parameters
     """
-    query = [{'$match': {'domain': '%(param1)s', 'cat': '%(param2)s'}}]
-    parameters = {'param1': 'yo', 'param2': 1}
-    expected = [{'$match': {'domain': 'yo', 'cat': 1}}]
-    assert nosql_apply_parameters_to_query(query, parameters) == expected
+    tests = [
+        ({'$match': {'domain': 'truc', 'indic': '{{my_indic[0]*my_indic[1]}}'}},
+         {'my_indic': [5, 6]},
+         {'$match': {'domain': 'truc', 'indic': 30}}),
+
+        ({'$match': {'domain': 'truc', 'indic': '{%if my_indic%}1{%else%}2{%endif%}'}},
+         {'my_indic': False},
+         {'$match': {'domain': 'truc', 'indic': 2}}),
+
+        ({'$match': {'$and': [
+            {'domain': 'truc', 'indic0': '{{my_indic[0]}}'},
+            {'indic1': '{{my_indic[1]}}', 'indic2': 'yo_{{my_indic[2]}}'},
+            {'indic_list': '{{my_indic}}'}
+         ]}},
+         {'my_indic': ['0', 1, '2']},
+         {'$match': {'$and': [
+             {'domain': 'truc', 'indic0': '0'},
+             {'indic1': 1, 'indic2': 'yo_2'},
+             {'indic_list': ['0', 1, '2']}
+         ]}}),
+
+        ({'$match': {'$and': [
+            {'domain': 'truc', 'indic0': '%(my_indic_0)s'},
+            {'indic1': '%(my_indic_1)s', 'indic2': 'yo_%(my_indic_2)s'},
+            {'indic_list': '%(my_indic)s'}
+         ]}},
+         {'my_indic_0': '0', 'my_indic_1': 1, 'my_indic_2': '2', 'my_indic': ['0', 1, '2']},
+         {'$match': {'$and': [
+             {'domain': 'truc', 'indic0': '0'},
+             {'indic1': 1, 'indic2': 'yo_2'},
+             {'indic_list': ['0', 1, '2']}
+         ]}})
+    ]
+    for test in tests:
+        assert nosql_apply_parameters_to_query(test[0], test[1]) == test[2]
 
 
-def test_apply_parameter_to_query_in_expression():
-    """
-    It sould work when a parameter is in an expression (e.g. OData)
-    """
-    query = {'entity': 'books', 'query': {
-                '$filter': "title eq '%(title)s'",
-                '$top': "%(top)s"}}
-    parameters = {"title": "the overstory", "top": 3}
-    expected = {'entity': 'books', 'query': {
-                    '$filter': "title eq 'the overstory'",
-                    '$top': 3}}
-    assert nosql_apply_parameters_to_query(query, parameters) == expected
+def test_apply_params_with_missing_param():
+    tests = [
+        ({'domain': 'blah', 'country': {'$ne': '%(country)s'},
+          'city': '%(city)s'},
+         {'city': 'Paris'},
+         {'domain': 'blah', 'country': {}, 'city': 'Paris'}),
+
+        ([{'$match': {'country': '%(country)s', 'city': 'Test'}},
+          {'$match': {'b': 1}}],
+         {'city': 'Paris'},
+         [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}]),
+
+        ({'code': '%(city)s_%(country)s', 'domain': 'Test'},
+         {'city': 'Paris'},
+         {'domain': 'Test'}),
+
+        ({'code': '%(city)s_%(country)s', 'domain': 'Test'},
+         {'city': 'Paris', 'country': 'France'},
+         {'code': 'Paris_France', 'domain': 'Test'}),
+
+        ({'domain': 'blah', 'country': {'$ne': '{{country}}'},
+          'city': '{{city}}'},
+         {'city': 'Paris'},
+         {'domain': 'blah', 'country': {}, 'city': 'Paris'}),
+
+        ([{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}},
+          {'$match': {'b': 1}}],
+         {'city': 'Paris'},
+         [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}]),
+
+        ({'code': '{{city}}_{{country[0]}}', 'domain': 'Test'},
+         {'city': 'Paris'},
+         {'domain': 'Test'}),
+
+        ({'code': '{{city}}_{{country}}', 'domain': 'Test'},
+         {'city': 'Paris', 'country': 'France'},
+         {'code': 'Paris_France', 'domain': 'Test'}),
+
+        ({'code': '{{city}}_{{country}}', 'domain': 'Test'},
+         None,
+         {'domain': 'Test'})
+    ]
+    for test in tests:
+        assert nosql_apply_parameters_to_query(test[0], test[1]) == test[2]
 
 
-@responses.activate
-def test_custom_token_server():
-    auth = Auth(type='custom_token_server',
-                args=['POST', 'https://example.com'],
-                kwargs={'data': {'user': 'u', 'password ': 'p'}, 'filter': '.token'})
+def test_render_raw_permission_no_params():
+    query = '(indic0 == 0 or indic1 == 1)'
+    assert render_raw_permissions(query, None) == query
 
-    session = auth.get_session()
-    assert isinstance(session.auth, CustomTokenServer)
 
-    responses.add(responses.POST, 'https://example.com', json={'token': 'a'})
-
-    # dummy request class just to introspect headers
-    class TMP:
-        headers = {}
-
-    session.auth(TMP())
-    assert TMP.headers['Authorization'] == 'Bearer a'
-
-    # custom_token_server with its own auth class
-    responses.add(responses.POST, 'https://example.com', json={'token': 'a'})
-    session = Auth(type='custom_token_server',
-                   args=['POST', 'https://example.com'],
-                   kwargs={'auth': {'type': 'basic', 'args': ['u', 'p']}}).get_session()
-
-    session.auth(TMP())
-    assert responses.calls[1].request.headers['Authorization'].startswith('Basic')
+def test_render_raw_permission():
+    query = '(indic0 == {{my_indic[0]}} or indic1 == {{my_indic[1]}}) and ' \
+            'indic2 == "yo_{{my_indic[2]}}" and indic_list == {{my_indic}}'
+    params = {'my_indic': ['0', 1, '2']}
+    expected = '(indic0 == "0" or indic1 == 1) and ' \
+               'indic2 == "yo_2" and indic_list == [\'0\', 1, \'2\']'
+    assert render_raw_permissions(query, params) == expected

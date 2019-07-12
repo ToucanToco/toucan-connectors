@@ -9,6 +9,8 @@ import pandas as pd
 import tenacity as tny
 from pydantic import BaseModel
 
+from toucan_connectors.common import render_raw_permissions
+
 
 class ToucanDataSource(BaseModel):
     domain: str
@@ -17,6 +19,7 @@ class ToucanDataSource(BaseModel):
     load: bool = True
     live_data: bool = False
     validation: list = None
+    parameters: dict = None
 
     class Config:
         extra = 'forbid'
@@ -177,7 +180,9 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         res = self._retrieve_data(data_source)
         if permissions is not None:
-            res = res.query(permissions)
+            print(data_source)
+            rendered_permissions = render_raw_permissions(permissions, data_source.parameters)
+            res = res.query(rendered_permissions)
         return res
 
     def get_df_and_count(self, data_source: ToucanDataSource,

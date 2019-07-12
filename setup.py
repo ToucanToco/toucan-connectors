@@ -29,6 +29,7 @@ extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 install_requires = [
     'aiohttp',
     'jq',
+    'jinja2',
     'pydantic',
     'requests',
     'tenacity',

@@ -10,10 +10,7 @@ from bson.son import SON
 from toucan_connectors.mongo.mongo_connector import (
     MongoDataSource, MongoConnector, UnkwownMongoCollection
 )
-from toucan_connectors.mongo.mongo_connector import (
-    handle_missing_params,
-    normalize_query
-)
+from toucan_connectors.mongo.mongo_connector import normalize_query
 
 
 @pytest.fixture(scope='module')
@@ -189,55 +186,6 @@ def test_unknown_collection(mongo_connector, mongo_datasource):
         datasource = mongo_datasource(collection='unknown', query={})
         mongo_connector.get_df(datasource)
     assert str(exc_info.value) == "Collection unknown doesn't exist"
-
-
-def test_handle_missing_param():
-    params = {'city': 'Paris'}
-
-    query = {
-        'domain': 'blah',
-        'country': {'$ne': '%(country)s'},
-        'city': '%(city)s'
-    }
-
-    assert handle_missing_params(query, params) == {
-        'domain': 'blah',
-        'country': {},
-        'city': '%(city)s'
-    }
-
-    query = [
-        {'$match': {'country': '%(country)s', 'city': 'Test'}},
-        {'$match': {'b': 1}}
-    ]
-
-    assert handle_missing_params(query, params) == [
-        {'$match': {'city': 'Test'}},
-        {'$match': {'b': 1}}
-    ]
-
-    query = {'code': '%(city)s_%(country)s', 'domain': 'Test'}
-    assert handle_missing_params(query, params) == {'domain': 'Test'}
-
-    query = [
-        {'$match': {'country': '%(country)s', 'city': 'Test'}},
-        {'$project': {'b': {'$divide': ['__VOID__', '$a']}}}
-    ]
-
-    assert handle_missing_params(query, params) == [
-        {'$match': {'city': 'Test'}},
-        {'$project': {'b': {'$divide': ['__VOID__', '$a']}}}
-    ]
-
-    query = [
-        {'$match': {'country': '%(country)s', 'city': 'Test'}},
-        {'$project': {'b': {'$divide': ['$a', 1]}}}
-    ]
-
-    assert handle_missing_params(query, params) == [
-        {'$match': {'city': 'Test'}},
-        {'$project': {'b': {'$divide': ['$a', 1]}}}
-    ]
 
 
 def test_normalize_query():
