@@ -29,7 +29,7 @@ def nosql_apply_parameters_to_query(query, parameters):
         elif isinstance(res, list):
             return [_prepare_result(e) for e in res]
         elif isinstance(res, dict):
-            return {k: _prepare_result(v) for k, v in res}
+            return {k: _prepare_result(v) for k, v in res.items()}
         else:
             return res
 
@@ -76,7 +76,7 @@ def nosql_apply_parameters_to_query(query, parameters):
                     missing_params = []
                     for m in matches:
                         try:
-                            eval(m, params)
+                            eval(m, deepcopy(params))
                         except Exception:
                             missing_params.append(m)
                     if any(missing_params):

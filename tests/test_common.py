@@ -48,6 +48,18 @@ def test_apply_parameter_to_query():
              {'domain': 'truc', 'indic0': '0'},
              {'indic1': 1, 'indic2': 'yo_2'},
              {'indic_list': ['0', 1, '2']}
+         ]}}),
+
+        ({'$match': {'$and': [
+            {'domain': 'truc', 'indic0': '{{my_indic["zero"]}}'},
+            {'indic1': '{{my_indic["one"]}}', 'indic2': 'yo_{{my_indic["two"]}}'},
+            {'indic_list': '{{my_indic}}'}
+        ]}},
+         {'my_indic': {'zero': '0', 'one': 1, 'two': '2'}},
+         {'$match': {'$and': [
+             {'domain': 'truc', 'indic0': '0'},
+             {'indic1': 1, 'indic2': 'yo_2'},
+             {'indic_list': {'zero': '0', 'one': 1, 'two': '2'}}
          ]}})
     ]
     for test in tests:
