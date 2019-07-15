@@ -14,6 +14,35 @@ from toucan_connectors.toucan_connector import (
 )
 
 
+def _create_filter_agg(query, parents=None):
+    key = next(iter(query))
+    if parents is None:
+        filter = '.aggregations'
+        parents = [key]
+    else:
+        filter = f'${parents[-1]}'
+        parents.append(key)
+    filter += f'.{key}.buckets[] as ${key}'
+    if 'aggs' in query[key]:
+        filter += f' | ' + _create_filter_agg(query[key]['aggs'], parents)
+    else:
+        filter += ' | {'
+        for p in parents:
+            filter += f'"{p}": ${p}.key, '
+        filter += f'"count": ${parents[-1]}.doc_count}}'
+    return filter
+
+
+def _read_response(query, response):
+    if 'aggs' in query:
+        filter = _create_filter_agg(query['aggs'])
+    else:
+        filter = ".hits.hits[]._source"
+
+    res = jq(filter).transform(response, multiple_output=True)
+    return res
+
+
 class ElasticsearchHost(BaseModel):
     url: str
     port: int = None
@@ -70,11 +99,12 @@ class ElasticsearchConnector(ToucanConnector):
             body=data_source.body
         )
 
-        filter = ""
         if data_source.search_method == SearchMethod.msearch:
-            filter = ".responses[]"
-        filter = filter + ".hits.hits[]._source"
+            res = []
+            for query, data in zip(data_source.body[1::2], response['responses']):
+                res += _read_response(query, data)
+        else:
+            res = _read_response(data_source.body, response)
 
-        res = jq(filter).transform(response, multiple_output=True)
         df = json_normalize(res)
         return df

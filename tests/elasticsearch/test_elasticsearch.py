@@ -111,3 +111,43 @@ def test_get_df(elasticsearch):
     data = con.get_df(ds_msearch)
     assert list(data.columns) == ['adress.city', 'best_song']
     assert all(data.loc[data['adress.city'].isnull(), 'best_song'] == 'Africa')
+
+
+def test_get_agg(elasticsearch):
+    con = ElasticsearchConnector(
+        name='test',
+        hosts=[
+            {
+                'url': 'http://localhost',
+                'port': elasticsearch['port']
+            }
+        ]
+    )
+    query = {"aggs": {
+                "music": {
+                    "terms": {"field": "best_song.keyword"},
+                    "aggs": {
+                        "ville": {"terms": {"field": "adress.city.keyword"}}}
+                }
+            }}
+    ds_search = ElasticsearchDataSource(
+        domain='test',
+        name='test',
+        index='_all',
+        search_method='search',
+        body=query
+    )
+
+    ds_msearch = ElasticsearchDataSource(
+        domain='test',
+        name='test',
+        search_method='msearch',
+        body=[{}, query]
+    )
+    expected = [{'music': "Beat The Devil's Tattoo", 'ville': 'looo', 'count': 1}]
+
+    data_search = con.get_df(ds_search)
+    assert data_search.to_dict(orient='records') == expected
+
+    data_msearch = con.get_df(ds_msearch)
+    assert data_msearch.to_dict(orient='records') == expected
