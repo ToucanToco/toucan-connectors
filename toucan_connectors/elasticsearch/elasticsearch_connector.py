@@ -24,7 +24,7 @@ def _create_filter_agg(query, parents=None):
         parents.append(key)
     filter += f'.{key}.buckets[] as ${key}'
     if 'aggs' in query[key]:
-        filter += f' | ' + _create_filter_agg(query[key]['aggs'], parents)
+        filter += f' | {_create_filter_agg(query[key]["aggs"], parents)}'
     else:
         filter += ' | {'
         for p in parents:
