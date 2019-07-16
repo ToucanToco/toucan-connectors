@@ -180,7 +180,6 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         res = self._retrieve_data(data_source)
         if permissions is not None:
-            print(data_source)
             rendered_permissions = render_raw_permissions(permissions, data_source.parameters)
             res = res.query(rendered_permissions)
         return res
