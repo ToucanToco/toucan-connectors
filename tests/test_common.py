@@ -63,7 +63,10 @@ def test_apply_parameter_to_query():
          ]}})
     ]
     for test in tests:
-        assert nosql_apply_parameters_to_query(test[0], test[1]) == test[2]
+        query = test[0]
+        params = test[1]
+        expected = test[2]
+        assert nosql_apply_parameters_to_query(query, params) == expected
 
 
 def test_apply_params_with_missing_param():
@@ -109,7 +112,10 @@ def test_apply_params_with_missing_param():
          {'domain': 'Test'})
     ]
     for test in tests:
-        assert nosql_apply_parameters_to_query(test[0], test[1]) == test[2]
+        query = test[0]
+        params = test[1]
+        expected = test[2]
+        assert nosql_apply_parameters_to_query(query, params) == expected
 
 
 def test_render_raw_permission_no_params():
