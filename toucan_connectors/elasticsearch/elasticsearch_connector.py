@@ -1,5 +1,4 @@
 from enum import Enum
-from jq import jq
 from typing import List, Union
 from urllib.parse import urlparse
 
@@ -14,32 +13,50 @@ from toucan_connectors.toucan_connector import (
 )
 
 
-def _create_filter_agg(query, parents=None):
+def flatten_aggregations(query, data, parents):
+    """
+    Read `aggregations` block in data.
+    Example
+      Input data:
+      ```
+        aggregation: {
+            field1 : {
+                buckets: [{
+                    key: 'name1',
+                    field2: {
+                        buckets: [
+                            {key: 'type1', count_document: 5},
+                            {key: 'type2', count_document: 7},
+                        ]
+                    }
+                }]
+            }
+        }
+      ```
+         Result:
+      ```
+      [{'field1': 'name1', 'field2': 'type1', 'count': 5},
+      {'field1': 'name1', 'field2': 'type2', 'count': 7}]
+      ```
+    """
     key = next(iter(query))
-    if parents is None:
-        filter = '.aggregations'
-        parents = [key]
-    else:
-        filter = f'${parents[-1]}'
-        parents.append(key)
-    filter += f'.{key}.buckets[] as ${key}'
-    if 'aggs' in query[key]:
-        filter += f' | {_create_filter_agg(query[key]["aggs"], parents)}'
-    else:
-        filter += ' | {'
-        for p in parents:
-            filter += f'"{p}": ${p}.key, '
-        filter += f'"count": ${parents[-1]}.doc_count}}'
-    return filter
+    res = []
+    for block in data[key]['buckets']:
+        elt = block['key']
+        if 'aggs' in query[key]:
+            sub_query = query[key]['aggs']
+            new_parents = {**parents, key: elt}
+            res = res + flatten_aggregations(sub_query, block, new_parents)
+        else:
+            res.append({**parents, key: elt, 'count': block['doc_count']})
+    return res
 
 
 def _read_response(query, response):
     if 'aggs' in query:
-        filter = _create_filter_agg(query['aggs'])
+        res = flatten_aggregations(query['aggs'], response['aggregations'], {})
     else:
-        filter = ".hits.hits[]._source"
-
-    res = jq(filter).transform(response, multiple_output=True)
+        res = [elt['_source']for elt in response['hits']['hits']]
     return res
 
 
