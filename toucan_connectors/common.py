@@ -7,6 +7,19 @@ from jinja2 import Template
 from toucan_data_sdk.utils.helpers import slugify
 
 
+RE_PARAM = r'%\(([^(%\()]*)\)s'
+RE_JINJA = r'{{([^({{)}]*)}}'
+
+RE_PARAM_ALONE = r"^" + RE_PARAM + "$"
+RE_JINJA_ALONE = r"^" + RE_JINJA + "$"
+
+# Identify jinja params with no quotes around or complex condition
+RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r"([ )])", RE_JINJA + r"()$"]
+
+RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
+RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
+
+
 def nosql_apply_parameters_to_query(query, parameters):
     """
     WARNING : DO NOT USE THIS WITH VARIANTS OF SQL
@@ -42,8 +55,7 @@ def nosql_apply_parameters_to_query(query, parameters):
         elif type(query) is str:
             clean_p = deepcopy(parameters)
             # Add quotes to string parameters to keep type if not complex
-            if (re.compile(r"^{{[^({{)}]*}}$").match(query)
-                    or re.compile(r"^%\([^(%\()]*\)s$").match(query)):
+            if re.match(RE_PARAM_ALONE, query) or re.match(RE_JINJA_ALONE, query):
                 clean_p = _prepare_parameters(clean_p)
 
             # Render jinja then render parameters `%()s`
@@ -71,8 +83,7 @@ def nosql_apply_parameters_to_query(query, parameters):
             e = {}
             for k, v in elt.items():
                 if isinstance(v, str):
-                    matches = re.findall(r'%\(([^(%\()]*)\)s', v) \
-                              + re.findall(r'{{([^({{)}]*)}}', v)
+                    matches = re.findall(RE_PARAM, v) + re.findall(RE_JINJA, v)
                     missing_params = []
                     for m in matches:
                         try:
@@ -119,11 +130,10 @@ def render_raw_permissions(query, parameters):
     if parameters is None:
         return query
 
-    # Flag params to keep type if not complex
-    patterns = [r"{{([^({{)}]*)}}([ )])", r"{{([^({{)}]*)}}()$"]
-    for pattern in patterns:
-        query = re.sub(pattern, r'{{__keep_type__\1}}\2', query)
-    p_keep_type = re.findall(r'{{(__keep_type__[^({{)}]*)}}', query)
+    # Flag params to keep type if not complex (no quotes or condition)
+    for pattern in RE_JINJA_ALONE_IN_STRING:
+        query = re.sub(pattern, RE_SET_KEEP_TYPE, query)
+    p_keep_type = re.findall(RE_GET_KEEP_TYPE, query)
     for key in p_keep_type:
         query = query.replace(key, slugify(key, separator='_'))
     if len(p_keep_type):
