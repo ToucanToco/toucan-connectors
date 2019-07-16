@@ -118,7 +118,9 @@ class ElasticsearchConnector(ToucanConnector):
 
         if data_source.search_method == SearchMethod.msearch:
             res = []
-            for query, data in zip(data_source.body[1::2], response['responses']):
+            # Body alternate index and query `[index, query, index, query...]`
+            queries = data_source.body[1::2]
+            for query, data in zip(queries, response['responses']):
                 res += _read_response(query, data)
         else:
             res = _read_response(data_source.body, response)
