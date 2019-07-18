@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List, Union
 from urllib.parse import urlparse
+from copy import deepcopy
 
 import pandas as pd
 from elasticsearch import Elasticsearch
@@ -13,7 +14,18 @@ from toucan_connectors.toucan_connector import (
 )
 
 
-def flatten_aggregations(query, data, parents):
+def _is_branch_list(val):
+    res = None
+    if isinstance(val, dict):
+        for k, v in val.items():
+            if _is_branch_list(v):
+                res = True
+    elif isinstance(val, list):
+        res = True
+    return res
+
+
+def _flatten_aggregations(data, parent=None, neighbours=None):
     """
     Read `aggregations` block in data.
     Example
@@ -21,40 +33,66 @@ def flatten_aggregations(query, data, parents):
       ```
         aggregation: {
             field1 : {
-                buckets: [{
-                    key: 'name1',
-                    field2: {
-                        buckets: [
-                            {key: 'type1', count_document: 5},
-                            {key: 'type2', count_document: 7},
-                        ]
-                    }
-                }]
-            }
+                buckets: [
+                    {key: 'name1', count: 5},
+                    {key: 'name2', count: 10}
+                ]
+            },
+            field2: 5,
+            field3 : {
+                buckets: [
+                    {key: 'name3', count: 7}
+                ]
+            },
         }
       ```
          Result:
       ```
-      [{'field1': 'name1', 'field2': 'type1', 'count': 5},
-      {'field1': 'name1', 'field2': 'type2', 'count': 7}]
+      [{'field2': 5, 'field1_bucket_key': 'name1', 'field1_bucket_count': 5},
+      {'field2': 5, 'field1_bucket_key': 'name2', 'field1_bucket_count': 10},
+      {'field2': 5, 'field3_bucket_key': 'name3', 'field3_bucket_count': 7}]
       ```
     """
-    key = next(iter(query))
-    res = []
-    for block in data[key]['buckets']:
-        elt = block['key']
-        if 'aggs' in query[key]:
-            sub_query = query[key]['aggs']
-            new_parents = {**parents, key: elt}
-            res = res + flatten_aggregations(sub_query, block, new_parents)
+    if not neighbours:
+        neighbours = {}
+    if isinstance(data, dict):
+        branch_l = {}
+        for k, v in deepcopy(data).items():
+            if _is_branch_list(v):
+                branch_l[k] = v
+                data.pop(k)
+
+        for k, v in data.items():
+            new_parent = f'{parent}_{k}' if parent else k
+            neighbours = _flatten_aggregations(v, new_parent, neighbours)
+
+        if not branch_l:
+            return neighbours
         else:
-            res.append({**parents, key: elt, 'count': block['doc_count']})
-    return res
+            res = []
+            for k, v in branch_l.items():
+                new_parent = f"{parent}_{k}" if parent else k
+                if isinstance(v, list):  # buckets
+                    new_list = []
+                    for elt in v:
+                        new_elt = _flatten_aggregations(elt, new_parent, neighbours)
+                        if isinstance(new_elt, list):
+                            new_list += new_elt
+                        else:
+                            new_list.append(new_elt)
+                    res += new_list
+                else:
+                    res += _flatten_aggregations(v, new_parent,  neighbours)
+            return res
+    else:
+        return {**{parent: data}, **neighbours}
 
 
-def _read_response(query, response):
-    if 'aggs' in query:
-        res = flatten_aggregations(query['aggs'], response['aggregations'], {})
+def _read_response(response):
+    if 'aggregations' in response:
+        res = _flatten_aggregations(response['aggregations'])
+        if isinstance(res, dict):
+            res = [res]
     else:
         res = [elt['_source']for elt in response['hits']['hits']]
     return res
@@ -121,9 +159,9 @@ class ElasticsearchConnector(ToucanConnector):
             # Body alternate index and query `[index, query, index, query...]`
             queries = data_source.body[1::2]
             for query, data in zip(queries, response['responses']):
-                res += _read_response(query, data)
+                res += _read_response(data)
         else:
-            res = _read_response(data_source.body, response)
+            res = _read_response(response)
 
         df = json_normalize(res)
         return df
