@@ -15,11 +15,12 @@ from toucan_connectors.toucan_connector import (
 
 
 def _is_branch_list(val):
-    res = None
+    res = False
     if isinstance(val, dict):
         for k, v in val.items():
             if _is_branch_list(v):
                 res = True
+                break
     elif isinstance(val, list):
         res = True
     return res
