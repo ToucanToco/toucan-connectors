@@ -1,16 +1,20 @@
+from enum import Enum
+from jq import jq
 from typing import Optional, Union
 from urllib.parse import quote_plus
 
 import pandas as pd
 import pymongo
 from bson.son import SON
-from jq import jq
-from pydantic import validator
+from pydantic import create_model, validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.mongo.mongo_translator import MongoExpression
-from toucan_connectors.toucan_connector import ToucanConnector, \
-    ToucanDataSource, decorate_func_with_retry
+from toucan_connectors.toucan_connector import (
+    ToucanConnector,
+    ToucanDataSource,
+    decorate_func_with_retry
+)
 
 
 def normalize_query(query, parameters):
@@ -37,12 +41,53 @@ def apply_permissions(query, permissions):
     return query
 
 
+def validate_database(client, database):
+    if database not in client.list_database_names():
+        raise UnkwownMongoDatabase(f'Database {database!r} doesn\'t exist')
+
+
+def validate_collection(client, database, collection):
+    if collection not in client[database].list_collection_names():
+        raise UnkwownMongoCollection(f'Collection {collection!r} doesn\'t exist')
+
+
+class StrEnum(str, Enum):
+    """Class to easily make schemas with enum values and type string"""
+
+
 class MongoDataSource(ToucanDataSource):
     """Supports simple, multiples and aggregation queries as desribed in
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
     database: str
     collection: str
     query: Union[dict, list] = {}
+
+    @classmethod
+    def get_form(cls, connector: 'MongoConnector', current_config):
+        """
+        Method to retrieve the form with a current config
+        For example, once the connector is set,
+        - we are able to give suggestions for the `database` field
+        - if `database` is set, we are able to give suggestions for the `collection` field
+        """
+        client = pymongo.MongoClient(connector.uri, ssl=connector.ssl)
+
+        # Add contraints to the schema
+        # the key has to be a valid field
+        # the value is either <default value> or a tuple ( <type>, <default value> )
+        # If the field is required, the <default value> has to be '...' (cf pydantic doc)
+        contraints = {}
+
+        # Always add the suggestions for the available databases
+        available_databases = client.list_database_names()
+        contraints['database'] = (StrEnum('database', {v: v for v in available_databases}), ...)
+
+        if 'database' in current_config:
+            validate_database(client, current_config['database'])
+            available_cols = client[current_config['database']].list_collection_names()
+            contraints['collection'] = (StrEnum('collection', {v: v for v in available_cols}), ...)
+
+        return create_model('FormSchema', **contraints, __base__=cls).schema()
 
 
 class MongoConnector(ToucanConnector):
@@ -128,19 +173,10 @@ class MongoConnector(ToucanConnector):
             'error': None
         }
 
-    @staticmethod
-    def _validate_database_and_collection(client, database, collection):
-        if database not in client.list_database_names():
-            raise UnkwownMongoDatabase(f'Database {database!r} doesn\'t exist')
-
-        if collection not in client[database].list_collection_names():
-            raise UnkwownMongoCollection(f'Collection {collection!r} doesn\'t exist')
-
     def _execute_query(self, data_source):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-        self._validate_database_and_collection(
-            client, data_source.database, data_source.collection
-        )
+        validate_database(client, data_source.database)
+        validate_collection(client, data_source.database, data_source.collection)
         col = client[data_source.database][data_source.collection]
 
         data_source.query = normalize_query(data_source.query,
@@ -182,9 +218,8 @@ class MongoConnector(ToucanConnector):
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-        self._validate_database_and_collection(
-            client, data_source.database, data_source.collection
-        )
+        validate_database(client, data_source.database)
+        validate_collection(client, data_source.database, data_source.collection)
         data_source.query = apply_permissions(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query,
                                             data_source.parameters)

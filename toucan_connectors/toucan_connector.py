@@ -25,6 +25,17 @@ class ToucanDataSource(BaseModel):
         extra = 'forbid'
         validate_assignment = True
 
+    @classmethod
+    def get_form(cls, connector: 'ToucanConnector', current_config):
+        """
+        Method to retrieve the form with a current config
+        Once the connector is set, we are often able to enforce some values depending
+        on what the current `ToucanDataSource` config looks like
+
+        By default, we simply return the model schema.
+        """
+        return cls.schema()
+
 
 class RetryPolicy(BaseModel):
     """Generic "retry" policy management.

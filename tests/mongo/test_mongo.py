@@ -310,3 +310,43 @@ def test_status_bad_username(mongo_connector):
         ],
         'error': 'Authentication failed.'
     }
+
+
+def test_get_form_empty_query(mongo_connector):
+    """It should give suggestions of the databases without changing the rest"""
+    current_config = {}
+    form = MongoDataSource.get_form(mongo_connector, current_config)
+    assert form['required'] == ['domain', 'name', 'database', 'collection']
+    assert form['properties']['database'] == {
+        'title': 'Database',
+        'type': 'string',
+        'enum': ['admin', 'config', 'local', 'toucan']
+    }
+    assert form['properties']['collection'] == {
+        'title': 'Collection',
+        'type': 'string'
+    }
+
+
+def test_get_form_query_with_bad_database(mongo_connector):
+    """It should raise an error"""
+    current_config = {'database': 'qweqwe'}
+    with pytest.raises(UnkwownMongoDatabase):
+        MongoDataSource.get_form(mongo_connector, current_config)
+
+
+def test_get_form_query_with_good_database(mongo_connector):
+    """It should give suggestions of the collections"""
+    current_config = {'database': 'toucan'}
+    form = MongoDataSource.get_form(mongo_connector, current_config)
+    assert form['required'] == ['domain', 'name', 'database', 'collection']
+    assert form['properties']['database'] == {
+        'title': 'Database',
+        'type': 'string',
+        'enum': ['admin', 'config', 'local', 'toucan']
+    }
+    assert form['properties']['collection'] == {
+        'title': 'Collection',
+        'type': 'string',
+        'enum': ['test_col']
+    }
