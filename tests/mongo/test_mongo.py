@@ -224,17 +224,16 @@ def test_status_all_good(mongo_connector):
 
 def test_status_bad_host(mongo_connector):
     mongo_connector.host = 'localhot'
-    assert mongo_connector.get_status() == {
-        'status': False,
-        'details': [
-            ('Hostname resolved', False),
-            ('Port opened', None),
-            ('Host connection', None),
-            ('Authenticated', None),
-            ('Database available', None)
-        ],
-        'error': '[Errno -2] Name or service not known'
-    }
+    status = mongo_connector.get_status()
+    assert status['status'] is False
+    assert status['details'] == [
+        ('Hostname resolved', False),
+        ('Port opened', None),
+        ('Host connection', None),
+        ('Authenticated', None),
+        ('Database available', None)
+    ]
+    assert 'not known' in status['error']
 
 
 def test_status_bad_port(mongo_connector):
