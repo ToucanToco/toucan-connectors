@@ -40,6 +40,7 @@ def apply_permissions(query, permissions):
 class MongoDataSource(ToucanDataSource):
     """Supports simple, multiples and aggregation queries as desribed in
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
+    database: str
     collection: str
     query: Union[dict, list] = {}
 
@@ -50,13 +51,12 @@ class MongoConnector(ToucanConnector):
 
     host: str
     port: int
-    database: str
     username: str = None
     password: str = None
     ssl: bool = False
 
     @validator('password')
-    def password_must_have_a_user(cls, v, values, **kwargs):
+    def password_must_have_a_user(cls, v, values):
         if values['username'] is None:
             raise ValueError('username must be set')
         return v
@@ -78,7 +78,6 @@ class MongoConnector(ToucanConnector):
             'Port opened',
             'Host connection',
             'Authenticated',
-            'Database available'
         ]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
@@ -123,28 +122,26 @@ class MongoConnector(ToucanConnector):
                 'error': str(e)
             }
 
-        # Check if given database actually exists
-        if self.database in client.list_database_names():
-            return {
-                'status': True,
-                'details': self._get_details(4, True),
-                'error': None
-            }
-        else:
-            return {
-                'status': False,
-                'details': self._get_details(4, False),
-                'error': f'Database {self.database!r} does not exist'
-            }
+        return {
+            'status': True,
+            'details': self._get_details(3, True),
+            'error': None
+        }
 
-    def _validate_collection(self, client, collection):
-        if collection not in client[self.database].list_collection_names():
-            raise UnkwownMongoCollection(f'Collection {collection} doesn\'t exist')
+    @staticmethod
+    def _validate_database_and_collection(client, database, collection):
+        if database not in client.list_database_names():
+            raise UnkwownMongoDatabase(f'Database {database!r} doesn\'t exist')
+
+        if collection not in client[database].list_collection_names():
+            raise UnkwownMongoCollection(f'Collection {collection!r} doesn\'t exist')
 
     def _execute_query(self, data_source):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-        self._validate_collection(client, data_source.collection)
-        col = client[self.database][data_source.collection]
+        self._validate_database_and_collection(
+            client, data_source.database, data_source.collection
+        )
+        col = client[data_source.database][data_source.collection]
 
         data_source.query = normalize_query(data_source.query,
                                             data_source.parameters)
@@ -185,12 +182,14 @@ class MongoConnector(ToucanConnector):
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-        self._validate_collection(client, data_source.collection)
+        self._validate_database_and_collection(
+            client, data_source.database, data_source.collection
+        )
         data_source.query = apply_permissions(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query,
                                             data_source.parameters)
 
-        cursor = client[self.database].command(
+        cursor = client[data_source.database].command(
             command="aggregate",
             value=data_source.collection,
             pipeline=data_source.query,
@@ -204,6 +203,10 @@ class MongoConnector(ToucanConnector):
         client.close()
 
         return jq(f).transform(cursor)
+
+
+class UnkwownMongoDatabase(Exception):
+    """raised when a database does not exist"""
 
 
 class UnkwownMongoCollection(Exception):

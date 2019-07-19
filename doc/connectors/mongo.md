@@ -9,7 +9,6 @@ This is the connector used to retrieve loaded data in Toucan Toco interface.
 * `name`: str, required
 * `host`: str, required
 * `port`: int, required
-* `database`: str, required
 * `username`: str
 * `password`: str
 
@@ -19,7 +18,6 @@ DATA_PROVIDERS: [
   name:    '<name>'
   host:    '<host>'
   port:    <port>
-  database:    '<database>'
   username:    '<username>'
   password:    '<password>'
 ,
@@ -35,6 +33,7 @@ Supports simple, multiples and aggregation queries as desribed in
 
 * `domain`: str, required
 * `name`: str, required
+* `database`: str, required
 * `collection`: str, required
 * `query`: `str` (translated to a query `{domain: <value>}`), dict or list, required
 
@@ -42,6 +41,7 @@ Supports simple, multiples and aggregation queries as desribed in
 DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
+  database:    '<database>'
   collection:    '<collection>'
   query:    '<query>'
 ,

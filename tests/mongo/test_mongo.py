@@ -8,7 +8,7 @@ import pytest
 from bson.son import SON
 
 from toucan_connectors.mongo.mongo_connector import (
-    MongoDataSource, MongoConnector, UnkwownMongoCollection
+    MongoDataSource, MongoConnector, UnkwownMongoCollection, UnkwownMongoDatabase
 )
 from toucan_connectors.mongo.mongo_connector import normalize_query
 
@@ -29,30 +29,35 @@ def mongo_server(service_container):
 
 @pytest.fixture
 def mongo_connector(mongo_server):
-    return MongoConnector(name='mycon', host='localhost', database='toucan',
-                          port=mongo_server['port'], username='ubuntu', password='ilovetoucan')
+    return MongoConnector(name='mycon', host='localhost', port=mongo_server['port'],
+                          username='ubuntu', password='ilovetoucan')
 
 
 @pytest.fixture
 def mongo_datasource():
     def f(**kwargs):
-        return MongoDataSource(name='mycon', domain='mydomain', **kwargs)
+        params = {
+            'name': 'mycon',
+            'domain': 'mydomain',
+            'database': 'toucan'
+        }
+        params.update(kwargs)
+        return MongoDataSource(**params)
 
     return f
 
 
 def test_uri():
-    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb')
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123')
     assert connector.uri == 'mongodb://myhost:123'
-    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123',
                                username='myuser')
     assert connector.uri == 'mongodb://myuser@myhost:123'
-    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123',
                                username='myuser', password='mypass')
     assert connector.uri == 'mongodb://myuser:mypass@myhost:123'
     with pytest.raises(ValueError) as exc_info:
-        MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
-                       password='mypass')
+        MongoConnector(name='my_mongo_con', host='myhost', port='123', password='mypass')
     assert 'password\n  username must be set' in str(exc_info.value)
 
 
@@ -84,23 +89,26 @@ def test_get_df(mocker):
         def close(self):
             pass
 
+        def list_database_names(self):
+            return self.data.keys()
+
     snock = mocker.patch('pymongo.MongoClient')
     snock.return_value = MongoMock('toucan', 'test_col')
     aggregate = mocker.patch('pymongo.collection.Collection.aggregate')
 
     mongo_connector = MongoConnector(
-        name='mycon', host='localhost', database='toucan', port=22,
+        name='mycon', host='localhost', port=22,
         username='ubuntu', password='ilovetoucan'
     )
 
     datasource = MongoDataSource(
-        name='mycon', domain='mydomain', collection='test_col',
+        name='mycon', domain='mydomain', database='toucan', collection='test_col',
         query={'domain': 'domain1'}
     )
     mongo_connector.get_df(datasource)
 
     datasource = MongoDataSource(
-        name='mycon', domain='mydomain', collection='test_col',
+        name='mycon', domain='mydomain', database='toucan', collection='test_col',
         query=[{'$match': {'domain': 'domain1'}}]
     )
     mongo_connector.get_df(datasource)
@@ -200,11 +208,18 @@ def test_explain(mongo_connector, mongo_datasource):
     assert list(res.keys()) == ['details', 'summary']
 
 
+def test_unknown_database(mongo_connector, mongo_datasource):
+    with pytest.raises(UnkwownMongoDatabase) as exc_info:
+        datasource = mongo_datasource(database='unknown', collection='test_col', query={})
+        mongo_connector.get_df(datasource)
+    assert str(exc_info.value) == "Database 'unknown' doesn't exist"
+
+
 def test_unknown_collection(mongo_connector, mongo_datasource):
     with pytest.raises(UnkwownMongoCollection) as exc_info:
         datasource = mongo_datasource(collection='unknown', query={})
         mongo_connector.get_df(datasource)
-    assert str(exc_info.value) == "Collection unknown doesn't exist"
+    assert str(exc_info.value) == "Collection 'unknown' doesn't exist"
 
 
 def test_normalize_query():
@@ -223,7 +238,6 @@ def test_status_all_good(mongo_connector):
             ('Port opened', True),
             ('Host connection', True),
             ('Authenticated', True),
-            ('Database available', True)
         ],
         'error': None
     }
@@ -238,7 +252,6 @@ def test_status_bad_host(mongo_connector):
         ('Port opened', None),
         ('Host connection', None),
         ('Authenticated', None),
-        ('Database available', None)
     ]
     assert 'not known' in status['error']
 
@@ -252,7 +265,6 @@ def test_status_bad_port(mongo_connector):
         ('Port opened', False),
         ('Host connection', None),
         ('Authenticated', None),
-        ('Database available', None)
     ]
     assert 'Connection refused' in status['error']
 
@@ -266,7 +278,6 @@ def test_status_bad_port2(mongo_connector):
             ('Port opened', False),
             ('Host connection', None),
             ('Authenticated', None),
-            ('Database available', None)
         ],
         'error': 'getsockaddrarg: port must be 0-65535.'
     }
@@ -282,7 +293,6 @@ def test_status_unreachable(mongo_connector, mocker):
             ('Port opened', True),
             ('Host connection', False),
             ('Authenticated', None),
-            ('Database available', None)
         ],
         'error': 'qwe'
     }
@@ -297,22 +307,6 @@ def test_status_bad_username(mongo_connector):
             ('Port opened', True),
             ('Host connection', True),
             ('Authenticated', False),
-            ('Database available', None)
         ],
         'error': 'Authentication failed.'
-    }
-
-
-def test_status_bad_db(mongo_connector):
-    mongo_connector.database = 'nothere'
-    assert mongo_connector.get_status() == {
-        'status': False,
-        'details': [
-            ('Hostname resolved', True),
-            ('Port opened', True),
-            ('Host connection', True),
-            ('Authenticated', True),
-            ('Database available', False)
-        ],
-        'error': "Database 'nothere' does not exist"
     }
