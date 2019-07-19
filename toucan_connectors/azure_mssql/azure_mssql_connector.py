@@ -10,6 +10,7 @@ CLOUD_HOST = 'database.windows.net'
 
 
 class AzureMSSQLDataSource(ToucanDataSource):
+    database: str
     query: constr(min_length=1)
 
 
@@ -22,7 +23,6 @@ class AzureMSSQLConnector(ToucanConnector):
     host: str
     user: str
     password: str
-    db: str
     connect_timeout: int = None
 
     @property
@@ -34,7 +34,6 @@ class AzureMSSQLConnector(ToucanConnector):
             'driver': '{ODBC Driver 17 for SQL Server}',
             'server': f'{base_host}.{CLOUD_HOST}',
             'user': user,
-            'database': self.db,
             'password': self.password,
             'timeout': self.connect_timeout
         }
@@ -42,7 +41,7 @@ class AzureMSSQLConnector(ToucanConnector):
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _retrieve_data(self, datasource: AzureMSSQLDataSource) -> pd.DataFrame:
-        connection = pyodbc.connect(**self.connection_params)
+        connection = pyodbc.connect(**self.connection_params, database=datasource.database)
 
         df = pd.read_sql(datasource.query, con=connection)
 
