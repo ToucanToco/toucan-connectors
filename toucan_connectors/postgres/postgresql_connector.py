@@ -6,7 +6,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class PostgresDataSource(ToucanDataSource):
-    database: str = None
+    database: str
     query: constr(min_length=1)
 
 
@@ -24,12 +24,13 @@ class PostgresConnector(ToucanConnector):
     port: int = None
     connect_timeout: int = None
 
-    def get_connection_params(self, database):
+    @property
+    def connection_params(self):
         con_params = dict(
             user=self.user,
             host=self.host if self.host else self.hostname,
             client_encoding=self.charset,
-            dbname=database,
+            dbname='postgres',
             password=self.password,
             port=self.port,
             connect_timeout=self.connect_timeout
@@ -38,7 +39,11 @@ class PostgresConnector(ToucanConnector):
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _retrieve_data(self, data_source):
-        connection = pgsql.connect(**self.get_connection_params(data_source.database))
+        connection_params = {
+            **self.connection_params,
+            'dbname': data_source.database
+        }
+        connection = pgsql.connect(**connection_params)
 
         query_params = data_source.parameters or {}
         df = pd.read_sql(data_source.query, con=connection, params=query_params)

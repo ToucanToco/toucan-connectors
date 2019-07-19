@@ -12,7 +12,7 @@ from toucan_connectors.postgres.postgresql_connector import (
 @pytest.fixture(scope='module')
 def postgres_server(service_container):
     def check(host_port):
-        conn = psycopg2.connect(host='127.0.0.1', port=host_port, database='postgres_db',
+        conn = psycopg2.connect(host='127.0.0.1', port=host_port, database='postgres',
                                 user='ubuntu', password='ilovetoucan')
         cur = conn.cursor()
         cur.execute('SELECT 1;')

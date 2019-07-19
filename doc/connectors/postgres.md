@@ -36,7 +36,7 @@ DATA_PROVIDERS: [
 
 * `domain`: str, required
 * `name`: str, required
-* `database`: str
+* `database`: str, required
 * `query`: str (not empty), required
 
 ```coffee
