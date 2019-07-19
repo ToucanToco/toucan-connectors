@@ -160,6 +160,18 @@ def test_get_df_and_count(mongo_connector, mongo_datasource):
     assert res['df'][['country', 'language', 'value']].equals(expected)
 
 
+def test_get_df_and_count_with_group_agg(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query=[
+        {"$match": {'domain': 'domain1'}},
+        {"$group": {"_id": {"country": "$country"}}},
+        {"$project": {"pays": "$_id.country", "_id": 0}}
+    ])
+    res = mongo_connector.get_df_and_count(datasource, limit=1)
+    assert res['count'] == 3
+    assert res['df'].shape == (1, 1)
+    assert res['df'].iloc[0].pays in ['France', 'England', 'Germany']
+
+
 def test_get_df_and_count_no_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.get_df_and_count(datasource, limit=None)

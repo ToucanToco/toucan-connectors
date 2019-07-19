@@ -203,7 +203,7 @@ class MongoConnector(ToucanConnector):
             }}
             facet['$facet']['count'].append({'$count': 'value'})
             facet['$facet']['df'].append({'$limit': limit})
-            data_source.query.append(facet)
+            data_source.query = [facet]
             res = self._execute_query(data_source).next()
             count = res['count'][0]['value'] if len(res['count']) > 0 else 0
             df = pd.DataFrame(res['df'])
