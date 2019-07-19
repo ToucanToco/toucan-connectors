@@ -11,7 +11,6 @@
 * `kerberos_service_name`: str, use with `auth: 'KERBEROS'` only
 * `username`: str
 * `password`: str, use with `auth: 'LDAP'` only
-* `database`: str, default to default
 
 ```coffee
 DATA_PROVIDERS: [
@@ -24,7 +23,6 @@ DATA_PROVIDERS: [
   kerberos_service_name:    '<kerberos_service_name>'
   username:    '<username>'
   password:    '<password>'
-  database:    '<database>'
 ,
   ...
 ]
@@ -35,12 +33,14 @@ DATA_PROVIDERS: [
 
 * `domain`: str, required
 * `name`: str, required
+* `database`: str, default to `'default'`
 * `query`: str, required
 
 ```coffee
 DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
+  database:    '<database>'
   query:    '<query>'
 ,
   ...
