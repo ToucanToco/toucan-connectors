@@ -11,7 +11,6 @@ Import data from PostgreSQL.
   - If you have a host name (eg aeaze.toucan.com), use the `hostname` parameter
   - If you have an IP address (e.g. 1.2.3.4), use the `host` parameter
 * `charset`: str
-* `db`: str
 * `password`: str
 * `port`: int
 * `connect_timeout`: int
@@ -24,7 +23,6 @@ DATA_PROVIDERS: [
   host:    '<host>'
   hostname:    '<hostname>'
   charset:    '<charset>'
-  db:    '<db>'
   password:    '<password>'
   port:    <port>
   connect_timeout:    <connect_timeout>
@@ -38,12 +36,14 @@ DATA_PROVIDERS: [
 
 * `domain`: str, required
 * `name`: str, required
+* `database`: str
 * `query`: str (not empty), required
 
 ```coffee
 DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
+  database:    '<database>'
   query:    '<query>'
 ,
   ...
