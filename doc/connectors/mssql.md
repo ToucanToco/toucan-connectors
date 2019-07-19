@@ -8,7 +8,6 @@ Import data from Microsoft SQL Server.
 * `name`: str, required
 * `host`: str, required
 * `user`: str, required
-* `db`: str
 * `password`: str
 * `port`: int
 * `connect_timeout`: int
@@ -19,7 +18,6 @@ DATA_PROVIDERS: [
   name:    '<name>'
   host:    '<host>'
   user:    '<user>'
-  db:    '<db>'
   password:    '<password>'
   port:    <port>
   connect_timeout:    <connect_timeout>
@@ -33,12 +31,14 @@ DATA_PROVIDERS: [
 
 * `domain`: str, required
 * `name`: str, required
+* `database`: str
 * `query`: str (not empty), required
 
 ```coffee
 DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
+  database:    '<database>'
   query:    '<query>'
 ,
   ...
