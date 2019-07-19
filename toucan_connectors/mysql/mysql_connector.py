@@ -14,6 +14,7 @@ class MySQLDataSource(ToucanDataSource):
     """
     Either `query` or `table` are required, both at the same time are not supported.
     """
+    database: str
     query: constr(min_length=1) = None
     table: constr(min_length=1) = None
     follow_relations: bool = False
@@ -36,7 +37,6 @@ class MySQLConnector(ToucanConnector):
 
     host: str
     user: str
-    db: str
     password: str = None
     port: int = None
     charset: str = 'utf8mb4'
@@ -49,7 +49,6 @@ class MySQLConnector(ToucanConnector):
         con_params = {
             'host': self.host,
             'user': self.user,
-            'database': self.db,
             'password': self.password,
             'port': self.port,
             'charset': self.charset,
@@ -67,7 +66,6 @@ class MySQLConnector(ToucanConnector):
             'Port opened',
             'Host connection',
             'Authenticated',
-            'Database access'
         ]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
@@ -117,19 +115,11 @@ class MySQLConnector(ToucanConnector):
                     'error': e.args[1]
                 }
 
-            # Wrong database
-            if error_code == ER.DBACCESS_DENIED_ERROR:
-                return {
-                    'status': False,
-                    'details': self._get_details(4, False),
-                    'error': e.args[1]
-                }
-        else:
-            return {
-                'status': True,
-                'details': self._get_details(4, True),
-                'error': None
-            }
+        return {
+            'status': True,
+            'details': self._get_details(3, True),
+            'error': None
+        }
 
     @staticmethod
     def clean_response(response):
@@ -329,7 +319,8 @@ class MySQLConnector(ToucanConnector):
         Returns: DataFrames from config['table'].
         """
 
-        connection = pymysql.connect(**self.connection_params)
+        connection = pymysql.connect(**self.connection_params,
+                                     database=datasource.database)
 
         # ----- Prepare -----
         if datasource.query:
