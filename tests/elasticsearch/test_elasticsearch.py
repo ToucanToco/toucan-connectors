@@ -111,3 +111,83 @@ def test_get_df(elasticsearch):
     data = con.get_df(ds_msearch)
     assert list(data.columns) == ['adress.city', 'best_song']
     assert all(data.loc[data['adress.city'].isnull(), 'best_song'] == 'Africa')
+
+
+def test_get_agg(elasticsearch):
+    con = ElasticsearchConnector(
+        name='test',
+        hosts=[
+            {
+                'url': 'http://localhost',
+                'port': elasticsearch['port']
+            }
+        ]
+    )
+    ds_search = ElasticsearchDataSource(
+        domain='test',
+        name='test',
+        index='_all',
+        search_method='search',
+        body={"aggs": {
+                "music": {
+                    "terms": {"field": "best_song.keyword"}
+                },
+                "sum_cedex": {"sum": {"field": "adress.cedex"}}
+            }}
+    )
+
+    # Buckets + Metric
+    expected = [
+        {'music_buckets_doc_count': 1, 'music_buckets_key': 'Africa',
+         'music_doc_count_error_upper_bound': 0,
+         'music_sum_other_doc_count': 0,
+         'sum_cedex_value': 15.0},
+        {'music_buckets_doc_count': 1, 'music_buckets_key': "Beat The Devil's Tattoo",
+         'music_doc_count_error_upper_bound': 0,
+         'music_sum_other_doc_count': 0,
+         'sum_cedex_value': 15.0}
+    ]
+    data_search = con.get_df(ds_search)
+    assert data_search.to_dict(orient='records') == expected
+
+    # Multiple Buckets
+    ds_msearch = ElasticsearchDataSource(
+        domain='test',
+        name='test',
+        search_method='msearch',
+        body=[{}, {"aggs": {
+            "music": {
+                "terms": {"field": "best_song.keyword"},
+                "aggs": {
+                    "ville": {"terms": {"field": "adress.city.keyword"}}}
+            },
+            "ville": {"terms": {"field": "adress.city.keyword"}}
+        }}]
+    )
+    expected = [
+        {'ville_buckets_doc_count': 1.0, 'ville_buckets_key': 'looo',
+         'ville_doc_count_error_upper_bound': 0.0,
+         'ville_sum_other_doc_count': 0.0},
+        {'music_buckets_doc_count': 1.0, 'music_buckets_key': "Beat The Devil's Tattoo",
+         'music_buckets_ville_buckets_doc_count': 1.0,
+         'music_buckets_ville_buckets_key': 'looo',
+         'music_buckets_ville_doc_count_error_upper_bound': 0.0,
+         'music_buckets_ville_sum_other_doc_count': 0.0,
+         'music_doc_count_error_upper_bound': 0.0,
+         'music_sum_other_doc_count': 0.0}
+    ]
+    data_msearch = con.get_df(ds_msearch)
+    assert [v.dropna().to_dict() for k, v in data_msearch.iterrows()] == expected
+
+    # Metric
+    ds_search = ElasticsearchDataSource(
+        domain='test',
+        name='test',
+        index='_all',
+        search_method='search',
+        body={"aggs": {"sum_cedex": {"sum": {"field": "adress.cedex"}}}}
+    )
+
+    expected = [{'sum_cedex_value': 15.0}]
+    data_search = con.get_df(ds_search)
+    assert data_search.to_dict(orient='records') == expected
