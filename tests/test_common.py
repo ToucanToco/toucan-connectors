@@ -18,9 +18,9 @@ def test_apply_parameter_to_query():
     It sould work render all parameters
     """
     tests = [
-        ({'$match': {'domain': 'truc', 'indic': '{{my_indic[0]*my_indic[1]}}'}},
-         {'my_indic': [5, 6]},
-         {'$match': {'domain': 'truc', 'indic': 30}}),
+        ({'$match': {'domain': 'truc', 'indic': '{{my_indic[0]*my_indic[1]}}'}},  # query
+         {'my_indic': [5, 6]},  # params
+         {'$match': {'domain': 'truc', 'indic': 30}}),  # expected
 
         ({'$match': {'domain': 'truc', 'indic': '{%if my_indic%}1{%else%}2{%endif%}'}},
          {'my_indic': False},
@@ -62,19 +62,16 @@ def test_apply_parameter_to_query():
              {'indic_list': {'zero': '0', 'one': 1, 'two': '2'}}
          ]}})
     ]
-    for test in tests:
-        query = test[0]
-        params = test[1]
-        expected = test[2]
+    for (query, params, expected) in tests:
         assert nosql_apply_parameters_to_query(query, params) == expected
 
 
 def test_apply_params_with_missing_param():
     tests = [
-        ({'domain': 'blah', 'country': {'$ne': '%(country)s'},
+        ({'domain': 'blah', 'country': {'$ne': '%(country)s'},  # query
           'city': '%(city)s'},
-         {'city': 'Paris'},
-         {'domain': 'blah', 'country': {}, 'city': 'Paris'}),
+         {'city': 'Paris'},  # params
+         {'domain': 'blah', 'country': {}, 'city': 'Paris'}),  # expected
 
         ([{'$match': {'country': '%(country)s', 'city': 'Test'}},
           {'$match': {'b': 1}}],
@@ -111,10 +108,7 @@ def test_apply_params_with_missing_param():
          None,
          {'domain': 'Test'})
     ]
-    for test in tests:
-        query = test[0]
-        params = test[1]
-        expected = test[2]
+    for (query, params, expected) in tests:
         assert nosql_apply_parameters_to_query(query, params) == expected
 
 
