@@ -161,7 +161,6 @@ def get_query_results(service, report_request):
 
 class GoogleAnalyticsDataSource(ToucanDataSource):
     report_request: ReportRequest
-    parameters: dict = None
 
 
 class GoogleAnalyticsConnector(ToucanConnector):

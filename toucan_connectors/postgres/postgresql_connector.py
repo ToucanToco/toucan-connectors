@@ -7,7 +7,6 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 class PostgresDataSource(ToucanDataSource):
     query: constr(min_length=1)
-    parameters: dict = None
 
 
 class PostgresConnector(ToucanConnector):

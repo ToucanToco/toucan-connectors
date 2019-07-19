@@ -31,7 +31,6 @@ class ElasticsearchDataSource(ToucanDataSource):
     search_method: SearchMethod
     index: str = None
     body: Union[dict, list]
-    parameters: dict = None
 
 
 class ElasticsearchConnector(ToucanConnector):

@@ -29,6 +29,7 @@ extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 install_requires = [
     'aiohttp',
     'jq',
+    'jinja2',
     'pydantic',
     'requests',
     'tenacity',
@@ -42,7 +43,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.21.2',
+      version='0.22.0',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',

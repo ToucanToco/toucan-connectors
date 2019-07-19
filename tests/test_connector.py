@@ -59,12 +59,14 @@ def test_validate():
 def test_get_df_with_permissions():
     class DataConnector(ToucanConnector):
         type = 'MyDB'
-        data_source_model = 'asd'
+        data_source_model: DataSource
 
         def _retrieve_data(self, datasource):
             return pd.DataFrame({'A': [1, 2]})
 
-    df = DataConnector(name='my_name').get_df({'domain': 'yo'}, permissions="A==1")
+    connector = DataConnector(name='my_name')
+    ds = connector.data_source_model(domain='yo', name='my_name', query='')
+    df = connector.get_df(ds, permissions="A==1")
     assert all(df == pd.DataFrame({'A': [1]}))
 
 

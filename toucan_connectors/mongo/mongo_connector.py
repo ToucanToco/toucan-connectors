@@ -1,48 +1,19 @@
-import re
-from jq import jq
 from typing import Optional, Union
 from urllib.parse import quote_plus
 
 import pandas as pd
 import pymongo
 from bson.son import SON
+from jq import jq
 from pydantic import validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
+from toucan_connectors.mongo.mongo_translator import MongoExpression
 from toucan_connectors.toucan_connector import ToucanConnector, \
     ToucanDataSource, decorate_func_with_retry
-from toucan_connectors.mongo.mongo_translator import MongoExpression
-
-PARAM_PATTERN = r'%\(\w*\)s'
-
-
-def handle_missing_params(elt, params):
-    """
-    Remove a dictionary key if its value has a missing parameter.
-    This is used to support the __VOID__ syntax, which is specific to
-    the use of mongo at Toucan Toco : cf. https://bit.ly/2Ln6rcf
-    """
-    if isinstance(elt, dict):
-        e = {}
-        for k, v in elt.items():
-            if isinstance(v, str):
-                matches = re.findall(PARAM_PATTERN, v)
-                missing_params = [m[2:-2] not in params.keys() for m in matches]
-                if any(missing_params):
-                    continue
-                else:
-                    e[k] = v
-            else:
-                e[k] = handle_missing_params(v, params)
-        return e
-    elif isinstance(elt, list):
-        return [handle_missing_params(e, params) for e in elt]
-    else:
-        return elt
 
 
 def normalize_query(query, parameters):
-    query = handle_missing_params(query, parameters)
     query = nosql_apply_parameters_to_query(query, parameters)
 
     if isinstance(query, dict):
@@ -71,7 +42,6 @@ class MongoDataSource(ToucanDataSource):
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
     collection: str
     query: Union[dict, list]
-    parameters: dict = None
 
 
 class MongoConnector(ToucanConnector):

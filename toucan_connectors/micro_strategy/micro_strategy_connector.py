@@ -32,7 +32,6 @@ class MicroStrategyDataSource(ToucanDataSource):
     viewfilter: dict = None
     offset: int = 0
     limit: int = 100
-    parameters: dict = None
 
 
 class MicroStrategyConnector(ToucanConnector):
