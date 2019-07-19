@@ -35,8 +35,8 @@ def mongo_connector(mongo_server):
 
 @pytest.fixture
 def mongo_datasource():
-    def f(collection, query):
-        return MongoDataSource(name='mycon', domain='mydomain', collection=collection, query=query)
+    def f(**kwargs):
+        return MongoDataSource(name='mycon', domain='mydomain', **kwargs)
 
     return f
 
@@ -54,6 +54,13 @@ def test_uri():
         MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
                        password='mypass')
     assert 'password\n  username must be set' in str(exc_info.value)
+
+
+def test_get_df_no_query(mongo_connector, mongo_datasource):
+    """It should return the whole collection by default"""
+    ds = mongo_datasource(collection='test_col')
+    df = mongo_connector.get_df(ds)
+    assert df.shape == (3, 5)
 
 
 def test_get_df(mocker):
