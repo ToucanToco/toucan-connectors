@@ -1,5 +1,6 @@
-from toucan_connectors.mongo.mongo_translator import MongoExpression
 import pytest
+
+from toucan_connectors.mongo.mongo_translator import MongoExpression
 
 
 def test_mongo_expression():
@@ -23,6 +24,24 @@ def test_mongo_expression():
 
     result = MongoExpression().parse(query)
     assert result == expected
+
+
+def test_mongo_expression_with_jinja():
+    expr = "(type == 'YTD') or (periode == 'yo_{{periode}}')"
+    expected = {'$or': [{'type': 'YTD'}, {'periode': 'yo_{{periode}}'}]}
+    assert MongoExpression().parse(expr) == expected
+
+    expr = "(type == 'YTD') or (periode == {{periode}})"
+    expected = {'$or': [{'type': 'YTD'}, {'periode': '{{periode}}'}]}
+    assert MongoExpression().parse(expr) == expected
+
+    expr = "(type == 'YTD') or (periode == 'yo_{{my_indic[\"a\"]}}')"
+    expected = {'$or': [{'type': 'YTD'}, {'periode': 'yo_{{my_indic["a"]}}'}]}
+    assert MongoExpression().parse(expr) == expected
+
+    expr = "(type == 'YTD') or (periode == '{{my_indic[0]}}')"
+    expected = {'$or': [{'type': 'YTD'}, {'periode': '{{my_indic[0]}}'}]}
+    assert MongoExpression().parse(expr) == expected
 
 
 def test_mongo_expression_exception():

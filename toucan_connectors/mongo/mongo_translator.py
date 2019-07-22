@@ -1,15 +1,17 @@
-from toucan_connectors.common import Expression, Operator, Column, Value
+import json
 from ast import USub
+
+from toucan_connectors.common import Expression, Operator, Column, Value
 
 
 class MongoExpression(Expression):
     def BoolOp(self, op):
         return {self.translate(op.op): list(map(self.translate, op.values))}
 
-    def And(cls, op):
+    def And(self, op):
         return '$and'
 
-    def Or(cls, op):
+    def Or(self, op):
         return '$or'
 
     def Compare(self, compare):
@@ -69,7 +71,10 @@ class MongoValue(Value):
     }
 
     def Name(self, node):
-        return self.SPECIAL_VALUES[node.id]
+        if node.id in self.SPECIAL_VALUES:
+            return self.SPECIAL_VALUES[node.id]
+        else:
+            return node.id
 
     def Str(self, node):
         return node.s
@@ -85,3 +90,14 @@ class MongoValue(Value):
         if isinstance(op.op, USub):
             value = -value
         return value
+
+    def Set(self, node):
+        elts = [self.translate(elt) for elt in node.elts]
+        return '{' + ', '.join(elts) + '}'
+
+    def Subscript(self, node):
+        indice = json.dumps(self.translate(node.slice))
+        return self.translate(node.value) + '[' + indice + ']'
+
+    def Index(self, node):
+        return self.translate(node.value)

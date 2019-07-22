@@ -145,14 +145,12 @@ class MongoConnector(ToucanConnector):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
         self._validate_collection(client, data_source.collection)
         col = client[self.database][data_source.collection]
-
-        data_source.query = normalize_query(data_source.query,
-                                            data_source.parameters)
         result = col.aggregate(data_source.query)
         client.close()
         return result
 
     def _retrieve_data(self, data_source):
+        data_source.query = normalize_query(data_source.query, data_source.parameters)
         data = self._execute_query(data_source)
         return pd.DataFrame(list(data))
 
@@ -163,10 +161,11 @@ class MongoConnector(ToucanConnector):
 
     @decorate_func_with_retry
     def get_df_and_count(self, data_source, permissions=None, limit=None):
-        data_source.query = apply_permissions(data_source.query, permissions)
         if limit is not None:
-            if isinstance(data_source.query, dict):
-                data_source.query = [{'$match': data_source.query}]
+            data_source.query = apply_permissions(data_source.query,
+                                                  permissions)
+            data_source.query = normalize_query(data_source.query,
+                                                data_source.parameters)
             facet = {"$facet": {
                 'count': data_source.query.copy(),
                 'df': data_source.query.copy(),
@@ -178,7 +177,7 @@ class MongoConnector(ToucanConnector):
             count = res['count'][0]['value'] if len(res['count']) > 0 else 0
             df = pd.DataFrame(res['df'])
         else:
-            df = self._retrieve_data(data_source)
+            df = self.get_df(data_source, permissions)
             count = len(df)
         return {'df': df, 'count': count}
 
