@@ -1,4 +1,3 @@
-from enum import Enum
 from jq import jq
 from typing import Optional, Union
 from urllib.parse import quote_plus
@@ -13,7 +12,8 @@ from toucan_connectors.mongo.mongo_translator import MongoExpression
 from toucan_connectors.toucan_connector import (
     ToucanConnector,
     ToucanDataSource,
-    decorate_func_with_retry
+    decorate_func_with_retry,
+    strlist_to_enum
 )
 
 
@@ -51,10 +51,6 @@ def validate_collection(client, database, collection):
         raise UnkwownMongoCollection(f'Collection {collection!r} doesn\'t exist')
 
 
-class StrEnum(str, Enum):
-    """Class to easily make schemas with enum values and type string"""
-
-
 class MongoDataSource(ToucanDataSource):
     """Supports simple, multiples and aggregation queries as desribed in
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
@@ -80,12 +76,12 @@ class MongoDataSource(ToucanDataSource):
 
         # Always add the suggestions for the available databases
         available_databases = client.list_database_names()
-        constraints['database'] = (StrEnum('database', {v: v for v in available_databases}), ...)
+        constraints['database'] = strlist_to_enum('database', available_databases)
 
         if 'database' in current_config:
             validate_database(client, current_config['database'])
             available_cols = client[current_config['database']].list_collection_names()
-            constraints['collection'] = (StrEnum('collection', {v: v for v in available_cols}), ...)
+            constraints['collection'] = strlist_to_enum('collection', available_cols)
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 

@@ -1,15 +1,30 @@
 import logging
+import operator
 import socket
 from abc import ABCMeta, abstractmethod
+from enum import Enum
 from functools import reduce, wraps
-import operator
-from typing import Iterable, Optional, Type
+from typing import Iterable, List, Optional, Type
 
 import pandas as pd
 import tenacity as tny
 from pydantic import BaseModel
 
 from toucan_connectors.common import render_raw_permissions
+
+
+class StrEnum(str, Enum):
+    """Class to easily make schemas with enum values and type string"""
+
+
+def strlist_to_enum(field: str, strlist: List[str], default_value=...) -> tuple:
+    """
+    Convert a list of strings to a pydantic schema enum
+    the value is either <default value> or a tuple ( <type>, <default value> )
+    If the field is required, the <default value> has to be '...' (cf pydantic doc)
+    By default, the field is considered required.
+    """
+    return StrEnum(field, {v: v for v in strlist}), default_value
 
 
 class ToucanDataSource(BaseModel):
