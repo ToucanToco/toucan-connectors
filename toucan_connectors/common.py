@@ -6,7 +6,6 @@ from copy import deepcopy
 from jinja2 import Template
 from toucan_data_sdk.utils.helpers import slugify
 
-
 RE_PARAM = r'%\(([^(%\()]*)\)s'
 RE_JINJA = r'{{([^({{)}]*)}}'
 
@@ -241,3 +240,15 @@ class Value(AstTranslator, metaclass=ABCMeta):
     @abstractmethod
     def UnaryOp(self, op):
         """Value with unary operator +/-"""
+
+    @abstractmethod
+    def Set(self, node):
+        """Set (jinja parameters)"""
+
+    @abstractmethod
+    def Subscript(self, node):
+        """List or Dict call (jinja parameters)"""
+
+    @abstractmethod
+    def Index(self, node):
+        """Indice in list or dict (jinja parameters)"""
