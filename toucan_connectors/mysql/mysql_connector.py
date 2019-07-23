@@ -42,8 +42,7 @@ class MySQLConnector(ToucanConnector):
     charset: str = 'utf8mb4'
     connect_timeout: int = None
 
-    @property
-    def connection_params(self):
+    def get_connection_params(self, *, database=None):
         conv = pymysql.converters.conversions.copy()
         conv[246] = float
         con_params = {
@@ -51,6 +50,7 @@ class MySQLConnector(ToucanConnector):
             'user': self.user,
             'password': self.password,
             'port': self.port,
+            'database': database,
             'charset': self.charset,
             'connect_timeout': self.connect_timeout,
             'conv': conv,
@@ -95,7 +95,7 @@ class MySQLConnector(ToucanConnector):
 
         # Check basic access
         try:
-            pymysql.connect(**self.connection_params)
+            pymysql.connect(**self.get_connection_params())
         except pymysql.err.OperationalError as e:
             error_code = e.args[0]
 
@@ -319,8 +319,9 @@ class MySQLConnector(ToucanConnector):
         Returns: DataFrames from config['table'].
         """
 
-        connection = pymysql.connect(**self.connection_params,
-                                     database=datasource.database)
+        connection = pymysql.connect(
+            **self.get_connection_params(database=datasource.database)
+        )
 
         # ----- Prepare -----
         if datasource.query:

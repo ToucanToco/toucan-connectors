@@ -8,7 +8,7 @@ from toucan_connectors.google_cloud_mysql.google_cloud_mysql_connector import (
 def test_connection_params():
     connector = GoogleCloudMySQLConnector(name='gcloud_sql_con', host='my_host',
                                           user='my_user', password='my_pass')
-    params = connector.connection_params
+    params = connector.get_connection_params()
     assert set(params) == {'host', 'password', 'charset', 'user', 'conv', 'cursorclass'}
 
     assert params['host'] == 'my_host'

@@ -45,16 +45,16 @@ def test_datasource():
     MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db', query='myquery')
 
 
-def test_connection_params():
+def test_get_connection_params():
     connector = MySQLConnector(name='my_mysql_con', host='myhost', user='myuser')
-    params = connector.connection_params
+    params = connector.get_connection_params()
     params.pop('conv')
     assert params == {'host': 'myhost', 'user': 'myuser', 'charset': 'utf8mb4',
                       'cursorclass': pymysql.cursors.DictCursor}
 
     connector = MySQLConnector(name='my_mssql_con', host='myhost', user='myuser',
                                password='mypass', port=123, charset='utf8', connect_timeout=50)
-    params = connector.connection_params
+    params = connector.get_connection_params()
     params.pop('conv')
     assert params == {'host': 'myhost', 'user': 'myuser', 'charset': 'utf8',
                       'cursorclass': pymysql.cursors.DictCursor, 'password': 'mypass',
