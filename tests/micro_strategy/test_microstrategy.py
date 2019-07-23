@@ -104,8 +104,11 @@ def test_fill_viewfilter_with_ids():
     dfn = get_definition(results)
     viewfilter = {
         'plop': {'attribute': 'Call Center'},
+        'plop_id': {'attribute': '8D679D3511D3E4981000E787EC6DE8A4'},
         'plip': {'attribute': 'Call Center@DESC'},
+        'plip_id': {'attribute': '8D679D3511D3E4981000E787EC6DE8A4@DESC'},
         'ploup': {'metric': '% Change to Profit'},
+        'ploup_id': {'metric': '965C42404FD62829356000B0B955F267'},
         'poulp': {'constant': 42},
     }
 
@@ -114,15 +117,18 @@ def test_fill_viewfilter_with_ids():
         'type': 'attribute',
         'id': '8D679D3511D3E4981000E787EC6DE8A4'
     }
+    assert res['plop'] == res['plop_id']
     assert res['plip'] == {
         'type': 'form',
         'attribute': {'id': '8D679D3511D3E4981000E787EC6DE8A4'},
         'form': {'id': 'CCFBE2A5EADB4F50941FB879CCF1721C'}
     }
+    assert res['plip'] == res['plip_id']
     assert res['ploup'] == {
         'type': 'metric',
         'id': '965C42404FD62829356000B0B955F267'
     }
+    assert res['ploup'] == res['ploup_id']
     assert res['poulp'] == {
         'type': 'constant',
         'dataType': 'Real',
