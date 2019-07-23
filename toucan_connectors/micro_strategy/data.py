@@ -8,7 +8,9 @@ def get_definition(results):
     for attr in dfn['attributes']:
         if 'forms' in attr:
             attr['forms'] = {f['name']: f for f in attr['forms']}
-    dfn['attributes'] = {attr['name']: attr for attr in attrs}
+    dfn['attributes_id'] = {attr['id']: attr for attr in attrs}  # attr ID as key
+    dfn['attributes'] = {attr['name']: attr for attr in attrs}  # attr name as key
+    dfn['metrics_id'] = {m['id']: m for m in dfn['metrics']}
     dfn['metrics'] = {m['name']: m for m in dfn['metrics']}
     return dfn
 
@@ -17,7 +19,11 @@ def fill_viewfilter_with_ids(vf, dfn):
     def fill_attribute(attr_name):
         if '@' in attr_name:
             attr_name, form_name = attr_name.split('@')
-            dfn_attr = dfn['attributes'][attr_name]
+            try:
+                dfn_attr = dfn['attributes'][attr_name]
+            except KeyError:
+                # No attribute has this name, so it must be a raw ID:
+                dfn_attr = dfn['attributes_id'][attr_name]
             return {
                 'type': 'form',
                 'attribute': {
@@ -28,14 +34,21 @@ def fill_viewfilter_with_ids(vf, dfn):
                 },
             }
         else:
-            dfn_attr = dfn['attributes'][attr_name]
+            try:
+                dfn_attr = dfn['attributes'][attr_name]
+            except KeyError:
+                # No attribute has this name, so it must be a raw ID:
+                dfn_attr = dfn['attributes_id'][attr_name]
             return {
                 'type': 'attribute',
                 'id': dfn_attr['id'],
             }
 
     def fill_metric(metric_name):
-        dfn_metric = dfn['metrics'][metric_name]
+        try:
+            dfn_metric = dfn['metrics'][metric_name]
+        except KeyError:
+            dfn_metric = dfn['metrics_id'][metric_name]
         return {
             'type': 'metric',
             'id': dfn_metric['id'],
