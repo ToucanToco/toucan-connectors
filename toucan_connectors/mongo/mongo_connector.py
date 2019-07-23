@@ -72,22 +72,22 @@ class MongoDataSource(ToucanDataSource):
         """
         client = pymongo.MongoClient(connector.uri, ssl=connector.ssl)
 
-        # Add contraints to the schema
+        # Add constraints to the schema
         # the key has to be a valid field
         # the value is either <default value> or a tuple ( <type>, <default value> )
         # If the field is required, the <default value> has to be '...' (cf pydantic doc)
-        contraints = {}
+        constraints = {}
 
         # Always add the suggestions for the available databases
         available_databases = client.list_database_names()
-        contraints['database'] = (StrEnum('database', {v: v for v in available_databases}), ...)
+        constraints['database'] = (StrEnum('database', {v: v for v in available_databases}), ...)
 
         if 'database' in current_config:
             validate_database(client, current_config['database'])
             available_cols = client[current_config['database']].list_collection_names()
-            contraints['collection'] = (StrEnum('collection', {v: v for v in available_cols}), ...)
+            constraints['collection'] = (StrEnum('collection', {v: v for v in available_cols}), ...)
 
-        return create_model('FormSchema', **contraints, __base__=cls).schema()
+        return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
 class MongoConnector(ToucanConnector):
