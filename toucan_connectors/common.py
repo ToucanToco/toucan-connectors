@@ -2,8 +2,12 @@ import ast
 import re
 from abc import ABCMeta, ABC, abstractmethod
 from copy import deepcopy
+from enum import Enum
+from typing import Any, Dict, List, Tuple, Type, Union
 
 from jinja2 import Template
+from pydantic import BaseModel, create_model
+from pydantic.fields import Field
 from toucan_data_sdk.utils.helpers import slugify
 
 RE_PARAM = r'%\(([^(%\()]*)\)s'
@@ -17,6 +21,67 @@ RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r"([ )])", RE_JINJA + r"()$"]
 
 RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
+
+
+class StrEnum(str, Enum):
+    """Class to easily make schemas with enum values and type string"""
+
+
+def strlist_to_enum(field: str, strlist: List[str], default_value=...) -> tuple:
+    """
+    Convert a list of strings to a pydantic schema enum
+    the value is either <default value> or a tuple ( <type>, <default value> )
+    If the field is required, the <default value> has to be '...' (cf pydantic doc)
+    By default, the field is considered required.
+    """
+    return StrEnum(field, {v: v for v in strlist}), default_value
+
+
+class classproperty:
+    """Author: jchl https://stackoverflow.com/questions/5189699/how-to-make-a-class-property"""
+
+    def __init__(self, f):
+        self.f = f
+
+    def __get__(self, obj, owner):
+        return self.f(owner)
+
+
+class TemplatedMixin:
+    """
+    Mixin to allow templated fields to be set.
+    It will add a new `templated_model` property, which creates a new model
+    allowing string values for templated fields.
+    These fields are set in the `__templated__` class attribute.
+    """
+    __templated__ = []
+
+    @classproperty
+    def templated_model(cls) -> Type[BaseModel]:
+        return create_templated_model(cls, cls.__templated__)
+
+
+def create_templated_model(
+    model_cls: Type[BaseModel],
+    templated_fields: List[str]
+) -> Type[BaseModel]:
+    """
+    Create a new BaseModel base on `model_cls` but by allowing `str` type
+    for all fields of `templated_fields`
+    """
+    templated_field_definitions: Dict[str, Tuple[type, Any]] = {}
+    for field_name in templated_fields:
+        try:
+            field: Field = model_cls.__fields__[field_name]
+        except KeyError:
+            continue
+        type_or_str = Union[str, field.type_]
+        default_value = ... if field.required else field.default
+        templated_field_definitions[field_name] = (type_or_str, default_value)
+
+    return create_model(
+        f'Templated{model_cls.__name__}', **templated_field_definitions, __base__=model_cls
+    )
 
 
 def nosql_apply_parameters_to_query(query, parameters):

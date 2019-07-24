@@ -7,14 +7,13 @@ import pymongo
 from bson.son import SON
 from pydantic import create_model, validator
 
-from toucan_connectors.common import nosql_apply_parameters_to_query
+from toucan_connectors.common import nosql_apply_parameters_to_query, strlist_to_enum
 from toucan_connectors.mongo.mongo_translator import MongoExpression
 from toucan_connectors.toucan_connector import (
     DataSlice,
     ToucanConnector,
     ToucanDataSource,
     decorate_func_with_retry,
-    strlist_to_enum,
 )
 
 

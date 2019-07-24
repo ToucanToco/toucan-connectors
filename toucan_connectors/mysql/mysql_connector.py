@@ -7,10 +7,10 @@ import pymysql
 from pydantic import constr, create_model
 from pymysql.constants import CR, ER
 
+from toucan_connectors.common import strlist_to_enum
 from toucan_connectors.toucan_connector import (
     ToucanDataSource,
     ToucanConnector,
-    strlist_to_enum
 )
 
 

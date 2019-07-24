@@ -1,4 +1,10 @@
+from typing import Union
+
+import pytest
+from pydantic import BaseModel
+
 from toucan_connectors.common import (
+    create_templated_model,
     nosql_apply_parameters_to_query,
     render_raw_permissions
 )
@@ -124,3 +130,51 @@ def test_render_raw_permission():
     expected = '(indic0 == "0" or indic1 == 1) and ' \
                'indic2 == "yo_2" and indic_list == [\'0\', 1, \'2\']'
     assert render_raw_permissions(query, params) == expected
+
+
+class PikaModel(BaseModel):
+    a: Union[dict, list]
+    b: int
+    c: int = 3
+    d: str
+
+
+def test_create_templated_model_basic():
+    m = create_templated_model(PikaModel, ['a'])
+    assert m.__name__ == 'TemplatedPikaModel'
+    assert {
+        field_name: f.type_
+        for field_name, f in m.__fields__.items()
+    } == {
+        'a': Union[str, dict, list],
+        'b': int,
+        'c': int,
+        'd': str
+    }
+
+    # 'a' can now be a string for the `m`
+    with pytest.raises(ValueError):
+        PikaModel(a='qwe', b=2, d='d')
+    res = m(a='qwe', b=2, d='d')
+    assert res.c == 3
+
+    # The rest should not be possible
+    with pytest.raises(ValueError):
+        PikaModel(a=[1], b='qwe', d='d')
+    with pytest.raises(ValueError):
+        m(a=[1], b='qwe', d='d')
+
+
+def test_create_templated_model_unknown_parameters():
+    m = create_templated_model(PikaModel, ['a', 'c', 'd', 'e'])
+    assert {
+        field_name: f.type_
+        for field_name, f in m.__fields__.items()
+    } == {
+        'a': Union[str, dict, list],
+        'b': int,
+        'c': Union[str, int],
+        'd': str
+    }
+    res = m(a='qwe', b=2, d='d')
+    assert res.c == 3
