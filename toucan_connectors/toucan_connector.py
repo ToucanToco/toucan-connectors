@@ -4,13 +4,18 @@ import socket
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Iterable, List, Optional, Tuple, Type
+from typing import Iterable, List, NamedTuple, Optional, Type
 
 import pandas as pd
 import tenacity as tny
 from pydantic import BaseModel
 
 from toucan_connectors.common import render_raw_permissions
+
+
+class SliceResult(NamedTuple):
+    df: pd.DataFrame  # the dataframe of the slice
+    total_count: int  # the length of the raw dataframe (without slicing)
 
 
 class StrEnum(str, Enum):
@@ -216,13 +221,13 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         permissions: Optional[str] = None,
         offset: int = 0,
         limit: Optional[int] = None
-    ) -> Tuple[pd.DataFrame, int]:
+    ) -> SliceResult:
         """
         Method to retrieve a part of the data as a pandas dataframe
         and the total size filtered with permissions
         """
         df = self.get_df(data_source, permissions)
-        return df[offset:limit], len(df)
+        return SliceResult(df[offset:limit], len(df))
 
     def explain(self, data_source: ToucanDataSource, permissions: Optional[str] = None):
         """Method to give metrics about the query"""

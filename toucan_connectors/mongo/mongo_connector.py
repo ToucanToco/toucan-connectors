@@ -1,5 +1,5 @@
 from jq import jq
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 from urllib.parse import quote_plus
 
 import pandas as pd
@@ -10,10 +10,11 @@ from pydantic import create_model, validator
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.mongo.mongo_translator import MongoExpression
 from toucan_connectors.toucan_connector import (
+    SliceResult,
     ToucanConnector,
     ToucanDataSource,
     decorate_func_with_retry,
-    strlist_to_enum
+    strlist_to_enum,
 )
 
 
@@ -195,7 +196,7 @@ class MongoConnector(ToucanConnector):
         permissions: Optional[str] = None,
         offset: int = 0,
         limit: Optional[int] = None
-    ) -> Tuple[pd.DataFrame, int]:
+    ) -> SliceResult:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
         if offset or limit is not None:
@@ -214,12 +215,12 @@ class MongoConnector(ToucanConnector):
                 facet['$facet']['df'].append({'$limit': limit})
             data_source.query = [facet]
             res = self._execute_query(data_source).next()
-            count = res['count'][0]['value'] if len(res['count']) > 0 else 0
+            total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
             df = pd.DataFrame(res['df'])
         else:
             df = self.get_df(data_source, permissions)
-            count = len(df)
-        return df, count
+            total_count = len(df)
+        return SliceResult(df, total_count)
 
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):

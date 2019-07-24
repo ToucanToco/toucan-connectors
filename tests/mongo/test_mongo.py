@@ -166,31 +166,31 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
 
 def test_get_slice(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    df, count = mongo_connector.get_slice(datasource)
-    assert count == 3
-    assert df.shape == (3, 5)
-    assert df['country'].tolist() == ['France', 'England', 'Germany']
+    res = mongo_connector.get_slice(datasource)
+    assert res.total_count == 3
+    assert res.df.shape == (3, 5)
+    assert res.df['country'].tolist() == ['France', 'England', 'Germany']
 
     # With a limit
-    df, count = mongo_connector.get_slice(datasource, limit=1)
+    res = mongo_connector.get_slice(datasource, limit=1)
     expected = pd.DataFrame({'country': ['France'],
                              'language': ['French'],
                              'value': [20]})
-    assert count == 3
-    assert df.shape == (1, 5)
-    assert df[['country', 'language', 'value']].equals(expected)
+    assert res.total_count == 3
+    assert res.df.shape == (1, 5)
+    assert res.df[['country', 'language', 'value']].equals(expected)
 
     # With a offset
-    df, count = mongo_connector.get_slice(datasource, offset=1)
-    assert count == 3
-    assert df.shape == (2, 5)
-    assert df['country'].tolist() == ['England', 'Germany']
+    res = mongo_connector.get_slice(datasource, offset=1)
+    assert res.total_count == 3
+    assert res.df.shape == (2, 5)
+    assert res.df['country'].tolist() == ['England', 'Germany']
 
     # With both
-    df, count = mongo_connector.get_slice(datasource, offset=1, limit=1)
-    assert count == 3
-    assert df.shape == (1, 5)
-    assert df.loc[0, 'country'] == 'England'
+    res = mongo_connector.get_slice(datasource, offset=1, limit=1)
+    assert res.total_count == 3
+    assert res.df.shape == (1, 5)
+    assert res.df.loc[0, 'country'] == 'England'
 
 
 def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):

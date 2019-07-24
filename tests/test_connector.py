@@ -81,9 +81,9 @@ def test_get_slice():
         def _retrieve_data(self, datasource):
             return pd.DataFrame({'A': [1, 2]})
 
-    df, count = DataConnector(name='my_name').get_slice({}, limit=1)
-    assert df.equals(pd.DataFrame({'A': [1]}))
-    assert count == 2
+    res = DataConnector(name='my_name').get_slice({}, limit=1)
+    assert res.df.equals(pd.DataFrame({'A': [1]}))
+    assert res.total_count == 2
 
 
 def test_explain():
