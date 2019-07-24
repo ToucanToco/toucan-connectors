@@ -15,7 +15,7 @@ def doc_or_empty(klass):
 def custom_str(field):
     whitelist = ('type', 'required', 'default')
     m = {
-        'type': lambda x: f'{x}' if str(x) is not 'ConstrainedStrValue' else 'str (not empty)',
+        'type': lambda x: f'{x}' if str(x) != 'ConstrainedStrValue' else 'str (not empty)',
         'required': lambda x: 'required' if x else None,
         'default': lambda x: f'default to {x}' if x is not None else x
     }

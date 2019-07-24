@@ -6,14 +6,13 @@ from toucan_connectors.google_cloud_mysql.google_cloud_mysql_connector import (
 
 
 def test_connection_params():
-    connector = GoogleCloudMySQLConnector(name='gcloud_sql_con', host='my_host', user='my_user',
-                                          db='my_db', password='my_pass')
-    params = connector.connection_params
-    assert set(params) == {'host', 'password', 'charset', 'database', 'user', 'conv', 'cursorclass'}
+    connector = GoogleCloudMySQLConnector(name='gcloud_sql_con', host='my_host',
+                                          user='my_user', password='my_pass')
+    params = connector.get_connection_params()
+    assert set(params) == {'host', 'password', 'charset', 'user', 'conv', 'cursorclass'}
 
     assert params['host'] == 'my_host'
     assert params['user'] == 'my_user'
-    assert params['database'] == 'my_db'
     assert params['password'] == 'my_pass'
     assert params['charset'] == 'utf8mb4'
     assert params['cursorclass'] == pymysql.cursors.DictCursor
@@ -24,10 +23,11 @@ def test_gcmysql_get_df(mocker):
     reasq = mocker.patch('pandas.read_sql')
 
     mysql_connector = GoogleCloudMySQLConnector(
-        name='test', host='localhost', port=22, db='mysql_db',
+        name='test', host='localhost', port=22,
         user='ubuntu', password='ilovetoucan'
     )
-    ds = GoogleCloudMySQLDataSource(domain='test', name='test', query='my_query')
+    ds = GoogleCloudMySQLDataSource(domain='test', name='test',
+                                    database='mysql_db', query='my_query')
     mysql_connector.get_df(ds)
 
     conv = pymysql.converters.conversions.copy()

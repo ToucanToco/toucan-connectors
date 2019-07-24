@@ -4,16 +4,21 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import pymysql
-from pydantic import constr
+from pydantic import constr, create_model
 from pymysql.constants import CR, ER
 
-from toucan_connectors.toucan_connector import ToucanDataSource, ToucanConnector
+from toucan_connectors.toucan_connector import (
+    ToucanDataSource,
+    ToucanConnector,
+    strlist_to_enum
+)
 
 
 class MySQLDataSource(ToucanDataSource):
     """
     Either `query` or `table` are required, both at the same time are not supported.
     """
+    database: str
     query: constr(min_length=1) = None
     table: constr(min_length=1) = None
     follow_relations: bool = False
@@ -27,6 +32,43 @@ class MySQLDataSource(ToucanDataSource):
         elif query is not None and table is not None:
             raise ValueError("Only one of 'query' or 'table' must be set")
 
+    @classmethod
+    def get_form(cls, connector: 'MySQLConnector', current_config):
+        """
+        Method to retrieve the form with a current config
+        For example, once the connector is set,
+        - we are able to give suggestions for the `database` field
+        - if `database` is set, we are able to give suggestions for the `table` field
+        """
+        connection = pymysql.connect(
+            **connector.get_connection_params(
+                cursorclass=None,
+                database=current_config.get('database')
+            )
+        )
+
+        # Add constraints to the schema
+        # the key has to be a valid field
+        # the value is either <default value> or a tuple ( <type>, <default value> )
+        # If the field is required, the <default value> has to be '...' (cf pydantic doc)
+        constraints = {}
+
+        # # Always add the suggestions for the available databases
+        with connection.cursor() as cursor:
+            cursor.execute('SHOW DATABASES;')
+            res = cursor.fetchall()
+            # res = (('information_schema',), ('mysql_db',))
+            available_dbs = [db_name for (db_name,) in res]
+            constraints['database'] = strlist_to_enum('database', available_dbs)
+
+            if 'database' in current_config:
+                cursor.execute('SHOW TABLES;')
+                res = cursor.fetchall()
+                available_tables = [table_name for (table_name,) in res]
+                constraints['table'] = strlist_to_enum('table', available_tables)
+
+        return create_model('FormSchema', **constraints, __base__=cls).schema()
+
 
 class MySQLConnector(ToucanConnector):
     """
@@ -36,26 +78,24 @@ class MySQLConnector(ToucanConnector):
 
     host: str
     user: str
-    db: str
     password: str = None
     port: int = None
     charset: str = 'utf8mb4'
     connect_timeout: int = None
 
-    @property
-    def connection_params(self):
+    def get_connection_params(self, *, database=None, cursorclass=pymysql.cursors.DictCursor):
         conv = pymysql.converters.conversions.copy()
         conv[246] = float
         con_params = {
             'host': self.host,
             'user': self.user,
-            'database': self.db,
             'password': self.password,
             'port': self.port,
+            'database': database,
             'charset': self.charset,
             'connect_timeout': self.connect_timeout,
             'conv': conv,
-            'cursorclass': pymysql.cursors.DictCursor
+            'cursorclass': cursorclass
         }
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
@@ -67,7 +107,6 @@ class MySQLConnector(ToucanConnector):
             'Port opened',
             'Host connection',
             'Authenticated',
-            'Database access'
         ]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
@@ -97,7 +136,7 @@ class MySQLConnector(ToucanConnector):
 
         # Check basic access
         try:
-            pymysql.connect(**self.connection_params)
+            pymysql.connect(**self.get_connection_params())
         except pymysql.err.OperationalError as e:
             error_code = e.args[0]
 
@@ -117,19 +156,11 @@ class MySQLConnector(ToucanConnector):
                     'error': e.args[1]
                 }
 
-            # Wrong database
-            if error_code == ER.DBACCESS_DENIED_ERROR:
-                return {
-                    'status': False,
-                    'details': self._get_details(4, False),
-                    'error': e.args[1]
-                }
-        else:
-            return {
-                'status': True,
-                'details': self._get_details(4, True),
-                'error': None
-            }
+        return {
+            'status': True,
+            'details': self._get_details(3, True),
+            'error': None
+        }
 
     @staticmethod
     def clean_response(response):
@@ -329,7 +360,9 @@ class MySQLConnector(ToucanConnector):
         Returns: DataFrames from config['table'].
         """
 
-        connection = pymysql.connect(**self.connection_params)
+        connection = pymysql.connect(
+            **self.get_connection_params(database=datasource.database)
+        )
 
         # ----- Prepare -----
         if datasource.query:

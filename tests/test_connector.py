@@ -1,12 +1,15 @@
 from time import time
 
 import pandas as pd
-
 import pytest
 import tenacity as tny
+from pydantic import create_model
 
-from toucan_connectors.toucan_connector import ToucanConnector, \
-    ToucanDataSource
+from toucan_connectors.toucan_connector import (
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum
+)
 
 
 class DataSource(ToucanDataSource):
@@ -70,7 +73,7 @@ def test_get_df_with_permissions():
     assert all(df == pd.DataFrame({'A': [1]}))
 
 
-def test_get_df_and_count():
+def test_get_slice():
     class DataConnector(ToucanConnector):
         type = 'MyDB'
         data_source_model = 'asd'
@@ -78,9 +81,9 @@ def test_get_df_and_count():
         def _retrieve_data(self, datasource):
             return pd.DataFrame({'A': [1, 2]})
 
-    res = DataConnector(name='my_name').get_df_and_count({}, limit=1)
-    assert all(res['df'] == pd.DataFrame({'A': [1]}))
-    assert res['count'] == 2
+    res = DataConnector(name='my_name').get_slice({}, limit=1)
+    assert res.df.equals(pd.DataFrame({'A': [1]}))
+    assert res.total_count == 2
 
 
 def test_explain():
@@ -184,3 +187,41 @@ def test_no_retry_on_df():
     udc = CustomNoRetryOnDataConnector(name='my_name')
     with pytest.raises(RuntimeError):
         udc.get_df({})
+
+
+def test_strlist_to_enum_required():
+    """It should be required by default"""
+    model = create_model(
+        'Test',
+        pokemon=strlist_to_enum('pokemon', ['pika', 'bulbi'])
+    )
+    assert model.schema() == {
+        'title': 'Test',
+        'type': 'object',
+        'properties': {
+            'pokemon': {
+                'title': 'Pokemon',
+                'enum': ['pika', 'bulbi'],
+                'type': 'string'}},
+        'required': ['pokemon']
+    }
+
+
+def test_strlist_to_enum_default_value():
+    """It should be possible to add a default value (not required)"""
+    model = create_model(
+        'Test',
+        pokemon=strlist_to_enum('pokemon', ['pika', 'bulbi'], 'pika')
+    )
+    assert model.schema() == {
+        'title': 'Test',
+        'type': 'object',
+        'properties': {
+            'pokemon': {
+                'title': 'Pokemon',
+                'default': 'pika',
+                'enum': ['pika', 'bulbi'],
+                'type': 'string'
+            }
+        }
+    }

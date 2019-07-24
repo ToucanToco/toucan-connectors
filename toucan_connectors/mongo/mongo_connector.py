@@ -1,16 +1,21 @@
+from jq import jq
 from typing import Optional, Union
 from urllib.parse import quote_plus
 
 import pandas as pd
 import pymongo
 from bson.son import SON
-from jq import jq
-from pydantic import validator
+from pydantic import create_model, validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.mongo.mongo_translator import MongoExpression
-from toucan_connectors.toucan_connector import ToucanConnector, \
-    ToucanDataSource, decorate_func_with_retry
+from toucan_connectors.toucan_connector import (
+    DataSlice,
+    ToucanConnector,
+    ToucanDataSource,
+    decorate_func_with_retry,
+    strlist_to_enum,
+)
 
 
 def normalize_query(query, parameters):
@@ -37,11 +42,49 @@ def apply_permissions(query, permissions):
     return query
 
 
+def validate_database(client, database):
+    if database not in client.list_database_names():
+        raise UnkwownMongoDatabase(f'Database {database!r} doesn\'t exist')
+
+
+def validate_collection(client, database, collection):
+    if collection not in client[database].list_collection_names():
+        raise UnkwownMongoCollection(f'Collection {collection!r} doesn\'t exist')
+
+
 class MongoDataSource(ToucanDataSource):
     """Supports simple, multiples and aggregation queries as desribed in
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
+    database: str
     collection: str
-    query: Union[dict, list]
+    query: Union[dict, list] = {}
+
+    @classmethod
+    def get_form(cls, connector: 'MongoConnector', current_config):
+        """
+        Method to retrieve the form with a current config
+        For example, once the connector is set,
+        - we are able to give suggestions for the `database` field
+        - if `database` is set, we are able to give suggestions for the `collection` field
+        """
+        client = pymongo.MongoClient(connector.uri, ssl=connector.ssl)
+
+        # Add constraints to the schema
+        # the key has to be a valid field
+        # the value is either <default value> or a tuple ( <type>, <default value> )
+        # If the field is required, the <default value> has to be '...' (cf pydantic doc)
+        constraints = {}
+
+        # Always add the suggestions for the available databases
+        available_databases = client.list_database_names()
+        constraints['database'] = strlist_to_enum('database', available_databases)
+
+        if 'database' in current_config:
+            validate_database(client, current_config['database'])
+            available_cols = client[current_config['database']].list_collection_names()
+            constraints['collection'] = strlist_to_enum('collection', available_cols)
+
+        return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
 class MongoConnector(ToucanConnector):
@@ -50,13 +93,12 @@ class MongoConnector(ToucanConnector):
 
     host: str
     port: int
-    database: str
     username: str = None
     password: str = None
     ssl: bool = False
 
     @validator('password')
-    def password_must_have_a_user(cls, v, values, **kwargs):
+    def password_must_have_a_user(cls, v, values):
         if values['username'] is None:
             raise ValueError('username must be set')
         return v
@@ -78,7 +120,6 @@ class MongoConnector(ToucanConnector):
             'Port opened',
             'Host connection',
             'Authenticated',
-            'Database available'
         ]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
@@ -123,28 +164,17 @@ class MongoConnector(ToucanConnector):
                 'error': str(e)
             }
 
-        # Check if given database actually exists
-        if self.database in client.list_database_names():
-            return {
-                'status': True,
-                'details': self._get_details(4, True),
-                'error': None
-            }
-        else:
-            return {
-                'status': False,
-                'details': self._get_details(4, False),
-                'error': f'Database {self.database!r} does not exist'
-            }
-
-    def _validate_collection(self, client, collection):
-        if collection not in client[self.database].list_collection_names():
-            raise UnkwownMongoCollection(f'Collection {collection} doesn\'t exist')
+        return {
+            'status': True,
+            'details': self._get_details(3, True),
+            'error': None
+        }
 
     def _execute_query(self, data_source):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-        self._validate_collection(client, data_source.collection)
-        col = client[self.database][data_source.collection]
+        validate_database(client, data_source.database)
+        validate_collection(client, data_source.database, data_source.collection)
+        col = client[data_source.database][data_source.collection]
         result = col.aggregate(data_source.query)
         client.close()
         return result
@@ -160,8 +190,16 @@ class MongoConnector(ToucanConnector):
         return self._retrieve_data(data_source)
 
     @decorate_func_with_retry
-    def get_df_and_count(self, data_source, permissions=None, limit=None):
-        if limit is not None:
+    def get_slice(
+        self,
+        data_source: MongoDataSource,
+        permissions: Optional[str] = None,
+        offset: int = 0,
+        limit: Optional[int] = None
+    ) -> DataSlice:
+        # Create a copy in order to keep the original (deepcopy-like)
+        data_source = MongoDataSource.parse_obj(data_source)
+        if offset or limit is not None:
             data_source.query = apply_permissions(data_source.query,
                                                   permissions)
             data_source.query = normalize_query(data_source.query,
@@ -171,25 +209,29 @@ class MongoConnector(ToucanConnector):
                 'df': data_source.query.copy(),
             }}
             facet['$facet']['count'].append({'$count': 'value'})
-            facet['$facet']['df'].append({'$limit': limit})
+            if offset:
+                facet['$facet']['df'].append({'$skip': offset})
+            if limit is not None:
+                facet['$facet']['df'].append({'$limit': limit})
             data_source.query = [facet]
             res = self._execute_query(data_source).next()
-            count = res['count'][0]['value'] if len(res['count']) > 0 else 0
+            total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
             df = pd.DataFrame(res['df'])
         else:
             df = self.get_df(data_source, permissions)
-            count = len(df)
-        return {'df': df, 'count': count}
+            total_count = len(df)
+        return DataSlice(df, total_count)
 
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-        self._validate_collection(client, data_source.collection)
+        validate_database(client, data_source.database)
+        validate_collection(client, data_source.database, data_source.collection)
         data_source.query = apply_permissions(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query,
                                             data_source.parameters)
 
-        cursor = client[self.database].command(
+        cursor = client[data_source.database].command(
             command="aggregate",
             value=data_source.collection,
             pipeline=data_source.query,
@@ -203,6 +245,10 @@ class MongoConnector(ToucanConnector):
         client.close()
 
         return jq(f).transform(cursor)
+
+
+class UnkwownMongoDatabase(Exception):
+    """raised when a database does not exist"""
 
 
 class UnkwownMongoCollection(Exception):

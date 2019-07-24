@@ -17,8 +17,7 @@ class OracleSQLConnector(ToucanConnector):
     password: str = None
     encoding: str = None
 
-    @property
-    def connection_params(self):
+    def get_connection_params(self):
         con_params = {
             'user': self.user,
             'password': self.password,
@@ -28,7 +27,7 @@ class OracleSQLConnector(ToucanConnector):
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _retrieve_data(self, data_source: OracleSQLDataSource) -> pd.DataFrame:
-        connection = cx_Oracle.connect(**self.connection_params)
+        connection = cx_Oracle.connect(**self.get_connection_params())
 
         query = data_source.query[:-1] if data_source.query.endswith(';') else data_source.query
         df = pd.read_sql(query, con=connection)

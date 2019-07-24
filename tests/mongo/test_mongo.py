@@ -8,7 +8,7 @@ import pytest
 from bson.son import SON
 
 from toucan_connectors.mongo.mongo_connector import (
-    MongoDataSource, MongoConnector, UnkwownMongoCollection
+    MongoDataSource, MongoConnector, UnkwownMongoCollection, UnkwownMongoDatabase
 )
 from toucan_connectors.mongo.mongo_connector import normalize_query
 
@@ -29,31 +29,43 @@ def mongo_server(service_container):
 
 @pytest.fixture
 def mongo_connector(mongo_server):
-    return MongoConnector(name='mycon', host='localhost', database='toucan',
-                          port=mongo_server['port'], username='ubuntu', password='ilovetoucan')
+    return MongoConnector(name='mycon', host='localhost', port=mongo_server['port'],
+                          username='ubuntu', password='ilovetoucan')
 
 
 @pytest.fixture
 def mongo_datasource():
-    def f(collection, query):
-        return MongoDataSource(name='mycon', domain='mydomain', collection=collection, query=query)
+    def f(**kwargs):
+        params = {
+            'name': 'mycon',
+            'domain': 'mydomain',
+            'database': 'toucan'
+        }
+        params.update(kwargs)
+        return MongoDataSource(**params)
 
     return f
 
 
 def test_uri():
-    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb')
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123')
     assert connector.uri == 'mongodb://myhost:123'
-    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123',
                                username='myuser')
     assert connector.uri == 'mongodb://myuser@myhost:123'
-    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123',
                                username='myuser', password='mypass')
     assert connector.uri == 'mongodb://myuser:mypass@myhost:123'
     with pytest.raises(ValueError) as exc_info:
-        MongoConnector(name='my_mongo_con', host='myhost', port='123', database='mydb',
-                       password='mypass')
+        MongoConnector(name='my_mongo_con', host='myhost', port='123', password='mypass')
     assert 'password\n  username must be set' in str(exc_info.value)
+
+
+def test_get_df_no_query(mongo_connector, mongo_datasource):
+    """It should return the whole collection by default"""
+    ds = mongo_datasource(collection='test_col')
+    df = mongo_connector.get_df(ds)
+    assert df.shape == (3, 5)
 
 
 def test_get_df(mocker):
@@ -77,23 +89,26 @@ def test_get_df(mocker):
         def close(self):
             pass
 
+        def list_database_names(self):
+            return self.data.keys()
+
     snock = mocker.patch('pymongo.MongoClient')
     snock.return_value = MongoMock('toucan', 'test_col')
     aggregate = mocker.patch('pymongo.collection.Collection.aggregate')
 
     mongo_connector = MongoConnector(
-        name='mycon', host='localhost', database='toucan', port=22,
+        name='mycon', host='localhost', port=22,
         username='ubuntu', password='ilovetoucan'
     )
 
     datasource = MongoDataSource(
-        name='mycon', domain='mydomain', collection='test_col',
+        name='mycon', domain='mydomain', database='toucan', collection='test_col',
         query={'domain': 'domain1'}
     )
     mongo_connector.get_df(datasource)
 
     datasource = MongoDataSource(
-        name='mycon', domain='mydomain', collection='test_col',
+        name='mycon', domain='mydomain', database='toucan', collection='test_col',
         query=[{'$match': {'domain': 'domain1'}}]
     )
     mongo_connector.get_df(datasource)
@@ -149,46 +164,64 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     assert df[['country', 'language', 'value']].equals(expected)
 
 
-def test_get_df_and_count(mongo_connector, mongo_datasource):
+def test_get_slice(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    res = mongo_connector.get_df_and_count(datasource, limit=1)
-    assert res['count'] == 3
+    res = mongo_connector.get_slice(datasource)
+    assert res.total_count == 3
+    assert res.df.shape == (3, 5)
+    assert res.df['country'].tolist() == ['France', 'England', 'Germany']
+
+    # With a limit
+    res = mongo_connector.get_slice(datasource, limit=1)
     expected = pd.DataFrame({'country': ['France'],
                              'language': ['French'],
                              'value': [20]})
-    assert res['df'].shape == (1, 5)
-    assert res['df'][['country', 'language', 'value']].equals(expected)
+    assert res.total_count == 3
+    assert res.df.shape == (1, 5)
+    assert res.df[['country', 'language', 'value']].equals(expected)
+
+    # With a offset
+    res = mongo_connector.get_slice(datasource, offset=1)
+    assert res.total_count == 3
+    assert res.df.shape == (2, 5)
+    assert res.df['country'].tolist() == ['England', 'Germany']
+
+    # With both
+    res = mongo_connector.get_slice(datasource, offset=1, limit=1)
+    assert res.total_count == 3
+    assert res.df.shape == (1, 5)
+    assert res.df.loc[0, 'country'] == 'England'
 
 
-def test_get_df_and_count_with_group_agg(mongo_connector, mongo_datasource):
+def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query=[
         {"$match": {'domain': 'domain1'}},
         {"$group": {"_id": {"country": "$country"}}},
         {"$project": {"pays": "$_id.country", "_id": 0}},
         {"$sort": [{'pays': 1}]}
     ])
-    res = mongo_connector.get_df_and_count(datasource, limit=1)
-    assert res['count'] == 3
-    assert res['df'].shape == (1, 1)
-    assert res['df'].iloc[0].pays in ['France', 'England', 'Germany']
+    df, count = mongo_connector.get_slice(datasource, limit=1)
+    assert count == 3
+    assert df.shape == (1, 1)
+    assert df.iloc[0].pays in ['France', 'England', 'Germany']
 
 
-def test_get_df_and_count_no_limit(mongo_connector, mongo_datasource):
+def test_get_slice_no_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    res = mongo_connector.get_df_and_count(datasource, limit=None)
-    assert res['count'] == 3
+    df, count = mongo_connector.get_slice(datasource, limit=None)
+    assert count == 3
     expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
                              'language': ['French', 'English', 'German'],
                              'value': [20, 14, 17]})
-    assert res['df'].shape == (3, 5)
-    assert res['df'][['country', 'language', 'value']].equals(expected)
+    assert df.shape == (3, 5)
+    assert df[['country', 'language', 'value']].equals(expected)
 
 
-def test_get_df_and_count_empty(mongo_connector, mongo_datasource):
+def test_get_slice_empty(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'unknown'})
-    res = mongo_connector.get_df_and_count(datasource, limit=1)
-    assert res['count'] == 0
-    assert res['df'].shape == (0, 0)
+    df, count = mongo_connector.get_slice(datasource, limit=1)
+    assert count == 0
+    assert df.shape == (0, 0)
 
 
 def test_explain(mongo_connector, mongo_datasource):
@@ -197,11 +230,18 @@ def test_explain(mongo_connector, mongo_datasource):
     assert list(res.keys()) == ['details', 'summary']
 
 
+def test_unknown_database(mongo_connector, mongo_datasource):
+    with pytest.raises(UnkwownMongoDatabase) as exc_info:
+        datasource = mongo_datasource(database='unknown', collection='test_col', query={})
+        mongo_connector.get_df(datasource)
+    assert str(exc_info.value) == "Database 'unknown' doesn't exist"
+
+
 def test_unknown_collection(mongo_connector, mongo_datasource):
     with pytest.raises(UnkwownMongoCollection) as exc_info:
         datasource = mongo_datasource(collection='unknown', query={})
         mongo_connector.get_df(datasource)
-    assert str(exc_info.value) == "Collection unknown doesn't exist"
+    assert str(exc_info.value) == "Collection 'unknown' doesn't exist"
 
 
 def test_normalize_query():
@@ -220,7 +260,6 @@ def test_status_all_good(mongo_connector):
             ('Port opened', True),
             ('Host connection', True),
             ('Authenticated', True),
-            ('Database available', True)
         ],
         'error': None
     }
@@ -228,17 +267,15 @@ def test_status_all_good(mongo_connector):
 
 def test_status_bad_host(mongo_connector):
     mongo_connector.host = 'localhot'
-    assert mongo_connector.get_status() == {
-        'status': False,
-        'details': [
-            ('Hostname resolved', False),
-            ('Port opened', None),
-            ('Host connection', None),
-            ('Authenticated', None),
-            ('Database available', None)
-        ],
-        'error': '[Errno -2] Name or service not known'
-    }
+    status = mongo_connector.get_status()
+    assert status['status'] is False
+    assert status['details'] == [
+        ('Hostname resolved', False),
+        ('Port opened', None),
+        ('Host connection', None),
+        ('Authenticated', None),
+    ]
+    assert 'not known' in status['error']
 
 
 def test_status_bad_port(mongo_connector):
@@ -250,7 +287,6 @@ def test_status_bad_port(mongo_connector):
         ('Port opened', False),
         ('Host connection', None),
         ('Authenticated', None),
-        ('Database available', None)
     ]
     assert 'Connection refused' in status['error']
 
@@ -264,7 +300,6 @@ def test_status_bad_port2(mongo_connector):
             ('Port opened', False),
             ('Host connection', None),
             ('Authenticated', None),
-            ('Database available', None)
         ],
         'error': 'getsockaddrarg: port must be 0-65535.'
     }
@@ -280,7 +315,6 @@ def test_status_unreachable(mongo_connector, mocker):
             ('Port opened', True),
             ('Host connection', False),
             ('Authenticated', None),
-            ('Database available', None)
         ],
         'error': 'qwe'
     }
@@ -295,22 +329,46 @@ def test_status_bad_username(mongo_connector):
             ('Port opened', True),
             ('Host connection', True),
             ('Authenticated', False),
-            ('Database available', None)
         ],
         'error': 'Authentication failed.'
     }
 
 
-def test_status_bad_db(mongo_connector):
-    mongo_connector.database = 'nothere'
-    assert mongo_connector.get_status() == {
-        'status': False,
-        'details': [
-            ('Hostname resolved', True),
-            ('Port opened', True),
-            ('Host connection', True),
-            ('Authenticated', True),
-            ('Database available', False)
-        ],
-        'error': "Database 'nothere' does not exist"
+def test_get_form_empty_query(mongo_connector):
+    """It should give suggestions of the databases without changing the rest"""
+    current_config = {}
+    form = MongoDataSource.get_form(mongo_connector, current_config)
+    assert form['required'] == ['domain', 'name', 'database', 'collection']
+    assert form['properties']['database'] == {
+        'title': 'Database',
+        'type': 'string',
+        'enum': ['admin', 'config', 'local', 'toucan']
+    }
+    assert form['properties']['collection'] == {
+        'title': 'Collection',
+        'type': 'string'
+    }
+
+
+def test_get_form_query_with_bad_database(mongo_connector):
+    """It should raise an error"""
+    current_config = {'database': 'qweqwe'}
+    with pytest.raises(UnkwownMongoDatabase):
+        MongoDataSource.get_form(mongo_connector, current_config)
+
+
+def test_get_form_query_with_good_database(mongo_connector):
+    """It should give suggestions of the collections"""
+    current_config = {'database': 'toucan'}
+    form = MongoDataSource.get_form(mongo_connector, current_config)
+    assert form['required'] == ['domain', 'name', 'database', 'collection']
+    assert form['properties']['database'] == {
+        'title': 'Database',
+        'type': 'string',
+        'enum': ['admin', 'config', 'local', 'toucan']
+    }
+    assert form['properties']['collection'] == {
+        'title': 'Collection',
+        'type': 'string',
+        'enum': ['test_col']
     }

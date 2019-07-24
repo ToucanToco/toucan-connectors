@@ -8,7 +8,6 @@ Import data from MySQL database.
 * `name`: str, required
 * `host`: str, required
 * `user`: str, required
-* `db`: str, required
 * `password`: str
 * `port`: int
 * `charset`: str, default to utf8mb4
@@ -20,7 +19,6 @@ DATA_PROVIDERS: [
   name:    '<name>'
   host:    '<host>'
   user:    '<user>'
-  db:    '<db>'
   password:    '<password>'
   port:    <port>
   charset:    '<charset>'
@@ -37,6 +35,7 @@ Either `query` or `table` are required, both at the same time are not supported.
 
 * `domain`: str, required
 * `name`: str, required
+* `database`: str, required
 * `query`: str (not empty), required if `table` is not provided.
 * `table`: str (not empty), required if `query` is not provided, will read the whole table.
 * `follow_relations`: bool, default to false. Merges data from foreign key relations.
@@ -46,6 +45,7 @@ Either `query` or `table` are required, both at the same time are not supported.
 DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
+  database:    '<database>'
   query:    'SELECT * FROM city WHERE country = %(country)s'
   parameters:
     country: '<value>'

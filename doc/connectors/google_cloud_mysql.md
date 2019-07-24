@@ -8,7 +8,6 @@ Import data from Google Cloud MySQL database.
 * `name`: str, required
 * `host`: str, required
 * `user`: str, required
-* `db`: str, required
 * `password`: str, required
 * `port`: int
 * `charset`: str, default to utf8mb4
@@ -20,7 +19,6 @@ DATA_PROVIDERS: [
   name:    '<name>'
   host:    '<host>'
   user:    '<user>'
-  db:    '<db>'
   password:    '<password>'
   port:    <port>
   charset:    '<charset>'
@@ -35,12 +33,14 @@ DATA_PROVIDERS: [
 
 * `domain`: str, required
 * `name`: str, required
+* `database`: str, required
 * `query`: str (not empty), required
 
 ```coffee
 DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
+  database:    '<database>'
   query:    '<query>'
 ,
   ...

@@ -75,3 +75,21 @@ def test_unknown_arg():
         DataSource(**data_source)
     assert 'unk' in e.value.errors()[0]['loc']
     assert e.value.errors()[0]['msg'] == 'extra fields not permitted'
+
+
+def test_get_form():
+    default_form = ToucanDataSource.get_form(None, {})
+    assert default_form == {
+        'title': 'ToucanDataSource',
+        'type': 'object',
+        'properties': {
+            'domain': {'title': 'Domain', 'type': 'string'},
+            'name': {'title': 'Name', 'type': 'string'},
+            'type': {'title': 'Type', 'type': 'string'},
+            'load': {'title': 'Load', 'type': 'boolean', 'default': True},
+            'live_data': {'title': 'Live_Data', 'type': 'boolean', 'default': False},
+            'validation': {'title': 'Validation', 'type': 'array', 'items': {}},
+            'parameters': {'title': 'Parameters', 'type': 'object'},
+        },
+        'required': ['domain', 'name']
+    }

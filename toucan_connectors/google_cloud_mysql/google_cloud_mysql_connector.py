@@ -6,6 +6,7 @@ from toucan_connectors.toucan_connector import ToucanDataSource, ToucanConnector
 
 
 class GoogleCloudMySQLDataSource(ToucanDataSource):
+    database: str
     query: constr(min_length=1)
 
 
@@ -17,22 +18,20 @@ class GoogleCloudMySQLConnector(ToucanConnector):
 
     host: str
     user: str
-    db: str
     password: str
     port: int = None
     charset: str = 'utf8mb4'
     connect_timeout: int = None
 
-    @property
-    def connection_params(self):
+    def get_connection_params(self, *, database=None):
         conv = pymysql.converters.conversions.copy()
         conv[246] = float
         con_params = {
             'host': self.host,
             'user': self.user,
-            'database': self.db,
             'password': self.password,
             'port': self.port,
+            'database': database,
             'charset': self.charset,
             'connect_timeout': self.connect_timeout,
             'conv': conv,
@@ -42,7 +41,9 @@ class GoogleCloudMySQLConnector(ToucanConnector):
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _retrieve_data(self, data_source: GoogleCloudMySQLDataSource) -> pd.DataFrame:
-        connection = pymysql.connect(**self.connection_params)
+        connection = pymysql.connect(
+            **self.get_connection_params(database=data_source.database)
+        )
 
         df = pd.read_sql(data_source.query, con=connection)
 

@@ -3,13 +3,16 @@ import psycopg2
 from pydantic import ValidationError
 import pytest
 
-from toucan_connectors.postgres.postgresql_connector import PostgresConnector, PostgresDataSource
+from toucan_connectors.postgres.postgresql_connector import (
+    PostgresConnector,
+    PostgresDataSource
+)
 
 
 @pytest.fixture(scope='module')
 def postgres_server(service_container):
     def check(host_port):
-        conn = psycopg2.connect(host='127.0.0.1', port=host_port, database='postgres_db',
+        conn = psycopg2.connect(host='127.0.0.1', port=host_port, database='postgres',
                                 user='ubuntu', password='ilovetoucan')
         cur = conn.cursor()
         cur.execute('SELECT 1;')
@@ -21,7 +24,7 @@ def postgres_server(service_container):
 
 @pytest.fixture
 def postgres_connector(postgres_server):
-    return PostgresConnector(name='test', host='localhost', db='postgres_db', user='ubuntu',
+    return PostgresConnector(name='test', host='localhost', user='ubuntu',
                              password='ilovetoucan', port=postgres_server['port'])
 
 
@@ -34,17 +37,18 @@ def test_no_user():
 def test_open_connection():
     """ It should not open a connection """
     with pytest.raises(psycopg2.OperationalError):
+        ds = PostgresDataSource(domain='pika', name='pika',
+                                database='circle_test', query='q')
         PostgresConnector(
                 name='test',
                 host='lolcathost',
-                db='circle_test',
                 user='ubuntu',
-                connect_timeout=1).get_df({})
+                connect_timeout=1).get_df(ds)
 
 
 def test_raise_on_empty_query():
     with pytest.raises(ValidationError):
-        PostgresDataSource(domaine='test', name='test', query='')
+        PostgresDataSource(domaine='test', name='test', database='postgres_db', query='')
 
 
 def test_postgress_get_df(mocker):
@@ -52,10 +56,9 @@ def test_postgress_get_df(mocker):
     reasq = mocker.patch('pandas.read_sql')
 
     postgres_connector = PostgresConnector(name='test', host='localhost',
-                                           db='postgres_db', user='ubuntu',
-                                           password='ilovetoucan', port=22)
+                                           user='ubuntu', password='ilovetoucan', port=22)
 
-    ds = PostgresDataSource(domain='test', name='test',
+    ds = PostgresDataSource(domain='test', name='test', database='postgres_db',
                             query='SELECT Name, CountryCode, Population FROM City LIMIT 2;')
     postgres_connector.get_df(ds)
 
@@ -79,6 +82,7 @@ def test_retrieve_response(postgres_connector):
     ds = PostgresDataSource(
             domain='test',
             name='test',
+            database='postgres_db',
             query='SELECT Name, CountryCode, Population FROM City LIMIT 2;')
     res = postgres_connector.get_df(ds)
     assert isinstance(res, pd.DataFrame)
@@ -91,6 +95,7 @@ def test_get_df_db(postgres_connector):
         'domain': 'Postgres test',
         'type': 'external_database',
         'name': 'Some Postgres provider',
+        'database': 'postgres_db',
         'query': 'SELECT * FROM City WHERE Population > %(max_pop)s',
         'parameters': {'max_pop': 5000000},
     }

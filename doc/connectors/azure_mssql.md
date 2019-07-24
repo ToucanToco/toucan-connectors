@@ -9,7 +9,6 @@ Import data from Microsoft Azure SQL Server.
 * `host`: str, required
 * `user`: str, required
 * `password`: str, required
-* `db`: str, required
 * `connect_timeout`: int
 
 ```coffee
@@ -19,7 +18,6 @@ DATA_PROVIDERS: [
   host:    '<host>'
   user:    '<user>'
   password:    '<password>'
-  db:    '<db>'
   connect_timeout:    <connect_timeout>
 ,
   ...
@@ -31,12 +29,14 @@ DATA_PROVIDERS: [
 
 * `domain`: str, required
 * `name`: str, required
+* `database`: str, required
 * `query`: str (not empty), required
 
 ```coffee
 DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
+  database:    '<database>'
   query:    '<query>'
 ,
   ...

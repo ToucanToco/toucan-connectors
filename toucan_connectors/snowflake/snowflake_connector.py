@@ -8,7 +8,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 class Path(str):
     @classmethod
-    def get_validators(cls):
+    def __get_validators__(cls):
         yield cls.validate
 
     @classmethod
