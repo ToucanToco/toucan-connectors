@@ -372,3 +372,16 @@ def test_get_form_query_with_good_database(mongo_connector):
         'type': 'string',
         'enum': ['test_col']
     }
+
+
+def test_get_templated_model():
+    ds_conf = {
+        'domain': 'mydom',
+        'name': 'mymongo',
+        'database': 'mydb',
+        'collection': 'mycoll',
+        'query': '{{ my_custom_list }}'
+    }
+    with pytest.raises(ValueError):
+        MongoDataSource(**ds_conf)
+    MongoDataSource.templated_model(**ds_conf)

@@ -54,6 +54,8 @@ def validate_collection(client, database, collection):
 class MongoDataSource(ToucanDataSource):
     """Supports simple, multiples and aggregation queries as desribed in
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
+    __templated__ = ['query']
+
     database: str
     collection: str
     query: Union[dict, list] = {}
