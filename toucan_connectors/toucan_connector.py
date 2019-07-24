@@ -4,7 +4,7 @@ import socket
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Iterable, List, Optional, Type
+from typing import Iterable, List, Optional, Tuple, Type
 
 import pandas as pd
 import tenacity as tny
@@ -210,16 +210,19 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
             res = res.query(rendered_permissions)
         return res
 
-    def get_df_and_count(self, data_source: ToucanDataSource,
-                         permissions: Optional[str] = None,
-                         limit: Optional[int] = None) -> dict:
+    def get_slice(
+        self,
+        data_source: ToucanDataSource,
+        permissions: Optional[str] = None,
+        offset: int = 0,
+        limit: Optional[int] = None
+    ) -> Tuple[pd.DataFrame, int]:
         """
         Method to retrieve a part of the data as a pandas dataframe
         and the total size filtered with permissions
         """
         df = self.get_df(data_source, permissions)
-        count = len(df)
-        return {'df': df[:limit], 'count': count}
+        return df[offset:limit], len(df)
 
     def explain(self, data_source: ToucanDataSource, permissions: Optional[str] = None):
         """Method to give metrics about the query"""

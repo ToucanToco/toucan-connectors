@@ -1,5 +1,5 @@
 from jq import jq
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 from urllib.parse import quote_plus
 
 import pandas as pd
@@ -189,8 +189,16 @@ class MongoConnector(ToucanConnector):
         return self._retrieve_data(data_source)
 
     @decorate_func_with_retry
-    def get_df_and_count(self, data_source, permissions=None, limit=None):
-        if limit is not None:
+    def get_slice(
+        self,
+        data_source: MongoDataSource,
+        permissions: Optional[str] = None,
+        offset: int = 0,
+        limit: Optional[int] = None
+    ) -> Tuple[pd.DataFrame, int]:
+        # Create a copy in order to keep the original (deepcopy-like)
+        data_source = MongoDataSource.parse_obj(data_source)
+        if offset or limit is not None:
             data_source.query = apply_permissions(data_source.query,
                                                   permissions)
             data_source.query = normalize_query(data_source.query,
@@ -200,7 +208,10 @@ class MongoConnector(ToucanConnector):
                 'df': data_source.query.copy(),
             }}
             facet['$facet']['count'].append({'$count': 'value'})
-            facet['$facet']['df'].append({'$limit': limit})
+            if offset:
+                facet['$facet']['df'].append({'$skip': offset})
+            if limit is not None:
+                facet['$facet']['df'].append({'$limit': limit})
             data_source.query = [facet]
             res = self._execute_query(data_source).next()
             count = res['count'][0]['value'] if len(res['count']) > 0 else 0
@@ -208,7 +219,7 @@ class MongoConnector(ToucanConnector):
         else:
             df = self.get_df(data_source, permissions)
             count = len(df)
-        return {'df': df, 'count': count}
+        return df, count
 
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):

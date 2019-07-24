@@ -73,7 +73,7 @@ def test_get_df_with_permissions():
     assert all(df == pd.DataFrame({'A': [1]}))
 
 
-def test_get_df_and_count():
+def test_get_slice():
     class DataConnector(ToucanConnector):
         type = 'MyDB'
         data_source_model = 'asd'
@@ -81,9 +81,9 @@ def test_get_df_and_count():
         def _retrieve_data(self, datasource):
             return pd.DataFrame({'A': [1, 2]})
 
-    res = DataConnector(name='my_name').get_df_and_count({}, limit=1)
-    assert all(res['df'] == pd.DataFrame({'A': [1]}))
-    assert res['count'] == 2
+    df, count = DataConnector(name='my_name').get_slice({}, limit=1)
+    assert df.equals(pd.DataFrame({'A': [1]}))
+    assert count == 2
 
 
 def test_explain():

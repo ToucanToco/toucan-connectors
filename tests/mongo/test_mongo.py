@@ -164,46 +164,64 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     assert df[['country', 'language', 'value']].equals(expected)
 
 
-def test_get_df_and_count(mongo_connector, mongo_datasource):
+def test_get_slice(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    res = mongo_connector.get_df_and_count(datasource, limit=1)
-    assert res['count'] == 3
+    df, count = mongo_connector.get_slice(datasource)
+    assert count == 3
+    assert df.shape == (3, 5)
+    assert df['country'].tolist() == ['France', 'England', 'Germany']
+
+    # With a limit
+    df, count = mongo_connector.get_slice(datasource, limit=1)
     expected = pd.DataFrame({'country': ['France'],
                              'language': ['French'],
                              'value': [20]})
-    assert res['df'].shape == (1, 5)
-    assert res['df'][['country', 'language', 'value']].equals(expected)
+    assert count == 3
+    assert df.shape == (1, 5)
+    assert df[['country', 'language', 'value']].equals(expected)
+
+    # With a offset
+    df, count = mongo_connector.get_slice(datasource, offset=1)
+    assert count == 3
+    assert df.shape == (2, 5)
+    assert df['country'].tolist() == ['England', 'Germany']
+
+    # With both
+    df, count = mongo_connector.get_slice(datasource, offset=1, limit=1)
+    assert count == 3
+    assert df.shape == (1, 5)
+    assert df.loc[0, 'country'] == 'England'
 
 
-def test_get_df_and_count_with_group_agg(mongo_connector, mongo_datasource):
+def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query=[
         {"$match": {'domain': 'domain1'}},
         {"$group": {"_id": {"country": "$country"}}},
         {"$project": {"pays": "$_id.country", "_id": 0}},
         {"$sort": [{'pays': 1}]}
     ])
-    res = mongo_connector.get_df_and_count(datasource, limit=1)
-    assert res['count'] == 3
-    assert res['df'].shape == (1, 1)
-    assert res['df'].iloc[0].pays in ['France', 'England', 'Germany']
+    df, count = mongo_connector.get_slice(datasource, limit=1)
+    assert count == 3
+    assert df.shape == (1, 1)
+    assert df.iloc[0].pays in ['France', 'England', 'Germany']
 
 
-def test_get_df_and_count_no_limit(mongo_connector, mongo_datasource):
+def test_get_slice_no_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    res = mongo_connector.get_df_and_count(datasource, limit=None)
-    assert res['count'] == 3
+    df, count = mongo_connector.get_slice(datasource, limit=None)
+    assert count == 3
     expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
                              'language': ['French', 'English', 'German'],
                              'value': [20, 14, 17]})
-    assert res['df'].shape == (3, 5)
-    assert res['df'][['country', 'language', 'value']].equals(expected)
+    assert df.shape == (3, 5)
+    assert df[['country', 'language', 'value']].equals(expected)
 
 
-def test_get_df_and_count_empty(mongo_connector, mongo_datasource):
+def test_get_slice_empty(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'unknown'})
-    res = mongo_connector.get_df_and_count(datasource, limit=1)
-    assert res['count'] == 0
-    assert res['df'].shape == (0, 0)
+    df, count = mongo_connector.get_slice(datasource, limit=1)
+    assert count == 0
+    assert df.shape == (0, 0)
 
 
 def test_explain(mongo_connector, mongo_datasource):
