@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from toucan_connectors.common import render_raw_permissions
 
 
-class SliceResult(NamedTuple):
+class DataSlice(NamedTuple):
     df: pd.DataFrame  # the dataframe of the slice
     total_count: int  # the length of the raw dataframe (without slicing)
 
@@ -221,13 +221,13 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         permissions: Optional[str] = None,
         offset: int = 0,
         limit: Optional[int] = None
-    ) -> SliceResult:
+    ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
         and the total size filtered with permissions
         """
         df = self.get_df(data_source, permissions)
-        return SliceResult(df[offset:limit], len(df))
+        return DataSlice(df[offset:limit], len(df))
 
     def explain(self, data_source: ToucanDataSource, permissions: Optional[str] = None):
         """Method to give metrics about the query"""

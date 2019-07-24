@@ -1,6 +1,6 @@
 from importlib import import_module
 
-from .toucan_connector import SliceResult, ToucanDataSource, ToucanConnector
+from .toucan_connector import DataSlice, ToucanDataSource, ToucanConnector
 
 CONNECTORS_CATALOGUE = {
     'AdobeAnalytics': 'adobe_analytics.adobe_analytics_connector.AdobeAnalyticsConnector',

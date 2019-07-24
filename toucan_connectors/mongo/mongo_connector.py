@@ -10,7 +10,7 @@ from pydantic import create_model, validator
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.mongo.mongo_translator import MongoExpression
 from toucan_connectors.toucan_connector import (
-    SliceResult,
+    DataSlice,
     ToucanConnector,
     ToucanDataSource,
     decorate_func_with_retry,
@@ -196,7 +196,7 @@ class MongoConnector(ToucanConnector):
         permissions: Optional[str] = None,
         offset: int = 0,
         limit: Optional[int] = None
-    ) -> SliceResult:
+    ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
         if offset or limit is not None:
@@ -220,7 +220,7 @@ class MongoConnector(ToucanConnector):
         else:
             df = self.get_df(data_source, permissions)
             total_count = len(df)
-        return SliceResult(df, total_count)
+        return DataSlice(df, total_count)
 
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):
