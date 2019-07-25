@@ -1,5 +1,6 @@
 from importlib import import_module
 
+from .common import create_templated_model, TemplatedMixin
 from .toucan_connector import DataSlice, ToucanDataSource, ToucanConnector
 
 CONNECTORS_CATALOGUE = {
