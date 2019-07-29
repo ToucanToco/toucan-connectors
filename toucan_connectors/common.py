@@ -3,7 +3,7 @@ import re
 from abc import ABCMeta, ABC, abstractmethod
 from copy import deepcopy
 
-from jinja2 import Template
+from jinja2 import StrictUndefined, Template
 from toucan_data_sdk.utils.helpers import slugify
 
 RE_PARAM = r'%\(([^(%\()]*)\)s'
@@ -86,7 +86,7 @@ def nosql_apply_parameters_to_query(query, parameters):
                     missing_params = []
                     for m in matches:
                         try:
-                            eval(m, deepcopy(params))
+                            Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
                         except Exception:
                             missing_params.append(m)
                     if any(missing_params):
