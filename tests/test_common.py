@@ -112,6 +112,32 @@ def test_apply_params_with_missing_param():
         assert nosql_apply_parameters_to_query(query, params) == expected
 
 
+def test_nosql_apply_parameters_to_query_dot():
+    """It should handle both `x["y"]` and `x.y`"""
+    query1 = {
+        'facet': '{{ facet.value }}',
+        'sort': '{{ rank[0] }}',
+        'rows': '{{ bibou[0].value }}'
+    }
+    query2 = {
+        'facet': '{{ facet["value"] }}',
+        'sort': '{{ rank[0] }}',
+        'rows': '{{ bibou[0]["value"] }}'
+    }
+    parameters = {
+        'facet': {'value': 'auteur'},
+        'rank': ['rang'],
+        'bibou': [{'value': 50}]
+    }
+    res1 = nosql_apply_parameters_to_query(query1, parameters)
+    res2 = nosql_apply_parameters_to_query(query2, parameters)
+    assert res1 == res2 == {
+        'facet': 'auteur',
+        'sort': 'rang',
+        'rows': 50
+    }
+
+
 def test_render_raw_permission_no_params():
     query = '(indic0 == 0 or indic1 == 1)'
     assert render_raw_permissions(query, None) == query
