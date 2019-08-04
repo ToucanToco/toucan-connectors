@@ -47,20 +47,6 @@ class classproperty:
         return self.f(owner)
 
 
-class TemplatedMixin:
-    """
-    Mixin to allow templated fields to be set.
-    It will add a new `templated_model` property, which creates a new model
-    allowing string values for templated fields.
-    These fields are set in the `__templated__` class attribute.
-    """
-    __templated__ = []
-
-    @classproperty
-    def templated_model(cls) -> Type[BaseModel]:
-        return create_templated_model(cls, cls.__templated__)
-
-
 def create_templated_model(
     model_cls: Type[BaseModel],
     templated_fields: List[str]

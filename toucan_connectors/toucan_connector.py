@@ -9,7 +9,11 @@ import pandas as pd
 import tenacity as tny
 from pydantic import BaseModel
 
-from toucan_connectors.common import TemplatedMixin, render_raw_permissions
+from toucan_connectors.common import (
+    classproperty,
+    create_templated_model,
+    render_raw_permissions
+)
 
 
 class DataSlice(NamedTuple):
@@ -17,7 +21,9 @@ class DataSlice(NamedTuple):
     total_count: int  # the length of the raw dataframe (without slicing)
 
 
-class ToucanDataSource(TemplatedMixin, BaseModel):
+class ToucanDataSource(BaseModel):
+    __templated__ = []  # see `templated_model` method for explanation
+
     domain: str
     name: str
     type: str = None
@@ -28,7 +34,20 @@ class ToucanDataSource(TemplatedMixin, BaseModel):
 
     class Config:
         extra = 'forbid'
+        keep_untouched = (classproperty,)
         validate_assignment = True
+
+    @classproperty
+    def templated_model(cls) -> Type[BaseModel]:
+        """
+        Some fields may be templated with jinja for example
+        If we want to instanciate a `ToucanDataSource` with a template,
+        it can raise an error if the expected type doesn't include string.
+        By setting adding fields in `__templated__` list, we directly
+        have a class property available, which creates a new model that will
+        allow a template for the given fields.
+        """
+        return create_templated_model(cls, cls.__templated__)
 
     @classmethod
     def get_form(cls, connector: 'ToucanConnector', current_config):
