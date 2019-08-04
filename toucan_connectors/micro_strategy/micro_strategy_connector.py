@@ -43,7 +43,7 @@ class MicroStrategyConnector(ToucanConnector):
 
     base_url: str
     username: str
-    password: str
+    password: str = None
     project_id: str
 
     def _retrieve_metadata(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
