@@ -60,7 +60,10 @@ def test_apply_parameter_to_query():
              {'domain': 'truc', 'indic0': '0'},
              {'indic1': 1, 'indic2': 'yo_2'},
              {'indic_list': {'zero': '0', 'one': 1, 'two': '2'}}
-         ]}})
+         ]}}),
+        ({'data': '%(fakirQuery)s'},
+         {'fakirQuery': '[{"values":["bibou"],"chartParam":"test","type":"test","name":"test"}]'},
+         {'data': '[{"values":["bibou"],"chartParam":"test","type":"test","name":"test"}]'})
     ]
     for (query, params, expected) in tests:
         assert nosql_apply_parameters_to_query(query, params) == expected
