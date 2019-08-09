@@ -95,7 +95,8 @@ class HttpAPIConnector(ToucanConnector):
 
         query = nosql_apply_parameters_to_query(
             data_source.dict(by_alias=True),
-            data_source.parameters)
+            data_source.parameters
+        )
 
         if self.template:
             template = {k: v for k, v in self.template.dict(by_alias=True).items() if v}

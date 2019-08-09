@@ -78,7 +78,7 @@ def nosql_apply_parameters_to_query(query, parameters):
     """
     def _prepare_parameters(p):
         if isinstance(p, str):
-            return f'"{p}"'
+            return repr(p)
         elif isinstance(p, list):
             return [_prepare_parameters(e) for e in p]
         elif isinstance(p, dict):
