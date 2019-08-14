@@ -127,7 +127,7 @@ def test_get_df_live(mongo_connector, mongo_datasource):
                              'language': ['French', 'English', 'German'],
                              'value': [20, 14, 17]})
     assert df.shape == (3, 5)
-    assert df.columns.tolist() == ['_id', 'country', 'domain', 'language', 'value']
+    assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
     assert df[['country', 'language', 'value']].equals(expected)
 
     datasource = mongo_datasource(collection='test_col', query=[
@@ -147,7 +147,7 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     assert datasource.query == [{'$match': {'$and': [{'domain': 'domain1'},
                                                      {'country': 'France'}]}}]
     assert df.shape == (1, 5)
-    assert df.columns.tolist() == ['_id', 'country', 'domain', 'language', 'value']
+    assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
     assert df[['country', 'language', 'value']].equals(expected)
 
     datasource = mongo_datasource(collection='test_col',
@@ -159,8 +159,7 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     assert datasource.query == [{'$match': {'domain': 'domain1'}},
                                 {'$match': {'country': 'France'}}]
     assert df.shape == (1, 5)
-    assert df.columns.tolist() == ['_id', 'country', 'domain', 'language',
-                                   'value']
+    assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
     assert df[['country', 'language', 'value']].equals(expected)
 
 
