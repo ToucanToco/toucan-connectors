@@ -30,7 +30,7 @@ install_requires = [
     'aiohttp',
     'jq',
     'jinja2',
-    'pydantic',
+    'pydantic==0.31.1',
     'requests',
     'tenacity',
     'toucan_data_sdk'
@@ -43,7 +43,7 @@ classifiers = [
 ]
 
 setup(name='toucan_connectors',
-      version='0.23.3',
+      version='0.23.4',
       description='Toucan Toco Connectors',
       author='Toucan Toco',
       author_email='dev@toucantoco.com',
