@@ -3,7 +3,7 @@ import re
 from abc import ABCMeta, ABC, abstractmethod
 from copy import deepcopy
 
-from jinja2 import StrictUndefined, Template
+from jinja2 import StrictUndefined, Template, Environment, meta
 from toucan_data_sdk.utils.helpers import slugify
 
 RE_PARAM = r'%\(([^(%\()]*)\)s'
@@ -25,6 +25,10 @@ def nosql_apply_parameters_to_query(query, parameters):
     Instead use your client library parameter substitution method.
     https://www.owasp.org/index.php/Query_Parameterization_Cheat_Sheet
     """
+    def _has_parameters(query):
+        t = Environment().parse(query)
+        return meta.find_undeclared_variables(t) or re.search(RE_PARAM, query)
+
     def _prepare_parameters(p):
         if isinstance(p, str):
             return repr(p)
@@ -52,6 +56,8 @@ def nosql_apply_parameters_to_query(query, parameters):
         elif isinstance(query, list):
             return [_render_query(elt, parameters) for elt in deepcopy(query)]
         elif type(query) is str:
+            if not _has_parameters(query):
+                return query
             clean_p = deepcopy(parameters)
             # Add quotes to string parameters to keep type if not complex
             if re.match(RE_PARAM_ALONE, query) or re.match(RE_JINJA_ALONE, query):

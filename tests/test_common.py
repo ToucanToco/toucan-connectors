@@ -8,7 +8,7 @@ def test_apply_parameter_to_query_do_nothing():
     """
     It should do nothing
     """
-    query = [{'$match': {'domain': 'yo', 'cat': 1}}]
+    query = [{'$match': {'domain': 'yo', 'cat': 1, 'step': '2'}}]
     res = nosql_apply_parameters_to_query(query, None)
     assert res == query
 
@@ -63,7 +63,13 @@ def test_apply_parameter_to_query():
          ]}}),
         ({'data': '%(fakirQuery)s'},
          {'fakirQuery': '[{"values":["bibou"],"chartParam":"test","type":"test","name":"test"}]'},
-         {'data': '[{"values":["bibou"],"chartParam":"test","type":"test","name":"test"}]'})
+         {'data': '[{"values":["bibou"],"chartParam":"test","type":"test","name":"test"}]'}),
+        ({'data': 1},
+         {},
+         {'data': 1}),
+        ({'data': '1'},
+         {},
+         {'data': '1'})
     ]
     for (query, params, expected) in tests:
         assert nosql_apply_parameters_to_query(query, params) == expected
