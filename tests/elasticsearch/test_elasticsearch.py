@@ -109,7 +109,7 @@ def test_get_df(elasticsearch):
     assert all(data.loc[data['name'] == 'BRMC', 'best_song'] == 'Beat The Devil\'s Tattoo')
 
     data = con.get_df(ds_msearch)
-    assert list(data.columns) == ['adress.city', 'best_song']
+    assert set(data.columns) == {'adress.city', 'best_song'}
     assert all(data.loc[data['adress.city'].isnull(), 'best_song'] == 'Africa')
 
 

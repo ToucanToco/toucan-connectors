@@ -64,13 +64,11 @@ def test_get_df_db(oracle_connector):
         }
     ]
 
-    expected_columns = ['ID', 'NAME', 'COUNTRYCODE', 'DISTRICT', 'POPULATION']
-
     data_source = OracleSQLDataSource(**data_sources_spec[0])
     df = oracle_connector.get_df(data_source)
 
     assert not df.empty
     assert df.shape == (50, 5)
-    assert df.columns.tolist() == expected_columns
+    assert set(df.columns) == {'ID', 'NAME', 'COUNTRYCODE', 'DISTRICT', 'POPULATION'}
 
     assert len(df[df['POPULATION'] > 500000]) == 5
