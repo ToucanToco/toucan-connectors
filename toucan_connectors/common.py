@@ -50,6 +50,10 @@ def nosql_apply_parameters_to_query(query, parameters):
             return res
 
     def _render_query(query, parameters):
+        """
+        Render both jinja or %()s templates in query
+        while keeping type of parameters
+        """
         if isinstance(query, dict):
             return {key: _render_query(value, parameters)
                     for key, value in deepcopy(query).items()}
