@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import pymysql
-from pydantic import constr, create_model
+from pydantic import Schema, SecretStr, constr, create_model
 from pymysql.constants import CR, ER
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
@@ -15,10 +15,28 @@ class MySQLDataSource(ToucanDataSource):
     Either `query` or `table` are required, both at the same time are not supported.
     """
 
-    database: str
-    query: constr(min_length=1) = None
-    table: constr(min_length=1) = None
-    follow_relations: bool = False
+    database: str = Schema(..., description='The name of the database you want to query')
+    table: constr(min_length=1) = Schema(
+        None,
+        description='The name of the data table that you want to '
+        'get (equivalent to "SELECT * FROM '
+        'your_table")',
+    )
+    query: constr(min_length=1) = Schema(
+        None,
+        description='You can write a custom query against your '
+        'database here. It will take precedence over '
+        'the "table" parameter above',
+        widget='sql',
+    )
+    follow_relations: bool = Schema(
+        False,
+        description='Whether you want to perform automatic inner '
+        'joins of related tables based on every foreign '
+        'key found in the queried table (left table of '
+        'the join). As a general rule, you should not '
+        'need to activate this parameter',
+    )
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -73,12 +91,26 @@ class MySQLConnector(ToucanConnector):
 
     data_source_model: MySQLDataSource
 
-    host: str
-    user: str
-    password: str = None
-    port: int = None
-    charset: str = 'utf8mb4'
-    connect_timeout: int = None
+    host: str = Schema(
+        ...,
+        description='The domain name (preferred option as more dynamic) or '
+        'the hardcoded IP address of your database server',
+    )
+    port: int = Schema(None, description='The listening port of your database server')
+    user: str = Schema(..., description='Your login username')
+    password: SecretStr = Schema(None, description='Your login password')
+    charset: str = Schema(
+        'utf8mb4',
+        title='Charset',
+        description='Character encoding. You should generally let the default "utf8mb4" here.',
+    )
+    connect_timeout: int = Schema(
+        None,
+        title='Connection timeout',
+        description='You can set a connection timeout in seconds here, '
+        'i.e. the maximum length of time you want to wait '
+        'for the server to respond. None by default',
+    )
 
     def get_connection_params(self, *, database=None, cursorclass=pymysql.cursors.DictCursor):
         conv = pymysql.converters.conversions.copy()
@@ -86,7 +118,7 @@ class MySQLConnector(ToucanConnector):
         con_params = {
             'host': self.host,
             'user': self.user,
-            'password': self.password,
+            'password': self.password.get_secret_value() if self.password else None,
             'port': self.port,
             'database': database,
             'charset': self.charset,
