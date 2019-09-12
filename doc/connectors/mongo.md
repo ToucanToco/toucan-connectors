@@ -48,3 +48,23 @@ DATA_SOURCES: [
   ...
 ]
 ```
+
+## Note
+
+The Mongo connector can be used as a context manager to avoid opening
+and closing a connection to a same database.
+For example:
+
+```python
+from toucan_connectors.mongo.mongo_connector import MongoConnector, MongoDataSource
+
+queries = [
+    {'domain': 'domain1', 'country': 'France'},
+    {'domain': 'domain1', 'country': 'England'},
+]
+
+with MongoConnector(name='mycon', host='myhost', port=27017) as con:
+    for query in queries:
+        datasource = MongoDataSource(collection='test_col', query=query)
+        con.get_df(datasource)
+```
