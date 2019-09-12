@@ -1,3 +1,4 @@
+from functools import _lru_cache_wrapper, lru_cache
 from jq import jq
 from typing import Optional, Union
 from urllib.parse import quote_plus
@@ -5,6 +6,7 @@ from urllib.parse import quote_plus
 import pandas as pd
 import pymongo
 from bson.son import SON
+from cached_property import cached_property
 from pydantic import create_model, validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
@@ -42,12 +44,12 @@ def apply_permissions(query, permissions):
     return query
 
 
-def validate_database(client, database):
+def validate_database(client, database: str):
     if database not in client.list_database_names():
         raise UnkwownMongoDatabase(f'Database {database!r} doesn\'t exist')
 
 
-def validate_collection(client, database, collection):
+def validate_collection(client, database: str, collection: str):
     if collection not in client[database].list_collection_names():
         raise UnkwownMongoCollection(f'Collection {collection!r} doesn\'t exist')
 
@@ -97,6 +99,9 @@ class MongoConnector(ToucanConnector):
     password: str = None
     ssl: bool = False
 
+    class Config:
+        keep_untouched = (cached_property, _lru_cache_wrapper)
+
     @validator('password')
     def password_must_have_a_user(cls, v, values):
         if values['username'] is None:
@@ -104,14 +109,23 @@ class MongoConnector(ToucanConnector):
         return v
 
     @property
-    def uri(self):
+    def uri(self) -> str:
         user_pass = ''
         if self.username is not None:
             user_pass = quote_plus(self.username)
             if self.password is not None:
                 user_pass += f':{quote_plus(self.password)}'
             user_pass += '@'
-        return ''.join(['mongodb://', user_pass, f'{self.host}:{self.port}'])
+        return f'mongodb://{user_pass}{self.host}:{self.port}'
+
+    def __hash__(self):
+        return hash(self.uri)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.client.close()
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
@@ -170,14 +184,26 @@ class MongoConnector(ToucanConnector):
             'error': None
         }
 
-    def _execute_query(self, data_source):
-        client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-        validate_database(client, data_source.database)
-        validate_collection(client, data_source.database, data_source.collection)
-        col = client[data_source.database][data_source.collection]
-        result = col.aggregate(data_source.query)
-        client.close()
-        return result
+    @cached_property
+    def client(self):
+        return pymongo.MongoClient(self.uri, ssl=self.ssl)
+
+    @lru_cache(maxsize=32)
+    def validate_database(self, database: str):
+        return validate_database(self.client, database)
+
+    @lru_cache(maxsize=32)
+    def validate_collection(self, database: str, collection: str):
+        return validate_collection(self.client, database, collection)
+
+    def validate_database_and_collection(self, database: str, collection: str):
+        self.validate_database(database)
+        self.validate_collection(database, collection)
+
+    def _execute_query(self, data_source: MongoDataSource):
+        self.validate_database_and_collection(data_source.database, data_source.collection)
+        col = self.client[data_source.database][data_source.collection]
+        return col.aggregate(data_source.query)
 
     def _retrieve_data(self, data_source):
         data_source.query = normalize_query(data_source.query, data_source.parameters)
@@ -225,8 +251,7 @@ class MongoConnector(ToucanConnector):
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
-        validate_database(client, data_source.database)
-        validate_collection(client, data_source.database, data_source.collection)
+        self.validate_database_and_collection(data_source.database, data_source.collection)
         data_source.query = apply_permissions(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query,
                                             data_source.parameters)

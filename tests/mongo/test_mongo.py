@@ -114,7 +114,7 @@ def test_get_df(mocker):
     mongo_connector.get_df(datasource)
 
     snock.assert_called_with('mongodb://ubuntu:ilovetoucan@localhost:22', ssl=False)
-    assert snock.call_count == 2
+    assert snock.call_count == 1  # client is cached
 
     aggregate.assert_called_with([{'$match': {'domain': 'domain1'}}])
     assert aggregate.call_count == 2
@@ -371,3 +371,32 @@ def test_get_form_query_with_good_database(mongo_connector):
         'type': 'string',
         'enum': ['test_col']
     }
+
+
+def test_get_multiple_dfs(mocker, mongo_connector, mongo_datasource):
+    """
+    It should keep a client open and use the cache as much as possible when retrieving
+    multiple dataframes
+    """
+    # Ensure the LRU cache is empty
+    mongo_connector.validate_database.cache_clear()
+
+    mongo_client_close = mocker.spy(pymongo.MongoClient, 'close')
+    mongo_client = mocker.spy(pymongo, 'MongoClient')
+    aggregate = mocker.spy(pymongo.collection.Collection, 'aggregate')
+    validate_database = mocker.patch('toucan_connectors.mongo.mongo_connector.validate_database')
+
+    queries = [
+        {'domain': 'domain1'},
+        {'domain': 'domain1', 'country': 'France'},
+        {'domain': 'domain1', 'country': 'England'},
+        {'country': 'England', 'domain': 'domain1'},
+    ]
+    with mongo_connector as con:
+        for query in queries:
+            datasource = mongo_datasource(collection='test_col', query=query)
+            con.get_df(datasource)
+    mongo_client.assert_called_once()
+    assert aggregate.call_count == 4
+    validate_database.assert_called_once()
+    mongo_client_close.assert_called_once()
