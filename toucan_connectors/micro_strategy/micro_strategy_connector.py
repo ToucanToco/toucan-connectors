@@ -2,6 +2,7 @@ from enum import Enum
 
 import pandas as pd
 from pandas.io.json import json_normalize
+from pydantic import Schema, SecretStr, UrlStr
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -32,11 +33,25 @@ class MicroStrategyDataSource(ToucanDataSource):
     Specify whether you want to use the `cube` or `reports` endpoints and a microstrategy doc id.
     """
 
-    id: str = None
+    id: str = Schema(
+        None, title='Cube / Report ID', description='In the form "BD91AF40492D2C188240DEAF7D9D1510"'
+    )
     dataset: Dataset
-    viewfilter: dict = None
-    offset: int = 0
-    limit: int = 100
+    viewfilter: dict = Schema(
+        None,
+        title='View filters',
+        description='You can apply Microstrategy View Filters here. Please find configuration details in our '
+        '<a href="https://docs.toucantoco.com/concepteur/power-apps-with-data/02-add-data-to-small-app.html#microstrategy-connector"> '
+        'documentation</a>',
+    )
+    offset: int = Schema(
+        0, description='If you need to skip results, specify here the number of rows to skip'
+    )
+    limit: int = Schema(
+        100,
+        title='Limit the number of results to:',
+        description='Specify -1 if you do not want to limit the number of returned rows',
+    )
 
 
 class MicroStrategyConnector(ToucanConnector):
@@ -47,10 +62,23 @@ class MicroStrategyConnector(ToucanConnector):
 
     data_source_model: MicroStrategyDataSource
 
-    base_url: str
-    username: str
-    password: str = None
-    project_id: str
+    base_url: UrlStr = Schema(
+        ...,
+        title='API base URL',
+        description='The URL of your MicroStrategy environment API. For '
+        'example '
+        '"https://demo.microstrategy.com/MicroStrategyLibrary2/api/"',
+        examples=['https://demo.microstrategy.com/MicroStrategyLibrary2/api/'],
+    )
+    username: str = Schema(..., description='Your login username')
+    password: SecretStr = Schema(None, description='Your login password')
+    project_id: str = Schema(
+        ...,
+        title='projectID',
+        description='The unique ID of your MicroStrategy project. '
+        'In the form "B7CA92F04B9FAE8D941C3E9B7E0CD754"',
+        examples=['https://demo.microstrategy.com/MicroStrategyLibrary2/api/'],
+    )
 
     def _retrieve_metadata(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
         client = Client(self.base_url, self.project_id, self.username, self.password)
