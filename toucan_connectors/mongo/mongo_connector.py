@@ -8,7 +8,7 @@ from bson.regex import Regex
 from bson.son import SON
 from cached_property import cached_property
 from jq import jq
-from pydantic import create_model, validator
+from pydantic import Schema, SecretStr, create_model, validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.mongo.mongo_translator import MongoExpression
@@ -56,12 +56,16 @@ def validate_collection(client, database: str, collection: str):
 
 
 class MongoDataSource(ToucanDataSource):
-    """Supports simple, multiples and aggregation queries as desribed in
+    """Supports simple, multiples and aggregation queries as described in
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
 
-    database: str
-    collection: str
-    query: Union[dict, list] = {}
+    database: str = Schema(..., description='The name of the database you want to query')
+    collection: str = Schema(..., description='The name of the collection you want to query')
+    query: Union[dict, list] = Schema(
+        {},
+        description='A mongo query. See more details on the Mongo '
+        'Aggregation Pipeline in the MongoDB documentation',
+    )
 
     @classmethod
     def get_form(cls, connector: 'MongoConnector', current_config):
@@ -96,11 +100,15 @@ class MongoConnector(ToucanConnector):
 
     data_source_model: MongoDataSource
 
-    host: str
-    port: int = None
-    username: str = None
-    password: str = None
-    ssl: bool = False
+    host: str = Schema(
+        ...,
+        description='The domain name (preferred option as more dynamic) or '
+        'the hardcoded IP address of your database server',
+    )
+    port: int = Schema(None, description='The listening port of your database server')
+    username: str = Schema(None, description='Your login username')
+    password: SecretStr = Schema(None, description='Your login password')
+    ssl: bool = Schema(False, description='Create the connection to the server using SSL')
 
     class Config:
         keep_untouched = (cached_property, _lru_cache_wrapper)
@@ -132,6 +140,8 @@ class MongoConnector(ToucanConnector):
         mongo_client_kwargs = self.dict().copy()
         for field in ToucanConnector.schema()['properties']:
             mongo_client_kwargs.pop(field)
+        if mongo_client_kwargs['password'] is not None:
+            mongo_client_kwargs['password'] = mongo_client_kwargs['password'].get_secret_value()
         return mongo_client_kwargs
 
     def get_status(self):
