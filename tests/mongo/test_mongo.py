@@ -375,7 +375,11 @@ def test_get_form_empty_query(mongo_connector):
         'type': 'string',
         'enum': ['admin', 'config', 'local', 'toucan'],
     }
-    assert form['properties']['collection'] == {'title': 'Collection', 'type': 'string'}
+    assert form['properties']['collection'] == {
+        'type': 'string',
+        'title': 'Collection',
+        'description': 'The name of the collection you want to query',
+    }
 
 
 def test_get_form_query_with_bad_database(mongo_connector):
