@@ -3,7 +3,7 @@ from typing import List
 
 from jq import jq
 from oauthlib.oauth2 import BackendApplicationClient
-from pydantic import BaseModel
+from pydantic import BaseModel, Schema
 from requests import Session
 from requests.auth import AuthBase, HTTPBasicAuth, HTTPDigestAuth
 from requests_oauthlib import OAuth1, OAuth2Session
@@ -60,9 +60,25 @@ class AuthType(str, Enum):
 
 
 class Auth(BaseModel):
-    type: AuthType
-    args: List[str]
-    kwargs: dict = None
+    type: AuthType = Schema(
+        ...,
+        description='As we rely on the python request lirary, we suggest that you '
+        'refer to the dedicated '
+        '<a href="https://2.python-requests.org//en/master/user/authentication/">documentation</a> '
+        'for more details.',
+        description_mimetype='text/html',
+    )
+    args: List[str] = Schema(
+        ...,
+        title='Positionnal arguments',
+        description='For example for a basic authentication, you can provide '
+        'your username and password here',
+    )
+    kwargs: dict = Schema(
+        None,
+        title='Named arguments',
+        description='A JSON object with argument name as key and corresponding value as value',
+    )
 
     def get_session(self) -> Session:
         auth_class = {
