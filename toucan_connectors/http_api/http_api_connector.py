@@ -3,7 +3,7 @@ from typing import List, Union
 
 import pandas as pd
 from jq import jq
-from pydantic import BaseModel, FilePath, Schema
+from pydantic import BaseModel, FilePath, Schema, UrlStr
 from requests import Session
 
 from toucan_connectors.auth import Auth
@@ -33,30 +33,83 @@ class Method(str, Enum):
 
 
 class Template(BaseModel):
-    headers: dict = None
-    params: dict = None
-    json_: dict = Schema(None, alias='json')
-    proxies: dict = None
+    headers: dict = Schema(
+        None,
+        description='JSON object of HTTP headers to send with every HTTP request',
+        examples=['{ "content-type": "application/xml" }'],
+    )
+    params: dict = Schema(
+        None,
+        description='JSON object of parameters to send in the query string of every HTTP request '
+        '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
+        examples=['{ "offset": 100, "limit": 50 }'],
+    )
+    json_: dict = Schema(
+        None,
+        alias='json',
+        description='JSON object of parameters to send in the body of every HTTP request',
+        examples=['{ "offset": 100, "limit": 50 }'],
+    )
+    proxies: dict = Schema(
+        None,
+        description='JSON object expressing a mapping of protocol or host to corresponding proxy',
+        examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
+    )
 
 
 class HttpAPIDataSource(ToucanDataSource):
-    url: str
-    method: Method = Method.GET
-    headers: dict = None
-    params: dict = None
-    json_: dict = Schema(None, alias='json')
-    proxies: dict = None
-    data: Union[str, dict] = None
-    filter: str = '.'
+    url: str = Schema(
+        ...,
+        title='URL path',
+        description='The URL path that will be appended to your baseroute URL. '
+        'For example "geo/countries"',
+    )
+    method: Method = Schema(Method.GET, title='HTTP Method')
+    headers: dict = Schema(
+        None,
+        description='JSON object of HTTP headers to send with every HTTP request',
+        examples=['{ "content-type": "application/xml" }'],
+    )
+    params: dict = Schema(
+        None,
+        description='JSON object of parameters to send in the query string of this HTTP request '
+        '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
+        examples=['{ "offset": 100, "limit": 50 }'],
+    )
+    json_: dict = Schema(
+        None,
+        alias='json',
+        description='JSON object of parameters to send in the body of every HTTP request',
+        examples=['{ "offset": 100, "limit": 50 }'],
+    )
+    proxies: dict = Schema(
+        None,
+        description='JSON object expressing a mapping of protocol or host to corresponding proxy',
+        examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
+    )
+    data: Union[str, dict] = Schema(
+        None, description='JSON object to send in the body of the HTTP request'
+    )
+    filter: str = Schema(
+        '.',
+        description='You can apply filters to json response if data is nested. As we rely on a '
+        'library called jq, we suggest the refer to the dedicated '
+        '<a href="https://2.python-requests.org//en/master/user/authentication/">documentation</a>',
+    )
 
 
 class HttpAPIConnector(ToucanConnector):
     data_source_model: HttpAPIDataSource
 
-    baseroute: str
-    cert: List[FilePath] = None
-    auth: Auth = None
-    template: Template = None
+    baseroute: UrlStr = Schema(..., title='API endpoint', description='Baseroute URL')
+    cert: List[FilePath] = Schema(
+        None, title='Certificate', description='File path of your certificate if any'
+    )
+    auth: Auth = Schema(None, title='Authentication type')
+    template: Template = Schema(
+        None,
+        description='You can provide a custom template that will be used for every HTTP request',
+    )
 
     def do_request(self, query, session):
         """
