@@ -227,7 +227,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         and the total size filtered with permissions
         """
         df = self.get_df(data_source, permissions)
-        return DataSlice(df[offset:limit], len(df))
+        return DataSlice(df[offset:offset+limit], len(df))
 
     def explain(self, data_source: ToucanDataSource, permissions: Optional[str] = None):
         """Method to give metrics about the query"""
