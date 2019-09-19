@@ -7,6 +7,7 @@ extras_require = {
     'dataiku': ['dataiku-api-client'],
     'elasticsearch': ['elasticsearch'],
     'facebook': ['facebook-sdk'],
+    'github': auth_deps,
     'google_analytics': ['google-api-python-client', 'oauth2client'],
     'google_big_query': ['pandas_gbq'],
     'google_cloud_mysql': ['PyMySQL>=0.8.0'],

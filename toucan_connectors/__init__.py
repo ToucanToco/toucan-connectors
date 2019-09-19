@@ -8,6 +8,7 @@ CONNECTORS_CATALOGUE = {
     'Dataiku': 'dataiku.dataiku_connector.DataikuConnector',
     'elasticsearch': 'elasticsearch.elasticsearch_connector.ElasticsearchConnector',
     'facebook_insights': 'facebook_insights.facebook_insights_connector.FacebookInsightsConnector',
+    'Github': 'github.github_connector.GithubConnector',
     'GoogleAnalytics': 'google_analytics.google_analytics_connector.GoogleAnalyticsConnector',
     'GoogleBigQuery': 'google_big_query.google_big_query_connector.GoogleBigQueryConnector',
     'GoogleCloudMySQL': 'google_cloud_mysql.google_cloud_mysql_connector.GoogleCloudMySQLConnector',
