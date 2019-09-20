@@ -14,7 +14,7 @@ install:
 
 .PHONY: format
 format:
-	isort -rc -w 100 toucan_connectors tests setup.py
+	isort -rc toucan_connectors tests setup.py
 	black -S -l 100 --target-version py36 toucan_connectors tests setup.py
 
 .PHONY: lint
