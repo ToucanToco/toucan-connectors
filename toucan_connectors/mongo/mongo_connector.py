@@ -121,7 +121,7 @@ class MongoConnector(ToucanConnector):
         return f'mongodb://{user_pass}{self.host}:{self.port}'
 
     def __hash__(self):
-        return hash(self.uri)
+        return hash(id(self)) + hash(self.uri)
 
     def __enter__(self):
         return self

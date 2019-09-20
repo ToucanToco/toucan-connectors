@@ -392,9 +392,6 @@ def test_get_multiple_dfs(mocker, mongo_connector, mongo_datasource):
     It should keep a client open and use the cache as much as possible when retrieving
     multiple dataframes
     """
-    # Ensure the LRU cache is empty
-    mongo_connector.validate_database.cache_clear()
-
     mongo_client_close = mocker.spy(pymongo.MongoClient, 'close')
     mongo_client = mocker.spy(pymongo, 'MongoClient')
     aggregate = mocker.spy(pymongo.collection.Collection, 'aggregate')
@@ -414,3 +411,16 @@ def test_get_multiple_dfs(mocker, mongo_connector, mongo_datasource):
     assert aggregate.call_count == 4
     validate_database.assert_called_once()
     mongo_client_close.assert_called_once()
+
+
+def test_validate_cache(mongo_connector):
+    """It should cache the validation of a database for the same instance only"""
+    con1 = mongo_connector
+    assert con1.validate_database('toucan') is None
+    con1.client.drop_database('toucan')
+    assert con1.validate_database('toucan') is None, 'the cache should validate the dropped db'
+
+    # A new connector should have a fresh cache
+    con2 = con1.copy(deep=True)
+    with pytest.raises(UnkwownMongoDatabase):
+        con2.validate_database('toucan')
