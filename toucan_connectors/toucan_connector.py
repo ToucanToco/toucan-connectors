@@ -225,9 +225,13 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         Method to retrieve a part of the data as a pandas dataframe
         and the total size filtered with permissions
+
+        - offset is the index of the starting row
+        - limit is the number of rows to retrieve
+        Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
         """
         df = self.get_df(data_source, permissions)
-        return DataSlice(df[offset:limit], len(df))
+        return DataSlice(df[offset:offset+limit], len(df))
 
     def explain(self, data_source: ToucanDataSource, permissions: Optional[str] = None):
         """Method to give metrics about the query"""
