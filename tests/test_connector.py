@@ -81,12 +81,22 @@ def test_get_slice():
         def _retrieve_data(self, datasource):
             return pd.DataFrame({'A': [1, 2, 3, 4, 5]})
 
-    # without offset
-    res = DataConnector(name='my_name').get_slice({}, limit=1)
-    assert res.df.equals(pd.DataFrame({'A': [1]}))
+    # without offset without limit
+    res = DataConnector(name='my_name').get_slice({})
+    assert res.df.reset_index(drop=True).equals(pd.DataFrame({'A': [1, 2, 3, 4, 5]}))
     assert res.total_count == 5
 
-    # with offset
+    # without offset with limit
+    res = DataConnector(name='my_name').get_slice({}, limit=1)
+    assert res.df.reset_index(drop=True).equals(pd.DataFrame({'A': [1]}))
+    assert res.total_count == 5
+
+    # with offset without limit
+    res = DataConnector(name='my_name').get_slice({}, offset=2)
+    assert res.df.reset_index(drop=True).equals(pd.DataFrame({'A': [3, 4, 5]}))
+    assert res.total_count == 5
+
+    # with offset with limit
     res = DataConnector(name='my_name').get_slice({}, offset=2, limit=2)
     assert res.df.reset_index(drop=True).equals(pd.DataFrame({'A': [3, 4]}))
     assert res.total_count == 5

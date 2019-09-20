@@ -231,7 +231,10 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
         """
         df = self.get_df(data_source, permissions)
-        return DataSlice(df[offset:offset+limit], len(df))
+        if limit is not None:
+            return DataSlice(df[offset:offset+limit], len(df))
+        else:
+            return DataSlice(df[offset:], len(df))
 
     def explain(self, data_source: ToucanDataSource, permissions: Optional[str] = None):
         """Method to give metrics about the query"""
