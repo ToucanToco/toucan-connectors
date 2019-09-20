@@ -40,13 +40,10 @@ jobs:
       - run:
           name: Install python librairies
           command: |
-            sudo pip3.6 install --upgrade pip setuptools
-            sudo pip3.6 install -r requirements-testing.txt
-            sudo pip3.6 install .[all]
-            sudo pip3.6 install codecov
+            sudo make install
+            sudo pip3 install codecov
       - run:
           name: Pulling all docker images
           command: docker-compose -f tests/docker-compose.yml pull
-      - run: flake8 toucan_connectors tests
-      - run: PYTHONPATH=. pytest tests -s -v --cov-report term-missing --cov=toucan_connectors
+      - run: make all
       - run: codecov --token=3e56598d-bfe8-4741-a973-f4b70bd2c280
