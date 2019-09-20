@@ -19,10 +19,10 @@ def test_google_analytics(mocker):
             'private_key': 'test',
             'client_email': 'test',
             'client_id': 'test',
-            'auth_uri': 'test',
-            'token_uri': 'test',
-            'auth_provider_x509_cert_url': 'test',
-            'client_x509_cert_url': 'test',
+            'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
+            'token_uri': 'https://oauth2.googleapis.com/token',
+            'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs',
+            'client_x509_cert_url': 'https://www.googleapis.com/robot/v1/metadata/x509/pika.com',
         },
     )
 

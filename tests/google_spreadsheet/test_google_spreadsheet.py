@@ -12,10 +12,10 @@ c = GoogleSpreadsheetConnector(
         'private_key': 'test',
         'client_email': 'test',
         'client_id': 'test',
-        'auth_uri': 'test',
-        'token_uri': 'test',
-        'auth_provider_x509_cert_url': 'test',
-        'client_x509_cert_url': 'test',
+        'auth_uri': 'https://test.com',
+        'token_uri': 'https://test.com',
+        'auth_provider_x509_cert_url': 'https://test.com',
+        'client_x509_cert_url': 'https://test.com',
     },
 )
 
