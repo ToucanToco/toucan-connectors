@@ -1,7 +1,7 @@
 import json
 from ast import USub
 
-from toucan_connectors.common import Expression, Operator, Column, Value
+from toucan_connectors.common import Column, Expression, Operator, Value
 
 
 class MongoExpression(Expression):
@@ -64,11 +64,7 @@ class MongoColumn(Column):
 
 
 class MongoValue(Value):
-    SPECIAL_VALUES = {
-        'null': None,
-        'false': False,
-        'true': True
-    }
+    SPECIAL_VALUES = {'null': None, 'false': False, 'true': True}
 
     def Name(self, node):
         if node.id in self.SPECIAL_VALUES:

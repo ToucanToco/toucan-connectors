@@ -1,34 +1,23 @@
 import pytest
 import responses
 
-from toucan_connectors.toucan_toco.toucan_toco_connector import ToucanTocoConnector, \
-    ToucanTocoDataSource
-
+from toucan_connectors.toucan_toco.toucan_toco_connector import (
+    ToucanTocoConnector,
+    ToucanTocoDataSource,
+)
 
 tcc = ToucanTocoConnector(
-    name='test',
-    host='https://example.com',
-    username='username',
-    password='password'
+    name='test', host='https://example.com', username='username', password='password'
 )
 
-tcd = ToucanTocoDataSource(
-    name='test',
-    domain='test',
-    endpoint='small-apps'
-)
+tcd = ToucanTocoDataSource(name='test', domain='test', endpoint='small-apps')
 
-tcda = ToucanTocoDataSource(
-    name='test',
-    domain='test',
-    endpoint='config',
-    all_small_apps=True
-)
+tcda = ToucanTocoDataSource(name='test', domain='test', endpoint='config', all_small_apps=True)
 
 
 fixtures = {
     'small_apps': [{'duplicateOf': '', 'id': 'test', 'last_update': '', 'name': '', 'stage': ''}],
-    'config': {'arbitrary': 'object'}
+    'config': {'arbitrary': 'object'},
 }
 
 
@@ -56,7 +45,7 @@ def test_live():
         name='test',
         host='https://api-demo.toucantoco.com',
         username='**********',
-        password='**********'
+        password='**********',
     )
     df = tcc_live.get_df(tcd)
     assert set(df.columns) == {'duplicateOf', 'id', 'last_update', 'name', 'stage'}

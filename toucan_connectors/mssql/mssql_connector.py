@@ -1,9 +1,8 @@
-import pymssql
-
 import pandas as pd
+import pymssql
 from pydantic import constr
 
-from toucan_connectors.toucan_connector import ToucanDataSource, ToucanConnector
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class MSSQLDataSource(ToucanDataSource):
@@ -17,6 +16,7 @@ class MSSQLConnector(ToucanConnector):
     """
     Import data from Microsoft SQL Server.
     """
+
     data_source_model: MSSQLDataSource
 
     host: str
@@ -33,7 +33,7 @@ class MSSQLConnector(ToucanConnector):
             'password': self.password,
             'port': self.port,
             'login_timeout': self.connect_timeout,
-            'as_dict': True
+            'as_dict': True,
         }
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}

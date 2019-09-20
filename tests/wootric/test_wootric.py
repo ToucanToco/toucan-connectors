@@ -1,7 +1,6 @@
-from aioresponses import aioresponses
-import responses
-
 import pytest
+import responses
+from aioresponses import aioresponses
 
 import toucan_connectors.wootric.wootric_connector as woot
 
@@ -25,8 +24,12 @@ def test_fetch_data_stop_before_end():
             aiomock.get(f'{base_query}&page={i}', status=200, payload=[{'page': i}])
         data = woot.fetch_wootric_data(base_query, max_pages=6)
         assert data == [
-            {'page': 1}, {'page': 2}, {'page': 3},
-            {'page': 4}, {'page': 5}, {'page': 6},
+            {'page': 1},
+            {'page': 2},
+            {'page': 3},
+            {'page': 4},
+            {'page': 5},
+            {'page': 6},
         ]
 
 
@@ -39,8 +42,13 @@ def test_fetch_data_stop_when_no_data():
             aiomock.get(f'{base_query}&page={i}', status=200, payload=[])
         data = woot.fetch_wootric_data(base_query)
         assert data == [
-            {'page': 1}, {'page': 2}, {'page': 3}, {'page': 4},
-            {'page': 5}, {'page': 6}, {'page': 7},
+            {'page': 1},
+            {'page': 2},
+            {'page': 3},
+            {'page': 4},
+            {'page': 5},
+            {'page': 6},
+            {'page': 7},
         ]
 
 
@@ -54,8 +62,13 @@ def test_fetch_data_custom_batch_size(mocker):
         mocker.spy(woot, 'batch_fetch')
         data = woot.fetch_wootric_data(base_query, batch_size=3)
         assert data == [
-            {'page': 1}, {'page': 2}, {'page': 3}, {'page': 4},
-            {'page': 5}, {'page': 6}, {'page': 7},
+            {'page': 1},
+            {'page': 2},
+            {'page': 3},
+            {'page': 4},
+            {'page': 5},
+            {'page': 6},
+            {'page': 7},
         ]
         assert woot.batch_fetch.call_count == 3
 
@@ -64,31 +77,40 @@ def test_fetch_data_filter_props():
     with aioresponses() as aiomock:
         base_query = 'https://api.wootric.com/v1/responses?access_token=x'
         for i in range(8):
-            aiomock.get(f'{base_query}&page={i}', status=200,
-                        payload=[{'page': i, 'x': 1, 'y': 2}])
+            aiomock.get(f'{base_query}&page={i}', status=200, payload=[{'page': i, 'x': 1, 'y': 2}])
         data = woot.fetch_wootric_data(base_query, props_fetched=('page', 'y'), max_pages=6)
         assert data == [
-            {'page': 1, 'y': 2}, {'page': 2, 'y': 2}, {'page': 3, 'y': 2},
-            {'page': 4, 'y': 2}, {'page': 5, 'y': 2}, {'page': 6, 'y': 2},
+            {'page': 1, 'y': 2},
+            {'page': 2, 'y': 2},
+            {'page': 3, 'y': 2},
+            {'page': 4, 'y': 2},
+            {'page': 5, 'y': 2},
+            {'page': 6, 'y': 2},
         ]
 
 
 @responses.activate
 def test_wootric_get_df(empty_token_cache):
     datasource = woot.WootricDataSource(
-        name='test', domain='test',
-        query='responses', properties=['page', 'y'], batch_size=3, max_pages=10
+        name='test',
+        domain='test',
+        query='responses',
+        properties=['page', 'y'],
+        batch_size=3,
+        max_pages=10,
     )
     connector = woot.WootricConnector(
         name='wootric', type='wootric', client_id='cid', client_secret='cs'
     )
-    responses.add(responses.POST, 'https://api.wootric.com/oauth/token',
-                  json={'access_token': 'x', 'expires_in': 10})
+    responses.add(
+        responses.POST,
+        'https://api.wootric.com/oauth/token',
+        json={'access_token': 'x', 'expires_in': 10},
+    )
     with aioresponses() as aiomock:
         base_query = 'https://api.wootric.com/v1/responses?access_token=x'
         for i in range(8):
-            aiomock.get(f'{base_query}&page={i}', status=200,
-                        payload=[{'page': i, 'x': 1, 'y': 2}])
+            aiomock.get(f'{base_query}&page={i}', status=200, payload=[{'page': i, 'x': 1, 'y': 2}])
         for i in range(8, 11):
             aiomock.get(f'{base_query}&page={i}', status=200, payload=[])
         df = connector.get_df(datasource)
@@ -110,8 +132,11 @@ def test_token_cache_hit(mocker, empty_token_cache):
     connector = woot.WootricConnector(
         name='wootric', type='wootric', client_id='cid', client_secret='cs'
     )
-    responses.add(responses.POST, 'https://api.wootric.com/oauth/token',
-                  json={'access_token': 'x', 'expires_in': 10})
+    responses.add(
+        responses.POST,
+        'https://api.wootric.com/oauth/token',
+        json={'access_token': 'x', 'expires_in': 10},
+    )
     mocker.spy(woot.WootricConnector, 'fetch_access_token')
     assert woot.access_token(connector) == 'x'
     assert woot.access_token(connector) == 'x'
@@ -126,8 +151,11 @@ def test_token_cache_miss(mocker, empty_token_cache):
         name='wootric', type='wootric', client_id='cid', client_secret='cs'
     )
     # HACK: use a negative expire
-    responses.add(responses.POST, 'https://api.wootric.com/oauth/token',
-                  json={'access_token': 'x', 'expires_in': -10})
+    responses.add(
+        responses.POST,
+        'https://api.wootric.com/oauth/token',
+        json={'access_token': 'x', 'expires_in': -10},
+    )
     mocker.spy(woot.WootricConnector, 'fetch_access_token')
     assert woot.access_token(connector) == 'x'
     assert woot.access_token(connector) == 'x'

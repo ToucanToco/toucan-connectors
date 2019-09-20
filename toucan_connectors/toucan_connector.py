@@ -76,10 +76,11 @@ class RetryPolicy(BaseModel):
     `tenacity` library, you can simply override this method and return your own
     `tenacity.retry` decorator.
     """
+
     # retry_on: Iterable[BaseException] = ()
     max_attempts: Optional[int] = 1
-    max_delay: Optional[float] = 0.
-    wait_time: Optional[float] = 0.
+    max_delay: Optional[float] = 0.0
+    wait_time: Optional[float] = 0.0
 
     def __init__(self, retry_on=(), logger=None, **data):
         super().__init__(**data)
@@ -148,12 +149,14 @@ def decorate_func_with_retry(func):
     """wrap `func` with the retry policy defined on the connector.
     If the retry policy is None, just leave the `get_df` implementation as is.
     """
+
     @wraps(func)
     def get_func_and_retry(self, *args, **kwargs):
         if self.retry_decorator:
             return self.retry_decorator(func)(self, *args, **kwargs)
         else:
             return func(self, *args, **kwargs)
+
     return get_func_and_retry
 
 
@@ -176,6 +179,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     In order to retry only on some custom exception classes, you can override
     the `_retry_on` class attribute in your concrete connector class.
     """
+
     name: str
     retry_policy: Optional[RetryPolicy] = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
@@ -194,17 +198,16 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     @property
     def retry_decorator(self):
-        return RetryPolicy(**self.retry_policy.dict(),
-                           retry_on=self._retry_on,
-                           logger=self.logger)
+        return RetryPolicy(**self.retry_policy.dict(), retry_on=self._retry_on, logger=self.logger)
 
     @abstractmethod
     def _retrieve_data(self, data_source: ToucanDataSource):
         """Main method to retrieve a pandas dataframe"""
 
     @decorate_func_with_retry
-    def get_df(self, data_source: ToucanDataSource,
-               permissions: Optional[str] = None) -> pd.DataFrame:
+    def get_df(
+        self, data_source: ToucanDataSource, permissions: Optional[str] = None
+    ) -> pd.DataFrame:
         """
         Method to retrieve the data as a pandas dataframe
         filtered by permissions
@@ -220,7 +223,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         data_source: ToucanDataSource,
         permissions: Optional[str] = None,
         offset: int = 0,
-        limit: Optional[int] = None
+        limit: Optional[int] = None,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
@@ -232,7 +235,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         df = self.get_df(data_source, permissions)
         if limit is not None:
-            return DataSlice(df[offset:offset+limit], len(df))
+            return DataSlice(df[offset : offset + limit], len(df))
         else:
             return DataSlice(df[offset:], len(df))
 
@@ -271,8 +274,4 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
           'error': 'port must be 0-65535'
         }
         """
-        return {
-            'status': None,
-            'details': [],
-            'error': None
-        }
+        return {'status': None, 'details': [], 'error': None}

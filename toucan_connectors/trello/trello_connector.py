@@ -58,8 +58,7 @@ class TrelloConnector(ToucanConnector):
 
     def get_board(self, path, **custom_params):
         return requests.get(
-            f"{API_URL}/{path}",
-            params={"key": self.key_id, "token": self.token, **custom_params},
+            f"{API_URL}/{path}", params={"key": self.key_id, "token": self.token, **custom_params}
         ).json()
 
     @staticmethod
@@ -84,9 +83,7 @@ class TrelloConnector(ToucanConnector):
         """
 
         # id, name and url fields do not need to translate from id to value
-        card_with_value = {
-            'id': card_with_id["id"]
-        }
+        card_with_value = {'id': card_with_id["id"]}
 
         if "name" in card_with_id:
             card_with_value["name"] = card_with_id["name"]
@@ -98,13 +95,11 @@ class TrelloConnector(ToucanConnector):
             card_with_value["lists"] = lists_ids_mapping[card_with_id["idList"]]
         if members_id_mapping:
             card_with_value["members"] = [
-                members_id_mapping[member]
-                for member in card_with_id["idMembers"]
+                members_id_mapping[member] for member in card_with_id["idMembers"]
             ]
         if labels_id_mapping:
             card_with_value["labels"] = [
-                labels_id_mapping[label["id"]]
-                for label in card_with_id["labels"]
+                labels_id_mapping[label["id"]] for label in card_with_id["labels"]
             ]
 
         # custom fields

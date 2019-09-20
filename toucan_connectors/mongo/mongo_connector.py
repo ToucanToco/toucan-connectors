@@ -1,5 +1,4 @@
 from functools import _lru_cache_wrapper, lru_cache
-from jq import jq
 from typing import Optional, Union
 from urllib.parse import quote_plus
 
@@ -7,6 +6,7 @@ import pandas as pd
 import pymongo
 from bson.son import SON
 from cached_property import cached_property
+from jq import jq
 from pydantic import create_model, validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
@@ -57,6 +57,7 @@ def validate_collection(client, database: str, collection: str):
 class MongoDataSource(ToucanDataSource):
     """Supports simple, multiples and aggregation queries as desribed in
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
+
     database: str
     collection: str
     query: Union[dict, list] = {}
@@ -91,6 +92,7 @@ class MongoDataSource(ToucanDataSource):
 
 class MongoConnector(ToucanConnector):
     """ Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
+
     data_source_model: MongoDataSource
 
     host: str
@@ -129,12 +131,7 @@ class MongoConnector(ToucanConnector):
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
-        checks = [
-            'Hostname resolved',
-            'Port opened',
-            'Host connection',
-            'Authenticated',
-        ]
+        checks = ['Hostname resolved', 'Port opened', 'Host connection', 'Authenticated']
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
@@ -145,44 +142,24 @@ class MongoConnector(ToucanConnector):
         try:
             self.check_hostname(self.host)
         except Exception as e:
-            return {
-                'status': False,
-                'details': self._get_details(0, False),
-                'error': str(e)
-            }
+            return {'status': False, 'details': self._get_details(0, False), 'error': str(e)}
 
         # Check port
         try:
             self.check_port(self.host, self.port)
         except Exception as e:
-            return {
-                'status': False,
-                'details': self._get_details(1, False),
-                'error': str(e)
-            }
+            return {'status': False, 'details': self._get_details(1, False), 'error': str(e)}
 
         # Check databases access
         client = pymongo.MongoClient(self.uri, ssl=self.ssl, serverSelectionTimeoutMS=500)
         try:
             client.server_info()
         except pymongo.errors.ServerSelectionTimeoutError as e:
-            return {
-                'status': False,
-                'details': self._get_details(2, False),
-                'error': str(e)
-            }
+            return {'status': False, 'details': self._get_details(2, False), 'error': str(e)}
         except pymongo.errors.OperationFailure as e:
-            return {
-                'status': False,
-                'details': self._get_details(3, False),
-                'error': str(e)
-            }
+            return {'status': False, 'details': self._get_details(3, False), 'error': str(e)}
 
-        return {
-            'status': True,
-            'details': self._get_details(3, True),
-            'error': None
-        }
+        return {'status': True, 'details': self._get_details(3, True), 'error': None}
 
     @cached_property
     def client(self):
@@ -221,19 +198,14 @@ class MongoConnector(ToucanConnector):
         data_source: MongoDataSource,
         permissions: Optional[str] = None,
         offset: int = 0,
-        limit: Optional[int] = None
+        limit: Optional[int] = None,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
         if offset or limit is not None:
-            data_source.query = apply_permissions(data_source.query,
-                                                  permissions)
-            data_source.query = normalize_query(data_source.query,
-                                                data_source.parameters)
-            facet = {"$facet": {
-                'count': data_source.query.copy(),
-                'df': data_source.query.copy(),
-            }}
+            data_source.query = apply_permissions(data_source.query, permissions)
+            data_source.query = normalize_query(data_source.query, data_source.parameters)
+            facet = {"$facet": {'count': data_source.query.copy(), 'df': data_source.query.copy()}}
             facet['$facet']['count'].append({'$count': 'value'})
             if offset:
                 facet['$facet']['df'].append({'$skip': offset})
@@ -253,14 +225,13 @@ class MongoConnector(ToucanConnector):
         client = pymongo.MongoClient(self.uri, ssl=self.ssl)
         self.validate_database_and_collection(data_source.database, data_source.collection)
         data_source.query = apply_permissions(data_source.query, permissions)
-        data_source.query = normalize_query(data_source.query,
-                                            data_source.parameters)
+        data_source.query = normalize_query(data_source.query, data_source.parameters)
 
         cursor = client[data_source.database].command(
             command="aggregate",
             value=data_source.collection,
             pipeline=data_source.query,
-            explain=True
+            explain=True,
         )
 
         f = '''{

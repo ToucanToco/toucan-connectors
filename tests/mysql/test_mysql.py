@@ -12,8 +12,9 @@ from toucan_connectors.mysql.mysql_connector import MySQLConnector, MySQLDataSou
 @pytest.fixture(scope='module')
 def mysql_server(service_container):
     def check(host_port):
-        conn = pymysql.connect(host='127.0.0.1', port=host_port,
-                               user='ubuntu', password='ilovetoucan')
+        conn = pymysql.connect(
+            host='127.0.0.1', port=host_port, user='ubuntu', password='ilovetoucan'
+        )
         cur = conn.cursor()
         cur.execute('SELECT 1;')
         cur.close()
@@ -24,8 +25,13 @@ def mysql_server(service_container):
 
 @pytest.fixture
 def mysql_connector(mysql_server):
-    return MySQLConnector(name='mycon', host='localhost', port=mysql_server['port'],
-                          user='ubuntu', password='ilovetoucan')
+    return MySQLConnector(
+        name='mycon',
+        host='localhost',
+        port=mysql_server['port'],
+        user='ubuntu',
+        password='ilovetoucan',
+    )
 
 
 def test_datasource():
@@ -37,8 +43,9 @@ def test_datasource():
     assert "'query' or 'table' must be set" in str(exc_info.value)
 
     with pytest.raises(ValueError) as exc_info:
-        MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db',
-                        query='myquery', table='mytable')
+        MySQLDataSource(
+            name='mycon', domain='mydomain', database='mysql_db', query='myquery', table='mytable'
+        )
     assert "Only one of 'query' or 'table' must be set" in str(exc_info.value)
 
     MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db', table='mytable')
@@ -49,16 +56,33 @@ def test_get_connection_params():
     connector = MySQLConnector(name='my_mysql_con', host='myhost', user='myuser')
     params = connector.get_connection_params()
     params.pop('conv')
-    assert params == {'host': 'myhost', 'user': 'myuser', 'charset': 'utf8mb4',
-                      'cursorclass': pymysql.cursors.DictCursor}
+    assert params == {
+        'host': 'myhost',
+        'user': 'myuser',
+        'charset': 'utf8mb4',
+        'cursorclass': pymysql.cursors.DictCursor,
+    }
 
-    connector = MySQLConnector(name='my_mssql_con', host='myhost', user='myuser',
-                               password='mypass', port=123, charset='utf8', connect_timeout=50)
+    connector = MySQLConnector(
+        name='my_mssql_con',
+        host='myhost',
+        user='myuser',
+        password='mypass',
+        port=123,
+        charset='utf8',
+        connect_timeout=50,
+    )
     params = connector.get_connection_params()
     params.pop('conv')
-    assert params == {'host': 'myhost', 'user': 'myuser', 'charset': 'utf8',
-                      'cursorclass': pymysql.cursors.DictCursor, 'password': 'mypass',
-                      'port': 123, 'connect_timeout': 50}
+    assert params == {
+        'host': 'myhost',
+        'user': 'myuser',
+        'charset': 'utf8',
+        'cursorclass': pymysql.cursors.DictCursor,
+        'password': 'mypass',
+        'port': 123,
+        'connect_timeout': 50,
+    }
 
 
 def test_get_status_all_good(mysql_connector):
@@ -70,7 +94,7 @@ def test_get_status_all_good(mysql_connector):
             ('Host connection', True),
             ('Authenticated', True),
         ],
-        'error': None
+        'error': None,
     }
 
 
@@ -97,14 +121,15 @@ def test_get_status_bad_port(mysql_connector):
             ('Host connection', None),
             ('Authenticated', None),
         ],
-        'error': 'getsockaddrarg: port must be 0-65535.'
+        'error': 'getsockaddrarg: port must be 0-65535.',
     }
 
 
 def test_get_status_bad_connection(mysql_connector, unused_port, mocker):
     mysql_connector.port = unused_port()
-    mocker.patch('toucan_connectors.mysql.mysql_connector.MySQLConnector.check_port',
-                 return_value=True)
+    mocker.patch(
+        'toucan_connectors.mysql.mysql_connector.MySQLConnector.check_port', return_value=True
+    )
     status = mysql_connector.get_status()
     assert status['status'] is False
     assert status['details'] == [
@@ -126,7 +151,7 @@ def test_get_status_bad_authentication(mysql_connector):
             ('Host connection', True),
             ('Authenticated', False),
         ],
-        'error': "Access denied for user 'pika'@'172.17.0.1' (using password: YES)"
+        'error': "Access denied for user 'pika'@'172.17.0.1' (using password: YES)",
     }
 
 
@@ -144,11 +169,12 @@ def test_get_df(mocker):
             'type': 'external_database',
             'name': 'Some MySQL provider',
             'database': 'mysql_db',
-            'table': 'City'
+            'table': 'City',
         }
     ]
-    mysql_connector = MySQLConnector(name='mycon', host='localhost', port=22,
-                                     user='ubuntu', password='ilovetoucan')
+    mysql_connector = MySQLConnector(
+        name='mycon', host='localhost', port=22, user='ubuntu', password='ilovetoucan'
+    )
 
     data_source = MySQLDataSource(**data_sources_spec[0])
     mysql_connector.get_df(data_source)
@@ -163,14 +189,10 @@ def test_get_df(mocker):
         port=22,
         charset='utf8mb4',
         conv=conv,
-        cursorclass=pymysql.cursors.DictCursor
+        cursorclass=pymysql.cursors.DictCursor,
     )
 
-    reasq.assert_called_once_with(
-        'select * from City',
-        con=snock(),
-        params={}
-    )
+    reasq.assert_called_once_with('select * from City', con=snock(), params={})
 
 
 def test_get_df_db_follow(mysql_connector):
@@ -182,16 +204,31 @@ def test_get_df_db_follow(mysql_connector):
             'name': 'Some MySQL provider',
             'database': 'mysql_db',
             'table': 'City',
-            'follow_relations': True
+            'follow_relations': True,
         }
     ]
 
-    expected_columns = ['ID', 'Name_City', 'CountryCode', 'District',
-                        'Population_City', 'Name_Country', 'Continent',
-                        'Region', 'SurfaceArea', 'IndepYear',
-                        'Population_Country', 'LifeExpectancy', 'GNP',
-                        'GNPOld', 'LocalName', 'GovernmentForm', 'HeadOfState',
-                        'Capital', 'Code2']
+    expected_columns = [
+        'ID',
+        'Name_City',
+        'CountryCode',
+        'District',
+        'Population_City',
+        'Name_Country',
+        'Continent',
+        'Region',
+        'SurfaceArea',
+        'IndepYear',
+        'Population_Country',
+        'LifeExpectancy',
+        'GNP',
+        'GNPOld',
+        'LocalName',
+        'GovernmentForm',
+        'HeadOfState',
+        'Capital',
+        'Code2',
+    ]
 
     data_source = MySQLDataSource(**data_sources_spec[0])
     df = mysql_connector.get_df(data_source)
@@ -237,11 +274,15 @@ def test_clean_response():
 
 def test_decode_df():
     """It should decode the bytes columns"""
-    df = pd.DataFrame({'date': [b'2013-08-01', b'2013-08-02'],
-                       'country': ['France', 'Germany'],
-                       'number': [1, 2],
-                       'other': [b'pikka', b'chuuu'],
-                       'random': [3, 4]})
+    df = pd.DataFrame(
+        {
+            'date': [b'2013-08-01', b'2013-08-02'],
+            'country': ['France', 'Germany'],
+            'number': [1, 2],
+            'other': [b'pikka', b'chuuu'],
+            'random': [3, 4],
+        }
+    )
     res = MySQLConnector.decode_df(df)
     assert res['date'].tolist() == ['2013-08-01', '2013-08-02']
     assert res['other'].tolist() == ['pikka', 'chuuu']
@@ -259,7 +300,7 @@ def test_get_form_empty_query(mysql_connector):
     assert form['properties']['database'] == {
         'title': 'Database',
         'type': 'string',
-        'enum': ['information_schema', 'mysql_db']
+        'enum': ['information_schema', 'mysql_db'],
     }
 
 
@@ -270,10 +311,10 @@ def test_get_form_query_with_good_database(mysql_connector):
     assert form['properties']['database'] == {
         'title': 'Database',
         'type': 'string',
-        'enum': ['information_schema', 'mysql_db']
+        'enum': ['information_schema', 'mysql_db'],
     }
     assert form['properties']['table'] == {
         'title': 'Table',
         'type': 'string',
-        'enum': ['City', 'Country', 'CountryLanguage']
+        'enum': ['City', 'Country', 'CountryLanguage'],
     }

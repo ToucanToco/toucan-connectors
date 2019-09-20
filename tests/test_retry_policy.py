@@ -1,5 +1,6 @@
-import pytest
 from time import time
+
+import pytest
 
 from toucan_connectors.toucan_connector import RetryPolicy
 
@@ -24,6 +25,7 @@ def test_retry_on_single_exception():
         if not logbook:
             logbook.append(None)
             raise KeyError()
+
     myfunc()
     assert len(logbook) == 1
 
@@ -37,6 +39,7 @@ def test_no_retry_on_unexpectd_exception():
         if not logbook:
             logbook.append(None)
             raise ValueError()
+
     with pytest.raises(ValueError):
         myfunc()
     assert len(logbook) == 1
@@ -54,6 +57,7 @@ def test_retry_on_multiple_exceptions():
         if len(logbook) == 1:
             logbook.append(None)
             raise ValueError()
+
     myfunc()
     assert len(logbook) == 2
 
@@ -67,6 +71,7 @@ def test_max_attempts():
         if len(logbook) < max_attempts:
             logbook.append(None)
             raise RuntimeError('try again!')
+
     myfunc(1)
     assert len(logbook) == 1
     logbook.clear()
@@ -86,6 +91,7 @@ def test_max_delay():
     def myfunc():
         logbook[0] = time()
         raise RuntimeError('try again!')
+
     with pytest.raises(RuntimeError):
         approx_start = time()
         myfunc()
@@ -102,6 +108,7 @@ def test_wait_time():
         if len(logbook) < 3:
             logbook.append(time())
             raise RuntimeError('try again!')
+
     myfunc()
     assert len(logbook) == 3
     t1, t2, t3 = logbook
@@ -117,6 +124,7 @@ def test_mix_attempts_and_max_delay():
     def myfunc():
         logbook.append(time())
         raise RuntimeError('try again!')
+
     with pytest.raises(RuntimeError):
         approx_start = time()
         myfunc()

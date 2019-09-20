@@ -1,1 +1,1 @@
-from .snowflake_connector import SnowflakeDataSource, SnowflakeConnector
+from .snowflake_connector import SnowflakeConnector, SnowflakeDataSource

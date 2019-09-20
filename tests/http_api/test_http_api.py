@@ -4,17 +4,18 @@ import pytest
 import responses
 
 from toucan_connectors.http_api.http_api_connector import (
+    Auth,
     HttpAPIConnector,
     HttpAPIDataSource,
     transform_with_jq,
-    Auth
 )
 
 
 @pytest.fixture(scope='function')
 def connector():
-    return HttpAPIConnector(name="myHttpConnector", type="HttpAPI",
-                            baseroute="https://jsonplaceholder.typicode.com")
+    return HttpAPIConnector(
+        name="myHttpConnector", type="HttpAPI", baseroute="https://jsonplaceholder.typicode.com"
+    )
 
 
 @pytest.fixture(scope='function')
@@ -30,8 +31,9 @@ def auth():
 def test_transform_with_jq():
     assert transform_with_jq(data=[1, 2, 3], jq_filter='.[]+1') == [2, 3, 4]
     assert transform_with_jq([[1, 2, 3]], '.[]') == [1, 2, 3]
-    assert transform_with_jq(
-        [{'col1': [1, 2], 'col2': [3, 4]}], '.') == [{'col1': [1, 2], 'col2': [3, 4]}]
+    assert transform_with_jq([{'col1': [1, 2], 'col2': [3, 4]}], '.') == [
+        {'col1': [1, 2], 'col2': [3, 4]}
+    ]
 
 
 def test_get_df(connector, data_source):
@@ -78,8 +80,9 @@ def test_get_df_with_parameters_and_auth(connector, data_source, auth, mocker):
 
 
 def test_exceptions_not_json():
-    connector = HttpAPIConnector(name="myHttpConnector", type="HttpAPI",
-                                 baseroute="https://demo.toucantoco.com")
+    connector = HttpAPIConnector(
+        name="myHttpConnector", type="HttpAPI", baseroute="https://demo.toucantoco.com"
+    )
     data_source = HttpAPIDataSource(name="myHttpDataSource", domain="my_domain", url="/")
 
     with pytest.raises(ValueError):
@@ -94,10 +97,7 @@ def test_exceptions_wrong_filter(connector, data_source):
 
 
 def test_e2e():
-    con_params = {
-        'name': 'open_data_paris',
-        'baseroute': 'https://opendata.paris.fr/api/'
-    }
+    con_params = {'name': 'open_data_paris', 'baseroute': 'https://opendata.paris.fr/api/'}
     ds_params = {
         'domain': 'books',
         'name': 'open_data_paris',
@@ -106,9 +106,9 @@ def test_e2e():
             'dataset': 'les-1000-titres-les-plus-reserves-dans-les-bibliotheques-de-pret',
             'facet': 'auteur',
             'sort': 'rang',
-            'rows': 1000
+            'rows': 1000,
         },
-        'filter': ".records[].fields"
+        'filter': ".records[].fields",
     }
 
     con = HttpAPIConnector(**con_params)
@@ -120,10 +120,8 @@ def test_e2e():
 @responses.activate
 def test_get_df_with_json(connector, data_source, mocker):
     data_source = HttpAPIDataSource(
-        name="myHttpDataSource",
-        domain="my_domain",
-        url="/comments",
-        json={'a': 1})
+        name="myHttpDataSource", domain="my_domain", url="/comments", json={'a': 1}
+    )
 
     responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 2}])
 
@@ -134,9 +132,14 @@ def test_get_df_with_json(connector, data_source, mocker):
 
 @responses.activate
 def test_get_df_with_template(data_source, mocker):
-    co = HttpAPIConnector(**{'name': 'test', 'type': 'HttpAPI',
-                             'baseroute': 'http://example.com',
-                             'template': {'headers': {'Authorization': 'XX'}}})
+    co = HttpAPIConnector(
+        **{
+            'name': 'test',
+            'type': 'HttpAPI',
+            'baseroute': 'http://example.com',
+            'template': {'headers': {'Authorization': 'XX'}},
+        }
+    )
 
     responses.add(responses.GET, 'http://example.com/comments', json=[{"a": 2}])
 
@@ -149,16 +152,21 @@ def test_get_df_with_template(data_source, mocker):
 
 @responses.activate
 def test_get_df_with_template_overide(data_source, mocker):
-    co = HttpAPIConnector(**{'name': 'test', 'type': 'HttpAPI',
-                             'baseroute': 'http://example.com',
-                             'template': {'headers': {'Authorization': 'XX', 'B': '1'}}})
+    co = HttpAPIConnector(
+        **{
+            'name': 'test',
+            'type': 'HttpAPI',
+            'baseroute': 'http://example.com',
+            'template': {'headers': {'Authorization': 'XX', 'B': '1'}},
+        }
+    )
 
     data_source = HttpAPIDataSource(
         name="myHttpDataSource",
         domain="my_domain",
         url="/comments",
         json={'A': 1},
-        headers={'Authorization': 'YY'}
+        headers={'Authorization': 'YY'},
     )
 
     responses.add(responses.GET, 'http://example.com/comments', json=[{"a": 2}])
@@ -182,17 +190,15 @@ def test_get_df_oauth2_backend():
         'baseroute': 'https://gateway.eu1.mindsphere.io/api/im/v3',
         'auth': {
             'type': 'oauth2_backend',
-            'args': ['https://mscenter.piam.eu1.mindsphere.io/oauth/token',
-                     '<client_id>',
-                     '<client_secret>']
-        }
+            'args': [
+                'https://mscenter.piam.eu1.mindsphere.io/oauth/token',
+                '<client_id>',
+                '<client_secret>',
+            ],
+        },
     }
 
-    users = {
-        'domain': 'test',
-        'name': 'test',
-        'url': '/Users',
-        'filter': '.resources'}
+    users = {'domain': 'test', 'name': 'test', 'url': '/Users', 'filter': '.resources'}
 
     co = HttpAPIConnector(**data_provider)
     df = co.get_df(HttpAPIDataSource(**users))
@@ -208,21 +214,24 @@ def test_get_df_oauth2_backend_mocked():
         'baseroute': 'https://gateway.eu1.mindsphere.io/api/im/v3',
         'auth': {
             'type': 'oauth2_backend',
-            'args': ['https://mscenter.piam.eu1.mindsphere.io/oauth/token',
-                     '<client_id>',
-                     '<client_secret>']
-        }
+            'args': [
+                'https://mscenter.piam.eu1.mindsphere.io/oauth/token',
+                '<client_id>',
+                '<client_secret>',
+            ],
+        },
     }
 
-    users = {
-        'domain': 'test',
-        'name': 'test',
-        'url': '/Users'}
+    users = {'domain': 'test', 'name': 'test', 'url': '/Users'}
 
-    responses.add(responses.POST, 'https://mscenter.piam.eu1.mindsphere.io/oauth/token',
-                  json={'access_token': 'A'})
-    responses.add(responses.GET, 'https://gateway.eu1.mindsphere.io/api/im/v3/Users',
-                  json=[{'A': 1}])
+    responses.add(
+        responses.POST,
+        'https://mscenter.piam.eu1.mindsphere.io/oauth/token',
+        json={'access_token': 'A'},
+    )
+    responses.add(
+        responses.GET, 'https://gateway.eu1.mindsphere.io/api/im/v3/Users', json=[{'A': 1}]
+    )
 
     co = HttpAPIConnector(**data_provider)
     co.get_df(HttpAPIDataSource(**users))
@@ -235,17 +244,13 @@ def test_with_proxies(mocker):
     f = 'toucan_connectors.http_api.http_api_connector.transform_with_jq'
     mocker.patch(f).return_value = [{'a': 1}]
 
-    data_provider = {
-        'name': 'test',
-        'type': 'HttpApi',
-        'baseroute': 'https://example.com'
-    }
+    data_provider = {'name': 'test', 'type': 'HttpApi', 'baseroute': 'https://example.com'}
 
     data_source = {
         'proxies': {'https': 'https://eu1.proxysite.com'},
         'name': 'test',
         'domain': 'test_domain',
-        'url': '/endpoint'
+        'url': '/endpoint',
     }
 
     HttpAPIConnector(**data_provider).get_df(HttpAPIDataSource(**data_source))
@@ -262,18 +267,11 @@ def test_with_cert(mocker):
         'name': 'test',
         'type': 'HttpApi',
         'baseroute': 'https://example.com',
-        'cert': ['tests/http_api/test_http_api.py', 'tests/http_api/test_http_api.py']
+        'cert': ['tests/http_api/test_http_api.py', 'tests/http_api/test_http_api.py'],
     }
 
-    data_source = {
-        'name': 'test',
-        'domain': 'test_domain',
-        'url': '/endpoint'
-    }
+    data_source = {'name': 'test', 'domain': 'test_domain', 'url': '/endpoint'}
 
     HttpAPIConnector(**data_provider).get_df(HttpAPIDataSource(**data_source))
     args, kwargs = req.call_args
-    assert kwargs['cert'] == [
-        'tests/http_api/test_http_api.py',
-        'tests/http_api/test_http_api.py'
-    ]
+    assert kwargs['cert'] == ['tests/http_api/test_http_api.py', 'tests/http_api/test_http_api.py']

@@ -5,11 +5,7 @@ import pytest
 import tenacity as tny
 from pydantic import create_model
 
-from toucan_connectors.toucan_connector import (
-    ToucanConnector,
-    ToucanDataSource,
-    strlist_to_enum
-)
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class DataSource(ToucanDataSource):
@@ -20,17 +16,21 @@ class DataConnector(ToucanConnector):
     type = 'MyDB'
     data_source_model: DataSource
 
-    def _retrieve_data(self, data_source): pass
+    def _retrieve_data(self, data_source):
+        pass
 
 
 ################################################
 def test_missing_attributes():
     # missing data_source_model
     with pytest.raises(TypeError) as exc_info:
+
         class MissingDataConnector2(ToucanConnector):
             type = 'MyDB'
 
-            def _retrieve_data(self, data_source): pass
+            def _retrieve_data(self, data_source):
+                pass
+
     assert str(exc_info.value) == "MissingDataConnector2 has no 'data_source_model' attribute."
 
 
@@ -52,11 +52,7 @@ def test_type():
 
 def test_validate():
     dc = DataConnector(name='my_name')
-    dc.data_source_model.validate({
-        'query': '',
-        'name': 'my_name',
-        'domain': 'my_domain'
-    })
+    dc.data_source_model.validate({'query': '', 'name': 'my_name', 'domain': 'my_domain'})
 
 
 def test_get_df_with_permissions():
@@ -118,7 +114,7 @@ def test_get_status():
     assert DataConnector(name='my_name').get_status() == {
         'status': None,
         'details': [],
-        'error': None
+        'error': None,
     }
 
 
@@ -135,9 +131,7 @@ class UnreliableDataConnector(ToucanConnector):
 
 
 def test_max_attempt_df():
-    udc = UnreliableDataConnector(name='my_name', retry_policy={
-        'max_attempts': 5
-    })
+    udc = UnreliableDataConnector(name='my_name', retry_policy={'max_attempts': 5})
     result = udc.get_df({})
     assert result == 42
 
@@ -207,28 +201,20 @@ def test_no_retry_on_df():
 
 def test_strlist_to_enum_required():
     """It should be required by default"""
-    model = create_model(
-        'Test',
-        pokemon=strlist_to_enum('pokemon', ['pika', 'bulbi'])
-    )
+    model = create_model('Test', pokemon=strlist_to_enum('pokemon', ['pika', 'bulbi']))
     assert model.schema() == {
         'title': 'Test',
         'type': 'object',
         'properties': {
-            'pokemon': {
-                'title': 'Pokemon',
-                'enum': ['pika', 'bulbi'],
-                'type': 'string'}},
-        'required': ['pokemon']
+            'pokemon': {'title': 'Pokemon', 'enum': ['pika', 'bulbi'], 'type': 'string'}
+        },
+        'required': ['pokemon'],
     }
 
 
 def test_strlist_to_enum_default_value():
     """It should be possible to add a default value (not required)"""
-    model = create_model(
-        'Test',
-        pokemon=strlist_to_enum('pokemon', ['pika', 'bulbi'], 'pika')
-    )
+    model = create_model('Test', pokemon=strlist_to_enum('pokemon', ['pika', 'bulbi'], 'pika'))
     assert model.schema() == {
         'title': 'Test',
         'type': 'object',
@@ -237,7 +223,7 @@ def test_strlist_to_enum_default_value():
                 'title': 'Pokemon',
                 'default': 'pika',
                 'enum': ['pika', 'bulbi'],
-                'type': 'string'
+                'type': 'string',
             }
-        }
+        },
     }

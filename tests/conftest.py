@@ -1,7 +1,7 @@
 import socket
 import time
 from contextlib import suppress
-from os import path, environ
+from os import environ, path
 
 import pytest
 import yaml
@@ -11,8 +11,7 @@ from slugify import slugify
 
 
 def pytest_addoption(parser):
-    parser.addoption('--pull', action='store_true', default=False,
-                     help='Pull docker images')
+    parser.addoption('--pull', action='store_true', default=False, help='Pull docker images')
 
 
 @pytest.fixture(scope='session')
@@ -26,9 +25,9 @@ def docker():
     if 'DOCKER_HOST' in environ:
         docker_kwargs['base_url'] = environ['DOCKER_HOST']
     if environ.get('DOCKER_TLS_VERIFY', 0) == '1':
-        docker_kwargs['tls'] = TLSConfig((
-            f"{environ['DOCKER_CERT_PATH']}/cert.pem",
-            f"{environ['DOCKER_CERT_PATH']}/key.pem"))
+        docker_kwargs['tls'] = TLSConfig(
+            (f"{environ['DOCKER_CERT_PATH']}/cert.pem", f"{environ['DOCKER_CERT_PATH']}/key.pem")
+        )
     return APIClient(**docker_kwargs)
 
 
@@ -57,16 +56,24 @@ def wait_for_container(checker_callable, host_port, image, skip_exception=None, 
 
 @pytest.fixture(scope='module')
 def container_starter(request, docker, docker_pull):
-    def f(image, internal_port, host_port, env=None, volumes=None, command=None,
-          checker_callable=None, skip_exception=None, timeout=None):
+    def f(
+        image,
+        internal_port,
+        host_port,
+        env=None,
+        volumes=None,
+        command=None,
+        checker_callable=None,
+        skip_exception=None,
+        timeout=None,
+    ):
 
         if docker_pull:
             print(f'Pulling {image} image')
             docker.pull(image)
 
         host_config = docker.create_host_config(
-            port_bindings={internal_port: host_port},
-            binds=volumes
+            port_bindings={internal_port: host_port}, binds=volumes
         )
 
         if volumes is not None:
@@ -82,7 +89,8 @@ def container_starter(request, docker, docker_pull):
             environment=env,
             volumes=volumes,
             command=command,
-            host_config=host_config)
+            host_config=host_config,
+        )
 
         print(f'Starting {container_name}')
         docker.start(container=container['Id'])

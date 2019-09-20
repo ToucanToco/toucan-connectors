@@ -1,13 +1,13 @@
 from typing import List
 
+import pandas as pd
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-import pandas as pd
 from pydantic import BaseModel
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-from toucan_connectors.google_credentials import GoogleCredentials
 from toucan_connectors.common import nosql_apply_parameters_to_query
+from toucan_connectors.google_credentials import GoogleCredentials
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 API = 'analyticsreporting'
 SCOPE = 'https://www.googleapis.com/auth/analytics.readonly'
@@ -154,8 +154,7 @@ def get_dict_from_response(report, request_date_ranges):
 
 
 def get_query_results(service, report_request):
-    response = service.reports().batchGet(
-        body={'reportRequests': report_request.dict()}).execute()
+    response = service.reports().batchGet(body={'reportRequests': report_request.dict()}).execute()
     return response.get('reports', [])[0]
 
 
@@ -174,10 +173,11 @@ class GoogleAnalyticsConnector(ToucanConnector):
             self.credentials.dict(), self.scope
         )
         service = build(API, VERSION, credentials=credentials)
-        report_request = ReportRequest(**nosql_apply_parameters_to_query(
-            data_source.report_request.dict(),
-            data_source.parameters
-        ))
+        report_request = ReportRequest(
+            **nosql_apply_parameters_to_query(
+                data_source.report_request.dict(), data_source.parameters
+            )
+        )
         report = get_query_results(service, report_request)
         reports_data = [pd.DataFrame(get_dict_from_response(report, report_request.dateRanges))]
 
@@ -185,7 +185,8 @@ class GoogleAnalyticsConnector(ToucanConnector):
             report_request.pageToken = report['nextPageToken']
 
             report = get_query_results(service, report_request)
-            reports_data.append(pd.DataFrame(
-                get_dict_from_response(report, report_request.dateRanges)))
+            reports_data.append(
+                pd.DataFrame(get_dict_from_response(report, report_request.dateRanges))
+            )
 
         return pd.concat(reports_data)

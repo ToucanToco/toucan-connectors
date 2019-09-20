@@ -22,7 +22,7 @@ class OracleSQLConnector(ToucanConnector):
             'user': self.user,
             'password': self.password,
             'dsn': self.dsn,
-            'encoding': self.encoding
+            'encoding': self.encoding,
         }
         return {k: v for k, v in con_params.items() if v is not None}
 

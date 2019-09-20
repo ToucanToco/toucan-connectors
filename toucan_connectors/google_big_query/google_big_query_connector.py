@@ -33,11 +33,10 @@ class GoogleBigQueryConnector(ToucanConnector):
             for each query. This is necessary when extracting multiple data to avoid the error:
             [Errno 54] Connection reset by peer
         """
-        credentials = (get_google_oauth2_credentials(self.credentials)
-                       .with_scopes(self.scopes))
+        credentials = get_google_oauth2_credentials(self.credentials).with_scopes(self.scopes)
         return pandas_gbq.read_gbq(
             query=data_source.query,
             project_id=self.credentials.project_id,
             credentials=credentials,
-            dialect=self.dialect
+            dialect=self.dialect,
         )

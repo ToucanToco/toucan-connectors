@@ -1,11 +1,11 @@
 import os
-import pymssql
 
 import pandas as pd
 import pydantic
+import pymssql
 import pytest
 
-from toucan_connectors.mssql.mssql_connector import MSSQLDataSource, MSSQLConnector
+from toucan_connectors.mssql.mssql_connector import MSSQLConnector, MSSQLDataSource
 
 
 @pytest.fixture(scope='module')
@@ -34,8 +34,13 @@ def mssql_server(service_container):
 
 @pytest.fixture
 def mssql_connector(mssql_server):
-    return MSSQLConnector(name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!',
-                          port=mssql_server['port'])
+    return MSSQLConnector(
+        name='mycon',
+        host='localhost',
+        user='SA',
+        password='Il0veT0uc@n!',
+        port=mssql_server['port'],
+    )
 
 
 @pytest.fixture
@@ -55,13 +60,26 @@ def test_datasource(mssql_datasource):
 def test_connection_params():
     connector = MSSQLConnector(name='my_mssql_con', host='myhost', user='myuser')
     assert connector.get_connection_params(None) == {
-        'server': 'myhost', 'user': 'myuser', 'as_dict': True
+        'server': 'myhost',
+        'user': 'myuser',
+        'as_dict': True,
     }
-    connector = MSSQLConnector(name='my_mssql_con', host='myhost', user='myuser',
-                               password='mypass', port=123, connect_timeout=60)
+    connector = MSSQLConnector(
+        name='my_mssql_con',
+        host='myhost',
+        user='myuser',
+        password='mypass',
+        port=123,
+        connect_timeout=60,
+    )
     assert connector.get_connection_params('mydb') == {
-        'server': 'myhost', 'user': 'myuser', 'as_dict': True, 'password': 'mypass',
-        'port': 123, 'login_timeout': 60, 'database': 'mydb'
+        'server': 'myhost',
+        'user': 'myuser',
+        'as_dict': True,
+        'password': 'mypass',
+        'port': 123,
+        'login_timeout': 60,
+        'database': 'mydb',
     }
 
 
@@ -69,11 +87,15 @@ def test_mssql_get_df(mocker):
     snock = mocker.patch('pymssql.connect')
     reasq = mocker.patch('pandas.read_sql')
 
-    mssql_connector = MSSQLConnector(name='mycon', host='localhost', user='SA',
-                                     password='Il0veT0uc@n!', port=22)
-    datasource = MSSQLDataSource(name='mycon', domain='mydomain', database='mydb',
-                                 query='SELECT Name, CountryCode, Population '
-                                       'FROM City WHERE ID BETWEEN 1 AND 3')
+    mssql_connector = MSSQLConnector(
+        name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!', port=22
+    )
+    datasource = MSSQLDataSource(
+        name='mycon',
+        domain='mydomain',
+        database='mydb',
+        query='SELECT Name, CountryCode, Population ' 'FROM City WHERE ID BETWEEN 1 AND 3',
+    )
     mssql_connector.get_df(datasource)
 
     snock.assert_called_once_with(
@@ -82,21 +104,22 @@ def test_mssql_get_df(mocker):
         user='SA',
         password='Il0veT0uc@n!',
         port=22,
-        database='mydb'
+        database='mydb',
     )
 
     reasq.assert_called_once_with(
-        'SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3',
-        con=snock()
+        'SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3', con=snock()
     )
 
 
 def test_get_df(mssql_connector, mssql_datasource):
     """ It should connect to the default database and retrieve the response to the query """
-    datasource = mssql_datasource(query='SELECT Name, CountryCode, Population '
-                                        'FROM City WHERE ID BETWEEN 1 AND 3')
-    expected = pd.DataFrame({'Name': ['Kabul', 'Qandahar', 'Herat'],
-                             'Population': [1780000, 237500, 186800]})
+    datasource = mssql_datasource(
+        query='SELECT Name, CountryCode, Population ' 'FROM City WHERE ID BETWEEN 1 AND 3'
+    )
+    expected = pd.DataFrame(
+        {'Name': ['Kabul', 'Qandahar', 'Herat'], 'Population': [1780000, 237500, 186800]}
+    )
     expected['CountryCode'] = 'AFG'
     expected = expected[['Name', 'CountryCode', 'Population']]
 

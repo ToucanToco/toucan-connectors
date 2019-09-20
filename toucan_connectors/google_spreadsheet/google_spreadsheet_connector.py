@@ -4,8 +4,8 @@ import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.google_credentials import GoogleCredentials
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class GoogleSpreadsheetDataSource(ToucanDataSource):
@@ -20,17 +20,19 @@ class GoogleSpreadsheetConnector(ToucanConnector):
     and use the values here. This is an oauth2 credential file. For more information
     see this: http://gspread.readthedocs.io/en/latest/oauth2.html
     """
+
     data_source_model: GoogleSpreadsheetDataSource
 
     credentials: GoogleCredentials
-    scope: List[str] = ['https://www.googleapis.com/auth/drive',
-                        'https://www.googleapis.com/auth/spreadsheets',
-                        'https://spreadsheets.google.com/feeds']
+    scope: List[str] = [
+        'https://www.googleapis.com/auth/drive',
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://spreadsheets.google.com/feeds',
+    ]
 
     def _retrieve_data(self, data_source):
         credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-            self.credentials.dict(),
-            self.scope
+            self.credentials.dict(), self.scope
         )
         gc = gspread.authorize(credentials)
 

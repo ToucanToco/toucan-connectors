@@ -14,6 +14,7 @@ class PostgresConnector(ToucanConnector):
     """
     Import data from PostgreSQL.
     """
+
     data_source_model: PostgresDataSource
 
     user: str
@@ -32,15 +33,13 @@ class PostgresConnector(ToucanConnector):
             dbname=database,
             password=self.password,
             port=self.port,
-            connect_timeout=self.connect_timeout
+            connect_timeout=self.connect_timeout,
         )
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _retrieve_data(self, data_source):
-        connection = pgsql.connect(
-            **self.get_connection_params(database=data_source.database)
-        )
+        connection = pgsql.connect(**self.get_connection_params(database=data_source.database))
 
         query_params = data_source.parameters or {}
         df = pd.read_sql(data_source.query, con=connection, params=query_params)

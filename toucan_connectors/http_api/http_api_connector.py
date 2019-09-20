@@ -1,14 +1,14 @@
 from enum import Enum
+from typing import List, Union
 
-from jq import jq
 import pandas as pd
-from pydantic import BaseModel, Schema, FilePath
+from jq import jq
+from pydantic import BaseModel, FilePath, Schema
 from requests import Session
-from typing import Union, List
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.auth import Auth
+from toucan_connectors.common import nosql_apply_parameters_to_query
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
@@ -97,8 +97,7 @@ class HttpAPIConnector(ToucanConnector):
             session = Session()
 
         query = nosql_apply_parameters_to_query(
-            data_source.dict(by_alias=True),
-            data_source.parameters
+            data_source.dict(by_alias=True), data_source.parameters
         )
 
         if self.template:

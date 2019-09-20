@@ -2,7 +2,8 @@ import cx_Oracle
 import pytest
 
 from toucan_connectors.oracle_sql.oracle_sql_connector import (
-    OracleSQLConnector, OracleSQLDataSource
+    OracleSQLConnector,
+    OracleSQLDataSource,
 )
 
 missing_oracle_lib = False
@@ -27,30 +28,29 @@ def oracle_server(service_container):
 
 @pytest.fixture
 def oracle_connector(oracle_server):
-    return OracleSQLConnector(name='my_oracle_sql_con', user='system', password='oracle',
-                              dsn=f'localhost:{oracle_server["port"]}/xe')
+    return OracleSQLConnector(
+        name='my_oracle_sql_con',
+        user='system',
+        password='oracle',
+        dsn=f'localhost:{oracle_server["port"]}/xe',
+    )
 
 
 def test_oracle_get_df(mocker):
     snock = mocker.patch('cx_Oracle.connect')
     reasq = mocker.patch('pandas.read_sql')
 
-    oracle_connector = OracleSQLConnector(name='my_oracle_sql_con', user='system',
-                                          password='oracle', dsn=f'localhost:22/xe')
-    datasource = OracleSQLDataSource(domain='Oracle test', name='my_oracle_sql_con',
-                                     query='SELECT * FROM City;')
+    oracle_connector = OracleSQLConnector(
+        name='my_oracle_sql_con', user='system', password='oracle', dsn=f'localhost:22/xe'
+    )
+    datasource = OracleSQLDataSource(
+        domain='Oracle test', name='my_oracle_sql_con', query='SELECT * FROM City;'
+    )
     oracle_connector.get_df(datasource)
 
-    snock.assert_called_once_with(
-        user='system',
-        password='oracle',
-        dsn=f'localhost:22/xe'
-    )
+    snock.assert_called_once_with(user='system', password='oracle', dsn=f'localhost:22/xe')
 
-    reasq.assert_called_once_with(
-        'SELECT * FROM City',
-        con=snock()
-    )
+    reasq.assert_called_once_with('SELECT * FROM City', con=snock())
 
 
 def test_get_df_db(oracle_connector):
@@ -60,7 +60,7 @@ def test_get_df_db(oracle_connector):
             'domain': 'Oracle test',
             'type': 'external_database',
             'name': 'my_oracle_sql_con',
-            'query': 'SELECT * FROM City;'
+            'query': 'SELECT * FROM City;',
         }
     ]
 

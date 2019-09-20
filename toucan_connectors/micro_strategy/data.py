@@ -26,12 +26,8 @@ def fill_viewfilter_with_ids(vf, dfn):
                 dfn_attr = dfn['attributes_id'][attr_name]
             return {
                 'type': 'form',
-                'attribute': {
-                    'id': dfn_attr['id'],
-                },
-                'form': {
-                    'id': dfn_attr['forms'][form_name]['id'],
-                },
+                'attribute': {'id': dfn_attr['id']},
+                'form': {'id': dfn_attr['forms'][form_name]['id']},
             }
         else:
             try:
@@ -39,28 +35,18 @@ def fill_viewfilter_with_ids(vf, dfn):
             except KeyError:
                 # No attribute has this name, so it must be a raw ID:
                 dfn_attr = dfn['attributes_id'][attr_name]
-            return {
-                'type': 'attribute',
-                'id': dfn_attr['id'],
-            }
+            return {'type': 'attribute', 'id': dfn_attr['id']}
 
     def fill_metric(metric_name):
         try:
             dfn_metric = dfn['metrics'][metric_name]
         except KeyError:
             dfn_metric = dfn['metrics_id'][metric_name]
-        return {
-            'type': 'metric',
-            'id': dfn_metric['id'],
-        }
+        return {'type': 'metric', 'id': dfn_metric['id']}
 
     def fill_constant(constant, data_type):
         data_type = data_type or ("Char" if isinstance(constant, str) else "Real")
-        return {
-            'type': 'constant',
-            'dataType': data_type,
-            'value': str(constant),
-        }
+        return {'type': 'constant', 'dataType': data_type, 'value': str(constant)}
 
     @singledispatch
     def visit(_):
