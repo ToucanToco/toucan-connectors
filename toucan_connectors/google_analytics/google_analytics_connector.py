@@ -3,7 +3,7 @@ from typing import List
 import pandas as pd
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic import BaseModel
+from pydantic import BaseModel, Schema
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.google_credentials import GoogleCredentials
@@ -115,7 +115,6 @@ class ReportRequest(BaseModel):
 
 
 def get_dict_from_response(report, request_date_ranges):
-
     columnHeader = report.get('columnHeader', {})
     dimensionHeaders = columnHeader.get('dimensions', [])
     metricHeaders = columnHeader.get('metricHeader', {}).get('metricHeaderEntries', [])
@@ -159,14 +158,33 @@ def get_query_results(service, report_request):
 
 
 class GoogleAnalyticsDataSource(ToucanDataSource):
-    report_request: ReportRequest
+    report_request: ReportRequest = Schema(
+        ...,
+        title='Report request',
+        description='See the complete '
+        '<a href="https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet#reportrequest">Google documentation</a>',
+    )
 
 
 class GoogleAnalyticsConnector(ToucanConnector):
     data_source_model: GoogleAnalyticsDataSource
 
-    credentials: GoogleCredentials
-    scope: List[str] = [SCOPE]
+    credentials: GoogleCredentials = Schema(
+        ...,
+        title='Google Credentials',
+        description='For authentication, download an authentication file from your '
+        '<a href="https://console.developers.google.com/apis/credentials">Google Console</a> '
+        'and use the values here. This is an oauth2 credential file. For more information see this '
+        '<a href="https://gspread.readthedocs.io/en/latest/oauth2.html">documentation</a>. '
+        'You should use "service_account" credentials, which is the preferred type of credentials '
+        'to use when authenticating on behalf of a service or application',
+    )
+    scope: List[str] = Schema(
+        [SCOPE],
+        description='OAuth 2.0 scopes define the level of access you need to '
+        'request the Google APIs. For more information, see this '
+        '<a href="https://developers.google.com/identity/protocols/googlescopes">documentation</a>',
+    )
 
     def _retrieve_data(self, data_source: GoogleAnalyticsDataSource) -> pd.DataFrame:
         credentials = ServiceAccountCredentials.from_json_keyfile_dict(
