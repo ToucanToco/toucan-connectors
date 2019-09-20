@@ -108,11 +108,7 @@ def test_get_df():
     assert set(df["Text test"]) == {np.nan, "zorro", "blabla"}
     assert set(df["case a cocher test"]) == {True, np.nan}
     assert set(df["Menu deroulant test"]) == {np.nan, "A", "B"}
-    assert set(df["Date test"]) == {
-        np.nan,
-        "2019-04-10T10:00:00.000Z",
-        "2019-05-03T10:00:00.000Z",
-    }
+    assert set(df["Date test"]) == {np.nan, "2019-04-10T10:00:00.000Z", "2019-05-03T10:00:00.000Z"}
     assert 2 in set(df["Nombre test"])
 
 

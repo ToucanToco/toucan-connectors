@@ -1,7 +1,7 @@
 from toucan_connectors.google_spreadsheet.google_spreadsheet_connector import (
-    GoogleSpreadsheetDataSource, GoogleSpreadsheetConnector
+    GoogleSpreadsheetConnector,
+    GoogleSpreadsheetDataSource,
 )
-
 
 c = GoogleSpreadsheetConnector(
     name='test_name',
@@ -16,27 +16,24 @@ c = GoogleSpreadsheetConnector(
         'token_uri': 'test',
         'auth_provider_x509_cert_url': 'test',
         'client_x509_cert_url': 'test',
-    }
+    },
 )
 
 s = GoogleSpreadsheetDataSource(
-    name='test_name',
-    domain='test_domain',
-    spreadsheet_id='test',
-    load=False,
+    name='test_name', domain='test_domain', spreadsheet_id='test', load=False
 )
 
 
 def test_spreadsheet(mocker):
     module = 'toucan_connectors.google_spreadsheet.google_spreadsheet_connector'
     mocker.patch(f'{module}.ServiceAccountCredentials.from_json_keyfile_dict')
-    mocker.patch(f'{module}.gspread.authorize')\
-        .return_value\
-        .open_by_key\
-        .return_value\
-        .sheet1\
-        .get_all_records\
-        .return_value = [{"a": 40}, {"a": 1}, {"a": 1}]
+    mocker.patch(
+        f'{module}.gspread.authorize'
+    ).return_value.open_by_key.return_value.sheet1.get_all_records.return_value = [
+        {"a": 40},
+        {"a": 1},
+        {"a": 1},
+    ]
 
     df = c.get_df(s)
     assert df.sum()["a"] == 42

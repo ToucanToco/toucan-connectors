@@ -1,5 +1,5 @@
-from pydantic import ValidationError
 import pytest
+from pydantic import ValidationError
 
 from toucan_connectors.sap_hana.sap_hana_connector import SapHanaConnector, SapHanaDataSource
 

@@ -1,11 +1,11 @@
 from enum import Enum
-from jq import jq
 from typing import List
 
+from jq import jq
 from oauthlib.oauth2 import BackendApplicationClient
 from pydantic import BaseModel
 from requests import Session
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth, AuthBase
+from requests.auth import AuthBase, HTTPBasicAuth, HTTPDigestAuth
 from requests_oauthlib import OAuth1, OAuth2Session
 
 
@@ -13,7 +13,8 @@ def oauth2_backend(token_url, client_id, client_secret):
     oauthclient = BackendApplicationClient(client_id=client_id)
     oauthsession = OAuth2Session(client=oauthclient)
     token = oauthsession.fetch_token(
-        token_url=token_url, client_id=client_id, client_secret=client_secret)
+        token_url=token_url, client_id=client_id, client_secret=client_secret
+    )
     return OAuth2Session(client_id=client_id, token=token)
 
 
@@ -21,11 +22,17 @@ class CustomTokenServer(AuthBase):
     """
     Get a token from a request to a custom token server.
     """
-    def __init__(self, method, url, params=None, data=None,
-                 headers=None, auth=None, json=None, filter='.'):
+
+    def __init__(
+        self, method, url, params=None, data=None, headers=None, auth=None, json=None, filter='.'
+    ):
         self.request_kwargs = {
-            'method': method, 'url': url, 'params': params, 'data': data,
-            'headers': headers, 'json': json
+            'method': method,
+            'url': url,
+            'params': params,
+            'data': data,
+            'headers': headers,
+            'json': json,
         }
         self.auth = auth
         self.filter = filter
@@ -63,7 +70,7 @@ class Auth(BaseModel):
             'digest': HTTPDigestAuth,
             'oauth1': OAuth1,
             'oauth2_backend': oauth2_backend,
-            'custom_token_server': CustomTokenServer
+            'custom_token_server': CustomTokenServer,
         }.get(self.type.value)
 
         kwargs = {} if not self.kwargs else self.kwargs

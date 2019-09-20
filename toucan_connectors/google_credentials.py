@@ -26,4 +26,5 @@ class GoogleCredentials(BaseModel):
 
 def get_google_oauth2_credentials(google_credentials):
     from google.oauth2.service_account import Credentials
+
     return Credentials.from_service_account_info(google_credentials.dict())

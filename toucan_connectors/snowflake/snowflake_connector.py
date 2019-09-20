@@ -1,7 +1,8 @@
 from os import path
+
 import pandas as pd
-from pydantic.types import constr
 import snowflake.connector
+from pydantic.types import constr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -28,6 +29,7 @@ class SnowflakeConnector(ToucanConnector):
     """
     Import data from Snowflake data warehouse.
     """
+
     data_source_model: SnowflakeDataSource
 
     user: str
@@ -37,9 +39,13 @@ class SnowflakeConnector(ToucanConnector):
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         connection = snowflake.connector.connect(
-            user=self.user, password=self.password, account=self.account,
-            database=data_source.database, warehouse=data_source.warehouse,
-            ocsp_response_cache_filename=self.ocsp_response_cache_filename)
+            user=self.user,
+            password=self.password,
+            account=self.account,
+            database=data_source.database,
+            warehouse=data_source.warehouse,
+            ocsp_response_cache_filename=self.ocsp_response_cache_filename,
+        )
 
         df = pd.read_sql(data_source.query, con=connection)
 

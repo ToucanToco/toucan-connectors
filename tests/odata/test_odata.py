@@ -17,16 +17,20 @@ def test_get_df(mocker):
     provider = ODataConnector(
         name='test',
         baseroute='http://services.odata.org/V4/Northwind/Northwind.svc/',
-        auth={'type': 'basic', 'args': ['u', 'p']})
+        auth={'type': 'basic', 'args': ['u', 'p']},
+    )
 
     data_source = ODataDataSource(
         domain='test',
         name='test',
         entity='Orders',
-        query={"$filter": "ShipCountry eq 'France'",
-               "$orderby": "Freight desc",
-               "$skip": 50,
-               "$top": 3})
+        query={
+            "$filter": "ShipCountry eq 'France'",
+            "$orderby": "Freight desc",
+            "$skip": 50,
+            "$top": 3,
+        },
+    )
 
     try:
         df = provider.get_df(data_source)

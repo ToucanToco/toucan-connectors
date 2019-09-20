@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 auth_deps = ['oauthlib', 'requests_oauthlib']
 extras_require = {
@@ -22,7 +22,7 @@ extras_require = {
     'postgres': ['psycopg2>=2.7.4'],
     'sap_hana': ['pyhdb>=0.3.4'],
     'snowflake': ['snowflake-connector-python'],
-    'toucan_toco': ['toucan_client']
+    'toucan_toco': ['toucan_client'],
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
@@ -34,24 +34,26 @@ install_requires = [
     'pydantic==0.31.1',
     'requests',
     'tenacity',
-    'toucan_data_sdk'
+    'toucan_data_sdk',
 ]
 
 classifiers = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: BSD License',
-    'Programming Language :: Python :: 3.6'
+    'Programming Language :: Python :: 3.6',
 ]
 
-setup(name='toucan_connectors',
-      version='0.24.2',
-      description='Toucan Toco Connectors',
-      author='Toucan Toco',
-      author_email='dev@toucantoco.com',
-      url='https://github.com/ToucanToco/toucan-connectors',
-      license='BSD',
-      classifiers=classifiers,
-      packages=find_packages(),
-      install_requires=install_requires,
-      extras_require=extras_require,
-      include_package_data=True)
+setup(
+    name='toucan_connectors',
+    version='0.24.2',
+    description='Toucan Toco Connectors',
+    author='Toucan Toco',
+    author_email='dev@toucantoco.com',
+    url='https://github.com/ToucanToco/toucan-connectors',
+    license='BSD',
+    classifiers=classifiers,
+    packages=find_packages(),
+    install_requires=install_requires,
+    extras_require=extras_require,
+    include_package_data=True,
+)

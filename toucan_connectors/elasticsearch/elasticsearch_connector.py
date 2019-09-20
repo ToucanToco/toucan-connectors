@@ -1,7 +1,7 @@
+from copy import deepcopy
 from enum import Enum
 from typing import List, Union
 from urllib.parse import urlparse
-from copy import deepcopy
 
 import pandas as pd
 from elasticsearch import Elasticsearch
@@ -9,9 +9,7 @@ from pandas.io.json import json_normalize
 from pydantic import BaseModel
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.toucan_connector import (
-    ToucanConnector, ToucanDataSource
-)
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 def _is_branch_list(val):
@@ -83,7 +81,7 @@ def _flatten_aggregations(data, parent=None, neighbours=None):
                             new_list.append(new_elt)
                     res += new_list
                 else:
-                    res += _flatten_aggregations(v, new_parent,  neighbours)
+                    res += _flatten_aggregations(v, new_parent, neighbours)
             return res
     else:
         return {**{parent: data}, **neighbours}
@@ -95,7 +93,7 @@ def _read_response(response):
         if isinstance(res, dict):
             res = [res]
     else:
-        res = [elt['_source']for elt in response['hits']['hits']]
+        res = [elt['_source'] for elt in response['hits']['hits']]
     return res
 
 
@@ -124,10 +122,7 @@ class ElasticsearchConnector(ToucanConnector):
     send_get_body_as: str = None
 
     def _retrieve_data(self, data_source: ElasticsearchDataSource) -> pd.DataFrame:
-        data_source.body = nosql_apply_parameters_to_query(
-            data_source.body,
-            data_source.parameters
-        )
+        data_source.body = nosql_apply_parameters_to_query(data_source.body, data_source.parameters)
         connection_params = []
         for host in self.hosts:
             parsed_url = urlparse(host.url)
@@ -147,11 +142,9 @@ class ElasticsearchConnector(ToucanConnector):
                 h['headers'] = host.headers
             connection_params.append(h)
 
-        esclient = Elasticsearch(connection_params,
-                                 send_get_body_as=self.send_get_body_as)
+        esclient = Elasticsearch(connection_params, send_get_body_as=self.send_get_body_as)
         response = getattr(esclient, data_source.search_method)(
-            index=data_source.index,
-            body=data_source.body
+            index=data_source.index, body=data_source.body
         )
 
         if data_source.search_method == SearchMethod.msearch:

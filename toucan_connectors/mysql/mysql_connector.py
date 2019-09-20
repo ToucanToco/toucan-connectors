@@ -7,17 +7,14 @@ import pymysql
 from pydantic import constr, create_model
 from pymysql.constants import CR, ER
 
-from toucan_connectors.toucan_connector import (
-    ToucanDataSource,
-    ToucanConnector,
-    strlist_to_enum
-)
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class MySQLDataSource(ToucanDataSource):
     """
     Either `query` or `table` are required, both at the same time are not supported.
     """
+
     database: str
     query: constr(min_length=1) = None
     table: constr(min_length=1) = None
@@ -42,8 +39,7 @@ class MySQLDataSource(ToucanDataSource):
         """
         connection = pymysql.connect(
             **connector.get_connection_params(
-                cursorclass=None,
-                database=current_config.get('database')
+                cursorclass=None, database=current_config.get('database')
             )
         )
 
@@ -74,6 +70,7 @@ class MySQLConnector(ToucanConnector):
     """
     Import data from MySQL database.
     """
+
     data_source_model: MySQLDataSource
 
     host: str
@@ -95,19 +92,14 @@ class MySQLConnector(ToucanConnector):
             'charset': self.charset,
             'connect_timeout': self.connect_timeout,
             'conv': conv,
-            'cursorclass': cursorclass
+            'cursorclass': cursorclass,
         }
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
-        checks = [
-            'Hostname resolved',
-            'Port opened',
-            'Host connection',
-            'Authenticated',
-        ]
+        checks = ['Hostname resolved', 'Port opened', 'Host connection', 'Authenticated']
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
@@ -118,21 +110,13 @@ class MySQLConnector(ToucanConnector):
         try:
             self.check_hostname(self.host)
         except Exception as e:
-            return {
-                'status': False,
-                'details': self._get_details(0, False),
-                'error': str(e)
-            }
+            return {'status': False, 'details': self._get_details(0, False), 'error': str(e)}
 
         # Check port
         try:
             self.check_port(self.host, self.port)
         except Exception as e:
-            return {
-                'status': False,
-                'details': self._get_details(1, False),
-                'error': str(e)
-            }
+            return {'status': False, 'details': self._get_details(1, False), 'error': str(e)}
 
         # Check basic access
         try:
@@ -142,25 +126,13 @@ class MySQLConnector(ToucanConnector):
 
             # Can't connect to full URI
             if error_code == CR.CR_CONN_HOST_ERROR:
-                return {
-                    'status': False,
-                    'details': self._get_details(2, False),
-                    'error': e.args[1]
-                }
+                return {'status': False, 'details': self._get_details(2, False), 'error': e.args[1]}
 
             # Wrong user/password
             if error_code == ER.ACCESS_DENIED_ERROR:
-                return {
-                    'status': False,
-                    'details': self._get_details(3, False),
-                    'error': e.args[1]
-                }
+                return {'status': False, 'details': self._get_details(3, False), 'error': e.args[1]}
 
-        return {
-            'status': True,
-            'details': self._get_details(3, True),
-            'error': None
-        }
+        return {'status': True, 'details': self._get_details(3, True), 'error': None}
 
     @staticmethod
     def clean_response(response):
@@ -192,11 +164,7 @@ class MySQLConnector(ToucanConnector):
         Returns: Bigger DataFrame.
 
         """
-        tmp_df = df.merge(f_df,
-                          left_on=f_key,
-                          right_on=f_table_key,
-                          how='outer',
-                          suffixes=suffixes)
+        tmp_df = df.merge(f_df, left_on=f_key, right_on=f_table_key, how='outer', suffixes=suffixes)
 
         MySQLConnector.logger.info('Merged two DataFrames...')
         if f_key != f_table_key:
@@ -225,22 +193,26 @@ class MySQLConnector(ToucanConnector):
         while idx >= 0:
             info = {}
             MySQLConnector.logger.info('start searching for foreign key.')
-            info['f_key'], idx = MySQLConnector.extract_info_word(fetch_all, idx,
-                                                                  ['FOREIGN', 'KEY'])
+            info['f_key'], idx = MySQLConnector.extract_info_word(
+                fetch_all, idx, ['FOREIGN', 'KEY']
+            )
             if idx == -1:
                 MySQLConnector.logger.info('No (other) foreign key.')
                 return res
 
             info['f_table'], idx = MySQLConnector.extract_info_word(fetch_all, idx, ['REFERENCES'])
             if idx == -1:
-                MySQLConnector.logger.error(f"Foreign key {info['f_key']}, "
-                                            f"found but no REFERENCES found.")
+                MySQLConnector.logger.error(
+                    f"Foreign key {info['f_key']}, " f"found but no REFERENCES found."
+                )
                 return res
 
             info['f_table_key'], idx = MySQLConnector.extract_info_word(fetch_all, idx, [])
             if idx == -1:
-                MySQLConnector.logger.error(f"Foreign key {info[f'_key']} "
-                                            f"and REFERENCES found but no foreign table key.")
+                MySQLConnector.logger.error(
+                    f"Foreign key {info[f'_key']} "
+                    f"and REFERENCES found but no foreign table key."
+                )
                 return res
             res.append(info)
 
@@ -345,10 +317,7 @@ class MySQLConnector(ToucanConnector):
         if str_df.empty:
             return df
 
-        str_df = (str_df.stack()
-                        .str.decode('utf8')
-                        .unstack()
-                        .dropna(axis=1, how='all'))
+        str_df = str_df.stack().str.decode('utf8').unstack().dropna(axis=1, how='all')
         for col in str_df.columns:
             df[col] = str_df[col]
         return df
@@ -360,16 +329,15 @@ class MySQLConnector(ToucanConnector):
         Returns: DataFrames from config['table'].
         """
 
-        connection = pymysql.connect(
-            **self.get_connection_params(database=datasource.database)
-        )
+        connection = pymysql.connect(**self.get_connection_params(database=datasource.database))
 
         # ----- Prepare -----
         if datasource.query:
             query = datasource.query
             # Extract table name for logging purpose (see below)
-            m = re.search(r"from\s*(?P<table>[^\s]+)\s*(where|order by|group by|limit)?",
-                          query, re.I)
+            m = re.search(
+                r"from\s*(?P<table>[^\s]+)\s*(where|order by|group by|limit)?", query, re.I
+            )
             table = m.group('table')
         else:
             table = datasource.table
@@ -408,17 +376,17 @@ class MySQLConnector(ToucanConnector):
             elif table_info['f_table'] in has_been_merged:
                 continue
 
-            MySQLConnector.logger.info(f"{table} <> found foreign key: {table_info['f_key']} "
-                                       f"inside {table_info['f_table']}")
+            MySQLConnector.logger.info(
+                f"{table} <> found foreign key: {table_info['f_key']} "
+                f"inside {table_info['f_table']}"
+            )
 
             f_df = pd.read_sql(f'select * from {table_info["f_table"]}', con=connection)
             suffixes = ('_' + table, '_' + table_info['f_table'])
             lres.append(
-                self._merge_drop(lres[0],
-                                 f_df,
-                                 suffixes,
-                                 table_info['f_key'],
-                                 table_info['f_table_key'])
+                self._merge_drop(
+                    lres[0], f_df, suffixes, table_info['f_key'], table_info['f_table_key']
+                )
             )
 
             if lres:

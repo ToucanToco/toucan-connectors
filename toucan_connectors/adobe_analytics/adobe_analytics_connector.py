@@ -1,10 +1,10 @@
 from enum import Enum
-
-import pandas as pd
 from typing import List, Union
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+import pandas as pd
 from adobe_analytics import Client, ReportDefinition
+
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class Granularity(str, Enum):
@@ -39,7 +39,7 @@ class AdobeAnalyticsDataSource(ToucanDataSource):
             date_to=self.date_to,
             last_days=self.last_days,
             granularity=self.granularity,
-            source=self.source
+            source=self.source,
         )
 
 
@@ -48,6 +48,7 @@ class AdobeAnalyticsConnector(ToucanConnector):
     Adobe Analytics Connector using Adobe Analytics' REST API v1.4.
     It provides a high-level interfaces for reporting queries (including Data Warehouse requests).
     """
+
     data_source_model: AdobeAnalyticsDataSource
 
     username: str

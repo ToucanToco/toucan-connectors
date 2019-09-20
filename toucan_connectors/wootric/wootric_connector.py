@@ -1,13 +1,12 @@
 import asyncio
+import json
 from datetime import datetime, timedelta
 from itertools import chain
-import json
 from typing import List, Optional
 
-from aiohttp import ClientSession
-import requests
-
 import pandas as pd
+import requests
+from aiohttp import ClientSession
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -59,10 +58,7 @@ def fetch_wootric_data(query, props_fetched=None, batch_size=5, max_pages=30):
         if props_fetched is None:
             all_data.extend(data)
         else:
-            all_data.extend([
-                {prop: d[prop] for prop in props_fetched}
-                for d in data
-            ])
+            all_data.extend([{prop: d[prop] for prop in props_fetched} for d in data])
         # last response is empty, it means that wootric doesn't have any data left
         if not responses[-1]:
             break
@@ -118,10 +114,14 @@ class WootricConnector(ToucanConnector):
 
         cf. https://docs.wootric.com/api/#authentication
         """
-        response = requests.post(wootric_url('oauth/token'),
-                                 data={'client_id': self.client_id,
-                                       'client_secret': self.client_secret,
-                                       'grant_type': 'client_credentials'}).json()
+        response = requests.post(
+            wootric_url('oauth/token'),
+            data={
+                'client_id': self.client_id,
+                'client_secret': self.client_secret,
+                'grant_type': 'client_credentials',
+            },
+        ).json()
         return {
             'access_token': response['access_token'],
             'expiration-date': datetime.now() + timedelta(seconds=int(response['expires_in'])),
@@ -135,6 +135,6 @@ class WootricConnector(ToucanConnector):
             query,
             props_fetched=data_source.properties,
             batch_size=data_source.batch_size,
-            max_pages=data_source.max_pages
+            max_pages=data_source.max_pages,
         )
         return pd.DataFrame(all_data)

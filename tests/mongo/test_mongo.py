@@ -8,9 +8,12 @@ import pytest
 from bson.son import SON
 
 from toucan_connectors.mongo.mongo_connector import (
-    MongoDataSource, MongoConnector, UnkwownMongoCollection, UnkwownMongoDatabase
+    MongoConnector,
+    MongoDataSource,
+    UnkwownMongoCollection,
+    UnkwownMongoDatabase,
+    normalize_query,
 )
-from toucan_connectors.mongo.mongo_connector import normalize_query
 
 
 @pytest.fixture(scope='module')
@@ -29,18 +32,19 @@ def mongo_server(service_container):
 
 @pytest.fixture
 def mongo_connector(mongo_server):
-    return MongoConnector(name='mycon', host='localhost', port=mongo_server['port'],
-                          username='ubuntu', password='ilovetoucan')
+    return MongoConnector(
+        name='mycon',
+        host='localhost',
+        port=mongo_server['port'],
+        username='ubuntu',
+        password='ilovetoucan',
+    )
 
 
 @pytest.fixture
 def mongo_datasource():
     def f(**kwargs):
-        params = {
-            'name': 'mycon',
-            'domain': 'mydomain',
-            'database': 'toucan'
-        }
+        params = {'name': 'mycon', 'domain': 'mydomain', 'database': 'toucan'}
         params.update(kwargs)
         return MongoDataSource(**params)
 
@@ -50,11 +54,11 @@ def mongo_datasource():
 def test_uri():
     connector = MongoConnector(name='my_mongo_con', host='myhost', port='123')
     assert connector.uri == 'mongodb://myhost:123'
-    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123',
-                               username='myuser')
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', username='myuser')
     assert connector.uri == 'mongodb://myuser@myhost:123'
-    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123',
-                               username='myuser', password='mypass')
+    connector = MongoConnector(
+        name='my_mongo_con', host='myhost', port='123', username='myuser', password='mypass'
+    )
     assert connector.uri == 'mongodb://myuser:mypass@myhost:123'
     with pytest.raises(ValueError) as exc_info:
         MongoConnector(name='my_mongo_con', host='myhost', port='123', password='mypass')
@@ -97,19 +101,24 @@ def test_get_df(mocker):
     aggregate = mocker.patch('pymongo.collection.Collection.aggregate')
 
     mongo_connector = MongoConnector(
-        name='mycon', host='localhost', port=22,
-        username='ubuntu', password='ilovetoucan'
+        name='mycon', host='localhost', port=22, username='ubuntu', password='ilovetoucan'
     )
 
     datasource = MongoDataSource(
-        name='mycon', domain='mydomain', database='toucan', collection='test_col',
-        query={'domain': 'domain1'}
+        name='mycon',
+        domain='mydomain',
+        database='toucan',
+        collection='test_col',
+        query={'domain': 'domain1'},
     )
     mongo_connector.get_df(datasource)
 
     datasource = MongoDataSource(
-        name='mycon', domain='mydomain', database='toucan', collection='test_col',
-        query=[{'$match': {'domain': 'domain1'}}]
+        name='mycon',
+        domain='mydomain',
+        database='toucan',
+        collection='test_col',
+        query=[{'$match': {'domain': 'domain1'}}],
     )
     mongo_connector.get_df(datasource)
 
@@ -123,17 +132,20 @@ def test_get_df(mocker):
 def test_get_df_live(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df(datasource)
-    expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
-                             'language': ['French', 'English', 'German'],
-                             'value': [20, 14, 17]})
+    expected = pd.DataFrame(
+        {
+            'country': ['France', 'England', 'Germany'],
+            'language': ['French', 'English', 'German'],
+            'value': [20, 14, 17],
+        }
+    )
     assert df.shape == (3, 5)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
     assert df[['country', 'language', 'value']].equals(expected)
 
-    datasource = mongo_datasource(collection='test_col', query=[
-        {'$match': {'domain': 'domain1'}},
-        {"$sort": [{'pays': 1}]}
-    ])
+    datasource = mongo_datasource(
+        collection='test_col', query=[{'$match': {'domain': 'domain1'}}, {"$sort": [{'pays': 1}]}]
+    )
     df2 = mongo_connector.get_df(datasource)
     assert df2.equals(df)
 
@@ -141,23 +153,21 @@ def test_get_df_live(mongo_connector, mongo_datasource):
 def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df(datasource, permissions='country=="France"')
-    expected = pd.DataFrame({'country': ['France'],
-                             'language': ['French'],
-                             'value': [20]})
-    assert datasource.query == [{'$match': {'$and': [{'domain': 'domain1'},
-                                                     {'country': 'France'}]}}]
+    expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
+    assert datasource.query == [
+        {'$match': {'$and': [{'domain': 'domain1'}, {'country': 'France'}]}}
+    ]
     assert df.shape == (1, 5)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
     assert df[['country', 'language', 'value']].equals(expected)
 
-    datasource = mongo_datasource(collection='test_col',
-                                  query=[{'$match': {'domain': 'domain1'}}])
+    datasource = mongo_datasource(collection='test_col', query=[{'$match': {'domain': 'domain1'}}])
     df = mongo_connector.get_df(datasource, permissions='country=="France"')
-    expected = pd.DataFrame({'country': ['France'],
-                             'language': ['French'],
-                             'value': [20]})
-    assert datasource.query == [{'$match': {'domain': 'domain1'}},
-                                {'$match': {'country': 'France'}}]
+    expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
+    assert datasource.query == [
+        {'$match': {'domain': 'domain1'}},
+        {'$match': {'country': 'France'}},
+    ]
     assert df.shape == (1, 5)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
     assert df[['country', 'language', 'value']].equals(expected)
@@ -172,9 +182,7 @@ def test_get_slice(mongo_connector, mongo_datasource):
 
     # With a limit
     res = mongo_connector.get_slice(datasource, limit=1)
-    expected = pd.DataFrame({'country': ['France'],
-                             'language': ['French'],
-                             'value': [20]})
+    expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
     assert res.total_count == 3
     assert res.df.shape == (1, 5)
     assert res.df[['country', 'language', 'value']].equals(expected)
@@ -193,12 +201,15 @@ def test_get_slice(mongo_connector, mongo_datasource):
 
 
 def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
-    datasource = mongo_datasource(collection='test_col', query=[
-        {"$match": {'domain': 'domain1'}},
-        {"$group": {"_id": {"country": "$country"}}},
-        {"$project": {"pays": "$_id.country", "_id": 0}},
-        {"$sort": [{'pays': 1}]}
-    ])
+    datasource = mongo_datasource(
+        collection='test_col',
+        query=[
+            {"$match": {'domain': 'domain1'}},
+            {"$group": {"_id": {"country": "$country"}}},
+            {"$project": {"pays": "$_id.country", "_id": 0}},
+            {"$sort": [{'pays': 1}]},
+        ],
+    )
     df, count = mongo_connector.get_slice(datasource, limit=1)
     assert count == 3
     assert df.shape == (1, 1)
@@ -209,9 +220,13 @@ def test_get_slice_no_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df, count = mongo_connector.get_slice(datasource, limit=None)
     assert count == 3
-    expected = pd.DataFrame({'country': ['France', 'England', 'Germany'],
-                             'language': ['French', 'English', 'German'],
-                             'value': [20, 14, 17]})
+    expected = pd.DataFrame(
+        {
+            'country': ['France', 'England', 'Germany'],
+            'language': ['French', 'English', 'German'],
+            'value': [20, 14, 17],
+        }
+    )
     assert df.shape == (3, 5)
     assert df[['country', 'language', 'value']].equals(expected)
 
@@ -260,7 +275,7 @@ def test_status_all_good(mongo_connector):
             ('Host connection', True),
             ('Authenticated', True),
         ],
-        'error': None
+        'error': None,
     }
 
 
@@ -300,13 +315,15 @@ def test_status_bad_port2(mongo_connector):
             ('Host connection', None),
             ('Authenticated', None),
         ],
-        'error': 'getsockaddrarg: port must be 0-65535.'
+        'error': 'getsockaddrarg: port must be 0-65535.',
     }
 
 
 def test_status_unreachable(mongo_connector, mocker):
-    mocker.patch('pymongo.MongoClient.server_info',
-                 side_effect=pymongo.errors.ServerSelectionTimeoutError('qwe'))
+    mocker.patch(
+        'pymongo.MongoClient.server_info',
+        side_effect=pymongo.errors.ServerSelectionTimeoutError('qwe'),
+    )
     assert mongo_connector.get_status() == {
         'status': False,
         'details': [
@@ -315,7 +332,7 @@ def test_status_unreachable(mongo_connector, mocker):
             ('Host connection', False),
             ('Authenticated', None),
         ],
-        'error': 'qwe'
+        'error': 'qwe',
     }
 
 
@@ -329,7 +346,7 @@ def test_status_bad_username(mongo_connector):
             ('Host connection', True),
             ('Authenticated', False),
         ],
-        'error': 'Authentication failed.'
+        'error': 'Authentication failed.',
     }
 
 
@@ -341,12 +358,9 @@ def test_get_form_empty_query(mongo_connector):
     assert form['properties']['database'] == {
         'title': 'Database',
         'type': 'string',
-        'enum': ['admin', 'config', 'local', 'toucan']
+        'enum': ['admin', 'config', 'local', 'toucan'],
     }
-    assert form['properties']['collection'] == {
-        'title': 'Collection',
-        'type': 'string'
-    }
+    assert form['properties']['collection'] == {'title': 'Collection', 'type': 'string'}
 
 
 def test_get_form_query_with_bad_database(mongo_connector):
@@ -364,12 +378,12 @@ def test_get_form_query_with_good_database(mongo_connector):
     assert form['properties']['database'] == {
         'title': 'Database',
         'type': 'string',
-        'enum': ['admin', 'config', 'local', 'toucan']
+        'enum': ['admin', 'config', 'local', 'toucan'],
     }
     assert form['properties']['collection'] == {
         'title': 'Collection',
         'type': 'string',
-        'enum': ['test_col']
+        'enum': ['test_col'],
     }
 
 

@@ -22,10 +22,14 @@ class HiveConnector(ToucanConnector):
 
     def _retrieve_data(self, data_source: HiveDataSource) -> pd.DataFrame:
         cursor = hive.connect(
-            host=self.host, port=self.port, username=self.username,
+            host=self.host,
+            port=self.port,
+            username=self.username,
             database=data_source.database,
-            auth=self.auth, configuration=self.configuration,
-            kerberos_service_name=self.kerberos_service_name, password=self.password,
+            auth=self.auth,
+            configuration=self.configuration,
+            kerberos_service_name=self.kerberos_service_name,
+            password=self.password,
         ).cursor()
         cursor.execute(data_source.query, parameters=data_source.parameters)
         columns = [metadata[0] for metadata in cursor.description]

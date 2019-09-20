@@ -1,8 +1,8 @@
 from typing import List
 
 import pandas as pd
-from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 from jq import jq
 from pandas.io.json import json_normalize
 from pydantic import BaseModel
@@ -46,12 +46,14 @@ class GoogleMyBusinessConnector(ToucanConnector):
 
     def build_service(self):
         credentials = Credentials.from_authorized_user_info(
-            self.credentials.dict(),
-            scopes=self.scopes
+            self.credentials.dict(), scopes=self.scopes
         )
-        service = build(API_SERVICE_NAME, API_VERSION,
-                        credentials=credentials,
-                        discoveryServiceUrl=DISCOVERY_URI)
+        service = build(
+            API_SERVICE_NAME,
+            API_VERSION,
+            credentials=credentials,
+            discoveryServiceUrl=DISCOVERY_URI,
+        )
         return service
 
     def _retrieve_data(self, data_source: GoogleMyBusinessDataSource) -> pd.DataFrame:
@@ -72,12 +74,12 @@ class GoogleMyBusinessConnector(ToucanConnector):
             "basicRequest": {
                 "metricRequests": data_source.dict()['metric_requests'],
                 "timeRange": data_source.dict()['time_range'],
-            }
+            },
         }
 
-        report_insights = service.accounts().locations().reportInsights(
-            name=name, body=query
-        ).execute()
+        report_insights = (
+            service.accounts().locations().reportInsights(name=name, body=query).execute()
+        )
 
         location_metrics = report_insights['locationMetrics']
 

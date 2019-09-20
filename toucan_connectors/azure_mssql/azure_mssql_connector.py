@@ -1,10 +1,10 @@
-import pyodbc
 import re
 
 import pandas as pd
+import pyodbc
 from pydantic import constr
 
-from toucan_connectors.toucan_connector import ToucanDataSource, ToucanConnector
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 CLOUD_HOST = 'database.windows.net'
 
@@ -18,6 +18,7 @@ class AzureMSSQLConnector(ToucanConnector):
     """
     Import data from Microsoft Azure SQL Server.
     """
+
     data_source_model: AzureMSSQLDataSource
 
     host: str
@@ -35,15 +36,13 @@ class AzureMSSQLConnector(ToucanConnector):
             'database': database,
             'user': user,
             'password': self.password,
-            'timeout': self.connect_timeout
+            'timeout': self.connect_timeout,
         }
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _retrieve_data(self, datasource: AzureMSSQLDataSource) -> pd.DataFrame:
-        connection = pyodbc.connect(
-            **self.get_connection_params(database=datasource.database)
-        )
+        connection = pyodbc.connect(**self.get_connection_params(database=datasource.database))
 
         df = pd.read_sql(datasource.query, con=connection)
 

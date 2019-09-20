@@ -1,8 +1,8 @@
 import os
 from urllib.parse import urlparse
 
-from pyhive import hive
 import pytest
+from pyhive import hive
 
 from toucan_connectors.hive.hive_connector import HiveConnector, HiveDataSource
 
@@ -39,9 +39,12 @@ def test_get_df(hive_connector, hive_datasource):
 
 
 def test_get_df_w_params(hive_connector):
-    datasource = HiveDataSource(name='mycon', domain='mydomain',
-                                query='select * from tests where a = %(i)s',
-                                parameters={'i': 10})
+    datasource = HiveDataSource(
+        name='mycon',
+        domain='mydomain',
+        query='select * from tests where a = %(i)s',
+        parameters={'i': 10},
+    )
     df = hive_connector.get_df(datasource)
     assert df.empty
 

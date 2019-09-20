@@ -17,7 +17,7 @@ def custom_str(field):
     m = {
         'type': lambda x: f'{x}' if str(x) != 'ConstrainedStrValue' else 'str (not empty)',
         'required': lambda x: 'required' if x else None,
-        'default': lambda x: f'default to {x}' if x is not None else x
+        'default': lambda x: f'default to {x}' if x is not None else x,
     }
     infos = [m[k](v) for k, v in field.info.items() if k in whitelist]
     return f'`{field.name}`: ' + ', '.join(x for x in infos if x is not None)
@@ -25,11 +25,7 @@ def custom_str(field):
 
 def snake_to_camel(name):
     name = ''.join(x.capitalize() or '_' for x in name.split('_'))
-    d_replace = {
-        'Mssql': 'MSSQL',
-        'Sql': 'SQL',
-        'sql': 'SQL'
-    }
+    d_replace = {'Mssql': 'MSSQL', 'Sql': 'SQL', 'sql': 'SQL'}
     for key, val in d_replace.items():
         name = name.replace(key, val)
     return name
@@ -61,9 +57,7 @@ def generate(klass):
     doc = [f'# {klass.type} connector', doc_or_empty(klass), '## Data provider configuration']
 
     li = [f'* `type`: `"{klass.type}"`']
-    schema_cson = {
-        'type': f"'{klass.type}'"
-    }
+    schema_cson = {'type': f"'{klass.type}'"}
     for name, obj in klass.__fields__.items():
         if name == 'type':
             continue
@@ -101,8 +95,7 @@ def generate(klass):
 def get_connectors():
     path = 'toucan_connectors/'
     connectors = [
-        o for o in os.listdir(path)
-        if os.path.isdir(os.path.join(path, o)) & (o != '__pycache__')
+        o for o in os.listdir(path) if os.path.isdir(os.path.join(path, o)) & (o != '__pycache__')
     ]
     connectors_ok = {}
     for connector in connectors:
