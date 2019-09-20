@@ -27,7 +27,7 @@ If you want to run the tests for another connector, you can install the extra de
 Now `pytest tests/mysql` should run all the mysql tests properly.
 
 If you want to run the tests for all the connectors you can add all the dependencies by typing  
-`pip install -e ".[all]"` and `make test`
+`pip install -e ".[all]"` and `make test`.
 
 ## Adding a connector
 
@@ -102,3 +102,7 @@ extras_require = {
 }
 ```
 If you need to add testing dependencies, add them to the `requirements-testing.txt` file.
+
+### Step 4
+Make sure your new code is properly formatted by typing `make lint`.
+If it's not, please use `make format`!
