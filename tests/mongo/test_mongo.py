@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 import pandas as pd
 import pymongo
@@ -20,11 +21,13 @@ from toucan_connectors.mongo.mongo_connector import (
 def mongo_server(service_container):
     def check_and_feed(host_port):
         client = pymongo.MongoClient(f'mongodb://ubuntu:ilovetoucan@localhost:{host_port}')
+
         docs_path = f'{os.path.dirname(__file__)}/fixtures/docs.json'
         with open(docs_path) as f:
             docs_json = f.read()
         docs = json.loads(docs_json)
         client['toucan']['test_col'].insert_many(docs)
+
         client.close()
 
     return service_container('mongo', check_and_feed, pymongo.errors.PyMongoError)
@@ -236,6 +239,12 @@ def test_get_slice_empty(mongo_connector, mongo_datasource):
     df, count = mongo_connector.get_slice(datasource, limit=1)
     assert count == 0
     assert df.shape == (0, 0)
+
+
+def test_get_df_with_regex(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
+    df = mongo_connector.get_df_with_regex(datasource, field='country', regex=re.compile('r.*a'))
+    pd.testing.assert_series_equal(df['country'], pd.Series(['France', 'Germany'], name='country'))
 
 
 def test_explain(mongo_connector, mongo_datasource):
