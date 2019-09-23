@@ -1,9 +1,10 @@
 from functools import _lru_cache_wrapper, lru_cache
-from typing import Optional, Union
+from typing import Optional, Pattern, Union
 from urllib.parse import quote_plus
 
 import pandas as pd
 import pymongo
+from bson.regex import Regex
 from bson.son import SON
 from cached_property import cached_property
 from jq import jq
@@ -219,6 +220,23 @@ class MongoConnector(ToucanConnector):
             df = self.get_df(data_source, permissions)
             total_count = len(df)
         return DataSlice(df, total_count)
+
+    def get_df_with_regex(
+        self,
+        data_source: MongoDataSource,
+        field: str,
+        regex: Pattern,
+        permissions: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> pd.DataFrame:
+        # Create a copy in order to keep the original (deepcopy-like)
+        data_source = MongoDataSource.parse_obj(data_source)
+        data_source.query = normalize_query(data_source.query, data_source.parameters)
+        data_source.query[0]['$match'] = {
+            '$and': [data_source.query[0]['$match']]
+            + [{field: {'$regex': Regex.from_native(regex)}}]
+        }
+        return self.get_slice(data_source, permissions, limit=limit).df
 
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):
