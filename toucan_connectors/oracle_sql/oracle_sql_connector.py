@@ -1,26 +1,36 @@
 import cx_Oracle
 import pandas as pd
-from pydantic import DSN
+from pydantic import DSN, Schema, SecretStr, constr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class OracleSQLDataSource(ToucanDataSource):
-    query: str
+    query: constr(min_length=1) = Schema(
+        ..., description='You can write your SQL query here', widget='sql'
+    )
 
 
 class OracleSQLConnector(ToucanConnector):
     data_source_model: OracleSQLDataSource
 
-    dsn: DSN
-    user: str = None
-    password: str = None
-    encoding: str = None
+    dsn: DSN = Schema(
+        ...,
+        description='A path following the '
+        '<a href="https://en.wikipedia.org/wiki/Data_source_name">DSN pattern</a>. '
+        'The DSN host, port and service name are required.',
+        examples=['localhost:80/service'],
+    )
+    user: str = Schema(None, description='Your login username')
+    password: SecretStr = Schema(None, description='Your login password')
+    encoding: str = Schema(
+        None, title='Charset', description='If you need to specify a specific character encoding.'
+    )
 
     def get_connection_params(self):
         con_params = {
             'user': self.user,
-            'password': self.password,
+            'password': self.password.get_secret_value() if self.password else None,
             'dsn': self.dsn,
             'encoding': self.encoding,
         }
