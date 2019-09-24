@@ -1,6 +1,6 @@
 # MicroStrategy connector
 
-Import data from MicroStrategy using the [JSON Data API](http://bit.ly/2HCzf04) for cubes and
+Import data from MicroStrategy using the [JSON Data API](https://lw.microstrategy.com/msdz/MSDL/GARelease_Current/_GARelease_Archives/1010/docs/projects/RESTSDK/Content/topics/JSON_Data_API/JSON_Data_API.htm) for cubes and
     reports.
 
 ## Data provider configuration
