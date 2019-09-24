@@ -2,7 +2,7 @@ from os import path
 
 import pandas as pd
 import snowflake.connector
-from pydantic.types import constr
+from pydantic import Schema, SecretStr, constr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -20,9 +20,11 @@ class Path(str):
 
 
 class SnowflakeDataSource(ToucanDataSource):
-    database: str = None
-    warehouse: str = None
-    query: constr(min_length=1)
+    database: str = Schema(None, description='The name of the database you want to query')
+    warehouse: str = Schema(None, description='The name of the warehouse you want to query')
+    query: constr(min_length=1) = Schema(
+        ..., description='You can write your SQL query here', widget='sql'
+    )
 
 
 class SnowflakeConnector(ToucanConnector):
@@ -32,15 +34,26 @@ class SnowflakeConnector(ToucanConnector):
 
     data_source_model: SnowflakeDataSource
 
-    user: str
-    password: str
-    account: str
-    ocsp_response_cache_filename: Path = None
+    user: str = Schema(..., description='Your login username')
+    password: SecretStr = Schema(..., description='Your login password')
+    account: str = Schema(
+        ...,
+        description='The full name of your Snowflake account. '
+        'It might require the region and cloud platform where your account is located, '
+        'in the form of: "your_account_name.region_id.cloud_platform". See more details '
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info">here</a>.',
+    )
+    ocsp_response_cache_filename: Path = Schema(
+        None,
+        title='OCSP response cache filename',
+        description='The path of the '
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses">OCSP cache file</a>',
+    )
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         connection = snowflake.connector.connect(
             user=self.user,
-            password=self.password,
+            password=self.password.get_secret_value(),
             account=self.account,
             database=data_source.database,
             warehouse=data_source.warehouse,
