@@ -19,10 +19,10 @@ def test_gbq(mocker):
         private_key='my_private_key',
         client_email='my_client_email',
         client_id='my_client_id',
-        auth_uri='my_auth_uri',
-        token_uri='my_token_uri',
-        auth_provider_x509_cert_url='my_provider',
-        client_x509_cert_url='my_cert',
+        auth_uri='https://accounts.google.com/o/oauth2/auth',
+        token_uri='https://oauth2.googleapis.com/token',
+        auth_provider_x509_cert_url='https://www.googleapis.com/oauth2/v1/certs',
+        client_x509_cert_url='https://www.googleapis.com/robot/v1/metadata/x509/pika.com',
     )
     connector = GoogleBigQueryConnector(
         name='MyGBQ',
