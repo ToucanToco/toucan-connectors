@@ -25,5 +25,5 @@ def test_saphana_get_df(mocker):
     ds = SapHanaDataSource(domain='test', name='test', query='my_query')
     saphana_connector.get_df(ds)
 
-    snock.assert_called_once_with('localhost', '22', 'ubuntu', 'truc')
+    snock.assert_called_once_with('localhost', 22, 'ubuntu', 'truc')
     reasq.assert_called_once_with('my_query', con=snock())
