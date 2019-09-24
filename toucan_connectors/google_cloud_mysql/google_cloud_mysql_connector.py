@@ -1,13 +1,15 @@
 import pandas as pd
 import pymysql
-from pydantic import constr
+from pydantic import Schema, SecretStr, constr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class GoogleCloudMySQLDataSource(ToucanDataSource):
-    database: str
-    query: constr(min_length=1)
+    database: str = Schema(..., description='The name of the database you want to query')
+    query: constr(min_length=1) = Schema(
+        ..., description='You can write your SQL query here', widget='sql'
+    )
 
 
 class GoogleCloudMySQLConnector(ToucanConnector):
@@ -17,12 +19,26 @@ class GoogleCloudMySQLConnector(ToucanConnector):
 
     data_source_model: GoogleCloudMySQLDataSource
 
-    host: str
-    user: str
-    password: str
-    port: int = None
-    charset: str = 'utf8mb4'
-    connect_timeout: int = None
+    host: str = Schema(
+        ...,
+        description='The domain name (preferred option as more dynamic) or '
+        'the hardcoded IP address of your database server',
+    )
+
+    port: int = Schema(None, description='The listening port of your database server')
+    user: str = Schema(..., description='Your login username')
+    password: SecretStr = Schema(..., description='Your login password')
+    charset: str = Schema(
+        'utf8mb4',
+        title='Charset',
+        description='Character encoding. You should generally let the default "utf8mb4" here.',
+    )
+    connect_timeout: int = Schema(
+        None,
+        title='Connection timeout',
+        description='You can set a connection timeout in seconds here, i.e. the maximum length '
+        'of time you want to wait for the server to respond. None by default',
+    )
 
     def get_connection_params(self, *, database=None):
         conv = pymysql.converters.conversions.copy()
@@ -30,7 +46,7 @@ class GoogleCloudMySQLConnector(ToucanConnector):
         con_params = {
             'host': self.host,
             'user': self.user,
-            'password': self.password,
+            'password': self.password.get_secret_value() if self.password else None,
             'port': self.port,
             'database': database,
             'charset': self.charset,
