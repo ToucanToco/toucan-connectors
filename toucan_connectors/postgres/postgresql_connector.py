@@ -1,13 +1,15 @@
 import pandas as pd
 import psycopg2 as pgsql
-from pydantic import constr
+from pydantic import Schema, SecretStr, constr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class PostgresDataSource(ToucanDataSource):
-    database: str
-    query: constr(min_length=1)
+    database: str = Schema(..., description='The name of the database you want to query')
+    query: constr(min_length=1) = Schema(
+        ..., description='You can write your SQL query here', widget='sql'
+    )
 
 
 class PostgresConnector(ToucanConnector):
@@ -17,13 +19,26 @@ class PostgresConnector(ToucanConnector):
 
     data_source_model: PostgresDataSource
 
-    user: str
-    host: str = None
-    hostname: str = None
-    charset: str = None
-    password: str = None
-    port: int = None
-    connect_timeout: int = None
+    hostname: str = Schema(
+        None,
+        description='Use this parameter if you have a domain name (preferred option as more dynamic). '
+        'If not, please use the "host" parameter',
+    )
+    host: str = Schema(
+        None,
+        description='Use this parameter if you have an IP address. '
+        'If not, please use the "hostname" parameter (preferred option as more dynamic)',
+    )
+    port: int = Schema(None, description='The listening port of your database server')
+    user: str = Schema(..., description='Your login username')
+    password: SecretStr = Schema(None, description='Your login password')
+    charset: str = Schema(None, description='If you need to specify a specific character encoding.')
+    connect_timeout: int = Schema(
+        None,
+        title='Connection timeout',
+        description='You can set a connection timeout in seconds here, i.e. the maximum length of '
+        'time you want to wait for the server to respond. None by default',
+    )
 
     def get_connection_params(self, *, database='postgres'):
         con_params = dict(
@@ -31,7 +46,7 @@ class PostgresConnector(ToucanConnector):
             host=self.host if self.host else self.hostname,
             client_encoding=self.charset,
             dbname=database,
-            password=self.password,
+            password=self.password.get_secret_value() if self.password else None,
             port=self.port,
             connect_timeout=self.connect_timeout,
         )
