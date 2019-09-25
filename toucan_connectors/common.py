@@ -166,6 +166,9 @@ class AstTranslator(ABC):
         return self.resolve(elt)(elt)
 
     def parse(self, expr):
+        # Replace ` by " because pandas.query like expressions (e.g "(`a` == 1)")
+        # are not valid python expressions:
+        expr = expr.replace('`', '"')
         ex = ast.parse(expr, mode='eval')
         return self.translate(ex.body)
 
