@@ -5,7 +5,7 @@ from toucan_connectors.mongo.mongo_translator import MongoExpression
 
 def test_mongo_expression():
     query = (
-        '"a b"=="1" or ((b not in ["la", 5, false]) and (c<1.5) '
+        '`a b`=="1" or ((`b` not in ["la", 5, false]) and (c<1.5) '
         'and (d != null) and (e == true)) or (f in [null, true])'
         'or (g>=2) or (h<=0) or (i>-3.5)'
     )
