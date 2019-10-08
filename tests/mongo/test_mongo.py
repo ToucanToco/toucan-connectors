@@ -247,6 +247,14 @@ def test_get_df_with_regex(mongo_connector, mongo_datasource):
     pd.testing.assert_series_equal(df['country'], pd.Series(['France', 'Germany'], name='country'))
 
 
+def test_get_df_with_regex_with_limit(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
+    df = mongo_connector.get_df_with_regex(
+        datasource, field='country', regex=re.compile('r.*a'), limit=1
+    )
+    pd.testing.assert_series_equal(df['country'], pd.Series(['France'], name='country'))
+
+
 def test_explain(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.explain(datasource)
