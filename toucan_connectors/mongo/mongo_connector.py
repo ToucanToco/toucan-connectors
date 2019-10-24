@@ -41,7 +41,7 @@ def apply_permissions(query, permissions):
         if isinstance(query, dict):
             query = {'$and': [query, permissions]}
         else:
-            query.append({'$match': permissions})
+            query[0]['$match'] = {'$and': [query[0]['$match'], permissions]}
     return query
 
 
