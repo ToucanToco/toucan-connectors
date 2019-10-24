@@ -168,8 +168,7 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     df = mongo_connector.get_df(datasource, permissions='country=="France"')
     expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
     assert datasource.query == [
-        {'$match': {'domain': 'domain1'}},
-        {'$match': {'country': 'France'}},
+        {'$match': {'$and': [{'domain': 'domain1'}, {'country': 'France'}]}}
     ]
     assert df.shape == (1, 5)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
