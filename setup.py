@@ -35,6 +35,7 @@ install_requires = [
     'requests',
     'tenacity',
     'toucan_data_sdk',
+    'urllib3==1.24.3',
 ]
 
 classifiers = [
