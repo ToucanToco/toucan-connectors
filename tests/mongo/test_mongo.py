@@ -281,7 +281,6 @@ def test_normalize_query():
 
 
 def test_status_all_good(mongo_connector):
-    # import ipdb; ipdb.set_trace();
     assert mongo_connector.get_status() == {
         'status': True,
         'details': [
