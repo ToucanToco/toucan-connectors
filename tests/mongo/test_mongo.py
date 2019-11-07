@@ -54,18 +54,14 @@ def mongo_datasource():
     return f
 
 
-def test_uri():
+def test_client_with_detailed_params():
     connector = MongoConnector(name='my_mongo_con', host='myhost', port='123')
-    assert connector.uri == 'mongodb://myhost:123'
-    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123', username='myuser')
-    assert connector.uri == 'mongodb://myuser@myhost:123'
-    connector = MongoConnector(
-        name='my_mongo_con', host='myhost', port='123', username='myuser', password='mypass'
-    )
-    assert connector.uri == 'mongodb://myuser:mypass@myhost:123'
-    with pytest.raises(ValueError) as exc_info:
-        MongoConnector(name='my_mongo_con', host='myhost', port='123', password='mypass')
-    assert 'password\n  username must be set' in str(exc_info.value)
+    assert isinstance(connector.client, pymongo.MongoClient)
+
+
+def test_client_with_mongo_uri():
+    connector = MongoConnector(name='my_mongo_con', host='mongodb://myuser@myhost:123')
+    assert isinstance(connector.client, pymongo.MongoClient)
 
 
 def test_get_df_no_query(mongo_connector, mongo_datasource):
@@ -125,7 +121,9 @@ def test_get_df(mocker):
     )
     mongo_connector.get_df(datasource)
 
-    snock.assert_called_with('mongodb://ubuntu:ilovetoucan@localhost:22', ssl=False)
+    snock.assert_called_with(
+        host='localhost', username='ubuntu', password='ilovetoucan', port=22, ssl=False
+    )
     assert snock.call_count == 1  # client is cached
 
     aggregate.assert_called_with([{'$match': {'domain': 'domain1'}}])
@@ -283,6 +281,7 @@ def test_normalize_query():
 
 
 def test_status_all_good(mongo_connector):
+    # import ipdb; ipdb.set_trace();
     assert mongo_connector.get_status() == {
         'status': True,
         'details': [
@@ -297,6 +296,7 @@ def test_status_all_good(mongo_connector):
 
 def test_status_bad_host(mongo_connector):
     mongo_connector.host = 'localhot'
+    mongo_connector.port = 42
     status = mongo_connector.get_status()
     assert status['status'] is False
     assert status['details'] == [
@@ -305,7 +305,7 @@ def test_status_bad_host(mongo_connector):
         ('Host connection', None),
         ('Authenticated', None),
     ]
-    assert 'not known' in status['error']
+    assert len(status['error']) > 0
 
 
 def test_status_bad_port(mongo_connector):

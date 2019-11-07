@@ -1,3 +1,4 @@
+import json
 from functools import _lru_cache_wrapper, lru_cache
 from typing import Optional, Pattern, Union
 from urllib.parse import quote_plus
@@ -71,7 +72,7 @@ class MongoDataSource(ToucanDataSource):
         - we are able to give suggestions for the `database` field
         - if `database` is set, we are able to give suggestions for the `collection` field
         """
-        client = pymongo.MongoClient(connector.uri, ssl=connector.ssl)
+        client = pymongo.MongoClient(**connector._get_mongo_client_kwargs())
 
         # Add constraints to the schema
         # the key has to be a valid field
@@ -97,7 +98,7 @@ class MongoConnector(ToucanConnector):
     data_source_model: MongoDataSource
 
     host: str
-    port: int
+    port: int = None
     username: str = None
     password: str = None
     ssl: bool = False
@@ -111,18 +112,8 @@ class MongoConnector(ToucanConnector):
             raise ValueError('username must be set')
         return v
 
-    @property
-    def uri(self) -> str:
-        user_pass = ''
-        if self.username is not None:
-            user_pass = quote_plus(self.username)
-            if self.password is not None:
-                user_pass += f':{quote_plus(self.password)}'
-            user_pass += '@'
-        return f'mongodb://{user_pass}{self.host}:{self.port}'
-
     def __hash__(self):
-        return hash(id(self)) + hash(self.uri)
+        return hash(id(self)) + hash(json.dumps(self._get_mongo_client_kwargs()))
 
     def __enter__(self):
         return self
@@ -138,21 +129,31 @@ class MongoConnector(ToucanConnector):
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
         return ok_checks + [new_check] + not_validated_checks
 
-    def get_status(self):
-        # Check hostname
-        try:
-            self.check_hostname(self.host)
-        except Exception as e:
-            return {'status': False, 'details': self._get_details(0, False), 'error': str(e)}
+    def _get_mongo_client_kwargs(self):
+        mongo_client_kwargs = self.dict().copy()
+        mongo_client_kwargs.pop('name')
+        mongo_client_kwargs.pop('retry_policy')
+        mongo_client_kwargs.pop('type')
+        return mongo_client_kwargs
 
-        # Check port
-        try:
-            self.check_port(self.host, self.port)
-        except Exception as e:
-            return {'status': False, 'details': self._get_details(1, False), 'error': str(e)}
+    def get_status(self):
+        if self.port:
+            # Check hostname
+            try:
+                self.check_hostname(self.host)
+            except Exception as e:
+                return {'status': False, 'details': self._get_details(0, False), 'error': str(e)}
+
+            # Check port
+            try:
+                self.check_port(self.host, self.port)
+            except Exception as e:
+                return {'status': False, 'details': self._get_details(1, False), 'error': str(e)}
 
         # Check databases access
-        client = pymongo.MongoClient(self.uri, ssl=self.ssl, serverSelectionTimeoutMS=500)
+        mongo_client_kwargs = self._get_mongo_client_kwargs()
+        mongo_client_kwargs['serverSelectionTimeoutMS'] = 500
+        client = pymongo.MongoClient(**mongo_client_kwargs)
         try:
             client.server_info()
         except pymongo.errors.ServerSelectionTimeoutError as e:
@@ -164,7 +165,7 @@ class MongoConnector(ToucanConnector):
 
     @cached_property
     def client(self):
-        return pymongo.MongoClient(self.uri, ssl=self.ssl)
+        return pymongo.MongoClient(**self._get_mongo_client_kwargs())
 
     @lru_cache(maxsize=32)
     def validate_database(self, database: str):
@@ -240,7 +241,7 @@ class MongoConnector(ToucanConnector):
 
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):
-        client = pymongo.MongoClient(self.uri, ssl=self.ssl)
+        client = pymongo.MongoClient(**self._get_mongo_client_kwargs())
         self.validate_database_and_collection(data_source.database, data_source.collection)
         data_source.query = apply_permissions(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
