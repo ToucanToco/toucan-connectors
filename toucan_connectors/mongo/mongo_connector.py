@@ -130,9 +130,8 @@ class MongoConnector(ToucanConnector):
 
     def _get_mongo_client_kwargs(self):
         mongo_client_kwargs = self.dict().copy()
-        mongo_client_kwargs.pop('name')
-        mongo_client_kwargs.pop('retry_policy')
-        mongo_client_kwargs.pop('type')
+        for field in ToucanConnector.schema()['properties']:
+            mongo_client_kwargs.pop(field)
         return mongo_client_kwargs
 
     def get_status(self):
