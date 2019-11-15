@@ -47,6 +47,9 @@ class SnowflakeConnector(ToucanConnector):
             ocsp_response_cache_filename=self.ocsp_response_cache_filename,
         )
 
+        # https://docs.snowflake.net/manuals/sql-reference/sql/use-warehouse.html
+        connection.cursor().execute(f'USE WAREHOUSE {data_source.warehouse}')
+
         df = pd.read_sql(data_source.query, con=connection)
 
         connection.close()
