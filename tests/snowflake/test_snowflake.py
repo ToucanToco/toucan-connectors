@@ -21,6 +21,10 @@ def test_snowflake(mocker):
 
     sc.get_df(sd)
 
+    snock.return_value.cursor.return_value.execute.assert_called_once_with(
+        'USE WAREHOUSE test_warehouse'
+    )
+
     snock.assert_called_once_with(
         user='test_user',
         password='test_password',
