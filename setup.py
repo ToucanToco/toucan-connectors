@@ -15,7 +15,7 @@ extras_require = {
     'hive': ['pyhive[hive]'],
     'http_api': auth_deps,
     'mongo': ['pymongo>=3.6.1'],
-    'mssql': ['pymssql>=2.1.3'],
+    'mssql': ['pymssql>=2.1.3,<3.0'],
     'mysql': ['PyMySQL>=0.8.0'],
     'odata': auth_deps + ['tctc_odata'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
