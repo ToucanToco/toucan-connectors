@@ -15,7 +15,7 @@ extras_require = {
     'hive': ['pyhive[hive]'],
     'http_api': auth_deps,
     'mongo': ['pymongo>=3.6.1'],
-    'mssql': ['pymssql>=2.1.3'],
+    'mssql': ['pymssql>=2.1.3,<3.0'],
     'mysql': ['PyMySQL>=0.8.0'],
     'odata': auth_deps + ['tctc_odata'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
@@ -45,7 +45,7 @@ classifiers = [
 
 setup(
     name='toucan_connectors',
-    version='0.25.0',
+    version='0.25.2',
     description='Toucan Toco Connectors',
     author='Toucan Toco',
     author_email='dev@toucantoco.com',
