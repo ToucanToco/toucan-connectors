@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 apt-get install -fyq libaio1 curl
 mkdir -p /opt/oracle
 curl -s 'https://raw.githubusercontent.com/circulosmeos/gdown.pl/master/gdown.pl' -o /tmp/gdown.pl

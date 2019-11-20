@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 # The next link was extracted from an email received after
 # filling: https://databricks.com/spark/odbc-driver-download
 mkdir -p /tmp/databricks
