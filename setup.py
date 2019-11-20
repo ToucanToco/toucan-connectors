@@ -53,8 +53,9 @@ setup(
     url='https://github.com/ToucanToco/toucan-connectors',
     license='BSD',
     classifiers=classifiers,
-    packages=find_packages(),
+    packages=find_packages(include=['toucan_connectors', 'toucan_connectors.*']),
     install_requires=install_requires,
     extras_require=extras_require,
     include_package_data=True,
+    zip_safe=False,
 )
