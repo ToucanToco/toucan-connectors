@@ -6,6 +6,7 @@ if [[ -e ~/oracle-installed ]]; then
     exit
 fi
 
+apt-get update
 apt-get install -fyq libaio1 curl
 mkdir -p /opt/oracle
 curl -s 'https://raw.githubusercontent.com/circulosmeos/gdown.pl/master/gdown.pl' -o /tmp/gdown.pl
