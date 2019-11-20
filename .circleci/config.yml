@@ -6,28 +6,19 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install sytem dependencies
+          name: Install system dependencies
           command: |
             sudo apt-get update
             sudo apt-get install freetds-dev libsasl2-dev libpq-dev
       - run:
           name: Install oracle dependencies
-          command: |
-            sudo apt-get install libaio1
-            sudo mkdir -p /opt/oracle
-            curl -s 'https://raw.githubusercontent.com/circulosmeos/gdown.pl/master/gdown.pl' -o /tmp/gdown.pl
-            chmod +x /tmp/gdown.pl
-            /tmp/gdown.pl 'https://drive.google.com/uc?export=download&id=1prPWRnaVMxDsIiSGJqz0TkFT7wXrCgaO' '/tmp/oracle_client_lib.zip'
-            sudo unzip /tmp/oracle_client_lib.zip -d /opt/oracle
-            sudo sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
-            sudo ldconfig
+          command: sudo bash toucan_connectors/install_scripts/oracle.sh
+      - run:
+          name: Install databricks dependencies
+          command: sudo bash toucan_connectors/install_scripts/databricks.sh
       - run:
           name: Install azure_mssql dependencies
-          command: |
-            curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-            curl https://packages.microsoft.com/config/ubuntu/14.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-            sudo apt-get update
-            sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev
+          command: sudo bash toucan_connectors/install_scripts/azure_mssql.sh
       - run:
           name: Install python 3.6
           command: |

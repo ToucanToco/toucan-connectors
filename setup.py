@@ -46,15 +46,16 @@ classifiers = [
 
 setup(
     name='toucan_connectors',
-    version='0.27.2',
+    version='0.28.0',
     description='Toucan Toco Connectors',
     author='Toucan Toco',
     author_email='dev@toucantoco.com',
     url='https://github.com/ToucanToco/toucan-connectors',
     license='BSD',
     classifiers=classifiers,
-    packages=find_packages(),
+    packages=find_packages(include=['toucan_connectors', 'toucan_connectors.*']),
     install_requires=install_requires,
     extras_require=extras_require,
     include_package_data=True,
+    zip_safe=False,
 )
