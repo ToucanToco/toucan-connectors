@@ -145,7 +145,7 @@ def test_get_df_live(mongo_connector, mongo_datasource):
     assert df[['country', 'language', 'value']].equals(expected)
 
     datasource = mongo_datasource(
-        collection='test_col', query=[{'$match': {'domain': 'domain1'}}, {"$sort": [{'pays': 1}]}]
+        collection='test_col', query=[{'$match': {'domain': 'domain1'}}, {'$sort': [{'pays': 1}]}]
     )
     df2 = mongo_connector.get_df(datasource)
     assert df2.equals(df)
@@ -204,10 +204,10 @@ def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(
         collection='test_col',
         query=[
-            {"$match": {'domain': 'domain1'}},
-            {"$group": {"_id": {"country": "$country"}}},
-            {"$project": {"pays": "$_id.country", "_id": 0}},
-            {"$sort": [{'pays': 1}]},
+            {'$match': {'domain': 'domain1'}},
+            {'$group': {'_id': {'country': '$country'}}},
+            {'$project': {'pays': '$_id.country', '_id': 0}},
+            {'$sort': [{'pays': 1}]},
         ],
     )
     df, count = mongo_connector.get_slice(datasource, limit=1)

@@ -70,7 +70,7 @@ def _flatten_aggregations(data, parent=None, neighbours=None):
         else:
             res = []
             for k, v in branch_l.items():
-                new_parent = f"{parent}_{k}" if parent else k
+                new_parent = f'{parent}_{k}' if parent else k
                 if isinstance(v, list):  # buckets
                     new_list = []
                     for elt in v:
@@ -106,8 +106,8 @@ class ElasticsearchHost(BaseModel):
 
 
 class SearchMethod(str, Enum):
-    search = "search"
-    msearch = "msearch"
+    search = 'search'
+    msearch = 'msearch'
 
 
 class ElasticsearchDataSource(ToucanDataSource):
@@ -126,18 +126,18 @@ class ElasticsearchConnector(ToucanConnector):
         connection_params = []
         for host in self.hosts:
             parsed_url = urlparse(host.url)
-            h = {"host": parsed_url.hostname}
+            h = {'host': parsed_url.hostname}
 
-            if parsed_url.path and parsed_url.path != "/":
-                h["url_prefix"] = parsed_url.path
-            if parsed_url.scheme == "https":
-                h["port"] = host.port or 443
-                h["use_ssl"] = True
+            if parsed_url.path and parsed_url.path != '/':
+                h['url_prefix'] = parsed_url.path
+            if parsed_url.scheme == 'https':
+                h['port'] = host.port or 443
+                h['use_ssl'] = True
             elif host.port:
-                h["port"] = host.port
+                h['port'] = host.port
 
             if host.username or host.password:
-                h["http_auth"] = f"{host.username}:{host.password}"
+                h['http_auth'] = f'{host.username}:{host.password}'
             if host.headers:
                 h['headers'] = host.headers
             connection_params.append(h)

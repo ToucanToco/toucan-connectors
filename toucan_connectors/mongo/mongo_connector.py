@@ -47,12 +47,12 @@ def apply_permissions(query, permissions):
 
 def validate_database(client, database: str):
     if database not in client.list_database_names():
-        raise UnkwownMongoDatabase(f'Database {database!r} doesn\'t exist')
+        raise UnkwownMongoDatabase(f"Database {database!r} doesn't exist")
 
 
 def validate_collection(client, database: str, collection: str):
     if collection not in client[database].list_collection_names():
-        raise UnkwownMongoCollection(f'Collection {collection!r} doesn\'t exist')
+        raise UnkwownMongoCollection(f"Collection {collection!r} doesn't exist")
 
 
 class MongoDataSource(ToucanDataSource):
@@ -205,7 +205,7 @@ class MongoConnector(ToucanConnector):
         if offset or limit is not None:
             data_source.query = apply_permissions(data_source.query, permissions)
             data_source.query = normalize_query(data_source.query, data_source.parameters)
-            facet = {"$facet": {'count': data_source.query.copy(), 'df': data_source.query.copy()}}
+            facet = {'$facet': {'count': data_source.query.copy(), 'df': data_source.query.copy()}}
             facet['$facet']['count'].append({'$count': 'value'})
             if offset:
                 facet['$facet']['df'].append({'$skip': offset})
@@ -245,16 +245,16 @@ class MongoConnector(ToucanConnector):
         data_source.query = normalize_query(data_source.query, data_source.parameters)
 
         cursor = client[data_source.database].command(
-            command="aggregate",
+            command='aggregate',
             value=data_source.collection,
             pipeline=data_source.query,
             explain=True,
         )
 
-        f = '''{
+        f = """{
                     details: (. | del(.serverInfo)),
                     summary: (.executionStats | del(.executionStages, .allPlansExecution))
-                }'''
+                }"""
         client.close()
 
         return jq(f).transform(cursor)

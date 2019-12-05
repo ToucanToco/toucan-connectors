@@ -39,7 +39,7 @@ def test_toucan_toco_all_small_apps():
     assert df.iloc[0]['response'] == fixtures['config']
 
 
-@pytest.mark.skip(reason="This uses a live demo")
+@pytest.mark.skip(reason='This uses a live demo')
 def test_live():
     tcc_live = ToucanTocoConnector(
         name='test',

@@ -14,20 +14,20 @@ def elasticsearch(service_container):
         This method check that the server is on
         and feeds the database once it's up
         """
-        url = f"http://localhost:{host_port}"
+        url = f'http://localhost:{host_port}'
         requests.get(url)
         # Feed the database
-        requests.put(url + "/company")
-        requests.post(url + "/company/employees/1", json={"name": "Toto", "best_song": "Africa"})
+        requests.put(url + '/company')
+        requests.post(url + '/company/employees/1', json={'name': 'Toto', 'best_song': 'Africa'})
         requests.post(
-            url + "/company/employees/2",
+            url + '/company/employees/2',
             json={
-                "name": "BRMC",
-                "best_song": "Beat The Devil\'s Tattoo",
-                "adress": {"street": "laaa", "cedex": 15, "city": "looo"},
+                'name': 'BRMC',
+                'best_song': "Beat The Devil's Tattoo",
+                'adress': {'street': 'laaa', 'cedex': 15, 'city': 'looo'},
             },
         )
-        requests.post(url + "/company/_refresh")
+        requests.post(url + '/company/_refresh')
 
     return service_container('elasticsearch', check_and_feed)
 
@@ -53,7 +53,7 @@ def test_connector(mocker):
         ],
     )
     ds = ElasticsearchDataSource(
-        domain='test', name='test', index='_all', search_method='search', body={"_source": True}
+        domain='test', name='test', index='_all', search_method='search', body={'_source': True}
     )
     con.get_df(ds)
     mock_es.assert_called_once_with(
@@ -76,19 +76,19 @@ def test_get_df(elasticsearch):
         name='test', hosts=[{'url': 'http://localhost', 'port': elasticsearch['port']}]
     )
     ds_search = ElasticsearchDataSource(
-        domain='test', name='test', index='_all', search_method='search', body={"_source": True}
+        domain='test', name='test', index='_all', search_method='search', body={'_source': True}
     )
 
     ds_msearch = ElasticsearchDataSource(
         domain='test',
         name='test',
         search_method='msearch',
-        body=[{}, {"_source": ['adress.city', 'best_song']}],
+        body=[{}, {'_source': ['adress.city', 'best_song']}],
     )
     data = con.get_df(ds_search)
     assert 'name' in data.columns
     assert 'adress.city' in data.columns
-    assert all(data.loc[data['name'] == 'BRMC', 'best_song'] == 'Beat The Devil\'s Tattoo')
+    assert all(data.loc[data['name'] == 'BRMC', 'best_song'] == "Beat The Devil's Tattoo")
 
     data = con.get_df(ds_msearch)
     assert set(data.columns) == {'adress.city', 'best_song'}
@@ -105,9 +105,9 @@ def test_get_agg(elasticsearch):
         index='_all',
         search_method='search',
         body={
-            "aggs": {
-                "music": {"terms": {"field": "best_song.keyword"}},
-                "sum_cedex": {"sum": {"field": "adress.cedex"}},
+            'aggs': {
+                'music': {'terms': {'field': 'best_song.keyword'}},
+                'sum_cedex': {'sum': {'field': 'adress.cedex'}},
             }
         },
     )
@@ -140,12 +140,12 @@ def test_get_agg(elasticsearch):
         body=[
             {},
             {
-                "aggs": {
-                    "music": {
-                        "terms": {"field": "best_song.keyword"},
-                        "aggs": {"ville": {"terms": {"field": "adress.city.keyword"}}},
+                'aggs': {
+                    'music': {
+                        'terms': {'field': 'best_song.keyword'},
+                        'aggs': {'ville': {'terms': {'field': 'adress.city.keyword'}}},
                     },
-                    "ville": {"terms": {"field": "adress.city.keyword"}},
+                    'ville': {'terms': {'field': 'adress.city.keyword'}},
                 }
             },
         ],
@@ -177,7 +177,7 @@ def test_get_agg(elasticsearch):
         name='test',
         index='_all',
         search_method='search',
-        body={"aggs": {"sum_cedex": {"sum": {"field": "adress.cedex"}}}},
+        body={'aggs': {'sum_cedex': {'sum': {'field': 'adress.cedex'}}}},
     )
 
     expected = [{'sum_cedex_value': 15.0}]

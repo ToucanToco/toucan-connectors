@@ -14,7 +14,7 @@ adobe_datasource = AdobeAnalyticsDataSource(
     metrics='metric',
     date_from='2018-06-07',
     date_to='2018-06-07',
-    granularity="day",
+    granularity='day',
 )
 
 adobe_connector = AdobeAnalyticsConnector(name='name', username='username', password='password')
@@ -59,7 +59,7 @@ def test_dimenssions_dict():
         name='name',
         domain='domain',
         suite_id='suite_id',
-        dimensions=[{"id": "page", "top": 5000}],
+        dimensions=[{'id': 'page', 'top': 5000}],
         metrics='metric',
         date_from='2018-06-07',
         date_to='2018-06-07',

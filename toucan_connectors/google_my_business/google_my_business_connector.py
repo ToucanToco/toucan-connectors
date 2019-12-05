@@ -42,7 +42,7 @@ class GoogleMyBusinessConnector(ToucanConnector):
     data_source_model: GoogleMyBusinessDataSource
 
     credentials: GoogleCredentials
-    scopes: List[str] = ["https://www.googleapis.com/auth/business.manage"]
+    scopes: List[str] = ['https://www.googleapis.com/auth/business.manage']
 
     def build_service(self):
         credentials = Credentials.from_authorized_user_info(
@@ -70,10 +70,10 @@ class GoogleMyBusinessConnector(ToucanConnector):
             location_names = [l['name'] for l in locations['locations']]
 
         query = {
-            "locationNames": location_names,
-            "basicRequest": {
-                "metricRequests": data_source.dict()['metric_requests'],
-                "timeRange": data_source.dict()['time_range'],
+            'locationNames': location_names,
+            'basicRequest': {
+                'metricRequests': data_source.dict()['metric_requests'],
+                'timeRange': data_source.dict()['time_range'],
             },
         }
 

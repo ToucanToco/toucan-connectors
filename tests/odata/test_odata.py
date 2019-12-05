@@ -25,10 +25,10 @@ def test_get_df(mocker):
         name='test',
         entity='Orders',
         query={
-            "$filter": "ShipCountry eq 'France'",
-            "$orderby": "Freight desc",
-            "$skip": 50,
-            "$top": 3,
+            '$filter': "ShipCountry eq 'France'",
+            '$orderby': 'Freight desc',
+            '$skip': 50,
+            '$top': 3,
         },
     )
 

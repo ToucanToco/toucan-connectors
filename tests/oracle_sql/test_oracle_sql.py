@@ -18,7 +18,7 @@ def oracle_server(service_container):
     def check(host_port):
         conn = cx_Oracle.connect(user='system', password='oracle', dsn=f'localhost:{host_port}/xe')
         cursor = conn.cursor()
-        cursor.execute("SELECT 1 FROM City")
+        cursor.execute('SELECT 1 FROM City')
         cursor.close()
         conn.close()
 
@@ -54,7 +54,7 @@ def test_oracle_get_df(mocker):
 
 
 def test_get_df_db(oracle_connector):
-    """" It should extract the table City and make some merge with some foreign key """
+    """It should extract the table City and make some merge with some foreign key"""
     data_sources_spec = [
         {
             'domain': 'Oracle test',

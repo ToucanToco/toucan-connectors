@@ -22,7 +22,7 @@ class GoogleBigQueryConnector(ToucanConnector):
 
     credentials: GoogleCredentials
     dialect: Dialect = Dialect.legacy
-    scopes: List[str] = ["https://www.googleapis.com/auth/bigquery"]
+    scopes: List[str] = ['https://www.googleapis.com/auth/bigquery']
 
     def _retrieve_data(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:
         """

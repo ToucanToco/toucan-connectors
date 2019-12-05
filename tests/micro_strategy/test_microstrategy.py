@@ -10,37 +10,37 @@ from toucan_connectors.micro_strategy.micro_strategy_connector import (
 )
 
 md = MicroStrategyDataSource(
-    name="microtest", domain="microstratdata", id="6137E0964C68D84F107816AA694C2209", dataset="cube"
+    name='microtest', domain='microstratdata', id='6137E0964C68D84F107816AA694C2209', dataset='cube'
 )
 
 md_filtered = MicroStrategyDataSource(
-    name="microtest",
-    domain="microstratdata",
-    id="6137E0964C68D84F107816AA694C2209",
-    dataset="cube",
+    name='microtest',
+    domain='microstratdata',
+    id='6137E0964C68D84F107816AA694C2209',
+    dataset='cube',
     viewfilter={
-        "operator": "Equals",
-        "operands": [{"attribute": "Call Center@DESC"}, {"constant": "Miami"}],
+        'operator': 'Equals',
+        'operands': [{'attribute': 'Call Center@DESC'}, {'constant': 'Miami'}],
     },
 )
 
 mdr = MicroStrategyDataSource(
-    name="microtest",
-    domain="microstratdata",
-    id="TDjAuKmfGeKnqbxKr1TPfcFr4vBTlWIKDWDvODTSKsQ",
-    dataset="report",
+    name='microtest',
+    domain='microstratdata',
+    id='TDjAuKmfGeKnqbxKr1TPfcFr4vBTlWIKDWDvODTSKsQ',
+    dataset='report',
 )
 
 mds = MicroStrategyDataSource(
-    name="microtest", domain="microstratdata", dataset="search", limit=5, id="revenue analysis"
+    name='microtest', domain='microstratdata', dataset='search', limit=5, id='revenue analysis'
 )
 
 mc = MicroStrategyConnector(
-    name="microtest",
-    base_url="https://demo.microstrategy.com/MicroStrategyLibrary2/api/",
-    username="guest",
-    password="",
-    project_id="B7CA92F04B9FAE8D941C3E9B7E0CD754",
+    name='microtest',
+    base_url='https://demo.microstrategy.com/MicroStrategyLibrary2/api/',
+    username='guest',
+    password='',
+    project_id='B7CA92F04B9FAE8D941C3E9B7E0CD754',
 )
 
 
@@ -133,14 +133,14 @@ def test_fill_viewfilter_with_ids():
 def test_viewfilter():
     js = json.load(open('tests/micro_strategy/fixtures/fixture.json'))
     expected_viewfilter = {
-        "operator": "Equals",
-        "operands": [
+        'operator': 'Equals',
+        'operands': [
             {
-                "type": "form",
-                "attribute": {"id": "8D679D3511D3E4981000E787EC6DE8A4"},
-                "form": {"id": "CCFBE2A5EADB4F50941FB879CCF1721C"},
+                'type': 'form',
+                'attribute': {'id': '8D679D3511D3E4981000E787EC6DE8A4'},
+                'form': {'id': 'CCFBE2A5EADB4F50941FB879CCF1721C'},
             },
-            {"type": "constant", "dataType": "Char", "value": "Miami"},
+            {'type': 'constant', 'dataType': 'Char', 'value': 'Miami'},
         ],
     }
 
@@ -175,7 +175,7 @@ def test_viewfilter():
     assert viewfilter == expected_viewfilter
 
 
-@pytest.mark.skip(reason="This uses a demo api that I found directly")
+@pytest.mark.skip(reason='This uses a demo api that I found directly')
 def test_on_live_instance():
     df = mc.get_df(md)
     assert df.shape == (100, 40)

@@ -19,31 +19,31 @@ s = GoogleMyBusinessDataSource(
     domain='test_domain',
     location_ids=['foo'],
     metric_requests=[],
-    time_range={"start_time": "", "end_time": ""},
+    time_range={'start_time': '', 'end_time': ''},
 )
 
 
 def test_get_df(mocker):
     REPORT_INSIGHTS = {
-        "locationMetrics": [
+        'locationMetrics': [
             {
-                "locationName": "locations/hey",
-                "timeZone": "Europe/Paris",
-                "metricValues": [
+                'locationName': 'locations/hey',
+                'timeZone': 'Europe/Paris',
+                'metricValues': [
                     {
-                        "metric": "QUERIES_DIRECT",
-                        "dimensionalValues": [
-                            {"metricOption": "AGGREGATED_DAILY", "value": "1007"},
-                            {"metricOption": "AGGREGATED_DAILY", "value": "949"},
+                        'metric': 'QUERIES_DIRECT',
+                        'dimensionalValues': [
+                            {'metricOption': 'AGGREGATED_DAILY', 'value': '1007'},
+                            {'metricOption': 'AGGREGATED_DAILY', 'value': '949'},
                         ],
                     },
                     {
-                        "metric": "QUERIES_DIRECT",
-                        "totalValue": {"metricOption": "AGGREGATED_TOTAL", "value": "29423"},
+                        'metric': 'QUERIES_DIRECT',
+                        'totalValue': {'metricOption': 'AGGREGATED_TOTAL', 'value': '29423'},
                     },
                     {
-                        "metric": "QUERIES_INDIRECT",
-                        "totalValue": {"metricOption": "AGGREGATED_TOTAL", "value": "32520"},
+                        'metric': 'QUERIES_INDIRECT',
+                        'totalValue': {'metricOption': 'AGGREGATED_TOTAL', 'value': '32520'},
                     },
                 ],
             }

@@ -9,11 +9,11 @@ from toucan_data_sdk.utils.helpers import slugify
 RE_PARAM = r'%\(([^(%\()]*)\)s'
 RE_JINJA = r'{{([^({{)}]*)}}'
 
-RE_PARAM_ALONE = r"^" + RE_PARAM + "$"
-RE_JINJA_ALONE = r"^" + RE_JINJA + "$"
+RE_PARAM_ALONE = r'^' + RE_PARAM + '$'
+RE_JINJA_ALONE = r'^' + RE_JINJA + '$'
 
 # Identify jinja params with no quotes around or complex condition
-RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r"([ )])", RE_JINJA + r"()$"]
+RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r'([ )])', RE_JINJA + r'()$']
 
 RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
@@ -166,7 +166,7 @@ class AstTranslator(ABC):
         return self.resolve(elt)(elt)
 
     def parse(self, expr):
-        # Replace ` by " because pandas.query like expressions (e.g "(`a` == 1)")
+        # Replace ` by ' because pandas.query like expressions (e.g '(`a` == 1)')
         # are not valid python expressions:
         expr = expr.replace('`', '"')
         ex = ast.parse(expr, mode='eval')
