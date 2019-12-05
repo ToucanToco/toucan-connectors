@@ -3,6 +3,7 @@ black
 cryptography >= 2.7.0
 docker >= 3.1.1
 flake8 >= 3.5.0
+flake8-quotes
 isort
 pytest-cov >= 2.5.1
 pytest >= 3.4.2
