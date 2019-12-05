@@ -14,7 +14,7 @@ class HiveConnector(ToucanConnector):
 
     host: str
     port: int = 10000
-    auth: str = "NONE"
+    auth: str = 'NONE'
     configuration: dict = None
     kerberos_service_name: str = None
     username: str = None

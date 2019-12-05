@@ -23,35 +23,35 @@ class MongoExpression(Expression):
 
 class MongoOperator(Operator):
     def Eq(self, node):
-        '''=='''
+        """=="""
         return MongoValue().translate(node)
 
     def NotEq(self, node):
-        '''!='''
+        """!="""
         return {'$ne': MongoValue().translate(node)}
 
     def In(self, node):
-        '''in'''
+        """in"""
         return {'$in': MongoValue().translate(node)}
 
     def NotIn(self, node):
-        '''not in'''
+        """not in"""
         return {'$nin': MongoValue().translate(node)}
 
     def Gt(self, node):
-        '''>'''
+        """>"""
         return {'$gt': MongoValue().translate(node)}
 
     def Lt(self, node):
-        '''<'''
+        """<"""
         return {'$lt': MongoValue().translate(node)}
 
     def GtE(self, node):
-        '''>='''
+        """>="""
         return {'$gte': MongoValue().translate(node)}
 
     def LtE(self, node):
-        '''<='''
+        """<="""
         return {'$lte': MongoValue().translate(node)}
 
 

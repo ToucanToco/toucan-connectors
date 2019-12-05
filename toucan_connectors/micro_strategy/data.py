@@ -45,7 +45,7 @@ def fill_viewfilter_with_ids(vf, dfn):
         return {'type': 'metric', 'id': dfn_metric['id']}
 
     def fill_constant(constant, data_type):
-        data_type = data_type or ("Char" if isinstance(constant, str) else "Real")
+        data_type = data_type or ('Char' if isinstance(constant, str) else 'Real')
         return {'type': 'constant', 'dataType': data_type, 'value': str(constant)}
 
     @singledispatch
@@ -77,7 +77,7 @@ def get_attr_names(data: dict) -> dict:
     """Retrieves attribute names from returned data."""
     row = {}
     for index, col in enumerate(data['result']['definition']['attributes']):
-        row[index] = col["name"]
+        row[index] = col['name']
     return row
 
 
@@ -85,7 +85,7 @@ def get_metric_names(data: dict) -> dict:
     """Retrieves metric names from returned data."""
     row = {}
     for index, col in enumerate(data['result']['definition']['metrics']):
-        row[index] = col["name"]
+        row[index] = col['name']
     return row
 
 
@@ -98,16 +98,16 @@ def flatten_json(json_root: dict, attributes: dict, metrics: dict) -> list:
         """ Recursive function that will traverse JSON to flatten data."""
         if isinstance(nodes, dict):
             for node in nodes:
-                # it appears "depth" is an indicator when data elements are coming
-                if node == "depth":
-                    row[attributes[nodes["depth"]]] = nodes["element"]["name"]
-                    # also, the "depth" value appears to be associated to the number of attributes,
+                # it appears 'depth' is an indicator when data elements are coming
+                if node == 'depth':
+                    row[attributes[nodes['depth']]] = nodes['element']['name']
+                    # also, the 'depth' value appears to be associated to the number of attributes,
                     # so we use this to determine when to get the metric data and write the row to
                     # the table
-                    if nodes["depth"] == (len(attributes) - 1):
+                    if nodes['depth'] == (len(attributes) - 1):
                         # iterate through metric names to get the values in json
                         for value in metrics.values():
-                            row[value] = nodes["metrics"][value]["rv"]
+                            row[value] = nodes['metrics'][value]['rv']
                         table.append(row.copy())
                 flatten(nodes[node], attributes, metrics, row, table)
         elif isinstance(nodes, list):

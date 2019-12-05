@@ -8,12 +8,12 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class Granularity(str, Enum):
-    hour = "hour"
-    day = "day"
-    week = "week"
-    month = "month"
-    quarter = "quarter"
-    year = "year"
+    hour = 'hour'
+    day = 'day'
+    week = 'week'
+    month = 'month'
+    quarter = 'quarter'
+    year = 'year'
 
 
 class AdobeAnalyticsDataSource(ToucanDataSource):

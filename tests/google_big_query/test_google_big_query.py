@@ -11,7 +11,7 @@ from toucan_connectors.google_credentials import GoogleCredentials
 def test_gbq(mocker):
     my_read_gbq = mocker.patch('pandas_gbq.read_gbq')
     my_read_gbq.return_value = mydf = pd.DataFrame({'a': [1, 1], 'b': [2, 2]})
-    mocker.patch("cryptography.hazmat.primitives.serialization.load_pem_private_key")
+    mocker.patch('cryptography.hazmat.primitives.serialization.load_pem_private_key')
     my_credentials = GoogleCredentials(
         type='my_type',
         project_id='my_project_id',
@@ -25,11 +25,11 @@ def test_gbq(mocker):
         client_x509_cert_url='my_cert',
     )
     connector = GoogleBigQueryConnector(
-        name="MyGBQ",
+        name='MyGBQ',
         credentials=my_credentials,
         dialect='standard',
         scopes=[
-            "https://www.googleapis.com/auth/bigquery",
+            'https://www.googleapis.com/auth/bigquery',
             'https://www.googleapis.com/auth/drive',
         ],
     )

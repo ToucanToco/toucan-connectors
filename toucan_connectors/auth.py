@@ -52,11 +52,11 @@ class CustomTokenServer(AuthBase):
 
 
 class AuthType(str, Enum):
-    basic = "basic"
-    digest = "digest"
-    oauth1 = "oauth1"
-    oauth2_backend = "oauth2_backend"
-    custom_token_server = "custom_token_server"
+    basic = 'basic'
+    digest = 'digest'
+    oauth1 = 'oauth1'
+    oauth2_backend = 'oauth2_backend'
+    custom_token_server = 'custom_token_server'
 
 
 class Auth(BaseModel):

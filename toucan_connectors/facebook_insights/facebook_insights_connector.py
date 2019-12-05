@@ -64,7 +64,7 @@ def get_page_tokens(longlived_token) -> Dict[str, str]:
         a mapping page_id → page_token
     """
     graph = facebook.GraphAPI(access_token=longlived_token, version='2.8')
-    pages_data = graph.get_object("me/accounts")
+    pages_data = graph.get_object('me/accounts')
     page_tokens = {item['id']: item['access_token'] for item in pages_data['data']}
     return page_tokens
 

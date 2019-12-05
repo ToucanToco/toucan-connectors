@@ -203,15 +203,14 @@ class MySQLConnector(ToucanConnector):
             info['f_table'], idx = MySQLConnector.extract_info_word(fetch_all, idx, ['REFERENCES'])
             if idx == -1:
                 MySQLConnector.logger.error(
-                    f"Foreign key {info['f_key']}, " f"found but no REFERENCES found."
+                    f"Foreign key {info['f_key']}, found but no REFERENCES found."
                 )
                 return res
 
             info['f_table_key'], idx = MySQLConnector.extract_info_word(fetch_all, idx, [])
             if idx == -1:
                 MySQLConnector.logger.error(
-                    f"Foreign key {info[f'_key']} "
-                    f"and REFERENCES found but no foreign table key."
+                    f"Foreign key {info[f'_key']} and REFERENCES found but no foreign table key."
                 )
                 return res
             res.append(info)
@@ -336,7 +335,7 @@ class MySQLConnector(ToucanConnector):
             query = datasource.query
             # Extract table name for logging purpose (see below)
             m = re.search(
-                r"from\s*(?P<table>[^\s]+)\s*(where|order by|group by|limit)?", query, re.I
+                r'from\s*(?P<table>[^\s]+)\s*(where|order by|group by|limit)?', query, re.I
             )
             table = m.group('table')
         else:

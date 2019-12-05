@@ -14,18 +14,18 @@ from toucan_connectors.http_api.http_api_connector import (
 @pytest.fixture(scope='function')
 def connector():
     return HttpAPIConnector(
-        name="myHttpConnector", type="HttpAPI", baseroute="https://jsonplaceholder.typicode.com"
+        name='myHttpConnector', type='HttpAPI', baseroute='https://jsonplaceholder.typicode.com'
     )
 
 
 @pytest.fixture(scope='function')
 def data_source():
-    return HttpAPIDataSource(name="myHttpDataSource", domain="my_domain", url="/comments")
+    return HttpAPIDataSource(name='myHttpDataSource', domain='my_domain', url='/comments')
 
 
 @pytest.fixture(scope='function')
 def auth():
-    return Auth(type="basic", args=["username", "password"])
+    return Auth(type='basic', args=['username', 'password'])
 
 
 def test_transform_with_jq():
@@ -43,7 +43,7 @@ def test_get_df(connector, data_source):
 
 @responses.activate
 def test_get_df_with_auth(connector, data_source, auth):
-    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 1}])
+    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{'a': 1}])
 
     connector.auth = auth
     connector.get_df(data_source)
@@ -54,10 +54,10 @@ def test_get_df_with_auth(connector, data_source, auth):
 
 @responses.activate
 def test_get_df_with_parameters(connector, data_source, mocker):
-    data_source.parameters = {"first_name": "raphael"}
-    data_source.headers = {"name": "%(first_name)s"}
+    data_source.parameters = {'first_name': 'raphael'}
+    data_source.headers = {'name': '%(first_name)s'}
 
-    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 1}])
+    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{'a': 1}])
 
     connector.get_df(data_source)
 
@@ -68,10 +68,10 @@ def test_get_df_with_parameters(connector, data_source, mocker):
 @responses.activate
 def test_get_df_with_parameters_and_auth(connector, data_source, auth, mocker):
     connector.auth = auth
-    data_source.parameters = {"first_name": "raphael"}
-    data_source.headers = {"name": "%(first_name)s"}
+    data_source.parameters = {'first_name': 'raphael'}
+    data_source.headers = {'name': '%(first_name)s'}
 
-    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 1}])
+    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{'a': 1}])
 
     connector.get_df(data_source)
 
@@ -81,16 +81,16 @@ def test_get_df_with_parameters_and_auth(connector, data_source, auth, mocker):
 
 def test_exceptions_not_json():
     connector = HttpAPIConnector(
-        name="myHttpConnector", type="HttpAPI", baseroute="https://demo.toucantoco.com"
+        name='myHttpConnector', type='HttpAPI', baseroute='https://demo.toucantoco.com'
     )
-    data_source = HttpAPIDataSource(name="myHttpDataSource", domain="my_domain", url="/")
+    data_source = HttpAPIDataSource(name='myHttpDataSource', domain='my_domain', url='/')
 
     with pytest.raises(ValueError):
         connector.get_df(data_source)
 
 
 def test_exceptions_wrong_filter(connector, data_source):
-    data_source.filter = "bla"
+    data_source.filter = 'bla'
 
     with pytest.raises(ValueError):
         connector.get_df(data_source)
@@ -101,14 +101,14 @@ def test_e2e():
     ds_params = {
         'domain': 'books',
         'name': 'open_data_paris',
-        'url': "records/1.0/search/",
+        'url': 'records/1.0/search/',
         'params': {
             'dataset': 'les-1000-titres-les-plus-reserves-dans-les-bibliotheques-de-pret',
             'facet': 'auteur',
             'sort': 'rang',
             'rows': 1000,
         },
-        'filter': ".records[].fields",
+        'filter': '.records[].fields',
     }
 
     con = HttpAPIConnector(**con_params)
@@ -120,10 +120,10 @@ def test_e2e():
 @responses.activate
 def test_get_df_with_json(connector, data_source, mocker):
     data_source = HttpAPIDataSource(
-        name="myHttpDataSource", domain="my_domain", url="/comments", json={'a': 1}
+        name='myHttpDataSource', domain='my_domain', url='/comments', json={'a': 1}
     )
 
-    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{"a": 2}])
+    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{'a': 2}])
 
     connector.get_df(data_source)
 
@@ -141,7 +141,7 @@ def test_get_df_with_template(data_source, mocker):
         }
     )
 
-    responses.add(responses.GET, 'http://example.com/comments', json=[{"a": 2}])
+    responses.add(responses.GET, 'http://example.com/comments', json=[{'a': 2}])
 
     co.get_df(data_source)
 
@@ -162,14 +162,14 @@ def test_get_df_with_template_overide(data_source, mocker):
     )
 
     data_source = HttpAPIDataSource(
-        name="myHttpDataSource",
-        domain="my_domain",
-        url="/comments",
+        name='myHttpDataSource',
+        domain='my_domain',
+        url='/comments',
         json={'A': 1},
         headers={'Authorization': 'YY'},
     )
 
-    responses.add(responses.GET, 'http://example.com/comments', json=[{"a": 2}])
+    responses.add(responses.GET, 'http://example.com/comments', json=[{'a': 2}])
 
     co.get_df(data_source)
 
@@ -181,7 +181,7 @@ def test_get_df_with_template_overide(data_source, mocker):
     assert 'A' in j and j['A']
 
 
-@pytest.mark.skip(reason="This uses an real api")
+@pytest.mark.skip(reason='This uses an real api')
 def test_get_df_oauth2_backend():
 
     data_provider = {
@@ -202,7 +202,7 @@ def test_get_df_oauth2_backend():
 
     co = HttpAPIConnector(**data_provider)
     df = co.get_df(HttpAPIDataSource(**users))
-    assert "userName" in df
+    assert 'userName' in df
 
 
 @responses.activate

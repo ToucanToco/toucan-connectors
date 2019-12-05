@@ -1,5 +1,6 @@
-from setuptools import find_packages, setup
 import glob
+
+from setuptools import find_packages, setup
 
 auth_deps = ['oauthlib', 'requests_oauthlib']
 extras_require = {

@@ -14,7 +14,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 def transform_with_jq(data: object, jq_filter: str) -> list:
     data = jq(jq_filter).transform(data, multiple_output=True)
 
-    # jq "multiple outout": the data is already presented as a list of rows
+    # jq 'multiple outout': the data is already presented as a list of rows
     multiple_output = len(data) == 1 and isinstance(data[0], list)
 
     # another valid datastructure:  [{col1:[value, ...], col2:[value, ...]}]
@@ -27,9 +27,9 @@ def transform_with_jq(data: object, jq_filter: str) -> list:
 
 
 class Method(str, Enum):
-    GET = "GET"
-    POST = "POST"
-    PUT = "PUT"
+    GET = 'GET'
+    POST = 'POST'
+    PUT = 'PUT'
 
 
 class Template(BaseModel):
@@ -47,7 +47,7 @@ class HttpAPIDataSource(ToucanDataSource):
     json_: dict = Schema(None, alias='json')
     proxies: dict = None
     data: Union[str, dict] = None
-    filter: str = "."
+    filter: str = '.'
 
 
 class HttpAPIConnector(ToucanConnector):
@@ -80,7 +80,7 @@ class HttpAPIConnector(ToucanConnector):
         try:
             data = res.json()
         except ValueError:
-            HttpAPIConnector.logger.error(f'Could not decode "{res.content}"')
+            HttpAPIConnector.logger.error(f'Could not decode {res.content!r}')
             raise
 
         try:

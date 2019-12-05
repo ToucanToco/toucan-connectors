@@ -30,10 +30,10 @@ def test_spreadsheet(mocker):
     mocker.patch(
         f'{module}.gspread.authorize'
     ).return_value.open_by_key.return_value.sheet1.get_all_records.return_value = [
-        {"a": 40},
-        {"a": 1},
-        {"a": 1},
+        {'a': 40},
+        {'a': 1},
+        {'a': 1},
     ]
 
     df = c.get_df(s)
-    assert df.sum()["a"] == 42
+    assert df.sum()['a'] == 42
