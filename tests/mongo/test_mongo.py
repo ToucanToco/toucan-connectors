@@ -60,8 +60,26 @@ def test_client_with_detailed_params():
 
 
 def test_client_with_mongo_uri():
-    connector = MongoConnector(name='my_mongo_con', host='mongodb://myuser@myhost:123')
+    connector = MongoConnector(name='my_mongo_con', host='mongodb://myuser:mypassword@myhost:123')
     assert isinstance(connector.client, pymongo.MongoClient)
+
+
+def test_client_args_with_mongo_uri(mocker):
+    """It should not pass any other parameter than the host to MongoClient"""
+    mongo_client_mock = mocker.patch('toucan_connectors.mongo.mongo_connector.pymongo.MongoClient')
+    connector = MongoConnector(name='my_mongo_con', host='mongodb://myuser:mypassword@myhost:123')
+    connector.client
+    mongo_client_mock.assert_called_with(host='mongodb://myuser:mypassword@myhost:123')
+
+
+def test_client_args_with_ssl(mocker):
+    """It should forward parameters to mongo client"""
+    mongo_client_mock = mocker.patch('toucan_connectors.mongo.mongo_connector.pymongo.MongoClient')
+    connector = MongoConnector(
+        name='my_mongo_con', host='myhost', password='blah', username='jean', ssl=True
+    )
+    connector.client
+    mongo_client_mock.assert_called_with(host='myhost', ssl=True, password='blah', username='jean')
 
 
 def test_get_df_no_query(mongo_connector, mongo_datasource):
@@ -121,9 +139,7 @@ def test_get_df(mocker):
     )
     mongo_connector.get_df(datasource)
 
-    snock.assert_called_with(
-        host='localhost', username='ubuntu', password='ilovetoucan', port=22, ssl=False
-    )
+    snock.assert_called_with(host='localhost', username='ubuntu', password='ilovetoucan', port=22)
     assert snock.call_count == 1  # client is cached
 
     aggregate.assert_called_with([{'$match': {'domain': 'domain1'}}])

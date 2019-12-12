@@ -105,10 +105,10 @@ class MongoConnector(ToucanConnector):
         description='The domain name (preferred option as more dynamic) or '
         'the hardcoded IP address of your database server',
     )
-    port: int = Schema(None, description='The listening port of your database server')
-    username: str = Schema(None, description='Your login username')
-    password: SecretStr = Schema(None, description='Your login password')
-    ssl: bool = Schema(False, description='Create the connection to the server using SSL')
+    port: Optional[int] = Schema(None, description='The listening port of your database server')
+    username: Optional[str] = Schema(None, description='Your login username')
+    password: Optional[SecretStr] = Schema(None, description='Your login password')
+    ssl: Optional[bool] = Schema(None, description='Create the connection to the server using SSL')
 
     class Config:
         keep_untouched = (cached_property, _lru_cache_wrapper)
@@ -142,6 +142,10 @@ class MongoConnector(ToucanConnector):
             mongo_client_kwargs.pop(field)
         if mongo_client_kwargs['password'] is not None:
             mongo_client_kwargs['password'] = mongo_client_kwargs['password'].get_secret_value()
+
+        # prevent optional parameters to be sent to MongoClient as None
+        mongo_client_kwargs = {k: v for (k, v) in mongo_client_kwargs.items() if v is not None}
+
         return mongo_client_kwargs
 
     def get_status(self):
