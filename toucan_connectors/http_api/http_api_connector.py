@@ -48,7 +48,7 @@ class Template(BaseModel):
 class HttpAPIDataSource(ToucanDataSource):
     url: str = Schema(
         ...,
-        title='URL path',
+        title='Endpoint URL',
         description='The URL path that will be appended to your baseroute URL. '
         'For example "geo/countries"',
     )
@@ -84,7 +84,7 @@ class HttpAPIDataSource(ToucanDataSource):
 class HttpAPIConnector(ToucanConnector):
     data_source_model: HttpAPIDataSource
 
-    baseroute: UrlStr = Schema(..., title='API endpoint', description='Baseroute URL')
+    baseroute: UrlStr = Schema(..., title='Baseroute URL', description='Baseroute URL')
     cert: List[FilePath] = Schema(
         None, title='Certificate', description='File path of your certificate if any'
     )
