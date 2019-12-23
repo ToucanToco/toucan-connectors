@@ -285,8 +285,8 @@ def transform_with_jq(data: object, jq_filter: str) -> list:
 
 
 FilterSchema = Schema(
-        '.',
-        description='You can apply filters to json response if data is nested. As we rely on a '
-        'library called jq, we suggest the refer to the dedicated '
-        '<a href="https://stedolan.github.io/jq/manual/">documentation</a>',
-    )
+    '.',
+    description='You can apply filters to json response if data is nested. As we rely on a '
+    'library called jq, we suggest the refer to the dedicated '
+    '<a href="https://stedolan.github.io/jq/manual/">documentation</a>',
+)

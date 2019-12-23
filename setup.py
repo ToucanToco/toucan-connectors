@@ -22,6 +22,7 @@ extras_require = {
     'odata': auth_deps + ['tctc_odata'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
+    'ROK': ['requests'],
     'sap_hana': ['pyhdb>=0.3.4'],
     'snowflake': ['snowflake-connector-python'],
     'toucan_toco': ['toucan_client'],

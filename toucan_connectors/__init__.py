@@ -22,6 +22,7 @@ CONNECTORS_CATALOGUE = {
     'OData': 'odata.odata_connector.ODataConnector',
     'OracleSQL': 'oracle_sql.oracle_sql_connector.OracleSQLConnector',
     'Postgres': 'postgres.postgresql_connector.PostgresConnector',
+    'ROK': 'rok.rok_connector.RokConnector',
     'SapHana': 'sap_hana.sap_hana_connector.SapHanaConnector',
     'Snowflake': 'snowflake.snowflake_connector.SnowflakeConnector',
     'ToucanToco': 'toucan_toco.toucan_toco_connector.ToucanTocoConnector',
