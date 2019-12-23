@@ -3,11 +3,11 @@ import json
 import pytest
 import responses
 
+from toucan_connectors.common import transform_with_jq
 from toucan_connectors.http_api.http_api_connector import (
     Auth,
     HttpAPIConnector,
     HttpAPIDataSource,
-    transform_with_jq,
 )
 
 

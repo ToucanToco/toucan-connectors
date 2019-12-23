@@ -2,28 +2,12 @@ from enum import Enum
 from typing import List, Union
 
 import pandas as pd
-from jq import jq
 from pydantic import BaseModel, FilePath, Schema, UrlStr
 from requests import Session
 
 from toucan_connectors.auth import Auth
-from toucan_connectors.common import nosql_apply_parameters_to_query
+from toucan_connectors.common import nosql_apply_parameters_to_query, transform_with_jq, FilterSchema
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-
-
-def transform_with_jq(data: object, jq_filter: str) -> list:
-    data = jq(jq_filter).transform(data, multiple_output=True)
-
-    # jq 'multiple outout': the data is already presented as a list of rows
-    multiple_output = len(data) == 1 and isinstance(data[0], list)
-
-    # another valid datastructure:  [{col1:[value, ...], col2:[value, ...]}]
-    single_cols_dict = isinstance(data[0], dict) and isinstance(list(data[0].values())[0], list)
-
-    if multiple_output or single_cols_dict:
-        return data[0]
-
-    return data
 
 
 class Method(str, Enum):
@@ -90,12 +74,7 @@ class HttpAPIDataSource(ToucanDataSource):
     data: Union[str, dict] = Schema(
         None, description='JSON object to send in the body of the HTTP request'
     )
-    filter: str = Schema(
-        '.',
-        description='You can apply filters to json response if data is nested. As we rely on a '
-        'library called jq, we suggest the refer to the dedicated '
-        '<a href="https://2.python-requests.org//en/master/user/authentication/">documentation</a>',
-    )
+    filter: str = FilterSchema
 
 
 class HttpAPIConnector(ToucanConnector):

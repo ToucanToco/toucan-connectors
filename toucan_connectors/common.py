@@ -4,6 +4,8 @@ from abc import ABC, ABCMeta, abstractmethod
 from copy import deepcopy
 
 from jinja2 import Environment, StrictUndefined, Template, meta
+from jq import jq
+from pydantic import Schema
 from toucan_data_sdk.utils.helpers import slugify
 
 RE_PARAM = r'%\(([^(%\()]*)\)s'
@@ -265,3 +267,26 @@ class Value(AstTranslator, metaclass=ABCMeta):
     @abstractmethod
     def Index(self, node):
         """Indice in list or dict (jinja parameters)"""
+
+
+def transform_with_jq(data: object, jq_filter: str) -> list:
+    data = jq(jq_filter).transform(data, multiple_output=True)
+
+    # jq 'multiple outout': the data is already presented as a list of rows
+    multiple_output = len(data) == 1 and isinstance(data[0], list)
+
+    # another valid datastructure:  [{col1:[value, ...], col2:[value, ...]}]
+    single_cols_dict = isinstance(data[0], dict) and isinstance(list(data[0].values())[0], list)
+
+    if multiple_output or single_cols_dict:
+        return data[0]
+
+    return data
+
+
+FilterSchema = Schema(
+        '.',
+        description='You can apply filters to json response if data is nested. As we rely on a '
+        'library called jq, we suggest the refer to the dedicated '
+        '<a href="https://stedolan.github.io/jq/manual/">documentation</a>',
+    )
