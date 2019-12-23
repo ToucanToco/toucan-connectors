@@ -36,6 +36,8 @@
 
 * [PostgresConnector](connectors/postgres.md)
 
+* [ROKConnector](connectors/ROK.md)
+
 * [SapHanaConnector](connectors/sap_hana.md)
 
 * [SnowflakeConnector](connectors/snowflake.md)

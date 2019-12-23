@@ -6,7 +6,11 @@ from pydantic import BaseModel, FilePath, Schema, UrlStr
 from requests import Session
 
 from toucan_connectors.auth import Auth
-from toucan_connectors.common import nosql_apply_parameters_to_query, transform_with_jq, FilterSchema
+from toucan_connectors.common import (
+    nosql_apply_parameters_to_query,
+    transform_with_jq,
+    FilterSchema,
+)
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
