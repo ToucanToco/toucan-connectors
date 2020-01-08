@@ -7,7 +7,6 @@ from pydantic import create_model
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
-
 class DataSource(ToucanDataSource):
     query: str
 

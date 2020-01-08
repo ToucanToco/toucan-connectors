@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Schema, UrlStr, validator
+from pydantic import BaseModel, Field, HttpUrl, validator
 
 CREDENTIALS_INFO_MESSAGE = (
     'This information is provided in your '
@@ -19,27 +19,21 @@ class GoogleCredentials(BaseModel):
         description=f'A private key in the form '
         f'"-----BEGIN PRIVATE KEY-----\\nXXX...XXX\\n-----END PRIVATE KEY-----\\n". {CREDENTIALS_INFO_MESSAGE}',
     )
-    client_email: str = Schema(..., title='Client email', description=CREDENTIALS_INFO_MESSAGE)
-    client_id: str = Schema(..., title='Client ID', description=CREDENTIALS_INFO_MESSAGE)
-    auth_uri: UrlStr = Schema(
+    client_email: str = Field(..., title='Client email', description=CREDENTIALS_INFO_MESSAGE)
+    client_id: str = Field(..., title='Client ID', description=CREDENTIALS_INFO_MESSAGE)
+    auth_uri: HttpUrl = Field(
         'https://accounts.google.com/o/oauth2/auth',
         title='Authentication URI',
         description=CREDENTIALS_INFO_MESSAGE,
     )
-    token_uri: UrlStr = Schema(
+    token_uri: HttpUrl = Field(
         'https://oauth2.googleapis.com/token',
         title='Token URI',
         description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
     )
     auth_provider_x509_cert_url: UrlStr = Schema(
-        'https://www.googleapis.com/oauth2/v1/certs',
-        title='Authentication provider X509 certificate URL',
-        description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
+    auth_provider_x509_cert_url: HttpUrl = Field(
     )
-    client_x509_cert_url: UrlStr = Schema(
-        ..., title='Client X509 certification URL', description=CREDENTIALS_INFO_MESSAGE,
-    )
-
     @validator('private_key')
     def unescape_break_lines(cls, v):
         """

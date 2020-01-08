@@ -1,7 +1,7 @@
 import pandas as pd
 from odata import ODataService
 from odata.metadata import MetaData
-from pydantic import Schema, UrlStr
+from pydantic import Field, HttpUrl
 
 from toucan_connectors.auth import Auth
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -39,8 +39,8 @@ class ODataDataSource(ToucanDataSource):
 class ODataConnector(ToucanConnector):
     data_source_model: ODataDataSource
 
-    baseroute: UrlStr = Schema(..., title='API endpoint', description='Baseroute URL')
-    auth: Auth = Schema(None, title='Authentication type')
+    baseroute: HttpUrl = Field(..., title='API endpoint', description='Baseroute URL')
+    auth: Auth = Field(None, title='Authentication type')
 
     def _retrieve_data(self, data_source: ODataDataSource) -> pd.DataFrame:
 

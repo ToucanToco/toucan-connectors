@@ -2,7 +2,8 @@ from enum import Enum
 from typing import List, Union
 
 import pandas as pd
-from pydantic import BaseModel, FilePath, Schema, UrlStr
+from jq import jq
+from pydantic import BaseModel, FilePath, Field, HttpUrl
 from requests import Session
 
 from toucan_connectors.auth import Auth
@@ -84,8 +85,8 @@ class HttpAPIDataSource(ToucanDataSource):
 class HttpAPIConnector(ToucanConnector):
     data_source_model: HttpAPIDataSource
 
-    baseroute: UrlStr = Schema(..., title='API endpoint', description='Baseroute URL')
-    cert: List[FilePath] = Schema(
+    baseroute: HttpUrl = Field(..., title='API endpoint', description='Baseroute URL')
+    cert: List[FilePath] = Field(
         None, title='Certificate', description='File path of your certificate if any'
     )
     auth: Auth = Schema(None, title='Authentication type')
