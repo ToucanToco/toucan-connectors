@@ -96,10 +96,9 @@ def test_unknown_arg():
 
 def test_get_form():
     default_form = ToucanDataSource.get_form(None, {})
-    print(default_form)
     assert default_form == {
-        'additionalProperties': False,
         'title': 'ToucanDataSource',
+        'additionalProperties': False,
         'type': 'object',
         'properties': {
             'domain': {'title': 'Domain', 'type': 'string'},

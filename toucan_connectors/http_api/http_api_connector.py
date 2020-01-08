@@ -3,7 +3,7 @@ from typing import List, Union
 
 import pandas as pd
 from jq import jq
-from pydantic import BaseModel, FilePath, Field, HttpUrl
+from pydantic import BaseModel, FilePath, Field, UrlStr
 from requests import Session
 
 from toucan_connectors.auth import Auth
@@ -85,7 +85,7 @@ class HttpAPIDataSource(ToucanDataSource):
 class HttpAPIConnector(ToucanConnector):
     data_source_model: HttpAPIDataSource
 
-    baseroute: HttpUrl = Field(..., title='API endpoint', description='Baseroute URL')
+    baseroute: UrlStr = Field(..., title='API endpoint', description='Baseroute URL')
     cert: List[FilePath] = Field(
         None, title='Certificate', description='File path of your certificate if any'
     )

@@ -1,6 +1,6 @@
 import cx_Oracle
 import pandas as pd
-from pydantic import Field, SecretStr, constr, HttpUrl
+from pydantic import DSN, Field, SecretStr, constr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -14,7 +14,7 @@ class OracleSQLDataSource(ToucanDataSource):
 class OracleSQLConnector(ToucanConnector):
     data_source_model: OracleSQLDataSource
 
-    dsn: HttpUrl = Field(
+    dsn: DSN = Field(
         ...,
         description='A path following the '
         '<a href="https://en.wikipedia.org/wiki/Data_source_name">DSN pattern</a>. '
