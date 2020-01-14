@@ -4,11 +4,7 @@ import pytest
 import responses
 
 from toucan_connectors.common import transform_with_jq
-from toucan_connectors.http_api.http_api_connector import (
-    Auth,
-    HttpAPIConnector,
-    HttpAPIDataSource,
-)
+from toucan_connectors.http_api.http_api_connector import Auth, HttpAPIConnector, HttpAPIDataSource
 
 
 @pytest.fixture(scope='function')

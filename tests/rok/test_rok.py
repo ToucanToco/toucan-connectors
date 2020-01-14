@@ -3,7 +3,6 @@ import responses
 
 from toucan_connectors.rok.rok_connector import RokConnector, RokDataSource
 
-
 rds = RokDataSource(
     name='RokConnector',
     domain='RokData',
