@@ -52,7 +52,7 @@ classifiers = [
 
 setup(
     name='toucan_connectors',
-    version='0.28.3',
+    version='0.29.0',
     description='Toucan Toco Connectors',
     author='Toucan Toco',
     author_email='dev@toucantoco.com',
