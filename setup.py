@@ -18,6 +18,7 @@ extras_require = {
     'google_spreadsheet': ['gspread>=3', 'oauth2client'],
     'hive': ['pyhive[hive]'],
     'http_api': auth_deps,
+    'lightspeed': ['bearer'],
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3,<3.0'],
     'mysql': ['PyMySQL>=0.8.0'],

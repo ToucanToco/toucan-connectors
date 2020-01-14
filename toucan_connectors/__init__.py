@@ -71,6 +71,10 @@ CONNECTORS_REGISTRY = {
         'label': 'Http API',
         'logo': 'http_api/http-api.png',
     },
+    'Lightspeed': {
+        'connector': 'lightspeed.lightspeed_connector.LightspeedConnector',
+        'logo': 'lightspeed/lightspeed.png',
+    },
     'MicroStrategy': {
         'connector': 'micro_strategy.micro_strategy_connector.MicroStrategyConnector',
         'logo': 'micro_strategy/microstrategy.png',
