@@ -13,6 +13,7 @@ extras_require = {
     'google_big_query': ['pandas_gbq'],
     'google_cloud_mysql': ['PyMySQL>=0.8.0'],
     'google_my_business': ['google-api-python-client>=1.7.5'],
+    'google_sheets': ['bearer'],
     'google_spreadsheet': ['gspread>=3', 'oauth2client'],
     'hive': ['pyhive[hive]'],
     'http_api': auth_deps,
