@@ -12,6 +12,7 @@ CONNECTORS_CATALOGUE = {
     'GoogleBigQuery': 'google_big_query.google_big_query_connector.GoogleBigQueryConnector',
     'GoogleCloudMySQL': 'google_cloud_mysql.google_cloud_mysql_connector.GoogleCloudMySQLConnector',
     'google_my_business': 'google_my_business.google_my_business_connector.GoogleMyBusinessConnector',
+    'GoogleSheets': 'google_sheets.google_sheets_connector.GoogleSheetsConnector',
     'GoogleSpreadsheet': 'google_spreadsheet.google_spreadsheet_connector.GoogleSpreadsheetConnector',
     'Hive': 'hive.hive_connector.HiveConnector',
     'HttpAPI': 'http_api.http_api_connector.HttpAPIConnector',
