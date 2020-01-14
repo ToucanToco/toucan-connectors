@@ -1,4 +1,5 @@
 import base64
+import mimetypes
 from contextlib import suppress
 from importlib import import_module
 from pathlib import Path
@@ -114,6 +115,14 @@ CONNECTORS_REGISTRY = {
 }
 
 
+def html_base64_image_src(image_path: str) -> str:
+    """From a file path, create the html src to be used in a browser"""
+    with open(image_path, 'rb') as image_file:
+        base64_image = base64.b64encode(image_file.read()).decode('utf8')
+    mimetype, _ = mimetypes.guess_type(image_path)
+    return f'data:{mimetype};base64, {base64_image}'
+
+
 for connector_type, connector_infos in CONNECTORS_REGISTRY.items():
     # Remove the path of the connector and set the connector class if available
     connector_path = connector_infos.pop('connector')
@@ -133,6 +142,5 @@ for connector_type, connector_infos in CONNECTORS_REGISTRY.items():
         connector_infos['label'] = connector_type
 
     # Convert logo into base64
-    logo_relative_path = connector_infos.get('logo', 'default-logo.png')
-    with open(Path(__file__).parent / logo_relative_path, 'rb') as f:
-        connector_infos['logo'] = base64.b64encode(f.read()).decode('utf8')
+    logo_path = Path(__file__).parent / connector_infos.get('logo', 'default-logo.png')
+    connector_infos['logo'] = html_base64_image_src(str(logo_path.resolve()))
