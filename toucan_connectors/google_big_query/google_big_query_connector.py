@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 import pandas_gbq
-from pydantic import Schema
+from pydantic import Field
 
 from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -15,7 +15,7 @@ class Dialect(str, Enum):
 
 
 class GoogleBigQueryDataSource(ToucanDataSource):
-    query: str = Schema(
+    query: str = Field(
         ...,
         description='You can find details on the query syntax '
         '<a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax">here</a>',
@@ -26,7 +26,7 @@ class GoogleBigQueryDataSource(ToucanDataSource):
 class GoogleBigQueryConnector(ToucanConnector):
     data_source_model: GoogleBigQueryDataSource
 
-    credentials: GoogleCredentials = Schema(
+    credentials: GoogleCredentials = Field(
         ...,
         title='Google Credentials',
         description='For authentication, download an authentication file from your '
@@ -36,13 +36,13 @@ class GoogleBigQueryConnector(ToucanConnector):
         'You should use "service_account" credentials, which is the preferred type of credentials '
         'to use when authenticating on behalf of a service or application',
     )
-    dialect: Dialect = Schema(
+    dialect: Dialect = Field(
         Dialect.legacy,
         description='BigQuery allows you to choose between standard and legacy SQL as query syntax. '
         'The preferred query syntax is the default standard SQL. You can find more information on this '
         '<a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax">documentation</a>',
     )
-    scopes: List[str] = Schema(
+    scopes: List[str] = Field(
         ['https://www.googleapis.com/auth/bigquery'],
         title='SQL dialect',
         description='OAuth 2.0 scopes define the level of access you need to request '

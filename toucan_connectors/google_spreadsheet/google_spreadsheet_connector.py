@@ -3,23 +3,23 @@ from typing import List
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic import Schema
+from pydantic import Field
 
 from toucan_connectors.google_credentials import GoogleCredentials
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class GoogleSpreadsheetDataSource(ToucanDataSource):
-    spreadsheet_id: str = Schema(
+    spreadsheet_id: str = Field(
         ...,
         title='Spreadsheet ID',
         description='You can find this ID in the URL of your spreadsheet, '
         'just after the base path "https://docs.google.com/spreadsheets/d/"',
     )
-    sheetname: str = Schema(
+    sheetname: str = Field(
         None, description='If not specified, the first sheet will be extracted by default'
     )
-    skip_rows: int = Schema(
+    skip_rows: int = Field(
         0,
         title='Number of rows to skip',
         description='If the first rows of your spreadsheet do not contain relevant data',
@@ -35,7 +35,7 @@ class GoogleSpreadsheetConnector(ToucanConnector):
 
     data_source_model: GoogleSpreadsheetDataSource
 
-    credentials: GoogleCredentials = Schema(
+    credentials: GoogleCredentials = Field(
         ...,
         title='Google Credentials',
         description='For authentication, download an authentication file from your '
@@ -45,7 +45,7 @@ class GoogleSpreadsheetConnector(ToucanConnector):
         'You should use "service_account" credentials, which is the preferred type of credentials '
         'to use when authenticating on behalf of a service or application',
     )
-    scope: List[str] = Schema(
+    scope: List[str] = Field(
         [
             'https://www.googleapis.com/auth/drive',
             'https://www.googleapis.com/auth/spreadsheets',

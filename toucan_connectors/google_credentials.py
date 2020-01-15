@@ -8,12 +8,12 @@ CREDENTIALS_INFO_MESSAGE = (
 
 
 class GoogleCredentials(BaseModel):
-    type: str = Schema(
+    type: str = Field(
         'service_account', title='Service account', description=CREDENTIALS_INFO_MESSAGE
     )
-    project_id: str = Schema(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
-    private_key_id: str = Schema(..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE)
-    private_key: str = Schema(
+    project_id: str = Field(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
+    private_key_id: str = Field(..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE)
+    private_key: str = Field(
         ...,
         title='Private Key',
         description=f'A private key in the form '
@@ -31,10 +31,6 @@ class GoogleCredentials(BaseModel):
         title='Token URI',
         description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
     )
-<<<<<<< HEAD
-    auth_provider_x509_cert_url: UrlStr = Schema(
-    auth_provider_x509_cert_url: HttpUrl = Field(
-=======
     auth_provider_x509_cert_url: UrlStr = Field(
         'https://www.googleapis.com/oauth2/v1/certs',
         title='Authentication provider X509 certificate URL',
@@ -42,7 +38,6 @@ class GoogleCredentials(BaseModel):
     )
     client_x509_cert_url: UrlStr = Field(
         ..., title='Client X509 certification URL', description=CREDENTIALS_INFO_MESSAGE,
->>>>>>> Revert "Replace UrlStr with UrlHTTP to improve URL/URI parsing logic"
     )
     @validator('private_key')
     def unescape_break_lines(cls, v):

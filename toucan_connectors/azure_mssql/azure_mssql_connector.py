@@ -1,17 +1,17 @@
 import re
 
 import pandas as pd
-import pyodbc
-from pydantic import Schema, SecretStr, constr
+from pydantic import Field, SecretStr, constr
 
+import pyodbc
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 CLOUD_HOST = 'database.windows.net'
 
 
 class AzureMSSQLDataSource(ToucanDataSource):
-    database: str = Schema(..., description='The name of the database you want to query')
-    query: constr(min_length=1) = Schema(
+    database: str = Field(..., description='The name of the database you want to query')
+    query: constr(min_length=1) = Field(
         ..., description='You can write your SQL query here', widget='sql'
     )
 
@@ -23,15 +23,15 @@ class AzureMSSQLConnector(ToucanConnector):
 
     data_source_model: AzureMSSQLDataSource
 
-    host: str = Schema(
+    host: str = Field(
         ...,
         description='The domain name (preferred option as more dynamic) or '
         'the hardcoded IP address of your database server',
     )
 
-    user: str = Schema(..., description='Your login username')
-    password: SecretStr = Schema(..., description='Your login password')
-    connect_timeout: int = Schema(
+    user: str = Field(..., description='Your login username')
+    password: SecretStr = Field(..., description='Your login password')
+    connect_timeout: int = Field(
         None,
         title='Connection timeout',
         description='You can set a connection timeout in seconds here, i.e. the maximum length of '

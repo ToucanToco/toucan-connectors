@@ -1,7 +1,8 @@
 import pandas as pd
+from pydantic import Field, UrlStr
+
 from odata import ODataService
 from odata.metadata import MetaData
-from pydantic import Field, UrlStr
 
 from toucan_connectors.auth import Auth
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -19,13 +20,13 @@ MetaData.__init__ = metadata_init_patched
 
 
 class ODataDataSource(ToucanDataSource):
-    entity: str = Schema(
+    entity: str = Field(
         ...,
         description='The entity path that will be appended to your baseroute URL. '
         'For example "geo/countries". For more details, see this '
         '<a href="https://www.odata.org/getting-started/basic-tutorial/">tutorial</a>',
     )
-    query: dict = Schema(
+    query: dict = Field(
         ...,
         description='JSON object of parameters with parameter name as key and value as value. '
         'For example {"$filter": "my_value", "$skip": 100} '
