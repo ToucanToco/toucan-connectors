@@ -3,11 +3,7 @@ from typing import List, Union
 
 import pandas as pd
 from jq import jq
-<<<<<<< HEAD
-from pydantic import BaseModel, FilePath, Field, UrlStr
-=======
-from pydantic import BaseModel, Field, FilePath, UrlStr
->>>>>>> Rename Schema with Field
+from pydantic import BaseModel, Field, FilePath, HttpUrl
 from requests import Session
 
 from toucan_connectors.auth import Auth
@@ -83,22 +79,18 @@ class HttpAPIDataSource(ToucanDataSource):
     data: Union[str, dict] = Field(
         None, description='JSON object to send in the body of the HTTP request'
     )
-<<<<<<< HEAD
-    filter: str = FilterSchema
-=======
     filter: str = Field(
         '.',
         description='You can apply filters to json response if data is nested. As we rely on a '
         'library called jq, we suggest the refer to the dedicated '
         '<a href="https://2.python-requests.org//en/master/user/authentication/">documentation</a>',
     )
->>>>>>> Rename Schema with Field
 
 
 class HttpAPIConnector(ToucanConnector):
     data_source_model: HttpAPIDataSource
 
-    baseroute: UrlStr = Field(..., title='API endpoint', description='Baseroute URL')
+    baseroute: HttpUrl = Field(..., title='API endpoint', description='Baseroute URL')
     cert: List[FilePath] = Field(
         None, title='Certificate', description='File path of your certificate if any'
     )

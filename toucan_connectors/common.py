@@ -5,7 +5,7 @@ from copy import deepcopy
 
 from jinja2 import Environment, StrictUndefined, Template, meta
 from jq import jq
-from pydantic import Schema
+from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
 
 RE_PARAM = r'%\(([^(%\()]*)\)s'
@@ -284,7 +284,7 @@ def transform_with_jq(data: object, jq_filter: str) -> list:
     return data
 
 
-FilterSchema = Schema(
+FilterSchema = Field(
     '.',
     description='You can apply filters to json response if data is nested. As we rely on a '
     'library called jq, we suggest the refer to the dedicated '

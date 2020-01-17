@@ -2,7 +2,7 @@ from enum import Enum
 
 import pandas as pd
 from pandas.io.json import json_normalize
-from pydantic import Field, SecretStr, UrlStr
+from pydantic import Field, SecretStr, HttpUrl
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -62,7 +62,7 @@ class MicroStrategyConnector(ToucanConnector):
 
     data_source_model: MicroStrategyDataSource
 
-    base_url: UrlStr = Field(
+    base_url: HttpUrl = Field(
         ...,
         title='API base URL',
         description='The URL of your MicroStrategy environment API. For '

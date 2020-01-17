@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, UrlStr, validator
+from pydantic import BaseModel, Field, HttpUrl, validator
 
 CREDENTIALS_INFO_MESSAGE = (
     'This information is provided in your '
@@ -21,22 +21,22 @@ class GoogleCredentials(BaseModel):
     )
     client_email: str = Field(..., title='Client email', description=CREDENTIALS_INFO_MESSAGE)
     client_id: str = Field(..., title='Client ID', description=CREDENTIALS_INFO_MESSAGE)
-    auth_uri: UrlStr = Field(
+    auth_uri: HttpUrl = Field(
         'https://accounts.google.com/o/oauth2/auth',
         title='Authentication URI',
         description=CREDENTIALS_INFO_MESSAGE,
     )
-    token_uri: UrlStr = Field(
+    token_uri: HttpUrl = Field(
         'https://oauth2.googleapis.com/token',
         title='Token URI',
         description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
     )
-    auth_provider_x509_cert_url: UrlStr = Field(
+    auth_provider_x509_cert_url: HttpUrl = Field(
         'https://www.googleapis.com/oauth2/v1/certs',
         title='Authentication provider X509 certificate URL',
         description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
     )
-    client_x509_cert_url: UrlStr = Field(
+    client_x509_cert_url: HttpUrl = Field(
         ..., title='Client X509 certification URL', description=CREDENTIALS_INFO_MESSAGE,
     )
     @validator('private_key')

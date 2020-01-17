@@ -1,6 +1,5 @@
 from toucan_connectors.google_credentials import GoogleCredentials
 
-
 def test_unespace_break_lines():
     conf = {
         'type': 'service_account',
