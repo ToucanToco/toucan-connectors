@@ -198,7 +198,8 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     @property
     def retry_decorator(self):
-        return RetryPolicy(**self.retry_policy.dict(), retry_on=self._retry_on, logger=self.logger)
+        kwargs = {**self.retry_policy.dict(), 'retry_on': self._retry_on, 'logger': self.logger}
+        return RetryPolicy(**kwargs)
 
     @abstractmethod
     def _retrieve_data(self, data_source: ToucanDataSource):
