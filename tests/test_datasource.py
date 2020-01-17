@@ -110,4 +110,6 @@ def test_get_form():
             'parameters': {'title': 'Parameters', 'type': 'object'},
         },
         'required': ['domain', 'name'],
+        'additionalProperties': False
     }
+
