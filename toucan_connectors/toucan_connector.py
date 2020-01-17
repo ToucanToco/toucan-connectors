@@ -9,10 +9,14 @@ from typing import Iterable, List, NamedTuple, Optional, Type
 
 import pandas as pd
 import tenacity as tny
-from bearer import Bearer
 from pydantic import BaseModel
 
 from toucan_connectors.common import render_raw_permissions
+
+try:
+    from bearer import Bearer
+except ImportError:
+    pass
 
 
 class DataSlice(NamedTuple):
