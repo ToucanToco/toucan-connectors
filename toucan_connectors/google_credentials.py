@@ -39,6 +39,7 @@ class GoogleCredentials(BaseModel):
     client_x509_cert_url: HttpUrl = Field(
         ..., title='Client X509 certification URL', description=CREDENTIALS_INFO_MESSAGE,
     )
+
     @validator('private_key')
     def unescape_break_lines(cls, v):
         """

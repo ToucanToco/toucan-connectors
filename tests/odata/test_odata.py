@@ -2,8 +2,8 @@ import socket
 
 import pandas as pd
 import pytest
-
 from odata.metadata import MetaData
+
 from toucan_connectors.odata.odata_connector import ODataConnector, ODataDataSource
 
 

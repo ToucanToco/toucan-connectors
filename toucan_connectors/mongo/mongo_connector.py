@@ -138,10 +138,13 @@ class MongoConnector(ToucanConnector):
 
     def _get_mongo_client_kwargs(self):
         mongo_client_kwargs = self.dict().copy()
-        for field in ToucanConnector.schema()['properties']:
+        for field in ToucanConnector.schema()["properties"]:
             mongo_client_kwargs.pop(field)
         if mongo_client_kwargs['password'] is not None:
             mongo_client_kwargs['password'] = mongo_client_kwargs['password'].get_secret_value()
+
+        if mongo_client_kwargs["password"] is not None:
+            mongo_client_kwargs["password"] = mongo_client_kwargs["password"].get_secret_value()
 
         # prevent optional parameters to be sent to MongoClient as None
         mongo_client_kwargs = {k: v for (k, v) in mongo_client_kwargs.items() if v is not None}

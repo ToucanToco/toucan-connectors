@@ -2,7 +2,7 @@ import pandas as pd
 import requests
 from pydantic import Field
 
-from toucan_connectors.common import transform_with_jq, FilterSchema
+from toucan_connectors.common import FilterSchema, transform_with_jq
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 

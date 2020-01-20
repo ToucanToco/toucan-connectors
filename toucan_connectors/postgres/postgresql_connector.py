@@ -1,7 +1,7 @@
 import pandas as pd
+import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr
 
-import psycopg2 as pgsql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 

@@ -1,9 +1,9 @@
 import re
 
 import pandas as pd
+import pyodbc
 from pydantic import Field, SecretStr, constr
 
-import pyodbc
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 CLOUD_HOST = 'database.windows.net'

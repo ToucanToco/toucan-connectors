@@ -1,8 +1,7 @@
 import pandas as pd
-from pydantic import Field, HttpUrl
-
 from odata import ODataService
 from odata.metadata import MetaData
+from pydantic import Field, HttpUrl
 
 from toucan_connectors.auth import Auth
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource

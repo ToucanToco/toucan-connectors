@@ -2,7 +2,7 @@ from enum import Enum
 
 import pandas as pd
 from pandas.io.json import json_normalize
-from pydantic import Field, SecretStr, HttpUrl
+from pydantic import Field, HttpUrl, SecretStr
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
