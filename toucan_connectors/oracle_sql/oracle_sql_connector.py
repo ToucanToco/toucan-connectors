@@ -1,6 +1,6 @@
 import cx_Oracle
 import pandas as pd
-from pydantic import DSN, Field, SecretStr, constr
+from pydantic import Field, SecretStr, constr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
