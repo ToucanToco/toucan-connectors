@@ -31,7 +31,7 @@ def test_spreadsheet(mocker):
     integration_mock.assert_called_once_with('google_sheets')
     auth_mock.assert_called_once_with('qweqwe-1111-1111-1111-qweqweqwe')
     get_mock.assert_called_once_with(
-        '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU/values/Constants'
+        '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU/values/Constants', query=None
     )
     assert df.shape == (3, 2)
     assert df.columns.tolist() == [0, 1]

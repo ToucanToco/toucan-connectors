@@ -204,13 +204,15 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         if 'bearer_integration' in cls.__fields__:
             cls.bearer_integration = cls.__fields__['bearer_integration'].default
 
-    def bearer_oauth_get_endpoint(self, endpoint: str):
+    def bearer_oauth_get_endpoint(
+        self, endpoint: str, query: Optional[dict] = None,
+    ):
         """Generic method to get an endpoint for an OAuth API integrated with Bearer"""
         return (
             Bearer(os.environ.get('BEARER_API_KEY'))
             .integration(self.bearer_integration)
             .auth(self.bearer_auth_id)
-            .get(endpoint)
+            .get(endpoint, query=query)
             .json()
         )
 
