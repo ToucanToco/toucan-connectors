@@ -1,7 +1,7 @@
 import socket
 import time
 from contextlib import suppress
-from os import environ, path
+from os import environ, getenv, path
 
 import pytest
 import yaml
@@ -136,3 +136,19 @@ def service_container(unused_port, container_starter):
         return container_starter(**params)
 
     return f
+
+
+@pytest.fixture
+def bearer_api_key():
+    bearer_api_key = getenv('BEARER_API_KEY')
+    if not bearer_api_key:
+        pytest.skip("'BEARER_API_KEY' is not set")
+    return bearer_api_key
+
+
+@pytest.fixture
+def bearer_auth_id(bearer_api_key):
+    bearer_auth_id = getenv('BEARER_AUTH_ID')
+    if not bearer_auth_id:
+        pytest.skip("'BEARER_AUTH_ID' is not set")
+    return bearer_auth_id
