@@ -38,7 +38,10 @@ class AircallConnector(ToucanConnector):
         page_raw_data = self.bearer_oauth_get_endpoint(
             endpoint, {**query, 'per_page': per_page, 'page': page_number}
         )
-        is_last_page = page_raw_data['meta']['next_page_link'] is None
+        try:
+            is_last_page = page_raw_data['meta']['next_page_link'] is None
+        except KeyError:
+            is_last_page = True
         page_data = jq(jq_filter).transform(page_raw_data)
         if isinstance(page_data, dict):
             page_data = [page_data]

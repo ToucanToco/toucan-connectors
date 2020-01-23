@@ -68,3 +68,15 @@ def test_aircall_params_limit_filter(con):
     assert df.shape == (10, 3)
     assert list(df.columns) == ['id', 'duration', 'ended_at']
     assert df.ended_at.sort_values(ascending=True).equals(df.ended_at)
+
+
+def test_aircall_params_no_meta(con, mocker):
+    """It should work if no meta is sent"""
+    ds = AircallDataSource(name='test_name', domain='test_domain', endpoint='/calls/1',)
+    mocker.patch(
+        'toucan_connectors.toucan_connector.ToucanConnector.bearer_oauth_get_endpoint',
+        return_value={'id': 1},
+    )
+
+    df = con.get_df(ds)
+    assert len(df) == 1
