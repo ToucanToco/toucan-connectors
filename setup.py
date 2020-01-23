@@ -3,9 +3,11 @@ import glob
 from setuptools import find_packages, setup
 
 auth_deps = ['oauthlib', 'requests_oauthlib']
+bearer_deps = ['bearer']
+
 extras_require = {
     'adobe': ['adobe_analytics'],
-    'aircall': ['bearer'],
+    'aircall': bearer_deps,
     'azure_mssql': ['pyodbc'],
     'dataiku': ['dataiku-api-client'],
     'elasticsearch': ['elasticsearch'],
@@ -14,11 +16,11 @@ extras_require = {
     'google_big_query': ['pandas_gbq'],
     'google_cloud_mysql': ['PyMySQL>=0.8.0'],
     'google_my_business': ['google-api-python-client>=1.7.5'],
-    'google_sheets': ['bearer'],
+    'google_sheets': bearer_deps,
     'google_spreadsheet': ['gspread>=3', 'oauth2client'],
     'hive': ['pyhive[hive]'],
     'http_api': auth_deps,
-    'lightspeed': ['bearer'],
+    'lightspeed': bearer_deps,
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pymssql>=2.1.3,<3.0'],
     'mysql': ['PyMySQL>=0.8.0'],
