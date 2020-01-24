@@ -1,12 +1,12 @@
 import pandas as pd
 import pyhdb
-from pydantic import Schema, SecretStr, constr
+from pydantic import Field, SecretStr, constr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class SapHanaDataSource(ToucanDataSource):
-    query: constr(min_length=1) = Schema(
+    query: constr(min_length=1) = Field(
         ..., description='You can write your SQL query here', widget='sql'
     )
 
@@ -18,15 +18,15 @@ class SapHanaConnector(ToucanConnector):
 
     data_source_model: SapHanaDataSource
 
-    host: str = Schema(
+    host: str = Field(
         ...,
         description='The domain name (preferred option as more dynamic) or '
         'the hardcoded IP address of your database server',
     )
 
-    port: int = Schema(..., description='The listening port of your database server')
-    user: str = Schema(..., description='Your login username')
-    password: SecretStr = Schema(..., description='Your login password')
+    port: int = Field(..., description='The listening port of your database server')
+    user: str = Field(..., description='Your login username')
+    password: SecretStr = Field(..., description='Your login password')
 
     def _retrieve_data(self, data_source):
         connection = pyhdb.connect(

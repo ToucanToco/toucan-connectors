@@ -2,7 +2,7 @@ from enum import Enum
 
 import pandas as pd
 from pandas.io.json import json_normalize
-from pydantic import Schema, SecretStr, UrlStr
+from pydantic import Field, SecretStr, UrlStr
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -33,21 +33,21 @@ class MicroStrategyDataSource(ToucanDataSource):
     Specify whether you want to use the `cube` or `reports` endpoints and a microstrategy doc id.
     """
 
-    id: str = Schema(
+    id: str = Field(
         None, title='Cube / Report ID', description='In the form "BD91AF40492D2C188240DEAF7D9D1510"'
     )
     dataset: Dataset
-    viewfilter: dict = Schema(
+    viewfilter: dict = Field(
         None,
         title='View filters',
         description='You can apply Microstrategy View Filters here. Please find configuration details in our '
         '<a href="https://docs.toucantoco.com/concepteur/power-apps-with-data/02-add-data-to-small-app.html#microstrategy-connector"> '
         'documentation</a>',
     )
-    offset: int = Schema(
+    offset: int = Field(
         0, description='If you need to skip results, specify here the number of rows to skip'
     )
-    limit: int = Schema(
+    limit: int = Field(
         100,
         title='Limit the number of results to:',
         description='Specify -1 if you do not want to limit the number of returned rows',
@@ -62,7 +62,7 @@ class MicroStrategyConnector(ToucanConnector):
 
     data_source_model: MicroStrategyDataSource
 
-    base_url: UrlStr = Schema(
+    base_url: UrlStr = Field(
         ...,
         title='API base URL',
         description='The URL of your MicroStrategy environment API. For '
@@ -70,9 +70,9 @@ class MicroStrategyConnector(ToucanConnector):
         '"https://demo.microstrategy.com/MicroStrategyLibrary2/api/"',
         examples=['https://demo.microstrategy.com/MicroStrategyLibrary2/api/'],
     )
-    username: str = Schema(..., description='Your login username')
-    password: SecretStr = Schema(None, description='Your login password')
-    project_id: str = Schema(
+    username: str = Field(..., description='Your login username')
+    password: SecretStr = Field(None, description='Your login password')
+    project_id: str = Field(
         ...,
         title='projectID',
         description='The unique ID of your MicroStrategy project. '

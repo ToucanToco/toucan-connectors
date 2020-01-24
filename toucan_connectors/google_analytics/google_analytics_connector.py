@@ -3,7 +3,7 @@ from typing import List
 import pandas as pd
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic import BaseModel, Schema
+from pydantic import BaseModel, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.google_credentials import GoogleCredentials
@@ -158,7 +158,7 @@ def get_query_results(service, report_request):
 
 
 class GoogleAnalyticsDataSource(ToucanDataSource):
-    report_request: ReportRequest = Schema(
+    report_request: ReportRequest = Field(
         ...,
         title='Report request',
         description='See the complete '
@@ -169,7 +169,7 @@ class GoogleAnalyticsDataSource(ToucanDataSource):
 class GoogleAnalyticsConnector(ToucanConnector):
     data_source_model: GoogleAnalyticsDataSource
 
-    credentials: GoogleCredentials = Schema(
+    credentials: GoogleCredentials = Field(
         ...,
         title='Google Credentials',
         description='For authentication, download an authentication file from your '
@@ -179,7 +179,7 @@ class GoogleAnalyticsConnector(ToucanConnector):
         'You should use "service_account" credentials, which is the preferred type of credentials '
         'to use when authenticating on behalf of a service or application',
     )
-    scope: List[str] = Schema(
+    scope: List[str] = Field(
         [SCOPE],
         description='OAuth 2.0 scopes define the level of access you need to '
         'request the Google APIs. For more information, see this '

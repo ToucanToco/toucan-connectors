@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Union
 
 import pandas as pd
-from pydantic import BaseModel, FilePath, Schema, UrlStr
+from pydantic import BaseModel, Field, FilePath, UrlStr
 from requests import Session
 
 from toucan_connectors.auth import Auth
@@ -21,24 +21,24 @@ class Method(str, Enum):
 
 
 class Template(BaseModel):
-    headers: dict = Schema(
+    headers: dict = Field(
         None,
         description='JSON object of HTTP headers to send with every HTTP request',
         examples=['{ "content-type": "application/xml" }'],
     )
-    params: dict = Schema(
+    params: dict = Field(
         None,
         description='JSON object of parameters to send in the query string of every HTTP request '
         '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    json_: dict = Schema(
+    json_: dict = Field(
         None,
         alias='json',
         description='JSON object of parameters to send in the body of every HTTP request',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    proxies: dict = Schema(
+    proxies: dict = Field(
         None,
         description='JSON object expressing a mapping of protocol or host to corresponding proxy',
         examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
@@ -46,36 +46,36 @@ class Template(BaseModel):
 
 
 class HttpAPIDataSource(ToucanDataSource):
-    url: str = Schema(
+    url: str = Field(
         ...,
         title='Endpoint URL',
         description='The URL path that will be appended to your baseroute URL. '
         'For example "geo/countries"',
     )
-    method: Method = Schema(Method.GET, title='HTTP Method')
-    headers: dict = Schema(
+    method: Method = Field(Method.GET, title='HTTP Method')
+    headers: dict = Field(
         None,
         description='JSON object of HTTP headers to send with every HTTP request',
         examples=['{ "content-type": "application/xml" }'],
     )
-    params: dict = Schema(
+    params: dict = Field(
         None,
         description='JSON object of parameters to send in the query string of this HTTP request '
         '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    json_: dict = Schema(
+    json_: dict = Field(
         None,
         alias='json',
         description='JSON object of parameters to send in the body of every HTTP request',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    proxies: dict = Schema(
+    proxies: dict = Field(
         None,
         description='JSON object expressing a mapping of protocol or host to corresponding proxy',
         examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
     )
-    data: Union[str, dict] = Schema(
+    data: Union[str, dict] = Field(
         None, description='JSON object to send in the body of the HTTP request'
     )
     filter: str = FilterSchema
@@ -84,12 +84,12 @@ class HttpAPIDataSource(ToucanDataSource):
 class HttpAPIConnector(ToucanConnector):
     data_source_model: HttpAPIDataSource
 
-    baseroute: UrlStr = Schema(..., title='Baseroute URL', description='Baseroute URL')
-    cert: List[FilePath] = Schema(
+    baseroute: UrlStr = Field(..., title='Baseroute URL', description='Baseroute URL')
+    cert: List[FilePath] = Field(
         None, title='Certificate', description='File path of your certificate if any'
     )
-    auth: Auth = Schema(None, title='Authentication type')
-    template: Template = Schema(
+    auth: Auth = Field(None, title='Authentication type')
+    template: Template = Field(
         None,
         description='You can provide a custom template that will be used for every HTTP request',
     )

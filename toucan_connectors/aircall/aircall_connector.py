@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple
 
 import pandas as pd
 from jq import jq
-from pydantic import Schema
+from pydantic import Field
 
 from toucan_connectors.common import FilterSchema, nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -11,13 +11,13 @@ PER_PAGE = 50
 
 
 class AircallDataSource(ToucanDataSource):
-    endpoint: str = Schema(
+    endpoint: str = Field(
         ...,
         title='Endpoint of the Aircall API',
         description='See https://developer.aircall.io/api-references/#endpoints',
     )
     filter: str = FilterSchema
-    limit: int = Schema(100, description='Limit of entries (-1 for no limit)', ge=-1)
+    limit: int = Field(100, description='Limit of entries (-1 for no limit)', ge=-1)
     query: Optional[dict] = {}
 
 

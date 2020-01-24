@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import pymysql
-from pydantic import Schema, SecretStr, constr, create_model
+from pydantic import Field, SecretStr, constr, create_model
 from pymysql.constants import CR, ER
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
@@ -15,21 +15,21 @@ class MySQLDataSource(ToucanDataSource):
     Either `query` or `table` are required, both at the same time are not supported.
     """
 
-    database: str = Schema(..., description='The name of the database you want to query')
-    table: constr(min_length=1) = Schema(
+    database: str = Field(..., description='The name of the database you want to query')
+    table: constr(min_length=1) = Field(
         None,
         description='The name of the data table that you want to '
         'get (equivalent to "SELECT * FROM '
         'your_table")',
     )
-    query: constr(min_length=1) = Schema(
+    query: constr(min_length=1) = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
         'the "table" parameter above',
         widget='sql',
     )
-    follow_relations: bool = Schema(
+    follow_relations: bool = Field(
         False,
         description='Whether you want to perform automatic inner '
         'joins of related tables based on every foreign '
@@ -91,20 +91,20 @@ class MySQLConnector(ToucanConnector):
 
     data_source_model: MySQLDataSource
 
-    host: str = Schema(
+    host: str = Field(
         ...,
         description='The domain name (preferred option as more dynamic) or '
         'the hardcoded IP address of your database server',
     )
-    port: int = Schema(None, description='The listening port of your database server')
-    user: str = Schema(..., description='Your login username')
-    password: SecretStr = Schema(None, description='Your login password')
-    charset: str = Schema(
+    port: int = Field(None, description='The listening port of your database server')
+    user: str = Field(..., description='Your login username')
+    password: SecretStr = Field(None, description='Your login password')
+    charset: str = Field(
         'utf8mb4',
         title='Charset',
         description='Character encoding. You should generally let the default "utf8mb4" here.',
     )
-    connect_timeout: int = Schema(
+    connect_timeout: int = Field(
         None,
         title='Connection timeout',
         description='You can set a connection timeout in seconds here, '
