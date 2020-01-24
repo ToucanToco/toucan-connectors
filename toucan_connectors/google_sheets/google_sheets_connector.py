@@ -2,22 +2,22 @@ from contextlib import suppress
 from typing import Optional
 
 import pandas as pd
-from pydantic import Schema, create_model
+from pydantic import Field, create_model
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class GoogleSheetsDataSource(ToucanDataSource):
-    spreadsheet_id: str = Schema(
+    spreadsheet_id: str = Field(
         ...,
         title='ID of the spreadsheet',
         description='Can be found in your URL: '
         'https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...',
     )
-    sheet: Optional[str] = Schema(
+    sheet: Optional[str] = Field(
         None, title='Sheet title', description='Title of the desired sheet'
     )
-    header_row: int = Schema(
+    header_row: int = Field(
         0, title='Header row', description='Row of the header of the spreadsheet'
     )
 

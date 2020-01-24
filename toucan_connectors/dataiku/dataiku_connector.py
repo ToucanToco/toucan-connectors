@@ -2,7 +2,7 @@ from io import StringIO
 
 import dataikuapi
 import pandas as pd
-from pydantic import Schema
+from pydantic import Field
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -19,12 +19,12 @@ class DataikuConnector(ToucanConnector):
 
     data_source_model: DataikuDataSource
 
-    host: str = Schema(
+    host: str = Field(
         ...,
         description='The domain name (preferred option as more dynamic) or '
         'the hardcoded IP address of your Dataiku server',
     )
-    apiKey: str = Schema(..., title='API key')
+    apiKey: str = Field(..., title='API key')
     project: str
 
     def _retrieve_data(self, data_source: DataikuDataSource) -> pd.DataFrame:

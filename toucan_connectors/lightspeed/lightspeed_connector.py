@@ -1,13 +1,13 @@
 import pandas as pd
 from jq import jq
-from pydantic import Schema
+from pydantic import Field
 
 from toucan_connectors.common import FilterSchema, nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class LightspeedDataSource(ToucanDataSource):
-    endpoint: str = Schema(
+    endpoint: str = Field(
         ...,
         title='Endpoint of the Lightspeed API',
         description='See https://developers.lightspeedhq.com/retail/endpoints/Account/',

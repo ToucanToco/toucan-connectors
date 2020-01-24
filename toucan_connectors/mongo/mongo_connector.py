@@ -8,7 +8,7 @@ from bson.regex import Regex
 from bson.son import SON
 from cached_property import cached_property
 from jq import jq
-from pydantic import Schema, SecretStr, create_model, validator
+from pydantic import Field, SecretStr, create_model, validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.mongo.mongo_translator import MongoExpression
@@ -59,9 +59,9 @@ class MongoDataSource(ToucanDataSource):
     """Supports simple, multiples and aggregation queries as described in
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
 
-    database: str = Schema(..., description='The name of the database you want to query')
-    collection: str = Schema(..., description='The name of the collection you want to query')
-    query: Union[dict, list] = Schema(
+    database: str = Field(..., description='The name of the database you want to query')
+    collection: str = Field(..., description='The name of the collection you want to query')
+    query: Union[dict, list] = Field(
         {},
         description='A mongo query. See more details on the Mongo '
         'Aggregation Pipeline in the MongoDB documentation',
@@ -100,15 +100,15 @@ class MongoConnector(ToucanConnector):
 
     data_source_model: MongoDataSource
 
-    host: str = Schema(
+    host: str = Field(
         ...,
         description='The domain name (preferred option as more dynamic) or '
         'the hardcoded IP address of your database server',
     )
-    port: Optional[int] = Schema(None, description='The listening port of your database server')
-    username: Optional[str] = Schema(None, description='Your login username')
-    password: Optional[SecretStr] = Schema(None, description='Your login password')
-    ssl: Optional[bool] = Schema(None, description='Create the connection to the server using SSL')
+    port: Optional[int] = Field(None, description='The listening port of your database server')
+    username: Optional[str] = Field(None, description='Your login username')
+    password: Optional[SecretStr] = Field(None, description='Your login password')
+    ssl: Optional[bool] = Field(None, description='Create the connection to the server using SSL')
 
     class Config:
         keep_untouched = (cached_property, _lru_cache_wrapper)

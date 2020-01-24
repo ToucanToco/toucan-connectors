@@ -1,6 +1,6 @@
 import pandas as pd
 import requests
-from pydantic import Schema
+from pydantic import Field
 
 from toucan_connectors.common import FilterSchema, transform_with_jq
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -8,7 +8,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 class RokDataSource(ToucanDataSource):
     database: str
-    query: str = Schema(..., description='GQL string')
+    query: str = Field(..., description='GQL string')
     filter: str = FilterSchema
 
 

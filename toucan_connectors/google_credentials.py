@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Schema, UrlStr, validator
+from pydantic import BaseModel, Field, UrlStr, validator
 
 CREDENTIALS_INFO_MESSAGE = (
     'This information is provided in your '
@@ -8,35 +8,35 @@ CREDENTIALS_INFO_MESSAGE = (
 
 
 class GoogleCredentials(BaseModel):
-    type: str = Schema(
+    type: str = Field(
         'service_account', title='Service account', description=CREDENTIALS_INFO_MESSAGE
     )
-    project_id: str = Schema(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
-    private_key_id: str = Schema(..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE)
-    private_key: str = Schema(
+    project_id: str = Field(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
+    private_key_id: str = Field(..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE)
+    private_key: str = Field(
         ...,
         title='Private Key',
         description=f'A private key in the form '
         f'"-----BEGIN PRIVATE KEY-----\\nXXX...XXX\\n-----END PRIVATE KEY-----\\n". {CREDENTIALS_INFO_MESSAGE}',
     )
-    client_email: str = Schema(..., title='Client email', description=CREDENTIALS_INFO_MESSAGE)
-    client_id: str = Schema(..., title='Client ID', description=CREDENTIALS_INFO_MESSAGE)
-    auth_uri: UrlStr = Schema(
+    client_email: str = Field(..., title='Client email', description=CREDENTIALS_INFO_MESSAGE)
+    client_id: str = Field(..., title='Client ID', description=CREDENTIALS_INFO_MESSAGE)
+    auth_uri: UrlStr = Field(
         'https://accounts.google.com/o/oauth2/auth',
         title='Authentication URI',
         description=CREDENTIALS_INFO_MESSAGE,
     )
-    token_uri: UrlStr = Schema(
+    token_uri: UrlStr = Field(
         'https://oauth2.googleapis.com/token',
         title='Token URI',
         description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
     )
-    auth_provider_x509_cert_url: UrlStr = Schema(
+    auth_provider_x509_cert_url: UrlStr = Field(
         'https://www.googleapis.com/oauth2/v1/certs',
         title='Authentication provider X509 certificate URL',
         description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
     )
-    client_x509_cert_url: UrlStr = Schema(
+    client_x509_cert_url: UrlStr = Field(
         ..., title='Client X509 certification URL', description=CREDENTIALS_INFO_MESSAGE,
     )
 
