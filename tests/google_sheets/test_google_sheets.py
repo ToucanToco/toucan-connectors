@@ -42,12 +42,12 @@ def test_spreadsheet(mocker):
     assert df.columns.tolist() == ['country', 'city']
 
     assert con.schema()['properties']['bearer_auth_id'] == {
-        'title': 'Bearer_Auth_Id',
+        'title': 'Bearer Auth Id',
         'type': 'string',
     }
     assert con.schema()['properties']['bearer_integration'] == {
         'default': 'google_sheets',
-        'title': 'Bearer_Integration',
+        'title': 'Bearer Integration',
         'type': 'string',
     }
     assert con.schema()['required'] == ['name', 'bearer_auth_id']
