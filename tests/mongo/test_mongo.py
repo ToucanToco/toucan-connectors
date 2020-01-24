@@ -456,6 +456,6 @@ def test_validate_cache(mongo_connector):
     assert con1.validate_database('toucan') is None, 'the cache should validate the dropped db'
 
     # A new connector should have a fresh cache
-    con2 = con1.copy(deep=True)
+    con2 = con1.copy()
     with pytest.raises(UnkwownMongoDatabase):
         con2.validate_database('toucan')
