@@ -54,6 +54,32 @@ def mongo_datasource():
     return f
 
 
+def test_username_password():
+    # password not set
+    mongo_connector = MongoConnector(name='mycon', host='localhost', port=22)
+    assert mongo_connector._get_mongo_client_kwargs() == {'host': 'localhost', 'port': 22}
+
+    # password set to None
+    mongo_connector = MongoConnector(name='mycon', host='localhost', port=22, password=None)
+    assert mongo_connector._get_mongo_client_kwargs() == {'host': 'localhost', 'port': 22}
+
+    # password set without username
+    with pytest.raises(ValueError) as e:
+        MongoConnector(name='mycon', host='localhost', port=22, password='bibou')
+    assert 'username must be set' in str(e.value)
+
+    # password and user set
+    mongo_connector = MongoConnector(
+        name='mycon', host='localhost', port=22, username='pika', password='bibou'
+    )
+    assert mongo_connector._get_mongo_client_kwargs() == {
+        'host': 'localhost',
+        'port': 22,
+        'username': 'pika',
+        'password': 'bibou',
+    }
+
+
 def test_client_with_detailed_params():
     connector = MongoConnector(name='my_mongo_con', host='myhost', port='123')
     assert isinstance(connector.client, pymongo.MongoClient)

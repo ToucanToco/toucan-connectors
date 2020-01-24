@@ -114,10 +114,10 @@ class MongoConnector(ToucanConnector):
         keep_untouched = (cached_property, _lru_cache_wrapper)
 
     @validator('password')
-    def password_must_have_a_user(cls, v, values):
-        if values['username'] is None:
+    def password_must_have_a_user(cls, password, values):
+        if password is not None and values['username'] is None:
             raise ValueError('username must be set')
-        return v
+        return password
 
     def __hash__(self):
         return hash(id(self)) + hash(json.dumps(self._get_mongo_client_kwargs()))
