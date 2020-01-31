@@ -54,12 +54,18 @@ class GoogleSheetsConnector(ToucanConnector):
         # https://developers.google.com/sheets/api/samples/reading
         read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}'
         data = self.bearer_oauth_get_endpoint(read_sheet_endpoint)['values']
+        df = pd.DataFrame(data)
 
-        if data_source.header_row:
-            df = pd.DataFrame(
-                data[data_source.header_row :], columns=data[data_source.header_row - 1]
-            )
-        else:
-            df = pd.DataFrame(data)
+        # Since `data` is a list of lists, the columns are not set properly
+        # df =
+        #         0            1           2
+        #  0  animateur                  week
+        #  1    pika                      W1
+        #  2    bulbi                     W2
+        #
+        # We set the first row as the header by default and replace empty value by the index
+        # to avoid having errors when trying to jsonify it (two columns can't have the same value)
+        df.columns = [name or index for index, name in enumerate(df.iloc[data_source.header_row])]
+        df = df[data_source.header_row + 1 :]
 
         return df
