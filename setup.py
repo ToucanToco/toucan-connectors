@@ -1,4 +1,4 @@
-import glob
+from pathlib import Path
 
 from setuptools import find_packages, setup
 
@@ -52,19 +52,30 @@ classifiers = [
     'Programming Language :: Python :: 3.6',
 ]
 
+HERE = Path(__file__).resolve().parent
+
+
+def get_static_file_paths():
+    pkg = HERE / 'toucan_connectors'
+    paths = pkg.glob(f'**/*')
+    paths = [str(path.relative_to(pkg)) for path in paths]
+    return paths
+
+
 setup(
     name='toucan_connectors',
     version='0.30.2',
     description='Toucan Toco Connectors',
+    long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
+    long_description_content_type='text/markdown',
     author='Toucan Toco',
     author_email='dev@toucantoco.com',
     url='https://github.com/ToucanToco/toucan-connectors',
     license='BSD',
     classifiers=classifiers,
     packages=find_packages(include=['toucan_connectors', 'toucan_connectors.*']),
-    scripts=glob.glob('toucan_connectors/install_scripts/*.sh'),
     install_requires=install_requires,
     extras_require=extras_require,
-    include_package_data=True,
+    package_data={'toucan_connectors': get_static_file_paths()},
     zip_safe=False,
 )

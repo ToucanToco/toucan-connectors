@@ -1,6 +1,0 @@
-include doc/*.md
-include README.md
-include toucan_connectors/**/*.png
-include toucan_connectors/**/*.jpg
-include toucan_connectors/**/*.jpeg
-include toucan_connectors/**/*.svg
