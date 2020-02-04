@@ -87,6 +87,7 @@ CONNECTORS_REGISTRY = {
     },
     'MySQL': {'connector': 'mysql.mysql_connector.MySQLConnector', 'logo': 'mysql/mysql.png',},
     'OData': {'connector': 'odata.odata_connector.ODataConnector', 'logo': 'odata/odata.png',},
+    'ODBC': {'connector': 'odbc.odbc_connector.ODBCConnector', 'logo': 'toucan_toco/toucan.png'},
     'OracleSQL': {
         'connector': 'oracle_sql.oracle_sql_connector.OracleSQLConnector',
         'label': 'Oracle SQL',
