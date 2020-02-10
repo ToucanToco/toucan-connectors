@@ -64,7 +64,7 @@ class Auth(BaseModel):
         ...,
         description='As we rely on the python request lirary, we suggest that you '
         'refer to the dedicated '
-        '<a href="https://2.python-requests.org//en/master/user/authentication/">documentation</a> '
+        '<a href="https://2.python-requests.org/en/master/user/authentication/">documentation</a> '
         'for more details.',
         description_mimetype='text/html',
     )
