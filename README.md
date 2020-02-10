@@ -6,10 +6,13 @@
 [![codecov](https://codecov.io/gh/ToucanToco/toucan-connectors/branch/master/graph/badge.svg)](https://codecov.io/gh/ToucanToco/toucan-connectors)
 
 # Toucan Connectors
-[Toucan Toco](https://toucantoco.com/fr/) data connectors.
+[Toucan Toco](https://toucantoco.com/fr/) data connectors are plugins to the Toucan Toco platform,
+configured with dictionaries (cf. `DataSource` classe) and returning
+[Pandas DataFrames](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html).
 
 ## Setup
-In order to work you need `Python 3.6` (consider running `pip install -U pip setuptools` if needed)
+In order to work you need `make` and `Python 3.6`, `3.7` or `3.8` (consider
+running `pip install -U pip setuptools` if needed)
 You can then install:
 - the main dependencies by typing `pip install -e .`
 - the test requirements by typing `pip install -r requirements-testing.txt`
@@ -17,9 +20,13 @@ You can then install:
 You should be able to run basic tests `pytest tests/test_connector.py`
 
 :warning: On macOS, to test and use
-- `azure_mssql` and `mssql` connector, you must install `freetds` running for instance:  `brew install freetds`
-- `postgres`, you must install `postgresql` running for instance: `brew install postgres`
-  then you can install the library with `env LDFLAGS='-L/usr/local/lib -L/usr/local/opt/openssl/lib -L/usr/local/opt/readline/lib' pip install psycopg2`
+- `azure_mssql` and `mssql` connectors, you must install `freetds`
+running for instance `brew install freetds`.
+- `postgres` connector, you must install `postgresql` running for instance `brew install postgres`.
+You can install the library with `env LDFLAGS='-L/usr/local/lib -L/usr/local/opt/openssl/lib -L/usr/local/opt/readline/lib' pip install psycopg2`
+
+:warning: On Windows we know that the `jq` package is not available. Please consider an alternative,
+such as using a VM or a container.
 
 ## Testing a connector
 If you want to run the tests for another connector, you can install the extra dependencies  
@@ -40,15 +47,23 @@ $ make new_connector type=mytype
 `mytype` should be the name of a system we would like to build a connector for, 
 such as `MySQL` or `Hive` or `Magento`.
 
-#### Step 1
+#### Step 1 : Tests
 Open the folder in `tests` for the new connector. You can start writing your tests
-before implementing it. Please do not hesitate to add a docker image in
+before implementing it.
+
+Some connectors are tested with calls to the actual data systems that they target,
+for example `elasticsearch`, `mongo`, `mssql`. Other are tested with mocks of the
+classes or functions returning data that you are wrapping (see : `HttpAPI`, or
+`microstrategy`).
+
+If you have a container for your target system, please do not hesitate to add a docker image in
 the `docker-compose.yml`. You can then use the fixture `service_container` to automatically
 start the docker and shut it down for you!
 
-:warning: _If you don't have the docker images in local please run pytest with `--pull` to retrieve them_
+:warning: _The test runner assumes you have all the docker images locally,
+if not please run pytest with `--pull` to retrieve them_
 
-#### Step 2
+#### Step 2 : New connector
 Open the folder `mytype` in `toucan_connectors` for your new connector and
 create your classes
 
@@ -56,7 +71,7 @@ create your classes
 import pandas as pd
 
 # Careful here you need to import ToucanConnector from the deep path, not the __init__ path.
-from toucan_connectors.toucan_connector import ToucanDataSource, ToucanConnector
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class MyTypeDataSource(ToucanDataSource):
@@ -93,7 +108,7 @@ You can now generate and edit the documentation page for your connector:
 PYTHONPATH=. python doc/generate.py MyTypeConnector > doc/mytypeconnector.md
 ```
 
-#### Step 3
+#### Step 3 : Register your connector
 Add the main requirements to the `setup.py` in the `extras_require` dictionary:
 ```ini
 extras_require = {
@@ -103,6 +118,7 @@ extras_require = {
 ```
 If you need to add testing dependencies, add them to the `requirements-testing.txt` file.
 
-### Step 4
+### Step 4 : Create a pull request
 Make sure your new code is properly formatted by typing `make lint`.
 If it's not, please use `make format`!
+You can now create a pull request!
