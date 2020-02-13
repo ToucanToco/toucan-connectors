@@ -9,7 +9,7 @@ clean:
 .PHONY: install
 install:
 	pip3 install -U setuptools pip
-	pip3 install -r requirements-testing.txt
+	pip3 install -r requirements-testing.txt --ignore-installed
 	pip3 install '.[all]'
 
 .PHONY: format
