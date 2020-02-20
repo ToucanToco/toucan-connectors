@@ -14,8 +14,8 @@ def connector():
         name='myWorkdayConnector',
         type='Workday',
         tenant='umanis',
-        username='pcadoret',
-        password='Umanis2020@'
+        username='<username>',
+        password='<password>'
     )
 
 
@@ -112,7 +112,7 @@ def test_exceptions_wrong_password(data_source):
         name='myWorkdayConnector',
         type='Workday',
         tenant='umanis',
-        username='pcadoret',
+        username='<username>',
         password='WrongPassword'
     )
 
@@ -125,7 +125,7 @@ def test_exceptions_wrong_username(data_source):
         type='Workday',
         tenant='umanis',
         username='WrongUsername',
-        password='Umanis2020@'
+        password='<password>'
     )
 
     with pytest.raises(workday.exceptions.WorkdaySoapApiError):
@@ -137,8 +137,8 @@ def test_exceptions_wrong_tenant(data_source):
         name='myWorkdayConnector',
         type='Workday',
         tenant='WrongTenant',
-        username='pcadoret',
-        password='Umanis2020@'
+        username='<username>',
+        password='<password>'
     )
 
     with pytest.raises(workday.exceptions.WorkdaySoapApiError):
@@ -203,7 +203,7 @@ def test_exceptions_wrong_query(connector):
     with pytest.raises(TypeError):
         connector.get_df(data_sourceWrong)
 
-"""
+""" This test is not pertinent, as the "Service" name is an arbitrary string, just a key to store the WSDL URL in a dict
 def test_exceptions_wrong_service(connector):
     data_sourceWrong = WorkdayDataSource(
         name='myWorkdayDataSource',
