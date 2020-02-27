@@ -91,6 +91,7 @@ CONNECTORS_REGISTRY = {
         'label': 'Http API',
         'logo': 'http_api/http-api.png',
     },
+    'Indexima': {'connector': 'hive.hive_connector.HiveConnector', 'logo': 'hive/indexima.png',},
     'Lightspeed': {
         'connector': 'lightspeed.lightspeed_connector.LightspeedConnector',
         'logo': 'lightspeed/lightspeed.png',
