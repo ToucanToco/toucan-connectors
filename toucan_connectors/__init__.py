@@ -35,6 +35,11 @@ CONNECTORS_REGISTRY = {
         'connector': 'dataiku.dataiku_connector.DataikuConnector',
         'logo': 'dataiku/dataiku.png',
     },
+    'DatabricksDeltaLake': {
+        'connector': 'azure_mssql.azure_mssql_connector.AzureMSSQLConnector',
+        'label': 'Databricks Delta Lake',
+        'logo': 'databricks_delta_lake/databricks.png',
+    },
     'elasticsearch': {
         'connector': 'elasticsearch.elasticsearch_connector.ElasticsearchConnector',
         'label': 'Elasticsearch',
