@@ -40,6 +40,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Databricks Delta Lake',
         'logo': 'databricks_delta_lake/databricks.png',
     },
+    'Denodo': {
+        'connector': 'postgres.postgresql_connector.PostgresConnector',
+        'label': 'Denodo',
+        'logo': 'denodo/denodo.png',
+    },
     'elasticsearch': {
         'connector': 'elasticsearch.elasticsearch_connector.ElasticsearchConnector',
         'label': 'Elasticsearch',
