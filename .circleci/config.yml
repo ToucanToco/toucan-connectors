@@ -2,7 +2,8 @@ version: 2
 
 jobs:
   build:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
       - checkout
       - run:
@@ -20,19 +21,16 @@ jobs:
           name: Install azure_mssql dependencies
           command: sudo bash toucan_connectors/install_scripts/azure_mssql.sh
       - run:
-          name: Install python 3.6
+          name: Install python 3.6 and setup virtualenv
           command: |
-            sudo add-apt-repository -y ppa:deadsnakes/ppa
-            sudo apt-get update
-            sudo apt-get install python3.6
-            sudo apt install python3.6-dev
-            wget https://bootstrap.pypa.io/get-pip.py
-            sudo python3.6 get-pip.py
+            pyenv install 3.6.8
+            /opt/circleci/.pyenv/versions/3.6.8/bin/python3 -m venv ./venv
+            echo 'export PATH=/home/circleci/project/venv/bin:$PATH' >> $BASH_ENV
       - run:
           name: Install python librairies
           command: |
-            sudo make install
-            sudo pip3 install codecov
+            make install
+            pip3 install codecov
       - run:
           name: Pulling all docker images
           command: docker-compose -f tests/docker-compose.yml pull
