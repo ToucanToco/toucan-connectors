@@ -16,6 +16,11 @@ CONNECTORS_REGISTRY = {
         'connector': 'aircall.aircall_connector.AircallConnector',
         'logo': 'aircall/Aircall.svg',
     },
+    'AWSDocumentDB': {
+        'connector': 'mongo.mongo_connector.MongoConnector',
+        'label': 'Amazon Document DB',
+        'logo': 'aws/aws.png',
+    },
     'AzureMSSQL': {
         'connector': 'azure_mssql.azure_mssql_connector.AzureMSSQLConnector',
         'label': 'Microsoft Azure SQL',
