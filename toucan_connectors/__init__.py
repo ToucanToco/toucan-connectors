@@ -21,6 +21,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Amazon Document DB',
         'logo': 'aws/aws.png',
     },
+    'AWSRedshift': {
+        'connector': 'postgres.postgresql_connector.PostgresConnector',
+        'logo': 'Amazon Redshift',
+        'logo': 'aws/aws.png',
+    },
     'AzureMSSQL': {
         'connector': 'azure_mssql.azure_mssql_connector.AzureMSSQLConnector',
         'label': 'Microsoft Azure SQL',
