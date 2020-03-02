@@ -57,25 +57,25 @@ class WorkdayDataSource(ToucanDataSource):
     )
     request_references_param: dict = Field(
         None,
-        title='Request_Criteria for the query',
+        title='Request_References Parameter',
         description='Check https://community.workday.com/sites/default/files/file-hosting/productionapi/index.html',
         example="{'Absence_Input_Reference' : {'ID' : {'_value_1': '08d4a6121b760154a3c7d6e1600c6646','type': 'WID'}}}"
     )
     request_criteria_param: dict = Field(
         None,
-        title='Request_Criteria for the query',
+        title='Request Criteria Parameter',
         description='Check https://community.workday.com/sites/default/files/file-hosting/productionapi/index.html',
         example="{'Exclude_Inactive_Workers' : False}"
     )
     response_filter_param: dict = Field(
         {},
-        title='Request_Criteria for the query',
+        title='Response Filter Parameter',
         description='Check https://community.workday.com/sites/default/files/file-hosting/productionapi/index.html',
         example="{'As_Of_Effective_Date': effective_date,'As_Of_Entry_DateTime': effective_date}"
     )
     response_group_param: dict = Field(
         None,
-        title='Request_Criteria for the query',
+        title='Response Group Parameter',
         description='Check https://community.workday.com/sites/default/files/file-hosting/productionapi/index.html',
         example="{'Include_Reference' : True,'Include_Absence_Input_Data' : True}"
     )   
@@ -101,7 +101,7 @@ class WorkdayConnector(ToucanConnector):
         None,
         title='Password for authentification',
         description='Password for Credential authentification',
-        example='$ecreTP4s$w0rd!'
+        example='$eCre7P4s$w0rd!'
     )
 
 
@@ -116,7 +116,7 @@ class WorkdayConnector(ToucanConnector):
             auth = AnonymousAuthentication()
 
         apis = {
-            data_source.service: data_source.service_WSDL_URL
+            'bla': data_source.service_WSDL_URL
         }
 
         client = workday.WorkdayClient(
