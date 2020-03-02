@@ -116,7 +116,7 @@ class WorkdayConnector(ToucanConnector):
             auth = AnonymousAuthentication()
 
         apis = {
-            'bla': data_source.service_WSDL_URL
+            data_source.service: data_source.service_WSDL_URL
         }
 
         client = workday.WorkdayClient(
