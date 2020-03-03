@@ -126,7 +126,7 @@ CONNECTORS_REGISTRY = {
     },
     'Snowflake': {
         'connector': 'snowflake.snowflake_connector.SnowflakeConnector',
-        'logo': 'snowflake/snowflake.jpeg',
+        'logo': 'snowflake/snowflake.png',
     },
     'ToucanToco': {
         'connector': 'toucan_toco.toucan_toco_connector.ToucanTocoConnector',
