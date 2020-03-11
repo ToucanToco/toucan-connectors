@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple
 
 import pandas as pd
+from enum import Enum
 from jq import jq
 from pydantic import Field
 
@@ -8,6 +9,12 @@ from toucan_connectors.common import FilterSchema, nosql_apply_parameters_to_que
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 PER_PAGE = 50
+
+
+class AircallRoutes(str, Enum):
+    calls = "calls"
+    tags = "tags"
+    teams = "teams"
 
 
 class AircallDataSource(ToucanDataSource):
@@ -19,6 +26,8 @@ class AircallDataSource(ToucanDataSource):
     filter: str = FilterSchema
     limit: int = Field(100, description='Limit of entries (-1 for no limit)', ge=-1)
     query: Optional[dict] = {}
+    partial_urls: List[str] = [partial_url for partial_url in AircallRoutes]
+    BASE_ROUTE = "https://api.aircall.io/v1"
 
 
 class AircallConnector(ToucanConnector):
@@ -30,6 +39,21 @@ class AircallConnector(ToucanConnector):
     data_source_model: AircallDataSource
     bearer_integration = 'aircall_oauth'
     bearer_auth_id: str
+
+    def build_aircall_url(self, BASE_ROUTE, partial_urls, route=""):
+        url = f'{BASE_ROUTE}/'
+
+        if route:
+            if route in partial_urls:
+                url += route
+            else:
+                err_str = "This is not a valid Aircall route"
+                print(err_str)
+                raise ValueError(err_str)
+        else:
+            url += "calls"
+
+        return url
 
     def _get_page_data(
         self, endpoint, query, jq_filter: str, page_number: int, per_page: int

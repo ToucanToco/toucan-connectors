@@ -1,11 +1,33 @@
 import pytest
-
 from toucan_connectors.aircall.aircall_connector import AircallConnector, AircallDataSource
 
 
 @pytest.fixture
 def con(bearer_auth_id):
     return AircallConnector(name='test_name', bearer_auth_id=bearer_auth_id)
+
+
+def test_build_aircall_url(mocker):
+    """This tests the url builder inside aircall connector"""
+    fake_conn = AircallConnector(name="mah_test", bearer_auth_id="abc123efg")
+    ds = AircallDataSource(
+        name="mah_ds",
+        domain="test_domain",
+        endpoint="/calls"
+    )
+    BASE_ROUTE = ds.BASE_ROUTE
+    partial_urls = ds.partial_urls
+
+    fake_url_1 = fake_conn.build_aircall_url(BASE_ROUTE, partial_urls, "teams")
+    assert fake_url_1 == "https://api.aircall.io/v1/teams"
+    assert fake_url_1 != "https://api.aircall.io/v1/foo"
+
+    fake_url_2 = fake_conn.build_aircall_url(BASE_ROUTE, partial_urls)
+    assert fake_url_2 != "https://api.aircall.io/v1/teams"
+    assert fake_url_2 == "https://api.aircall.io/v1/calls"
+
+    with pytest.raises(ValueError):
+        fake_conn.build_aircall_url(BASE_ROUTE, partial_urls, "schwing")
 
 
 def test_aircall_params_default_limit(con, mocker):
