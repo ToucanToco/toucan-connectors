@@ -116,6 +116,9 @@ fake_teams = [
 
 
 def test_build_full_user_list():
+    """
+    Tests the functions that concatenate information from users and teams
+    """
     fake_full_user_list = build_full_user_list(fake_users, fake_teams)
 
     assert len(fake_full_user_list) == 4
@@ -126,7 +129,6 @@ def test_build_full_user_list():
     assert first_fake_user.get("team") is not None
 
     # check that users in common between both lists are not added twice
-
     fake_dup_user_id = 456
     fake_dup_user_list = [fake_user for fake_user in fake_full_user_list if fake_user["id"] == fake_dup_user_id]
 

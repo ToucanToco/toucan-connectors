@@ -19,15 +19,28 @@ def test_build_aircall_url(mocker):
     partial_urls = ds.partial_urls
 
     fake_url_1 = fake_conn.build_aircall_url(BASE_ROUTE, partial_urls, "teams")
-    assert fake_url_1 == "https://api.aircall.io/v1/teams"
-    assert fake_url_1 != "https://api.aircall.io/v1/foo"
+    assert fake_url_1 == "https://156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@api.aircall.io/v1/teams"
+    assert fake_url_1 != "https://156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@api.aircall.io/v1/foo"
 
     fake_url_2 = fake_conn.build_aircall_url(BASE_ROUTE, partial_urls)
-    assert fake_url_2 != "https://api.aircall.io/v1/teams"
-    assert fake_url_2 == "https://api.aircall.io/v1/calls"
+    assert fake_url_2 != "https://156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@api.aircall.io/v1/teams"
+    assert fake_url_2 == "https://156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@api.aircall.io/v1/calls"
 
     with pytest.raises(ValueError):
         fake_conn.build_aircall_url(BASE_ROUTE, partial_urls, "schwing")
+
+
+def test_get_page_data_async(mocker):
+    """This tests async data call to /teams route"""
+    con = AircallConnector(name="mah_test", bearer_auth_id="abc123efg")
+    ds = AircallDataSource(
+        name="mah_ds",
+        domain="test_domain",
+        endpoint="/teams",
+        limit=10
+    )
+
+    con._retrieve_data(ds)
 
 
 def test_aircall_params_default_limit(con, mocker):
