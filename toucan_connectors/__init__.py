@@ -141,6 +141,10 @@ CONNECTORS_REGISTRY = {
         'connector': 'wootric.wootric_connector.WootricConnector',
         'logo': 'wootric/wootric.png',
     },
+    'Workday': {
+        'connector': 'workday.workday_connector.WorkdayConnector',
+        'logo': 'workday/workday.jpg',
+    },
 }
 
 
