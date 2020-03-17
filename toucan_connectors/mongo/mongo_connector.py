@@ -218,13 +218,20 @@ class MongoConnector(ToucanConnector):
         if offset or limit is not None:
             data_source.query = apply_permissions(data_source.query, permissions)
             data_source.query = normalize_query(data_source.query, data_source.parameters)
-            facet = {'$facet': {'count': data_source.query.copy(), 'df': data_source.query.copy()}}
-            facet['$facet']['count'].append({'$count': 'value'})
+
+            df_facet = []
             if offset:
-                facet['$facet']['df'].append({'$skip': offset})
+                df_facet.append({'$skip': offset})
             if limit is not None:
-                facet['$facet']['df'].append({'$limit': limit})
-            data_source.query = [facet]
+                df_facet.append({'$limit': limit})
+            facet = {
+                '$facet': {
+                    'count': [{'$count': 'value'}],
+                    'df': df_facet,  # df_facet is never empty
+                }
+            }
+            data_source.query.append(facet)
+
             res = self._execute_query(data_source).next()
             total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
             df = pd.DataFrame(res['df'])
