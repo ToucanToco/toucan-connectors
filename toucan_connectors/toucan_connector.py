@@ -204,6 +204,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         if 'bearer_integration' in cls.__fields__:
             cls.bearer_integration = cls.__fields__['bearer_integration'].default
 
+    # ***** BEARER ENDPOINT ******
     def bearer_oauth_get_endpoint(
         self, endpoint: str, query: Optional[dict] = None,
     ):

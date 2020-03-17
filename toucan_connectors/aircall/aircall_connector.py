@@ -89,6 +89,7 @@ class AircallConnector(ToucanConnector):
         BASE_ROUTE = "https://156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@api.aircall.io/v1/"
         partial_urls: List[str] = [partial_url for partial_url in AircallRoutes]
         print("async data called")
+        print("jq filter ", jq_filter)
         new_endpoint = self.build_aircall_url(BASE_ROUTE, partial_urls, endpoint)
         # limit = float('inf') if data_source.limit == -1 else data_source.limit
         async with ClientSession() as session:
@@ -99,7 +100,10 @@ class AircallConnector(ToucanConnector):
                 users = users_data.get("users", [])
                 pool_of_users = build_full_user_list(users, teams)
 
-                print("pool of users ", pool_of_users)
+                # print("pool of users ", pool_of_users)
+                test = jq(jq_filter).transform(pool_of_users)
+                # print("test ", test)
+                print(pd.DataFrame(test))
             else:
                 data = await fetch(new_endpoint, session)
 
@@ -128,14 +132,6 @@ class AircallConnector(ToucanConnector):
         #     page_data, is_last_page = self._get_page_data(
         #         endpoint, query, data_source.filter, current_page, per_page
         #     )
-
-        #     loop = asyncio.get_event_loop()
-        #     loop.run_until_complete(self._get_page_data_async(endpoint, query, data_source.filter, current_page, 1))
-
-        #     page_data, is_last_page = self._get_page_data_async(
-        #         endpoint, query, data_source.filter, current_page, per_page
-        #     )
-
         #     # data = [{...}, ..., {...}], current_page = 2, limit = 10
         #     data += page_data
         #     current_page += 1
