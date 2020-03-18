@@ -1,8 +1,12 @@
-# Module containing helpers for the Aircall connector
+"""Module containing helpers for the Aircall connector"""
+
+from typing import List
 
 
-def process_team_info_on_users(teams):
+def process_team_info_on_users(teams: List[dict]) -> List[dict]:
+    """takes raw team data and adds team field to each user in team"""
     pool_of_team_users = []
+
     for team in teams:
         teams_users = team["users"]
 
@@ -12,16 +16,9 @@ def process_team_info_on_users(teams):
 
     return pool_of_team_users
 
-# build_full_user_list - this builds a list of users from two separate Aircall API requests
-# one request is to /teams and returns an array of objects with a field called "users" that contains a list
-# of user objects and another field called "name" that is the name of the team
-# the second request contains a list of user objects obtained from calling the /users route
-# the rationale behind this is that we obtain a list of all users belonging to a client's Aircall and not just those belonging to a team
-# and the team information has been added to each user
-# if a user does not belong to a team, their "team" field is null
 
-
-def build_full_user_list(users, teams):
+def build_full_user_list(users: List[dict], teams: List[dict]) -> List[dict]:
+    """builds a list of users from two separate Aircall API requests"""
     pool_of_users = []
 
     if len(teams) > 0:
@@ -30,7 +27,6 @@ def build_full_user_list(users, teams):
 
         for user in users:
             if user["id"] not in team_user_ids:
-                # need to check if this will be accepted by pandas
                 user["team"] = None
                 pool_of_users.append(user)
     else:

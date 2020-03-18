@@ -51,9 +51,8 @@ class AircallConnector(ToucanConnector):
     bearer_auth_id: str
 
     # build a generic route with the "/calls" route as default
-    def build_aircall_url(self, BASE_ROUTE, partial_urls, route=""):
-        url = f'{BASE_ROUTE}'
-        route = route.strip("/")
+    def build_aircall_url(self, BASE_ROUTE: str, partial_urls, route: str = "") -> str:
+        url: str = f'{BASE_ROUTE}'
 
         if route:
             if route in partial_urls:
@@ -90,7 +89,8 @@ class AircallConnector(ToucanConnector):
         partial_urls: List[str] = [partial_url for partial_url in AircallRoutes]
         print("async data called")
         print("jq filter ", jq_filter)
-        new_endpoint = self.build_aircall_url(BASE_ROUTE, partial_urls, endpoint)
+        request_param: str = endpoint.strip("/")
+        new_endpoint = self.build_aircall_url(BASE_ROUTE, partial_urls, request_param)
         # limit = float('inf') if data_source.limit == -1 else data_source.limit
         async with ClientSession() as session:
             if endpoint == "/teams":
@@ -103,9 +103,20 @@ class AircallConnector(ToucanConnector):
                 # print("pool of users ", pool_of_users)
                 test = jq(jq_filter).transform(pool_of_users)
                 # print("test ", test)
-                print(pd.DataFrame(test))
+                column_names = {"id": "user_id", "created_at": "user_created_at", "name" : "user_name"}
+                new_pd = pd.DataFrame(test)
+                return (
+                    new_pd
+                    .rename(columns=column_names)
+                    .reindex(columns=["team", "user_id", "user_name", "user_created_at"])
+                    .assign(**{"user_created_at": lambda x: x["user_created_at"].str[:10]})
+                )
             else:
                 data = await fetch(new_endpoint, session)
+                tags = data.get(request_param, [])
+                # print(data)
+                new_pd = pd.DataFrame(tags)
+                print(new_pd)
 
         # return res
 
