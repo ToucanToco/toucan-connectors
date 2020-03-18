@@ -33,3 +33,19 @@ def build_full_user_list(users: List[dict], teams: List[dict]) -> List[dict]:
         pool_of_users = users
 
     return pool_of_users
+
+
+def reshape_users_in_calls(calls):
+    updated_calls = []
+    for call in calls:
+        user = call.get("user", None)
+        # print("user ", user)
+        if user:
+            # print("there's a user")
+            new_user = {
+                "id": user["id"],
+                "name": user["name"]
+            }
+            call["user"] = new_user
+        updated_calls.append(call)
+    return updated_calls

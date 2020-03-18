@@ -3,6 +3,7 @@ from typing import List, Optional, Tuple
 import asyncio
 from aiohttp import ClientSession
 import pandas as pd
+from pandas.io.json import json_normalize
 from enum import Enum
 from jq import jq
 from pydantic import Field
@@ -10,7 +11,7 @@ from pydantic import Field
 from toucan_connectors.common import FilterSchema, nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
-from .helpers import build_full_user_list
+from .helpers import build_full_user_list, reshape_users_in_calls
 
 PER_PAGE = 50
 
@@ -98,13 +99,19 @@ class AircallConnector(ToucanConnector):
                 team_data, users_data = await asyncio.gather(fetch(new_endpoint, session), fetch(users_endpoint, session))
                 teams = team_data.get("teams", [])
                 users = users_data.get("users", [])
-                pool_of_users = build_full_user_list(users, teams)
+                pool_of_users = {'teams' : build_full_user_list(users, teams)}
+                # pool_of_users = build_full_user_list(users, teams)
 
                 # print("pool of users ", pool_of_users)
                 test = jq(jq_filter).transform(pool_of_users)
                 # print("test ", test)
-                column_names = {"id": "user_id", "created_at": "user_created_at", "name" : "user_name"}
+                column_names = {
+                    "id": "user_id",
+                    "created_at": "user_created_at",
+                    "name" : "user_name"
+                }
                 new_pd = pd.DataFrame(test)
+                print(new_pd)
                 return (
                     new_pd
                     .rename(columns=column_names)
@@ -112,12 +119,23 @@ class AircallConnector(ToucanConnector):
                     .assign(**{"user_created_at": lambda x: x["user_created_at"].str[:10]})
                 )
             else:
-                data = await fetch(new_endpoint, session)
-                tags = data.get(request_param, [])
-                # print(data)
-                new_pd = pd.DataFrame(tags)
-                print(new_pd)
+                raw_data = await fetch(new_endpoint, session)
+                # print(raw_data)
+                print(raw_data["calls"][8])
+                data = jq(jq_filter).transform(raw_data)
+                # print(data[8])
+                # new_pd = pd.DataFrame(data)
+                # print(new_pd)
 
+                if request_param == "calls":
+                    test = reshape_users_in_calls(data)
+                    test = json_normalize(test, meta=[["user", "id"], ["user", "name"]]).rename(columns={"user.id": "user_id", "user.name": "user_name"})
+                    test = test.where(test.notnull(), None)
+                    # test = test.assign(**{
+                    #     "answered_at" : lambda t: pd.to_datetime(t["answered_at"], unit="s"),
+                    #     "ended_at": lambda t: pd.to_datetime(t['ended_at'], unit="s"),
+                    #     "day": lambda t: t["ended_at"].astype(str).str[:10]})
+                    # print(test[:9])
         # return res
 
     def _retrieve_data(self, data_source: AircallDataSource) -> pd.DataFrame:
