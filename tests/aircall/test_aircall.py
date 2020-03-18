@@ -8,6 +8,7 @@ def con(bearer_auth_id):
     return AircallConnector(name='test_name', bearer_auth_id=bearer_auth_id)
 
 
+@pytest.mark.flaky(reruns=5, reruns_delay=2)
 def test_aircall_params_default_limit(con, mocker):
     """It should retrieve 100 entries by default"""
     get_page_data_spy = mocker.spy(AircallConnector, '_get_page_data')
@@ -53,6 +54,7 @@ def test_aircall_params_negative_limit():
         )
 
 
+@pytest.mark.flaky(reruns=5, reruns_delay=2)
 def test_aircall_params_limit_filter(con):
     """It should filter properly the retrieved data"""
     ds = AircallDataSource(
