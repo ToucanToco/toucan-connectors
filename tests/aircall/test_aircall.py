@@ -34,7 +34,7 @@ def test_get_page_data_async(mocker):
     ds = AircallDataSource(
         name='mah_ds',
         domain='test_domain',
-        dataset='users',
+        dataset='calls',
         limit=10,
         # filter='.calls | map({id, user, teams})'
 

@@ -75,52 +75,46 @@ class AircallConnector(ToucanConnector):
         # limit = float('inf') if data_source.limit == -1 else data_source.limit
         async with ClientSession() as session:
             print('dataset ', dataset)
-            if dataset == 'users':
-                teams_endpoint = f'{BASE_ROUTE}/teams'
-                users_endpoint = f'{BASE_ROUTE}/users'
+            empty_df = build_empty_df(dataset)
 
-                team_data, users_data = await asyncio.gather(fetch(teams_endpoint, session), fetch(users_endpoint, session))
-
-                teams_jq_filter, users_jq_filter = generate_users_jq_filters(dataset)
-
-                team_data = jq(teams_jq_filter).transform(team_data)
-                users_data = jq(users_jq_filter).transform(users_data)
-
-                df_empty = pd.DataFrame(columns=['user_id', 'user_name', 'team', 'user_created_at'])
-                df_teams = pd.DataFrame(team_data)
-                df_users = pd.DataFrame(users_data)
-
-                df = (pd
-                      .concat([df_empty, df_teams, df_users], sort=False, ignore_index=True)
-                      .drop_duplicates(['user_id'], keep='first')
-                      .assign(**{'user_created_at': lambda x: x['user_created_at'].str[:10]})
-                      )
-
-                print(df)
-            else:
+            if dataset == 'tags':
                 endpoint = f'{BASE_ROUTE}/{dataset}'
-                # raw_data = await fetch(endpoint, session)
-                raw_data = { 'tags': []}
-                # print(raw_data)
-                # print(raw_data['calls'][8:10])
+                raw_data = await fetch(endpoint, session)
                 jq_filter = generate_single_jq_filters(dataset)
                 data = jq(jq_filter).transform(raw_data)
-                # print(data[8])
-                empty_df = build_empty_df(dataset)
                 non_empty_df = pd.DataFrame(data)
                 new_df = pd.concat([empty_df, non_empty_df])
                 print(new_df)
 
-                # if request_param == 'calls':
-                #     test = reshape_users_in_calls(data)
-                #     test = json_normalize(test, meta=[['user', 'id'], ['user', 'name']]).rename(columns={'user.id': 'user_id', 'user.name': 'user_name'})
-                #     test = test.where(test.notNone(), None)
-                    # test = test.assign(**{
-                    #     'answered_at' : lambda t: pd.to_datetime(t['answered_at'], unit='s'),
-                    #     'ended_at': lambda t: pd.to_datetime(t['ended_at'], unit='s'),
-                    #     'day': lambda t: t['ended_at'].astype(str).str[:10]})
-                    # print(test[:9])
-        # return res
+                # test = test.assign(**{
+                #     'answered_at' : lambda t: pd.to_datetime(t['answered_at'], unit='s'),
+                #     'ended_at': lambda t: pd.to_datetime(t['ended_at'], unit='s'),
+                #     'day': lambda t: t['ended_at'].astype(str).str[:10]})
+                # print(test[:9])
+            else:
+                teams_endpoint = f'{BASE_ROUTE}/teams'
+                variable_endpoint = f'{BASE_ROUTE}/{dataset}'
+
+                print(variable_endpoint)
+
+                team_data, variable_data = await asyncio.gather(fetch(teams_endpoint, session), fetch(variable_endpoint, session))
+
+                team_jq_filter, variable_jq_filter = generate_users_jq_filters(dataset)
+
+                team_data = jq(team_jq_filter).transform(team_data)
+                variable_data = jq(variable_jq_filter).transform(variable_data)
+                print(variable_data)
+                # df_team = pd.DataFrame(team_data)
+                # df_var = pd.DataFrame(variable_data)
+
+                # df = (pd
+                #       .concat([empty_df, df_team, df_var], sort=False, ignore_index=True)
+                #       .drop_duplicates(['user_id'], keep='first')
+                #       .assign(**{'user_created_at': lambda x: x['user_created_at'].str[:10]})
+                #       )
+
+                # print(df)
+        # return new_df
 
     def _retrieve_data(self, data_source: AircallDataSource) -> pd.DataFrame:
         print('retrieve data called')
