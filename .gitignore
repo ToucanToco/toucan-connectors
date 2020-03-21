@@ -12,6 +12,9 @@ dist/
 .pytest_cache/
 .coverage*
 
+# pyenv
+.python-version
+
 # Environments
 .env
 .venv
