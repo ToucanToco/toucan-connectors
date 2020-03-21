@@ -4,8 +4,8 @@ from toucan_connectors.aircall.aircall_connector import AircallConnector, Aircal
 
 
 @pytest.fixture
-def con(bearer_auth_id):
-    return AircallConnector(name='test_name', bearer_auth_id=bearer_auth_id)
+def con(bearer_aircall_auth_id):
+    return AircallConnector(name='test_name', bearer_auth_id=bearer_aircall_auth_id)
 
 
 @pytest.mark.flaky(reruns=5, reruns_delay=2)
