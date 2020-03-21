@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple
 
 import pandas as pd
-from jq import jq
+import pyjq
 from pydantic import Field
 
 from toucan_connectors.common import FilterSchema, nosql_apply_parameters_to_query
@@ -42,7 +42,7 @@ class AircallConnector(ToucanConnector):
             is_last_page = page_raw_data['meta']['next_page_link'] is None
         except KeyError:
             is_last_page = True
-        page_data = jq(jq_filter).transform(page_raw_data)
+        page_data = pyjq.first(jq_filter, page_raw_data)
         if isinstance(page_data, dict):
             page_data = [page_data]
         return page_data, is_last_page

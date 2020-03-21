@@ -1,5 +1,5 @@
 import pandas as pd
-from jq import jq
+import pyjq
 from pydantic import Field
 
 from toucan_connectors.common import FilterSchema, nosql_apply_parameters_to_query
@@ -28,5 +28,5 @@ class LightspeedConnector(ToucanConnector):
     def _retrieve_data(self, data_source: LightspeedDataSource) -> pd.DataFrame:
         endpoint = nosql_apply_parameters_to_query(data_source.endpoint, data_source.parameters)
         data = self.bearer_oauth_get_endpoint(endpoint)
-        data = jq(data_source.filter).transform(data)
+        data = pyjq.first(data_source.filter, data)
         return pd.DataFrame(data)

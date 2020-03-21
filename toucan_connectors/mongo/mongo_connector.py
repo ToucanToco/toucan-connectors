@@ -3,11 +3,11 @@ from functools import _lru_cache_wrapper, lru_cache
 from typing import Optional, Pattern, Union
 
 import pandas as pd
+import pyjq
 import pymongo
 from bson.regex import Regex
 from bson.son import SON
 from cached_property import cached_property
-from jq import jq
 from pydantic import Field, SecretStr, create_model, validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
@@ -277,7 +277,7 @@ class MongoConnector(ToucanConnector):
                 }"""
         client.close()
 
-        return jq(f).transform(cursor)
+        return pyjq.first(f, cursor)
 
 
 class UnkwownMongoDatabase(Exception):
