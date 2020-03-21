@@ -19,11 +19,12 @@ You can then install:
 
 You should be able to run basic tests `pytest tests/test_connector.py`
 
-:warning: On macOS, to test and use
-- `azure_mssql` and `mssql` connectors, you must install `freetds`
-running for instance `brew install freetds`.
-- `postgres` connector, you must install `postgresql` running for instance `brew install postgres`.
-You can install the library with `env LDFLAGS='-L/usr/local/lib -L/usr/local/opt/openssl/lib -L/usr/local/opt/readline/lib' pip install psycopg2`
+:warning: To test and use `mssql` (and `azure_mssql`) you need to install the Microsoft ODBC driver for SQL Server for
+[Linux](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15)
+or [MacOS](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/install-microsoft-odbc-driver-sql-server-macos?view=sql-server-ver15)
+
+:warning: On macOS, to test the `postgres` connector, you need to install `postgresql` by running for instance `brew install postgres`.
+You can then install the library with `env LDFLAGS='-L/usr/local/lib -L/usr/local/opt/openssl/lib -L/usr/local/opt/readline/lib' pip install psycopg2`
 
 ## Testing a connector
 If you want to run the tests for another connector, you can install the extra dependencies  

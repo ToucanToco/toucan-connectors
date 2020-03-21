@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 import pydantic
-import pymssql
+import pyodbc
 import pytest
 
 from toucan_connectors.mssql.mssql_connector import MSSQLConnector, MSSQLDataSource
@@ -15,7 +15,12 @@ def mssql_server(service_container):
         This method does not only check that the server is on
         but also feeds the database once it's up !
         """
-        conn = pymssql.connect(host='127.0.0.1', port=host_port, user='SA', password='Il0veT0uc@n!')
+        conn = pyodbc.connect(
+            driver='{ODBC Driver 17 for SQL Server}',
+            server=f'127.0.0.1,{host_port}',
+            user='SA',
+            password='Il0veT0uc@n!',
+        )
         cur = conn.cursor()
         cur.execute('SELECT 1;')
 
@@ -29,7 +34,7 @@ def mssql_server(service_container):
         cur.close()
         conn.close()
 
-    return service_container('mssql', check_and_feed, pymssql.Error)
+    return service_container('mssql', check_and_feed, pyodbc.Error)
 
 
 @pytest.fixture
@@ -60,6 +65,7 @@ def test_datasource(mssql_datasource):
 def test_connection_params():
     connector = MSSQLConnector(name='my_mssql_con', host='myhost', user='myuser')
     assert connector.get_connection_params(None) == {
+        'driver': '{ODBC Driver 17 for SQL Server}',
         'server': 'myhost',
         'user': 'myuser',
         'as_dict': True,
@@ -73,18 +79,18 @@ def test_connection_params():
         connect_timeout=60,
     )
     assert connector.get_connection_params('mydb') == {
-        'server': 'myhost',
+        'driver': '{ODBC Driver 17 for SQL Server}',
+        'server': 'myhost,123',
         'user': 'myuser',
         'as_dict': True,
         'password': 'mypass',
-        'port': 123,
-        'login_timeout': 60,
+        'timeout': 60,
         'database': 'mydb',
     }
 
 
 def test_mssql_get_df(mocker):
-    snock = mocker.patch('pymssql.connect')
+    snock = mocker.patch('pyodbc.connect')
     reasq = mocker.patch('pandas.read_sql')
 
     mssql_connector = MSSQLConnector(
@@ -99,11 +105,11 @@ def test_mssql_get_df(mocker):
     mssql_connector.get_df(datasource)
 
     snock.assert_called_once_with(
+        driver='{ODBC Driver 17 for SQL Server}',
         as_dict=True,
-        server='localhost',
+        server='127.0.0.1,22',
         user='SA',
         password='Il0veT0uc@n!',
-        port=22,
         database='mydb',
     )
 

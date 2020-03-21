@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -29,8 +29,8 @@ jobs:
     - name: Install databricks dependencies
       run: sudo bash toucan_connectors/install_scripts/databricks.sh
 
-    - name: Install azure_mssql dependencies
-      run: sudo bash toucan_connectors/install_scripts/azure_mssql.sh
+    - name: Install mssql dependencies
+      run: sudo bash toucan_connectors/install_scripts/mssql.sh
 
     - name: install
       run: make install
