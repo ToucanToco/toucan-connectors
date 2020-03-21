@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List
 
-from jq import jq
+import pyjq
 from oauthlib.oauth2 import BackendApplicationClient
 from pydantic import BaseModel, Field
 from requests import Session
@@ -45,7 +45,7 @@ class CustomTokenServer(AuthBase):
             session = Session()
 
         res = session.request(**self.request_kwargs)
-        token = jq(self.filter).transform(res.json())
+        token = pyjq.first(self.filter, res.json())
 
         r.headers['Authorization'] = f'Bearer {token}'
         return r

@@ -25,9 +25,6 @@ running for instance `brew install freetds`.
 - `postgres` connector, you must install `postgresql` running for instance `brew install postgres`.
 You can install the library with `env LDFLAGS='-L/usr/local/lib -L/usr/local/opt/openssl/lib -L/usr/local/opt/readline/lib' pip install psycopg2`
 
-:warning: On Windows we know that the `jq` package is not available. Please consider an alternative,
-such as using a VM or a container.
-
 ## Testing a connector
 If you want to run the tests for another connector, you can install the extra dependencies  
 (e.g to test MySQL just type `pip install -e ".[mysql]"`)  

@@ -3,8 +3,8 @@ import re
 from abc import ABC, ABCMeta, abstractmethod
 from copy import deepcopy
 
+import pyjq
 from jinja2 import Environment, StrictUndefined, Template, meta
-from jq import jq
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
 
@@ -270,7 +270,7 @@ class Value(AstTranslator, metaclass=ABCMeta):
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
-    data = jq(jq_filter).transform(data, multiple_output=True)
+    data = pyjq.all(jq_filter, data)
 
     # jq 'multiple outout': the data is already presented as a list of rows
     multiple_output = len(data) == 1 and isinstance(data[0], list)
