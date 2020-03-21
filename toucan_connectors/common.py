@@ -232,7 +232,11 @@ class Column(AstTranslator, metaclass=ABCMeta):
         """Column name"""
 
     def Str(self, node):
-        """Column name as str"""
+        """Column name as str (python 3.7-)"""
+
+    @abstractmethod
+    def Constant(self, node):
+        """Column name as str (python 3.8+)"""
 
 
 class Value(AstTranslator, metaclass=ABCMeta):
@@ -242,11 +246,15 @@ class Value(AstTranslator, metaclass=ABCMeta):
 
     @abstractmethod
     def Str(self, node):
-        """String field"""
+        """String field (python 3.7-)"""
 
     @abstractmethod
     def Num(self, node):
-        """String field"""
+        """Num field (python 3.7-)"""
+
+    @abstractmethod
+    def Constant(self, node):
+        """Contant field (python 3.8+)"""
 
     @abstractmethod
     def List(self, node):

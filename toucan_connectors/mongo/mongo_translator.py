@@ -62,6 +62,9 @@ class MongoColumn(Column):
     def Str(self, node):
         return node.s
 
+    def Constant(self, node):
+        return node.value
+
 
 class MongoValue(Value):
     SPECIAL_VALUES = {'null': None, 'false': False, 'true': True}
@@ -77,6 +80,9 @@ class MongoValue(Value):
 
     def Num(self, node):
         return node.n
+
+    def Constant(self, node):
+        return node.value
 
     def List(self, node):
         return list(map(self.translate, node.elts))
