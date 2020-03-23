@@ -4,7 +4,7 @@ import pandas as pd
 
 from typing import List
 
-from .constants import COLUMN_DICTIONARY
+from .constants import COLUMN_DICTIONARY, FILTER_DICTIONARY
 
 
 def build_df(dataset: str, list_of_data: List[dict]) -> pd.DataFrame:
@@ -39,41 +39,8 @@ def build_empty_df(dataset: str) -> pd.DataFrame:
 def generate_multiple_jq_filters(dataset: str) -> List[str]:
     """Provides two separate jq filters; used in calls and users datasets"""
 
-    teams_jq_filter = """
-    [.teams[] | .name as $team | .users[]
-    | {
-        user_name: .name,
-        team: $team,
-        user_id: .id,
-        user_created_at: .created_at
-    }]
-    """
+    teams_jq_filter = FILTER_DICTIONARY['teams']
 
-    variable_jq_filter = None
-
-    if dataset == 'users':
-        variable_jq_filter = """
-        [.users[]
-        | {
-            user_name: .name,
-            user_id: .id,
-            user_created_at: .created_at
-        }]
-        """
-    elif dataset == 'calls':
-        variable_jq_filter = """
-        .calls
-        | map({
-            id,
-            direction,
-            duration,
-            answered_at,
-            ended_at,
-            raw_digits,
-            user_id: .user.id,
-            tags : .tags | map({name}),
-            user_name: .user.name
-        })
-        """
+    variable_jq_filter = FILTER_DICTIONARY.get(dataset, None)
 
     return [teams_jq_filter, variable_jq_filter]
