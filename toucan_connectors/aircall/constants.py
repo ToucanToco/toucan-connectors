@@ -1,3 +1,5 @@
+"""File containing constants for AirCall connector"""
+
 COLUMN_DICTIONARY = {
     'calls' : [
         'id',

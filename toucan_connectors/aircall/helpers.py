@@ -7,7 +7,8 @@ from typing import List
 from .constants import COLUMN_DICTIONARY
 
 
-def build_df(dataset, list_of_data):
+def build_df(dataset: str, list_of_data: List[dict]) -> pd.DataFrame:
+    """builds a dataframe for the users and calls datasets"""
     if dataset == 'users':
         return (pd
                 .concat(list_of_data, sort=False, ignore_index=True)
@@ -31,10 +32,13 @@ def build_df(dataset, list_of_data):
 
 
 def build_empty_df(dataset: str) -> pd.DataFrame:
+    """Provides column headers for empty dataframes"""
     return pd.DataFrame(columns=COLUMN_DICTIONARY[dataset])
 
 
-def generate_users_jq_filters(dataset: str) -> List[str]:
+def generate_multiple_jq_filters(dataset: str) -> List[str]:
+    """Provides two separate jq filters; used in calls and users datasets"""
+
     teams_jq_filter = """
     [.teams[] | .name as $team | .users[]
     | {
@@ -56,7 +60,7 @@ def generate_users_jq_filters(dataset: str) -> List[str]:
             user_created_at: .created_at
         }]
         """
-    else:
+    elif dataset == 'calls':
         variable_jq_filter = """
         .calls
         | map({
