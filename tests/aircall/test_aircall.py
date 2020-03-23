@@ -1,6 +1,7 @@
 import pytest
 from toucan_connectors.aircall.aircall_connector import AircallConnector, AircallDataSource
 
+# following commented lines will eventually be put in various tests
 
 # team_data = jq(teams_jq_filter).transform(teams_data)
 # users_data = jq(users_jq_filter).transform(empty_users)
@@ -34,11 +35,8 @@ def test_get_page_data_async(mocker):
     ds = AircallDataSource(
         name='mah_ds',
         domain='test_domain',
-        dataset='users',
+        dataset='calls',
         limit=10,
-        # filter='.calls | map({id, user, teams})'
-
-        # filter='.calls | map({id, user, direction, duration, answered_at, ended_at, raw_digits, tags, teams})'
     )
 
     con._retrieve_data(ds)

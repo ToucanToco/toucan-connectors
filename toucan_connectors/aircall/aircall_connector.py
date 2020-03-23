@@ -10,7 +10,7 @@ from pydantic import Field
 from toucan_connectors.common import FilterSchema, nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
-from .helpers import build_empty_df, generate_users_jq_filters, generate_single_jq_filters
+from .helpers import build_df, build_empty_df, generate_users_jq_filters
 
 PER_PAGE = 50
 
@@ -79,17 +79,11 @@ class AircallConnector(ToucanConnector):
             if dataset == 'tags':
                 endpoint = f'{BASE_ROUTE}/{dataset}'
                 raw_data = await fetch(endpoint, session)
-                jq_filter = generate_single_jq_filters(dataset)
+                jq_filter = f'.{dataset}'
                 data = pyjq.first(jq_filter, raw_data)
                 non_empty_df = pd.DataFrame(data)
                 new_df = pd.concat([empty_df, non_empty_df])
                 print(new_df)
-
-                # test = test.assign(**{
-                #     'answered_at' : lambda t: pd.to_datetime(t['answered_at'], unit='s'),
-                #     'ended_at': lambda t: pd.to_datetime(t['ended_at'], unit='s'),
-                #     'day': lambda t: t['ended_at'].astype(str).str[:10]})
-                # print(test[:9])
             else:
                 teams_endpoint = f'{BASE_ROUTE}/teams'
                 variable_endpoint = f'{BASE_ROUTE}/{dataset}'
@@ -103,17 +97,9 @@ class AircallConnector(ToucanConnector):
                 team_data = pyjq.first(team_jq_filter, team_data)
                 variable_data = pyjq.first(variable_jq_filter, variable_data)
 
-                df_team = pd.DataFrame(team_data)
-                df_var = pd.DataFrame(variable_data)
-
-                df = (pd
-                      .concat([empty_df, df_team, df_var], sort=False, ignore_index=True)
-                      .drop_duplicates(['user_id'], keep='first')
-                      .assign(**{'user_created_at': lambda x: x['user_created_at'].str[:10]})
-                      )
-
+                df = build_df(dataset, [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)])
                 print(df)
-        # return new_df
+        return new_df
 
     def _retrieve_data(self, data_source: AircallDataSource) -> pd.DataFrame:
         print('retrieve data called')
