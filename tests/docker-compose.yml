@@ -18,7 +18,6 @@ mssql:
   image: microsoft/mssql-server-linux
   environment:
     - ACCEPT_EULA=Y
-    - MSSQL_PID=Developer
     - SA_PASSWORD=Il0veT0uc@n!
   ports:
     - 1433:1433

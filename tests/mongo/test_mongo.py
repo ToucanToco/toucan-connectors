@@ -364,16 +364,15 @@ def test_status_bad_port(mongo_connector):
 
 def test_status_bad_port2(mongo_connector):
     mongo_connector.port = 123000
-    assert mongo_connector.get_status() == {
-        'status': False,
-        'details': [
-            ('Hostname resolved', True),
-            ('Port opened', False),
-            ('Host connection', None),
-            ('Authenticated', None),
-        ],
-        'error': 'getsockaddrarg: port must be 0-65535.',
-    }
+    status = mongo_connector.get_status()
+    assert status['status'] is False
+    assert status['details'] == [
+        ('Hostname resolved', True),
+        ('Port opened', False),
+        ('Host connection', None),
+        ('Authenticated', None),
+    ]
+    assert 'port must be 0-65535.' in status['error']
 
 
 def test_status_unreachable(mongo_connector, mocker):

@@ -22,7 +22,7 @@ extras_require = {
     'http_api': auth_deps,
     'lightspeed': bearer_deps,
     'mongo': ['pymongo>=3.6.1'],
-    'mssql': ['pymssql>=2.1.3,<3.0'],
+    'mssql': ['pyodbc'],
     'mysql': ['PyMySQL>=0.8.0'],
     'odata': auth_deps + ['tctc_odata'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
@@ -37,9 +37,9 @@ extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 install_requires = [
     'aiohttp',
     'cached_property',
-    'jq',
     'jinja2',
     'pydantic',
+    'pyjq',
     'requests',
     'tenacity',
     'toucan_data_sdk',
@@ -50,6 +50,8 @@ classifiers = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: BSD License',
     'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
 ]
 
 HERE = Path(__file__).resolve().parent
@@ -64,7 +66,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='0.30.5',
+    version='0.31.0',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',

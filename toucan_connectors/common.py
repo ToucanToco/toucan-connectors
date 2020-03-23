@@ -3,8 +3,8 @@ import re
 from abc import ABC, ABCMeta, abstractmethod
 from copy import deepcopy
 
+import pyjq
 from jinja2 import Environment, StrictUndefined, Template, meta
-from jq import jq
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
 
@@ -232,7 +232,11 @@ class Column(AstTranslator, metaclass=ABCMeta):
         """Column name"""
 
     def Str(self, node):
-        """Column name as str"""
+        """Column name as str (python 3.7-)"""
+
+    @abstractmethod
+    def Constant(self, node):
+        """Column name as str (python 3.8+)"""
 
 
 class Value(AstTranslator, metaclass=ABCMeta):
@@ -242,11 +246,15 @@ class Value(AstTranslator, metaclass=ABCMeta):
 
     @abstractmethod
     def Str(self, node):
-        """String field"""
+        """String field (python 3.7-)"""
 
     @abstractmethod
     def Num(self, node):
-        """String field"""
+        """Num field (python 3.7-)"""
+
+    @abstractmethod
+    def Constant(self, node):
+        """Contant field (python 3.8+)"""
 
     @abstractmethod
     def List(self, node):
@@ -270,7 +278,7 @@ class Value(AstTranslator, metaclass=ABCMeta):
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
-    data = jq(jq_filter).transform(data, multiple_output=True)
+    data = pyjq.all(jq_filter, data)
 
     # jq 'multiple outout': the data is already presented as a list of rows
     multiple_output = len(data) == 1 and isinstance(data[0], list)

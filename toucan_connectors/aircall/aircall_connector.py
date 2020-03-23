@@ -3,9 +3,8 @@ from typing import List, Optional, Tuple
 import asyncio
 from aiohttp import ClientSession
 import pandas as pd
-from pandas.io.json import json_normalize
 from enum import Enum
-from jq import jq
+import pyjq
 from pydantic import Field
 
 from toucan_connectors.common import FilterSchema, nosql_apply_parameters_to_query
@@ -62,7 +61,7 @@ class AircallConnector(ToucanConnector):
             is_last_page = page_raw_data['meta']['next_page_link'] is None
         except KeyError:
             is_last_page = True
-        page_data = jq(jq_filter).transform(page_raw_data)
+        page_data = pyjq.first(jq_filter, page_raw_data)
         if isinstance(page_data, dict):
             page_data = [page_data]
         return page_data, is_last_page
@@ -81,7 +80,7 @@ class AircallConnector(ToucanConnector):
                 endpoint = f'{BASE_ROUTE}/{dataset}'
                 raw_data = await fetch(endpoint, session)
                 jq_filter = generate_single_jq_filters(dataset)
-                data = jq(jq_filter).transform(raw_data)
+                data = pyjq.first(jq_filter, raw_data)
                 non_empty_df = pd.DataFrame(data)
                 new_df = pd.concat([empty_df, non_empty_df])
                 print(new_df)
@@ -101,19 +100,19 @@ class AircallConnector(ToucanConnector):
 
                 team_jq_filter, variable_jq_filter = generate_users_jq_filters(dataset)
 
-                team_data = jq(team_jq_filter).transform(team_data)
-                variable_data = jq(variable_jq_filter).transform(variable_data)
-                print(variable_data)
-                # df_team = pd.DataFrame(team_data)
-                # df_var = pd.DataFrame(variable_data)
+                team_data = pyjq.first(team_jq_filter, team_data)
+                variable_data = pyjq.first(variable_jq_filter, variable_data)
 
-                # df = (pd
-                #       .concat([empty_df, df_team, df_var], sort=False, ignore_index=True)
-                #       .drop_duplicates(['user_id'], keep='first')
-                #       .assign(**{'user_created_at': lambda x: x['user_created_at'].str[:10]})
-                #       )
+                df_team = pd.DataFrame(team_data)
+                df_var = pd.DataFrame(variable_data)
 
-                # print(df)
+                df = (pd
+                      .concat([empty_df, df_team, df_var], sort=False, ignore_index=True)
+                      .drop_duplicates(['user_id'], keep='first')
+                      .assign(**{'user_created_at': lambda x: x['user_created_at'].str[:10]})
+                      )
+
+                print(df)
         # return new_df
 
     def _retrieve_data(self, data_source: AircallDataSource) -> pd.DataFrame:

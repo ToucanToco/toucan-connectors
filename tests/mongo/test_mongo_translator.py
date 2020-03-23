@@ -50,7 +50,7 @@ def test_mongo_expression_with_jinja():
 
 
 def test_mongo_expression_exception():
-    query = '1=="1"'
+    query = '"ab" == "a"+"b"'
     with pytest.raises(Exception) as e:
         MongoExpression().parse(query)
-    assert 'Missing method for Num' == str(e.value)
+    assert str(e.value) == 'Missing method for BinOp'

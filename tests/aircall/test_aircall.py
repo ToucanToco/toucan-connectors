@@ -24,8 +24,8 @@ from toucan_connectors.aircall.aircall_connector import AircallConnector, Aircal
 
 
 @pytest.fixture
-def con(bearer_auth_id):
-    return AircallConnector(name='test_name', bearer_auth_id=bearer_auth_id)
+def con(bearer_aircall_auth_id):
+    return AircallConnector(name='test_name', bearer_auth_id=bearer_aircall_auth_id)
 
 
 def test_get_page_data_async(mocker):
@@ -34,7 +34,7 @@ def test_get_page_data_async(mocker):
     ds = AircallDataSource(
         name='mah_ds',
         domain='test_domain',
-        dataset='calls',
+        dataset='users',
         limit=10,
         # filter='.calls | map({id, user, teams})'
 
