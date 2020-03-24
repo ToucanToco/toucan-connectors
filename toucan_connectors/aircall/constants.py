@@ -29,25 +29,10 @@ COLUMN_DICTIONARY = {
 }
 
 FILTER_DICTIONARY = {
-    'teams' : """
-    [.teams[] | .name as $team | .users[]
-    | {
-        user_name: .name,
-        team: $team,
-        user_id: .id,
-        user_created_at: .created_at
-    }]
-    """,
-    'users' : """
-        [.users[]
-        | {
-            user_name: .name,
-            user_id: .id,
-            user_created_at: .created_at
-        }]
-    """,
     'calls' : """
-        .calls
+        .results
+        | map({calls}
+        | .calls
         | map({
             id,
             direction,
@@ -55,9 +40,39 @@ FILTER_DICTIONARY = {
             answered_at,
             ended_at,
             raw_digits,
-            user_id: .user.id,
+            user_id:.user.id,
             tags : .tags | map({name}),
-            user_name: .user.name
-        })
+            user_name:.user.name,
+        }))
+        | flatten
+    """,
+    'tags' : """
+        [
+            .results []
+            | .tags[]
+        ]
+    """,
+    'teams' : """
+        .results []
+        | [
+            .teams[]
+            | .name as $team
+            | .users[]
+            | {
+                user_name: .name,
+                team: $team,
+                user_id: .id,
+                user_created_at: .created_at
+        }]
+    """,
+    'users' : """
+        [
+            .results []
+            |  .users []
+            | {
+                user_id : .id,
+                user_name:.name,
+                user_created_at: .created_at
+            }]
     """
 }

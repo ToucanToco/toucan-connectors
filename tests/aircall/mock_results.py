@@ -242,3 +242,16 @@ user_json = {
 }
 
 empty_users = {'users' : []}
+
+
+fake_calls = {
+    'calls': [],
+    'meta' : {
+        'count' : 50,
+        'total' : 6649,
+        'current_page': 1,
+        'per_page' : 50,
+        'next_page_link' : 'https://api.aircall.io/v1/calls?order=asc&page=2&per_page=50',
+        'previous_page_link' : None
+    }
+}

@@ -10,9 +10,28 @@ from pydantic import Field
 from toucan_connectors.common import FilterSchema, nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
-from .helpers import build_df, build_empty_df, generate_multiple_jq_filters
+from .helpers import build_df, build_empty_df, generate_multiple_jq_filters, generate_tags_filter
 
 PER_PAGE = 50
+STUFF = '156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@'
+
+
+async def bulk_fetch(base_endpoint, data_list, session, limit):
+    data = await fetch(base_endpoint, session)
+
+    data_list.append(data)
+
+    next_page_link = data['meta'].get('next_page_link', None)
+
+    limit += 1
+
+    if next_page_link is not None and limit != 3:
+        new_endpoint = next_page_link
+        new_endpoint = new_endpoint.replace('//', f'//{STUFF}')
+        data_list = await bulk_fetch(new_endpoint, data_list, session, limit)
+
+    print('third data list ', len(data_list))
+    return data_list
 
 
 async def fetch(new_endpoint, session):
@@ -63,28 +82,27 @@ class AircallConnector(ToucanConnector):
     async def _get_page_data_async(
         self, dataset: str, query, page_number: int, per_page: int
     ):
-        BASE_ROUTE = 'https://156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@api.aircall.io/v1/'
+        BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
+        variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
+
         print('async data called')
         # limit = float('inf') if data_source.limit == -1 else data_source.limit
         async with ClientSession() as session:
             if dataset == 'tags':
-                endpoint = f'{BASE_ROUTE}/{dataset}'
+                raw_data = await bulk_fetch(variable_endpoint, [], session, 1)
 
-                raw_data = await fetch(endpoint, session)
+                jq_filter = generate_tags_filter(dataset)
 
-                jq_filter = f'.{dataset}'
-
-                return pyjq.first(jq_filter, raw_data)
+                return pyjq.first(jq_filter, {'results' : raw_data})
             else:
                 teams_endpoint = f'{BASE_ROUTE}/teams'
-                variable_endpoint = f'{BASE_ROUTE}/{dataset}'
 
-                team_data, variable_data = await asyncio.gather(fetch(teams_endpoint, session), fetch(variable_endpoint, session))
+                team_data, variable_data = await asyncio.gather(bulk_fetch(teams_endpoint, [], session, 1), bulk_fetch(variable_endpoint, [], session, 1))
 
                 team_jq_filter, variable_jq_filter = generate_multiple_jq_filters(dataset)
 
-                team_data = pyjq.first(team_jq_filter, team_data)
-                variable_data = pyjq.first(variable_jq_filter, variable_data)
+                team_data = pyjq.first(team_jq_filter, {'results' : team_data})
+                variable_data = pyjq.first(variable_jq_filter, {'results' : variable_data})
 
                 return team_data, variable_data
 
@@ -101,11 +119,14 @@ class AircallConnector(ToucanConnector):
         dataset = data_source.dataset
         empty_df = build_empty_df(dataset)
 
-        current_page = 1
-        is_last_page = False
-        data = []
+        print('query ', query)
+        print('limit ', limit)
 
-        res = self.run_fetches(dataset, query, current_page, 1)
+        current_page = 1
+        # is_last_page = False
+        # data = []
+
+        res = self.run_fetches(dataset, query, current_page, limit)
 
         if dataset == 'tags':
             non_empty_df = pd.DataFrame(res)
@@ -115,20 +136,6 @@ class AircallConnector(ToucanConnector):
             return pd.concat([empty_df, non_empty_df])
         else:
             team_data, variable_data = res
-            # df = build_df(dataset, [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)])
-            # print('df ', df)
+            df = build_df(dataset, [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)])
+            print('df ', df)
             return build_df(dataset, [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)])
-
-        # while limit > 0 and not is_last_page:
-        #     per_page = PER_PAGE if limit > PER_PAGE else limit
-
-        #     # data = [], current_page = 1, limit = 60
-        #     # page_data, is_last_page = self._get_page_data(
-        #     #     endpoint, query, data_source.filter, current_page, per_page
-        #     # )
-        #     # data = [{...}, ..., {...}], current_page = 2, limit = 10
-        #     data += page_data
-        #     current_page += 1
-        #     limit -= per_page
-
-        return pd.DataFrame(data)

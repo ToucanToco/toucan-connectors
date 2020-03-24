@@ -44,3 +44,7 @@ def generate_multiple_jq_filters(dataset: str) -> List[str]:
     variable_jq_filter = FILTER_DICTIONARY.get(dataset, None)
 
     return [teams_jq_filter, variable_jq_filter]
+
+
+def generate_tags_filter(dataset):
+    return FILTER_DICTIONARY[dataset]
