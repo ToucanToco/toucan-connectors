@@ -1,46 +1,9 @@
 import pytest
 
 from toucan_connectors.mongo.mongo_translator import (
-    MongoOperatorMapping,
     permission_condition_to_mongo_clause,
     permission_conditions_to_mongo_query,
 )
-
-
-def test_mongo_operator_mapping_from_identifier():
-    assert MongoOperatorMapping.from_identifier('eq') == MongoOperatorMapping.EQUAL
-    assert MongoOperatorMapping.from_identifier('ne') == MongoOperatorMapping.NOT_EQUAL
-    assert MongoOperatorMapping.from_identifier('lt') == MongoOperatorMapping.LOWER_THAN
-    assert MongoOperatorMapping.from_identifier('le') == MongoOperatorMapping.LOWER_THAN_EQUAL
-    assert MongoOperatorMapping.from_identifier('gt') == MongoOperatorMapping.GREATER_THAN
-    assert MongoOperatorMapping.from_identifier('ge') == MongoOperatorMapping.GREATER_THAN_EQUAL
-    assert MongoOperatorMapping.from_identifier('in') == MongoOperatorMapping.IN
-    assert MongoOperatorMapping.from_identifier('nin') == MongoOperatorMapping.NOT_IN
-    assert MongoOperatorMapping.from_identifier('matches') == MongoOperatorMapping.MATCHES
-    assert MongoOperatorMapping.from_identifier('notmatches') == MongoOperatorMapping.NOT_MATCHES
-    assert MongoOperatorMapping.from_identifier('isnull') == MongoOperatorMapping.IS_NULL
-    assert MongoOperatorMapping.from_identifier('notnull') == MongoOperatorMapping.IS_NOT_NULL
-
-
-def test_mongo_operator_mapping_to_clause():
-    assert MongoOperatorMapping.EQUAL.to_clause('type', 'YTD') == {'type': {'$eq': 'YTD'}}
-    assert MongoOperatorMapping.NOT_EQUAL.to_clause('type', 'YTD') == {'type': {'$ne': 'YTD'}}
-    assert MongoOperatorMapping.LOWER_THAN.to_clause('type', 'YTD') == {'type': {'$lt': 'YTD'}}
-    assert MongoOperatorMapping.LOWER_THAN_EQUAL.to_clause('type', 'YTD') == {
-        'type': {'$lte': 'YTD'}
-    }
-    assert MongoOperatorMapping.GREATER_THAN.to_clause('type', 'YTD') == {'type': {'$gt': 'YTD'}}
-    assert MongoOperatorMapping.GREATER_THAN_EQUAL.to_clause('type', 'YTD') == {
-        'type': {'$gte': 'YTD'}
-    }
-    assert MongoOperatorMapping.IN.to_clause('type', ['YTD']) == {'type': {'$in': ['YTD']}}
-    assert MongoOperatorMapping.NOT_IN.to_clause('type', ['YTD']) == {'type': {'$nin': ['YTD']}}
-    assert MongoOperatorMapping.MATCHES.to_clause('type', 'expr') == {'type': {'$regex': 'expr'}}
-    assert MongoOperatorMapping.NOT_MATCHES.to_clause('type', 'expr') == {
-        'type': {'$not': {'$regex': 'expr'}}
-    }
-    assert MongoOperatorMapping.IS_NULL.to_clause('type', 'YTD') == {'type': {'$exists': False}}
-    assert MongoOperatorMapping.IS_NOT_NULL.to_clause('type', 'YTD') == {'type': {'$exists': True}}
 
 
 def test_permission_condition_to_mongo_clause():

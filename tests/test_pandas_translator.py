@@ -1,30 +1,9 @@
 import pytest
 
 from toucan_connectors.pandas_translator import (
-    PandasOperatorMapping,
     permission_condition_to_pandas_clause,
     permission_conditions_to_pandas_query,
 )
-
-
-def test_PandasOperatorMapping():
-    assert PandasOperatorMapping.from_identifier('eq') == PandasOperatorMapping.EQUAL
-    assert PandasOperatorMapping.from_identifier('ne') == PandasOperatorMapping.NOT_EQUAL
-    assert PandasOperatorMapping.from_identifier('lt') == PandasOperatorMapping.LOWER_THAN
-    assert PandasOperatorMapping.from_identifier('le') == PandasOperatorMapping.LOWER_THAN_EQUAL
-    assert PandasOperatorMapping.from_identifier('gt') == PandasOperatorMapping.GREATER_THAN
-    assert PandasOperatorMapping.from_identifier('ge') == PandasOperatorMapping.GREATER_THAN_EQUAL
-    assert PandasOperatorMapping.from_identifier('in') == PandasOperatorMapping.IN
-    assert PandasOperatorMapping.from_identifier('nin') == PandasOperatorMapping.NOT_IN
-
-    assert PandasOperatorMapping.EQUAL.to_clause('type', 'YTD') == 'type == YTD'
-    assert PandasOperatorMapping.NOT_EQUAL.to_clause('type', 'YTD') == 'type != YTD'
-    assert PandasOperatorMapping.LOWER_THAN.to_clause('type', 'YTD') == 'type < YTD'
-    assert PandasOperatorMapping.LOWER_THAN_EQUAL.to_clause('type', 'YTD') == 'type <= YTD'
-    assert PandasOperatorMapping.GREATER_THAN.to_clause('type', 'YTD') == 'type > YTD'
-    assert PandasOperatorMapping.GREATER_THAN_EQUAL.to_clause('type', 'YTD') == 'type >= YTD'
-    assert PandasOperatorMapping.IN.to_clause('type', 'YTD') == 'type in YTD'
-    assert PandasOperatorMapping.NOT_IN.to_clause('type', 'YTD') == 'type not in YTD'
 
 
 def test_permission_condition_to_pandas_clause():
@@ -49,6 +28,10 @@ def test_permission_condition_to_pandas_clause():
     with pytest.raises(ValueError):
         permission_condition_to_pandas_clause(
             {'column': 'population', 'operator': 'unsupported', 'value': 42}
+        )
+    with pytest.raises(Exception):
+        permission_condition_to_pandas_clause(
+            {'column': 'population', 'operator': 'matches', 'value': 42}
         )
 
 

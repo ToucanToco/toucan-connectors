@@ -1,35 +1,34 @@
-from enum import Enum
+from enum_switch import Switch
+
+from toucan_connectors.common import ConditionOperator
 
 
 def permission_condition_to_pandas_clause(condition: dict, enclosing_field_char='`') -> str:
     """
-    Convert a permission condition to it's pandas clause equivalent.
-
-    :param      condition:             The condition tree
-    :type       condition:             dict
-    :param      enclosing_field_char:  The enclosing field character
-    :type       enclosing_field_char:  string
-
-    :returns:   The pandas clause
-    :rtype:     str
+    Convert a SimpleCondition to it's pandas clause equivalent.
     """
     if 'operator' not in condition:
         raise KeyError('key "operator" is missing from permission condition')
-    elif 'column' not in condition:
+    else:
+        operator = ConditionOperator(condition['operator'])
+
+    if 'column' not in condition:
         raise KeyError('key "column" is missing from permission condition')
-    elif 'value' not in condition:
-        raise KeyError('key "value" is missing from permission condition')
     else:
         column = condition['column']
-        operator = PandasOperatorMapping.from_identifier(condition['operator'])
-        if operator is None:
-            raise ValueError(f'Unsupported operator:{condition["operator"]}')
-        values = condition['value']
-        enclosing_value_char = "'" if isinstance(values, str) else ''
-        return operator.to_clause(
-            f'{enclosing_field_char}{column}{enclosing_field_char}',
-            f'{enclosing_value_char}{values}{enclosing_value_char}',
-        )
+
+    if 'value' not in condition:
+        raise KeyError('key "value" is missing from permission condition')
+    else:
+        value = condition['value']
+
+    enclosing_value_char = "'" if isinstance(value, str) else ''
+    pandas_operator_mapping = PandasOperatorMapping(ConditionOperator)
+    generate_pandas_clause = pandas_operator_mapping(operator)
+    return generate_pandas_clause(
+        f'{enclosing_field_char}{column}{enclosing_field_char}',
+        f'{enclosing_value_char}{value}{enclosing_value_char}',
+    )
 
 
 def permission_conditions_to_pandas_query(group: dict, enclosing_field_char='`') -> str:
@@ -64,19 +63,39 @@ def permission_conditions_to_pandas_query(group: dict, enclosing_field_char='`')
         return permission_condition_to_pandas_clause(group, enclosing_field_char)
 
 
-class PandasOperatorMapping(Enum):
-    EQUAL = {'identifier': 'eq', 'template': '{column} == {value}'}
-    NOT_EQUAL = {'identifier': 'ne', 'template': '{column} != {value}'}
-    LOWER_THAN = {'identifier': 'lt', 'template': '{column} < {value}'}
-    LOWER_THAN_EQUAL = {'identifier': 'le', 'template': '{column} <= {value}'}
-    GREATER_THAN = {'identifier': 'gt', 'template': '{column} > {value}'}
-    GREATER_THAN_EQUAL = {'identifier': 'ge', 'template': '{column} >= {value}'}
-    IN = {'identifier': 'in', 'template': '{column} in {value}'}
-    NOT_IN = {'identifier': 'nin', 'template': '{column} not in {value}'}
+class PandasOperatorMapping(Switch):
+    def EQUAL(self):
+        return lambda column, value: f'{column} == {value}'
 
-    def to_clause(self, column, value):
-        return self.value['template'].format(column=column, value=value)
+    def NOT_EQUAL(self):
+        return lambda column, value: f'{column} != {value}'
 
-    @classmethod
-    def from_identifier(cls, operator: str):
-        return next((item for item in cls if operator == item.value['identifier']), None)
+    def LOWER_THAN(self):
+        return lambda column, value: f'{column} < {value}'
+
+    def LOWER_THAN_EQUAL(self):
+        return lambda column, value: f'{column} <= {value}'
+
+    def GREATER_THAN(self):
+        return lambda column, value: f'{column} > {value}'
+
+    def GREATER_THAN_EQUAL(self):
+        return lambda column, value: f'{column} >= {value}'
+
+    def IN(self):
+        return lambda column, value: f'{column} in {value}'
+
+    def NOT_IN(self):
+        return lambda column, value: f'{column} not in {value}'
+
+    def MATCHES(self):
+        raise NotImplementedError(f'Operator not implemented in pandas (MATCHES)')
+
+    def NOT_MATCHES(self):
+        raise NotImplementedError(f'Operator not implemented in pandas (NOT_MATCHES)')
+
+    def IS_NULL(self):
+        raise NotImplementedError(f'Operator not implemented in pandas (IS_NULL)')
+
+    def IS_NOT_NULL(self):
+        raise NotImplementedError(f'Operator not implemented in pandas (IS_NOT_NULL)')

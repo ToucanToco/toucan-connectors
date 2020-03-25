@@ -3,15 +3,13 @@ import re
 from copy import deepcopy
 from enum import Enum
 
+import pyjq
 from jinja2 import Environment, StrictUndefined, Template, meta
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
 
-import pyjq
 
 # Permissions conditions operators
-
-
 class ConditionOperator(Enum):
     EQUAL = 'eq'
     NOT_EQUAL = 'ne'
@@ -21,9 +19,13 @@ class ConditionOperator(Enum):
     GREATER_THAN_EQUAL = 'ge'
     IN = 'in'
     NOT_IN = 'nin'
+    MATCHES = 'matches'
+    NOT_MATCHES = 'notmatches'
+    IS_NULL = 'isnull'
+    IS_NOT_NULL = 'notnull'
 
     @classmethod
-    def has_value(cls, value):
+    def has_value(cls, value: str) -> bool:
         return any(value == item.value for item in cls)
 
 
