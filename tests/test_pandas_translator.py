@@ -53,3 +53,14 @@ def test_permission_conditions_to_pandas_query():
         PandasConditionTranslator.translate({'and': 1})
     with pytest.raises(ValueError):
         PandasConditionTranslator.translate({'or': 1})
+
+
+def test_PandasConditionTranslator_operators():
+    assert PandasConditionTranslator.EQUAL()('col', 'val') == 'col == val'
+    assert PandasConditionTranslator.NOT_EQUAL()('col', 'val') == 'col != val'
+    assert PandasConditionTranslator.GREATER_THAN()('col', 'val') == 'col > val'
+    assert PandasConditionTranslator.GREATER_THAN_EQUAL()('col', 'val') == 'col >= val'
+    assert PandasConditionTranslator.LOWER_THAN()('col', 'val') == 'col < val'
+    assert PandasConditionTranslator.LOWER_THAN_EQUAL()('col', 'val') == 'col <= val'
+    assert PandasConditionTranslator.IN()('col', ['val']) == "col in ['val']"
+    assert PandasConditionTranslator.NOT_IN()('col', ['val']) == "col not in ['val']"

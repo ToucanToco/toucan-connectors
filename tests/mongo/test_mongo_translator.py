@@ -125,3 +125,20 @@ def test_MongoConditionTranslator_translate_with_jinja():
     }
     expected = {'$or': [{'type': {'$eq': 'YTD'}}, {'periode': {'$eq': '{{my_indic[0]}}'}}]}
     assert MongoConditionTranslator.translate(expr) == expected
+
+
+def test_MongoConditionTranslator_operators():
+    assert MongoConditionTranslator.EQUAL()('col', 'val') == {'col': {'$eq': 'val'}}
+    assert MongoConditionTranslator.NOT_EQUAL()('col', 'val') == {'col': {'$ne': 'val'}}
+    assert MongoConditionTranslator.GREATER_THAN()('col', 'val') == {'col': {'$gt': 'val'}}
+    assert MongoConditionTranslator.GREATER_THAN_EQUAL()('col', 'val') == {'col': {'$gte': 'val'}}
+    assert MongoConditionTranslator.LOWER_THAN()('col', 'val') == {'col': {'$lt': 'val'}}
+    assert MongoConditionTranslator.LOWER_THAN_EQUAL()('col', 'val') == {'col': {'$lte': 'val'}}
+    assert MongoConditionTranslator.IN()('col', ['val']) == {'col': {'$in': ['val']}}
+    assert MongoConditionTranslator.NOT_IN()('col', ['val']) == {'col': {'$nin': ['val']}}
+    assert MongoConditionTranslator.IS_NULL()('col') == {'col': {'$exists': False}}
+    assert MongoConditionTranslator.IS_NOT_NULL()('col') == {'col': {'$exists': True}}
+    assert MongoConditionTranslator.MATCHES()('col', 'val') == {'col': {'$regex': 'val'}}
+    assert MongoConditionTranslator.NOT_MATCHES()('col', 'val') == {
+        'col': {'$not': {'$regex': 'val'}}
+    }

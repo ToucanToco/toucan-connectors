@@ -85,8 +85,8 @@ class MongoConditionTranslator(ConditionTranslator):
 
     @classmethod
     def IS_NULL(self):
-        return lambda column, value: {column: {'$exists': False}}
+        return lambda column, value=None: {column: {'$exists': False}}
 
     @classmethod
     def IS_NOT_NULL(self):
-        return lambda column, value: {column: {'$exists': True}}
+        return lambda column, value=None: {column: {'$exists': True}}
