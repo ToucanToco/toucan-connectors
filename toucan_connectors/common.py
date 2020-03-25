@@ -29,7 +29,7 @@ class ConditionOperator(Enum):
         return any(value == item.value for item in cls)
 
 
-class ConditionTranslator():
+class ConditionTranslator:
     """
     Base class for any translator from conditions to query clause.
 
@@ -37,6 +37,7 @@ class ConditionTranslator():
 
     Each available operator supported must be implemented in child classes.
     """
+
     def translate(cls, condition):
         raise NotImplementedError()
 
@@ -87,6 +88,7 @@ class ConditionTranslator():
     @classmethod
     def IS_NOT_NULL(cls):
         raise NotImplementedError
+
 
 
 # Query interpolation

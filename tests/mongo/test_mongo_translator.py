@@ -1,35 +1,34 @@
 import pytest
 
-from toucan_connectors.mongo.mongo_translator import (
-    permission_condition_to_mongo_clause,
-    permission_conditions_to_mongo_query,
-)
+from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 
 
-def test_permission_condition_to_mongo_clause():
+def test_MongoConditionTranslator_condition_to_clause():
     # works with list
     c = {'column': 'city name', 'operator': 'in', 'value': ['Paris', 'London']}
-    assert permission_condition_to_mongo_clause(c) == {'city name': {'$in': ['Paris', 'London']}}
+    assert MongoConditionTranslator.condition_to_clause(c) == {
+        'city name': {'$in': ['Paris', 'London']}
+    }
     # works with numbers
     c = {'column': 'population', 'operator': 'eq', 'value': 42}
-    assert permission_condition_to_mongo_clause(c) == {'population': {'$eq': 42}}
+    assert MongoConditionTranslator.condition_to_clause(c) == {'population': {'$eq': 42}}
     # works with strings
     c = {'column': 'country', 'operator': 'eq', 'value': 'France'}
-    assert permission_condition_to_mongo_clause(c) == {'country': {'$eq': 'France'}}
+    assert MongoConditionTranslator.condition_to_clause(c) == {'country': {'$eq': 'France'}}
     # raise when needed
     with pytest.raises(KeyError):
-        permission_condition_to_mongo_clause({'column': 'population', 'operator': 'eq'})
+        MongoConditionTranslator.condition_to_clause({'column': 'population', 'operator': 'eq'})
     with pytest.raises(KeyError):
-        permission_condition_to_mongo_clause({'column': 'population', 'value': 42})
+        MongoConditionTranslator.condition_to_clause({'column': 'population', 'value': 42})
     with pytest.raises(KeyError):
-        permission_condition_to_mongo_clause({'operator': 'eq', 'value': 42})
+        MongoConditionTranslator.condition_to_clause({'operator': 'eq', 'value': 42})
     with pytest.raises(ValueError):
-        permission_condition_to_mongo_clause(
+        MongoConditionTranslator.condition_to_clause(
             {'column': 'population', 'operator': 'unsupported', 'value': 42}
         )
 
 
-def test_permission_conditions_to_mongo_query():
+def test_MongoConditionTranslator_translate():
     c = {
         'and': [
             {'column': 'country', 'operator': 'eq', 'value': 'France'},
@@ -41,7 +40,7 @@ def test_permission_conditions_to_mongo_query():
             },
         ]
     }
-    assert permission_conditions_to_mongo_query(c) == {
+    assert MongoConditionTranslator.translate(c) == {
         '$and': [
             {'country': {'$eq': 'France'}},
             {'$or': [{'city name': {'$in': ['Paris', 'London']}}, {'population': {'$eq': 42}}]},
@@ -49,9 +48,9 @@ def test_permission_conditions_to_mongo_query():
     }
     # Invalid and/or condition list
     with pytest.raises(ValueError):
-        permission_conditions_to_mongo_query({'and': 1})
+        MongoConditionTranslator.translate({'and': 1})
     with pytest.raises(ValueError):
-        permission_conditions_to_mongo_query({'or': 1})
+        MongoConditionTranslator.translate({'or': 1})
     # Complicated one
     query = {
         'or': [
@@ -86,11 +85,11 @@ def test_permission_conditions_to_mongo_query():
         ]
     }
 
-    result = permission_conditions_to_mongo_query(query)
+    result = MongoConditionTranslator.translate(query)
     assert result == expected
 
 
-def test_permission_conditions_to_mongo_query_with_jinja():
+def test_MongoConditionTranslator_translate_with_jinja():
     expr = {
         'or': [
             {'column': 'type', 'operator': 'eq', 'value': 'YTD'},
@@ -98,7 +97,7 @@ def test_permission_conditions_to_mongo_query_with_jinja():
         ]
     }
     expected = {'$or': [{'type': {'$eq': 'YTD'}}, {'periode': {'$eq': 'yo_{{periode}}'}}]}
-    assert permission_conditions_to_mongo_query(expr) == expected
+    assert MongoConditionTranslator.translate(expr) == expected
 
     expr = {
         'or': [
@@ -107,7 +106,7 @@ def test_permission_conditions_to_mongo_query_with_jinja():
         ]
     }
     expected = {'$or': [{'type': {'$eq': 'YTD'}}, {'periode': {'$eq': '{{periode}}'}}]}
-    assert permission_conditions_to_mongo_query(expr) == expected
+    assert MongoConditionTranslator.translate(expr) == expected
 
     expr = {
         'or': [
@@ -116,7 +115,7 @@ def test_permission_conditions_to_mongo_query_with_jinja():
         ]
     }
     expected = {'$or': [{'type': {'$eq': 'YTD'}}, {'periode': {'$eq': 'yo_{{my_indic["a"]}}'}}]}
-    assert permission_conditions_to_mongo_query(expr) == expected
+    assert MongoConditionTranslator.translate(expr) == expected
 
     expr = {
         'or': [
@@ -125,4 +124,4 @@ def test_permission_conditions_to_mongo_query_with_jinja():
         ]
     }
     expected = {'$or': [{'type': {'$eq': 'YTD'}}, {'periode': {'$eq': '{{my_indic[0]}}'}}]}
-    assert permission_conditions_to_mongo_query(expr) == expected
+    assert MongoConditionTranslator.translate(expr) == expected
