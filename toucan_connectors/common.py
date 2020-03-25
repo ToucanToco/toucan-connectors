@@ -122,14 +122,11 @@ def nosql_apply_parameters_to_query(query, parameters):
     return query
 
 
-def apply_query_parameters(query, parameters):
+def apply_query_parameters(query: str, parameters: dict) -> str:
     """
     Apply parameters to query
 
-    :param      query:       The query
-    :type       query:       { type_description }
-    :param      parameters:  The parameters
-    :type       parameters:  { type_description }
+    Interpolate the query, which is a Jinja templates, with the provided parameters.
     """
 
     def _flatten_dict(p, parent_key=''):

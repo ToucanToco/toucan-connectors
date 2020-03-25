@@ -46,6 +46,10 @@ def test_permission_condition_to_pandas_clause():
         permission_condition_to_pandas_clause({'column': 'population', 'value': 42})
     with pytest.raises(KeyError):
         permission_condition_to_pandas_clause({'operator': 'eq', 'value': 42})
+    with pytest.raises(ValueError):
+        permission_condition_to_pandas_clause(
+            {'column': 'population', 'operator': 'unsupported', 'value': 42}
+        )
 
 
 def test_permission_conditions_to_pandas_query():
@@ -64,7 +68,7 @@ def test_permission_conditions_to_pandas_query():
         permission_conditions_to_pandas_query(c)
         == "(`country` == 'France' and (`city name` in ['Paris', 'London'] or `population` == 42))"
     )
-    # looking for 100% code coverage
+    # Invalid and/or condition list
     with pytest.raises(ValueError):
         permission_conditions_to_pandas_query({'and': 1})
     with pytest.raises(ValueError):
