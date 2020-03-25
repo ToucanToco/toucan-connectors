@@ -84,19 +84,3 @@ class PandasConditionTranslator(ConditionTranslator):
     @classmethod
     def NOT_IN(cls):
         return lambda column, value: f'{column} not in {value}'
-
-    @classmethod
-    def MATCHES(cls):
-        raise NotImplementedError(f'Operator not implemented in pandas (MATCHES)')
-
-    @classmethod
-    def NOT_MATCHES(cls):
-        raise NotImplementedError(f'Operator not implemented in pandas (NOT_MATCHES)')
-
-    @classmethod
-    def IS_NULL(cls):
-        raise NotImplementedError(f'Operator not implemented in pandas (IS_NULL)')
-
-    @classmethod
-    def IS_NOT_NULL(cls):
-        raise NotImplementedError(f'Operator not implemented in pandas (IS_NOT_NULL)')
