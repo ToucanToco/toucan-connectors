@@ -1,12 +1,33 @@
 import ast
 import re
-from abc import ABC, ABCMeta, abstractmethod
 from copy import deepcopy
+from enum import Enum
 
-import pyjq
 from jinja2 import Environment, StrictUndefined, Template, meta
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
+
+import pyjq
+
+# Permissions conditions operators
+
+
+class ConditionOperator(Enum):
+    EQUAL = 'eq'
+    NOT_EQUAL = 'ne'
+    LOWER_THAN = 'lt'
+    LOWER_THAN_EQUAL = 'le'
+    GREATER_THAN = 'gt'
+    GREATER_THAN_EQUAL = 'ge'
+    IN = 'in'
+    NOT_IN = 'nin'
+
+    @classmethod
+    def has_value(cls, value):
+        return any(value == item.value for item in cls)
+
+
+# Query interpolation
 
 RE_PARAM = r'%\(([^(%\()]*)\)s'
 RE_JINJA = r'{{([^({{)}]*)}}'
@@ -159,6 +180,9 @@ def apply_query_parameters(query: str, parameters: dict) -> str:
         parameters.update(p_keep_type)
 
     return Template(query).render(parameters)
+
+
+# jq filtering
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
