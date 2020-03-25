@@ -29,6 +29,66 @@ class ConditionOperator(Enum):
         return any(value == item.value for item in cls)
 
 
+class ConditionTranslator():
+    """
+    Base class for any translator from conditions to query clause.
+
+    The `translate` method take the condition and returnthe corresponding part of a query.
+
+    Each available operator supported must be implemented in child classes.
+    """
+    def translate(cls, condition):
+        raise NotImplementedError()
+
+    @classmethod
+    def EQUAL(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def NOT_EQUAL(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def LOWER_THAN(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def LOWER_THAN_EQUAL(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def GREATER_THAN(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def GREATER_THAN_EQUAL(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def IN(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def NOT_IN(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def MATCHES(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def NOT_MATCHES(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def IS_NULL(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def IS_NOT_NULL(cls):
+        raise NotImplementedError
+
+
 # Query interpolation
 
 RE_PARAM = r'%\(([^(%\()]*)\)s'
