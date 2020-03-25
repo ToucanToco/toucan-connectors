@@ -122,7 +122,16 @@ def nosql_apply_parameters_to_query(query, parameters):
     return query
 
 
-def render_raw_permissions(query, parameters):
+def apply_query_parameters(query, parameters):
+    """
+    Apply parameters to query
+
+    :param      query:       The query
+    :type       query:       { type_description }
+    :param      parameters:  The parameters
+    :type       parameters:  { type_description }
+    """
+
     def _flatten_dict(p, parent_key=''):
         new_p = {}
         for k, v in deepcopy(p).items():

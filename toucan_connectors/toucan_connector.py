@@ -11,7 +11,8 @@ import pandas as pd
 import tenacity as tny
 from pydantic import BaseModel
 
-from toucan_connectors.common import render_raw_permissions
+from toucan_connectors.common import apply_query_parameters
+from toucan_connectors.pandas_translator import permission_conditions_to_pandas_query
 
 try:
     from bearer import Bearer
@@ -227,7 +228,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     @decorate_func_with_retry
     def get_df(
-        self, data_source: ToucanDataSource, permissions: Optional[str] = None
+        self, data_source: ToucanDataSource, permissions: Optional[dict] = None
     ) -> pd.DataFrame:
         """
         Method to retrieve the data as a pandas dataframe
@@ -235,14 +236,15 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         res = self._retrieve_data(data_source)
         if permissions is not None:
-            rendered_permissions = render_raw_permissions(permissions, data_source.parameters)
-            res = res.query(rendered_permissions)
+            permissions_query = permission_conditions_to_pandas_query(permissions)
+            permissions_query = apply_query_parameters(permissions_query, data_source.parameters)
+            res = res.query(permissions_query)
         return res
 
     def get_slice(
         self,
         data_source: ToucanDataSource,
-        permissions: Optional[str] = None,
+        permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
     ) -> DataSlice:
@@ -260,7 +262,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         else:
             return DataSlice(df[offset:], len(df))
 
-    def explain(self, data_source: ToucanDataSource, permissions: Optional[str] = None):
+    def explain(self, data_source: ToucanDataSource, permissions: Optional[dict] = None):
         """Method to give metrics about the query"""
         return None
 

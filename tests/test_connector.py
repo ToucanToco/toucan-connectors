@@ -65,7 +65,7 @@ def test_get_df_with_permissions():
 
     connector = DataConnector(name='my_name')
     ds = connector.data_source_model(domain='yo', name='my_name', query='')
-    df = connector.get_df(ds, permissions='A==1')
+    df = connector.get_df(ds, permissions={'column': 'A', 'operator': 'eq', 'value': 1})
     assert all(df == pd.DataFrame({'A': [1]}))
 
 
