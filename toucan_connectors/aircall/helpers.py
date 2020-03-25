@@ -37,14 +37,18 @@ def build_empty_df(dataset: str) -> pd.DataFrame:
 
 
 def generate_multiple_jq_filters(dataset: str) -> List[str]:
-    """Provides two separate jq filters; used in calls and users datasets"""
+    """
+    Provides two separate jq filters;
+    used in calls and users datasets
+    """
 
-    teams_jq_filter = FILTER_DICTIONARY['teams']
+    teams_jq_filter: str = FILTER_DICTIONARY['teams']
 
-    variable_jq_filter = FILTER_DICTIONARY.get(dataset, None)
+    variable_jq_filter: str = FILTER_DICTIONARY[dataset]
 
     return [teams_jq_filter, variable_jq_filter]
 
 
-def generate_tags_filter(dataset):
+def generate_tags_filter(dataset: str) -> str:
+    """Provides a single, simple jq filter; only for tags call"""
     return FILTER_DICTIONARY[dataset]
