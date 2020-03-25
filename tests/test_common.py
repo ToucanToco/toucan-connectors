@@ -1,4 +1,16 @@
-from toucan_connectors.common import apply_query_parameters, nosql_apply_parameters_to_query
+from toucan_connectors.common import (
+    ConditionOperator,
+    apply_query_parameters,
+    nosql_apply_parameters_to_query,
+)
+
+
+def test_condition_operator():
+    """
+    It should indicate whether or not the operator is valid
+    """
+    assert ConditionOperator.has_value('eq') is True
+    assert ConditionOperator.has_value('perlinpinpin') is False
 
 
 def test_apply_parameter_to_query_do_nothing():
