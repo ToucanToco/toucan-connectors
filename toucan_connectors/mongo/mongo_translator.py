@@ -7,7 +7,7 @@ def permission_condition_to_mongo_clause(condition: dict) -> dict:
     else:
         operator = MongoOperatorMapping.from_identifier(condition['operator'])
         if operator is None:
-            raise ValueError(f'Unsupported operator:{condition["operator"]}')
+            raise ValueError(f'Unsupported operator: {condition["operator"]}')
 
     if 'column' not in condition:
         raise KeyError('key "column" is missing from permission condition')

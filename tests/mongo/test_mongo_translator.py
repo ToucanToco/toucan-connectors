@@ -84,7 +84,7 @@ def test_permission_conditions_to_mongo_query():
             {'$or': [{'city name': {'$in': ['Paris', 'London']}}, {'population': {'$eq': 42}}]},
         ]
     }
-    # looking for 100% code coverage
+    # Invalid and/or condition list
     with pytest.raises(ValueError):
         permission_conditions_to_mongo_query({'and': 1})
     with pytest.raises(ValueError):

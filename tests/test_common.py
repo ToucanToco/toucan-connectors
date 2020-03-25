@@ -1,9 +1,4 @@
-import pytest
-
-from toucan_connectors.common import (
-    apply_query_parameters,
-    nosql_apply_parameters_to_query,
-)
+from toucan_connectors.common import apply_query_parameters, nosql_apply_parameters_to_query
 
 
 def test_apply_parameter_to_query_do_nothing():
@@ -17,7 +12,7 @@ def test_apply_parameter_to_query_do_nothing():
 
 def test_apply_parameter_to_query():
     """
-    It sould work render all parameters
+    It should work render all parameters
     """
     tests = [
         (

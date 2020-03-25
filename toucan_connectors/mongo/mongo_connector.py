@@ -10,9 +10,8 @@ from bson.son import SON
 from cached_property import cached_property
 from pydantic import Field, SecretStr, create_model, validator
 
-from toucan_connectors.common import (
-    nosql_apply_parameters_to_query,
-)
+from toucan_connectors.common import nosql_apply_parameters_to_query
+from toucan_connectors.mongo.mongo_translator import permission_conditions_to_mongo_query
 from toucan_connectors.toucan_connector import (
     DataSlice,
     ToucanConnector,
@@ -20,7 +19,7 @@ from toucan_connectors.toucan_connector import (
     decorate_func_with_retry,
     strlist_to_enum,
 )
-from toucan_connectors.mongo.mongo_translator import permission_conditions_to_mongo_query
+
 
 def normalize_query(query, parameters):
     query = nosql_apply_parameters_to_query(query, parameters)
