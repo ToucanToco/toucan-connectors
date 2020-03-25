@@ -1,4 +1,9 @@
-from toucan_connectors.common import nosql_apply_parameters_to_query, render_raw_permissions
+import pytest
+
+from toucan_connectors.common import (
+    apply_query_parameters,
+    nosql_apply_parameters_to_query,
+)
 
 
 def test_apply_parameter_to_query_do_nothing():
@@ -162,7 +167,7 @@ def test_nosql_apply_parameters_to_query_dot():
 
 def test_render_raw_permission_no_params():
     query = '(indic0 == 0 or indic1 == 1)'
-    assert render_raw_permissions(query, None) == query
+    assert apply_query_parameters(query, None) == query
 
 
 def test_render_raw_permission():
@@ -174,4 +179,4 @@ def test_render_raw_permission():
     expected = (
         '(indic0 == "0" or indic1 == 1) and ' 'indic2 == "yo_2" and indic_list == [\'0\', 1, \'2\']'
     )
-    assert render_raw_permissions(query, params) == expected
+    assert apply_query_parameters(query, params) == expected
