@@ -1,105 +1,77 @@
-import json
-from ast import USub
-
-from toucan_connectors.common import Column, Expression, Operator, Value
+from enum import Enum
 
 
-class MongoExpression(Expression):
-    def BoolOp(self, op):
-        return {self.translate(op.op): list(map(self.translate, op.values))}
+def permission_condition_to_mongo_clause(condition: dict) -> dict:
+    if 'operator' not in condition:
+        raise KeyError('key "operator" is missing from permission condition')
+    else:
+        operator = MongoOperatorMapping.from_identifier(condition['operator'])
+        if operator is None:
+            raise ValueError(f'Unsupported operator:{condition["operator"]}')
 
-    def And(self, op):
-        return '$and'
+    if 'column' not in condition:
+        raise KeyError('key "column" is missing from permission condition')
+    else:
+        column = condition['column']
 
-    def Or(self, op):
-        return '$or'
+    if 'value' not in condition:
+        raise KeyError('key "value" is missing from permission condition')
+    else:
+        value = condition['value']
 
-    def Compare(self, compare):
-        field = MongoColumn().translate(compare.left)
-        operator = compare.ops[0]
-        right = compare.comparators[0]
-        return {field: MongoOperator().resolve(operator)(right)}
-
-
-class MongoOperator(Operator):
-    def Eq(self, node):
-        """=="""
-        return MongoValue().translate(node)
-
-    def NotEq(self, node):
-        """!="""
-        return {'$ne': MongoValue().translate(node)}
-
-    def In(self, node):
-        """in"""
-        return {'$in': MongoValue().translate(node)}
-
-    def NotIn(self, node):
-        """not in"""
-        return {'$nin': MongoValue().translate(node)}
-
-    def Gt(self, node):
-        """>"""
-        return {'$gt': MongoValue().translate(node)}
-
-    def Lt(self, node):
-        """<"""
-        return {'$lt': MongoValue().translate(node)}
-
-    def GtE(self, node):
-        """>="""
-        return {'$gte': MongoValue().translate(node)}
-
-    def LtE(self, node):
-        """<="""
-        return {'$lte': MongoValue().translate(node)}
+    return operator.to_clause(column, value)
 
 
-class MongoColumn(Column):
-    def Name(self, node):
-        return node.id
-
-    def Str(self, node):
-        return node.s
-
-    def Constant(self, node):
-        return node.value
-
-
-class MongoValue(Value):
-    SPECIAL_VALUES = {'null': None, 'false': False, 'true': True}
-
-    def Name(self, node):
-        if node.id in self.SPECIAL_VALUES:
-            return self.SPECIAL_VALUES[node.id]
+def permission_conditions_to_mongo_query(group: dict) -> dict:
+    if 'or' in group:
+        if isinstance(group['or'], list):
+            return {'$or': [permission_conditions_to_mongo_query(group) for group in group['or']]}
         else:
-            return node.id
+            raise ValueError("'or' value must be an array")
+    elif 'and' in group:
+        if isinstance(group['and'], list):
+            return {'$and': [permission_conditions_to_mongo_query(group) for group in group['and']]}
+        else:
+            raise ValueError("'and' value must be an array")
+    else:
+        return permission_condition_to_mongo_clause(group)
 
-    def Str(self, node):
-        return node.s
 
-    def Num(self, node):
-        return node.n
+class MongoOperatorMapping(Enum):
+    EQUAL = {'identifier': 'eq', 'clause': lambda column, value: {column: {'$eq': value}}}
+    NOT_EQUAL = {'identifier': 'ne', 'clause': lambda column, value: {column: {'$ne': value}}}
+    LOWER_THAN = {'identifier': 'lt', 'clause': lambda column, value: {column: {'$lt': value}}}
+    LOWER_THAN_EQUAL = {
+        'identifier': 'le',
+        'clause': lambda column, value: {column: {'$lte': value}},
+    }
+    GREATER_THAN = {'identifier': 'gt', 'clause': lambda column, value: {column: {'$gt': value}}}
+    GREATER_THAN_EQUAL = {
+        'identifier': 'ge',
+        'clause': lambda column, value: {column: {'$gte': value}},
+    }
+    IN = {'identifier': 'in', 'clause': lambda column, value: {column: {'$in': value}}}
+    NOT_IN = {'identifier': 'nin', 'clause': lambda column, value: {column: {'$nin': value}}}
+    MATCHES = {
+        'identifier': 'matches',
+        'clause': lambda column, value: {column: {'$regex': value}},
+    }
+    NOT_MATCHES = {
+        'identifier': 'notmatches',
+        'clause': lambda column, value: {column: {'$not': {'$regex': value}}},
+    }
+    IS_NULL = {
+        'identifier': 'isnull',
+        'clause': lambda column, value: {column: {'$exists': False}},
+    }
+    IS_NOT_NULL = {
+        'identifier': 'notnull',
+        'clause': lambda column, value: {column: {'$exists': True}},
+    }
 
-    def Constant(self, node):
-        return node.value
+    def to_clause(self, column, value):
+        return self.value['clause'](column, value)
 
-    def List(self, node):
-        return list(map(self.translate, node.elts))
-
-    def UnaryOp(self, op):
-        value = self.translate(op.operand)
-        if isinstance(op.op, USub):
-            value = -value
-        return value
-
-    def Set(self, node):
-        elts = [self.translate(elt) for elt in node.elts]
-        return '{' + ', '.join(elts) + '}'
-
-    def Subscript(self, node):
-        indice = json.dumps(self.translate(node.slice))
-        return self.translate(node.value) + '[' + indice + ']'
-
-    def Index(self, node):
-        return self.translate(node.value)
+    @classmethod
+    def from_identifier(cls, operator: str):
+        return next((item for item in cls if operator == item.value['identifier']), None)
