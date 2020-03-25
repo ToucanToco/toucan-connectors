@@ -39,47 +39,47 @@ class ConditionTranslator:
     """
 
     def translate(cls, condition):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def EQUAL(cls):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def NOT_EQUAL(cls):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def LOWER_THAN(cls):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def LOWER_THAN_EQUAL(cls):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def GREATER_THAN(cls):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def GREATER_THAN_EQUAL(cls):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def IN(cls):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def NOT_IN(cls):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def MATCHES(cls):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def NOT_MATCHES(cls):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def IS_NULL(cls):
@@ -88,7 +88,6 @@ class ConditionTranslator:
     @classmethod
     def IS_NOT_NULL(cls):
         raise NotImplementedError
-
 
 
 # Query interpolation
