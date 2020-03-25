@@ -12,7 +12,7 @@ import tenacity as tny
 from pydantic import BaseModel
 
 from toucan_connectors.common import apply_query_parameters
-from toucan_connectors.pandas_translator import permission_conditions_to_pandas_query
+from toucan_connectors.pandas_translator import PandasConditionTranslator
 
 try:
     from bearer import Bearer
@@ -236,7 +236,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         res = self._retrieve_data(data_source)
         if permissions is not None:
-            permissions_query = permission_conditions_to_pandas_query(permissions)
+            permissions_query = PandasConditionTranslator.translate(permissions)
             permissions_query = apply_query_parameters(permissions_query, data_source.parameters)
             res = res.query(permissions_query)
         return res
