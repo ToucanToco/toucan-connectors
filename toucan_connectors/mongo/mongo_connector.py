@@ -11,7 +11,7 @@ from cached_property import cached_property
 from pydantic import Field, SecretStr, create_model, validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.mongo.mongo_translator import permission_conditions_to_mongo_query
+from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
     ToucanConnector,
@@ -37,7 +37,7 @@ def normalize_query(query, parameters):
 
 def apply_permissions(query, permissions_condition: dict):
     if permissions_condition:
-        permissions = permission_conditions_to_mongo_query(permissions_condition)
+        permissions = MongoConditionTranslator.translate(permissions_condition)
         if isinstance(query, dict):
             query = {'$and': [query, permissions]}
         else:
