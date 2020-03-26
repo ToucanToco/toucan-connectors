@@ -6,6 +6,7 @@ import pandas as pd
 from enum import Enum
 import pyjq
 from pydantic import Field
+import time
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -13,6 +14,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from .helpers import build_df, build_empty_df, generate_multiple_jq_filters, generate_tags_filter
 
 PER_PAGE = 50
+# temporary constant that will be removed in production-ready code
 STUFF = '156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@'
 
 
@@ -23,6 +25,7 @@ async def bulk_fetch(
     Fetches data from AirCall API
     dependent on existence of other pages and call limit
     """
+    print(f'current pass {current_pass}', time.ctime())
     data: dict = await fetch(base_endpoint, session)
 
     data_list.append(data)
@@ -106,6 +109,8 @@ class AircallConnector(ToucanConnector):
                     bulk_fetch(variable_endpoint, [], session, limit, 0)
                 )
 
+                print('final arrival ', time.ctime())
+
                 team_jq_filter, variable_jq_filter = generate_multiple_jq_filters(dataset)
 
                 team_data = pyjq.first(team_jq_filter, {'results' : team_data})
@@ -139,11 +144,11 @@ class AircallConnector(ToucanConnector):
             return pd.concat([empty_df, non_empty_df])
         else:
             team_data, variable_data = res
-            df = build_df(
-                dataset,
-                [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
-            )
-            print('df ', df)
+            # df = build_df(
+            #     dataset,
+            #     [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
+            # )
+            # print('df ', df)
             return build_df(
                 dataset,
                 [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
