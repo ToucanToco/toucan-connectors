@@ -129,7 +129,7 @@ empty_teams = {
     }
 }
 
-user_json = {
+user_data = {
     'users': [
         {
             'id': 10,
@@ -255,3 +255,63 @@ fake_calls = {
         'previous_page_link' : None
     }
 }
+
+filtered_teams = [
+    {
+        'team' : 'Team 1',
+        'user_id' : 100,
+        'user_name' : 'User 1',
+        'user_created_at' : '2020-03-25T14:41:09.000Z'
+    },
+    {
+        'team' : 'Team 2',
+        'user_id' : 200,
+        'user_name' : 'User 2',
+        'user_created_at' : '2020-03-25T14:41:09.000Z'
+    },
+    {
+        'team' : 'Team 2',
+        'user_id' : 300,
+        'user_name' : 'User 3',
+        'user_created_at' : '2020-03-25T14:41:09.000Z'
+    },
+    {
+        'team' : 'Team 3',
+        'user_id' : 400,
+        'user_name' : 'User 4',
+        'user_created_at' : '2020-03-25T14:41:09.000Z'
+    }
+]
+
+filtered_users = [
+    {
+        'user_id' : 100,
+        'user_name' : 'User 1',
+        'user_created_at' : '2020-03-25T14:41:09.000Z'
+    },
+    {
+        'user_id' : 200,
+        'user_name' : 'User 2',
+        'user_created_at' : '2020-03-25T14:41:09.000Z'
+    },
+    {
+        'user_id' : 300,
+        'user_name' : 'User 3',
+        'user_created_at' : '2020-03-25T14:41:09.000Z'
+    },
+    {
+        'user_id' : 400,
+        'user_name' : 'User 4',
+        'user_created_at' : '2020-03-25T14:41:09.000Z'
+    },
+    {
+        'user_id' : 500,
+        'user_name' : 'User 5',
+        'user_created_at' : '2020-03-25T14:41:09.000Z'
+    },
+    {
+        'user_id' : 600,
+        'user_name' : 'User 6',
+        'user_created_at' : '2020-03-25T14:41:09.000Z'
+    }
+]
