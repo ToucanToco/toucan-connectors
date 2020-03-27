@@ -44,11 +44,12 @@ def generate_multiple_jq_filters(dataset: str) -> List[str]:
 
     teams_jq_filter: str = FILTER_DICTIONARY['teams']
 
-    variable_jq_filter: str = FILTER_DICTIONARY[dataset]
+    # NOTE: 'users' is the default dataset
+    variable_jq_filter: str = FILTER_DICTIONARY.get(dataset, FILTER_DICTIONARY['users'])
 
     return [teams_jq_filter, variable_jq_filter]
 
 
 def generate_tags_filter(dataset: str) -> str:
     """Provides a single, simple jq filter; only for tags call"""
-    return FILTER_DICTIONARY[dataset]
+    return FILTER_DICTIONARY.get(dataset, 'tags')

@@ -54,7 +54,7 @@ class AircallDataset(str, Enum):
 class AircallDataSource(ToucanDataSource):
     limit: int = Field(100, description='Limit of entries (-1 for no limit)', ge=-1)
     query: Optional[dict] = {}
-    dataset: AircallDataset = 'teams'
+    dataset: AircallDataset = 'users'
 
 
 class AircallConnector(ToucanConnector):
