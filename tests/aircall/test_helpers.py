@@ -7,7 +7,9 @@ from tests.aircall.mock_results import (
     filtered_users,
     team_data, user_data
 )
-from toucan_connectors.aircall.helpers import build_df, build_empty_df
+from toucan_connectors.aircall.helpers import (
+    build_df, build_empty_df
+)
 
 
 def test_build_df():
@@ -46,3 +48,23 @@ def test_build_df():
 
     assert df_4.shape == (4, 4)
     assert not df_4['team'].isna().any()
+
+
+def test_build_empty_df():
+    """Test the empty dataframe builder"""
+    empty_df = build_empty_df('calls')
+
+    assert empty_df.shape == (0, 11)
+    assert list(empty_df.columns) == [
+        'id',
+        'direction',
+        'duration',
+        'answered_at',
+        'ended_at',
+        'raw_digits',
+        'user_id',
+        'tags',
+        'user_name',
+        'team',
+        'day'
+    ]
