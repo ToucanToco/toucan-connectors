@@ -35,8 +35,7 @@ class ConditionTranslator(ABC):
     """
 
     @classmethod
-    @abstractmethod
-    def translate(cls, condition: dict):
+    def translate(cls, condition: dict, **kwargs):
         """
         Convert a condition into a format relevant for a type of connector.
 
@@ -59,6 +58,47 @@ class ConditionTranslator(ABC):
                 ]
             }
         """
+        if 'or' in condition:
+            if isinstance(condition['or'], list):
+                return cls.join_clauses(
+                    [cls.translate(condition, **kwargs) for condition in condition['or']], 'or'
+                )
+            else:
+                raise ValueError("'or' value must be an array")
+        elif 'and' in condition:
+            if isinstance(condition['and'], list):
+                return cls.join_clauses(
+                    [cls.translate(condition, **kwargs) for condition in condition['and']], 'and'
+                )
+            else:
+                raise ValueError("'and' value must be an array")
+        else:
+            return cls.generate_clause(**condition, **kwargs)
+
+    @classmethod
+    @abstractmethod
+    def join_clauses(cls, clauses: list, logical_operator: str):
+        """
+        Join multiple clauses with `and` or `or`.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def generate_clause(
+        cls, column: str, operator: str, value, enclosing_field_char='', enclosing_value_char=''
+    ):
+        print(enclosing_field_char, enclosing_value_char)
+        condition_operator = ConditionOperator(operator)
+        clause_generator_for_operator = getattr(cls, condition_operator.name)
+
+        if isinstance(value, str):
+            value = f'{enclosing_value_char}{value}{enclosing_value_char}'
+
+        return clause_generator_for_operator(
+            f'{enclosing_field_char}{column}{enclosing_field_char}', value
+        )
+
+    # Operators
 
     @classmethod
     @abstractmethod
@@ -112,12 +152,12 @@ class ConditionTranslator(ABC):
 
     @classmethod
     @abstractmethod
-    def IS_NULL(cls, column):
+    def IS_NULL(cls, column, value=None):
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
-    def IS_NOT_NULL(cls, column):
+    def IS_NOT_NULL(cls, column, value=None):
         raise NotImplementedError
 
 

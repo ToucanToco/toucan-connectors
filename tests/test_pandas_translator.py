@@ -3,36 +3,34 @@ import pytest
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 
 
-def test_permission_condition_to_pandas_clause():
+def test_translate_condition_unit():
     # works with list
     c = {'column': 'city name', 'operator': 'in', 'value': ['Paris', 'London']}
-    assert PandasConditionTranslator.condition_to_clause(c) == "`city name` in ['Paris', 'London']"
+    assert PandasConditionTranslator.translate(c) == "`city name` in ['Paris', 'London']"
     # works with numbers
     c = {'column': 'population', 'operator': 'eq', 'value': 42}
-    assert PandasConditionTranslator.condition_to_clause(c) == '`population` == 42'
-    # override enclosing field char
-    assert PandasConditionTranslator.condition_to_clause(c, "'") == "'population' == 42"
+    assert PandasConditionTranslator.translate(c) == '`population` == 42'
     # put strings between ''
     c = {'column': 'country', 'operator': 'eq', 'value': 'France'}
-    assert PandasConditionTranslator.condition_to_clause(c) == "`country` == 'France'"
-    # looking for 100% code coverage
-    with pytest.raises(KeyError):
-        PandasConditionTranslator.condition_to_clause({'column': 'population', 'operator': 'eq'})
-    with pytest.raises(KeyError):
-        PandasConditionTranslator.condition_to_clause({'column': 'population', 'value': 42})
-    with pytest.raises(KeyError):
-        PandasConditionTranslator.condition_to_clause({'operator': 'eq', 'value': 42})
+    assert PandasConditionTranslator.translate(c) == "`country` == 'France'"
+    # error cases
+    with pytest.raises(TypeError):
+        PandasConditionTranslator.translate({'column': 'population', 'operator': 'eq'})
+    with pytest.raises(TypeError):
+        PandasConditionTranslator.translate({'column': 'population', 'value': 42})
+    with pytest.raises(TypeError):
+        PandasConditionTranslator.translate({'operator': 'eq', 'value': 42})
     with pytest.raises(ValueError):
-        PandasConditionTranslator.condition_to_clause(
+        PandasConditionTranslator.translate(
             {'column': 'population', 'operator': 'unsupported', 'value': 42}
         )
     with pytest.raises(Exception):
-        PandasConditionTranslator.condition_to_clause(
+        PandasConditionTranslator.translate(
             {'column': 'population', 'operator': 'matches', 'value': 42}
         )
 
 
-def test_permission_conditions_to_pandas_query():
+def test_translate_condition_to_pandas_query():
     c = {
         'and': [
             {'column': 'country', 'operator': 'eq', 'value': 'France'},

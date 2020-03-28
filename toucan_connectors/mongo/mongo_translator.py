@@ -1,4 +1,4 @@
-from toucan_connectors.common import ConditionOperator, ConditionTranslator
+from toucan_connectors.common import ConditionTranslator
 
 
 class MongoConditionTranslator(ConditionTranslator):
@@ -7,42 +7,8 @@ class MongoConditionTranslator(ConditionTranslator):
     """
 
     @classmethod
-    def translate(cls, conditions: dict) -> dict:
-        if 'or' in conditions:
-            if isinstance(conditions['or'], list):
-                return {'$or': [cls.translate(conditions) for conditions in conditions['or']]}
-            else:
-                raise ValueError("'or' value must be an array")
-        elif 'and' in conditions:
-            if isinstance(conditions['and'], list):
-                return {'$and': [cls.translate(conditions) for conditions in conditions['and']]}
-            else:
-                raise ValueError("'and' value must be an array")
-        else:
-            return cls.condition_to_clause(conditions)
-
-    @classmethod
-    def condition_to_clause(cls, condition: dict) -> dict:
-        """
-        Convert a SimpleCondition to it's mongo clause equivalent.
-        """
-        if 'operator' not in condition:
-            raise KeyError('key "operator" is missing from permission condition')
-        else:
-            operator = ConditionOperator(condition['operator'])
-
-        if 'column' not in condition:
-            raise KeyError('key "column" is missing from permission condition')
-        else:
-            column = condition['column']
-
-        if 'value' not in condition:
-            raise KeyError('key "value" is missing from permission condition')
-        else:
-            value = condition['value']
-
-        generate_clause = getattr(cls, operator.name)
-        return generate_clause(column, value)
+    def join_clauses(cls, clauses: list, logical_operator: str):
+        return {f'${logical_operator}': clauses}
 
     @classmethod
     def EQUAL(cls, column, value):
