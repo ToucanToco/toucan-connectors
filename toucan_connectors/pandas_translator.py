@@ -1,9 +1,12 @@
-from toucan_connectors.common import ConditionTranslator
+from toucan_connectors.condition_translator import ConditionTranslator
 
 
 class PandasConditionTranslator(ConditionTranslator):
     """
     Utility class to convert a condition object into pandas.query format
+
+    This is a default way to apply a data filter in connectors, after data has
+    been requested and received.
     """
 
     @classmethod
