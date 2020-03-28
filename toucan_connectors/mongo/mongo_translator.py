@@ -1,4 +1,4 @@
-from toucan_connectors.common import ConditionTranslator
+from toucan_connectors.condition_translator import ConditionTranslator
 
 
 class MongoConditionTranslator(ConditionTranslator):
