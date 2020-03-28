@@ -1,5 +1,6 @@
 import ast
 import re
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from enum import Enum
 
@@ -10,7 +11,7 @@ from toucan_data_sdk.utils.helpers import slugify
 
 
 # Permissions conditions operators
-class ConditionOperator(Enum):
+class ConditionOperator(str, Enum):
     EQUAL = 'eq'
     NOT_EQUAL = 'ne'
     LOWER_THAN = 'lt'
@@ -24,69 +25,99 @@ class ConditionOperator(Enum):
     IS_NULL = 'isnull'
     IS_NOT_NULL = 'notnull'
 
-    @classmethod
-    def has_value(cls, value: str) -> bool:
-        return any(value == item.value for item in cls)
 
-
-class ConditionTranslator:
+class ConditionTranslator(ABC):
     """
-    Base class for any translator from conditions to query clause.
+    Class with utilities methods to translate data conditions from a
+    dictionnary to a format that can be applied to filter data.
 
-    The `translate` method take the condition and returnthe corresponding part of a query.
-
-    Each available operator supported must be implemented in child classes.
+    The main method is `translate`.
     """
 
-    def translate(cls, condition):
+    @classmethod
+    @abstractmethod
+    def translate(cls, condition: dict):
+        """
+        Convert a condition into a format relevant for a type of connector.
+
+        A simple condition looks like:
+            {
+                'column':
+                'operator':
+                'value':
+            }
+
+        These base blocks can be assembled in groups with logical operators:
+            {
+                or: [
+                    { column, operator, value },
+                    { column, operator, value },
+                    { and: [
+                        { column, operator, value },
+                        { column, operator, value }
+                    ] }
+                ]
+            }
+        """
+
+    @classmethod
+    @abstractmethod
+    def EQUAL(cls, column, value):
         raise NotImplementedError
 
     @classmethod
-    def EQUAL(cls):
+    @abstractmethod
+    def NOT_EQUAL(cls, column, value):
         raise NotImplementedError
 
     @classmethod
-    def NOT_EQUAL(cls):
+    @abstractmethod
+    def LOWER_THAN(cls, column, value):
         raise NotImplementedError
 
     @classmethod
-    def LOWER_THAN(cls):
+    @abstractmethod
+    def LOWER_THAN_EQUAL(cls, column, value):
         raise NotImplementedError
 
     @classmethod
-    def LOWER_THAN_EQUAL(cls):
+    @abstractmethod
+    def GREATER_THAN(cls, column, value):
         raise NotImplementedError
 
     @classmethod
-    def GREATER_THAN(cls):
+    @abstractmethod
+    def GREATER_THAN_EQUAL(cls, column, value):
         raise NotImplementedError
 
     @classmethod
-    def GREATER_THAN_EQUAL(cls):
+    @abstractmethod
+    def IN(cls, column, values):
         raise NotImplementedError
 
     @classmethod
-    def IN(cls):
+    @abstractmethod
+    def NOT_IN(cls, column, values):
         raise NotImplementedError
 
     @classmethod
-    def NOT_IN(cls):
+    @abstractmethod
+    def MATCHES(cls, column, value):
         raise NotImplementedError
 
     @classmethod
-    def MATCHES(cls):
+    @abstractmethod
+    def NOT_MATCHES(cls, column, value):
         raise NotImplementedError
 
     @classmethod
-    def NOT_MATCHES(cls):
+    @abstractmethod
+    def IS_NULL(cls, column):
         raise NotImplementedError
 
     @classmethod
-    def IS_NULL(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def IS_NOT_NULL(cls):
+    @abstractmethod
+    def IS_NOT_NULL(cls, column):
         raise NotImplementedError
 
 
