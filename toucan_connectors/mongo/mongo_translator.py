@@ -2,11 +2,12 @@ from toucan_connectors.common import ConditionOperator, ConditionTranslator
 
 
 class MongoConditionTranslator(ConditionTranslator):
+    """
+    Utility class to convert a condition object into mongo $match format
+    """
+
     @classmethod
     def translate(cls, conditions: dict) -> dict:
-        """
-        Convert a conditions object into mongo $match clauses
-        """
         if 'or' in conditions:
             if isinstance(conditions['or'], list):
                 return {'$or': [cls.translate(conditions) for conditions in conditions['or']]}
@@ -40,53 +41,53 @@ class MongoConditionTranslator(ConditionTranslator):
         else:
             value = condition['value']
 
-        generate_clause = getattr(cls, operator.name)()
+        generate_clause = getattr(cls, operator.name)
         return generate_clause(column, value)
 
     @classmethod
-    def EQUAL(self):
-        return lambda column, value: {column: {'$eq': value}}
+    def EQUAL(cls, column, value):
+        return {column: {'$eq': value}}
 
     @classmethod
-    def NOT_EQUAL(self):
-        return lambda column, value: {column: {'$ne': value}}
+    def NOT_EQUAL(cls, column, value):
+        return {column: {'$ne': value}}
 
     @classmethod
-    def LOWER_THAN(self):
-        return lambda column, value: {column: {'$lt': value}}
+    def LOWER_THAN(cls, column, value):
+        return {column: {'$lt': value}}
 
     @classmethod
-    def LOWER_THAN_EQUAL(self):
-        return lambda column, value: {column: {'$lte': value}}
+    def LOWER_THAN_EQUAL(cls, column, value):
+        return {column: {'$lte': value}}
 
     @classmethod
-    def GREATER_THAN(self):
-        return lambda column, value: {column: {'$gt': value}}
+    def GREATER_THAN(cls, column, value):
+        return {column: {'$gt': value}}
 
     @classmethod
-    def GREATER_THAN_EQUAL(self):
-        return lambda column, value: {column: {'$gte': value}}
+    def GREATER_THAN_EQUAL(cls, column, value):
+        return {column: {'$gte': value}}
 
     @classmethod
-    def IN(self):
-        return lambda column, value: {column: {'$in': value}}
+    def IN(cls, column, values):
+        return {column: {'$in': values}}
 
     @classmethod
-    def NOT_IN(self):
-        return lambda column, value: {column: {'$nin': value}}
+    def NOT_IN(cls, column, values):
+        return {column: {'$nin': values}}
 
     @classmethod
-    def MATCHES(self):
-        return lambda column, value: {column: {'$regex': value}}
+    def MATCHES(cls, column, value):
+        return {column: {'$regex': value}}
 
     @classmethod
-    def NOT_MATCHES(self):
-        return lambda column, value: {column: {'$not': {'$regex': value}}}
+    def NOT_MATCHES(cls, column, value):
+        return {column: {'$not': {'$regex': value}}}
 
     @classmethod
-    def IS_NULL(self):
-        return lambda column, value=None: {column: {'$exists': False}}
+    def IS_NULL(cls, column, value=None):
+        return {column: {'$exists': False}}
 
     @classmethod
-    def IS_NOT_NULL(self):
-        return lambda column, value=None: {column: {'$exists': True}}
+    def IS_NOT_NULL(cls, column, value=None):
+        return {column: {'$exists': True}}

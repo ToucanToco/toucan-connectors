@@ -2,11 +2,12 @@ from toucan_connectors.common import ConditionOperator, ConditionTranslator
 
 
 class PandasConditionTranslator(ConditionTranslator):
+    """
+    Utility class to convert a condition object into pandas.query format
+    """
+
     @classmethod
     def translate(cls, conditions: dict, enclosing_field_char='`') -> str:
-        """
-        Convert a conditions object into pandas.query format
-        """
         if 'or' in conditions:
             if isinstance(conditions['or'], list):
                 pandas_query = ' or '.join(
@@ -47,40 +48,40 @@ class PandasConditionTranslator(ConditionTranslator):
             value = condition['value']
 
         enclosing_value_char = "'" if isinstance(value, str) else ''
-        generate_clause = getattr(cls, operator.name)()
+        generate_clause = getattr(cls, operator.name)
         return generate_clause(
             f'{enclosing_field_char}{column}{enclosing_field_char}',
             f'{enclosing_value_char}{value}{enclosing_value_char}',
         )
 
     @classmethod
-    def EQUAL(cls):
-        return lambda column, value: f'{column} == {value}'
+    def EQUAL(cls, column, value):
+        return f'{column} == {value}'
 
     @classmethod
-    def NOT_EQUAL(cls):
-        return lambda column, value: f'{column} != {value}'
+    def NOT_EQUAL(cls, column, value):
+        return f'{column} != {value}'
 
     @classmethod
-    def LOWER_THAN(cls):
-        return lambda column, value: f'{column} < {value}'
+    def LOWER_THAN(cls, column, value):
+        return f'{column} < {value}'
 
     @classmethod
-    def LOWER_THAN_EQUAL(cls):
-        return lambda column, value: f'{column} <= {value}'
+    def LOWER_THAN_EQUAL(cls, column, value):
+        return f'{column} <= {value}'
 
     @classmethod
-    def GREATER_THAN(cls):
-        return lambda column, value: f'{column} > {value}'
+    def GREATER_THAN(cls, column, value):
+        return f'{column} > {value}'
 
     @classmethod
-    def GREATER_THAN_EQUAL(cls):
-        return lambda column, value: f'{column} >= {value}'
+    def GREATER_THAN_EQUAL(cls, column, value):
+        return f'{column} >= {value}'
 
     @classmethod
-    def IN(cls):
-        return lambda column, value: f'{column} in {value}'
+    def IN(cls, column, values):
+        return f'{column} in {values}'
 
     @classmethod
-    def NOT_IN(cls):
-        return lambda column, value: f'{column} not in {value}'
+    def NOT_IN(cls, column, values):
+        return f'{column} not in {values}'

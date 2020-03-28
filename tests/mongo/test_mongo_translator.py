@@ -66,6 +66,7 @@ def test_MongoConditionTranslator_translate():
             {'column': 'g', 'operator': 'ge', 'value': 2},
             {'column': 'h', 'operator': 'le', 'value': 0},
             {'column': 'i', 'operator': 'gt', 'value': -3.5},
+            {'column': 'j', 'operator': 'isnull', 'value': None},
         ]
     }
     expected = {
@@ -82,6 +83,7 @@ def test_MongoConditionTranslator_translate():
             {'g': {'$gte': 2}},
             {'h': {'$lte': 0}},
             {'i': {'$gt': -3.5}},
+            {'j': {'$exists': False}},
         ]
     }
 
@@ -128,17 +130,17 @@ def test_MongoConditionTranslator_translate_with_jinja():
 
 
 def test_MongoConditionTranslator_operators():
-    assert MongoConditionTranslator.EQUAL()('col', 'val') == {'col': {'$eq': 'val'}}
-    assert MongoConditionTranslator.NOT_EQUAL()('col', 'val') == {'col': {'$ne': 'val'}}
-    assert MongoConditionTranslator.GREATER_THAN()('col', 'val') == {'col': {'$gt': 'val'}}
-    assert MongoConditionTranslator.GREATER_THAN_EQUAL()('col', 'val') == {'col': {'$gte': 'val'}}
-    assert MongoConditionTranslator.LOWER_THAN()('col', 'val') == {'col': {'$lt': 'val'}}
-    assert MongoConditionTranslator.LOWER_THAN_EQUAL()('col', 'val') == {'col': {'$lte': 'val'}}
-    assert MongoConditionTranslator.IN()('col', ['val']) == {'col': {'$in': ['val']}}
-    assert MongoConditionTranslator.NOT_IN()('col', ['val']) == {'col': {'$nin': ['val']}}
-    assert MongoConditionTranslator.IS_NULL()('col') == {'col': {'$exists': False}}
-    assert MongoConditionTranslator.IS_NOT_NULL()('col') == {'col': {'$exists': True}}
-    assert MongoConditionTranslator.MATCHES()('col', 'val') == {'col': {'$regex': 'val'}}
-    assert MongoConditionTranslator.NOT_MATCHES()('col', 'val') == {
+    assert MongoConditionTranslator.EQUAL('col', 'val') == {'col': {'$eq': 'val'}}
+    assert MongoConditionTranslator.NOT_EQUAL('col', 'val') == {'col': {'$ne': 'val'}}
+    assert MongoConditionTranslator.GREATER_THAN('col', 'val') == {'col': {'$gt': 'val'}}
+    assert MongoConditionTranslator.GREATER_THAN_EQUAL('col', 'val') == {'col': {'$gte': 'val'}}
+    assert MongoConditionTranslator.LOWER_THAN('col', 'val') == {'col': {'$lt': 'val'}}
+    assert MongoConditionTranslator.LOWER_THAN_EQUAL('col', 'val') == {'col': {'$lte': 'val'}}
+    assert MongoConditionTranslator.IN('col', ['val']) == {'col': {'$in': ['val']}}
+    assert MongoConditionTranslator.NOT_IN('col', ['val']) == {'col': {'$nin': ['val']}}
+    assert MongoConditionTranslator.IS_NULL('col') == {'col': {'$exists': False}}
+    assert MongoConditionTranslator.IS_NOT_NULL('col') == {'col': {'$exists': True}}
+    assert MongoConditionTranslator.MATCHES('col', 'val') == {'col': {'$regex': 'val'}}
+    assert MongoConditionTranslator.NOT_MATCHES('col', 'val') == {
         'col': {'$not': {'$regex': 'val'}}
     }
