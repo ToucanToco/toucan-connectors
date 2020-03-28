@@ -3,32 +3,30 @@ import pytest
 from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 
 
-def test_MongoConditionTranslator_condition_to_clause():
+def test_translate_condition_unit_to_mongo_match():
     # works with list
     c = {'column': 'city name', 'operator': 'in', 'value': ['Paris', 'London']}
-    assert MongoConditionTranslator.condition_to_clause(c) == {
-        'city name': {'$in': ['Paris', 'London']}
-    }
+    assert MongoConditionTranslator.translate(c) == {'city name': {'$in': ['Paris', 'London']}}
     # works with numbers
     c = {'column': 'population', 'operator': 'eq', 'value': 42}
-    assert MongoConditionTranslator.condition_to_clause(c) == {'population': {'$eq': 42}}
+    assert MongoConditionTranslator.translate(c) == {'population': {'$eq': 42}}
     # works with strings
     c = {'column': 'country', 'operator': 'eq', 'value': 'France'}
-    assert MongoConditionTranslator.condition_to_clause(c) == {'country': {'$eq': 'France'}}
+    assert MongoConditionTranslator.translate(c) == {'country': {'$eq': 'France'}}
     # raise when needed
-    with pytest.raises(KeyError):
-        MongoConditionTranslator.condition_to_clause({'column': 'population', 'operator': 'eq'})
-    with pytest.raises(KeyError):
-        MongoConditionTranslator.condition_to_clause({'column': 'population', 'value': 42})
-    with pytest.raises(KeyError):
-        MongoConditionTranslator.condition_to_clause({'operator': 'eq', 'value': 42})
+    with pytest.raises(TypeError):
+        MongoConditionTranslator.translate({'column': 'population', 'operator': 'eq'})
+    with pytest.raises(TypeError):
+        MongoConditionTranslator.translate({'column': 'population', 'value': 42})
+    with pytest.raises(TypeError):
+        MongoConditionTranslator.translate({'operator': 'eq', 'value': 42})
     with pytest.raises(ValueError):
-        MongoConditionTranslator.condition_to_clause(
+        MongoConditionTranslator.translate(
             {'column': 'population', 'operator': 'unsupported', 'value': 42}
         )
 
 
-def test_MongoConditionTranslator_translate():
+def test_translate_condition_to_mongo_match():
     c = {
         'and': [
             {'column': 'country', 'operator': 'eq', 'value': 'France'},
