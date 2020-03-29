@@ -1,3 +1,5 @@
+from typing import List
+
 from toucan_connectors.condition_translator import ConditionTranslator
 
 
@@ -10,45 +12,46 @@ class PandasConditionTranslator(ConditionTranslator):
     """
 
     @classmethod
-    def translate(cls, conditions: dict, enclosing_field_char='`', enclosing_value_char="'") -> str:
-        return super().translate(
-            conditions,
-            enclosing_field_char=enclosing_field_char,
-            enclosing_value_char=enclosing_value_char,
-        )
+    def get_column_ref(cls, column: str) -> str:
+        """To refer column names (even with spaces or operators), we surround them in backticks"""
+        return f'`{column}`'
 
     @classmethod
-    def join_clauses(cls, clauses: list, logical_operator: str):
+    def get_value_str_ref(cls, value: str) -> str:
+        return f"'{value}'"
+
+    @classmethod
+    def join_clauses(cls, clauses: List[str], logical_operator: str) -> str:
         return '(' + f' {logical_operator} '.join(clauses) + ')'
 
     @classmethod
-    def EQUAL(cls, column, value):
+    def EQUAL(cls, column, value) -> str:
         return f'{column} == {value}'
 
     @classmethod
-    def NOT_EQUAL(cls, column, value):
+    def NOT_EQUAL(cls, column, value) -> str:
         return f'{column} != {value}'
 
     @classmethod
-    def LOWER_THAN(cls, column, value):
+    def LOWER_THAN(cls, column, value) -> str:
         return f'{column} < {value}'
 
     @classmethod
-    def LOWER_THAN_EQUAL(cls, column, value):
+    def LOWER_THAN_EQUAL(cls, column, value) -> str:
         return f'{column} <= {value}'
 
     @classmethod
-    def GREATER_THAN(cls, column, value):
+    def GREATER_THAN(cls, column, value) -> str:
         return f'{column} > {value}'
 
     @classmethod
-    def GREATER_THAN_EQUAL(cls, column, value):
+    def GREATER_THAN_EQUAL(cls, column, value) -> str:
         return f'{column} >= {value}'
 
     @classmethod
-    def IN(cls, column, value):
+    def IN(cls, column, value) -> str:
         return f'{column} in {value}'
 
     @classmethod
-    def NOT_IN(cls, column, value):
+    def NOT_IN(cls, column, value) -> str:
         return f'{column} not in {value}'

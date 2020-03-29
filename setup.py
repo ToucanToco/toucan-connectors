@@ -44,6 +44,7 @@ install_requires = [
     'tenacity',
     'toucan_data_sdk',
     'urllib3==1.24.3',
+    'typing-extensions; python_version < "3.8"',
 ]
 
 classifiers = [
