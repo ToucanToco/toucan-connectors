@@ -14,11 +14,11 @@ def test_translate_condition_unit():
     c = {'column': 'country', 'operator': 'eq', 'value': 'France'}
     assert PandasConditionTranslator.translate(c) == "`country` == 'France'"
     # error cases
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         PandasConditionTranslator.translate({'column': 'population', 'operator': 'eq'})
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         PandasConditionTranslator.translate({'column': 'population', 'value': 42})
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         PandasConditionTranslator.translate({'operator': 'eq', 'value': 42})
     with pytest.raises(ValueError):
         PandasConditionTranslator.translate(

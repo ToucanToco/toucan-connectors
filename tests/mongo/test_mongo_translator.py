@@ -14,11 +14,11 @@ def test_translate_condition_unit_to_mongo_match():
     c = {'column': 'country', 'operator': 'eq', 'value': 'France'}
     assert MongoConditionTranslator.translate(c) == {'country': {'$eq': 'France'}}
     # raise when needed
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         MongoConditionTranslator.translate({'column': 'population', 'operator': 'eq'})
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         MongoConditionTranslator.translate({'column': 'population', 'value': 42})
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         MongoConditionTranslator.translate({'operator': 'eq', 'value': 42})
     with pytest.raises(ValueError):
         MongoConditionTranslator.translate(
@@ -130,10 +130,10 @@ def test_MongoConditionTranslator_translate_with_jinja():
 def test_MongoConditionTranslator_operators():
     assert MongoConditionTranslator.EQUAL('col', 'val') == {'col': {'$eq': 'val'}}
     assert MongoConditionTranslator.NOT_EQUAL('col', 'val') == {'col': {'$ne': 'val'}}
-    assert MongoConditionTranslator.GREATER_THAN('col', 'val') == {'col': {'$gt': 'val'}}
-    assert MongoConditionTranslator.GREATER_THAN_EQUAL('col', 'val') == {'col': {'$gte': 'val'}}
-    assert MongoConditionTranslator.LOWER_THAN('col', 'val') == {'col': {'$lt': 'val'}}
-    assert MongoConditionTranslator.LOWER_THAN_EQUAL('col', 'val') == {'col': {'$lte': 'val'}}
+    assert MongoConditionTranslator.GREATER_THAN('col', 3) == {'col': {'$gt': 3}}
+    assert MongoConditionTranslator.GREATER_THAN_EQUAL('col', 3) == {'col': {'$gte': 3}}
+    assert MongoConditionTranslator.LOWER_THAN('col', 3) == {'col': {'$lt': 3}}
+    assert MongoConditionTranslator.LOWER_THAN_EQUAL('col', 3) == {'col': {'$lte': 3}}
     assert MongoConditionTranslator.IN('col', ['val']) == {'col': {'$in': ['val']}}
     assert MongoConditionTranslator.NOT_IN('col', ['val']) == {'col': {'$nin': ['val']}}
     assert MongoConditionTranslator.IS_NULL('col') == {'col': {'$exists': False}}
