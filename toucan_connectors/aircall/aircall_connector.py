@@ -92,7 +92,6 @@ class AircallConnector(ToucanConnector):
 
                 team_data = pyjq.first(team_jq_filter, {'results' : team_data})
                 variable_data = pyjq.first(variable_jq_filter, {'results' : variable_data})
-                print(team_data)
                 return team_data, variable_data
 
     def run_fetches(self, dataset, query, limit):
