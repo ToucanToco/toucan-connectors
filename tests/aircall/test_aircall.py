@@ -1,4 +1,8 @@
+import aiohttp
+import asyncio
+from aioresponses import aioresponses
 import pytest
+from tests.aircall.helpers import build_ds, run_loop
 from toucan_connectors.aircall.aircall_connector import AircallConnector, AircallDataSource
 
 # following commented lines will eventually be put in various tests
@@ -24,22 +28,49 @@ from toucan_connectors.aircall.aircall_connector import AircallConnector, Aircal
 # print('empty ', test_empty_users)
 
 
+def test__get_data_multiple(mocker):
+    """Tests _get_data() with a call that returns a tuple of arrays"""
+    con, ds = build_ds('users')
+    res = run_loop(con, ds)
+
+    assert type(res) == tuple
+    assert len(res) == 2
+    first_part, second_part = res
+
+    assert type(first_part) == list
+    if len(first_part) > 0:
+        assert type(first_part[0]) == dict
+    assert type(second_part) == list
+    if len(second_part):
+        assert type(second_part[0]) == dict
+
+
+def test__get_data_single(mocker):
+    """Tests _get_data() with a call that returns an array"""
+    con, ds = build_ds('tags')
+    res = run_loop(con, ds)
+
+    assert type(res) == list
+    if len(res) > 0:
+        assert type(res[0]) == dict
+
+
 @pytest.fixture
 def con(bearer_aircall_auth_id):
     return AircallConnector(name='test_name', bearer_auth_id=bearer_aircall_auth_id)
 
 
-def test_get_page_data_async(mocker):
-    """This tests async data call to /teams route"""
-    con = AircallConnector(name='mah_test', bearer_auth_id='abc123efg')
-    ds = AircallDataSource(
-        name='mah_ds',
-        domain='test_domain',
-        dataset='users',
-        limit=10,
-    )
+# def test__retrieve_data(mocker):
+#     """This tests async data call to /teams route"""
+#     con = AircallConnector(name='mah_test', bearer_auth_id='abc123efg')
+#     ds = AircallDataSource(
+#         name='mah_ds',
+#         domain='test_domain',
+#         dataset='users',
+#         limit=10,
+#     )
 
-    con._retrieve_data(ds)
+#     con._retrieve_data(ds)
 
 
 @pytest.mark.flaky(reruns=5, reruns_delay=2)
