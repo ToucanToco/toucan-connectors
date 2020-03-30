@@ -10,7 +10,7 @@ def build_ds(dataset):
         name='mah_ds',
         domain='test_domain',
         dataset=dataset,
-        limit=10,
+        limit=1,
     )
 
     return con, ds

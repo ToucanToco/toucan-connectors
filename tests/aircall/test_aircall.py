@@ -28,21 +28,68 @@ from toucan_connectors.aircall.aircall_connector import AircallConnector, Aircal
 # print('empty ', test_empty_users)
 
 
-def test__get_data_multiple(mocker):
-    """Tests _get_data() with a call that returns a tuple of arrays"""
-    con, ds = build_ds('users')
+def test__get_data_multiple_calls(mocker):
+    """Tests _get_data() with calls call"""
+    con, ds = build_ds('calls')
     res = run_loop(con, ds)
+    columns_for_calls = [
+        'id',
+        'direction',
+        'duration',
+        'answered_at',
+        'ended_at',
+        'raw_digits',
+        'user_id',
+        'tags',
+        'user_name'
+    ]
+    columns_for_teams = ['team', 'user_id', 'user_name', 'user_created_at']
 
     assert type(res) == tuple
     assert len(res) == 2
+
     first_part, second_part = res
 
     assert type(first_part) == list
     if len(first_part) > 0:
+        first_ele = first_part[0]
         assert type(first_part[0]) == dict
+        keys = list(first_ele)
+        assert keys == columns_for_teams  # insures order of columns
+
     assert type(second_part) == list
     if len(second_part):
-        assert type(second_part[0]) == dict
+        second_ele = second_part[0]
+        assert type(second_ele) == dict
+        keys = list(second_ele)
+        assert keys == columns_for_calls  # insures order of columns
+
+
+def test__get_data_multiple_users(mocker):
+    """Tests _get_data() with users call"""
+    con, ds = build_ds('users')
+    res = run_loop(con, ds)
+    columns_for_users = ['user_id', 'user_name', 'user_created_at']
+    columns_for_teams = ['team', 'user_id', 'user_name', 'user_created_at']
+
+    assert type(res) == tuple
+    assert len(res) == 2
+
+    first_part, second_part = res
+
+    assert type(first_part) == list
+    if len(first_part) > 0:
+        first_ele = first_part[0]
+        assert type(first_part[0]) == dict
+        keys = list(first_ele)
+        assert keys == columns_for_teams  # insures order of columns
+
+    assert type(second_part) == list
+    if len(second_part):
+        second_ele = second_part[0]
+        assert type(second_ele) == dict
+        keys = list(second_ele)
+        assert keys == columns_for_users  # insures order of columns
 
 
 def test__get_data_single(mocker):
@@ -60,17 +107,24 @@ def con(bearer_aircall_auth_id):
     return AircallConnector(name='test_name', bearer_auth_id=bearer_aircall_auth_id)
 
 
-# def test__retrieve_data(mocker):
-#     """This tests async data call to /teams route"""
-#     con = AircallConnector(name='mah_test', bearer_auth_id='abc123efg')
-#     ds = AircallDataSource(
-#         name='mah_ds',
-#         domain='test_domain',
-#         dataset='users',
-#         limit=10,
-#     )
-
-#     con._retrieve_data(ds)
+def test__retrieve_data(mocker):
+    """This tests async data call to /teams route"""
+    con, ds = build_ds('calls')
+    calls_df = con._retrieve_data(ds)
+    calls_columns = [
+        'id',
+        'direction',
+        'duration',
+        'answered_at',
+        'ended_at',
+        'raw_digits',
+        'user_id',
+        'tags',
+        'user_name',
+        'team',
+        'day'
+    ]
+    assert list(calls_df.columns) == calls_columns
 
 
 @pytest.mark.flaky(reruns=5, reruns_delay=2)

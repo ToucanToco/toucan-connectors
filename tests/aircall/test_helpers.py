@@ -14,7 +14,7 @@ def test_build_df():
     """Tests dataframes being with filtered data"""
     empty_df = build_empty_df('users')
     empty_var_df = pd.DataFrame([])
-    order_of_columns = ['user_id', 'user_name', 'team', 'user_created_at']
+    order_of_columns = ['team', 'user_id', 'user_name', 'user_created_at']
     teams_df = pd.DataFrame(filtered_teams)
     users_df = pd.DataFrame(filtered_users)
 
