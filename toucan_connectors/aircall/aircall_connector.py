@@ -52,7 +52,8 @@ class AircallDataset(str, Enum):
 
 
 class AircallDataSource(ToucanDataSource):
-    limit: int = Field(100, description='Limit of entries (-1 for no limit)', ge=-1)
+    # limit: int = Field(100, description='Limit of entries (-1 for no limit)', ge=-1)
+    limit: int = Field(1, description='Limit of entries (default is 1 run)', ge=1)
     query: Optional[dict] = {}
     dataset: AircallDataset = 'users'
 
@@ -70,6 +71,7 @@ class AircallConnector(ToucanConnector):
     async def _get_data(
         self, dataset: str, query, limit
     ) -> Union[Tuple[List[dict], List[dict]], List[dict]]:
+        """Triggers fetches for data and does preliminary filtering process"""
         BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
         variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
 
@@ -104,7 +106,12 @@ class AircallConnector(ToucanConnector):
         dataset = data_source.dataset
         empty_df = build_empty_df(dataset)
 
-        res = self.run_fetches(dataset, query, MAX_RUNS)
+        limit = MAX_RUNS
+
+        if data_source.limit:
+            limit = data_source.limit
+
+        res = self.run_fetches(dataset, query, limit)
 
         if dataset == 'tags':
             non_empty_df = pd.DataFrame(res)
