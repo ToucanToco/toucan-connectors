@@ -17,7 +17,7 @@ from .helpers import build_df, build_empty_df, generate_multiple_jq_filters, gen
 STUFF = '156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@'
 
 
-async def bulk_fetch(
+async def fetch_page(
     base_endpoint: str, data_list: List[dict], session, limit, current_pass: int
 ) -> List[dict]:
     """
@@ -35,7 +35,7 @@ async def bulk_fetch(
     if next_page_link is not None and current_pass != limit:
         new_endpoint = next_page_link
         new_endpoint = new_endpoint.replace('//', f'//{STUFF}')
-        data_list = await bulk_fetch(new_endpoint, data_list, session, limit, current_pass)
+        data_list = await fetch_page(new_endpoint, data_list, session, limit, current_pass)
 
     return data_list
 
@@ -75,7 +75,7 @@ class AircallConnector(ToucanConnector):
 
         async with ClientSession() as session:
             if dataset == 'tags':
-                raw_data = await bulk_fetch(variable_endpoint, [], session, limit, 1)
+                raw_data = await fetch_page(variable_endpoint, [], session, limit, 1)
 
                 jq_filter = generate_tags_filter(dataset)
 
@@ -84,8 +84,8 @@ class AircallConnector(ToucanConnector):
                 teams_endpoint = f'{BASE_ROUTE}/teams'
 
                 team_data, variable_data = await asyncio.gather(
-                    bulk_fetch(teams_endpoint, [], session, limit, 0),
-                    bulk_fetch(variable_endpoint, [], session, limit, 0)
+                    fetch_page(teams_endpoint, [], session, limit, 0),
+                    fetch_page(variable_endpoint, [], session, limit, 0)
                 )
 
                 team_jq_filter, variable_jq_filter = generate_multiple_jq_filters(dataset)
@@ -94,7 +94,7 @@ class AircallConnector(ToucanConnector):
                 variable_data = pyjq.first(variable_jq_filter, {'results' : variable_data})
                 return team_data, variable_data
 
-    def run_fetches(self, dataset, query, limit):
+    def run_fetches(self, dataset, query, limit) -> Union[Tuple[List[dict], List[dict]], List[dict]]:
         loop = asyncio.get_event_loop()
         future = asyncio.ensure_future(self._get_data(dataset, query, limit))
         return loop.run_until_complete(future)
