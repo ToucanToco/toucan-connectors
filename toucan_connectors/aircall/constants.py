@@ -21,9 +21,9 @@ COLUMN_DICTIONARY = {
         'description'
     ],
     'users': [
+        'team',
         'user_id',
         'user_name',
-        'team',
         'user_created_at'
     ]
 }
@@ -59,9 +59,9 @@ FILTER_DICTIONARY = {
             | .name as $team
             | .users[]
             | {
-                user_name: .name,
                 team: $team,
                 user_id: .id,
+                user_name: .name,
                 user_created_at: .created_at
         }]
     """,

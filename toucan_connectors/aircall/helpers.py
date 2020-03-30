@@ -21,14 +21,16 @@ def build_df(dataset: str, list_of_data: List[dict]) -> pd.DataFrame:
               .merge(call_data, sort=False, on='user_id', how='right')
               .drop(columns=['user_name_y', 'user_created_at']))
 
-        return (pd
-                .concat([empty_df, df], sort=False, ignore_index=True)
-                .assign(**{
-                    'answered_at' : lambda t: pd.to_datetime(t['answered_at'], unit='s'),
-                    'ended_at' : lambda t: pd.to_datetime(t['ended_at'], unit='s'),
-                    'day' : lambda t : t['ended_at'].astype(str).str[:10]
-                })
-                .rename(columns={'user_name_x' : 'user_name'}))
+        total_df = (pd
+                    .concat([empty_df, df], sort=False, ignore_index=True)
+                    .assign(**{
+                        'answered_at' : lambda t: pd.to_datetime(t['answered_at'], unit='s'),
+                        'ended_at' : lambda t: pd.to_datetime(t['ended_at'], unit='s'),
+                        'day' : lambda t : t['ended_at'].astype(str).str[:10]
+                    })
+                    # .rename(columns={'user_name_x' : 'user_name'})
+                    )
+        return total_df[COLUMN_DICTIONARY[dataset]]
 
 
 def build_empty_df(dataset: str) -> pd.DataFrame:
