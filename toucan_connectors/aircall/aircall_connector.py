@@ -25,6 +25,7 @@ async def fetch_page(
     dependent on existence of other pages and call limit
     """
     data: dict = await fetch(base_endpoint, session)
+    print(data)
 
     data_list.append(data)
 
