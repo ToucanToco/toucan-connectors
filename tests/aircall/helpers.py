@@ -1,10 +1,10 @@
-import aiohttp
+# import aiohttp
 import asyncio
 
 from toucan_connectors.aircall.aircall_connector import AircallConnector, AircallDataSource
 
 
-def build_ds(dataset):
+def build_con_and_ds(dataset):
     con = AircallConnector(name='mah_test', bearer_auth_id='abc123efg')
     ds = AircallDataSource(
         name='mah_ds',

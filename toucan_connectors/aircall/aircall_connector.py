@@ -25,7 +25,6 @@ async def fetch_page(
     dependent on existence of other pages and call limit
     """
     data: dict = await fetch(base_endpoint, session)
-    print(data)
 
     data_list.append(data)
 
@@ -33,7 +32,7 @@ async def fetch_page(
 
     current_pass += 1
 
-    if next_page_link is not None and current_pass != limit:
+    if next_page_link is not None and current_pass < limit:
         new_endpoint = next_page_link
         new_endpoint = new_endpoint.replace('//', f'//{STUFF}')
         data_list = await fetch_page(new_endpoint, data_list, session, limit, current_pass)
