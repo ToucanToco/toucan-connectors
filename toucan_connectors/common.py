@@ -1,12 +1,13 @@
 import ast
 import re
-from abc import ABC, ABCMeta, abstractmethod
 from copy import deepcopy
 
 import pyjq
 from jinja2 import Environment, StrictUndefined, Template, meta
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
+
+# Query interpolation
 
 RE_PARAM = r'%\(([^(%\()]*)\)s'
 RE_JINJA = r'{{([^({{)}]*)}}'
@@ -122,7 +123,13 @@ def nosql_apply_parameters_to_query(query, parameters):
     return query
 
 
-def render_raw_permissions(query, parameters):
+def apply_query_parameters(query: str, parameters: dict) -> str:
+    """
+    Apply parameters to query
+
+    Interpolate the query, which is a Jinja templates, with the provided parameters.
+    """
+
     def _flatten_dict(p, parent_key=''):
         new_p = {}
         for k, v in deepcopy(p).items():
@@ -155,126 +162,7 @@ def render_raw_permissions(query, parameters):
     return Template(query).render(parameters)
 
 
-class AstTranslator(ABC):
-    def resolve(self, elt):
-        elt_name = elt.__class__.__name__
-        try:
-            method = getattr(self, elt_name)
-        except AttributeError:
-            raise Exception(f'Missing method for {elt_name}')
-        return method
-
-    def translate(self, elt):
-        return self.resolve(elt)(elt)
-
-    def parse(self, expr):
-        # Replace ` by ' because pandas.query like expressions (e.g '(`a` == 1)')
-        # are not valid python expressions:
-        expr = expr.replace('`', '"')
-        ex = ast.parse(expr, mode='eval')
-        return self.translate(ex.body)
-
-
-class Expression(AstTranslator, metaclass=ABCMeta):
-    @abstractmethod
-    def BoolOp(self, op):
-        """Boolean expressions with or/and """
-
-    @abstractmethod
-    def And(self, op):
-        """Boolean operator and """
-
-    @abstractmethod
-    def Or(self, op):
-        """Boolean operator and """
-
-    @abstractmethod
-    def Compare(self, compare):
-        """Expression with left, operator and right elements"""
-
-
-class Operator(AstTranslator, metaclass=ABCMeta):
-    @abstractmethod
-    def Eq(self, node):
-        """Equal operator"""
-
-    @abstractmethod
-    def NotEq(self, node):
-        """Not equal operator"""
-
-    @abstractmethod
-    def In(self, node):
-        """In operator"""
-
-    @abstractmethod
-    def NotIn(self, node):
-        """Not in operator"""
-
-    @abstractmethod
-    def Gt(self, node):
-        """Greater than operator"""
-
-    @abstractmethod
-    def Lt(self, node):
-        """Less than operator"""
-
-    @abstractmethod
-    def GtE(self, node):
-        """Greater than or equal operator"""
-
-    @abstractmethod
-    def LtE(self, node):
-        """Less than or equal operator"""
-
-
-class Column(AstTranslator, metaclass=ABCMeta):
-    def Name(self, node):
-        """Column name"""
-
-    def Str(self, node):
-        """Column name as str (python 3.7-)"""
-
-    @abstractmethod
-    def Constant(self, node):
-        """Column name as str (python 3.8+)"""
-
-
-class Value(AstTranslator, metaclass=ABCMeta):
-    @abstractmethod
-    def Name(self, node):
-        """Var field"""
-
-    @abstractmethod
-    def Str(self, node):
-        """String field (python 3.7-)"""
-
-    @abstractmethod
-    def Num(self, node):
-        """Num field (python 3.7-)"""
-
-    @abstractmethod
-    def Constant(self, node):
-        """Contant field (python 3.8+)"""
-
-    @abstractmethod
-    def List(self, node):
-        """List field"""
-
-    @abstractmethod
-    def UnaryOp(self, op):
-        """Value with unary operator +/-"""
-
-    @abstractmethod
-    def Set(self, node):
-        """Set (jinja parameters)"""
-
-    @abstractmethod
-    def Subscript(self, node):
-        """List or Dict call (jinja parameters)"""
-
-    @abstractmethod
-    def Index(self, node):
-        """Indice in list or dict (jinja parameters)"""
+# jq filtering
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:

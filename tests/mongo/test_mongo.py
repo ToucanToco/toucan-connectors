@@ -195,20 +195,24 @@ def test_get_df_live(mongo_connector, mongo_datasource):
 
 def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    df = mongo_connector.get_df(datasource, permissions='country=="France"')
+    df = mongo_connector.get_df(
+        datasource, permissions={'column': 'country', 'operator': 'eq', 'value': 'France'}
+    )
     expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
     assert datasource.query == [
-        {'$match': {'$and': [{'domain': 'domain1'}, {'country': 'France'}]}}
+        {'$match': {'$and': [{'domain': 'domain1'}, {'country': {'$eq': 'France'}}]}}
     ]
     assert df.shape == (1, 5)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
     assert df[['country', 'language', 'value']].equals(expected)
 
     datasource = mongo_datasource(collection='test_col', query=[{'$match': {'domain': 'domain1'}}])
-    df = mongo_connector.get_df(datasource, permissions='country=="France"')
+    df = mongo_connector.get_df(
+        datasource, permissions={'column': 'country', 'operator': 'eq', 'value': 'France'}
+    )
     expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
     assert datasource.query == [
-        {'$match': {'$and': [{'domain': 'domain1'}, {'country': 'France'}]}}
+        {'$match': {'$and': [{'domain': 'domain1'}, {'country': {'$eq': 'France'}}]}}
     ]
     assert df.shape == (1, 5)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
