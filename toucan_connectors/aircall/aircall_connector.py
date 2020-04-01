@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import asyncio
 from aiohttp import ClientSession
@@ -28,7 +28,11 @@ async def fetch_page(
 
     data_list.append(data)
 
-    next_page_link: Optional[str] = data['meta'].get('next_page_link', None)
+    next_page_link = None
+    meta_data = data.get('meta', None)
+
+    if meta_data is not None:
+        next_page_link: Optional[str] = data['meta'].get('next_page_link', None)
 
     current_pass += 1
 
@@ -70,35 +74,47 @@ class AircallConnector(ToucanConnector):
 
     async def _get_data(
         self, dataset: str, query, limit
-    ) -> Union[Tuple[List[dict], List[dict]], List[dict]]:
+    ) -> Tuple[List[dict], List[dict]]:
         """Triggers fetches for data and does preliminary filtering process"""
         BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
         variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
 
         async with ClientSession() as session:
-            if dataset == 'tags':
-                raw_data = await fetch_page(variable_endpoint, [], session, limit, 1)
+            teams_endpoint = f'{BASE_ROUTE}/teams'
 
-                jq_filter = generate_tags_filter(dataset)
+            team_data, variable_data = await asyncio.gather(
+                fetch_page(teams_endpoint, [], session, limit, 0),
+                fetch_page(variable_endpoint, [], session, limit, 0)
+            )
 
-                return pyjq.first(jq_filter, {'results' : raw_data})
-            else:
-                teams_endpoint = f'{BASE_ROUTE}/teams'
+            team_jq_filter, variable_jq_filter = generate_multiple_jq_filters(dataset)
 
-                team_data, variable_data = await asyncio.gather(
-                    fetch_page(teams_endpoint, [], session, limit, 0),
-                    fetch_page(variable_endpoint, [], session, limit, 0)
-                )
+            team_data = pyjq.first(team_jq_filter, {'results' : team_data})
+            variable_data = pyjq.first(variable_jq_filter, {'results' : variable_data})
+            return team_data, variable_data
 
-                team_jq_filter, variable_jq_filter = generate_multiple_jq_filters(dataset)
+    async def _get_tags(
+        self, dataset: str, query, limit
+    ) -> List[dict]:
+        """Triggers fetches for tags and does preliminary filtering process"""
+        BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
+        variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
 
-                team_data = pyjq.first(team_jq_filter, {'results' : team_data})
-                variable_data = pyjq.first(variable_jq_filter, {'results' : variable_data})
-                return team_data, variable_data
+        async with ClientSession() as session:
+            raw_data = await fetch_page(variable_endpoint, [], session, limit, 1)
 
-    def run_fetches(self, dataset, query, limit) -> Union[Tuple[List[dict], List[dict]], List[dict]]:
+            jq_filter = generate_tags_filter(dataset)
+
+            return pyjq.first(jq_filter, {'results' : raw_data})
+
+    def run_fetches(self, dataset, query, limit) -> Tuple[List[dict], List[dict]]:
         loop = asyncio.get_event_loop()
         future = asyncio.ensure_future(self._get_data(dataset, query, limit))
+        return loop.run_until_complete(future)
+
+    def run_fetches_for_tags(self, dataset, query, limit):
+        loop = asyncio.get_event_loop()
+        future = asyncio.ensure_future(self._get_tags(dataset, query, limit))
         return loop.run_until_complete(future)
 
     def _retrieve_data(self, data_source: AircallDataSource) -> pd.DataFrame:
@@ -111,13 +127,12 @@ class AircallConnector(ToucanConnector):
         if data_source.limit:
             limit = data_source.limit
 
-        res = self.run_fetches(dataset, query, limit)
-
         if dataset == 'tags':
+            res = self.run_fetches_for_tags(dataset, query, limit)
             non_empty_df = pd.DataFrame(res)
             return pd.concat([empty_df, non_empty_df])
         else:
-            team_data, variable_data = res
+            team_data, variable_data = self.run_fetches(dataset, query, limit)
             return build_df(
                 dataset,
                 [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
