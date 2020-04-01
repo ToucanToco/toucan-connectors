@@ -11,7 +11,7 @@ from toucan_connectors.aircall.helpers import (
 
 
 def test_build_df():
-    """Tests dataframes being with filtered data"""
+    """Tests dataframes built with filtered data"""
     empty_df = build_empty_df('users')
     empty_var_df = pd.DataFrame([])
     order_of_columns = ['team', 'user_id', 'user_name', 'user_created_at']

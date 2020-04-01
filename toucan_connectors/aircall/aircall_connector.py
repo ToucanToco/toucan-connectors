@@ -86,6 +86,9 @@ class AircallConnector(ToucanConnector):
                 fetch_page(teams_endpoint, [], session, limit, 0),
                 fetch_page(variable_endpoint, [], session, limit, 0)
             )
+            
+            # print('team data ', team_data)
+            print('users ', variable_data)
 
             team_jq_filter, variable_jq_filter = generate_multiple_jq_filters(dataset)
 
@@ -102,7 +105,6 @@ class AircallConnector(ToucanConnector):
 
         async with ClientSession() as session:
             raw_data = await fetch_page(variable_endpoint, [], session, limit, 1)
-
             jq_filter = generate_tags_filter(dataset)
 
             return pyjq.first(jq_filter, {'results' : raw_data})
