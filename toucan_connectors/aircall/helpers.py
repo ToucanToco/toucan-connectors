@@ -7,8 +7,37 @@ from typing import List
 from .constants import COLUMN_DICTIONARY, FILTER_DICTIONARY
 
 
+def resolve_calls_df(team_data, call_data) -> pd.DataFrame:
+    """
+    Resolves the shape of calls df depending on response
+
+    if there is both team data and calls data, then merge the dataframes
+    on user_id
+    if there is no team data but there is call data, then return the call data df
+    if there is team data but no call data, then return the team df
+    if there is nothing, then just return an empty df
+    """
+    df = pd.DataFrame([])
+
+    if len(team_data) > 0 and len(call_data):
+        df = (team_data
+              .merge(call_data, sort=False, on='user_id', how='right')
+              .drop(columns=['user_name_y', 'user_created_at']))
+    elif len(call_data) > 0:
+        df = call_data
+    elif len(team_data) > 0:
+        df = team_data
+    return df
+
+
 def build_df(dataset: str, list_of_data: List[dict]) -> pd.DataFrame:
-    """builds a dataframe for the users and calls datasets"""
+    """
+    builds a dataframe for the users and calls datasets
+
+    dataset is the identifier for the dataset we're fetching
+    for example, 'calls' searches data from /teams and /calls
+    list_of_data is an accumulator of filtered data
+    """
     if dataset == 'users':
         return (pd
                 .concat(list_of_data, sort=False, ignore_index=True)
@@ -17,9 +46,8 @@ def build_df(dataset: str, list_of_data: List[dict]) -> pd.DataFrame:
                 )
     elif dataset == 'calls':
         empty_df, team_data, call_data = list_of_data
-        df = (team_data
-              .merge(call_data, sort=False, on='user_id', how='right')
-              .drop(columns=['user_name_y', 'user_created_at']))
+
+        df = resolve_calls_df(team_data, call_data)
 
         total_df = (pd
                     .concat([empty_df, df], sort=False, ignore_index=True)
@@ -27,9 +55,7 @@ def build_df(dataset: str, list_of_data: List[dict]) -> pd.DataFrame:
                         'answered_at' : lambda t: pd.to_datetime(t['answered_at'], unit='s'),
                         'ended_at' : lambda t: pd.to_datetime(t['ended_at'], unit='s'),
                         'day' : lambda t : t['ended_at'].astype(str).str[:10]
-                    })
-                    # .rename(columns={'user_name_x' : 'user_name'})
-                    )
+                    }))
         return total_df[COLUMN_DICTIONARY[dataset]]
 
 

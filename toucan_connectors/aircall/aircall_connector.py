@@ -2,8 +2,8 @@ from typing import List, Optional, Tuple
 
 import asyncio
 from aiohttp import ClientSession
-import pandas as pd
 from enum import Enum
+import pandas as pd
 import pyjq
 from pydantic import Field
 
@@ -32,7 +32,7 @@ async def fetch_page(
     meta_data = data.get('meta', None)
 
     if meta_data is not None:
-        next_page_link: Optional[str] = data['meta'].get('next_page_link', None)
+        next_page_link: Optional[str] = data['meta'].get('next_page_link')
 
     current_pass += 1
 
@@ -56,8 +56,7 @@ class AircallDataset(str, Enum):
 
 
 class AircallDataSource(ToucanDataSource):
-    # limit: int = Field(100, description='Limit of entries (-1 for no limit)', ge=-1)
-    limit: int = Field(1, description='Limit of entries (default is 1 run)', ge=1)
+    limit: int = Field(MAX_RUNS, description='Limit of entries (default is 1 run)', ge=1)
     query: Optional[dict] = {}
     dataset: AircallDataset = 'users'
 
@@ -86,9 +85,6 @@ class AircallConnector(ToucanConnector):
                 fetch_page(teams_endpoint, [], session, limit, 0),
                 fetch_page(variable_endpoint, [], session, limit, 0)
             )
-            
-            # print('team data ', team_data)
-            print('users ', variable_data)
 
             team_jq_filter, variable_jq_filter = generate_multiple_jq_filters(dataset)
 
@@ -124,10 +120,10 @@ class AircallConnector(ToucanConnector):
         dataset = data_source.dataset
         empty_df = build_empty_df(dataset)
 
-        limit = MAX_RUNS
+        limit = data_source.limit
 
-        if data_source.limit:
-            limit = data_source.limit
+        # if limit < 0 or limit > MAX_RUNS:
+        #     raise ValueError
 
         if dataset == 'tags':
             res = self.run_fetches_for_tags(dataset, query, limit)
