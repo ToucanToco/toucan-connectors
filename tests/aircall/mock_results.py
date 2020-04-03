@@ -14,7 +14,7 @@ fake_teams = [
                         'email': 'jane.doe@eg.com',
                         'available': True,
                         'availability_status': 'available',
-                        'created_at': '2019-04-26T14:41:09.000Z'
+                        'created_at': '2019-04-26T14:41:09.000Z',
                     },
                     {
                         'id': 11,
@@ -23,7 +23,7 @@ fake_teams = [
                         'email': 'john.doe@eg.com',
                         'available': True,
                         'availability_status': 'available',
-                        'created_at': '2019-08-28T07:11:28.000Z'
+                        'created_at': '2019-08-28T07:11:28.000Z',
                     },
                     {
                         'id': 12,
@@ -32,7 +32,7 @@ fake_teams = [
                         'email': 'laleli.lolu@eg.com',
                         'available': True,
                         'availability_status': 'available',
-                        'created_at': '2019-08-28T07:12:17.000Z'
+                        'created_at': '2019-08-28T07:12:17.000Z',
                     },
                     {
                         'id': 13,
@@ -41,7 +41,7 @@ fake_teams = [
                         'email': 'patati.patata@eg.com',
                         'available': True,
                         'availability_status': 'custom',
-                        'created_at': '2019-08-28T07:14:25.000Z'
+                        'created_at': '2019-08-28T07:14:25.000Z',
                     },
                     {
                         'id': 14,
@@ -50,9 +50,9 @@ fake_teams = [
                         'email': 'jean.dupont@eg.com',
                         'available': True,
                         'availability_status': 'custom',
-                        'created_at': '2020-02-12T11:00:25.000Z'
-                    }
-                ]
+                        'created_at': '2020-02-12T11:00:25.000Z',
+                    },
+                ],
             },
             {
                 'id': 2,
@@ -67,7 +67,7 @@ fake_teams = [
                         'email': 'seymour.butts@eg.com',
                         'available': True,
                         'availability_status': 'available',
-                        'created_at': '2019-06-03T15:49:29.000Z'
+                        'created_at': '2019-06-03T15:49:29.000Z',
                     },
                     {
                         'id': 16,
@@ -76,10 +76,10 @@ fake_teams = [
                         'email': 'robin.hood@eg.com',
                         'available': True,
                         'availability_status': 'available',
-                        'created_at': '2019-06-03T16:08:14.000Z'
-                    }
-                ]
-            }
+                        'created_at': '2019-06-03T16:08:14.000Z',
+                    },
+                ],
+            },
         ],
         'meta': {
             'count': 2,
@@ -87,8 +87,8 @@ fake_teams = [
             'current_page': 1,
             'per_page': 20,
             'next_page_link': None,
-            'previous_page_link': None
-        }
+            'previous_page_link': None,
+        },
     }
 ]
 
@@ -99,15 +99,15 @@ empty_team_users = {
             'name': 'Team 1',
             'direct_link': 'https: //api.aircall.io/v1/teams/1',
             'created_at': '2019-08-27T09:13:25.000Z',
-            'users': []
+            'users': [],
         },
         {
             'id': 2,
             'name': 'Team 2',
             'direct_link': 'https://api.aircall.io/v1/teams/2',
             'created_at': '2019-10-30T09:19:29.000Z',
-            'users': []
-        }
+            'users': [],
+        },
     ],
     'meta': {
         'count': 2,
@@ -115,8 +115,8 @@ empty_team_users = {
         'current_page': 1,
         'per_page': 20,
         'next_page_link': None,
-        'previous_page_link': None
-    }
+        'previous_page_link': None,
+    },
 }
 
 empty_teams = {
@@ -127,8 +127,8 @@ empty_teams = {
         'current_page': 1,
         'per_page': 20,
         'next_page_link': None,
-        'previous_page_link': None
-    }
+        'previous_page_link': None,
+    },
 }
 
 fake_users = [
@@ -141,7 +141,7 @@ fake_users = [
                 'email': 'jane.doe@eg.com',
                 'available': True,
                 'availability_status': 'available',
-                'created_at': '2019-04-26T14:41:09.000Z'
+                'created_at': '2019-04-26T14:41:09.000Z',
             },
             {
                 'id': 17,
@@ -150,7 +150,7 @@ fake_users = [
                 'email': 'mini.me@eg.com',
                 'available': False,
                 'availability_status': 'custom',
-                'created_at': '2019-06-03T15:45:49.000Z'
+                'created_at': '2019-06-03T15:45:49.000Z',
             },
             {
                 'id': 18,
@@ -159,7 +159,7 @@ fake_users = [
                 'email': 'doctor.evil@eg.com',
                 'available': True,
                 'availability_status': 'available',
-                'created_at': '2019-06-03T15:47:51.000Z'
+                'created_at': '2019-06-03T15:47:51.000Z',
             },
             {
                 'id': 15,
@@ -168,7 +168,7 @@ fake_users = [
                 'email': 'seymour.butts@eg.com',
                 'available': False,
                 'availability_status': 'available',
-                'created_at': '2019-06-03T15:49:29.000Z'
+                'created_at': '2019-06-03T15:49:29.000Z',
             },
             {
                 'id': 16,
@@ -177,7 +177,7 @@ fake_users = [
                 'email': 'robin.hood@eg.com',
                 'available': True,
                 'availability_status': 'available',
-                'created_at': '2019-06-03T16:08:14.000Z'
+                'created_at': '2019-06-03T16:08:14.000Z',
             },
             {
                 'id': 11,
@@ -186,7 +186,7 @@ fake_users = [
                 'email': 'john.doe@eg.com',
                 'available': True,
                 'availability_status': 'available',
-                'created_at': '2019-08-28T07:11:28.000Z'
+                'created_at': '2019-08-28T07:11:28.000Z',
             },
             {
                 'id': 12,
@@ -195,7 +195,7 @@ fake_users = [
                 'email': 'laleli.lolu@eg.com',
                 'available': True,
                 'availability_status': 'available',
-                'created_at': '2019-08-28T07:12:17.000Z'
+                'created_at': '2019-08-28T07:12:17.000Z',
             },
             {
                 'id': 13,
@@ -204,7 +204,7 @@ fake_users = [
                 'email': 'patati.patata@eg.com',
                 'available': False,
                 'availability_status': 'custom',
-                'created_at': '2019-08-28T07:14:25.000Z'
+                'created_at': '2019-08-28T07:14:25.000Z',
             },
             {
                 'id': 19,
@@ -213,7 +213,7 @@ fake_users = [
                 'email': 'fefifo.fum@eg.com',
                 'available': True,
                 'availability_status': 'available',
-                'created_at': '2019-09-02T07:13:28.000Z'
+                'created_at': '2019-09-02T07:13:28.000Z',
             },
             {
                 'id': 14,
@@ -222,7 +222,7 @@ fake_users = [
                 'email': 'jean.dupont@eg.com',
                 'available': False,
                 'availability_status': 'custom',
-                'created_at': '2020-02-12T11:00:25.000Z'
+                'created_at': '2020-02-12T11:00:25.000Z',
             },
             {
                 'id': 20,
@@ -231,8 +231,8 @@ fake_users = [
                 'email': 'jeron.imo@eg.com',
                 'available': False,
                 'availability_status': 'custom',
-                'created_at': '2020-03-11T14:11:13.000Z'
-            }
+                'created_at': '2020-03-11T14:11:13.000Z',
+            },
         ],
         'meta': {
             'count': 11,
@@ -240,117 +240,78 @@ fake_users = [
             'current_page': 1,
             'per_page': 20,
             'next_page_link': None,
-            'previous_page_link': None
-        }
+            'previous_page_link': None,
+        },
     }
 ]
 
-empty_users = {'users' : []}
+empty_users = {'users': []}
 
 
 empty_calls = {
     'calls': [],
-    'meta' : {
-        'count' : 50,
-        'total' : 6649,
+    'meta': {
+        'count': 50,
+        'total': 6649,
         'current_page': 1,
-        'per_page' : 50,
-        'next_page_link' : 'https://api.aircall.io/v1/calls?order=asc&page=2&per_page=50',
-        'previous_page_link' : None
-    }
+        'per_page': 50,
+        'next_page_link': 'https://api.aircall.io/v1/calls?order=asc&page=2&per_page=50',
+        'previous_page_link': None,
+    },
 }
 
 fake_tags = [
     {
-        'tags' : [
-            {
-                'id' : 10000,
-                'name' : 'Tag 1',
-                'color' : '#f00',
-                'description' : 'foo'
-            },
-            {
-                'id' : 10001,
-                'name' : 'Tag 2',
-                'color' : '#0f0',
-                'description' : 'bar'
-            },
-            {
-                'id' : 10002,
-                'name' : 'Tag 3',
-                'color' : '#00f',
-                'description' : 'baz'
-            }
+        'tags': [
+            {'id': 10000, 'name': 'Tag 1', 'color': '#f00', 'description': 'foo'},
+            {'id': 10001, 'name': 'Tag 2', 'color': '#0f0', 'description': 'bar'},
+            {'id': 10002, 'name': 'Tag 3', 'color': '#00f', 'description': 'baz'},
         ],
-        'meta' : {
-            'count' : 3,
-            'total' : 3,
+        'meta': {
+            'count': 3,
+            'total': 3,
             'current_page': 1,
-            'per_page' : 50,
-            'next_page_link' : None,
-            'previous_page_link' : None
-        }
+            'per_page': 50,
+            'next_page_link': None,
+            'previous_page_link': None,
+        },
     }
 ]
 
 filtered_teams = [
     {
-        'team' : 'Team 1',
-        'user_id' : 100,
-        'user_name' : 'User 1',
-        'user_created_at' : '2020-03-25T14:41:09.000Z'
+        'team': 'Team 1',
+        'user_id': 100,
+        'user_name': 'User 1',
+        'user_created_at': '2020-03-25T14:41:09.000Z',
     },
     {
-        'team' : 'Team 2',
-        'user_id' : 200,
-        'user_name' : 'User 2',
-        'user_created_at' : '2020-03-25T14:41:09.000Z'
+        'team': 'Team 2',
+        'user_id': 200,
+        'user_name': 'User 2',
+        'user_created_at': '2020-03-25T14:41:09.000Z',
     },
     {
-        'team' : 'Team 2',
-        'user_id' : 300,
-        'user_name' : 'User 3',
-        'user_created_at' : '2020-03-25T14:41:09.000Z'
+        'team': 'Team 2',
+        'user_id': 300,
+        'user_name': 'User 3',
+        'user_created_at': '2020-03-25T14:41:09.000Z',
     },
     {
-        'team' : 'Team 3',
-        'user_id' : 400,
-        'user_name' : 'User 4',
-        'user_created_at' : '2020-03-25T14:41:09.000Z'
-    }
+        'team': 'Team 3',
+        'user_id': 400,
+        'user_name': 'User 4',
+        'user_created_at': '2020-03-25T14:41:09.000Z',
+    },
 ]
 
 filtered_users = [
-    {
-        'user_id' : 100,
-        'user_name' : 'User 1',
-        'user_created_at' : '2020-03-25T14:41:09.000Z'
-    },
-    {
-        'user_id' : 200,
-        'user_name' : 'User 2',
-        'user_created_at' : '2020-03-25T14:41:09.000Z'
-    },
-    {
-        'user_id' : 300,
-        'user_name' : 'User 3',
-        'user_created_at' : '2020-03-25T14:41:09.000Z'
-    },
-    {
-        'user_id' : 400,
-        'user_name' : 'User 4',
-        'user_created_at' : '2020-03-25T14:41:09.000Z'
-    },
-    {
-        'user_id' : 500,
-        'user_name' : 'User 5',
-        'user_created_at' : '2020-03-25T14:41:09.000Z'
-    },
-    {
-        'user_id' : 600,
-        'user_name' : 'User 6',
-        'user_created_at' : '2020-03-25T14:41:09.000Z'
-    }
+    {'user_id': 100, 'user_name': 'User 1', 'user_created_at': '2020-03-25T14:41:09.000Z'},
+    {'user_id': 200, 'user_name': 'User 2', 'user_created_at': '2020-03-25T14:41:09.000Z'},
+    {'user_id': 300, 'user_name': 'User 3', 'user_created_at': '2020-03-25T14:41:09.000Z'},
+    {'user_id': 400, 'user_name': 'User 4', 'user_created_at': '2020-03-25T14:41:09.000Z'},
+    {'user_id': 500, 'user_name': 'User 5', 'user_created_at': '2020-03-25T14:41:09.000Z'},
+    {'user_id': 600, 'user_name': 'User 6', 'user_created_at': '2020-03-25T14:41:09.000Z'},
 ]
 
 
@@ -364,7 +325,8 @@ filtered_calls = [
         'raw_digits': '+1 111-111-1111',
         'user_id': 100,
         'tags': [],
-        'user_name': 'User 1'},
+        'user_name': 'User 1',
+    },
     {
         'id': 1001,
         'direction': 'outbound',
@@ -374,7 +336,7 @@ filtered_calls = [
         'raw_digits': '+1 111-111-1111',
         'user_id': 100,
         'tags': [],
-        'user_name': 'User 1'
+        'user_name': 'User 1',
     },
     {
         'id': 1002,
@@ -385,7 +347,7 @@ filtered_calls = [
         'raw_digits': '+1 111-111-1112',
         'user_id': 100,
         'tags': [],
-        'user_name': 'User 1'
+        'user_name': 'User 1',
     },
     {
         'id': 1003,
@@ -396,7 +358,7 @@ filtered_calls = [
         'raw_digits': '+1 111-111-1113',
         'user_id': 100,
         'tags': [],
-        'user_name': 'User 1'
+        'user_name': 'User 1',
     },
     {
         'id': 1004,
@@ -407,7 +369,7 @@ filtered_calls = [
         'raw_digits': '+1 111-111-1111',
         'user_id': 100,
         'tags': [],
-        'user_name': 'User 1'
+        'user_name': 'User 1',
     },
     {
         'id': 1005,
@@ -418,7 +380,7 @@ filtered_calls = [
         'raw_digits': '+1 111-111-1114',
         'user_id': 100,
         'tags': [],
-        'user_name': 'User 1'
+        'user_name': 'User 1',
     },
     {
         'id': 1006,
@@ -429,7 +391,7 @@ filtered_calls = [
         'raw_digits': '+1 111-111-1115',
         'user_id': 200,
         'tags': [],
-        'user_name': 'User 2'
+        'user_name': 'User 2',
     },
     {
         'id': 1007,
@@ -438,8 +400,9 @@ filtered_calls = [
         'answered_at': 1572631741,
         'ended_at': 1572631764,
         'raw_digits': '+1 111-111-1116',
-        'user_id': 200, 'tags': [],
-        'user_name': 'User 2'
+        'user_id': 200,
+        'tags': [],
+        'user_name': 'User 2',
     },
     {
         'id': 1008,
@@ -450,7 +413,7 @@ filtered_calls = [
         'raw_digits': '+1 111-111-1117',
         'user_id': 200,
         'tags': [],
-        'user_name': 'User 2'
+        'user_name': 'User 2',
     },
     {
         'id': 1009,
@@ -461,27 +424,12 @@ filtered_calls = [
         'raw_digits': '+1 111-111-1117',
         'user_id': 200,
         'tags': [],
-        'user_name': 'User 2'
-    }
+        'user_name': 'User 2',
+    },
 ]
 
 filtered_tags = [
-    {
-        'id' : 10000,
-        'name' : 'Tag 1',
-        'color' : '#f00',
-        'description' : 'foo'
-    },
-    {
-        'id' : 10001,
-        'name' : 'Tag 2',
-        'color' : '#0f0',
-        'description' : 'bar'
-    },
-    {
-        'id' : 10002,
-        'name' : 'Tag 3',
-        'color' : '#00f',
-        'description' : 'baz'
-    }
+    {'id': 10000, 'name': 'Tag 1', 'color': '#f00', 'description': 'foo'},
+    {'id': 10001, 'name': 'Tag 2', 'color': '#0f0', 'description': 'bar'},
+    {'id': 10002, 'name': 'Tag 3', 'color': '#00f', 'description': 'baz'},
 ]

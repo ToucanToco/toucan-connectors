@@ -1,13 +1,13 @@
+"""Module containing tests for AirCall helpers"""
 import pandas as pd
 
-from tests.aircall.mock_results import (
-    filtered_calls,
-    filtered_teams,
-    filtered_users
-)
+from tests.aircall.mock_results import filtered_calls, filtered_teams, filtered_users
 from toucan_connectors.aircall.helpers import (
-    build_df, build_empty_df,
-    generate_multiple_jq_filters, generate_tags_filter
+    build_df,
+    build_empty_df,
+    generate_multiple_jq_filters,
+    generate_tags_filter,
+    resolve_calls_df,
 )
 
 columns_for_calls = [
@@ -21,8 +21,32 @@ columns_for_calls = [
     'tags',
     'user_name',
     'team',
-    'day'
+    'day',
 ]
+
+
+def test_resolve_calls_df():
+    """Tests if resolver for calls works"""
+    teams_df = pd.DataFrame(filtered_teams)
+    calls_df = pd.DataFrame(filtered_calls)
+
+    # tests result for data in both dataframes
+    full_df = resolve_calls_df(teams_df, calls_df)
+    assert full_df.shape == (10, 10)
+
+    empty_df = pd.DataFrame([])
+
+    # tests empty teams case
+    empty_teams_df = resolve_calls_df(empty_df, calls_df)
+    assert empty_teams_df.shape == (10, 9)
+
+    # tests empty calls case
+    empty_calls_df = resolve_calls_df(teams_df, empty_df)
+    assert empty_calls_df.shape == (4, 4)
+
+    # tests no data case
+    empty_data = resolve_calls_df(empty_df, empty_df)
+    assert empty_data.shape == (0, 0)
 
 
 def test_build_users_df():
@@ -95,7 +119,7 @@ def test_build_calls_df():
 
 
 def test_build_empty_df():
-    """Test the empty dataframe builder"""
+    """Tests the empty dataframe builder"""
     empty_df = build_empty_df('calls')
 
     assert empty_df.shape == (0, 11)
@@ -103,7 +127,7 @@ def test_build_empty_df():
 
 
 def test_generate_multiple_jq_filters():
-    """Test the multiple jq filter generator"""
+    """Tests the multiple jq filter generator"""
     # test a valid dataset
     dataset = 'calls'
     jq_filters = generate_multiple_jq_filters(dataset)
@@ -116,7 +140,7 @@ def test_generate_multiple_jq_filters():
     assert 'teams' in team_filter
     assert 'calls' in variable_filter
 
-    # test a bad dataset
+    # test a bad dataset; should default to 'users'
     bad_dataset = 'turkeys'
 
     default_filters = generate_multiple_jq_filters(bad_dataset)
@@ -138,6 +162,7 @@ def test_generate_tags_filter():
     assert type(jq_filter) == str
     assert 'tags' in jq_filter
 
+    # bad dataset
     bad_dataset = 'totos'
 
     default_filter = generate_tags_filter(bad_dataset)

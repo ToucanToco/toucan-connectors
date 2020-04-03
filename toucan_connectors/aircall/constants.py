@@ -1,7 +1,7 @@
 """File containing constants for AirCall connector"""
 
 COLUMN_DICTIONARY = {
-    'calls' : [
+    'calls': [
         'id',
         'direction',
         'duration',
@@ -12,24 +12,14 @@ COLUMN_DICTIONARY = {
         'tags',
         'user_name',
         'team',
-        'day'
+        'day',
     ],
-    'tags' : [
-        'id',
-        'name',
-        'color',
-        'description'
-    ],
-    'users': [
-        'team',
-        'user_id',
-        'user_name',
-        'user_created_at'
-    ]
+    'tags': ['id', 'name', 'color', 'description'],
+    'users': ['team', 'user_id', 'user_name', 'user_created_at'],
 }
 
 FILTER_DICTIONARY = {
-    'calls' : """
+    'calls': """
         .results
         | map({calls}
         | .calls
@@ -46,13 +36,13 @@ FILTER_DICTIONARY = {
         }))
         | flatten
     """,
-    'tags' : """
+    'tags': """
         [
             .results []
             | .tags[]
         ]
     """,
-    'teams' : """
+    'teams': """
         .results []
         | [
             .teams[]
@@ -65,7 +55,7 @@ FILTER_DICTIONARY = {
                 user_created_at: .created_at
         }]
     """,
-    'users' : """
+    'users': """
         [
             .results []
             |  .users []
@@ -74,7 +64,7 @@ FILTER_DICTIONARY = {
                 user_name:.name,
                 user_created_at: .created_at
             }]
-    """
+    """,
 }
 
 # MAX_RUNS = 60

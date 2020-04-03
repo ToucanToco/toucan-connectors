@@ -1,16 +1,16 @@
+import asyncio
+from enum import Enum
 from typing import List, Optional, Tuple
 
-import asyncio
-from aiohttp import ClientSession
-from enum import Enum
 import pandas as pd
 import pyjq
+from aiohttp import ClientSession
 from pydantic import Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
-from .constants import PER_PAGE, MAX_RUNS
+from .constants import MAX_RUNS, PER_PAGE
 from .helpers import build_df, build_empty_df, generate_multiple_jq_filters, generate_tags_filter
 
 # temporary constant that will be removed in production-ready code
@@ -18,10 +18,11 @@ STUFF = '156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@'
 
 
 async def fetch_page(
-    base_endpoint: str, data_list: List[dict], session, limit, current_pass: int
+    base_endpoint: str, data_list: List[dict], session: ClientSession, limit, current_pass: int
 ) -> List[dict]:
     """
     Fetches data from AirCall API
+
     dependent on existence of other pages and call limit
     """
     data: dict = await fetch(base_endpoint, session)
@@ -44,7 +45,8 @@ async def fetch_page(
     return data_list
 
 
-async def fetch(new_endpoint, session) -> dict:
+async def fetch(new_endpoint, session: ClientSession) -> dict:
+    """The basic fetch function"""
     async with session.get(new_endpoint) as res:
         return await res.json()
 
@@ -71,9 +73,7 @@ class AircallConnector(ToucanConnector):
     bearer_integration = 'aircall_oauth'
     bearer_auth_id: str
 
-    async def _get_data(
-        self, dataset: str, query, limit
-    ) -> Tuple[List[dict], List[dict]]:
+    async def _get_data(self, dataset: str, query, limit) -> Tuple[List[dict], List[dict]]:
         """Triggers fetches for data and does preliminary filtering process"""
         BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
         variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
@@ -83,18 +83,16 @@ class AircallConnector(ToucanConnector):
 
             team_data, variable_data = await asyncio.gather(
                 fetch_page(teams_endpoint, [], session, limit, 0),
-                fetch_page(variable_endpoint, [], session, limit, 0)
+                fetch_page(variable_endpoint, [], session, limit, 0),
             )
 
             team_jq_filter, variable_jq_filter = generate_multiple_jq_filters(dataset)
 
-            team_data = pyjq.first(team_jq_filter, {'results' : team_data})
-            variable_data = pyjq.first(variable_jq_filter, {'results' : variable_data})
+            team_data = pyjq.first(team_jq_filter, {'results': team_data})
+            variable_data = pyjq.first(variable_jq_filter, {'results': variable_data})
             return team_data, variable_data
 
-    async def _get_tags(
-        self, dataset: str, query, limit
-    ) -> List[dict]:
+    async def _get_tags(self, dataset: str, query, limit) -> List[dict]:
         """Triggers fetches for tags and does preliminary filtering process"""
         BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
         variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
@@ -103,27 +101,29 @@ class AircallConnector(ToucanConnector):
             raw_data = await fetch_page(variable_endpoint, [], session, limit, 1)
             jq_filter = generate_tags_filter(dataset)
 
-            return pyjq.first(jq_filter, {'results' : raw_data})
+            return pyjq.first(jq_filter, {'results': raw_data})
 
     def run_fetches(self, dataset, query, limit) -> Tuple[List[dict], List[dict]]:
+        """sets up event loop and fetches for 'calls' and 'users' datasets"""
         loop = asyncio.get_event_loop()
         future = asyncio.ensure_future(self._get_data(dataset, query, limit))
         return loop.run_until_complete(future)
 
     def run_fetches_for_tags(self, dataset, query, limit):
+        """sets up event loop and fetches for 'tags' dataset"""
         loop = asyncio.get_event_loop()
         future = asyncio.ensure_future(self._get_tags(dataset, query, limit))
         return loop.run_until_complete(future)
 
     def _retrieve_data(self, data_source: AircallDataSource) -> pd.DataFrame:
+        """retrieves data from AirCall API"""
         query = nosql_apply_parameters_to_query(data_source.query, data_source.parameters)
         dataset = data_source.dataset
         empty_df = build_empty_df(dataset)
 
+        # NOTE: no check needed on limit here because a non-valid limit
+        # raises a Pydantic ValidationError
         limit = data_source.limit
-
-        # if limit < 0 or limit > MAX_RUNS:
-        #     raise ValueError
 
         if dataset == 'tags':
             res = self.run_fetches_for_tags(dataset, query, limit)
@@ -132,6 +132,5 @@ class AircallConnector(ToucanConnector):
         else:
             team_data, variable_data = self.run_fetches(dataset, query, limit)
             return build_df(
-                dataset,
-                [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
+                dataset, [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
             )

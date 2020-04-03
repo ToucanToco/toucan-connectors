@@ -1,14 +1,18 @@
-from pydantic import ValidationError
 import pytest
+from pydantic import ValidationError
+
 from tests.aircall.helpers import (
-    build_complex_mock_fetch_data, build_mock_fetch_data, build_con_and_ds, run_loop
+    build_complex_mock_fetch_data,
+    build_con_and_ds,
+    build_mock_fetch_data,
+    run_loop,
 )
 from tests.aircall.mock_results import (
     fake_tags,
     filtered_calls,
     filtered_tags,
     filtered_teams,
-    filtered_users
+    filtered_users,
 )
 from toucan_connectors.aircall.aircall_connector import AircallConnector, AircallDataSource
 
@@ -23,14 +27,9 @@ columns_for_calls = [
     'tags',
     'user_name',
     'team',
-    'day'
+    'day',
 ]
-columns_for_tags = [
-    'id',
-    'name',
-    'color',
-    'description'
-]
+columns_for_tags = ['id', 'name', 'color', 'description']
 columns_for_teams = ['team', 'user_id', 'user_name', 'user_created_at']
 columns_for_users = ['user_id', 'user_name', 'user_created_at']
 
@@ -51,7 +50,7 @@ def test__get_data_calls(mocker):
         'raw_digits',
         'user_id',
         'tags',
-        'user_name'
+        'user_name',
     ]
     con, ds = build_con_and_ds('calls')
     res = run_loop(con, ds)
@@ -119,9 +118,7 @@ def test__retrieve_data_users_happy_case(mocker):
     # NOTE: this test is only cursory because 'users' call is tested more
     # thoroughly in helpers test file
     run_fetches_mock = mocker.patch.object(
-        AircallConnector,
-        'run_fetches',
-        return_value=[filtered_teams, filtered_users]
+        AircallConnector, 'run_fetches', return_value=[filtered_teams, filtered_users]
     )
     con, ds = build_con_and_ds('users')
 
@@ -135,9 +132,7 @@ def test__retrieve_data_users_happy_case(mocker):
 def test__retrieve_data_calls_happy_case(mocker):
     """Tests case when calls call has data"""
     run_fetches_mock = mocker.patch.object(
-        AircallConnector,
-        'run_fetches',
-        return_value=[filtered_teams, filtered_calls]
+        AircallConnector, 'run_fetches', return_value=[filtered_teams, filtered_calls]
     )
     con, ds = build_con_and_ds('calls')
 
@@ -153,9 +148,7 @@ def test__retrieve_data_calls_happy_case(mocker):
 def test__retrieve_data_tags_happy_case(mocker):
     """Tests case when tags call has data"""
     run_fetches_mock = mocker.patch.object(
-        AircallConnector,
-        'run_fetches_for_tags',
-        return_value=filtered_tags
+        AircallConnector, 'run_fetches_for_tags', return_value=filtered_tags
     )
     con, ds = build_con_and_ds('tags')
 
@@ -167,11 +160,7 @@ def test__retrieve_data_tags_happy_case(mocker):
 
 def test__retrieve_data_no_data_case(mocker):
     """Tests case when there is no data returned"""
-    run_fetches_mock = mocker.patch.object(
-        AircallConnector,
-        'run_fetches',
-        return_value=[[], []]
-    )
+    run_fetches_mock = mocker.patch.object(AircallConnector, 'run_fetches', return_value=[[], []])
     con, ds = build_con_and_ds('users')
 
     df = con._retrieve_data(ds)
@@ -183,9 +172,7 @@ def test__retrieve_data_no_data_case(mocker):
 def test__retrieve_data_no_teams_case(mocker):
     """Tests case when there is no team data but there is calls data"""
     run_fetches_mock = mocker.patch.object(
-        AircallConnector,
-        'run_fetches',
-        return_value=[[], filtered_calls]
+        AircallConnector, 'run_fetches', return_value=[[], filtered_calls]
     )
     con, ds = build_con_and_ds('calls')
     df = con._retrieve_data(ds)
@@ -200,26 +187,13 @@ def test_bad_limit():
     """Tests case when user passes a bad limit"""
     # limit less than 1 (want to be able to do at least one run)
     with pytest.raises(ValidationError):
-        AircallDataSource(
-            name='bar',
-            domain='test_domain',
-            dataset='tags',
-            limit=-6
-        )
+        AircallDataSource(name='bar', domain='test_domain', dataset='tags', limit=-6)
 
 
 def test_default_limit(mocker):
     """If no limit is provided, the default is chosen"""
     con = AircallConnector(name='mah_test', bearer_auth_id='abc123efg')
-    ds = AircallDataSource(
-        name='mah_ds',
-        domain='test_domain',
-        dataset='tags'
-    )
-    mocker.patch.object(
-        AircallConnector,
-        'run_fetches_for_tags',
-        return_value=filtered_tags
-    )
+    ds = AircallDataSource(name='mah_ds', domain='test_domain', dataset='tags')
+    mocker.patch.object(AircallConnector, 'run_fetches_for_tags', return_value=filtered_tags)
 
     con._retrieve_data(ds)

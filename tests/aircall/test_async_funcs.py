@@ -1,65 +1,33 @@
+"""Module containing tests with fake server"""
 from aiohttp import web
+
 from toucan_connectors.aircall.aircall_connector import fetch_page
 
 
-async def send_no_link(req):
-    fake_response = {
-        'data' : {
-            'stuff' : 'stuff'
-        },
-        'meta' : {
-            'next_page_link' : None
-        }
-    }
+async def send_no_link(req: web.Request) -> dict:
+    """Sends a response with no next_page_link in meta dict"""
+    fake_response = {'data': {'stuff': 'stuff'}, 'meta': {'next_page_link': None}}
     return web.json_response(fake_response)
 
 
-async def send_next_link(req):
-    fake_response = {
-        'data' : {
-            'stuff' : 'stuff'
-        },
-        'meta' : {
-            'next_page_link' : 'https://api.aircall.io/v1/foo?page=2'
-        }
-    }
-
+async def send_no_meta(req: web.Request) -> dict:
+    """Sends a response with no meta dict"""
+    fake_response = {'data': {'stuff': 'stuff'}}
     return web.json_response(fake_response)
 
 
-async def send_no_meta(req):
-    fake_response = {
-        'data' : {
-            'stuff' : 'stuff'
-        }
-    }
-    return web.json_response(fake_response)
-
-
-async def send_error(req):
+async def send_error(req: web.Request) -> dict:
+    """Sends a response with an error"""
     fake_response = {'message': 'oops'}
     return web.json_response(fake_response, status=400)
 
 
-async def send_multiple_links(req):
-    fake_response = {
-        'data' : {
-            'stuff' : 'stuff'
-        },
-        'meta' : {
-            'next_page_link' : '/foo?page=2'
-        }
-    }
+async def send_multiple_links(req: web.Request) -> dict:
+    """Sends a response with multiple pages"""
+    fake_response = {'data': {'stuff': 'stuff'}, 'meta': {'next_page_link': '/foo?page=2'}}
 
     if req.query.get('page') == '2':
-        fake_response = {
-            'data' : {
-                'stuff' : 'stuff 2'
-            },
-            'meta' : {
-                'next_page_link' : None
-            }
-        }
+        fake_response = {'data': {'stuff': 'stuff 2'}, 'meta': {'next_page_link': None}}
 
     return web.json_response(fake_response)
 
@@ -79,12 +47,12 @@ async def test_fetch_page_with_no_next_page(aiohttp_client, loop):
 
 
 async def test_fetch_page_with_next_page(aiohttp_client, loop):
-    """Test fetch_page to see limit and current pass stopping recursion"""
+    """Test fetch_page to see multiple pages"""
     app = web.Application(loop=loop)
     endpoint = '/foo'
     app.router.add_get(endpoint, send_multiple_links)
     client = await aiohttp_client(app)
-    # limit is only 1 and run is 0 i.e. this is the first run
+    # limit is 10 and run is 0 i.e. this is the first run
     res = await fetch_page(endpoint, [], client, 10, 0)
     assert len(res) == 2
 
@@ -93,7 +61,7 @@ async def test_fetch_page_with_low_limit(aiohttp_client, loop):
     """Test fetch_page to see limit and current pass stopping recursion"""
     app = web.Application(loop=loop)
     endpoint = '/foo'
-    app.router.add_get(endpoint, send_next_link)
+    app.router.add_get(endpoint, send_multiple_links)
     client = await aiohttp_client(app)
     # limit is only 1 and run is 0 i.e. this is the first run
     res = await fetch_page(endpoint, [], client, 1, 0)
@@ -106,13 +74,13 @@ async def test_fetch_page_with_no_meta(aiohttp_client, loop):
     endpoint = '/bar'
     app.router.add_get(endpoint, send_no_meta)
     client = await aiohttp_client(app)
-    res = await fetch_page(endpoint, [], client, 1, 0)
+    res = await fetch_page(endpoint, [], client, 10, 0)
     assert len(res) == 1
 
 
 async def test_fetch_page_with_error(aiohttp_client, loop):
     """
-    Tests that error sent from API does not throw error on our server
+    Tests error sent from API does not throw error on our server
     """
     app = web.Application(loop=loop)
     endpoint = '/oops'

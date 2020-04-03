@@ -10,12 +10,7 @@ def build_con_and_ds(dataset: str):
     Builds test connector and test datasource
     """
     con = AircallConnector(name='mah_test', bearer_auth_id='abc123efg')
-    ds = AircallDataSource(
-        name='mah_ds',
-        domain='test_domain',
-        dataset=dataset,
-        limit=1,
-    )
+    ds = AircallDataSource(name='mah_ds', domain='test_domain', dataset=dataset, limit=1,)
 
     return con, ds
 
@@ -27,10 +22,7 @@ def build_mock_fetch_data(fake_data, mocker):
     f = asyncio.Future()
     f.set_result(fake_data)
 
-    return mocker.patch(
-        'toucan_connectors.aircall.aircall_connector.fetch_page',
-        return_value=f
-    )
+    return mocker.patch('toucan_connectors.aircall.aircall_connector.fetch_page', return_value=f)
 
 
 def build_complex_mock_fetch_data(mocker):
@@ -44,8 +36,7 @@ def build_complex_mock_fetch_data(mocker):
     f_2.set_result(fake_users)
 
     return mocker.patch(
-        'toucan_connectors.aircall.aircall_connector.fetch_page',
-        side_effect=[f_1, f_2]
+        'toucan_connectors.aircall.aircall_connector.fetch_page', side_effect=[f_1, f_2]
     )
 
 

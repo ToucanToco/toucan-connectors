@@ -1,8 +1,8 @@
 """Module containing helpers for the Aircall connector"""
 
-import pandas as pd
-
 from typing import List
+
+import pandas as pd
 
 from .constants import COLUMN_DICTIONARY, FILTER_DICTIONARY
 
@@ -11,18 +11,21 @@ def resolve_calls_df(team_data, call_data) -> pd.DataFrame:
     """
     Resolves the shape of calls df depending on response
 
-    if there is both team data and calls data, then merge the dataframes
+    - if there is both team data and calls data, then merge the dataframes
     on user_id
-    if there is no team data but there is call data, then return the call data df
-    if there is team data but no call data, then return the team df
-    if there is nothing, then just return an empty df
+    - if there is no team data but there is call data,
+      then return the call data df
+    - if there is team data but no call data, then return the team df
+    - if there is nothing, then just return an empty df
+    This is to prevent bugs due to pandas dataframe merge
+    (not as permissive as dataframe concatenation with empty dataframes)
     """
     df = pd.DataFrame([])
 
     if len(team_data) > 0 and len(call_data):
-        df = (team_data
-              .merge(call_data, sort=False, on='user_id', how='right')
-              .drop(columns=['user_name_y', 'user_created_at']))
+        df = team_data.merge(call_data, sort=False, on='user_id', how='right').drop(
+            columns=['user_name_y', 'user_created_at']
+        )
     elif len(call_data) > 0:
         df = call_data
     elif len(team_data) > 0:
@@ -36,26 +39,29 @@ def build_df(dataset: str, list_of_data: List[dict]) -> pd.DataFrame:
 
     dataset is the identifier for the dataset we're fetching
     for example, 'calls' searches data from /teams and /calls
-    list_of_data is an accumulator of filtered data
+    list_of_data is a list of three dataframes:
+    - an empty dataframe built for the specific dataset
+    - team data dataframe (if any)
+    - either user data or call data dataframe (if any)
     """
     if dataset == 'users':
-        return (pd
-                .concat(list_of_data, sort=False, ignore_index=True)
-                .drop_duplicates(['user_id'], keep='first')
-                .assign(**{'user_created_at': lambda x: x['user_created_at'].str[:10]})
-                )
+        return (
+            pd.concat(list_of_data, sort=False, ignore_index=True)
+            .drop_duplicates(['user_id'], keep='first')
+            .assign(**{'user_created_at': lambda x: x['user_created_at'].str[:10]})
+        )
     elif dataset == 'calls':
         empty_df, team_data, call_data = list_of_data
 
         df = resolve_calls_df(team_data, call_data)
 
-        total_df = (pd
-                    .concat([empty_df, df], sort=False, ignore_index=True)
-                    .assign(**{
-                        'answered_at' : lambda t: pd.to_datetime(t['answered_at'], unit='s'),
-                        'ended_at' : lambda t: pd.to_datetime(t['ended_at'], unit='s'),
-                        'day' : lambda t : t['ended_at'].astype(str).str[:10]
-                    }))
+        total_df = pd.concat([empty_df, df], sort=False, ignore_index=True).assign(
+            **{
+                'answered_at': lambda t: pd.to_datetime(t['answered_at'], unit='s'),
+                'ended_at': lambda t: pd.to_datetime(t['ended_at'], unit='s'),
+                'day': lambda t: t['ended_at'].astype(str).str[:10],
+            }
+        )
         return total_df[COLUMN_DICTIONARY[dataset]]
 
 
