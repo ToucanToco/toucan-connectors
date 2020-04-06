@@ -86,6 +86,7 @@ def test__get_data_users(event_loop):
         assert keys == columns_for_users  # insures order of columns
 
 
+@pytest.mark.asyncio
 async def test__get_data_tags_case(mocker):
     """Tests with tags happy case"""
     dataset = 'tags'
@@ -97,6 +98,7 @@ async def test__get_data_tags_case(mocker):
     assert len(res) == 3
 
 
+@pytest.mark.asyncio
 async def test__get_data_users_case(mocker):
     """Tests users call happy case"""
     dataset = 'users'
