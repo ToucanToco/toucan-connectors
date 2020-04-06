@@ -4,8 +4,7 @@ from pydantic import ValidationError
 from tests.aircall.helpers import (
     build_complex_mock_fetch_data,
     build_con_and_ds,
-    build_mock_fetch_data,
-    run_loop,
+    build_mock_fetch_data
 )
 from tests.aircall.mock_results import (
     fake_tags,
@@ -39,8 +38,9 @@ def con(bearer_aircall_auth_id):
     return AircallConnector(name='test_name', bearer_auth_id=bearer_aircall_auth_id)
 
 
-def test__get_data_calls(mocker):
+def test__get_data_calls(event_loop):
     """Tests _get_data() with calls call (E2E)"""
+    dataset = 'calls'
     columns_for_red_calls = [
         'id',
         'direction',
@@ -52,9 +52,8 @@ def test__get_data_calls(mocker):
         'tags',
         'user_name',
     ]
-    con, ds = build_con_and_ds('calls')
-    res = run_loop(con, ds)
-
+    con, ds = build_con_and_ds(dataset)
+    res = event_loop.run_until_complete(con._get_data(dataset, {}, 1))
     first_part, second_part = res
 
     if len(first_part) > 0:
@@ -68,10 +67,11 @@ def test__get_data_calls(mocker):
         assert keys == columns_for_red_calls  # insures order of columns
 
 
-def test__get_data_users(mocker):
+def test__get_data_users(event_loop):
     """Tests _get_data() with users call (E2E)"""
-    con, ds = build_con_and_ds('users')
-    res = run_loop(con, ds)
+    dataset = 'users'
+    con, ds = build_con_and_ds(dataset)
+    res = event_loop.run_until_complete(con._get_data(dataset, {}, 1))
 
     first_part, second_part = res
 
@@ -169,22 +169,22 @@ def test__retrieve_data_no_data_case(mocker):
     assert list(df.columns) == columns_for_teams
 
 
-def test_run_fetches_for_tags(mocker):
-    """Tests the loop generator function for tags call"""
-    dataset = 'tags'
-    spy = mocker.spy(AircallConnector, 'run_fetches_for_tags')
-    con, ds = build_con_and_ds(dataset)
-    con.run_fetches_for_tags(dataset, {}, 1)
-    assert spy.call_count == 1
+# def test_run_fetches_for_tags(mocker):
+#     """Tests the loop generator function for tags call"""
+#     dataset = 'tags'
+#     spy = mocker.spy(AircallConnector, 'run_fetches_for_tags')
+#     con, ds = build_con_and_ds(dataset)
+#     con.run_fetches_for_tags(dataset, {}, 1)
+#     assert spy.call_count == 1
 
 
-def test_run_fetches(mocker):
-    """Tests the loop generator function for calls/users call"""
-    dataset = 'users'
-    spy = mocker.spy(AircallConnector, 'run_fetches')
-    con, ds = build_con_and_ds(dataset)
-    con.run_fetches(dataset, {}, 1)
-    assert spy.call_count == 1
+# def test_run_fetches(mocker):
+#     """Tests the loop generator function for calls/users call"""
+#     dataset = 'users'
+#     spy = mocker.spy(AircallConnector, 'run_fetches')
+#     con, ds = build_con_and_ds(dataset)
+#     con.run_fetches(dataset, {}, 1)
+#     assert spy.call_count == 1
 
 
 def test__retrieve_data_no_teams_case(mocker):
