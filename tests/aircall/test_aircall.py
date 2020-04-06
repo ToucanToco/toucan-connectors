@@ -4,7 +4,7 @@ from pydantic import ValidationError
 from tests.aircall.helpers import (
     build_complex_mock_fetch_data,
     build_con_and_ds,
-    build_mock_fetch_data
+    build_mock_fetch_data,
 )
 from tests.aircall.mock_results import (
     fake_tags,
