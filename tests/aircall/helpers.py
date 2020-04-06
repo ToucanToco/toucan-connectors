@@ -42,6 +42,10 @@ def build_complex_mock_fetch_data(mocker):
 
 def run_loop(con, ds):
     """Sets up a real event loop for E2E tests"""
-    loop = asyncio.get_event_loop()
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
     future = asyncio.ensure_future(con._get_data(ds.dataset, ds.query, ds.limit))
     return loop.run_until_complete(future)

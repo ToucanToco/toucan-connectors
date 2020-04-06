@@ -169,6 +169,24 @@ def test__retrieve_data_no_data_case(mocker):
     assert list(df.columns) == columns_for_teams
 
 
+def test_run_fetches_for_tags(mocker):
+    """Tests the loop generator function for tags call"""
+    dataset = 'tags'
+    spy = mocker.spy(AircallConnector, 'run_fetches_for_tags')
+    con, ds = build_con_and_ds(dataset)
+    con.run_fetches_for_tags(dataset, {}, 1)
+    assert spy.call_count == 1
+
+
+def test_run_fetches(mocker):
+    """Tests the loop generator function for calls/users call"""
+    dataset = 'users'
+    spy = mocker.spy(AircallConnector, 'run_fetches')
+    con, ds = build_con_and_ds(dataset)
+    con.run_fetches(dataset, {}, 1)
+    assert spy.call_count == 1
+
+
 def test__retrieve_data_no_teams_case(mocker):
     """Tests case when there is no team data but there is calls data"""
     run_fetches_mock = mocker.patch.object(
