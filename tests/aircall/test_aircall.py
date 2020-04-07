@@ -87,7 +87,7 @@ def test__get_data_users(event_loop):
 
 
 @pytest.mark.asyncio
-async def test__get_data_tags_case(mocker):
+async def test__get_data_tags_case(mocker, event_loop):
     """Tests with tags happy case"""
     dataset = 'tags'
     fake_fetch_page = build_mock_fetch_data(fake_tags, mocker)
@@ -99,7 +99,7 @@ async def test__get_data_tags_case(mocker):
 
 
 @pytest.mark.asyncio
-async def test__get_data_users_case(mocker):
+async def test__get_data_users_case(mocker, event_loop):
     """Tests users call happy case"""
     dataset = 'users'
     fake_fetch_page = build_complex_mock_fetch_data(mocker)
