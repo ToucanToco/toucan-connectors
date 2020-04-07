@@ -24,13 +24,15 @@ def build_mock_fetch_data(fake_data, mocker):
     # In python > 3.8, patch detects we're mocking a coroutine and replace it by an AsyncMock
     if sys.version_info > (3, 8):
         return_value = fake_data
-    # In python < 3.8, patch only uses a MagicMock, which is not awaitable 
+    # In python < 3.8, patch only uses a MagicMock, which is not awaitable
     else:
         f = asyncio.Future()
         f.set_result(fake_data)
         return_value = f
 
-    return mocker.patch('toucan_connectors.aircall.aircall_connector.fetch_page', return_value=return_value)
+    return mocker.patch(
+        'toucan_connectors.aircall.aircall_connector.fetch_page', return_value=return_value
+    )
 
 
 def build_complex_mock_fetch_data(mocker):
