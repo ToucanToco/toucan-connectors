@@ -43,9 +43,7 @@ async def test__get_data_tags_case(mocker):
     """Tests with tags happy case"""
     dataset = 'tags'
     fake_res = handle_mock_data(fake_tags)
-    fake_fetch_page = mocker.patch(
-        fetch_fn_name, return_value=fake_res
-    )
+    fake_fetch_page = mocker.patch(fetch_fn_name, return_value=fake_res)
     con, ds = build_con_and_ds(dataset)
     res = await con._get_tags(ds.dataset, {}, 10)
 
@@ -57,10 +55,7 @@ async def test__get_data_tags_case(mocker):
 async def test__get_data_tags_unhappy_case(mocker):
     """Tests what happens when tags call returns an error"""
     dataset = 'tags'
-    mocker.patch(
-        fetch_fn_name,
-        return_value=Exception('OMGERD OOPS!!!')
-    )
+    mocker.patch(fetch_fn_name, return_value=Exception('OMGERD OOPS!!!'))
     con, ds = build_con_and_ds(dataset)
     with pytest.raises(Exception):
         await con._get_tags(ds.dataset, {}, 10)
@@ -71,9 +66,7 @@ async def test__get_data_users_case(mocker):
     """Tests users call happy case"""
     dataset = 'users'
     fake_res = handle_mock_data([fake_teams, fake_users])
-    fake_fetch_page = mocker.patch(
-        fetch_fn_name, side_effect=fake_res
-    )
+    fake_fetch_page = mocker.patch(fetch_fn_name, side_effect=fake_res)
     con, ds = build_con_and_ds(dataset)
     res = await con._get_data(ds.dataset, {}, 10)
 
@@ -178,20 +171,14 @@ def test__retrieve_data_no_teams_case(mocker):
 def test__retrieve_tags_from_fetch(mocker):
     """Tests _retrieve_tages from the fetch_page function on"""
     fake_res = handle_mock_data(fake_tags)
-    mocker.patch(
-        fetch_fn_name,
-        return_value=fake_res
-    )
+    mocker.patch(fetch_fn_name, return_value=fake_res)
     dataset = 'tags'
     con, ds = build_con_and_ds(dataset)
 
     df = con._retrieve_data(ds)
     assert df.shape == (3, 4)
 
-    mocker.patch(
-        fetch_fn_name,
-        side_effect=Exception('Oh noez !!!')
-    )
+    mocker.patch(fetch_fn_name, side_effect=Exception('Oh noez !!!'))
 
     with pytest.raises(Exception):
         con._retrieve_data(ds)
@@ -200,10 +187,7 @@ def test__retrieve_tags_from_fetch(mocker):
 def test__retrieve_users_from_fetch(mocker):
     """Tests _retrieve_data for users from fetch_page function on"""
     fake_res = handle_mock_data([fake_teams, fake_users])
-    mocker.patch(
-        fetch_fn_name,
-        side_effect=fake_res
-    )
+    mocker.patch(fetch_fn_name, side_effect=fake_res)
     dataset = 'users'
     con, ds = build_con_and_ds(dataset)
 
