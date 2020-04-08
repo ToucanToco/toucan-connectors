@@ -218,7 +218,9 @@ def test_default_limit(mocker):
     """If no limit is provided, the default is chosen"""
     con = AircallConnector(name='mah_test', bearer_auth_id='abc123efg')
     ds = AircallDataSource(name='mah_ds', domain='test_domain', dataset='tags')
-    mock_run_fetches_for_tags = mocker.patch.object(AircallConnector, 'run_fetches_for_tags', return_value=filtered_tags)
+    mock_run_fetches_for_tags = mocker.patch.object(
+        AircallConnector, 'run_fetches_for_tags', return_value=filtered_tags
+    )
 
     con._retrieve_data(ds)
     assert ds.limit == 60
