@@ -30,58 +30,12 @@ columns_for_tags = ['id', 'name', 'color', 'description']
 columns_for_teams = ['team', 'user_id', 'user_name', 'user_created_at']
 columns_for_users = ['user_id', 'user_name', 'user_created_at']
 
+fetch_fn_name = 'toucan_connectors.aircall.aircall_connector.fetch_page'
+
 
 @pytest.fixture
 def con(bearer_aircall_auth_id):
     return AircallConnector(name='test_name', bearer_auth_id=bearer_aircall_auth_id)
-
-
-def test__get_data_calls(event_loop):
-    """Tests _get_data() with calls call (E2E)"""
-    dataset = 'calls'
-    columns_for_red_calls = [
-        'id',
-        'direction',
-        'duration',
-        'answered_at',
-        'ended_at',
-        'raw_digits',
-        'user_id',
-        'tags',
-        'user_name',
-    ]
-    con, ds = build_con_and_ds(dataset)
-    res = event_loop.run_until_complete(con._get_data(dataset, {}, 1))
-    first_part, second_part = res
-
-    if first_part:
-        first_ele = first_part[0]
-        keys = list(first_ele)
-        assert keys == columns_for_teams  # insures order of columns
-
-    if second_part:
-        second_ele = second_part[0]
-        keys = list(second_ele)
-        assert keys == columns_for_red_calls  # insures order of columns
-
-
-def test__get_data_users(event_loop):
-    """Tests _get_data() with users call (E2E)"""
-    dataset = 'users'
-    con, ds = build_con_and_ds(dataset)
-    res = event_loop.run_until_complete(con._get_data(dataset, {}, 1))
-
-    first_part, second_part = res
-
-    if first_part:
-        first_ele = first_part[0]
-        keys = list(first_ele)
-        assert keys == columns_for_teams  # insures order of columns
-
-    if second_part:
-        second_ele = second_part[0]
-        keys = list(second_ele)
-        assert keys == columns_for_users  # insures order of columns
 
 
 @pytest.mark.asyncio
@@ -90,7 +44,7 @@ async def test__get_data_tags_case(mocker):
     dataset = 'tags'
     fake_res = handle_mock_data(fake_tags)
     fake_fetch_page = mocker.patch(
-        'toucan_connectors.aircall.aircall_connector.fetch_page', return_value=fake_res
+        fetch_fn_name, return_value=fake_res
     )
     con, ds = build_con_and_ds(dataset)
     res = await con._get_tags(ds.dataset, {}, 10)
@@ -100,12 +54,25 @@ async def test__get_data_tags_case(mocker):
 
 
 @pytest.mark.asyncio
+async def test__get_data_tags_unhappy_case(mocker):
+    """Tests what happens when tags call returns an error"""
+    dataset = 'tags'
+    mocker.patch(
+        fetch_fn_name,
+        return_value=Exception('OMGERD OOPS!!!')
+    )
+    con, ds = build_con_and_ds(dataset)
+    with pytest.raises(Exception):
+        await con._get_tags(ds.dataset, {}, 10)
+
+
+@pytest.mark.asyncio
 async def test__get_data_users_case(mocker):
     """Tests users call happy case"""
     dataset = 'users'
     fake_res = handle_mock_data([fake_teams, fake_users])
     fake_fetch_page = mocker.patch(
-        'toucan_connectors.aircall.aircall_connector.fetch_page', side_effect=fake_res
+        fetch_fn_name, side_effect=fake_res
     )
     con, ds = build_con_and_ds(dataset)
     res = await con._get_data(ds.dataset, {}, 10)
@@ -180,8 +147,9 @@ def test_run_fetches_for_tags(mocker):
     dataset = 'tags'
     spy = mocker.spy(AircallConnector, 'run_fetches_for_tags')
     con, ds = build_con_and_ds(dataset)
-    con.run_fetches_for_tags(dataset, {}, 1)
+    foo = con.run_fetches_for_tags(dataset, {}, 1)
     assert spy.call_count == 1
+    print(foo)
 
 
 def test_run_fetches(mocker):
@@ -205,6 +173,45 @@ def test__retrieve_data_no_teams_case(mocker):
     assert run_fetches_mock.call_count == 1
     assert df.shape == (10, 11)
     assert df['team'].isna().any()
+
+
+def test__retrieve_tags_from_fetch(mocker):
+    """Tests _retrieve_tages from the fetch_page function on"""
+    fake_res = handle_mock_data(fake_tags)
+    mocker.patch(
+        fetch_fn_name,
+        return_value=fake_res
+    )
+    dataset = 'tags'
+    con, ds = build_con_and_ds(dataset)
+
+    df = con._retrieve_data(ds)
+    assert df.shape == (3, 4)
+
+    mocker.patch(
+        fetch_fn_name,
+        side_effect=Exception('Oh noez !!!')
+    )
+
+    with pytest.raises(Exception):
+        con._retrieve_data(ds)
+
+
+def test__retrieve_users_from_fetch(mocker):
+    """Tests _retrieve_data for users from fetch_page function on"""
+    fake_res = handle_mock_data([fake_teams, fake_users])
+    mocker.patch(
+        fetch_fn_name,
+        side_effect=fake_res
+    )
+    dataset = 'users'
+    con, ds = build_con_and_ds(dataset)
+
+    df = con._retrieve_data(ds)
+    assert df.shape == (11, 4)
+    mocker.patch(fetch_fn_name, side_effect=Exception('Youch!'))
+    with pytest.raises(Exception):
+        con._retrieve_data(ds)
 
 
 def test_bad_limit():
