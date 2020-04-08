@@ -2,7 +2,6 @@
 import asyncio
 import sys
 
-from tests.aircall.mock_results import fake_teams, fake_users
 from toucan_connectors.aircall.aircall_connector import AircallConnector, AircallDataSource
 
 
@@ -16,38 +15,28 @@ def build_con_and_ds(dataset: str):
     return con, ds
 
 
-def build_mock_fetch_data(fake_data, mocker):
-    """
-    Builds a mock version of the fetch_data function
-    """
-
+def handle_mock_data(fake_data):
     # In python > 3.8, patch detects we're mocking a coroutine and replace it by an AsyncMock
     if sys.version_info > (3, 8):
-        return_value = fake_data
+        return fake_data
     # In python < 3.8, patch only uses a MagicMock, which is not awaitable
     else:
-        f = asyncio.Future()
-        f.set_result(fake_data)
-        return_value = f
-
-    return mocker.patch(
-        'toucan_connectors.aircall.aircall_connector.fetch_page', return_value=return_value
-    )
+        if len(fake_data) > 1:
+            return build_futures(fake_data)
+        else:
+            return build_future(fake_data)
 
 
-def build_complex_mock_fetch_data(mocker):
-    """
-    Builds a mock version of the fetch_data function
-    """
-    if sys.version_info > (3, 8):
-        return_value = [fake_teams, fake_users]
-    else:
-        f_teams = asyncio.Future()
-        f_teams.set_result(fake_teams)
-        f_users = asyncio.Future()
-        f_users.set_result(fake_users)
-        return_value = [f_teams, f_users]
+def build_future(fake_data):
+    f = asyncio.Future()
+    f.set_result(fake_data)
+    return f
 
-    return mocker.patch(
-        'toucan_connectors.aircall.aircall_connector.fetch_page', side_effect=return_value
-    )
+
+def build_futures(fake_data):
+    fake_teams, fake_users = fake_data
+    f_teams = asyncio.Future()
+    f_teams.set_result(fake_teams)
+    f_users = asyncio.Future()
+    f_users.set_result(fake_users)
+    return [f_teams, f_users]

@@ -1,13 +1,11 @@
 import pytest
 from pydantic import ValidationError
 
-from tests.aircall.helpers import (
-    build_complex_mock_fetch_data,
-    build_con_and_ds,
-    build_mock_fetch_data,
-)
+from tests.aircall.helpers import build_con_and_ds, handle_mock_data
 from tests.aircall.mock_results import (
     fake_tags,
+    fake_teams,
+    fake_users,
     filtered_calls,
     filtered_tags,
     filtered_teams,
@@ -90,10 +88,12 @@ def test__get_data_users(event_loop):
 async def test__get_data_tags_case(mocker):
     """Tests with tags happy case"""
     dataset = 'tags'
-    fake_fetch_page = build_mock_fetch_data(fake_tags, mocker)
+    fake_res = handle_mock_data(fake_tags)
+    fake_fetch_page = mocker.patch(
+        'toucan_connectors.aircall.aircall_connector.fetch_page', return_value=fake_res
+    )
     con, ds = build_con_and_ds(dataset)
     res = await con._get_tags(ds.dataset, {}, 10)
-    print('res ', res)
 
     assert fake_fetch_page.call_count == 1
     assert len(res) == 3
@@ -103,7 +103,10 @@ async def test__get_data_tags_case(mocker):
 async def test__get_data_users_case(mocker):
     """Tests users call happy case"""
     dataset = 'users'
-    fake_fetch_page = build_complex_mock_fetch_data(mocker)
+    fake_res = handle_mock_data([fake_teams, fake_users])
+    fake_fetch_page = mocker.patch(
+        'toucan_connectors.aircall.aircall_connector.fetch_page', side_effect=fake_res
+    )
     con, ds = build_con_and_ds(dataset)
     res = await con._get_data(ds.dataset, {}, 10)
 
