@@ -54,12 +54,12 @@ def test__get_data_calls(event_loop):
     res = event_loop.run_until_complete(con._get_data(dataset, {}, 1))
     first_part, second_part = res
 
-    if len(first_part) > 0:
+    if first_part:
         first_ele = first_part[0]
         keys = list(first_ele)
         assert keys == columns_for_teams  # insures order of columns
 
-    if len(second_part):
+    if second_part:
         second_ele = second_part[0]
         keys = list(second_ele)
         assert keys == columns_for_red_calls  # insures order of columns
@@ -73,12 +73,12 @@ def test__get_data_users(event_loop):
 
     first_part, second_part = res
 
-    if len(first_part) > 0:
+    if first_part:
         first_ele = first_part[0]
         keys = list(first_ele)
         assert keys == columns_for_teams  # insures order of columns
 
-    if len(second_part):
+    if second_part:
         second_ele = second_part[0]
         keys = list(second_ele)
         assert keys == columns_for_users  # insures order of columns
@@ -218,6 +218,9 @@ def test_default_limit(mocker):
     """If no limit is provided, the default is chosen"""
     con = AircallConnector(name='mah_test', bearer_auth_id='abc123efg')
     ds = AircallDataSource(name='mah_ds', domain='test_domain', dataset='tags')
-    mocker.patch.object(AircallConnector, 'run_fetches_for_tags', return_value=filtered_tags)
+    mock_run_fetches_for_tags = mocker.patch.object(AircallConnector, 'run_fetches_for_tags', return_value=filtered_tags)
 
     con._retrieve_data(ds)
+    assert ds.limit == 60
+    assert mock_run_fetches_for_tags.call_count == 1
+    assert mock_run_fetches_for_tags.call_args.args[2] == 60
