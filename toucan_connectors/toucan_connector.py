@@ -209,6 +209,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         self, endpoint: str, query: Optional[dict] = None,
     ):
         """Generic method to get an endpoint for an OAuth API integrated with Bearer"""
+        print(endpoint, query)
         return (
             Bearer(os.environ.get('BEARER_API_KEY'))
             .integration(self.bearer_integration)
