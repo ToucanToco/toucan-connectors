@@ -50,9 +50,7 @@ async def test_fetch_page_with_no_next_page(aiohttp_client, loop):
 async def test_fetch_page_with_next_page(aiohttp_client, loop, mocker):
     """Test fetch_page to see multiple pages"""
     fake_bearer_func = mocker.patch.object(
-        ToucanConnector,
-        'bearer_oauth_get_endpoint',
-        return_value='/foo?page=2'
+        ToucanConnector, 'bearer_oauth_get_endpoint', return_value='/foo?page=2'
     )
     app = web.Application(loop=loop)
     endpoint = '/foo'
