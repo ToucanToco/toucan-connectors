@@ -2,6 +2,7 @@
 from aiohttp import web
 
 from toucan_connectors.aircall.aircall_connector import fetch_page
+from toucan_connectors.toucan_connector import ToucanConnector
 
 
 async def send_no_link(req: web.Request) -> dict:
@@ -46,14 +47,20 @@ async def test_fetch_page_with_no_next_page(aiohttp_client, loop):
     assert res_dict.get('meta') is not None
 
 
-async def test_fetch_page_with_next_page(aiohttp_client, loop):
+async def test_fetch_page_with_next_page(aiohttp_client, loop, mocker):
     """Test fetch_page to see multiple pages"""
+    fake_bearer_func = mocker.patch.object(
+        ToucanConnector,
+        'bearer_oauth_get_endpoint',
+        return_value='/foo?page=2'
+    )
     app = web.Application(loop=loop)
     endpoint = '/foo'
     app.router.add_get(endpoint, send_multiple_links)
     client = await aiohttp_client(app)
     # limit is 10 and run is 0 i.e. this is the first run
     res = await fetch_page(endpoint, [], client, 10, 0)
+    assert fake_bearer_func.call_count == 1
     assert len(res) == 2
 
 
