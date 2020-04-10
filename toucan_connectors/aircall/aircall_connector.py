@@ -107,7 +107,7 @@ class AircallConnector(ToucanConnector):
         variable_endpoint = self.bearer_oauth_get_endpoint(dataset, {**query, 'per_page': PER_PAGE})
 
         async with ClientSession() as session:
-            raw_data = await fetch_page(variable_endpoint, [], session, limit, 1, dataset)
+            raw_data = await fetch_page(variable_endpoint, [], session, limit, 1)
             jq_filter = generate_tags_filter(dataset)
 
             return pyjq.first(jq_filter, {'results': raw_data})
