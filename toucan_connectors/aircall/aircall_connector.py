@@ -33,15 +33,15 @@ async def fetch_page(
     meta_data = data.get('meta', None)
 
     if meta_data is not None:
-        next_page_link: Optional[str] = data['meta'].get('next_page_link')
+        # next_page_link: Optional[str] = data['meta'].get('next_page_link')
+        next_page_link: str(data['meta'].get('current_page') + 1)
 
     current_pass += 1
 
     if next_page_link is not None and current_pass < limit:
         new_endpoint = ToucanConnector.bearer_oauth_get_endpoint(
-            next_page_link, {'per_page': PER_PAGE}
+            base_endpoint, {'page': next_page_link, 'per_page': PER_PAGE}
         )
-        print('new_endpoint ', new_endpoint)
         # new_endpoint = next_page_link
         # new_endpoint = new_endpoint.replace('//', f'//{STUFF}')
         data_list = await fetch_page(new_endpoint, data_list, session, limit, current_pass)
@@ -107,7 +107,7 @@ class AircallConnector(ToucanConnector):
         variable_endpoint = self.bearer_oauth_get_endpoint(dataset, {**query, 'per_page': PER_PAGE})
 
         async with ClientSession() as session:
-            raw_data = await fetch_page(variable_endpoint, [], session, limit, 1)
+            raw_data = await fetch_page(variable_endpoint, [], session, limit, 1, dataset)
             jq_filter = generate_tags_filter(dataset)
 
             return pyjq.first(jq_filter, {'results': raw_data})
