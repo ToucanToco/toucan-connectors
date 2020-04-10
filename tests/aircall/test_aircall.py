@@ -145,8 +145,7 @@ def test_run_fetches_for_tags(con, mocker):
     print('run fetches for tags')
     dataset = 'tags'
     spy = mocker.spy(AircallConnector, 'run_fetches_for_tags')
-    ds = build_ds(dataset)
-    con.run_fetches_for_tags(ds.dataset, {}, 1)
+    con.run_fetches_for_tags(dataset, {}, 1)
     assert spy.call_count == 1
 
 
