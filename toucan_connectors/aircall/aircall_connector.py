@@ -41,6 +41,7 @@ async def fetch_page(
         new_endpoint = ToucanConnector.bearer_oauth_get_endpoint(
             next_page_link, {'per_page': PER_PAGE}
         )
+        print('new_endpoint ', new_endpoint)
         # new_endpoint = next_page_link
         # new_endpoint = new_endpoint.replace('//', f'//{STUFF}')
         data_list = await fetch_page(new_endpoint, data_list, session, limit, current_pass)
