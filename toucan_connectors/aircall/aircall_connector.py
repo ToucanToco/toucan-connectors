@@ -38,8 +38,9 @@ async def fetch_page(
     current_pass += 1
 
     if next_page_link is not None and current_pass < limit:
-        new_endpoint = next_page_link
-        new_endpoint = new_endpoint.replace('//', f'//{STUFF}')
+        new_endpoint = ToucanConnector.bearer_oauth_get_endpoint(next_page_link, {'per_page' : PER_PAGE})
+        # new_endpoint = next_page_link
+        # new_endpoint = new_endpoint.replace('//', f'//{STUFF}')
         data_list = await fetch_page(new_endpoint, data_list, session, limit, current_pass)
 
     return data_list
@@ -75,11 +76,13 @@ class AircallConnector(ToucanConnector):
 
     async def _get_data(self, dataset: str, query, limit) -> Tuple[List[dict], List[dict]]:
         """Triggers fetches for data and does preliminary filtering process"""
-        BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
-        variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
+        # BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
+        # variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
+        variable_endpoint = self.bearer_oauth_get_endpoint(dataset, {**query, 'per_page': PER_PAGE})
 
         async with ClientSession() as session:
-            teams_endpoint = f'{BASE_ROUTE}/teams'
+            # teams_endpoint = f'{BASE_ROUTE}/teams'
+            teams_endpoint = self.bearer_oauth_get_endpoint('teams', {**query, 'per_page': PER_PAGE})
 
             team_data, variable_data = await asyncio.gather(
                 fetch_page(teams_endpoint, [], session, limit, 0),
@@ -94,8 +97,9 @@ class AircallConnector(ToucanConnector):
 
     async def _get_tags(self, dataset: str, query, limit) -> List[dict]:
         """Triggers fetches for tags and does preliminary filtering process"""
-        BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
-        variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
+        # BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
+        # variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
+        variable_endpoint = self.bearer_oauth_get_endpoint(dataset, {**query, 'per_page': PER_PAGE})
 
         async with ClientSession() as session:
             raw_data = await fetch_page(variable_endpoint, [], session, limit, 1)
