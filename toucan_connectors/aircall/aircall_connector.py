@@ -1,9 +1,8 @@
 # from dotenv import load_dotenv
 import asyncio
+import os
 from enum import Enum
 from typing import List, Optional, Tuple
-
-import os
 
 import pandas as pd
 import pyjq
@@ -86,10 +85,7 @@ class AircallConnector(ToucanConnector):
     async def _get_data(self, dataset: str, query, limit) -> Tuple[List[dict], List[dict]]:
         """Triggers fetches for data and does preliminary filtering process"""
         variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
-        headers = {
-            'Authorization' : BEARER_API_KEY,
-            'Bearer-Auth-Id' : self.bearer_auth_id
-        }
+        headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
         async with ClientSession(headers=headers) as session:
             teams_endpoint = f'{BASE_ROUTE}/teams?per_page={PER_PAGE}'
 
@@ -107,10 +103,7 @@ class AircallConnector(ToucanConnector):
     async def _get_tags(self, dataset: str, query, limit) -> List[dict]:
         """Triggers fetches for tags and does preliminary filtering process"""
         variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
-        headers = {
-            'Authorization' : BEARER_API_KEY,
-            'Bearer-Auth-Id' : self.bearer_auth_id
-        }
+        headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
         async with ClientSession(headers=headers) as session:
             raw_data = await fetch_page(variable_endpoint, [], session, limit, 1,)
             jq_filter = generate_tags_filter(dataset)
