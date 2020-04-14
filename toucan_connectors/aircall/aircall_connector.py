@@ -1,6 +1,9 @@
+# from dotenv import load_dotenv
 import asyncio
 from enum import Enum
 from typing import List, Optional, Tuple
+
+import os
 
 import pandas as pd
 import pyjq
@@ -13,8 +16,14 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from .constants import MAX_RUNS, PER_PAGE
 from .helpers import build_df, build_empty_df, generate_multiple_jq_filters, generate_tags_filter
 
+# load_dotenv()
+
 # temporary constant that will be removed in production-ready code
-STUFF = '156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@'
+# STUFF = '156faf0053c34ea6535126f9274181f4:1434a05fe17fe0cd0121d840966d8d71@'
+BASE_ROUTE = f'https://proxy.bearer.sh/aircall_oauth'
+# BEARER_API_KEY = os.getenv('BEARER_API_KEY')
+BEARER_API_KEY = os.environ.get('BEARER_API_KEY')
+# BEARER_AUTH_ID = os.getenv('BEARER_AUTH_ID')
 
 
 async def fetch_page(
@@ -38,11 +47,7 @@ async def fetch_page(
     current_pass += 1
 
     if next_page_link is not None and current_pass < limit:
-        new_endpoint = ToucanConnector.bearer_oauth_get_endpoint(
-            next_page_link, {'per_page': PER_PAGE}
-        )
-        print('new_endpoint ', new_endpoint)
-        # new_endpoint = next_page_link
+        new_endpoint = next_page_link
         # new_endpoint = new_endpoint.replace('//', f'//{STUFF}')
         data_list = await fetch_page(new_endpoint, data_list, session, limit, current_pass)
 
@@ -52,6 +57,7 @@ async def fetch_page(
 async def fetch(new_endpoint, session: ClientSession) -> dict:
     """The basic fetch function"""
     async with session.get(new_endpoint) as res:
+        # print('res ', res)
         return await res.json()
 
 
@@ -79,21 +85,19 @@ class AircallConnector(ToucanConnector):
 
     async def _get_data(self, dataset: str, query, limit) -> Tuple[List[dict], List[dict]]:
         """Triggers fetches for data and does preliminary filtering process"""
-        # BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
-        # variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
-        variable_endpoint = self.bearer_oauth_get_endpoint(dataset, {**query, 'per_page': PER_PAGE})
-
-        async with ClientSession() as session:
-            # teams_endpoint = f'{BASE_ROUTE}/teams'
-            teams_endpoint = self.bearer_oauth_get_endpoint(
-                'teams', {**query, 'per_page': PER_PAGE}
-            )
+        variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
+        headers = {
+            'Authorization' : BEARER_API_KEY,
+            'Bearer-Auth-Id' : self.bearer_auth_id
+        }
+        async with ClientSession(headers=headers) as session:
+            teams_endpoint = f'{BASE_ROUTE}/teams?per_page={PER_PAGE}'
 
             team_data, variable_data = await asyncio.gather(
-                fetch_page(teams_endpoint, [], session, limit, 0),
-                fetch_page(variable_endpoint, [], session, limit, 0),
+                fetch_page(teams_endpoint, [], session, limit, 0,),
+                fetch_page(variable_endpoint, [], session, limit, 0,),
             )
-
+            # print(team_data, variable_data)
             team_jq_filter, variable_jq_filter = generate_multiple_jq_filters(dataset)
 
             team_data = pyjq.first(team_jq_filter, {'results': team_data})
@@ -102,12 +106,13 @@ class AircallConnector(ToucanConnector):
 
     async def _get_tags(self, dataset: str, query, limit) -> List[dict]:
         """Triggers fetches for tags and does preliminary filtering process"""
-        # BASE_ROUTE = f'https://{STUFF}api.aircall.io/v1/'
-        # variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
-        variable_endpoint = self.bearer_oauth_get_endpoint(dataset, {**query, 'per_page': PER_PAGE})
-
-        async with ClientSession() as session:
-            raw_data = await fetch_page(variable_endpoint, [], session, limit, 1)
+        variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
+        headers = {
+            'Authorization' : BEARER_API_KEY,
+            'Bearer-Auth-Id' : self.bearer_auth_id
+        }
+        async with ClientSession(headers=headers) as session:
+            raw_data = await fetch_page(variable_endpoint, [], session, limit, 1,)
             jq_filter = generate_tags_filter(dataset)
 
             return pyjq.first(jq_filter, {'results': raw_data})
