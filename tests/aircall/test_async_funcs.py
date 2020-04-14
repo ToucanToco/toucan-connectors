@@ -46,7 +46,7 @@ async def test_fetch_page_with_no_next_page(aiohttp_client, loop):
     assert res_dict.get('meta') is not None
 
 
-async def test_fetch_page_with_next_page(aiohttp_client, loop):
+async def test_fetch_page_with_next_page(aiohttp_client, loop, mocker):
     """Test fetch_page to see multiple pages"""
     app = web.Application(loop=loop)
     endpoint = '/foo'
