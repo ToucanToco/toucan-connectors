@@ -31,8 +31,8 @@ def handle_mock_data(fake_data):
     # In python < 3.8, patch only uses a MagicMock, which is not awaitable
     else:
         # if it's the 'tags' call, then the array has a length of 1
-        if len(fake_data) > 1:
-            return build_futures(fake_data)
+        if type(fake_data) == list and len(fake_data) > 1:
+            return [build_future(item) for item in fake_data]
         return build_future(fake_data)
 
 
@@ -41,13 +41,3 @@ def build_future(fake_data):
     f = asyncio.Future()
     f.set_result(fake_data)
     return f
-
-
-def build_futures(fake_data):
-    """Builds a couple of futures for 'users' call"""
-    fake_teams, fake_users = fake_data
-    f_teams = asyncio.Future()
-    f_teams.set_result(fake_teams)
-    f_users = asyncio.Future()
-    f_users.set_result(fake_users)
-    return [f_teams, f_users]
