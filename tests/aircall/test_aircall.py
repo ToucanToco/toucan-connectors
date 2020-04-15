@@ -10,6 +10,8 @@ from tests.aircall.mock_results import (
     filtered_tags,
     filtered_teams,
     filtered_users,
+    more_filtered_teams,
+    more_filtered_users,
 )
 from toucan_connectors.aircall.aircall_connector import AircallConnector, AircallDataSource
 
@@ -53,7 +55,7 @@ async def test__get_data_tags_case(con, mocker):
     res = await con._get_tags(ds.dataset, {}, 10)
 
     assert fake_fetch_page.call_count == 1
-    assert len(res) == 3
+    assert res == filtered_tags
 
 
 @pytest.mark.asyncio
@@ -78,9 +80,9 @@ async def test__get_data_users_case(con, mocker):
     assert fake_fetch_page.call_count == 2
     assert len(res) == 2
     teams, users = res
-    assert len(teams) == 7
+    assert teams == more_filtered_teams
     assert list(teams[0].keys()) == columns_for_teams
-    assert len(users) == 11
+    assert users == more_filtered_users
     assert list(users[0].keys()) == columns_for_users
 
 
