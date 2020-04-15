@@ -24,7 +24,7 @@ lint:
 
 .PHONY: test
 test:
-	pytest -s --cov=toucan_connectors --cov-report term-missing
+	pytest --cov=toucan_connectors --cov-report term-missing
 
 .PHONY: all
 all: test lint
