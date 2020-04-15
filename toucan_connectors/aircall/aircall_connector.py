@@ -104,23 +104,21 @@ class AircallConnector(ToucanConnector):
 
     def run_fetches(self, dataset, query, limit) -> Tuple[List[dict], List[dict]]:
         """sets up event loop and fetches for 'calls' and 'users' datasets"""
-        # try:
-        #     loop = asyncio.get_event_loop()
-        # except RuntimeError:
-        #     loop = asyncio.new_event_loop()
-        #     asyncio.set_event_loop(loop)
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         future = asyncio.ensure_future(self._get_data(dataset, query, limit))
         return loop.run_until_complete(future)
 
     def run_fetches_for_tags(self, dataset, query, limit):
         """sets up event loop and fetches for 'tags' dataset"""
-        # try:
-        #     loop = asyncio.get_event_loop()
-        # except RuntimeError:
-        #     loop = asyncio.new_event_loop()
-        #     asyncio.set_event_loop(loop)
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         future = asyncio.ensure_future(self._get_tags(dataset, query, limit))
         return loop.run_until_complete(future)
 
