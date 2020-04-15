@@ -360,17 +360,17 @@ more_filtered_teams = [
 ]
 
 more_filtered_users = [
-    {'user_id': 10, 'user_name': 'Jane Doe', 'user_created_at': '2019-04-26T14:41:09.000Z',},
-    {'user_id': 17, 'user_name': 'Mini Me', 'user_created_at': '2019-06-03T15:45:49.000Z',},
-    {'user_id': 18, 'user_name': 'Doctor Evil', 'user_created_at': '2019-06-03T15:47:51.000Z',},
-    {'user_id': 15, 'user_name': 'Seymour Butts', 'user_created_at': '2019-06-03T15:49:29.000Z',},
-    {'user_id': 16, 'user_name': 'Robin Hood', 'user_created_at': '2019-06-03T16:08:14.000Z',},
-    {'user_id': 11, 'user_name': 'John Doe', 'user_created_at': '2019-08-28T07:11:28.000Z',},
-    {'user_id': 12, 'user_name': 'Laleli Lolu', 'user_created_at': '2019-08-28T07:12:17.000Z',},
-    {'user_id': 13, 'user_name': 'Patati Patata', 'user_created_at': '2019-08-28T07:14:25.000Z',},
-    {'user_id': 19, 'user_name': 'Fefifo Fum', 'user_created_at': '2019-09-02T07:13:28.000Z',},
-    {'user_id': 14, 'user_name': 'Jean Dupont', 'user_created_at': '2020-02-12T11:00:25.000Z',},
-    {'user_id': 20, 'user_name': 'Jeron Imo', 'user_created_at': '2020-03-11T14:11:13.000Z',},
+    {'user_id': 10, 'user_name': 'Jane Doe', 'user_created_at': '2019-04-26T14:41:09.000Z', },
+    {'user_id': 17, 'user_name': 'Mini Me', 'user_created_at': '2019-06-03T15:45:49.000Z', },
+    {'user_id': 18, 'user_name': 'Doctor Evil', 'user_created_at': '2019-06-03T15:47:51.000Z', },
+    {'user_id': 15, 'user_name': 'Seymour Butts', 'user_created_at': '2019-06-03T15:49:29.000Z', },
+    {'user_id': 16, 'user_name': 'Robin Hood', 'user_created_at': '2019-06-03T16:08:14.000Z', },
+    {'user_id': 11, 'user_name': 'John Doe', 'user_created_at': '2019-08-28T07:11:28.000Z', },
+    {'user_id': 12, 'user_name': 'Laleli Lolu', 'user_created_at': '2019-08-28T07:12:17.000Z', },
+    {'user_id': 13, 'user_name': 'Patati Patata', 'user_created_at': '2019-08-28T07:14:25.000Z', },
+    {'user_id': 19, 'user_name': 'Fefifo Fum', 'user_created_at': '2019-09-02T07:13:28.000Z', },
+    {'user_id': 14, 'user_name': 'Jean Dupont', 'user_created_at': '2020-02-12T11:00:25.000Z', },
+    {'user_id': 20, 'user_name': 'Jeron Imo', 'user_created_at': '2020-03-11T14:11:13.000Z', },
 ]
 
 
