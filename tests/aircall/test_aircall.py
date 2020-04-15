@@ -144,7 +144,6 @@ def test__retrieve_data_no_data_case(con, mocker):
 
 def test_run_fetches_for_tags(con, mocker):
     """Tests the loop generator function for tags call"""
-    print('run fetches for tags')
     dataset = 'tags'
     spy = mocker.spy(AircallConnector, 'run_fetches_for_tags')
     con.run_fetches_for_tags(dataset, {}, 1)
@@ -153,7 +152,6 @@ def test_run_fetches_for_tags(con, mocker):
 
 def test_run_fetches(con, mocker):
     """Tests the loop generator function for calls/users call"""
-    print('run fetches')
     dataset = 'users'
     spy = mocker.spy(AircallConnector, 'run_fetches')
     ds = build_ds(dataset)

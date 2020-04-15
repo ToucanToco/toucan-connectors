@@ -2,13 +2,7 @@
 import pandas as pd
 
 from tests.aircall.mock_results import filtered_calls, filtered_teams, filtered_users
-from toucan_connectors.aircall.helpers import (
-    build_df,
-    build_empty_df,
-    generate_multiple_jq_filters,
-    generate_tags_filter,
-    resolve_calls_df,
-)
+from toucan_connectors.aircall.helpers import build_df, build_empty_df, resolve_calls_df
 
 columns_for_calls = [
     'id',
@@ -124,47 +118,3 @@ def test_build_empty_df():
 
     assert empty_df.shape == (0, 11)
     assert list(empty_df.columns) == columns_for_calls
-
-
-def test_generate_multiple_jq_filters():
-    """Tests the multiple jq filter generator"""
-    # test a valid dataset
-    dataset = 'calls'
-    jq_filters = generate_multiple_jq_filters(dataset)
-
-    assert type(jq_filters) == list
-    assert len(jq_filters) == 2
-
-    team_filter, variable_filter = jq_filters
-
-    assert 'teams' in team_filter
-    assert 'calls' in variable_filter
-
-    # test a bad dataset; should default to 'users'
-    bad_dataset = 'turkeys'
-
-    default_filters = generate_multiple_jq_filters(bad_dataset)
-
-    assert len(jq_filters) == 2
-
-    team_filter, default_filter = default_filters
-
-    assert 'teams' in team_filter
-    assert 'users' in default_filter
-
-
-def test_generate_tags_filter():
-    """Tests the tags jq filter generator"""
-    dataset = 'tags'
-
-    jq_filter = generate_tags_filter(dataset)
-
-    assert type(jq_filter) == str
-    assert 'tags' in jq_filter
-
-    # bad dataset
-    bad_dataset = 'totos'
-
-    default_filter = generate_tags_filter(bad_dataset)
-
-    assert 'tags' in default_filter
