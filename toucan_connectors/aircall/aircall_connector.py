@@ -19,28 +19,34 @@ BEARER_API_KEY = os.environ.get('BEARER_API_KEY')
 
 
 async def fetch_page(
-    base_endpoint: str, data_list: List[dict], session: ClientSession, limit, current_pass: int
+    dataset: str,
+    data_list: List[dict],
+    session: ClientSession,
+    limit,
+    current_pass: int,
+    new_page=1,
 ) -> List[dict]:
     """
     Fetches data from AirCall API
 
     dependent on existence of other pages and call limit
     """
-    data: dict = await fetch(base_endpoint, session)
+    endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}&page={new_page}'
+    data: dict = await fetch(endpoint, session)
 
     data_list.append(data)
 
     next_page_link = None
-    meta_data = data.get('meta', None)
+    meta_data = data.get('meta')
 
     if meta_data is not None:
-        next_page_link: Optional[str] = data['meta'].get('next_page_link')
+        next_page_link: Optional[str] = meta_data.get('next_page_link')
 
     current_pass += 1
 
     if next_page_link is not None and current_pass < limit:
-        new_endpoint = next_page_link
-        data_list = await fetch_page(new_endpoint, data_list, session, limit, current_pass)
+        next_page = meta_data.get('current_page') + 1
+        data_list = await fetch_page(dataset, data_list, session, limit, current_pass, next_page)
 
     return data_list
 
@@ -75,14 +81,11 @@ class AircallConnector(ToucanConnector):
 
     async def _get_data(self, dataset: str, query, limit) -> Tuple[List[dict], List[dict]]:
         """Triggers fetches for data and does preliminary filtering process"""
-        variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
         headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
         async with ClientSession(headers=headers) as session:
-            teams_endpoint = f'{BASE_ROUTE}/teams?per_page={PER_PAGE}'
-
             team_data, variable_data = await asyncio.gather(
-                fetch_page(teams_endpoint, [], session, limit, 0,),
-                fetch_page(variable_endpoint, [], session, limit, 0,),
+                fetch_page('teams', [], session, limit, 0,),
+                fetch_page(dataset, [], session, limit, 0,),
             )
 
             team_jq_filter = FILTER_DICTIONARY.get('teams')
@@ -94,10 +97,9 @@ class AircallConnector(ToucanConnector):
 
     async def _get_tags(self, dataset: str, query, limit) -> List[dict]:
         """Triggers fetches for tags and does preliminary filtering process"""
-        variable_endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}'
         headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
         async with ClientSession(headers=headers) as session:
-            raw_data = await fetch_page(variable_endpoint, [], session, limit, 1,)
+            raw_data = await fetch_page(dataset, [], session, limit, 1,)
             jq_filter = FILTER_DICTIONARY.get(dataset, 'tags')
 
             return pyjq.first(jq_filter, {'results': raw_data})
