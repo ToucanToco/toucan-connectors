@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from tests.aircall.helpers import handle_mock_data
+import tests.general_helpers as helpers
 from tests.aircall.mock_results import (
     fake_tags,
     fake_teams,
@@ -34,6 +34,11 @@ columns_for_users = ['user_id', 'user_name', 'user_created_at']
 
 fetch_fn_name = 'toucan_connectors.aircall.aircall_connector.fetch_page'
 
+# some tests are dependent on the version of Python being used;
+# in this case the limiting factor is Python3.8
+PY_VERSION_TO_CHECK = (3, 8)
+is_py_version_older = helpers.check_py_version(PY_VERSION_TO_CHECK)
+
 
 @pytest.fixture
 def con(bearer_aircall_auth_id):
@@ -49,7 +54,9 @@ def build_ds(dataset: str):
 async def test__get_data_tags_case(con, mocker):
     """Tests with tags happy case"""
     dataset = 'tags'
-    fake_res = handle_mock_data(fake_tags)
+    fake_res = fake_tags
+    if is_py_version_older:
+        fake_res = helpers.build_future(fake_res)
     fake_fetch_page = mocker.patch(fetch_fn_name, return_value=fake_res)
     ds = build_ds(dataset)
     res = await con._get_tags(ds.dataset, {}, 10)
@@ -72,7 +79,9 @@ async def test__get_data_tags_unhappy_case(con, mocker):
 async def test__get_data_users_case(con, mocker):
     """Tests users call happy case"""
     dataset = 'users'
-    fake_res = handle_mock_data([fake_teams, fake_users])
+    fake_res = [fake_teams, fake_users]
+    if is_py_version_older:
+        fake_res = [helpers.build_future(item) for item in fake_res]
     fake_fetch_page = mocker.patch(fetch_fn_name, side_effect=fake_res)
     ds = build_ds(dataset)
     res = await con._get_data(ds.dataset, {}, 10)
@@ -174,8 +183,10 @@ def test__retrieve_data_no_teams_case(con, mocker):
 
 
 def test__retrieve_tags_from_fetch(con, mocker):
-    """Tests _retrieve_tages from the fetch_page function on"""
-    fake_res = handle_mock_data(fake_tags)
+    """Tests _retrieve_tags from the fetch_page function"""
+    fake_res = fake_tags
+    if is_py_version_older:
+        fake_res = helpers.build_future(fake_tags)
     mocker.patch(fetch_fn_name, return_value=fake_res)
     dataset = 'tags'
     ds = build_ds(dataset)
@@ -190,8 +201,10 @@ def test__retrieve_tags_from_fetch(con, mocker):
 
 
 def test__retrieve_users_from_fetch(con, mocker):
-    """Tests _retrieve_data for users from fetch_page function on"""
-    fake_res = handle_mock_data([fake_teams, fake_users])
+    """Tests _retrieve_data for users from fetch_page function"""
+    fake_res = [fake_teams, fake_users]
+    if is_py_version_older:
+        fake_res = [helpers.build_future(item) for item in fake_res]
     mocker.patch(fetch_fn_name, side_effect=fake_res)
     dataset = 'users'
     ds = build_ds(dataset)

@@ -1,8 +1,22 @@
 """Module containing tests for AirCall helpers"""
 import pandas as pd
 
-from tests.aircall.mock_results import filtered_calls, filtered_teams, filtered_users
-from toucan_connectors.aircall.helpers import build_df, build_empty_df, resolve_calls_df
+from tests.aircall.mock_results import (
+    fake_calls,
+    fake_teams,
+    fake_users,
+    filtered_calls,
+    filtered_teams,
+    filtered_users,
+    more_filtered_teams,
+    more_filtered_users,
+)
+from toucan_connectors.aircall.helpers import (
+    DICTIONARY_OF_FORMATTERS,
+    build_df,
+    build_empty_df,
+    resolve_calls_df,
+)
 
 columns_for_calls = [
     'id',
@@ -118,3 +132,35 @@ def test_build_empty_df():
 
     assert empty_df.shape == (0, 11)
     assert list(empty_df.columns) == columns_for_calls
+
+
+def test_format_calls_data():
+    """Tests format calls data filter function"""
+    # we are only interested in the first call, which is embedded in a response like:
+    # [{'calls': [{...call data...}]}]
+    first_data_point = fake_calls[0]['calls'][0]
+    first_filtered_obj = filtered_calls[0]
+    result = DICTIONARY_OF_FORMATTERS['calls'](first_data_point)
+    assert result == first_filtered_obj
+
+
+def test_format_teams_data():
+    """Tests format teams data filter function"""
+    # we are only interested in the first team, which is embedded in a response like:
+    # [{'teams': [{...team data...}]}]
+    first_data_point = fake_teams[0]['teams'][0]
+    # only want first 5 elements of the more_filtered_teams array
+    # in other words, those belonging to Team 1
+    filtered_team_users = more_filtered_teams[:5]
+    result = DICTIONARY_OF_FORMATTERS['teams'](first_data_point)
+    assert result == filtered_team_users
+
+
+def test_format_users_data():
+    """Tests format users data filter function"""
+    # we are only interested in the first user, which is embedded in a response like:
+    # [{'user': [{...user data...}]}]
+    first_data_point = fake_users[0]['users'][0]
+    first_filtered_obj = more_filtered_users[0]
+    result = DICTIONARY_OF_FORMATTERS['users'](first_data_point)
+    assert result == first_filtered_obj

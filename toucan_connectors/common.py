@@ -1,4 +1,5 @@
 import ast
+import asyncio
 import re
 from copy import deepcopy
 
@@ -186,3 +187,14 @@ FilterSchema = Field(
     'library called jq, we suggest the refer to the dedicated '
     '<a href="https://stedolan.github.io/jq/manual/">documentation</a>',
 )
+
+
+def get_loop():
+    """Sets up event loop"""
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    return loop

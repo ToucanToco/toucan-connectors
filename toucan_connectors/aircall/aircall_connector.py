@@ -4,15 +4,14 @@ from enum import Enum
 from typing import List, Optional, Tuple
 
 import pandas as pd
-import pyjq
 from aiohttp import ClientSession
 from pydantic import Field
 
-from toucan_connectors.common import nosql_apply_parameters_to_query
+from toucan_connectors.common import get_loop, nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
-from .constants import FILTER_DICTIONARY, MAX_RUNS, PER_PAGE
-from .helpers import build_df, build_empty_df
+from .constants import MAX_RUNS, PER_PAGE
+from .helpers import DICTIONARY_OF_FORMATTERS, build_df, build_empty_df
 
 BASE_ROUTE = f'https://proxy.bearer.sh/aircall_oauth'
 BEARER_API_KEY = os.environ.get('BEARER_API_KEY')
@@ -47,7 +46,6 @@ async def fetch_page(
     if next_page_link is not None and current_pass < limit:
         next_page = meta_data.get('current_page') + 1
         data_list = await fetch_page(dataset, data_list, session, limit, current_pass, next_page)
-
     return data_list
 
 
@@ -88,40 +86,45 @@ class AircallConnector(ToucanConnector):
                 fetch_page(dataset, [], session, limit, 0,),
             )
 
-            team_jq_filter = FILTER_DICTIONARY.get('teams')
-            variable_jq_filter = FILTER_DICTIONARY.get(dataset, 'users')
+            team_response_list = []
+            variable_response_list = []
+            if len(team_data) > 0:
+                for data in team_data:
+                    for team_obj in data.get('teams'):
+                        team_response_list += DICTIONARY_OF_FORMATTERS.get('teams')(team_obj)
 
-            team_data = pyjq.first(team_jq_filter, {'results': team_data})
-            variable_data = pyjq.first(variable_jq_filter, {'results': variable_data})
-            return team_data, variable_data
+            if len(variable_data) > 0:
+                for data in variable_data:
+                    variable_response_list += list(
+                        map(
+                            lambda obj: DICTIONARY_OF_FORMATTERS.get(dataset, 'users')(obj),
+                            data.get(dataset),
+                        )
+                    )
+            return team_response_list, variable_response_list
 
     async def _get_tags(self, dataset: str, query, limit) -> List[dict]:
         """Triggers fetches for tags and does preliminary filtering process"""
         headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
         async with ClientSession(headers=headers) as session:
             raw_data = await fetch_page(dataset, [], session, limit, 1,)
-            jq_filter = FILTER_DICTIONARY.get(dataset, 'tags')
-
-            return pyjq.first(jq_filter, {'results': raw_data})
+            tags_data_list = []
+            if len(raw_data) > 0:
+                for data in raw_data:
+                    tags_data_list += data.get('tags')
+            return tags_data_list
 
     def run_fetches(self, dataset, query, limit) -> Tuple[List[dict], List[dict]]:
         """sets up event loop and fetches for 'calls' and 'users' datasets"""
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        loop = get_loop()
         future = asyncio.ensure_future(self._get_data(dataset, query, limit))
         return loop.run_until_complete(future)
 
     def run_fetches_for_tags(self, dataset, query, limit):
         """sets up event loop and fetches for 'tags' dataset"""
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        loop = get_loop()
         future = asyncio.ensure_future(self._get_tags(dataset, query, limit))
+        print(future)
         return loop.run_until_complete(future)
 
     def _retrieve_data(self, data_source: AircallDataSource) -> pd.DataFrame:
