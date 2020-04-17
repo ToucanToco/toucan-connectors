@@ -66,5 +66,5 @@ FILTER_DICTIONARY = {
     """,
 }
 
-MAX_RUNS = 10
+MAX_RUNS = 60
 PER_PAGE = 50
