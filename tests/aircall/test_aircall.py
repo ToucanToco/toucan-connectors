@@ -59,7 +59,7 @@ async def test__get_data_tags_case(con, mocker):
         fake_res = helpers.build_future(fake_res)
     fake_fetch_page = mocker.patch(fetch_fn_name, return_value=fake_res)
     ds = build_ds(dataset)
-    res = await con._get_tags(ds.dataset, {}, 10)
+    res = await con._get_tags(ds.dataset, 10)
 
     assert fake_fetch_page.call_count == 1
     assert res == filtered_tags
@@ -72,7 +72,7 @@ async def test__get_data_tags_unhappy_case(con, mocker):
     mocker.patch(fetch_fn_name, return_value=Exception('OMGERD OOPS!!!'))
     ds = build_ds(dataset)
     with pytest.raises(Exception):
-        await con._get_tags(ds.dataset, {}, 10)
+        await con._get_tags(ds.dataset, 10)
 
 
 @pytest.mark.asyncio
@@ -84,7 +84,7 @@ async def test__get_data_users_case(con, mocker):
         fake_res = [helpers.build_future(item) for item in fake_res]
     fake_fetch_page = mocker.patch(fetch_fn_name, side_effect=fake_res)
     ds = build_ds(dataset)
-    res = await con._get_data(ds.dataset, {}, 10)
+    res = await con._get_data(ds.dataset, 10)
 
     assert fake_fetch_page.call_count == 2
     assert len(res) == 2
@@ -155,16 +155,17 @@ def test_run_fetches_for_tags(con, mocker):
     """Tests the loop generator function for tags call"""
     dataset = 'tags'
     spy = mocker.spy(AircallConnector, 'run_fetches_for_tags')
-    con.run_fetches_for_tags(dataset, {}, 1)
+    con.run_fetches_for_tags(dataset, 1)
     assert spy.call_count == 1
 
 
-def test_run_fetches(con, mocker):
+def test_run_fetches(mocker):
     """Tests the loop generator function for calls/users call"""
     dataset = 'users'
     spy = mocker.spy(AircallConnector, 'run_fetches')
     ds = build_ds(dataset)
-    con.run_fetches(ds.dataset, {}, 1)
+    con = AircallConnector(name='test_name', bearer_auth_id='17effab0-1d94-11ea-b11c-c54519488059')
+    con.run_fetches(ds.dataset, 1)
     assert spy.call_count == 1
 
 
@@ -234,3 +235,9 @@ def test_default_limit(con, mocker):
     assert ds.limit == 60
     assert mock_run_fetches_for_tags.call_count == 1
     assert mock_run_fetches_for_tags.call_args[0][2] == 60
+
+
+def test_datasource():
+    """Tests that default dataset on datasource is 'calls'"""
+    ds = AircallDataSource(name='mah_ds', domain='test_domain', limit=1,)
+    assert ds.dataset == 'calls'

@@ -7,7 +7,7 @@ import pandas as pd
 from aiohttp import ClientSession
 from pydantic import Field
 
-from toucan_connectors.common import get_loop, nosql_apply_parameters_to_query
+from toucan_connectors.common import get_loop
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 from .constants import MAX_RUNS, PER_PAGE
@@ -63,8 +63,7 @@ class AircallDataset(str, Enum):
 
 class AircallDataSource(ToucanDataSource):
     limit: int = Field(MAX_RUNS, description='Limit of entries (default is 1 run)', ge=1)
-    query: Optional[dict] = {}
-    dataset: AircallDataset = 'users'
+    dataset: AircallDataset = 'calls'
 
 
 class AircallConnector(ToucanConnector):
@@ -77,7 +76,7 @@ class AircallConnector(ToucanConnector):
     bearer_integration = 'aircall_oauth'
     bearer_auth_id: str
 
-    async def _get_data(self, dataset: str, query, limit) -> Tuple[List[dict], List[dict]]:
+    async def _get_data(self, dataset: str, limit) -> Tuple[List[dict], List[dict]]:
         """Triggers fetches for data and does preliminary filtering process"""
         headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
         async with ClientSession(headers=headers) as session:
@@ -103,7 +102,7 @@ class AircallConnector(ToucanConnector):
                     )
             return team_response_list, variable_response_list
 
-    async def _get_tags(self, dataset: str, query, limit) -> List[dict]:
+    async def _get_tags(self, dataset: str, limit) -> List[dict]:
         """Triggers fetches for tags and does preliminary filtering process"""
         headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
         async with ClientSession(headers=headers) as session:
@@ -114,22 +113,21 @@ class AircallConnector(ToucanConnector):
                     tags_data_list += data.get('tags')
             return tags_data_list
 
-    def run_fetches(self, dataset, query, limit) -> Tuple[List[dict], List[dict]]:
+    def run_fetches(self, dataset, limit) -> Tuple[List[dict], List[dict]]:
         """sets up event loop and fetches for 'calls' and 'users' datasets"""
         loop = get_loop()
-        future = asyncio.ensure_future(self._get_data(dataset, query, limit))
+        future = asyncio.ensure_future(self._get_data(dataset, limit))
         return loop.run_until_complete(future)
 
-    def run_fetches_for_tags(self, dataset, query, limit):
+    def run_fetches_for_tags(self, dataset, limit):
         """sets up event loop and fetches for 'tags' dataset"""
         loop = get_loop()
-        future = asyncio.ensure_future(self._get_tags(dataset, query, limit))
+        future = asyncio.ensure_future(self._get_tags(dataset, limit))
         print(future)
         return loop.run_until_complete(future)
 
     def _retrieve_data(self, data_source: AircallDataSource) -> pd.DataFrame:
         """retrieves data from AirCall API"""
-        query = nosql_apply_parameters_to_query(data_source.query, data_source.parameters)
         dataset = data_source.dataset
         empty_df = build_empty_df(dataset)
 
@@ -138,11 +136,11 @@ class AircallConnector(ToucanConnector):
         limit = data_source.limit
 
         if dataset == 'tags':
-            res = self.run_fetches_for_tags(dataset, query, limit)
+            res = self.run_fetches_for_tags(dataset, limit)
             non_empty_df = pd.DataFrame(res)
             return pd.concat([empty_df, non_empty_df])
         else:
-            team_data, variable_data = self.run_fetches(dataset, query, limit)
+            team_data, variable_data = self.run_fetches(dataset, limit)
             return build_df(
                 dataset, [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
             )
