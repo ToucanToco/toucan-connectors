@@ -17,5 +17,5 @@ COLUMN_DICTIONARY = {
     'users': ['team', 'user_id', 'user_name', 'user_created_at'],
 }
 
-MAX_RUNS = 3
+MAX_RUNS = 60
 PER_PAGE = 50

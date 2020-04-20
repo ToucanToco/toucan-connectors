@@ -234,7 +234,7 @@ def test_default_limit(con, mocker):
     con._retrieve_data(ds)
     assert ds.limit == 60
     assert mock_run_fetches_for_tags.call_count == 1
-    assert mock_run_fetches_for_tags.call_args[0][2] == 60
+    assert mock_run_fetches_for_tags.call_args[0][1] == 60
 
 
 def test_datasource():
