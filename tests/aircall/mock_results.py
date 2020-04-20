@@ -1059,3 +1059,35 @@ fake_calls = [
         ]
     }
 ]
+
+fake_calls_no_user = [
+    {
+        'calls': [
+            {
+                'id': 1010,
+                'direct_link': 'https://api.aircall.io/v1/calls/1010',
+                'direction': 'outbound',
+                'status': 'done',
+                'missed_call_reason': None,
+                'started_at': 1572618619,
+                'answered_at': 1572632320,
+                'ended_at': 1572632335,
+                'duration': 18,
+                'voicemail': None,
+                'recording': 'https://aircall-production.s3.us-west-1.amazonaws.com/companies/219998/recordings/call-171166689-e59e7c8f82b681e6fa5adacd5bcc20fe-liverecord.mp3',
+                'asset': 'https://assets.aircall.io/calls/171166689/recording',
+                'raw_digits': '+1 111-111-1117',
+                'user': {},
+                'contact': None,
+                'archived': False,
+                'assigned_to': None,
+                'transferred_to': None,
+                'teams': [],
+                'number': {},
+                'cost': '0.0',
+                'comments': [],
+                'tags': [],
+            },
+        ]
+    }
+]
