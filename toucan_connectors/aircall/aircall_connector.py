@@ -41,11 +41,21 @@ async def fetch_page(
     if meta_data is not None:
         next_page_link: Optional[str] = meta_data.get('next_page_link')
 
-    current_pass += 1
+    if limit > -1:
+        current_pass += 1
 
-    if next_page_link is not None and current_pass < limit:
-        next_page = meta_data.get('current_page') + 1
-        data_list = await fetch_page(dataset, data_list, session, limit, current_pass, next_page)
+        if next_page_link is not None and current_pass < limit:
+            next_page = meta_data.get('current_page') + 1
+            data_list = await fetch_page(
+                dataset, data_list, session, limit, current_pass, next_page
+            )
+    else:
+        if next_page_link is not None:
+            next_page = meta_data.get('current_page') + 1
+            data_list = await fetch_page(
+                dataset, data_list, session, limit, current_pass, next_page
+            )
+
     return data_list
 
 
@@ -135,11 +145,16 @@ class AircallConnector(ToucanConnector):
         limit = data_source.limit
 
         if dataset == 'tags':
-            res = self.run_fetches_for_tags(dataset, limit)
-            non_empty_df = pd.DataFrame(res)
+            non_empty_df = pd.DataFrame([])
+            if limit != 0:
+                res = self.run_fetches_for_tags(dataset, limit)
+                non_empty_df = pd.DataFrame(res)
             return pd.concat([empty_df, non_empty_df])
         else:
-            team_data, variable_data = self.run_fetches(dataset, limit)
+            team_data = pd.DataFrame([])
+            variable_data = pd.DataFrame([])
+            if limit != 0:
+                team_data, variable_data = self.run_fetches(dataset, limit)
             return build_df(
                 dataset, [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
             )

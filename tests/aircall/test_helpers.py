@@ -41,7 +41,7 @@ def test_resolve_calls_df():
 
     # tests result for data in both dataframes
     full_df = resolve_calls_df(teams_df, calls_df)
-    assert full_df.shape == (10, 10)
+    assert full_df.shape == (10, 11)
 
     empty_df = pd.DataFrame([])
 
@@ -69,10 +69,12 @@ def test_build_users_df():
     # teams and users arrays are filled
     fake_list_of_data_1 = [empty_df, teams_df, users_df]
     df_1 = build_df('users', fake_list_of_data_1)
+    print(df_1)
 
     assert df_1.shape == (6, 4)
     assert list(df_1.columns) == order_of_columns
-    assert df_1['team'].isna().sum() == 2
+    assert 'NO TEAM' in df_1['team'].values
+    assert df_1['team'].isin(['NO TEAM']).sum() == 2
 
     # only empty arrays
     fake_list_of_data_2 = [empty_df, empty_var_df, empty_var_df]
@@ -86,7 +88,7 @@ def test_build_users_df():
     df_3 = build_df('users', fake_list_of_data_3)
 
     assert df_3.shape == (6, 4)
-    assert df_3['team'].isna().all()
+    assert df_3['team'].isin(['NO TEAM']).all()
 
     # filled teams array, empty users - NOTE: normally this should never occur
     fake_list_of_data_4 = [empty_df, teams_df, empty_var_df]
@@ -106,7 +108,6 @@ def test_build_calls_df():
     # teams and calls arrays are filled
     fake_list_of_data_1 = [empty_df, teams_df, calls_df]
     df_1 = build_df('calls', fake_list_of_data_1)
-    print('df 1', df_1)
     assert df_1.shape == (10, 11)
     assert list(df_1.columns) == columns_for_calls
 
@@ -143,7 +144,6 @@ def test_format_calls_data():
     first_data_point = fake_calls[0]['calls'][0]
     first_filtered_obj = filtered_calls[0]
     result = DICTIONARY_OF_FORMATTERS['calls'](first_data_point)
-    print('result ', result)
     assert result == first_filtered_obj
 
     # we want to check that no user defined in call result won't generate an error

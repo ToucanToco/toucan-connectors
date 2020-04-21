@@ -103,7 +103,6 @@ def test__retrieve_data_users_happy_case(con, mocker):
         AircallConnector, 'run_fetches', return_value=[filtered_teams, filtered_users]
     )
     ds = build_ds('users')
-
     df = con._retrieve_data(ds)
     assert run_fetches_mock.call_count == 1
     assert df.shape == (6, 4)
@@ -155,7 +154,8 @@ def test_run_fetches_for_tags(con, mocker):
     """Tests the loop generator function for tags call"""
     dataset = 'tags'
     spy = mocker.spy(AircallConnector, 'run_fetches_for_tags')
-    con.run_fetches_for_tags(dataset, 1)
+    ds = build_ds(dataset)
+    con.run_fetches_for_tags(dataset, ds.limit)
     assert spy.call_count == 1
 
 
@@ -164,7 +164,7 @@ def test_run_fetches(con, mocker):
     dataset = 'users'
     spy = mocker.spy(AircallConnector, 'run_fetches')
     ds = build_ds(dataset)
-    con.run_fetches(ds.dataset, 1)
+    con.run_fetches(ds.dataset, ds.limit)
     assert spy.call_count == 1
 
 
@@ -234,6 +234,21 @@ def test_default_limit(con, mocker):
     assert ds.limit == 1
     assert mock_run_fetches_for_tags.call_count == 1
     assert mock_run_fetches_for_tags.call_args[0][1] == 1
+
+
+def test_limit_of_zero(con, mocker):
+    """A limit of zero triggers no fetch"""
+    # Test the calls/users branch
+    ds_calls = AircallDataSource(name='bar', domain='test_domain', dataset='calls', limit=0)
+    spy_calls = mocker.spy(AircallConnector, 'run_fetches')
+    con._retrieve_data(ds_calls)
+    assert spy_calls.call_count == 0
+
+    # Test the tags branch
+    ds_tags = AircallDataSource(name='baz', domain='test_domain', dataset='calls', limit=0)
+    spy_tags = mocker.spy(AircallConnector, 'run_fetches_for_tags')
+    con._retrieve_data(ds_tags)
+    assert spy_tags.call_count == 0
 
 
 def test_datasource():
