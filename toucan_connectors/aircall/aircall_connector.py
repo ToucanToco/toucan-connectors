@@ -62,7 +62,7 @@ class AircallDataset(str, Enum):
 
 
 class AircallDataSource(ToucanDataSource):
-    limit: int = Field(MAX_RUNS, description='Limit of entries (default is 1 run)', ge=1)
+    limit: int = Field(MAX_RUNS, description='Limit of entries (default is 1 run)', ge=-1)
     dataset: AircallDataset = 'calls'
 
 
@@ -123,7 +123,6 @@ class AircallConnector(ToucanConnector):
         """sets up event loop and fetches for 'tags' dataset"""
         loop = get_loop()
         future = asyncio.ensure_future(self._get_tags(dataset, limit))
-        print(future)
         return loop.run_until_complete(future)
 
     def _retrieve_data(self, data_source: AircallDataSource) -> pd.DataFrame:

@@ -106,6 +106,7 @@ def test_build_calls_df():
     # teams and calls arrays are filled
     fake_list_of_data_1 = [empty_df, teams_df, calls_df]
     df_1 = build_df('calls', fake_list_of_data_1)
+    print('df 1', df_1)
     assert df_1.shape == (10, 11)
     assert list(df_1.columns) == columns_for_calls
 
@@ -142,6 +143,7 @@ def test_format_calls_data():
     first_data_point = fake_calls[0]['calls'][0]
     first_filtered_obj = filtered_calls[0]
     result = DICTIONARY_OF_FORMATTERS['calls'](first_data_point)
+    print('result ', result)
     assert result == first_filtered_obj
 
     # we want to check that no user defined in call result won't generate an error

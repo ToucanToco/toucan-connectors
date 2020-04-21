@@ -159,12 +159,11 @@ def test_run_fetches_for_tags(con, mocker):
     assert spy.call_count == 1
 
 
-def test_run_fetches(mocker):
+def test_run_fetches(con, mocker):
     """Tests the loop generator function for calls/users call"""
     dataset = 'users'
     spy = mocker.spy(AircallConnector, 'run_fetches')
     ds = build_ds(dataset)
-    con = AircallConnector(name='test_name', bearer_auth_id='17effab0-1d94-11ea-b11c-c54519488059')
     con.run_fetches(ds.dataset, 1)
     assert spy.call_count == 1
 
@@ -232,9 +231,9 @@ def test_default_limit(con, mocker):
     )
 
     con._retrieve_data(ds)
-    assert ds.limit == 60
+    assert ds.limit == 1
     assert mock_run_fetches_for_tags.call_count == 1
-    assert mock_run_fetches_for_tags.call_args[0][1] == 60
+    assert mock_run_fetches_for_tags.call_args[0][1] == 1
 
 
 def test_datasource():

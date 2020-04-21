@@ -1,7 +1,7 @@
 """Module containing helpers for the Aircall connector"""
-
 from typing import List
 
+import numpy as np
 import pandas as pd
 
 from .constants import COLUMN_DICTIONARY
@@ -23,8 +23,10 @@ def resolve_calls_df(team_data, call_data) -> pd.DataFrame:
     df = pd.DataFrame([])
 
     if len(team_data) > 0 and len(call_data):
-        df = team_data.merge(call_data, sort=False, on='user_id', how='right').drop(
-            columns=['user_name_y', 'user_created_at']
+        df = (
+            team_data.merge(call_data, sort=False, on='user_id', how='right')
+            .drop(columns=['user_name_y', 'user_created_at'])
+            .assign(user_name=lambda x: x['user_name_x'])
         )
     elif len(call_data) > 0:
         df = call_data
@@ -48,7 +50,10 @@ def build_df(dataset: str, list_of_data: List[dict]) -> pd.DataFrame:
         return (
             pd.concat(list_of_data, sort=False, ignore_index=True)
             .drop_duplicates(['user_id'], keep='first')
-            .assign(user_created_at=lambda x: x['user_created_at'].str[:10])
+            .assign(
+                user_created_at=lambda x: x['user_created_at'].str[:10],
+                team=lambda x: x['team'].replace({np.NaN: 'NO TEAM'}),
+            )
         )
     elif dataset == 'calls':
         empty_df, team_data, call_data = list_of_data
@@ -60,6 +65,8 @@ def build_df(dataset: str, list_of_data: List[dict]) -> pd.DataFrame:
             ended_at=lambda t: pd.to_datetime(t['ended_at'], unit='s'),
             day=lambda t: t['ended_at'].astype(str).str[:10],
         )
+        print('total df ', total_df)
+        print('total df user name ', total_df['user_name'])
         return total_df[COLUMN_DICTIONARY[dataset]]
 
 
