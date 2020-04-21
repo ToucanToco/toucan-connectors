@@ -69,7 +69,6 @@ def test_build_users_df():
     # teams and users arrays are filled
     fake_list_of_data_1 = [empty_df, teams_df, users_df]
     df_1 = build_df('users', fake_list_of_data_1)
-    print(df_1)
 
     assert df_1.shape == (6, 4)
     assert list(df_1.columns) == order_of_columns
