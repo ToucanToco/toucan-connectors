@@ -6,6 +6,7 @@ import asyncio
 import sys
 
 PY_VERSION = sys.version_info
+PY_VERSION_TO_CHECK = (3, 8)
 
 
 def check_py_version(version_to_check):
@@ -19,7 +20,9 @@ def check_py_version(version_to_check):
 
 
 def build_future(fake_data):
-    """Builds a single future"""
-    f = asyncio.Future()
-    f.set_result(fake_data)
-    return f
+    """Builds a future for versions of Python older than 3.8"""
+    if PY_VERSION < PY_VERSION_TO_CHECK:
+        f = asyncio.Future()
+        f.set_result(fake_data)
+        return f
+    return fake_data
