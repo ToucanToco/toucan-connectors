@@ -45,13 +45,13 @@ async def fetch_page(
         current_pass += 1
 
         if next_page_link is not None and current_pass < limit:
-            next_page = meta_data.get('current_page') + 1
+            next_page = meta_data['current_page'] + 1
             data_list = await fetch_page(
                 dataset, data_list, session, limit, current_pass, next_page
             )
     else:
         if next_page_link is not None:
-            next_page = meta_data.get('current_page') + 1
+            next_page = meta_data['current_page'] + 1
             data_list = await fetch_page(
                 dataset, data_list, session, limit, current_pass, next_page
             )
@@ -99,17 +99,14 @@ class AircallConnector(ToucanConnector):
             variable_response_list = []
             if len(team_data) > 0:
                 for data in team_data:
-                    for team_obj in data.get('teams'):
-                        team_response_list += DICTIONARY_OF_FORMATTERS.get('teams')(team_obj)
+                    for team_obj in data['teams']:
+                        team_response_list += DICTIONARY_OF_FORMATTERS['teams'](team_obj)
 
             if len(variable_data) > 0:
                 for data in variable_data:
-                    variable_response_list += list(
-                        map(
-                            lambda obj: DICTIONARY_OF_FORMATTERS.get(dataset, 'users')(obj),
-                            data.get(dataset),
-                        )
-                    )
+                    variable_response_list += [
+                        DICTIONARY_OF_FORMATTERS.get(dataset, 'users')(obj) for obj in data[dataset]
+                    ]
             return team_response_list, variable_response_list
 
     async def _get_tags(self, dataset: str, limit) -> List[dict]:
@@ -118,9 +115,8 @@ class AircallConnector(ToucanConnector):
         async with ClientSession(headers=headers) as session:
             raw_data = await fetch_page(dataset, [], session, limit, 1,)
             tags_data_list = []
-            if len(raw_data) > 0:
-                for data in raw_data:
-                    tags_data_list += data.get('tags')
+            for data in raw_data:
+                tags_data_list += data['tags']
             return tags_data_list
 
     def run_fetches(self, dataset, limit) -> Tuple[List[dict], List[dict]]:

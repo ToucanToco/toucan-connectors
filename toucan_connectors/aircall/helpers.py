@@ -82,9 +82,9 @@ def format_calls_data(call_obj: dict) -> dict:
         'answered_at': call_obj.get('answered_at'),
         'ended_at': call_obj.get('ended_at'),
         'raw_digits': call_obj.get('raw_digits'),
-        'user_id': call_obj.get('user').get('id') if call_obj.get('user') else None,
-        'tags': list(map(lambda tag: tag.get('name'), call_obj.get('tags'))),
-        'user_name': call_obj.get('user').get('name') if call_obj.get('user') else None,
+        'user_id': call_obj.get('user', {}).get('id'),
+        'tags': [tag.get('name') for tag in call_obj['tags']],
+        'user_name': call_obj.get('user', {}).get('name'),
     }
 
 
