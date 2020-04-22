@@ -2,8 +2,8 @@
 # from aiohttp import web
 import pytest
 
-from tests.aircall.helpers import assert_called_with
 import tests.general_helpers as helpers
+from tests.aircall.helpers import assert_called_with
 from toucan_connectors.aircall.aircall_connector import fetch_page
 
 fetch_fn_name = 'toucan_connectors.aircall.aircall_connector.fetch'
@@ -21,7 +21,9 @@ async def test_fetch_page_with_no_next(mocker):
     assert 'data' in first_dict
     assert 'meta' in first_dict
 
-    assert_called_with(fake_fetch, ['https://proxy.bearer.sh/aircall_oauth/tags?per_page=50&page=1', {}])
+    assert_called_with(
+        fake_fetch, ['https://proxy.bearer.sh/aircall_oauth/tags?per_page=50&page=1', {}]
+    )
 
 
 async def test_fetch_page_with_next_page(mocker):
@@ -44,7 +46,9 @@ async def test_fetch_page_with_next_page(mocker):
     fake_res = await fetch_page(dataset, [], {}, 10, 0)
     assert len(fake_res) == 2
 
-    assert_called_with(fake_fetch, ['https://proxy.bearer.sh/aircall_oauth/calls?per_page=50&page=2', {}], 2)
+    assert_called_with(
+        fake_fetch, ['https://proxy.bearer.sh/aircall_oauth/calls?per_page=50&page=2', {}], 2
+    )
 
 
 async def test_fetch_page_with_low_limit(mocker):
@@ -67,7 +71,9 @@ async def test_fetch_page_with_low_limit(mocker):
     res = await fetch_page(dataset, [], {}, 1, 0)
     assert len(res) == 1
 
-    assert_called_with(fake_fetch, ['https://proxy.bearer.sh/aircall_oauth/users?per_page=50&page=1', {}])
+    assert_called_with(
+        fake_fetch, ['https://proxy.bearer.sh/aircall_oauth/users?per_page=50&page=1', {}]
+    )
 
 
 async def test_fetch_page_with_no_meta(mocker):
