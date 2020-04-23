@@ -5,6 +5,8 @@ docker >= 3.1.1
 flake8 >= 3.5.0
 flake8-quotes
 isort
+pytest-aiohttp >= 0.3.0
+pytest-asyncio
 pytest-cov >= 2.5.1
 pytest >= 3.4.2
 pytest-mock >= 1.9.0
