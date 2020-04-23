@@ -119,7 +119,7 @@ def test_build_calls_df():
     fake_list_of_data_3 = [empty_df, empty_var_df, calls_df]
     df_3 = build_df('calls', fake_list_of_data_3)
     assert df_3.shape == (10, 11)
-    assert df_3['team'].isna().all()
+    assert df_3['team'].isin(['NO TEAM']).all()
 
     # empty arrays
     fake_list_of_data_4 = [empty_df, empty_var_df, empty_var_df]

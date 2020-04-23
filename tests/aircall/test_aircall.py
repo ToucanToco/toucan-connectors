@@ -172,7 +172,7 @@ def test__retrieve_data_no_teams_case(con, mocker):
     # must have calls and still have a team column even if everything is NaN
     assert run_fetches_mock.call_count == 1
     assert df.shape == (10, 11)
-    assert df['team'].isna().any()
+    assert df['team'].isin(['NO TEAM']).all()
 
 
 def test__retrieve_tags_from_fetch(con, mocker):
