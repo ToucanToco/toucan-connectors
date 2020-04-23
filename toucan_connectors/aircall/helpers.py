@@ -64,6 +64,7 @@ def build_df(dataset: str, list_of_data: List[dict]) -> pd.DataFrame:
             answered_at=lambda t: pd.to_datetime(t['answered_at'], unit='s'),
             ended_at=lambda t: pd.to_datetime(t['ended_at'], unit='s'),
             day=lambda t: t['ended_at'].astype(str).str[:10],
+            team=lambda x: x['team'].replace({np.NaN: 'NO TEAM'}),
         )
         return total_df[COLUMN_DICTIONARY[dataset]]
 
