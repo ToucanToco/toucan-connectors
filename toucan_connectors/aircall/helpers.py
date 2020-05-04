@@ -88,7 +88,6 @@ def format_calls_data(call_obj: dict) -> dict:
             'tags': [tag.get('name') for tag in call_obj['tags']],
             'user_name': call_obj.get('user').get('name') if call_obj.get('user') else None,
         }
-    return {}
 
 
 def format_teams_data(team_obj: dict) -> dict:
