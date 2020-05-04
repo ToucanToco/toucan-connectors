@@ -20,6 +20,8 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 
+MAX_COUNTED_ROWS = 1000001
+
 
 def normalize_query(query, parameters):
     query = nosql_apply_parameters_to_query(query, parameters)
@@ -226,7 +228,8 @@ class MongoConnector(ToucanConnector):
                 df_facet.append({'$limit': limit})
             facet = {
                 '$facet': {
-                    'count': [{'$count': 'value'}],
+                    # counting more than 1M values can be really slow, and the exact number is not that much relevant
+                    'count': [{'$limit': MAX_COUNTED_ROWS}, {'$count': 'value'}],
                     'df': df_facet,  # df_facet is never empty
                 }
             }
