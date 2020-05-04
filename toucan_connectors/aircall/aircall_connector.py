@@ -104,7 +104,6 @@ class AircallConnector(ToucanConnector):
 
             if len(variable_data) > 0:
                 for data in variable_data:
-                    print(DICTIONARY_OF_FORMATTERS.get(dataset, 'users'))
                     variable_response_list += [
                         DICTIONARY_OF_FORMATTERS.get(dataset, 'users')(obj) for obj in data[dataset]
                     ]

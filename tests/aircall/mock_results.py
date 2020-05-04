@@ -1092,4 +1092,8 @@ fake_calls_no_user = [
     }
 ]
 
-fake_none = [{'calls': [None]}]
+fake_calls_none = [{'calls': [None]}]
+
+fake_teams_none = [{'teams': [None]}]
+
+fake_users_none = [{'users': [None]}]
