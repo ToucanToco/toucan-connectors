@@ -284,6 +284,24 @@ def test_get_slice_empty(mongo_connector, mongo_datasource):
     assert df.shape == (0, 0)
 
 
+def test_get_slice_max_count(mongo_connector, mongo_datasource, mocker):
+    """
+    It should limit mongo's count operation to 1M rows
+
+    We're not going to insert a million rows in mongo just for this test,
+    so we mock the execution of the query.
+    """
+    aggregate = mocker.spy(pymongo.collection.Collection, 'aggregate')
+
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'unknown'})
+    df, count = mongo_connector.get_slice(datasource, limit=50)
+
+    aggregate.assert_called_once()
+    # count facet must be limited
+    assert '$limit' in aggregate.call_args[0][1][1]['$facet']['count'][0]
+    assert aggregate.call_args[0][1][1]['$facet']['count'][0]['$limit'] > 0
+
+
 def test_get_df_with_regex(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df_with_regex(datasource, field='country', regex=re.compile('r.*a'))
