@@ -1091,3 +1091,5 @@ fake_calls_no_user = [
         ]
     }
 ]
+
+fake_none = [{'calls': [None]}]

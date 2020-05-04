@@ -76,17 +76,19 @@ def build_empty_df(dataset: str) -> pd.DataFrame:
 
 def format_calls_data(call_obj: dict) -> dict:
     """Provides a filter for calls"""
-    return {
-        'id': call_obj.get('id'),
-        'direction': call_obj.get('direction'),
-        'duration': call_obj.get('duration'),
-        'answered_at': call_obj.get('answered_at'),
-        'ended_at': call_obj.get('ended_at'),
-        'raw_digits': call_obj.get('raw_digits'),
-        'user_id': call_obj.get('user').get('id') if call_obj.get('user') else None,
-        'tags': [tag.get('name') for tag in call_obj['tags']],
-        'user_name': call_obj.get('user').get('name') if call_obj.get('user') else None,
-    }
+    if call_obj:
+        return {
+            'id': call_obj.get('id'),
+            'direction': call_obj.get('direction'),
+            'duration': call_obj.get('duration'),
+            'answered_at': call_obj.get('answered_at'),
+            'ended_at': call_obj.get('ended_at'),
+            'raw_digits': call_obj.get('raw_digits'),
+            'user_id': call_obj.get('user').get('id') if call_obj.get('user') else None,
+            'tags': [tag.get('name') for tag in call_obj['tags']],
+            'user_name': call_obj.get('user').get('name') if call_obj.get('user') else None,
+        }
+    return {}
 
 
 def format_teams_data(team_obj: dict) -> dict:

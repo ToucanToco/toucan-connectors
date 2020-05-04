@@ -4,6 +4,7 @@ import pandas as pd
 from tests.aircall.mock_results import (
     fake_calls,
     fake_calls_no_user,
+    fake_none,
     fake_teams,
     fake_users,
     filtered_calls,
@@ -148,6 +149,9 @@ def test_format_calls_data():
     # we want to check that no user defined in call result won't generate an error
     first_data_point_no_user = fake_calls_no_user[0]['calls'][0]
     DICTIONARY_OF_FORMATTERS['calls'](first_data_point_no_user)
+
+    first_data_point_none = fake_none[0]['calls'][0]
+    DICTIONARY_OF_FORMATTERS['calls'](first_data_point_none)
 
 
 def test_format_teams_data():
