@@ -76,41 +76,44 @@ def build_empty_df(dataset: str) -> pd.DataFrame:
 
 def format_calls_data(call_obj: dict) -> dict:
     """Provides a filter for calls"""
-    return {
-        'id': call_obj.get('id'),
-        'direction': call_obj.get('direction'),
-        'duration': call_obj.get('duration'),
-        'answered_at': call_obj.get('answered_at'),
-        'ended_at': call_obj.get('ended_at'),
-        'raw_digits': call_obj.get('raw_digits'),
-        'user_id': call_obj.get('user', {}).get('id'),
-        'tags': [tag.get('name') for tag in call_obj['tags']],
-        'user_name': call_obj.get('user', {}).get('name'),
-    }
+    if call_obj:
+        return {
+            'id': call_obj.get('id'),
+            'direction': call_obj.get('direction'),
+            'duration': call_obj.get('duration'),
+            'answered_at': call_obj.get('answered_at'),
+            'ended_at': call_obj.get('ended_at'),
+            'raw_digits': call_obj.get('raw_digits'),
+            'user_id': call_obj.get('user').get('id') if call_obj.get('user') else None,
+            'tags': [tag.get('name') for tag in call_obj['tags']],
+            'user_name': call_obj.get('user').get('name') if call_obj.get('user') else None,
+        }
 
 
 def format_teams_data(team_obj: dict) -> dict:
     """Provides a filter for teams"""
-    return list(
-        map(
-            lambda user: {
-                'team': team_obj.get('name'),
-                'user_id': user.get('id'),
-                'user_name': user.get('name'),
-                'user_created_at': user.get('created_at'),
-            },
-            team_obj.get('users'),
+    if team_obj:
+        return list(
+            map(
+                lambda user: {
+                    'team': team_obj.get('name'),
+                    'user_id': user.get('id'),
+                    'user_name': user.get('name'),
+                    'user_created_at': user.get('created_at'),
+                },
+                team_obj.get('users'),
+            )
         )
-    )
 
 
 def format_users_data(user_obj: dict) -> dict:
     """Provides a filter for users"""
-    return {
-        'user_id': user_obj.get('id'),
-        'user_name': user_obj.get('name'),
-        'user_created_at': user_obj.get('created_at'),
-    }
+    if user_obj:
+        return {
+            'user_id': user_obj.get('id'),
+            'user_name': user_obj.get('name'),
+            'user_created_at': user_obj.get('created_at'),
+        }
 
 
 DICTIONARY_OF_FORMATTERS = {

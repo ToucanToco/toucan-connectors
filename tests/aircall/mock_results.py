@@ -1077,7 +1077,7 @@ fake_calls_no_user = [
                 'recording': 'https://aircall-production.s3.us-west-1.amazonaws.com/companies/219998/recordings/call-171166689-e59e7c8f82b681e6fa5adacd5bcc20fe-liverecord.mp3',
                 'asset': 'https://assets.aircall.io/calls/171166689/recording',
                 'raw_digits': '+1 111-111-1117',
-                'user': {},
+                'user': None,
                 'contact': None,
                 'archived': False,
                 'assigned_to': None,
@@ -1091,3 +1091,9 @@ fake_calls_no_user = [
         ]
     }
 ]
+
+fake_calls_none = [{'calls': [None]}]
+
+fake_teams_none = [{'teams': [None]}]
+
+fake_users_none = [{'users': [None]}]

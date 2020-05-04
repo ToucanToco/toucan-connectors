@@ -4,8 +4,11 @@ import pandas as pd
 from tests.aircall.mock_results import (
     fake_calls,
     fake_calls_no_user,
+    fake_calls_none,
     fake_teams,
+    fake_teams_none,
     fake_users,
+    fake_users_none,
     filtered_calls,
     filtered_teams,
     filtered_users,
@@ -149,6 +152,9 @@ def test_format_calls_data():
     first_data_point_no_user = fake_calls_no_user[0]['calls'][0]
     DICTIONARY_OF_FORMATTERS['calls'](first_data_point_no_user)
 
+    first_data_point_none = fake_calls_none[0]['calls'][0]
+    DICTIONARY_OF_FORMATTERS['calls'](first_data_point_none)
+
 
 def test_format_teams_data():
     """Tests format teams data filter function"""
@@ -161,6 +167,9 @@ def test_format_teams_data():
     result = DICTIONARY_OF_FORMATTERS['teams'](first_data_point)
     assert result == filtered_team_users
 
+    first_data_point_none = fake_teams_none[0]['teams'][0]
+    DICTIONARY_OF_FORMATTERS['teams'](first_data_point_none)
+
 
 def test_format_users_data():
     """Tests format users data filter function"""
@@ -170,3 +179,6 @@ def test_format_users_data():
     first_filtered_obj = more_filtered_users[0]
     result = DICTIONARY_OF_FORMATTERS['users'](first_data_point)
     assert result == first_filtered_obj
+
+    first_data_point_none = fake_users_none[0]['users'][0]
+    DICTIONARY_OF_FORMATTERS['users'](first_data_point_none)
