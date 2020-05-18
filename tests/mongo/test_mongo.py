@@ -13,6 +13,7 @@ from toucan_connectors.mongo.mongo_connector import (
     MongoDataSource,
     UnkwownMongoCollection,
     UnkwownMongoDatabase,
+    _format_explain_result,
     normalize_query,
 )
 
@@ -506,3 +507,100 @@ def test_validate_cache(mongo_connector):
     con2 = con1.copy()
     with pytest.raises(UnkwownMongoDatabase):
         con2.validate_database('toucan')
+
+
+def test_format_no_explain_result():
+    """It should return None on empty result"""
+    assert _format_explain_result({}) is None
+    assert _format_explain_result(None) is None
+
+
+def test_format_no_stage_explain_result():
+    """It should handle explain result without 'stages' entry"""
+    explain_result = {
+        'executionStats': {'foo': 'bar'},
+        'ok': 1.0,
+        'queryPlanner': {'winningPlan': {}},
+        'serverInfo': {
+            'gitVersion': '20364840b8f1af16917e4c23c1b5f5efd8b352f8',
+            'host': '24a5e90be103',
+            'port': 27017,
+            'version': '4.2.6',
+        },
+    }
+    assert _format_explain_result(explain_result) == {
+        'details': {
+            'executionStats': {'foo': 'bar'},
+            'ok': 1.0,
+            'queryPlanner': {'winningPlan': {}},
+        },
+        'summary': [{'foo': 'bar'}],
+    }
+
+
+def test_format_stages_explain_result():
+    """It should handle explain results with 'stages' entries"""
+    explain_result = {
+        'stages': [
+            {
+                '$cursor': {
+                    'query': {},
+                    'queryPlanner': {
+                        'plannerVersion': 1,
+                        'namespace': 'database.collection',
+                        'parsedQuery': {},
+                        'winningPlan': {},
+                    },
+                    'executionStats': {
+                        'executionSuccess': True,
+                        'nReturned': 5815,
+                        'executionTimeMillis': 5271,
+                        'totalKeysExamined': 1432800,
+                        'totalDocsExamined': 1432799,
+                        'executionStages': {'stage': 'FETCH', 'inputStage': {}},
+                    },
+                },
+            },
+            {'$group': {}},
+            {'$project': {}},
+        ],
+        'ok': 1,
+    }
+    assert _format_explain_result(explain_result) == {
+        'details': {
+            'ok': 1,
+            'stages': [
+                {
+                    '$cursor': {
+                        'executionStats': {
+                            'executionStages': {'inputStage': {}, 'stage': 'FETCH'},
+                            'executionSuccess': True,
+                            'executionTimeMillis': 5271,
+                            'nReturned': 5815,
+                            'totalDocsExamined': 1432799,
+                            'totalKeysExamined': 1432800,
+                        },
+                        'query': {},
+                        'queryPlanner': {
+                            'namespace': 'database.collection',
+                            'parsedQuery': {},
+                            'plannerVersion': 1,
+                            'winningPlan': {},
+                        },
+                    },
+                },
+                {'$group': {}},
+                {'$project': {}},
+            ],
+        },
+        'summary': [
+            {
+                'executionStages': {'inputStage': {}, 'stage': 'FETCH'},
+                'executionSuccess': True,
+                'executionTimeMillis': 5271,
+                'nReturned': 5815,
+                'totalDocsExamined': 1432799,
+                'totalKeysExamined': 1432800,
+            },
+        ],
+    }

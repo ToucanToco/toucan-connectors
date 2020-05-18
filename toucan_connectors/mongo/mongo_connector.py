@@ -3,7 +3,6 @@ from functools import _lru_cache_wrapper, lru_cache
 from typing import Optional, Pattern, Union
 
 import pandas as pd
-import pyjq
 import pymongo
 from bson.regex import Regex
 from bson.son import SON
@@ -267,20 +266,46 @@ class MongoConnector(ToucanConnector):
         data_source.query = apply_permissions(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
 
-        cursor = client[data_source.database].command(
-            command='aggregate',
-            value=data_source.collection,
-            pipeline=data_source.query,
-            explain=True,
+        agg_cmd = SON(
+            [
+                ('aggregate', data_source.collection),
+                ('pipeline', data_source.query),
+                ('cursor', {}),
+            ]
         )
+        result = client[data_source.database].command(
+            command='explain', value=agg_cmd, verbosity='executionStats'
+        )
+        return _format_explain_result(result)
 
-        f = """{
-                    details: (. | del(.serverInfo)),
-                    summary: (.executionStats | del(.executionStages, .allPlansExecution))
-                }"""
-        client.close()
 
-        return pyjq.first(f, cursor)
+def _format_explain_result(explain_result):
+    """format output of an `explain` mongo command
+
+    Return a dictionary with 2 properties:
+
+    - 'details': the origin explain result without the `serverInfo` part
+      to avoid leaing mongo server version number
+    - 'summary': the list of execution statistics (i.e. drop the details of
+       candidate plans)
+
+    if `explain_result` is empty, return `None`
+    """
+    if explain_result:
+        explain_result.pop('serverInfo', None)
+        if 'stages' in explain_result:
+            stats = [
+                stage['$cursor']['executionStats']
+                for stage in explain_result['stages']
+                if '$cursor' in stage
+            ]
+        else:
+            stats = [explain_result['executionStats']]
+        return {
+            'details': explain_result,
+            'summary': stats,
+        }
+    return None
 
 
 class UnkwownMongoDatabase(Exception):
