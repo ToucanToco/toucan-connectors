@@ -60,7 +60,7 @@ HERE = Path(__file__).resolve().parent
 
 def get_static_file_paths():
     pkg = HERE / 'toucan_connectors'
-    paths = pkg.glob(f'**/*')
+    paths = pkg.glob('**/*')
     paths = [str(path.relative_to(pkg)) for path in paths]
     return paths
 

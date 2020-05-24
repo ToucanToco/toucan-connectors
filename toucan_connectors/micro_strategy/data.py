@@ -64,8 +64,8 @@ def fill_viewfilter_with_ids(vf, dfn):
             d.update(**fill_constant(d.pop('constant'), d.get('dataType')))
 
     @visit.register(list)
-    def visit_list(l: list):
-        for e in l:
+    def visit_list(node: list):
+        for e in node:
             visit(e)
 
     vf = deepcopy(vf)
