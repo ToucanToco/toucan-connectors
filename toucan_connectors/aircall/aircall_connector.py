@@ -13,7 +13,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from .constants import MAX_RUNS, PER_PAGE
 from .helpers import DICTIONARY_OF_FORMATTERS, build_df, build_empty_df
 
-BASE_ROUTE = f'https://proxy.bearer.sh/aircall_oauth'
+BASE_ROUTE = 'https://proxy.bearer.sh/aircall_oauth'
 BEARER_API_KEY = os.environ.get('BEARER_API_KEY')
 
 

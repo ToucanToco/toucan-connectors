@@ -67,7 +67,7 @@ class GoogleMyBusinessConnector(ToucanConnector):
         else:
             # retrieve all locations:
             locations = service.accounts().locations().list(parent=name).execute()
-            location_names = [l['name'] for l in locations['locations']]
+            location_names = [loc['name'] for loc in locations['locations']]
 
         query = {
             'locationNames': location_names,
