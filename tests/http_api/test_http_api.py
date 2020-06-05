@@ -271,3 +271,33 @@ def test_with_cert(mocker):
     HttpAPIConnector(**data_provider).get_df(HttpAPIDataSource(**data_source))
     args, kwargs = req.call_args
     assert kwargs['cert'] == ['tests/http_api/test_http_api.py', 'tests/http_api/test_http_api.py']
+
+
+@responses.activate
+def test_no_top_level_domain():
+    data_provider = {
+        'name': 'DataServiceApi',
+        'type': 'HttpAPI',
+        # before we relaxed the type of baseroute using AnyHttpUrl
+        # this "domain" would trigger a validation error
+        'baseroute': 'http://cd-arggh-v2:9088/api/aggregations/v1/',
+    }
+    c = HttpAPIConnector(**data_provider)
+
+    # we want to check as well that we call the right urls
+    data_source = {
+        'domain': 'appendable3_id_9001',
+        'name': 'DataServiceApi',
+        'url': 'forecast_90_days/site/%(SITE_VARIABLE)s/date/%(REQ_DATE)s',
+        'parameters': {'SITE_VARIABLE': 'blah', 'REQ_DATE': '123456'},
+        'method': 'GET',
+    }
+
+    responses.add(
+        responses.GET,
+        'http://cd-arggh-v2:9088/api/aggregations/v1/forecast_90_days/site/blah/date/123456',
+        json=[{'a': 1}],
+    )
+    c.get_df(HttpAPIDataSource(**data_source))
+
+    assert len(responses.calls) == 1
