@@ -55,6 +55,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Facebook Insights',
         'logo': 'facebook_insights/facebook-insights.png',
     },
+    'github': {
+        'connector': 'github.github_connector.GithubConnector',
+        'label': 'Github',
+        'logo': 'github/github.png'
+    },
     'GoogleAnalytics': {
         'connector': 'google_analytics.google_analytics_connector.GoogleAnalyticsConnector',
         'label': 'Google Analytics',
