@@ -1,0 +1,401 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module github_connector</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>github_connector</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/melodiesouksone/tests_rapha/toucan/toucan-connectors/toucan_connectors/github/github_connector.py">/Users/melodiesouksone/tests_rapha/toucan/toucan-connectors/toucan_connectors/github/github_connector.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="json.html">json</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="pandas.html">pandas</a><br>
+</td><td width="25%" valign=top><a href="requests.html">requests</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="toucan_connectors.toucan_connector.html#ToucanConnector">toucan_connectors.toucan_connector.ToucanConnector</a>(<a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="github_connector.html#GithubConnector">GithubConnector</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="toucan_connectors.toucan_connector.html#ToucanDataSource">toucan_connectors.toucan_connector.ToucanDataSource</a>(<a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="github_connector.html#GithubDataSource">GithubDataSource</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="GithubConnector">class <strong>GithubConnector</strong></a>(<a href="toucan_connectors.toucan_connector.html#ToucanConnector">toucan_connectors.toucan_connector.ToucanConnector</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#GithubConnector">GithubConnector</a>(*,&nbsp;name:&nbsp;str,&nbsp;retry_policy:&nbsp;toucan_connectors.toucan_connector.RetryPolicy&nbsp;=&nbsp;RetryPolicy(max_attempts=1,&nbsp;max_delay=0.0,&nbsp;wait_time=0.0,&nbsp;retry_on=(),&nbsp;logger=None),&nbsp;type:&nbsp;str&nbsp;=&nbsp;None,&nbsp;bearer_auth_token:&nbsp;str)&nbsp;-&amp;gt;&nbsp;None<br>
+&nbsp;<br>
+This&nbsp;class&nbsp;is&nbsp;our&nbsp;<a href="toucan_connectors.toucan_connector.html#ToucanConnector">ToucanConnector</a>&nbsp;implementation&nbsp;to&nbsp;handle&nbsp;the&nbsp;connection&nbsp;with&nbsp;Github's&nbsp;API<br>
+and&nbsp;retrieve&nbsp;the&nbsp;data.&nbsp;It&nbsp;instanciates&nbsp;with&nbsp;a&nbsp;<a href="#GithubDataSource">GithubDataSource</a>&nbsp;object&nbsp;and&nbsp;mandatory&nbsp;token&nbsp;to<br>
+be&nbsp;able&nbsp;to&nbsp;call&nbsp;the&nbsp;API<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="github_connector.html#GithubConnector">GithubConnector</a></dd>
+<dd><a href="toucan_connectors.toucan_connector.html#ToucanConnector">toucan_connectors.toucan_connector.ToucanConnector</a></dd>
+<dd><a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a></dd>
+<dd><a href="pydantic.utils.html#Representation">pydantic.utils.Representation</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="GithubConnector-__json_encoder__"><strong>__json_encoder__</strong></a> = pydantic_encoder(obj: Any) -&gt; Any</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
+
+<dl><dt><strong>__annotations__</strong> = {'bearer_auth_token': &lt;class 'str'&gt;, 'data_source_model': &lt;class 'github_connector.GithubDataSource'&gt;}</dl>
+
+<dl><dt><strong>__config__</strong> = &lt;class 'github_connector.Config'&gt;</dl>
+
+<dl><dt><strong>__custom_root_type__</strong> = False</dl>
+
+<dl><dt><strong>__field_defaults__</strong> = {'retry_policy': RetryPolicy(max_attempts=1, max_delay=0.0, wait_time=0.0, retry_on=(), logger=None), 'type': None}</dl>
+
+<dl><dt><strong>__fields__</strong> = {'bearer_auth_token': ModelField(name='bearer_auth_token', type=str, required=True), 'name': ModelField(name='name', type=str, required=True), 'retry_policy': ModelField(name='retry_policy', type=Optional[Re...ay=0.0, wait_time=0.0, retry_on=(), logger=None)), 'type': ModelField(name='type', type=Optional[str], required=False, default=None)}</dl>
+
+<dl><dt><strong>__post_root_validators__</strong> = []</dl>
+
+<dl><dt><strong>__pre_root_validators__</strong> = []</dl>
+
+<dl><dt><strong>__schema_cache__</strong> = {}</dl>
+
+<dl><dt><strong>__signature__</strong> = &lt;Signature (*, name: str, retry_policy: toucan_c...ype: str = None, bearer_auth_token: str) -&gt; None&gt;</dl>
+
+<dl><dt><strong>__validators__</strong> = {}</dl>
+
+<dl><dt><strong>data_source_model</strong> = &lt;class 'github_connector.GithubDataSource'&gt;<dd><tt>This&nbsp;class&nbsp;is&nbsp;our&nbsp;<a href="toucan_connectors.toucan_connector.html#ToucanDataSource">ToucanDataSource</a>&nbsp;implementation&nbsp;for&nbsp;the&nbsp;github&nbsp;data&nbsp;source<br>
+it&nbsp;instanciates&nbsp;with&nbsp;a&nbsp;repo&nbsp;name&nbsp;from&nbsp;where&nbsp;to&nbsp;pull&nbsp;the&nbsp;info,&nbsp;an&nbsp;owner&nbsp;name&nbsp;to&nbsp;whom<br>
+the&nbsp;repo&nbsp;belongs&nbsp;to&nbsp;and&nbsp;a&nbsp;dict&nbsp;containing&nbsp;the&nbsp;query&nbsp;to&nbsp;send&nbsp;to&nbsp;the&nbsp;Github&nbsp;GraphQL&nbsp;API</tt></dl>
+
+<dl><dt><strong>logger</strong> = &lt;Logger GithubConnector (WARNING)&gt;</dl>
+
+<hr>
+Methods inherited from <a href="toucan_connectors.toucan_connector.html#ToucanConnector">toucan_connectors.toucan_connector.ToucanConnector</a>:<br>
+<dl><dt><a name="GithubConnector-bearer_oauth_get_endpoint"><strong>bearer_oauth_get_endpoint</strong></a>(self, endpoint: str, query: Union[dict, NoneType] = None)</dt><dd><tt>Generic&nbsp;method&nbsp;to&nbsp;get&nbsp;an&nbsp;endpoint&nbsp;for&nbsp;an&nbsp;OAuth&nbsp;API&nbsp;integrated&nbsp;with&nbsp;Bearer</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-explain"><strong>explain</strong></a>(self, data_source: toucan_connectors.toucan_connector.ToucanDataSource, permissions: Union[dict, NoneType] = None)</dt><dd><tt>Method&nbsp;to&nbsp;give&nbsp;metrics&nbsp;about&nbsp;the&nbsp;query</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-get_df"><strong>get_df</strong></a>(self, data_source: toucan_connectors.toucan_connector.ToucanDataSource, permissions: Union[dict, NoneType] = None) -&gt; pandas.core.frame.DataFrame</dt><dd><tt>Method&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;data&nbsp;as&nbsp;a&nbsp;pandas&nbsp;dataframe<br>
+filtered&nbsp;by&nbsp;permissions</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-get_slice"><strong>get_slice</strong></a>(self, data_source: toucan_connectors.toucan_connector.ToucanDataSource, permissions: Union[dict, NoneType] = None, offset: int = 0, limit: Union[int, NoneType] = None) -&gt; toucan_connectors.toucan_connector.DataSlice</dt><dd><tt>Method&nbsp;to&nbsp;retrieve&nbsp;a&nbsp;part&nbsp;of&nbsp;the&nbsp;data&nbsp;as&nbsp;a&nbsp;pandas&nbsp;dataframe<br>
+and&nbsp;the&nbsp;total&nbsp;size&nbsp;filtered&nbsp;with&nbsp;permissions<br>
+&nbsp;<br>
+-&nbsp;offset&nbsp;is&nbsp;the&nbsp;index&nbsp;of&nbsp;the&nbsp;starting&nbsp;row<br>
+-&nbsp;limit&nbsp;is&nbsp;the&nbsp;number&nbsp;of&nbsp;rows&nbsp;to&nbsp;retrieve<br>
+Exemple:&nbsp;if&nbsp;offset&nbsp;=&nbsp;5&nbsp;and&nbsp;limit&nbsp;=&nbsp;10&nbsp;then&nbsp;10&nbsp;results&nbsp;are&nbsp;expected&nbsp;from&nbsp;6th&nbsp;row</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-get_status"><strong>get_status</strong></a>(self) -&gt; dict</dt><dd><tt>Check&nbsp;if&nbsp;connection&nbsp;can&nbsp;be&nbsp;made.<br>
+Returns<br>
+{<br>
+&nbsp;&nbsp;'status':&nbsp;True/False/None&nbsp;&nbsp;#&nbsp;the&nbsp;status&nbsp;of&nbsp;the&nbsp;connection&nbsp;(None&nbsp;if&nbsp;no&nbsp;check&nbsp;has&nbsp;been&nbsp;made)<br>
+&nbsp;&nbsp;'details':&nbsp;[(&lt;&nbsp;type&nbsp;of&nbsp;check&nbsp;&gt;,&nbsp;True/False/None),&nbsp;(...),&nbsp;...]<br>
+&nbsp;&nbsp;'error':&nbsp;&lt;&nbsp;error&nbsp;message&nbsp;&gt;&nbsp;&nbsp;#&nbsp;if&nbsp;a&nbsp;check&nbsp;raised&nbsp;an&nbsp;error,&nbsp;return&nbsp;it<br>
+}<br>
+e.g.<br>
+{<br>
+&nbsp;&nbsp;'status':&nbsp;False,<br>
+&nbsp;&nbsp;'details':&nbsp;[<br>
+&nbsp;&nbsp;&nbsp;&nbsp;('hostname&nbsp;resolved',&nbsp;True),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;('port&nbsp;opened',&nbsp;False,),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;('db&nbsp;validation',&nbsp;None),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;...<br>
+&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;'error':&nbsp;'port&nbsp;must&nbsp;be&nbsp;0-65535'<br>
+}</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="toucan_connectors.toucan_connector.html#ToucanConnector">toucan_connectors.toucan_connector.ToucanConnector</a>:<br>
+<dl><dt><a name="GithubConnector-__init_subclass__"><strong>__init_subclass__</strong></a>()<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt><dd><tt>This&nbsp;method&nbsp;is&nbsp;called&nbsp;when&nbsp;a&nbsp;class&nbsp;is&nbsp;subclassed.<br>
+&nbsp;<br>
+The&nbsp;default&nbsp;implementation&nbsp;does&nbsp;nothing.&nbsp;It&nbsp;may&nbsp;be<br>
+overridden&nbsp;to&nbsp;extend&nbsp;subclasses.</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="toucan_connectors.toucan_connector.html#ToucanConnector">toucan_connectors.toucan_connector.ToucanConnector</a>:<br>
+<dl><dt><a name="GithubConnector-check_hostname"><strong>check_hostname</strong></a>(hostname)</dt><dd><tt>Check&nbsp;if&nbsp;a&nbsp;hostname&nbsp;is&nbsp;resolved</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-check_port"><strong>check_port</strong></a>(host, port)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="toucan_connectors.toucan_connector.html#ToucanConnector">toucan_connectors.toucan_connector.ToucanConnector</a>:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>retry_decorator</strong></dt>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="toucan_connectors.toucan_connector.html#ToucanConnector">toucan_connectors.toucan_connector.ToucanConnector</a>:<br>
+<dl><dt><strong>Config</strong> = &lt;class 'toucan_connectors.toucan_connector.ToucanConnector.Config'&gt;</dl>
+
+<hr>
+Methods inherited from <a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>:<br>
+<dl><dt><a name="GithubConnector-__eq__"><strong>__eq__</strong></a>(self, other: Any) -&gt; bool</dt></dl>
+
+<dl><dt><a name="GithubConnector-__getstate__"><strong>__getstate__</strong></a>(self) -&gt; 'DictAny'</dt></dl>
+
+<dl><dt><a name="GithubConnector-__init__"><strong>__init__</strong></a>(__pydantic_self__, **data: Any) -&gt; None</dt><dd><tt>Create&nbsp;a&nbsp;new&nbsp;model&nbsp;by&nbsp;parsing&nbsp;and&nbsp;validating&nbsp;input&nbsp;data&nbsp;from&nbsp;keyword&nbsp;arguments.<br>
+&nbsp;<br>
+Raises&nbsp;ValidationError&nbsp;if&nbsp;the&nbsp;input&nbsp;data&nbsp;cannot&nbsp;be&nbsp;parsed&nbsp;to&nbsp;form&nbsp;a&nbsp;valid&nbsp;model.</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-__iter__"><strong>__iter__</strong></a>(self) -&gt; 'TupleGenerator'</dt><dd><tt>so&nbsp;`<a href="#GithubConnector-dict">dict</a>(model)`&nbsp;works</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-__repr_args__"><strong>__repr_args__</strong></a>(self) -&gt; 'ReprArgs'</dt></dl>
+
+<dl><dt><a name="GithubConnector-__setattr__"><strong>__setattr__</strong></a>(self, name, value)</dt></dl>
+
+<dl><dt><a name="GithubConnector-__setstate__"><strong>__setstate__</strong></a>(self, state: 'DictAny') -&gt; None</dt></dl>
+
+<dl><dt><a name="GithubConnector-copy"><strong>copy</strong></a>(self: 'Model', *, include: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, exclude: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, update: 'DictStrAny' = None, deep: bool = False) -&gt; 'Model'</dt><dd><tt>Duplicate&nbsp;a&nbsp;model,&nbsp;optionally&nbsp;choose&nbsp;which&nbsp;fields&nbsp;to&nbsp;include,&nbsp;exclude&nbsp;and&nbsp;change.<br>
+&nbsp;<br>
+:param&nbsp;include:&nbsp;fields&nbsp;to&nbsp;include&nbsp;in&nbsp;new&nbsp;model<br>
+:param&nbsp;exclude:&nbsp;fields&nbsp;to&nbsp;exclude&nbsp;from&nbsp;new&nbsp;model,&nbsp;as&nbsp;with&nbsp;values&nbsp;this&nbsp;takes&nbsp;precedence&nbsp;over&nbsp;include<br>
+:param&nbsp;update:&nbsp;values&nbsp;to&nbsp;change/add&nbsp;in&nbsp;the&nbsp;new&nbsp;model.&nbsp;Note:&nbsp;the&nbsp;data&nbsp;is&nbsp;not&nbsp;validated&nbsp;before&nbsp;creating<br>
+&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;new&nbsp;model:&nbsp;you&nbsp;should&nbsp;trust&nbsp;this&nbsp;data<br>
+:param&nbsp;deep:&nbsp;set&nbsp;to&nbsp;`True`&nbsp;to&nbsp;make&nbsp;a&nbsp;deep&nbsp;copy&nbsp;of&nbsp;the&nbsp;model<br>
+:return:&nbsp;new&nbsp;model&nbsp;instance</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-dict"><strong>dict</strong></a>(self, *, include: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, exclude: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, by_alias: bool = False, skip_defaults: bool = None, exclude_unset: bool = False, exclude_defaults: bool = False, exclude_none: bool = False) -&gt; 'DictStrAny'</dt><dd><tt>Generate&nbsp;a&nbsp;dictionary&nbsp;representation&nbsp;of&nbsp;the&nbsp;model,&nbsp;optionally&nbsp;specifying&nbsp;which&nbsp;fields&nbsp;to&nbsp;include&nbsp;or&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-json"><strong>json</strong></a>(self, *, include: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, exclude: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, by_alias: bool = False, skip_defaults: bool = None, exclude_unset: bool = False, exclude_defaults: bool = False, exclude_none: bool = False, encoder: Union[Callable[[Any], Any], NoneType] = None, **dumps_kwargs: Any) -&gt; 'unicode'</dt><dd><tt>Generate&nbsp;a&nbsp;JSON&nbsp;representation&nbsp;of&nbsp;the&nbsp;model,&nbsp;`include`&nbsp;and&nbsp;`exclude`&nbsp;arguments&nbsp;as&nbsp;per&nbsp;`<a href="#GithubConnector-dict">dict</a>()`.<br>
+&nbsp;<br>
+`encoder`&nbsp;is&nbsp;an&nbsp;optional&nbsp;function&nbsp;to&nbsp;supply&nbsp;as&nbsp;`default`&nbsp;to&nbsp;json.dumps(),&nbsp;other&nbsp;arguments&nbsp;as&nbsp;per&nbsp;`json.dumps()`.</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-to_string"><strong>to_string</strong></a>(self, pretty: bool = False) -&gt; 'unicode'</dt></dl>
+
+<hr>
+Class methods inherited from <a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>:<br>
+<dl><dt><a name="GithubConnector-__get_validators__"><strong>__get_validators__</strong></a>() -&gt; 'CallableGenerator'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubConnector-construct"><strong>construct</strong></a>(_fields_set: Union[ForwardRef('SetStr'), NoneType] = None, **values: Any) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt><dd><tt>Creates&nbsp;a&nbsp;new&nbsp;model&nbsp;setting&nbsp;__dict__&nbsp;and&nbsp;__fields_set__&nbsp;from&nbsp;trusted&nbsp;or&nbsp;pre-validated&nbsp;data.<br>
+Default&nbsp;values&nbsp;are&nbsp;respected,&nbsp;but&nbsp;no&nbsp;other&nbsp;validation&nbsp;is&nbsp;performed.</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-from_orm"><strong>from_orm</strong></a>(obj: Any) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubConnector-parse_file"><strong>parse_file</strong></a>(path: Union[str, pathlib.Path], *, content_type: 'unicode' = None, encoding: 'unicode' = 'utf8', proto: pydantic.parse.Protocol = None, allow_pickle: bool = False) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubConnector-parse_obj"><strong>parse_obj</strong></a>(obj: Any) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubConnector-parse_raw"><strong>parse_raw</strong></a>(b: Union[str, bytes], *, content_type: 'unicode' = None, encoding: 'unicode' = 'utf8', proto: pydantic.parse.Protocol = None, allow_pickle: bool = False) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubConnector-schema"><strong>schema</strong></a>(by_alias: bool = True) -&gt; 'DictStrAny'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubConnector-schema_json"><strong>schema_json</strong></a>(*, by_alias: bool = True, **dumps_kwargs: Any) -&gt; 'unicode'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubConnector-update_forward_refs"><strong>update_forward_refs</strong></a>(**localns: Any) -&gt; None<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt><dd><tt>Try&nbsp;to&nbsp;update&nbsp;ForwardRefs&nbsp;on&nbsp;fields&nbsp;based&nbsp;on&nbsp;this&nbsp;Model,&nbsp;globalns&nbsp;and&nbsp;localns.</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-validate"><strong>validate</strong></a>(value: Any) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__fields_set__</strong></dt>
+</dl>
+<dl><dt><strong>__values__</strong></dt>
+</dl>
+<dl><dt><strong>fields</strong></dt>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>:<br>
+<dl><dt><strong>__hash__</strong> = None</dl>
+
+<hr>
+Methods inherited from <a href="pydantic.utils.html#Representation">pydantic.utils.Representation</a>:<br>
+<dl><dt><a name="GithubConnector-__pretty__"><strong>__pretty__</strong></a>(self, fmt: Callable[[Any], Any], **kwargs: Any) -&gt; Generator[Any, NoneType, NoneType]</dt><dd><tt>Used&nbsp;by&nbsp;devtools&nbsp;(https://python-devtools.helpmanual.io/)&nbsp;to&nbsp;provide&nbsp;a&nbsp;human&nbsp;readable&nbsp;representations&nbsp;of&nbsp;objects</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-__repr__"><strong>__repr__</strong></a>(self) -&gt; 'unicode'</dt></dl>
+
+<dl><dt><a name="GithubConnector-__repr_name__"><strong>__repr_name__</strong></a>(self) -&gt; 'unicode'</dt><dd><tt>Name&nbsp;of&nbsp;the&nbsp;instance's&nbsp;class,&nbsp;used&nbsp;in&nbsp;__repr__.</tt></dd></dl>
+
+<dl><dt><a name="GithubConnector-__repr_str__"><strong>__repr_str__</strong></a>(self, join_str: 'unicode') -&gt; 'unicode'</dt></dl>
+
+<dl><dt><a name="GithubConnector-__str__"><strong>__str__</strong></a>(self) -&gt; 'unicode'</dt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="GithubDataSource">class <strong>GithubDataSource</strong></a>(<a href="toucan_connectors.toucan_connector.html#ToucanDataSource">toucan_connectors.toucan_connector.ToucanDataSource</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#GithubDataSource">GithubDataSource</a>(*,&nbsp;domain:&nbsp;str,&nbsp;name:&nbsp;str,&nbsp;type:&nbsp;str&nbsp;=&nbsp;None,&nbsp;load:&nbsp;bool&nbsp;=&nbsp;True,&nbsp;live_data:&nbsp;bool&nbsp;=&nbsp;False,&nbsp;validation:&nbsp;list&nbsp;=&nbsp;None,&nbsp;parameters:&nbsp;dict&nbsp;=&nbsp;None,&nbsp;repo_name:&nbsp;str,&nbsp;owner:&nbsp;str,&nbsp;query:&nbsp;dict)&nbsp;-&amp;gt;&nbsp;None<br>
+&nbsp;<br>
+This&nbsp;class&nbsp;is&nbsp;our&nbsp;<a href="toucan_connectors.toucan_connector.html#ToucanDataSource">ToucanDataSource</a>&nbsp;implementation&nbsp;for&nbsp;the&nbsp;github&nbsp;data&nbsp;source<br>
+it&nbsp;instanciates&nbsp;with&nbsp;a&nbsp;repo&nbsp;name&nbsp;from&nbsp;where&nbsp;to&nbsp;pull&nbsp;the&nbsp;info,&nbsp;an&nbsp;owner&nbsp;name&nbsp;to&nbsp;whom<br>
+the&nbsp;repo&nbsp;belongs&nbsp;to&nbsp;and&nbsp;a&nbsp;dict&nbsp;containing&nbsp;the&nbsp;query&nbsp;to&nbsp;send&nbsp;to&nbsp;the&nbsp;Github&nbsp;GraphQL&nbsp;API<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="github_connector.html#GithubDataSource">GithubDataSource</a></dd>
+<dd><a href="toucan_connectors.toucan_connector.html#ToucanDataSource">toucan_connectors.toucan_connector.ToucanDataSource</a></dd>
+<dd><a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a></dd>
+<dd><a href="pydantic.utils.html#Representation">pydantic.utils.Representation</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="GithubDataSource-__json_encoder__"><strong>__json_encoder__</strong></a> = pydantic_encoder(obj: Any) -&gt; Any</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
+
+<dl><dt><strong>__annotations__</strong> = {'owner': &lt;class 'str'&gt;, 'query': &lt;class 'dict'&gt;, 'repo_name': &lt;class 'str'&gt;}</dl>
+
+<dl><dt><strong>__config__</strong> = &lt;class 'github_connector.Config'&gt;</dl>
+
+<dl><dt><strong>__custom_root_type__</strong> = False</dl>
+
+<dl><dt><strong>__field_defaults__</strong> = {'live_data': False, 'load': True, 'parameters': None, 'type': None, 'validation': None}</dl>
+
+<dl><dt><strong>__fields__</strong> = {'domain': ModelField(name='domain', type=str, required=True), 'live_data': ModelField(name='live_data', type=bool, required=False, default=False), 'load': ModelField(name='load', type=bool, required=False, default=True), 'name': ModelField(name='name', type=str, required=True), 'owner': ModelField(name='owner', type=str, required=True), 'parameters': ModelField(name='parameters', type=Optional[dict], required=False, default=None), 'query': ModelField(name='query', type=dict, required=True), 'repo_name': ModelField(name='repo_name', type=str, required=True), 'type': ModelField(name='type', type=Optional[str], required=False, default=None), 'validation': ModelField(name='validation', type=Optional[list], required=False, default=None)}</dl>
+
+<dl><dt><strong>__post_root_validators__</strong> = []</dl>
+
+<dl><dt><strong>__pre_root_validators__</strong> = []</dl>
+
+<dl><dt><strong>__schema_cache__</strong> = {}</dl>
+
+<dl><dt><strong>__signature__</strong> = &lt;Signature (*, domain: str, name: str, type: str...repo_name: str, owner: str, query: dict) -&gt; None&gt;</dl>
+
+<dl><dt><strong>__validators__</strong> = {}</dl>
+
+<hr>
+Class methods inherited from <a href="toucan_connectors.toucan_connector.html#ToucanDataSource">toucan_connectors.toucan_connector.ToucanDataSource</a>:<br>
+<dl><dt><a name="GithubDataSource-get_form"><strong>get_form</strong></a>(connector: 'ToucanConnector', current_config)<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt><dd><tt>Method&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;form&nbsp;with&nbsp;a&nbsp;current&nbsp;config<br>
+Once&nbsp;the&nbsp;connector&nbsp;is&nbsp;set,&nbsp;we&nbsp;are&nbsp;often&nbsp;able&nbsp;to&nbsp;enforce&nbsp;some&nbsp;values&nbsp;depending<br>
+on&nbsp;what&nbsp;the&nbsp;current&nbsp;`<a href="toucan_connectors.toucan_connector.html#ToucanDataSource">ToucanDataSource</a>`&nbsp;config&nbsp;looks&nbsp;like<br>
+&nbsp;<br>
+By&nbsp;default,&nbsp;we&nbsp;simply&nbsp;return&nbsp;the&nbsp;model&nbsp;schema.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="toucan_connectors.toucan_connector.html#ToucanDataSource">toucan_connectors.toucan_connector.ToucanDataSource</a>:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="toucan_connectors.toucan_connector.html#ToucanDataSource">toucan_connectors.toucan_connector.ToucanDataSource</a>:<br>
+<dl><dt><strong>Config</strong> = &lt;class 'toucan_connectors.toucan_connector.ToucanDataSource.Config'&gt;</dl>
+
+<hr>
+Methods inherited from <a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>:<br>
+<dl><dt><a name="GithubDataSource-__eq__"><strong>__eq__</strong></a>(self, other: Any) -&gt; bool</dt></dl>
+
+<dl><dt><a name="GithubDataSource-__getstate__"><strong>__getstate__</strong></a>(self) -&gt; 'DictAny'</dt></dl>
+
+<dl><dt><a name="GithubDataSource-__init__"><strong>__init__</strong></a>(__pydantic_self__, **data: Any) -&gt; None</dt><dd><tt>Create&nbsp;a&nbsp;new&nbsp;model&nbsp;by&nbsp;parsing&nbsp;and&nbsp;validating&nbsp;input&nbsp;data&nbsp;from&nbsp;keyword&nbsp;arguments.<br>
+&nbsp;<br>
+Raises&nbsp;ValidationError&nbsp;if&nbsp;the&nbsp;input&nbsp;data&nbsp;cannot&nbsp;be&nbsp;parsed&nbsp;to&nbsp;form&nbsp;a&nbsp;valid&nbsp;model.</tt></dd></dl>
+
+<dl><dt><a name="GithubDataSource-__iter__"><strong>__iter__</strong></a>(self) -&gt; 'TupleGenerator'</dt><dd><tt>so&nbsp;`<a href="#GithubDataSource-dict">dict</a>(model)`&nbsp;works</tt></dd></dl>
+
+<dl><dt><a name="GithubDataSource-__repr_args__"><strong>__repr_args__</strong></a>(self) -&gt; 'ReprArgs'</dt></dl>
+
+<dl><dt><a name="GithubDataSource-__setattr__"><strong>__setattr__</strong></a>(self, name, value)</dt></dl>
+
+<dl><dt><a name="GithubDataSource-__setstate__"><strong>__setstate__</strong></a>(self, state: 'DictAny') -&gt; None</dt></dl>
+
+<dl><dt><a name="GithubDataSource-copy"><strong>copy</strong></a>(self: 'Model', *, include: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, exclude: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, update: 'DictStrAny' = None, deep: bool = False) -&gt; 'Model'</dt><dd><tt>Duplicate&nbsp;a&nbsp;model,&nbsp;optionally&nbsp;choose&nbsp;which&nbsp;fields&nbsp;to&nbsp;include,&nbsp;exclude&nbsp;and&nbsp;change.<br>
+&nbsp;<br>
+:param&nbsp;include:&nbsp;fields&nbsp;to&nbsp;include&nbsp;in&nbsp;new&nbsp;model<br>
+:param&nbsp;exclude:&nbsp;fields&nbsp;to&nbsp;exclude&nbsp;from&nbsp;new&nbsp;model,&nbsp;as&nbsp;with&nbsp;values&nbsp;this&nbsp;takes&nbsp;precedence&nbsp;over&nbsp;include<br>
+:param&nbsp;update:&nbsp;values&nbsp;to&nbsp;change/add&nbsp;in&nbsp;the&nbsp;new&nbsp;model.&nbsp;Note:&nbsp;the&nbsp;data&nbsp;is&nbsp;not&nbsp;validated&nbsp;before&nbsp;creating<br>
+&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;new&nbsp;model:&nbsp;you&nbsp;should&nbsp;trust&nbsp;this&nbsp;data<br>
+:param&nbsp;deep:&nbsp;set&nbsp;to&nbsp;`True`&nbsp;to&nbsp;make&nbsp;a&nbsp;deep&nbsp;copy&nbsp;of&nbsp;the&nbsp;model<br>
+:return:&nbsp;new&nbsp;model&nbsp;instance</tt></dd></dl>
+
+<dl><dt><a name="GithubDataSource-dict"><strong>dict</strong></a>(self, *, include: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, exclude: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, by_alias: bool = False, skip_defaults: bool = None, exclude_unset: bool = False, exclude_defaults: bool = False, exclude_none: bool = False) -&gt; 'DictStrAny'</dt><dd><tt>Generate&nbsp;a&nbsp;dictionary&nbsp;representation&nbsp;of&nbsp;the&nbsp;model,&nbsp;optionally&nbsp;specifying&nbsp;which&nbsp;fields&nbsp;to&nbsp;include&nbsp;or&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="GithubDataSource-json"><strong>json</strong></a>(self, *, include: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, exclude: Union[ForwardRef('AbstractSetIntStr'), ForwardRef('MappingIntStrAny')] = None, by_alias: bool = False, skip_defaults: bool = None, exclude_unset: bool = False, exclude_defaults: bool = False, exclude_none: bool = False, encoder: Union[Callable[[Any], Any], NoneType] = None, **dumps_kwargs: Any) -&gt; 'unicode'</dt><dd><tt>Generate&nbsp;a&nbsp;JSON&nbsp;representation&nbsp;of&nbsp;the&nbsp;model,&nbsp;`include`&nbsp;and&nbsp;`exclude`&nbsp;arguments&nbsp;as&nbsp;per&nbsp;`<a href="#GithubDataSource-dict">dict</a>()`.<br>
+&nbsp;<br>
+`encoder`&nbsp;is&nbsp;an&nbsp;optional&nbsp;function&nbsp;to&nbsp;supply&nbsp;as&nbsp;`default`&nbsp;to&nbsp;json.dumps(),&nbsp;other&nbsp;arguments&nbsp;as&nbsp;per&nbsp;`json.dumps()`.</tt></dd></dl>
+
+<dl><dt><a name="GithubDataSource-to_string"><strong>to_string</strong></a>(self, pretty: bool = False) -&gt; 'unicode'</dt></dl>
+
+<hr>
+Class methods inherited from <a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>:<br>
+<dl><dt><a name="GithubDataSource-__get_validators__"><strong>__get_validators__</strong></a>() -&gt; 'CallableGenerator'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubDataSource-construct"><strong>construct</strong></a>(_fields_set: Union[ForwardRef('SetStr'), NoneType] = None, **values: Any) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt><dd><tt>Creates&nbsp;a&nbsp;new&nbsp;model&nbsp;setting&nbsp;__dict__&nbsp;and&nbsp;__fields_set__&nbsp;from&nbsp;trusted&nbsp;or&nbsp;pre-validated&nbsp;data.<br>
+Default&nbsp;values&nbsp;are&nbsp;respected,&nbsp;but&nbsp;no&nbsp;other&nbsp;validation&nbsp;is&nbsp;performed.</tt></dd></dl>
+
+<dl><dt><a name="GithubDataSource-from_orm"><strong>from_orm</strong></a>(obj: Any) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubDataSource-parse_file"><strong>parse_file</strong></a>(path: Union[str, pathlib.Path], *, content_type: 'unicode' = None, encoding: 'unicode' = 'utf8', proto: pydantic.parse.Protocol = None, allow_pickle: bool = False) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubDataSource-parse_obj"><strong>parse_obj</strong></a>(obj: Any) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubDataSource-parse_raw"><strong>parse_raw</strong></a>(b: Union[str, bytes], *, content_type: 'unicode' = None, encoding: 'unicode' = 'utf8', proto: pydantic.parse.Protocol = None, allow_pickle: bool = False) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubDataSource-schema"><strong>schema</strong></a>(by_alias: bool = True) -&gt; 'DictStrAny'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubDataSource-schema_json"><strong>schema_json</strong></a>(*, by_alias: bool = True, **dumps_kwargs: Any) -&gt; 'unicode'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<dl><dt><a name="GithubDataSource-update_forward_refs"><strong>update_forward_refs</strong></a>(**localns: Any) -&gt; None<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt><dd><tt>Try&nbsp;to&nbsp;update&nbsp;ForwardRefs&nbsp;on&nbsp;fields&nbsp;based&nbsp;on&nbsp;this&nbsp;Model,&nbsp;globalns&nbsp;and&nbsp;localns.</tt></dd></dl>
+
+<dl><dt><a name="GithubDataSource-validate"><strong>validate</strong></a>(value: Any) -&gt; 'Model'<font color="#909090"><font face="helvetica, arial"> from <a href="pydantic.main.html#ModelMetaclass">pydantic.main.ModelMetaclass</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__fields_set__</strong></dt>
+</dl>
+<dl><dt><strong>__values__</strong></dt>
+</dl>
+<dl><dt><strong>fields</strong></dt>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>:<br>
+<dl><dt><strong>__hash__</strong> = None</dl>
+
+<hr>
+Methods inherited from <a href="pydantic.utils.html#Representation">pydantic.utils.Representation</a>:<br>
+<dl><dt><a name="GithubDataSource-__pretty__"><strong>__pretty__</strong></a>(self, fmt: Callable[[Any], Any], **kwargs: Any) -&gt; Generator[Any, NoneType, NoneType]</dt><dd><tt>Used&nbsp;by&nbsp;devtools&nbsp;(https://python-devtools.helpmanual.io/)&nbsp;to&nbsp;provide&nbsp;a&nbsp;human&nbsp;readable&nbsp;representations&nbsp;of&nbsp;objects</tt></dd></dl>
+
+<dl><dt><a name="GithubDataSource-__repr__"><strong>__repr__</strong></a>(self) -&gt; 'unicode'</dt></dl>
+
+<dl><dt><a name="GithubDataSource-__repr_name__"><strong>__repr_name__</strong></a>(self) -&gt; 'unicode'</dt><dd><tt>Name&nbsp;of&nbsp;the&nbsp;instance's&nbsp;class,&nbsp;used&nbsp;in&nbsp;__repr__.</tt></dd></dl>
+
+<dl><dt><a name="GithubDataSource-__repr_str__"><strong>__repr_str__</strong></a>(self, join_str: 'unicode') -&gt; 'unicode'</dt></dl>
+
+<dl><dt><a name="GithubDataSource-__str__"><strong>__str__</strong></a>(self) -&gt; 'unicode'</dt></dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>GITHUB_TOKEN</strong> = '80a987e0475bf36b34e4a14879841f61b43da091'</td></tr></table>
+</body></html>
