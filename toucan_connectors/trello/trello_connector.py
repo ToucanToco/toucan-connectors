@@ -44,10 +44,25 @@ class Fields(str, Enum):
     labels = 'labels'
 
 
+class CardsFilter(str, Enum):
+    """
+    A filter to match cards in a specific state on a board.
+
+    https://developer.atlassian.com/cloud/trello/rest/#api-boards-id-cards-filter-get
+    """
+
+    all = 'all'
+    closed = 'closed'
+    open = 'open'
+    visible = 'visible'
+    none = 'none'
+
+
 class TrelloDataSource(ToucanDataSource):
     board_id: str
     fields_list: List[Fields] = list(Fields.__members__)
     custom_fields: bool = True
+    filter: CardsFilter = CardsFilter.open
 
 
 class TrelloConnector(ToucanConnector):
@@ -154,6 +169,7 @@ class TrelloConnector(ToucanConnector):
             f'{data_source.board_id}/cards',
             fields=fields_for_request,
             customFieldItems='true' if data_source.custom_fields else 'false',
+            filter=data_source.filter,
         )
 
         # replace all id in `cards_with_id` by the corresponding readable value
