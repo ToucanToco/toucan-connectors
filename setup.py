@@ -40,7 +40,7 @@ install_requires = [
     'jinja2',
     'pydantic',
     'pyjq',
-    'requests',
+    'requests<2.24.0',
     'tenacity',
     'toucan_data_sdk',
     'urllib3==1.24.3',
