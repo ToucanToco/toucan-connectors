@@ -1,5 +1,4 @@
 """Module containing tests with fake server"""
-# from aiohttp import web
 import pytest
 
 import tests.general_helpers as helpers
@@ -90,10 +89,13 @@ async def test_fetch_page_with_no_meta(mocker):
 
 async def test_fetch_page_with_error(mocker):
     """
-    Tests error sent from API does not throw error on our server
+    Tests error sent from API goes through a retry policy and then throws an exception
     """
     dataset = 'tags'
-    fake_fetch = mocker.patch(fetch_fn_name, side_effect=Exception('oops'))
-    with pytest.raises(Exception):
+    fake_data = {'error': 'Oops!', 'troubleshoot': 'Blah blah blah'}
+    fake_data = helpers.build_future(fake_data)
+    fake_fetch = mocker.patch(fetch_fn_name, return_value=fake_data)
+    with pytest.raises(Exception) as e:
         await fetch_page(dataset, [], {}, 1, 0)
-        fake_fetch.assert_awaited_once()
+    fake_fetch.call_count == 4
+    assert str(e.value) == 'Aborting Aircall requests due to Oops!'

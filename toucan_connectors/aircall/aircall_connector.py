@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 from enum import Enum
 from typing import List, Optional, Tuple
@@ -24,6 +25,7 @@ async def fetch_page(
     limit,
     current_pass: int,
     new_page=1,
+    delay_counter=0,
 ) -> List[dict]:
     """
     Fetches data from AirCall API
@@ -32,7 +34,27 @@ async def fetch_page(
     """
     endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}&page={new_page}'
     data: dict = await fetch(endpoint, session)
+    logging.getLogger(__file__).info(
+        f'Request sent to Aircall for page {new_page} for dataset {dataset}'
+    )
 
+    aircall_error = data.get('error')
+    if aircall_error:
+        logging.getLogger(__file__).error(f'Aircall error has occurred: {aircall_error}')
+        delay_timer = 1
+        max_num_of_retries = 3
+        await asyncio.sleep(delay_timer)
+        if delay_counter < max_num_of_retries:
+            delay_counter += 1
+            logging.getLogger(__file__).info('Retrying Aircall API')
+            data_list = await fetch_page(
+                dataset, data_list, session, limit, current_pass, new_page, delay_counter
+            )
+        else:
+            logging.getLogger(__file__).error('Aborting Aircall requests')
+            raise Exception(f'Aborting Aircall requests due to {aircall_error}')
+
+    delay_counter = 0
     data_list.append(data)
 
     next_page_link = None

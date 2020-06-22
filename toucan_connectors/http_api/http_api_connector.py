@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Union
 
 import pandas as pd
-from pydantic import BaseModel, Field, FilePath, AnyHttpUrl
+from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 from requests import Session
 
 from toucan_connectors.auth import Auth
