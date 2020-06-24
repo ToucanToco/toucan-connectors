@@ -47,7 +47,7 @@ def test_connector(mocker):
             {
                 'url': 'https://toto.com/lu',
                 'username': 'test',
-                'password': 'test',
+                'password': '**********',
                 'headers': {'truc': ''},
             }
         ],
@@ -63,7 +63,7 @@ def test_connector(mocker):
                 'url_prefix': '/lu',
                 'port': 443,
                 'use_ssl': True,
-                'http_auth': 'test:test',
+                'http_auth': 'test:**********',
                 'headers': {'truc': ''},
             }
         ],

@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 import pandas as pd
 from elasticsearch import Elasticsearch
 from pandas.io.json import json_normalize
-from pydantic import BaseModel
+from pydantic import Field, BaseModel, SecretStr
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -101,7 +101,7 @@ class ElasticsearchHost(BaseModel):
     url: str
     port: int = None
     username: str = None
-    password: str = None
+    password: SecretStr = Field(None, description='Your login password')
     headers: dict = None
 
 
