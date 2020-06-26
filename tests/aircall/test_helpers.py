@@ -28,7 +28,6 @@ columns_for_calls = [
     'duration',
     'answered_at',
     'ended_at',
-    'raw_digits',
     'user_id',
     'tags',
     'user_name',
@@ -44,13 +43,13 @@ def test_resolve_calls_df():
 
     # tests result for data in both dataframes
     full_df = resolve_calls_df(teams_df, calls_df)
-    assert full_df.shape == (10, 11)
+    assert full_df.shape == (10, 10)
 
     empty_df = pd.DataFrame([])
 
     # tests empty teams case
     empty_teams_df = resolve_calls_df(empty_df, calls_df)
-    assert empty_teams_df.shape == (10, 9)
+    assert empty_teams_df.shape == (10, 8)
 
     # tests empty calls case
     empty_calls_df = resolve_calls_df(teams_df, empty_df)
@@ -110,32 +109,32 @@ def test_build_calls_df():
     # teams and calls arrays are filled
     fake_list_of_data_1 = [empty_df, teams_df, calls_df]
     df_1 = build_df('calls', fake_list_of_data_1)
-    assert df_1.shape == (10, 11)
+    assert df_1.shape == (10, 10)
     assert list(df_1.columns) == columns_for_calls
 
     # filled teams array, empty calls
     fake_list_of_data_2 = [empty_df, teams_df, empty_var_df]
     df_2 = build_df('calls', fake_list_of_data_2)
-    assert df_2.shape == (4, 11)
+    assert df_2.shape == (4, 10)
 
     # empty teams array, filled calls
     fake_list_of_data_3 = [empty_df, empty_var_df, calls_df]
     df_3 = build_df('calls', fake_list_of_data_3)
-    assert df_3.shape == (10, 11)
+    assert df_3.shape == (10, 10)
     assert df_3['team'].isin(['NO TEAM']).all()
 
     # empty arrays
     fake_list_of_data_4 = [empty_df, empty_var_df, empty_var_df]
     df_4 = build_df('calls', fake_list_of_data_4)
 
-    assert df_4.shape == (0, 11)
+    assert df_4.shape == (0, 10)
 
 
 def test_build_empty_df():
     """Tests the empty dataframe builder"""
     empty_df = build_empty_df('calls')
 
-    assert empty_df.shape == (0, 11)
+    assert empty_df.shape == (0, 10)
     assert list(empty_df.columns) == columns_for_calls
 
 
