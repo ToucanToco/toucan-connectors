@@ -6,7 +6,6 @@ COLUMN_DICTIONARY = {
         'duration',
         'answered_at',
         'ended_at',
-        'raw_digits',
         'user_id',
         'tags',
         'user_name',

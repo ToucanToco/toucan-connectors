@@ -21,7 +21,6 @@ columns_for_calls = [
     'duration',
     'answered_at',
     'ended_at',
-    'raw_digits',
     'user_id',
     'tags',
     'user_name',
@@ -112,7 +111,7 @@ def test__retrieve_data_calls_happy_case(con, mocker):
 
     df = con._retrieve_data(ds)
     assert run_fetches_mock.call_count == 1
-    assert df.shape == (10, 11)
+    assert df.shape == (10, 10)
     assert list(df.columns) == columns_for_calls
     assert df['team'].isna().sum() == 0
     assert df['team'].eq('Team 1').sum() == 6
@@ -171,7 +170,7 @@ def test__retrieve_data_no_teams_case(con, mocker):
 
     # must have calls and still have a team column even if everything is NaN
     assert run_fetches_mock.call_count == 1
-    assert df.shape == (10, 11)
+    assert df.shape == (10, 10)
     assert df['team'].isin(['NO TEAM']).all()
 
 
