@@ -23,12 +23,17 @@ RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
 
 
+class NonValidEndpointVariable(Exception):
+    """ Error thrown for a non valid variable in endpoint """
+
+
 def nosql_apply_parameters_to_query(query, parameters):
     """
     WARNING : DO NOT USE THIS WITH VARIANTS OF SQL
     Instead use your client library parameter substitution method.
     https://www.owasp.org/index.php/Query_Parameterization_Cheat_Sheet
     """
+    print('first query ', query)
 
     def _has_parameters(query):
         t = Environment().parse(query)
@@ -103,6 +108,10 @@ def nosql_apply_parameters_to_query(query, parameters):
                             Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
                         except Exception:
                             missing_params.append(m)
+                            if k == 'url':
+                                raise NonValidEndpointVariable(
+                                    f'Non valid variable {m} in endpoint'
+                                )
                     if any(missing_params):
                         continue
                     else:
