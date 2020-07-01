@@ -23,7 +23,11 @@ RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
 
 
-def nosql_apply_parameters_to_query(query, parameters):
+class NonValidVariable(Exception):
+    """ Error thrown for a non valid variable in endpoint """
+
+
+def nosql_apply_parameters_to_query(query, parameters, handle_errors=False):
     """
     WARNING : DO NOT USE THIS WITH VARIANTS OF SQL
     Instead use your client library parameter substitution method.
@@ -86,7 +90,7 @@ def nosql_apply_parameters_to_query(query, parameters):
         else:
             return query
 
-    def _handle_missing_params(elt, params):
+    def _handle_missing_params(elt, params, handle_errors):
         """
         Remove a dictionary key if its value has a missing parameter.
         This is used to support the __VOID__ syntax, specific at Toucan Toco :
@@ -102,20 +106,22 @@ def nosql_apply_parameters_to_query(query, parameters):
                         try:
                             Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
                         except Exception:
+                            if handle_errors:
+                                raise NonValidVariable(f'Non valid variable {m}')
                             missing_params.append(m)
                     if any(missing_params):
                         continue
                     else:
                         e[k] = v
                 else:
-                    e[k] = _handle_missing_params(v, params)
+                    e[k] = _handle_missing_params(v, params, handle_errors)
             return e
         elif isinstance(elt, list):
-            return [_handle_missing_params(e, params) for e in elt]
+            return [_handle_missing_params(e, params, handle_errors) for e in elt]
         else:
             return elt
 
-    query = _handle_missing_params(query, parameters)
+    query = _handle_missing_params(query, parameters, handle_errors)
 
     if parameters is None:
         return query

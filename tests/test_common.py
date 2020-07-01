@@ -1,4 +1,10 @@
-from toucan_connectors.common import apply_query_parameters, nosql_apply_parameters_to_query
+import pytest
+
+from toucan_connectors.common import (
+    NonValidVariable,
+    apply_query_parameters,
+    nosql_apply_parameters_to_query,
+)
 
 
 def test_apply_parameter_to_query_do_nothing():
@@ -175,3 +181,13 @@ def test_render_raw_permission():
         '(indic0 == "0" or indic1 == 1) and ' 'indic2 == "yo_2" and indic_list == [\'0\', 1, \'2\']'
     )
     assert apply_query_parameters(query, params) == expected
+
+
+def test_bad_variable_in_query():
+    """It should thrown a NonValidEndpointVariable exception if bad variable in endpoint"""
+    query = {'url': '/stuff/%(thing)s/foo'}
+    params = {}
+    nosql_apply_parameters_to_query(query, params)
+    with pytest.raises(NonValidVariable) as err:
+        nosql_apply_parameters_to_query(query, params, handle_errors=True)
+    assert str(err.value) == 'Non valid variable thing'

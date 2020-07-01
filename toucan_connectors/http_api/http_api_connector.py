@@ -133,7 +133,7 @@ class HttpAPIConnector(ToucanConnector):
             session = Session()
 
         query = nosql_apply_parameters_to_query(
-            data_source.dict(by_alias=True), data_source.parameters
+            data_source.dict(by_alias=True), data_source.parameters, handle_errors=True
         )
 
         if self.template:
