@@ -1,7 +1,7 @@
 import pytest
 
 from toucan_connectors.common import (
-    NonValidEndpointVariable,
+    NonValidVariable,
     apply_query_parameters,
     nosql_apply_parameters_to_query,
 )
@@ -187,6 +187,7 @@ def test_bad_variable_in_query():
     """It should thrown a NonValidEndpointVariable exception if bad variable in endpoint"""
     query = {'url': '/stuff/%(thing)s/foo'}
     params = {}
-    with pytest.raises(NonValidEndpointVariable) as err:
-        nosql_apply_parameters_to_query(query, params)
-    assert str(err.value) == 'Non valid variable thing in endpoint'
+    nosql_apply_parameters_to_query(query, params)
+    with pytest.raises(NonValidVariable) as err:
+        nosql_apply_parameters_to_query(query, params, handle_errors=True)
+    assert str(err.value) == 'Non valid variable thing'
