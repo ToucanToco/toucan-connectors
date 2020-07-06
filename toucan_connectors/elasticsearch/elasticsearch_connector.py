@@ -137,7 +137,7 @@ class ElasticsearchConnector(ToucanConnector):
                 h['port'] = host.port
 
             if host.username or host.password:
-                h['http_auth'] = f'{host.username}:{host.password}'
+                h['http_auth'] = f'{host.username}:{host.password.get_secret_value()}'
             if host.headers:
                 h['headers'] = host.headers
             connection_params.append(h)
