@@ -3,7 +3,7 @@ from typing import Dict, List
 from toucan_connectors.condition_translator import ConditionTranslator
 
 
-class MongoConditionTranslator(ConditionTranslator):
+class DocumentDBConditionTranslator(ConditionTranslator):
     """
     Utility class to convert a condition object into mongo $match format
     """
