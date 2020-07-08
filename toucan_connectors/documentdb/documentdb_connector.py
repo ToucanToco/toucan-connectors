@@ -237,7 +237,7 @@ class DocumentDBConnector(ToucanConnector):
             data_source_count.query.append(group)
             res_count = self._execute_query(data_source).next()
             res = self._execute_query(data_source).next()
-            total_count = res_count['count'][0]['value'] if len(res_count['count']) > 0 else 0
+            total_count = res_count['count'] if res_count['count'] is not None else 0
             df = pd.DataFrame(res)
         else:
             df = self.get_df(data_source, permissions)
