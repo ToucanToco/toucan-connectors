@@ -231,8 +231,8 @@ class DocumentDBConnector(ToucanConnector):
         limit: Optional[int] = None,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
-        # total_count = MAX_COUNTED_ROWS
-        total_count = self.get_total(DocumentDBDataSource.parse_obj(data_source), permissions)
+        total_count = MAX_COUNTED_ROWS
+#         total_count = self.get_total(DocumentDBDataSource.parse_obj(data_source), permissions)
         data_source = DocumentDBDataSource.parse_obj(data_source)
         
         if offset:
