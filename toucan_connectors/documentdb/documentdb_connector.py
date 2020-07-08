@@ -204,10 +204,12 @@ class DocumentDBConnector(ToucanConnector):
     @decorate_func_with_retry
     def get_total(self, data_source, permissions=None):
         group = {
-            "_id": None,
-            "count": {
-                "$sum": 1
-            },
+            "$group": {
+                "_id": None,
+                "count": {
+                    "$sum": 1
+                }             
+            }
         }
         data_source.query.append(group)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
@@ -229,6 +231,7 @@ class DocumentDBConnector(ToucanConnector):
         limit: Optional[int] = None,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
+        # total_count = MAX_COUNTED_ROWS
         total_count = self.get_total(DocumentDBDataSource.parse_obj(data_source), permissions)
         data_source = DocumentDBDataSource.parse_obj(data_source)
         
