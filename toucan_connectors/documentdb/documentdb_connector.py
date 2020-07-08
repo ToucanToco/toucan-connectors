@@ -201,19 +201,20 @@ class DocumentDBConnector(ToucanConnector):
         data = self._execute_query(data_source)
         return pd.DataFrame(list(data))
     
-    def _count_data(self, data_source):
+    @decorate_func_with_retry
+    def get_total(self, data_source, permissions=None):
         group = {
-            "$group": {
-                "_id": None,
-                "count": {
-                    "$sum": 1
-                }
-            }
+            "_id": None,
+            "count": {
+                "$sum": 1
+            },
         }
         data_source.query.append(group)
+        data_source.query = normalize_query(data_source.query, data_source.parameters)
         data = self._execute_query(data_source).next()
-        return data['count'] if data['count'] is not None else 0 
-
+        total = res['count'] if res['count'] is not None else 0
+        return total      
+    
     @decorate_func_with_retry
     def get_df(self, data_source, permissions=None):
         data_source.query = apply_permissions(data_source.query, permissions)
@@ -229,8 +230,7 @@ class DocumentDBConnector(ToucanConnector):
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = DocumentDBDataSource.parse_obj(data_source)
-        df = self.get_df(data_source, permissions)
-        total_count = len(df)
+        total_count = self.get_total(DocumentDBDataSource.parse_obj(data_source), permissions)
         
         if offset:
             data_source.query.append({'$skip': offset})
