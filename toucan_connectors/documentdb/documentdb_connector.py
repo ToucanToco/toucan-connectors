@@ -220,8 +220,7 @@ class DocumentDBConnector(ToucanConnector):
             data_source.query = apply_permissions(data_source.query, permissions)
             data_source.query = normalize_query(data_source.query, data_source.parameters)
 
-            data_source.query = apply_permissions(data_source.query, permissions)
-            data_source.query = normalize_query(data_source.query, data_source.parameters)
+            data_source_count = DocumentDBDataSource.parse_obj(data_source)
 
             group = {
                 "$group": {
@@ -231,32 +230,15 @@ class DocumentDBConnector(ToucanConnector):
                     }
                 }
             }
-            lookup = {
-                "$lookup": {
-                    "from": data_source.database,
-                    "localField": "tmp",
-                    "foreignField": "tmp",
-                    "as": "df"
-                    }
-            }
-            limit_q = "$count"
+            if offset:
+                data_source.append({'$skip': offset})
             if limit is not None:
-                limit_q = limit
-            project = {
-                "$project": {
-                    "_id": None,
-                    "count": 1, 
-                    "df": {
-                        "$slice": ["$df", offset,  limit_q]
-                    }           
-                }
-            }
-            data_source.query.append(group)
-            data_source.query.append(lookup)
-            data_source.query.append(project)
+                data_source.append({'$limit': limit})   
+            data_source_count.query.append(group)
+            res_count = self._execute_query(data_source).next()
             res = self._execute_query(data_source).next()
-            total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
-            df = pd.DataFrame(res['df'])
+            total_count = res_count['count'][0]['value'] if len(res_count['count']) > 0 else 0
+            df = pd.DataFrame(res)
         else:
             df = self.get_df(data_source, permissions)
             total_count = len(df)
