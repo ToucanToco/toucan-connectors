@@ -231,9 +231,9 @@ class DocumentDBConnector(ToucanConnector):
                 }
             }
             if offset:
-                data_source.append({'$skip': offset})
+                data_source.query.append({'$skip': offset})
             if limit is not None:
-                data_source.append({'$limit': limit})   
+                data_source.query.append({'$limit': limit})   
             data_source_count.query.append(group)
             res_count = self._execute_query(data_source).next()
             res = self._execute_query(data_source).next()
