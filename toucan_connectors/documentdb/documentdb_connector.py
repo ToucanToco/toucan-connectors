@@ -232,6 +232,14 @@ class DocumentDBConnector(ToucanConnector):
                     "df" : {"$push" : "$$ROOT"}
                 }
             }
+            lookup = {
+                "$lookup": {
+                    "from": data_source.database,
+                    "localField": "tmp",
+                    "foreignField": "tmp",
+                    "as": "df"
+                    }
+            }
             limit_q = "$count"
             if limit is not None:
                 limit_q = limit
@@ -245,6 +253,7 @@ class DocumentDBConnector(ToucanConnector):
                 }
             }
             data_source.query.append(group)
+            data_source.query.append(lookup)
             data_source.query.append(project)
             res = self._execute_query(data_source).next()
             total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
