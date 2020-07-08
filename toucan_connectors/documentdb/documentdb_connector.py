@@ -224,11 +224,13 @@ class DocumentDBConnector(ToucanConnector):
             data_source.query = normalize_query(data_source.query, data_source.parameters)
 
             group = {
-                "_id": None,
-                "count": {
-                    "$sum": 1
-                },
-                "df" : {"$push" : "$$ROOT"} 
+                "$group": {
+                    "_id": None,
+                    "count": {
+                        "$sum": 1
+                    },
+                    "df" : {"$push" : "$$ROOT"}
+                }
             }
             limit_q = "$count"
             if limit is not None:
