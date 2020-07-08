@@ -211,7 +211,7 @@ class DocumentDBConnector(ToucanConnector):
         }
         data_source.query.append(group)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
-        data = self._execute_query(data_source).next()
+        res = self._execute_query(data_source).next()
         total = res['count'] if res['count'] is not None else 0
         return total      
     
@@ -229,16 +229,15 @@ class DocumentDBConnector(ToucanConnector):
         limit: Optional[int] = None,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
-        data_source = DocumentDBDataSource.parse_obj(data_source)
         total_count = self.get_total(DocumentDBDataSource.parse_obj(data_source), permissions)
+        data_source = DocumentDBDataSource.parse_obj(data_source)
         
         if offset:
             data_source.query.append({'$skip': offset})
         if limit is not None:
             data_source.query.append({'$limit': limit})
         
-        res = self._execute_query(data_source)
-        df = pd.DataFrame(list(res))
+        df = self.get_df(data_source, permissions)
         return DataSlice(df, total_count)
 
     def get_df_with_regex(
