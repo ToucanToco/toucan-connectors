@@ -228,8 +228,7 @@ class DocumentDBConnector(ToucanConnector):
                     "_id": None,
                     "count": {
                         "$sum": 1
-                    },
-                    "df" : {"$push" : "$$ROOT"}
+                    }
                 }
             }
             lookup = {
