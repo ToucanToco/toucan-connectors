@@ -200,6 +200,19 @@ class DocumentDBConnector(ToucanConnector):
         data_source.query = normalize_query(data_source.query, data_source.parameters)
         data = self._execute_query(data_source)
         return pd.DataFrame(list(data))
+    
+    def _count_data(self, data_source):
+        group = {
+            "$group": {
+                "_id": None,
+                "count": {
+                    "$sum": 1
+                }
+            }
+        }
+        data_source.query.append(group)
+        data = self._execute_query(data_source).next()
+        return data['count'] if data['count'] is not None else 0 
 
     @decorate_func_with_retry
     def get_df(self, data_source, permissions=None):
@@ -216,32 +229,16 @@ class DocumentDBConnector(ToucanConnector):
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = DocumentDBDataSource.parse_obj(data_source)
-        if offset or limit is not None:
-            data_source.query = apply_permissions(data_source.query, permissions)
-            data_source.query = normalize_query(data_source.query, data_source.parameters)
-
-            data_source_count = DocumentDBDataSource.parse_obj(data_source)
-
-            group = {
-                "$group": {
-                    "_id": None,
-                    "count": {
-                        "$sum": 1
-                    }
-                }
-            }
-            if offset:
-                data_source.query.append({'$skip': offset})
-            if limit is not None:
-                data_source.query.append({'$limit': limit})   
-            data_source_count.query.append(group)
-            res_count = self._execute_query(data_source_count).next()
-            res = self._execute_query(data_source)
-            total_count = res_count['count'] if res_count['count'] is not None else 0
-            df = pd.DataFrame(list(res))
-        else:
-            df = self.get_df(data_source, permissions)
-            total_count = len(df)
+        df = self.get_df(data_source, permissions)
+        total_count = len(df)
+        
+        if offset:
+            data_source.query.append({'$skip': offset})
+        if limit is not None:
+            data_source.query.append({'$limit': limit})
+        
+        res = self._execute_query(data_source)
+        df = pd.DataFrame(list(res))
         return DataSlice(df, total_count)
 
     def get_df_with_regex(
