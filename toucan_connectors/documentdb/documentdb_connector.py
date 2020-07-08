@@ -225,20 +225,20 @@ class DocumentDBConnector(ToucanConnector):
 
             group = {
                 "_id": None,
-                "total": {
+                "count": {
                     "$sum": 1
                 },
-                "results" : {"$push" : "$$ROOT"} 
+                "df" : {"$push" : "$$ROOT"} 
             }
-            limit_q = "$total"
+            limit_q = "$count"
             if limit is not None:
                 limit_q = limit
             project = {
                 "$project": {
                     "_id": None,
-                    "total": 1, 
-                    "results": {
-                        "$slice": ["$results", offset,  limit_q]
+                    "count": 1, 
+                    "df": {
+                        "$slice": ["$df", offset,  limit_q]
                     }           
                 }
             }
