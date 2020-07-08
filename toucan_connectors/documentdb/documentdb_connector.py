@@ -10,7 +10,7 @@ from cached_property import cached_property
 from pydantic import Field, SecretStr, create_model, validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
+from toucan_connectors.documentdb.documentdb_translator import DocumentDBConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
     ToucanConnector,
@@ -48,15 +48,15 @@ def apply_permissions(query, permissions_condition: dict):
 
 def validate_database(client, database: str):
     if database not in client.list_database_names():
-        raise UnkwownMongoDatabase(f"Database {database!r} doesn't exist")
+        raise UnkwownDocumentDBDatabase(f"Database {database!r} doesn't exist")
 
 
 def validate_collection(client, database: str, collection: str):
     if collection not in client[database].list_collection_names():
-        raise UnkwownMongoCollection(f"Collection {collection!r} doesn't exist")
+        raise UnkwownDocumentDBCollection(f"Collection {collection!r} doesn't exist")
 
 
-class MongoDataSource(ToucanDataSource):
+class DocumentDBDataSource(ToucanDataSource):
     """Supports simple, multiples and aggregation queries as described in
      [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)"""
 
@@ -64,19 +64,19 @@ class MongoDataSource(ToucanDataSource):
     collection: str = Field(..., description='The name of the collection you want to query')
     query: Union[dict, list] = Field(
         {},
-        description='A mongo query. See more details on the Mongo '
-        'Aggregation Pipeline in the MongoDB documentation',
+        description='A documentdb query. See more details on the DocumentDB '
+        'Aggregation Pipeline in the DocumentDB documentation',
     )
 
     @classmethod
-    def get_form(cls, connector: 'MongoConnector', current_config):
+    def get_form(cls, connector: 'DocumentDBConnector', current_config):
         """
         Method to retrieve the form with a current config
         For example, once the connector is set,
         - we are able to give suggestions for the `database` field
         - if `database` is set, we are able to give suggestions for the `collection` field
         """
-        client = pymongo.MongoClient(**connector._get_mongo_client_kwargs())
+        client = pymongo.MongoClient(**connector._get_documentdb_client_kwargs())
 
         # Add constraints to the schema
         # the key has to be a valid field
@@ -96,10 +96,10 @@ class MongoDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class MongoConnector(ToucanConnector):
-    """ Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
+class DocumentDBConnector(ToucanConnector):
+    """ Retrieve data from a [DocumentDB](https://aws.amazon.com/documentdb/) database."""
 
-    data_source_model: MongoDataSource
+    data_source_model: DocumentDBDataSource
 
     host: str = Field(
         ...,
@@ -121,7 +121,7 @@ class MongoConnector(ToucanConnector):
         return password
 
     def __hash__(self):
-        return hash(id(self)) + hash(json.dumps(self._get_mongo_client_kwargs()))
+        return hash(id(self)) + hash(json.dumps(self._get_documentdb_client_kwargs()))
 
     def __enter__(self):
         return self
@@ -137,16 +137,16 @@ class MongoConnector(ToucanConnector):
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
         return ok_checks + [new_check] + not_validated_checks
 
-    def _get_mongo_client_kwargs(self):
+    def _get_documentdb_client_kwargs(self):
         # We don't want parent class attributes nor the `client` property
         # nor attributes with `None` value
         to_exclude = set(ToucanConnector.__fields__) | {'client'}
-        mongo_client_kwargs = self.dict(exclude=to_exclude, exclude_none=True).copy()
+        documentdb_client_kwargs = self.dict(exclude=to_exclude, exclude_none=True).copy()
 
-        if 'password' in mongo_client_kwargs:
-            mongo_client_kwargs['password'] = mongo_client_kwargs['password'].get_secret_value()
+        if 'password' in documentdb_client_kwargs:
+            documentdb_client_kwargs['password'] = documentdb_client_kwargs['password'].get_secret_value()
 
-        return mongo_client_kwargs
+        return documentdb_client_kwargs
 
     def get_status(self):
         if self.port:
@@ -163,9 +163,9 @@ class MongoConnector(ToucanConnector):
                 return {'status': False, 'details': self._get_details(1, False), 'error': str(e)}
 
         # Check databases access
-        mongo_client_kwargs = self._get_mongo_client_kwargs()
-        mongo_client_kwargs['serverSelectionTimeoutMS'] = 500
-        client = pymongo.MongoClient(**mongo_client_kwargs)
+        documentdb_client_kwargs = self._get_documentdb_client_kwargs()
+        documentdb_client_kwargs['serverSelectionTimeoutMS'] = 500
+        client = pymongo.MongoClient(**documentdb_client_kwargs)
         try:
             client.server_info()
         except pymongo.errors.ServerSelectionTimeoutError as e:
@@ -177,7 +177,7 @@ class MongoConnector(ToucanConnector):
 
     @cached_property
     def client(self):
-        return pymongo.MongoClient(**self._get_mongo_client_kwargs())
+        return pymongo.MongoClient(**self._get_documentdb_client_kwargs())
 
     @lru_cache(maxsize=32)
     def validate_database(self, database: str):
@@ -191,7 +191,7 @@ class MongoConnector(ToucanConnector):
         self.validate_database(database)
         self.validate_collection(database, collection)
 
-    def _execute_query(self, data_source: MongoDataSource):
+    def _execute_query(self, data_source: DocumentDBDataSource):
         self.validate_database_and_collection(data_source.database, data_source.collection)
         col = self.client[data_source.database][data_source.collection]
         return col.aggregate(data_source.query)
@@ -209,31 +209,41 @@ class MongoConnector(ToucanConnector):
     @decorate_func_with_retry
     def get_slice(
         self,
-        data_source: MongoDataSource,
+        data_source: DocumentDBDataSource,
         permissions: Optional[str] = None,
         offset: int = 0,
         limit: Optional[int] = None,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
-        data_source = MongoDataSource.parse_obj(data_source)
+        data_source = DocumentDBDataSource.parse_obj(data_source)
         if offset or limit is not None:
             data_source.query = apply_permissions(data_source.query, permissions)
             data_source.query = normalize_query(data_source.query, data_source.parameters)
 
-            df_facet = []
-            if offset:
-                df_facet.append({'$skip': offset})
+            data_source.query = apply_permissions(data_source.query, permissions)
+            data_source.query = normalize_query(data_source.query, data_source.parameters)
+
+            group = {
+                "_id": None,
+                "total": {
+                    "$sum": 1
+                },
+                "results" : {"$push" : "$$ROOT"} 
+            }
+            limit_q = "$total"
             if limit is not None:
-                df_facet.append({'$limit': limit})
-            facet = {
-                '$facet': {
-                    # counting more than 1M values can be really slow, and the exact number is not that much relevant
-                    'count': [{'$limit': MAX_COUNTED_ROWS}, {'$count': 'value'}],
-                    'df': df_facet,  # df_facet is never empty
+                limit_q = limit
+            project = {
+                "$project": {
+                    "_id": None,
+                    "total": 1, 
+                    "results": {
+                        "$slice": ["$results", offset,  limit_q]
+                    }           
                 }
             }
-            data_source.query.append(facet)
-
+            data_source.query.append(group)
+            data_source.query.append(project)
             res = self._execute_query(data_source).next()
             total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
             df = pd.DataFrame(res['df'])
@@ -244,14 +254,14 @@ class MongoConnector(ToucanConnector):
 
     def get_df_with_regex(
         self,
-        data_source: MongoDataSource,
+        data_source: DocumentDBDataSource,
         field: str,
         regex: Pattern,
         permissions: Optional[str] = None,
         limit: Optional[int] = None,
     ) -> pd.DataFrame:
         # Create a copy in order to keep the original (deepcopy-like)
-        data_source = MongoDataSource.parse_obj(data_source)
+        data_source = DocumentDBDataSource.parse_obj(data_source)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
         data_source.query[0]['$match'] = {
             '$and': [data_source.query[0]['$match']]
@@ -261,7 +271,7 @@ class MongoConnector(ToucanConnector):
 
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):
-        client = pymongo.MongoClient(**self._get_mongo_client_kwargs())
+        client = pymongo.MongoClient(**self._get_documentdb_client_kwargs())
         self.validate_database_and_collection(data_source.database, data_source.collection)
         data_source.query = apply_permissions(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
@@ -280,10 +290,10 @@ class MongoConnector(ToucanConnector):
 
 
 def _format_explain_result(explain_result):
-    """format output of an `explain` mongo command
+    """format output of an `explain` documentdb command
     Return a dictionary with 2 properties:
     - 'details': the origin explain result without the `serverInfo` part
-      to avoid leaing mongo server version number
+      to avoid leaing documentdb server version number
     - 'summary': the list of execution statistics (i.e. drop the details of
        candidate plans)
     if `explain_result` is empty, return `None`
@@ -305,9 +315,9 @@ def _format_explain_result(explain_result):
     return None
 
 
-class UnkwownMongoDatabase(Exception):
+class UnkwownDocumentDBDatabase(Exception):
     """raised when a database does not exist"""
 
 
-class UnkwownMongoCollection(Exception):
+class UnkwownDocumentDBCollection(Exception):
     """raised when a collection is not in the database"""
