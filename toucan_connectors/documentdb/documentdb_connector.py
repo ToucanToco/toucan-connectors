@@ -235,8 +235,8 @@ class DocumentDBConnector(ToucanConnector):
             if limit is not None:
                 data_source.query.append({'$limit': limit})   
             data_source_count.query.append(group)
-            res_count = self._execute_query(data_source).next()
-            res = self._execute_query(data_source).next()
+            res_count = self._execute_query(data_source_count)
+            res = self._execute_query(data_source)
             total_count = res_count['count'] if res_count['count'] is not None else 0
             df = pd.DataFrame(list(res))
         else:
