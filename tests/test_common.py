@@ -1,4 +1,10 @@
-from toucan_connectors.common import nosql_apply_parameters_to_query, render_raw_permissions
+import pytest
+
+from toucan_connectors.common import (
+    NonValidVariable,
+    apply_query_parameters,
+    nosql_apply_parameters_to_query,
+)
 
 
 def test_apply_parameter_to_query_do_nothing():
@@ -10,16 +16,14 @@ def test_apply_parameter_to_query_do_nothing():
     assert res == query
 
 
-def test_apply_parameter_to_query():
-    """
-    It sould work render all parameters
-    """
-    tests = [
+@pytest.mark.parametrize(
+    'query,params,expected',
+    [
         (
-            {'$match': {'domain': 'truc', 'indic': '{{my_indic[0]*my_indic[1]}}'}},  # query
-            {'my_indic': [5, 6]},  # params
+            {'$match': {'domain': 'truc', 'indic': '{{my_indic[0]*my_indic[1]}}'}},
+            {'my_indic': [5, 6]},
             {'$match': {'domain': 'truc', 'indic': 30}},
-        ),  # expected
+        ),
         (
             {'$match': {'domain': 'truc', 'indic': '{%if my_indic%}1{%else%}2{%endif%}'}},
             {'my_indic': False},
@@ -97,18 +101,11 @@ def test_apply_parameter_to_query():
         ),
         ({'data': 1}, {}, {'data': 1}),
         ({'data': '1'}, {}, {'data': '1'}),
-    ]
-    for (query, params, expected) in tests:
-        assert nosql_apply_parameters_to_query(query, params) == expected
-
-
-def test_apply_params_with_missing_param():
-    tests = [
         (
-            {'domain': 'blah', 'country': {'$ne': '%(country)s'}, 'city': '%(city)s'},  # query
-            {'city': 'Paris'},  # params
+            {'domain': 'blah', 'country': {'$ne': '%(country)s'}, 'city': '%(city)s'},
+            {'city': 'Paris'},
             {'domain': 'blah', 'country': {}, 'city': 'Paris'},
-        ),  # expected
+        ),
         (
             [{'$match': {'country': '%(country)s', 'city': 'Test'}}, {'$match': {'b': 1}}],
             {'city': 'Paris'},
@@ -141,9 +138,10 @@ def test_apply_params_with_missing_param():
             {'code': 'Paris_France', 'domain': 'Test'},
         ),
         ({'code': '{{city}}_{{country}}', 'domain': 'Test'}, None, {'domain': 'Test'}),
-    ]
-    for (query, params, expected) in tests:
-        assert nosql_apply_parameters_to_query(query, params) == expected
+    ],
+)
+def test_apply_parameter_to_query(query, params, expected):
+    assert nosql_apply_parameters_to_query(query, params) == expected
 
 
 def test_nosql_apply_parameters_to_query_dot():
@@ -162,7 +160,7 @@ def test_nosql_apply_parameters_to_query_dot():
 
 def test_render_raw_permission_no_params():
     query = '(indic0 == 0 or indic1 == 1)'
-    assert render_raw_permissions(query, None) == query
+    assert apply_query_parameters(query, None) == query
 
 
 def test_render_raw_permission():
@@ -174,4 +172,14 @@ def test_render_raw_permission():
     expected = (
         '(indic0 == "0" or indic1 == 1) and ' 'indic2 == "yo_2" and indic_list == [\'0\', 1, \'2\']'
     )
-    assert render_raw_permissions(query, params) == expected
+    assert apply_query_parameters(query, params) == expected
+
+
+def test_bad_variable_in_query():
+    """It should thrown a NonValidEndpointVariable exception if bad variable in endpoint"""
+    query = {'url': '/stuff/%(thing)s/foo'}
+    params = {}
+    nosql_apply_parameters_to_query(query, params)
+    with pytest.raises(NonValidVariable) as err:
+        nosql_apply_parameters_to_query(query, params, handle_errors=True)
+    assert str(err.value) == 'Non valid variable thing'

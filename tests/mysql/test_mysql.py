@@ -108,21 +108,20 @@ def test_get_status_bad_host(mysql_connector):
         ('Host connection', None),
         ('Authenticated', None),
     ]
-    assert 'not known' in status['error']
+    assert status['error'] is not None
 
 
 def test_get_status_bad_port(mysql_connector):
     mysql_connector.port = 123000
-    assert mysql_connector.get_status() == {
-        'status': False,
-        'details': [
-            ('Hostname resolved', True),
-            ('Port opened', False),
-            ('Host connection', None),
-            ('Authenticated', None),
-        ],
-        'error': 'getsockaddrarg: port must be 0-65535.',
-    }
+    status = mysql_connector.get_status()
+    assert status['status'] is False
+    assert status['details'] == [
+        ('Hostname resolved', True),
+        ('Port opened', False),
+        ('Host connection', None),
+        ('Authenticated', None),
+    ]
+    assert 'port must be 0-65535.' in status['error']
 
 
 def test_get_status_bad_connection(mysql_connector, unused_port, mocker):

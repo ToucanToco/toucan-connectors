@@ -22,7 +22,7 @@ extras_require = {
     'http_api': auth_deps,
     'lightspeed': bearer_deps,
     'mongo': ['pymongo>=3.6.1'],
-    'mssql': ['pymssql>=2.1.3,<3.0'],
+    'mssql': ['pyodbc'],
     'mysql': ['PyMySQL>=0.8.0'],
     'odata': auth_deps + ['tctc_odata'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
@@ -39,19 +39,22 @@ extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 install_requires = [
     'aiohttp',
     'cached_property',
-    'jq',
     'jinja2',
     'pydantic',
-    'requests',
+    'pyjq',
+    'requests<2.24.0',
     'tenacity',
     'toucan_data_sdk',
     'urllib3==1.24.3',
+    'typing-extensions; python_version < "3.8"',
 ]
 
 classifiers = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: BSD License',
     'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
 ]
 
 HERE = Path(__file__).resolve().parent
@@ -59,14 +62,14 @@ HERE = Path(__file__).resolve().parent
 
 def get_static_file_paths():
     pkg = HERE / 'toucan_connectors'
-    paths = pkg.glob(f'**/*')
+    paths = pkg.glob('**/*')
     paths = [str(path.relative_to(pkg)) for path in paths]
     return paths
 
 
 setup(
     name='toucan_connectors',
-    version='0.30.4',
+    version='0.37.5',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',

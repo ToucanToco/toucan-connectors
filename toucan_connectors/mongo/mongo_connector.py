@@ -7,11 +7,10 @@ import pymongo
 from bson.regex import Regex
 from bson.son import SON
 from cached_property import cached_property
-from jq import jq
 from pydantic import Field, SecretStr, create_model, validator
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.mongo.mongo_translator import MongoExpression
+from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
     ToucanConnector,
@@ -19,6 +18,8 @@ from toucan_connectors.toucan_connector import (
     decorate_func_with_retry,
     strlist_to_enum,
 )
+
+MAX_COUNTED_ROWS = 1000001
 
 
 def normalize_query(query, parameters):
@@ -35,9 +36,9 @@ def normalize_query(query, parameters):
     return query
 
 
-def apply_permissions(query, permissions):
-    if permissions:
-        permissions = MongoExpression().parse(permissions)
+def apply_permissions(query, permissions_condition: dict):
+    if permissions_condition:
+        permissions = MongoConditionTranslator.translate(permissions_condition)
         if isinstance(query, dict):
             query = {'$and': [query, permissions]}
         else:
@@ -218,13 +219,21 @@ class MongoConnector(ToucanConnector):
         if offset or limit is not None:
             data_source.query = apply_permissions(data_source.query, permissions)
             data_source.query = normalize_query(data_source.query, data_source.parameters)
-            facet = {'$facet': {'count': data_source.query.copy(), 'df': data_source.query.copy()}}
-            facet['$facet']['count'].append({'$count': 'value'})
+
+            df_facet = []
             if offset:
-                facet['$facet']['df'].append({'$skip': offset})
+                df_facet.append({'$skip': offset})
             if limit is not None:
-                facet['$facet']['df'].append({'$limit': limit})
-            data_source.query = [facet]
+                df_facet.append({'$limit': limit})
+            facet = {
+                '$facet': {
+                    # counting more than 1M values can be really slow, and the exact number is not that much relevant
+                    'count': [{'$limit': MAX_COUNTED_ROWS}, {'$count': 'value'}],
+                    'df': df_facet,  # df_facet is never empty
+                }
+            }
+            data_source.query.append(facet)
+
             res = self._execute_query(data_source).next()
             total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
             df = pd.DataFrame(res['df'])
@@ -257,20 +266,46 @@ class MongoConnector(ToucanConnector):
         data_source.query = apply_permissions(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
 
-        cursor = client[data_source.database].command(
-            command='aggregate',
-            value=data_source.collection,
-            pipeline=data_source.query,
-            explain=True,
+        agg_cmd = SON(
+            [
+                ('aggregate', data_source.collection),
+                ('pipeline', data_source.query),
+                ('cursor', {}),
+            ]
         )
+        result = client[data_source.database].command(
+            command='explain', value=agg_cmd, verbosity='executionStats'
+        )
+        return _format_explain_result(result)
 
-        f = """{
-                    details: (. | del(.serverInfo)),
-                    summary: (.executionStats | del(.executionStages, .allPlansExecution))
-                }"""
-        client.close()
 
-        return jq(f).transform(cursor)
+def _format_explain_result(explain_result):
+    """format output of an `explain` mongo command
+
+    Return a dictionary with 2 properties:
+
+    - 'details': the origin explain result without the `serverInfo` part
+      to avoid leaing mongo server version number
+    - 'summary': the list of execution statistics (i.e. drop the details of
+       candidate plans)
+
+    if `explain_result` is empty, return `None`
+    """
+    if explain_result:
+        explain_result.pop('serverInfo', None)
+        if 'stages' in explain_result:
+            stats = [
+                stage['$cursor']['executionStats']
+                for stage in explain_result['stages']
+                if '$cursor' in stage
+            ]
+        else:
+            stats = [explain_result['executionStats']]
+        return {
+            'details': explain_result,
+            'summary': stats,
+        }
+    return None
 
 
 class UnkwownMongoDatabase(Exception):

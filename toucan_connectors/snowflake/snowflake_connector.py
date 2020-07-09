@@ -15,7 +15,7 @@ class Path(str):
     @classmethod
     def validate(cls, v):
         if not path.exists(v):
-            raise ValueError(f'path does not exists: v')
+            raise ValueError(f'path does not exists: {v}')
         return v
 
 

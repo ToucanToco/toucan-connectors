@@ -1,99 +1,61 @@
-import json
-from ast import USub
+from typing import Dict, List
 
-from toucan_connectors.common import Column, Expression, Operator, Value
-
-
-class MongoExpression(Expression):
-    def BoolOp(self, op):
-        return {self.translate(op.op): list(map(self.translate, op.values))}
-
-    def And(self, op):
-        return '$and'
-
-    def Or(self, op):
-        return '$or'
-
-    def Compare(self, compare):
-        field = MongoColumn().translate(compare.left)
-        operator = compare.ops[0]
-        right = compare.comparators[0]
-        return {field: MongoOperator().resolve(operator)(right)}
+from toucan_connectors.condition_translator import ConditionTranslator
 
 
-class MongoOperator(Operator):
-    def Eq(self, node):
-        """=="""
-        return MongoValue().translate(node)
+class MongoConditionTranslator(ConditionTranslator):
+    """
+    Utility class to convert a condition object into mongo $match format
+    """
 
-    def NotEq(self, node):
-        """!="""
-        return {'$ne': MongoValue().translate(node)}
+    @classmethod
+    def join_clauses(cls, clauses: List[dict], logical_operator: str):
+        return {f'${logical_operator}': clauses}
 
-    def In(self, node):
-        """in"""
-        return {'$in': MongoValue().translate(node)}
+    @classmethod
+    def EQUAL(cls, column, value) -> Dict[str, dict]:
+        return {column: {'$eq': value}}
 
-    def NotIn(self, node):
-        """not in"""
-        return {'$nin': MongoValue().translate(node)}
+    @classmethod
+    def NOT_EQUAL(cls, column, value) -> Dict[str, dict]:
+        return {column: {'$ne': value}}
 
-    def Gt(self, node):
-        """>"""
-        return {'$gt': MongoValue().translate(node)}
+    @classmethod
+    def LOWER_THAN(cls, column, value) -> Dict[str, dict]:
+        return {column: {'$lt': value}}
 
-    def Lt(self, node):
-        """<"""
-        return {'$lt': MongoValue().translate(node)}
+    @classmethod
+    def LOWER_THAN_EQUAL(cls, column, value) -> Dict[str, dict]:
+        return {column: {'$lte': value}}
 
-    def GtE(self, node):
-        """>="""
-        return {'$gte': MongoValue().translate(node)}
+    @classmethod
+    def GREATER_THAN(cls, column, value) -> Dict[str, dict]:
+        return {column: {'$gt': value}}
 
-    def LtE(self, node):
-        """<="""
-        return {'$lte': MongoValue().translate(node)}
+    @classmethod
+    def GREATER_THAN_EQUAL(cls, column, value) -> Dict[str, dict]:
+        return {column: {'$gte': value}}
 
+    @classmethod
+    def IN(cls, column, values) -> Dict[str, dict]:
+        return {column: {'$in': values}}
 
-class MongoColumn(Column):
-    def Name(self, node):
-        return node.id
+    @classmethod
+    def NOT_IN(cls, column, values) -> Dict[str, dict]:
+        return {column: {'$nin': values}}
 
-    def Str(self, node):
-        return node.s
+    @classmethod
+    def MATCHES(cls, column, value) -> Dict[str, dict]:
+        return {column: {'$regex': value}}
 
+    @classmethod
+    def NOT_MATCHES(cls, column, value) -> Dict[str, dict]:
+        return {column: {'$not': {'$regex': value}}}
 
-class MongoValue(Value):
-    SPECIAL_VALUES = {'null': None, 'false': False, 'true': True}
+    @classmethod
+    def IS_NULL(cls, column, value=None) -> Dict[str, dict]:
+        return {column: {'$exists': False}}
 
-    def Name(self, node):
-        if node.id in self.SPECIAL_VALUES:
-            return self.SPECIAL_VALUES[node.id]
-        else:
-            return node.id
-
-    def Str(self, node):
-        return node.s
-
-    def Num(self, node):
-        return node.n
-
-    def List(self, node):
-        return list(map(self.translate, node.elts))
-
-    def UnaryOp(self, op):
-        value = self.translate(op.operand)
-        if isinstance(op.op, USub):
-            value = -value
-        return value
-
-    def Set(self, node):
-        elts = [self.translate(elt) for elt in node.elts]
-        return '{' + ', '.join(elts) + '}'
-
-    def Subscript(self, node):
-        indice = json.dumps(self.translate(node.slice))
-        return self.translate(node.value) + '[' + indice + ']'
-
-    def Index(self, node):
-        return self.translate(node.value)
+    @classmethod
+    def IS_NOT_NULL(cls, column, value=None) -> Dict[str, dict]:
+        return {column: {'$exists': True}}

@@ -49,7 +49,9 @@ DATA_SOURCES: [
 ]
 ```
 
-## Note
+## Notes
+
+### Context manager usage
 
 The Mongo connector can be used as a context manager to avoid opening
 and closing a connection to a same database.
@@ -68,3 +70,9 @@ with MongoConnector(name='mycon', host='myhost', port=27017) as con:
         datasource = MongoDataSource(collection='test_col', query=query)
         con.get_df(datasource)
 ```
+
+### Document count limit
+
+The Mongo connectors limits the number of counted documents to one million, to
+avoid scanning all results of a very large query at each `get_slice` call.
+A count of 1M and 1 means that there is more than one million results.

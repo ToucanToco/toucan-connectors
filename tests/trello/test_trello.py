@@ -59,7 +59,7 @@ def test_get_df():
     responses.add(
         responses.GET,
         f'{baseroute}/cards?key=&token=&fields=name&fields=url&'
-        'fields=idList&fields=labels&fields=idMembers&customFieldItems=true',
+        'fields=idList&fields=labels&fields=idMembers&customFieldItems=true&filter=open',
         json=mock_trello_api_json_responses['cards_1'],
         status=200,
     )
@@ -129,7 +129,7 @@ def test_get_df_with_set_of_fields():
     responses.add(
         responses.GET,
         f'{baseroute}/cards?{default_param}fields=name&fields=idList'
-        '&fields=idMembers&customFieldItems=false',
+        '&fields=idMembers&customFieldItems=false&filter=open',
         json=mock_trello_api_json_responses['cards_2'],
         status=200,
     )

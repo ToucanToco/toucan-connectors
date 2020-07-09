@@ -1,12 +1,14 @@
 import ast
+import asyncio
 import re
-from abc import ABC, ABCMeta, abstractmethod
 from copy import deepcopy
 
+import pyjq
 from jinja2 import Environment, StrictUndefined, Template, meta
-from jq import jq
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
+
+# Query interpolation
 
 RE_PARAM = r'%\(([^(%\()]*)\)s'
 RE_JINJA = r'{{([^({{)}]*)}}'
@@ -21,7 +23,11 @@ RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
 
 
-def nosql_apply_parameters_to_query(query, parameters):
+class NonValidVariable(Exception):
+    """ Error thrown for a non valid variable in endpoint """
+
+
+def nosql_apply_parameters_to_query(query, parameters, handle_errors=False):
     """
     WARNING : DO NOT USE THIS WITH VARIANTS OF SQL
     Instead use your client library parameter substitution method.
@@ -84,7 +90,7 @@ def nosql_apply_parameters_to_query(query, parameters):
         else:
             return query
 
-    def _handle_missing_params(elt, params):
+    def _handle_missing_params(elt, params, handle_errors):
         """
         Remove a dictionary key if its value has a missing parameter.
         This is used to support the __VOID__ syntax, specific at Toucan Toco :
@@ -100,20 +106,22 @@ def nosql_apply_parameters_to_query(query, parameters):
                         try:
                             Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
                         except Exception:
+                            if handle_errors:
+                                raise NonValidVariable(f'Non valid variable {m}')
                             missing_params.append(m)
                     if any(missing_params):
                         continue
                     else:
                         e[k] = v
                 else:
-                    e[k] = _handle_missing_params(v, params)
+                    e[k] = _handle_missing_params(v, params, handle_errors)
             return e
         elif isinstance(elt, list):
-            return [_handle_missing_params(e, params) for e in elt]
+            return [_handle_missing_params(e, params, handle_errors) for e in elt]
         else:
             return elt
 
-    query = _handle_missing_params(query, parameters)
+    query = _handle_missing_params(query, parameters, handle_errors)
 
     if parameters is None:
         return query
@@ -122,7 +130,13 @@ def nosql_apply_parameters_to_query(query, parameters):
     return query
 
 
-def render_raw_permissions(query, parameters):
+def apply_query_parameters(query: str, parameters: dict) -> str:
+    """
+    Apply parameters to query
+
+    Interpolate the query, which is a Jinja templates, with the provided parameters.
+    """
+
     def _flatten_dict(p, parent_key=''):
         new_p = {}
         for k, v in deepcopy(p).items():
@@ -155,122 +169,11 @@ def render_raw_permissions(query, parameters):
     return Template(query).render(parameters)
 
 
-class AstTranslator(ABC):
-    def resolve(self, elt):
-        elt_name = elt.__class__.__name__
-        try:
-            method = getattr(self, elt_name)
-        except AttributeError:
-            raise Exception(f'Missing method for {elt_name}')
-        return method
-
-    def translate(self, elt):
-        return self.resolve(elt)(elt)
-
-    def parse(self, expr):
-        # Replace ` by ' because pandas.query like expressions (e.g '(`a` == 1)')
-        # are not valid python expressions:
-        expr = expr.replace('`', '"')
-        ex = ast.parse(expr, mode='eval')
-        return self.translate(ex.body)
-
-
-class Expression(AstTranslator, metaclass=ABCMeta):
-    @abstractmethod
-    def BoolOp(self, op):
-        """Boolean expressions with or/and """
-
-    @abstractmethod
-    def And(self, op):
-        """Boolean operator and """
-
-    @abstractmethod
-    def Or(self, op):
-        """Boolean operator and """
-
-    @abstractmethod
-    def Compare(self, compare):
-        """Expression with left, operator and right elements"""
-
-
-class Operator(AstTranslator, metaclass=ABCMeta):
-    @abstractmethod
-    def Eq(self, node):
-        """Equal operator"""
-
-    @abstractmethod
-    def NotEq(self, node):
-        """Not equal operator"""
-
-    @abstractmethod
-    def In(self, node):
-        """In operator"""
-
-    @abstractmethod
-    def NotIn(self, node):
-        """Not in operator"""
-
-    @abstractmethod
-    def Gt(self, node):
-        """Greater than operator"""
-
-    @abstractmethod
-    def Lt(self, node):
-        """Less than operator"""
-
-    @abstractmethod
-    def GtE(self, node):
-        """Greater than or equal operator"""
-
-    @abstractmethod
-    def LtE(self, node):
-        """Less than or equal operator"""
-
-
-class Column(AstTranslator, metaclass=ABCMeta):
-    def Name(self, node):
-        """Column name"""
-
-    def Str(self, node):
-        """Column name as str"""
-
-
-class Value(AstTranslator, metaclass=ABCMeta):
-    @abstractmethod
-    def Name(self, node):
-        """Var field"""
-
-    @abstractmethod
-    def Str(self, node):
-        """String field"""
-
-    @abstractmethod
-    def Num(self, node):
-        """String field"""
-
-    @abstractmethod
-    def List(self, node):
-        """List field"""
-
-    @abstractmethod
-    def UnaryOp(self, op):
-        """Value with unary operator +/-"""
-
-    @abstractmethod
-    def Set(self, node):
-        """Set (jinja parameters)"""
-
-    @abstractmethod
-    def Subscript(self, node):
-        """List or Dict call (jinja parameters)"""
-
-    @abstractmethod
-    def Index(self, node):
-        """Indice in list or dict (jinja parameters)"""
+# jq filtering
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
-    data = jq(jq_filter).transform(data, multiple_output=True)
+    data = pyjq.all(jq_filter, data)
 
     # jq 'multiple outout': the data is already presented as a list of rows
     multiple_output = len(data) == 1 and isinstance(data[0], list)
@@ -290,3 +193,14 @@ FilterSchema = Field(
     'library called jq, we suggest the refer to the dedicated '
     '<a href="https://stedolan.github.io/jq/manual/">documentation</a>',
 )
+
+
+def get_loop():
+    """Sets up event loop"""
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    return loop

@@ -13,6 +13,7 @@ from toucan_connectors.mongo.mongo_connector import (
     MongoDataSource,
     UnkwownMongoCollection,
     UnkwownMongoDatabase,
+    _format_explain_result,
     normalize_query,
 )
 
@@ -195,20 +196,24 @@ def test_get_df_live(mongo_connector, mongo_datasource):
 
 def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    df = mongo_connector.get_df(datasource, permissions='country=="France"')
+    df = mongo_connector.get_df(
+        datasource, permissions={'column': 'country', 'operator': 'eq', 'value': 'France'}
+    )
     expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
     assert datasource.query == [
-        {'$match': {'$and': [{'domain': 'domain1'}, {'country': 'France'}]}}
+        {'$match': {'$and': [{'domain': 'domain1'}, {'country': {'$eq': 'France'}}]}}
     ]
     assert df.shape == (1, 5)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
     assert df[['country', 'language', 'value']].equals(expected)
 
     datasource = mongo_datasource(collection='test_col', query=[{'$match': {'domain': 'domain1'}}])
-    df = mongo_connector.get_df(datasource, permissions='country=="France"')
+    df = mongo_connector.get_df(
+        datasource, permissions={'column': 'country', 'operator': 'eq', 'value': 'France'}
+    )
     expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
     assert datasource.query == [
-        {'$match': {'$and': [{'domain': 'domain1'}, {'country': 'France'}]}}
+        {'$match': {'$and': [{'domain': 'domain1'}, {'country': {'$eq': 'France'}}]}}
     ]
     assert df.shape == (1, 5)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
@@ -278,6 +283,24 @@ def test_get_slice_empty(mongo_connector, mongo_datasource):
     df, count = mongo_connector.get_slice(datasource, limit=1)
     assert count == 0
     assert df.shape == (0, 0)
+
+
+def test_get_slice_max_count(mongo_connector, mongo_datasource, mocker):
+    """
+    It should limit mongo's count operation to 1M rows
+
+    We're not going to insert a million rows in mongo just for this test,
+    so we mock the execution of the query.
+    """
+    aggregate = mocker.spy(pymongo.collection.Collection, 'aggregate')
+
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'unknown'})
+    df, count = mongo_connector.get_slice(datasource, limit=50)
+
+    aggregate.assert_called_once()
+    # count facet must be limited
+    assert '$limit' in aggregate.call_args[0][1][1]['$facet']['count'][0]
+    assert aggregate.call_args[0][1][1]['$facet']['count'][0]['$limit'] > 0
 
 
 def test_get_df_with_regex(mongo_connector, mongo_datasource):
@@ -364,16 +387,15 @@ def test_status_bad_port(mongo_connector):
 
 def test_status_bad_port2(mongo_connector):
     mongo_connector.port = 123000
-    assert mongo_connector.get_status() == {
-        'status': False,
-        'details': [
-            ('Hostname resolved', True),
-            ('Port opened', False),
-            ('Host connection', None),
-            ('Authenticated', None),
-        ],
-        'error': 'getsockaddrarg: port must be 0-65535.',
-    }
+    status = mongo_connector.get_status()
+    assert status['status'] is False
+    assert status['details'] == [
+        ('Hostname resolved', True),
+        ('Port opened', False),
+        ('Host connection', None),
+        ('Authenticated', None),
+    ]
+    assert 'port must be 0-65535.' in status['error']
 
 
 def test_status_unreachable(mongo_connector, mocker):
@@ -485,3 +507,100 @@ def test_validate_cache(mongo_connector):
     con2 = con1.copy()
     with pytest.raises(UnkwownMongoDatabase):
         con2.validate_database('toucan')
+
+
+def test_format_no_explain_result():
+    """It should return None on empty result"""
+    assert _format_explain_result({}) is None
+    assert _format_explain_result(None) is None
+
+
+def test_format_no_stage_explain_result():
+    """It should handle explain result without 'stages' entry"""
+    explain_result = {
+        'executionStats': {'foo': 'bar'},
+        'ok': 1.0,
+        'queryPlanner': {'winningPlan': {}},
+        'serverInfo': {
+            'gitVersion': '20364840b8f1af16917e4c23c1b5f5efd8b352f8',
+            'host': '24a5e90be103',
+            'port': 27017,
+            'version': '4.2.6',
+        },
+    }
+    assert _format_explain_result(explain_result) == {
+        'details': {
+            'executionStats': {'foo': 'bar'},
+            'ok': 1.0,
+            'queryPlanner': {'winningPlan': {}},
+        },
+        'summary': [{'foo': 'bar'}],
+    }
+
+
+def test_format_stages_explain_result():
+    """It should handle explain results with 'stages' entries"""
+    explain_result = {
+        'stages': [
+            {
+                '$cursor': {
+                    'query': {},
+                    'queryPlanner': {
+                        'plannerVersion': 1,
+                        'namespace': 'database.collection',
+                        'parsedQuery': {},
+                        'winningPlan': {},
+                    },
+                    'executionStats': {
+                        'executionSuccess': True,
+                        'nReturned': 5815,
+                        'executionTimeMillis': 5271,
+                        'totalKeysExamined': 1432800,
+                        'totalDocsExamined': 1432799,
+                        'executionStages': {'stage': 'FETCH', 'inputStage': {}},
+                    },
+                },
+            },
+            {'$group': {}},
+            {'$project': {}},
+        ],
+        'ok': 1,
+    }
+    assert _format_explain_result(explain_result) == {
+        'details': {
+            'ok': 1,
+            'stages': [
+                {
+                    '$cursor': {
+                        'executionStats': {
+                            'executionStages': {'inputStage': {}, 'stage': 'FETCH'},
+                            'executionSuccess': True,
+                            'executionTimeMillis': 5271,
+                            'nReturned': 5815,
+                            'totalDocsExamined': 1432799,
+                            'totalKeysExamined': 1432800,
+                        },
+                        'query': {},
+                        'queryPlanner': {
+                            'namespace': 'database.collection',
+                            'parsedQuery': {},
+                            'plannerVersion': 1,
+                            'winningPlan': {},
+                        },
+                    },
+                },
+                {'$group': {}},
+                {'$project': {}},
+            ],
+        },
+        'summary': [
+            {
+                'executionStages': {'inputStage': {}, 'stage': 'FETCH'},
+                'executionSuccess': True,
+                'executionTimeMillis': 5271,
+                'nReturned': 5815,
+                'totalDocsExamined': 1432799,
+                'totalKeysExamined': 1432800,
+            },
+        ],
+    }

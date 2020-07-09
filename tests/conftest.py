@@ -147,8 +147,8 @@ def bearer_api_key():
 
 
 @pytest.fixture
-def bearer_auth_id(bearer_api_key):
-    bearer_auth_id = getenv('BEARER_AUTH_ID')
-    if not bearer_auth_id:
-        pytest.skip("'BEARER_AUTH_ID' is not set")
-    return bearer_auth_id
+def bearer_aircall_auth_id(bearer_api_key):
+    bearer_aircall_auth_id = getenv('BEARER_AIRCALL_AUTH_ID')
+    if not bearer_aircall_auth_id:
+        pytest.skip("'BEARER_AIRCALL_AUTH_ID' is not set")
+    return bearer_aircall_auth_id

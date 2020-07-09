@@ -1,9 +1,9 @@
 from typing import List
 
 import pandas as pd
+import pyjq
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from jq import jq
 from pandas.io.json import json_normalize
 from pydantic import BaseModel
 
@@ -67,7 +67,7 @@ class GoogleMyBusinessConnector(ToucanConnector):
         else:
             # retrieve all locations:
             locations = service.accounts().locations().list(parent=name).execute()
-            location_names = [l['name'] for l in locations['locations']]
+            location_names = [loc['name'] for loc in locations['locations']]
 
         query = {
             'locationNames': location_names,
@@ -93,8 +93,7 @@ class GoogleMyBusinessConnector(ToucanConnector):
                       {"metric": $mv.metric} * $mv.totalValue
                     end
         """
-
-        res = jq(f).transform(location_metrics, multiple_output=True)
+        res = pyjq.all(f, location_metrics)
         df = json_normalize(res)
 
         return df

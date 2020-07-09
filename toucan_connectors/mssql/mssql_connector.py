@@ -1,5 +1,5 @@
 import pandas as pd
-import pymssql
+import pyodbc
 from pydantic import Field, SecretStr, constr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -42,20 +42,25 @@ class MSSQLConnector(ToucanConnector):
     )
 
     def get_connection_params(self, database):
+        server = self.host
+        if server == 'localhost':
+            server = '127.0.0.1'  # localhost is not understood by pyodbc
+        if self.port is not None:
+            server += f',{self.port}'
         con_params = {
-            'server': self.host,
-            'user': self.user,
+            'driver': '{ODBC Driver 17 for SQL Server}',
+            'server': server,
             'database': database,
+            'user': self.user,
             'password': self.password.get_secret_value() if self.password else None,
-            'port': self.port,
-            'login_timeout': self.connect_timeout,
+            'timeout': self.connect_timeout,
             'as_dict': True,
         }
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _retrieve_data(self, datasource):
-        connection = pymssql.connect(**self.get_connection_params(datasource.database))
+        connection = pyodbc.connect(**self.get_connection_params(datasource.database))
         df = pd.read_sql(datasource.query, con=connection)
 
         connection.close()
