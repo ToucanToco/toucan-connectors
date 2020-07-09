@@ -16,16 +16,14 @@ def test_apply_parameter_to_query_do_nothing():
     assert res == query
 
 
-def test_apply_parameter_to_query():
-    """
-    It should work render all parameters
-    """
-    tests = [
+@pytest.mark.parametrize(
+    'query,params,expected',
+    [
         (
-            {'$match': {'domain': 'truc', 'indic': '{{my_indic[0]*my_indic[1]}}'}},  # query
-            {'my_indic': [5, 6]},  # params
+            {'$match': {'domain': 'truc', 'indic': '{{my_indic[0]*my_indic[1]}}'}},
+            {'my_indic': [5, 6]},
             {'$match': {'domain': 'truc', 'indic': 30}},
-        ),  # expected
+        ),
         (
             {'$match': {'domain': 'truc', 'indic': '{%if my_indic%}1{%else%}2{%endif%}'}},
             {'my_indic': False},
@@ -103,18 +101,11 @@ def test_apply_parameter_to_query():
         ),
         ({'data': 1}, {}, {'data': 1}),
         ({'data': '1'}, {}, {'data': '1'}),
-    ]
-    for (query, params, expected) in tests:
-        assert nosql_apply_parameters_to_query(query, params) == expected
-
-
-def test_apply_params_with_missing_param():
-    tests = [
         (
-            {'domain': 'blah', 'country': {'$ne': '%(country)s'}, 'city': '%(city)s'},  # query
-            {'city': 'Paris'},  # params
+            {'domain': 'blah', 'country': {'$ne': '%(country)s'}, 'city': '%(city)s'},
+            {'city': 'Paris'},
             {'domain': 'blah', 'country': {}, 'city': 'Paris'},
-        ),  # expected
+        ),
         (
             [{'$match': {'country': '%(country)s', 'city': 'Test'}}, {'$match': {'b': 1}}],
             {'city': 'Paris'},
@@ -147,9 +138,10 @@ def test_apply_params_with_missing_param():
             {'code': 'Paris_France', 'domain': 'Test'},
         ),
         ({'code': '{{city}}_{{country}}', 'domain': 'Test'}, None, {'domain': 'Test'}),
-    ]
-    for (query, params, expected) in tests:
-        assert nosql_apply_parameters_to_query(query, params) == expected
+    ],
+)
+def test_apply_parameter_to_query(query, params, expected):
+    assert nosql_apply_parameters_to_query(query, params) == expected
 
 
 def test_nosql_apply_parameters_to_query_dot():
