@@ -13,8 +13,8 @@ MAX_COUNTED_ROWS = 1000001
 class DocumentDBConnector(MongoConnector):
     """ Retrieve data from a [DocumentDB](https://aws.amazon.com/documentdb/) database."""
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
     
     @decorate_func_with_retry
     def get_slice(
