@@ -217,7 +217,7 @@ class MongoConnector(ToucanConnector):
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
         if client.server_info().get('storageEngines') is not None:
-            if offset or limit is not None and:
+            if offset or limit is not None:
                 data_source.query = apply_permissions(data_source.query, permissions)
                 data_source.query = normalize_query(data_source.query, data_source.parameters)
 
