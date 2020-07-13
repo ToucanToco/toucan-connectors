@@ -207,8 +207,26 @@ class MongoConnector(ToucanConnector):
         return self._retrieve_data(data_source)
 
     def is_non_geniune(self):
-        # Detect Non-Geniune mongoDB like documentDB
-        return False if self.client.server_info().get('storageEngines') else True
+        # Detect Non-Geniune mongoDB like documentDB or cosmosDB like in mongo compas https://github.com/mongodb-js/data-service/blob/master/lib/instance-detail-helper.js
+        is_geniune = True
+        
+        # cosmosDB detection
+        try:
+            build_info = self.client.admin.command("buildinfo")
+            if build_info is None or buildInfo.get('_t') is not None:
+                is_geniune = False
+        except:
+            is_geniune = False
+
+        # documentDB detection
+        try:
+            get_cmd_line_opts = client.admin.command("getCmdLineOpts")
+            if get_cmd_line_opts is None:
+                is_geniune = False
+        except:
+            is_geniune = False
+            
+        return is_geniune
         
     @decorate_func_with_retry
     def get_slice(
