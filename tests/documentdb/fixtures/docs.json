@@ -1,0 +1,20 @@
+[
+  {
+    "domain": "domain1",
+    "country": "France",
+    "language": "French",
+    "value": 20
+  },
+  {
+    "domain": "domain1",
+    "country": "England",
+    "language": "English",
+    "value": 14
+  },
+  {
+    "domain": "domain1",
+    "country": "Germany",
+    "language": "German",
+    "value": 17
+  }
+]
