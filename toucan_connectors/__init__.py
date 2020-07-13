@@ -17,7 +17,7 @@ CONNECTORS_REGISTRY = {
         'logo': 'aircall/Aircall.svg',
     },
     'AWSDocumentDB': {
-        'connector': 'documentdb.documentdb_connector.DocumentDBConnector',
+        'connector': 'mongo.mongo_connector.MongoConnector',
         'label': 'Amazon Document DB',
         'logo': 'aws/aws.png',
     },

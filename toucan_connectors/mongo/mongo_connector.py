@@ -216,30 +216,38 @@ class MongoConnector(ToucanConnector):
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
-        if offset or limit is not None:
-            data_source.query = apply_permissions(data_source.query, permissions)
-            data_source.query = normalize_query(data_source.query, data_source.parameters)
+        if client.server_info().get('storageEngines') is not None:
+            if offset or limit is not None and:
+                data_source.query = apply_permissions(data_source.query, permissions)
+                data_source.query = normalize_query(data_source.query, data_source.parameters)
 
-            df_facet = []
-            if offset:
-                df_facet.append({'$skip': offset})
-            if limit is not None:
-                df_facet.append({'$limit': limit})
-            facet = {
-                '$facet': {
-                    # counting more than 1M values can be really slow, and the exact number is not that much relevant
-                    'count': [{'$limit': MAX_COUNTED_ROWS}, {'$count': 'value'}],
-                    'df': df_facet,  # df_facet is never empty
+                df_facet = []
+                if offset:
+                    df_facet.append({'$skip': offset})
+                if limit is not None:
+                    df_facet.append({'$limit': limit})
+                facet = {
+                    '$facet': {
+                        # counting more than 1M values can be really slow, and the exact number is not that much relevant
+                        'count': [{'$limit': MAX_COUNTED_ROWS}, {'$count': 'value'}],
+                        'df': df_facet,  # df_facet is never empty
+                    }
                 }
-            }
-            data_source.query.append(facet)
+                data_source.query.append(facet)
 
-            res = self._execute_query(data_source).next()
-            total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
-            df = pd.DataFrame(res['df'])
+                res = self._execute_query(data_source).next()
+                total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
+                df = pd.DataFrame(res['df'])
+            else:
+                df = self.get_df(data_source, permissions)
+                total_count = len(df)
         else:
+            total_count = MAX_COUNTED_ROWS
+            if offset:
+                data_source.query.append({'$skip': offset})
+            if limit is not None:
+                data_source.query.append({'$limit': limit})
             df = self.get_df(data_source, permissions)
-            total_count = len(df)
         return DataSlice(df, total_count)
 
     def get_df_with_regex(
