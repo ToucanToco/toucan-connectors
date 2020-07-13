@@ -226,7 +226,7 @@ class MongoConnector(ToucanConnector):
         except:
             is_geniune = False
             
-        return is_geniune
+        return not is_geniune
         
     @decorate_func_with_retry
     def get_slice(
