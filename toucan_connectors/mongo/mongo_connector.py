@@ -101,6 +101,7 @@ class MongoConnector(ToucanConnector):
 
     data_source_model: MongoDataSource
 
+    non_genuine_db = False
     host: str = Field(
         ...,
         description='The domain name (preferred option as more dynamic) or '
@@ -206,6 +207,10 @@ class MongoConnector(ToucanConnector):
         data_source.query = apply_permissions(data_source.query, permissions)
         return self._retrieve_data(data_source)
 
+    def is_non_geniune(self):
+        # Detect Non-Geniune mongoDB like documentDB
+        return False if self.client.server_info().get('storageEngines') else True
+        
     @decorate_func_with_retry
     def get_slice(
         self,
@@ -216,8 +221,8 @@ class MongoConnector(ToucanConnector):
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
-        if client.server_info().get('storageEngines') is None:
-            # Detect documentDB or Non-Geniune mongoDB 
+        if self.is_non_geniune() is True:
+            # specific code for Non-Geniune mongoDB who don't have $facet like documentDB or  CosmosDB
             total_count = MAX_COUNTED_ROWS
             if offset:
                 data_source.query.append({'$skip': offset})
