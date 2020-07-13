@@ -101,7 +101,6 @@ class MongoConnector(ToucanConnector):
 
     data_source_model: MongoDataSource
 
-    non_genuine_db = False
     host: str = Field(
         ...,
         description='The domain name (preferred option as more dynamic) or '
