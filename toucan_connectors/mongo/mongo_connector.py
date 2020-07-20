@@ -206,27 +206,27 @@ class MongoConnector(ToucanConnector):
         data_source.query = apply_permissions(data_source.query, permissions)
         return self._retrieve_data(data_source)
 
-    def is_non_geniune(self):
-        # Detect Non-Geniune mongoDB like documentDB or cosmosDB like in mongo compas https://github.com/mongodb-js/data-service/blob/master/lib/instance-detail-helper.js
-        is_geniune = True
+    def is_non_genuine(self):
+        # Detect Non-Genuine mongoDB like documentDB or cosmosDB like in mongo compas https://github.com/mongodb-js/data-service/blob/master/lib/instance-detail-helper.js
+        is_genuine = True
         
         # cosmosDB detection
         try:
             build_info = self.client.admin.command("buildinfo")
             if build_info is None or buildInfo.get('_t') is not None:
-                is_geniune = False
+                is_genuine = False
         except:
-            is_geniune = False
+            is_genuine = False
 
         # documentDB detection
         try:
             get_cmd_line_opts = client.admin.command("getCmdLineOpts")
             if get_cmd_line_opts is None:
-                is_geniune = False
+                is_genuine = False
         except:
-            is_geniune = False
+            is_genuine = False
             
-        return not is_geniune
+        return not is_genuine
         
     @decorate_func_with_retry
     def get_slice(
@@ -238,8 +238,8 @@ class MongoConnector(ToucanConnector):
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
-        if self.is_non_geniune() is True:
-            # specific code for Non-Geniune mongoDB who don't have $facet like documentDB or  CosmosDB
+        if self.is_non_genuine() is True:
+            # specific code for Non-Genuine mongoDB who don't have $facet like documentDB or  CosmosDB
             total_count = MAX_COUNTED_ROWS
             if offset:
                 data_source.query.append({'$skip': offset})
