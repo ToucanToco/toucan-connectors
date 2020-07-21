@@ -7,7 +7,7 @@ if [[ -e ~/oracle-installed ]]; then
 fi
 
 apt-get update
-apt-get install -fyq libaio1 curl
+apt-get install -fyq libaio1 curl wget
 mkdir -p /opt/oracle
 curl -s 'https://raw.githubusercontent.com/circulosmeos/gdown.pl/master/gdown.pl' -o /tmp/gdown.pl
 chmod +x /tmp/gdown.pl
