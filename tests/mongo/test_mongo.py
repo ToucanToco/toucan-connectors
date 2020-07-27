@@ -434,8 +434,10 @@ def test_get_form_empty_query(mongo_connector):
     current_config = {}
     form = MongoDataSource.get_form(mongo_connector, current_config)
     assert form['required'] == ['domain', 'name', 'database', 'collection']
-    assert form['properties']['database'] == {
-        'title': 'Database',
+    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
+    assert form['definitions']['database'] == {
+        'title': 'database',
+        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['admin', 'config', 'local', 'toucan'],
     }
@@ -458,13 +460,17 @@ def test_get_form_query_with_good_database(mongo_connector):
     current_config = {'database': 'toucan'}
     form = MongoDataSource.get_form(mongo_connector, current_config)
     assert form['required'] == ['domain', 'name', 'database', 'collection']
-    assert form['properties']['database'] == {
-        'title': 'Database',
+    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
+    assert form['definitions']['database'] == {
+        'title': 'database',
+        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['admin', 'config', 'local', 'toucan'],
     }
-    assert form['properties']['collection'] == {
-        'title': 'Collection',
+    assert form['properties']['collection'] == {'$ref': '#/definitions/collection'}
+    assert form['definitions']['collection'] == {
+        'title': 'collection',
+        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['test_col'],
     }
