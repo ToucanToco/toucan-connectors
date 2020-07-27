@@ -205,9 +205,15 @@ def test_strlist_to_enum_required():
     assert model.schema() == {
         'title': 'Test',
         'type': 'object',
-        'properties': {
-            'pokemon': {'title': 'Pokemon', 'enum': ['pika', 'bulbi'], 'type': 'string'}
+        'definitions': {
+            'pokemon': {
+                'description': 'An enumeration.',
+                'enum': ['pika', 'bulbi'],
+                'title': 'pokemon',
+                'type': 'string',
+            }
         },
+        'properties': {'pokemon': {'$ref': '#/definitions/pokemon'}},
         'required': ['pokemon'],
     }
 
@@ -218,12 +224,13 @@ def test_strlist_to_enum_default_value():
     assert model.schema() == {
         'title': 'Test',
         'type': 'object',
-        'properties': {
+        'definitions': {
             'pokemon': {
-                'title': 'Pokemon',
-                'default': 'pika',
+                'description': 'An enumeration.',
                 'enum': ['pika', 'bulbi'],
+                'title': 'pokemon',
                 'type': 'string',
             }
         },
+        'properties': {'pokemon': {'$ref': '#/definitions/pokemon'}},
     }

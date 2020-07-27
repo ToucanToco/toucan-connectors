@@ -296,8 +296,10 @@ def test_get_form_empty_query(mysql_connector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {}
     form = MySQLDataSource.get_form(mysql_connector, current_config)
-    assert form['properties']['database'] == {
-        'title': 'Database',
+    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
+    assert form['definitions']['database'] == {
+        'title': 'database',
+        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['information_schema', 'mysql_db'],
     }
@@ -307,13 +309,17 @@ def test_get_form_query_with_good_database(mysql_connector):
     """It should give suggestions of the collections"""
     current_config = {'database': 'mysql_db'}
     form = MySQLDataSource.get_form(mysql_connector, current_config)
-    assert form['properties']['database'] == {
-        'title': 'Database',
+    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
+    assert form['definitions']['database'] == {
+        'title': 'database',
+        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['information_schema', 'mysql_db'],
     }
-    assert form['properties']['table'] == {
-        'title': 'Table',
+    assert form['properties']['table'] == {'$ref': '#/definitions/table'}
+    assert form['definitions']['table'] == {
+        'title': 'table',
+        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['City', 'Country', 'CountryLanguage'],
     }
