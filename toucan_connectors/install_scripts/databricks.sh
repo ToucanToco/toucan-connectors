@@ -7,7 +7,7 @@ if [[ -e ~/databricks-installed ]]; then
 fi
 
 apt-get update
-apt-get install -fyq libsasl2-modules-gssapi-mit wget
+apt-get install -fyq libsasl2-modules-gssapi-mit wget unzip
 mkdir -p /tmp/databricks
 # The next link was extracted from an email received after
 # filling: https://databricks.com/spark/odbc-driver-download
