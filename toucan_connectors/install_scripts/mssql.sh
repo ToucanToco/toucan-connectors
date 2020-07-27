@@ -7,7 +7,7 @@ if [[ -e ~/mssql-installed ]]; then
 fi
 
 apt-get update
-apt-get install -fyq curl
+apt-get install -fyq gnupg curl
 curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
 source /etc/os-release &&\
     curl "https://packages.microsoft.com/config/${ID}/${VERSION_ID}/prod.list" \
