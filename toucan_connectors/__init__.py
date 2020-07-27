@@ -23,7 +23,7 @@ CONNECTORS_REGISTRY = {
     },
     'AWSRedshift': {
         'connector': 'postgres.postgresql_connector.PostgresConnector',
-        'logo': 'Amazon Redshift',
+        'label': 'Amazon Redshift',
         'logo': 'aws/aws.png',
     },
     'AzureMSSQL': {
@@ -165,6 +165,11 @@ for connector_type, connector_infos in CONNECTORS_REGISTRY.items():
         connector_infos['connector'] = connector_cls
         with suppress(AttributeError):
             connector_infos['bearer_integration'] = connector_cls.bearer_integration
+        # check if connector implements `get_status`,
+        # which is hence different from `ToucanConnector.get_status`
+        connector_infos['hasStatusCheck'] = (
+            connector_cls.get_status is not connector_cls.__bases__[0].get_status
+        )
 
     # Set default label if not set
     if 'label' not in connector_infos:
