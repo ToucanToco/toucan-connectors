@@ -11,7 +11,7 @@ def connector():
         type='Workday',
         tenant='umanis',
         username='<username>',
-        password='WrongPassword',
+        password='<password>',
     )
 
 
@@ -58,8 +58,6 @@ def test_get_df_Get_Absences(connector):
         filter='[.Absence_Input[].Absence_Input_Data | {Start_Date: .Start_Date, End_Date: .End_Date, Batch_ID: .Batch_ID}]',
     )
     df = connector.get_df(data_source_absence)
-    print(df.iloc[0, 0])
-    print(df)
     assert df.shape == (2, 3)
 
 
