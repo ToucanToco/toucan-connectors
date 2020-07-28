@@ -105,7 +105,7 @@ class WorkdayConnector(ToucanConnector):
         if num_page > 1:
             for i in range(num_page - 1):
                 data_next = json.loads(
-                    json.dumps(zeep.helpers.serialize_object(data.next().data))
+                    json.dumps(zeep.helpers.serialize_object(data.next().data), default=json_serial)
                 )
                 df = df.append(
                     pd.DataFrame(transform_with_jq(data_next, data_source.filter)),
