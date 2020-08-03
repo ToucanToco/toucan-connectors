@@ -44,7 +44,7 @@ class GoogleBigQueryConnector(ToucanConnector):
     )
     scopes: List[str] = Field(
         ['https://www.googleapis.com/auth/bigquery'],
-        title='SQL dialect',
+        title='OAuth scopes',
         description='OAuth 2.0 scopes define the level of access you need to request '
         'the Google APIs. For more information, see this '
         '<a href="https://developers.google.com/identity/protocols/googlescopes">documentation</a>',
