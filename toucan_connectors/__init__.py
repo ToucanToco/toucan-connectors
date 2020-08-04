@@ -118,6 +118,11 @@ CONNECTORS_REGISTRY = {
         'label': 'PostgreSQL',
         'logo': 'postgres/postgres.png',
     },
+    'Revinate': {
+        'connector': 'revinate.revinate_connector.RevinateConnector',
+        'label': 'Revinate',
+        'logo': 'revinate/revinate.png',
+    },
     'ROK': {'connector': 'rok.rok_connector.RokConnector', 'logo': 'rok/rok.png',},
     'SapHana': {
         'connector': 'sap_hana.sap_hana_connector.SapHanaConnector',
