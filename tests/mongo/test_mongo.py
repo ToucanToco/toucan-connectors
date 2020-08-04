@@ -417,16 +417,15 @@ def test_status_unreachable(mongo_connector, mocker):
 
 def test_status_bad_username(mongo_connector):
     mongo_connector.username = 'bibou'
-    assert mongo_connector.get_status() == {
-        'status': False,
-        'details': [
-            ('Hostname resolved', True),
-            ('Port opened', True),
-            ('Host connection', True),
-            ('Authenticated', False),
-        ],
-        'error': 'Authentication failed.',
-    }
+    status = mongo_connector.get_status()
+    assert status['status'] is False
+    assert status['details'] == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', True),
+        ('Authenticated', False),
+    ]
+    assert 'Authentication failed' in status['error']
 
 
 def test_get_form_empty_query(mongo_connector):
