@@ -1,8 +1,8 @@
-# Revinate Connector
+# Revinate connector
 
 Revinate connector cf. https://porter.revinate.com/documentation
 
-# Data Provider Configuration
+# Data provider configuration
 
 * `type`: `Revinate`
 * `name`: str, required
@@ -12,11 +12,14 @@ Revinate connector cf. https://porter.revinate.com/documentation
 DATA_PROVIDERS: [
     type: 'Revinate',
     name: '<name>',
-    authentication: '<authentication>'
+    authentication:
+      api_key: '<api_key>',
+      api_secret: '<api_secret>',
+      username: '<username>',
 ]
 ```
 
-# Revinate Authentication
+# Revinate authentication
 
 
 Please see the Revinate documentation to understand what form the headers must take before a request can be made to their API. This essential element of the connector must have the following form:
@@ -25,11 +28,10 @@ Please see the Revinate documentation to understand what form the headers must t
 * `api_secret`: str, required
 * `username`: str, required
 
-The `api_key`, `api_secret` and `user_name` must be obtained from Revinate before the concepteur can use the connector.
-
+The `api_key`, `api_secret` and `username` must be obtained from Revinate before using the connector.
 The timestamp required in the headers is handled by the connector.
 
-# Data Source Configuration
+# Data source configuration
 
 * `domain`: str, required
 * `name`: str, required
