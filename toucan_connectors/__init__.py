@@ -121,7 +121,7 @@ CONNECTORS_REGISTRY = {
     'Revinate': {
         'connector': 'revinate.revinate_connector.RevinateConnector',
         'label': 'Revinate',
-        'logo': 'http_api/http-api.png',
+        'logo': 'revinate/revinate.png',
     },
     'ROK': {'connector': 'rok.rok_connector.RokConnector', 'logo': 'rok/rok.png',},
     'SapHana': {
