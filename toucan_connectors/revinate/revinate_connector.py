@@ -80,7 +80,7 @@ class RevinateDataSource(ToucanDataSource):
 
 class RevinateConnector(ToucanConnector):
     """
-    The main Revinate connector
+    A connector the Revinate Porter API
 
     - It's async
     - It returns a basic pandas Dataframe based on whatever JQ filter is passed to it or it returns an error
@@ -91,7 +91,7 @@ class RevinateConnector(ToucanConnector):
 
     baseroute = 'https://porter.revinate.com'
 
-    async def _get_data(self, query, jq_filter):
+    async def _get_data(self, endpoint, jq_filter):
         """
         Basic data retrieval function
 
@@ -99,7 +99,7 @@ class RevinateConnector(ToucanConnector):
         - retrieves built headers
         - calls a fetch and returns filtered data or an error
         """
-        full_url = f'{self.baseroute}/{query}'
+        full_url = f'{self.baseroute}/{endpoint}'
         api_key = self.authentication.api_key
         api_secret: str = self.authentication.api_secret.get_secret_value()
         username = self.authentication.username
@@ -120,19 +120,19 @@ class RevinateConnector(ToucanConnector):
                 LOGGER.error('Could not transform the data using %s as filter', jq_filter)
                 raise
 
-    def _run_fetch(self, query, jq_filter):
+    def _run_fetch(self, endpoint, jq_filter):
         """Event loop handler"""
         loop = get_loop()
-        future = asyncio.ensure_future(self._get_data(query, jq_filter))
+        future = asyncio.ensure_future(self._get_data(endpoint, jq_filter))
         return loop.run_until_complete(future)
 
     def _retrieve_data(self, data_source: RevinateDataSource) -> pd.DataFrame:
         """
         Primary function and point of entry
         """
-        query = data_source.endpoint
+        endpoint = data_source.endpoint
 
-        query = nosql_apply_parameters_to_query(query=query, parameters=data_source.params)
+        endpoint = nosql_apply_parameters_to_query(query=endpoint, parameters=data_source.params)
 
-        result = self._run_fetch(query, jq_filter=data_source.filter)
+        result = self._run_fetch(endpoint, jq_filter=data_source.filter)
         return pd.DataFrame(result)

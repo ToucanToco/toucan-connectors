@@ -83,9 +83,9 @@ async def test__get_data_happy_case(base_connector, ds, mocker):
     """It should return valid data if everything is valid"""
     fake_fetch = mocker.patch(fetch_fn_name, return_value=helpers.build_future(FAKE_DATA),)
 
-    fake_query = f'/{ds.endpoint}?page=2&size=50'
+    fake_endpoint = f'/{ds.endpoint}?page=2&size=50'
 
-    res = await base_connector._get_data(fake_query, jq_filter='.')
+    res = await base_connector._get_data(fake_endpoint, jq_filter='.')
 
     assert res == JQ_FILTERED_DATA
     assert fake_fetch.call_count == 1
@@ -193,7 +193,7 @@ def test__retrieve_data_bad_connector(authentication, ds, mocker):
     with pytest.raises(ValidationError):
         RevinateConnector(name='Bad Connector 3')._retrieve_data(ds)
 
-    # failure should happen before the connectorùs _retrieve_data method is called
+    # failure should happen before the connector's _retrieve_data method is called
     assert fake__run_fetch.call_count == 0
 
 
