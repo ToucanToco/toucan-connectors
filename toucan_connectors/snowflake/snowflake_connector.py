@@ -41,13 +41,13 @@ class SnowflakeConnector(ToucanConnector):
         description='The full name of your Snowflake account. '
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
-        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info">here</a>.',
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
     )
     ocsp_response_cache_filename: Path = Field(
         None,
         title='OCSP response cache filename',
         description='The path of the '
-        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses">OCSP cache file</a>',
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses" target="_blank">OCSP cache file</a>',
     )
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
