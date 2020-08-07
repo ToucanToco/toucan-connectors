@@ -17,7 +17,7 @@ class OracleSQLConnector(ToucanConnector):
     dsn: str = Field(
         ...,
         description='A path following the '
-        '<a href="https://en.wikipedia.org/wiki/Data_source_name">DSN pattern</a>. '
+        '<a href="https://en.wikipedia.org/wiki/Data_source_name" target="_blank">DSN pattern</a>. '
         'The DSN host, port and service name are required.',
         examples=['localhost:80/service'],
     )
