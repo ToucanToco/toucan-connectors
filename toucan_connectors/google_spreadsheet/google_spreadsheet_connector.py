@@ -39,9 +39,9 @@ class GoogleSpreadsheetConnector(ToucanConnector):
         ...,
         title='Google Credentials',
         description='For authentication, download an authentication file from your '
-        '<a href="https://console.developers.google.com/apis/credentials">Google Console</a> '
+        '<a href="https://console.developers.google.com/apis/credentials" target="_blank">Google Console</a> '
         'and use the values here. This is an oauth2 credential file. For more information see this '
-        '<a href="https://gspread.readthedocs.io/en/latest/oauth2.html">documentation</a>. '
+        '<a href="https://gspread.readthedocs.io/en/latest/oauth2.html" target="_blank">documentation</a>. '
         'You should use "service_account" credentials, which is the preferred type of credentials '
         'to use when authenticating on behalf of a service or application',
     )
@@ -53,7 +53,7 @@ class GoogleSpreadsheetConnector(ToucanConnector):
         ],
         description='OAuth 2.0 scopes define the level of access you need to '
         'request the Google APIs. For more information, see this '
-        '<a href="https://developers.google.com/identity/protocols/googlescopes">documentation</a>',
+        '<a href="https://developers.google.com/identity/protocols/googlescopes" target="_blank">documentation</a>',
     )
 
     def _retrieve_data(self, data_source):
