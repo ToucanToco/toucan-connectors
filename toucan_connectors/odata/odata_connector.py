@@ -23,7 +23,7 @@ class ODataDataSource(ToucanDataSource):
         ...,
         description='The entity path that will be appended to your baseroute URL. '
         'For example "geo/countries". For more details, see this '
-        '<a href="https://www.odata.org/getting-started/basic-tutorial/">tutorial</a>',
+        '<a href="https://www.odata.org/getting-started/basic-tutorial/" target="_blank">tutorial</a>',
     )
     query: dict = Field(
         ...,
@@ -31,7 +31,7 @@ class ODataDataSource(ToucanDataSource):
         'For example {"$filter": "my_value", "$skip": 100} '
         '(equivalent to "$filter=my_value&$skip=100" in parameterized URL). '
         'For more details on query parameters convention, see '
-        '<a href="https://www.odata.org/documentation/odata-version-2-0/uri-conventions/">this documentation</a>',
+        '<a href="https://www.odata.org/documentation/odata-version-2-0/uri-conventions/" target="_blank">this documentation</a>',
         widget='json',
     )
 
