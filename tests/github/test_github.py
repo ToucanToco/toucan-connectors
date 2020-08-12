@@ -12,6 +12,7 @@ def test_no_user():
 
 
 def test_get_df():
+    # please, put your own github token here ;) it will need the following authorization for this test: 'public_repo'
     connector = GithubConnector(name="github", token='...')
     df = connector.get_df(GithubDataSource(name='test', domain='test',
                                            mapping=[['data', 'repositoryOwner', 'repositories', 'nodes']],
