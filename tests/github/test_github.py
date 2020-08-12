@@ -12,8 +12,7 @@ def test_no_user():
 
 
 def test_get_df():
-    pandas.set_option('display.max_colwidth', -1)
-    connector = GithubConnector(name="github", token='b566c86b169ecde44a0304cfe56590d794ef833e')
+    connector = GithubConnector(name="github", token='...')
     df = connector.get_df(GithubDataSource(name='test', domain='test',
                                            mapping=[['data', 'repositoryOwner', 'repositories', 'nodes']],
                                            query='''
