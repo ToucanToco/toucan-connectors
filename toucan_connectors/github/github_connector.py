@@ -11,7 +11,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 class GithubDataSource(ToucanDataSource):
     query: constr(min_length=1) = Field(
-        ..., description='You can write your graphQL query here', widget='graphql'
+        ..., description='You can write your graphQL query here'
     )
     mapping: List[List[str]] = Field(
         [],
