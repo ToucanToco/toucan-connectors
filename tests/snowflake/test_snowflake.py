@@ -11,7 +11,8 @@ sd = SnowflakeDataSource(
     domain='test_domain',
     database='test_database',
     warehouse='test_warehouse',
-    query='test_query',
+    query='test_query with %(foo)s',
+    parameters={'foo': 'bar'},
 )
 
 
@@ -34,7 +35,7 @@ def test_snowflake(mocker):
         ocsp_response_cache_filename=None,
     )
 
-    reasq.assert_called_once_with('test_query', con=snock())
+    reasq.assert_called_once_with('test_query with %(foo)s', con=snock(), params={'foo': 'bar'})
 
 
 def test_missing_cache_file():

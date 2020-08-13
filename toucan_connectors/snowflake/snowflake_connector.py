@@ -63,7 +63,8 @@ class SnowflakeConnector(ToucanConnector):
         # https://docs.snowflake.net/manuals/sql-reference/sql/use-warehouse.html
         connection.cursor().execute(f'USE WAREHOUSE {data_source.warehouse}')
 
-        df = pd.read_sql(data_source.query, con=connection)
+        query_params = data_source.parameters or {}
+        df = pd.read_sql(data_source.query, con=connection, params=query_params)
 
         connection.close()
 
