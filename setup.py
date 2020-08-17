@@ -43,7 +43,6 @@ install_requires = [
     'requests<2.24.0',
     'tenacity',
     'toucan_data_sdk',
-    'urllib3==1.24.3',
     'typing-extensions; python_version < "3.8"',
 ]
 
@@ -67,7 +66,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='0.39.1',
+    version='0.39.2',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',
