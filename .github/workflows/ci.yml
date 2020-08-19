@@ -68,6 +68,8 @@ jobs:
       run: pip install codecov && codecov --token=3e56598d-bfe8-4741-a973-f4b70bd2c280
 
     - name: SonarCloud Scan
+      # Only executed for one of the tested python version
+      if: ${{ always() && matrix['python-version'] == 3.6 }}
       uses: sonarsource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
