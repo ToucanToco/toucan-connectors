@@ -4,6 +4,7 @@ import pandas as pd
 import snowflake.connector
 from pydantic import Field, SecretStr, constr
 
+from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -63,8 +64,8 @@ class SnowflakeConnector(ToucanConnector):
         # https://docs.snowflake.net/manuals/sql-reference/sql/use-warehouse.html
         connection.cursor().execute(f'USE WAREHOUSE {data_source.warehouse}')
 
-        query_params = data_source.parameters or {}
-        df = pd.read_sql(data_source.query, con=connection, params=query_params)
+        query = nosql_apply_parameters_to_query(data_source.query, data_source.parameters)
+        df = pd.read_sql(query, con=connection)
 
         connection.close()
 
