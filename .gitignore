@@ -13,6 +13,7 @@ dist/
 .coverage*
 coverage.xml
 test-report.xml
+.scannerwork
 
 # pyenv
 .python-version
