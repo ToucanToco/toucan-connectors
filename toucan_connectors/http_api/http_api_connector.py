@@ -84,8 +84,6 @@ class HttpAPIDataSource(ToucanDataSource):
 class HttpAPIConnector(ToucanConnector):
     data_source_model: HttpAPIDataSource
 
-    auth_flow = 'oauth2'
-
     baseroute: AnyHttpUrl = Field(..., title='Baseroute URL', description='Baseroute URL')
     cert: List[FilePath] = Field(
         None, title='Certificate', description='File path of your certificate if any'
