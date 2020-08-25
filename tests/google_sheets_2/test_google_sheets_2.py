@@ -21,9 +21,5 @@ def ds():
     )
 
 
-def test_spreadsheet(mocker, con, ds):
-    pass
-
-
-def test_set_columns(mocker, con, ds):
+def test_retrieve_data():
     pass
