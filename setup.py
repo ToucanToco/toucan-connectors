@@ -29,7 +29,7 @@ extras_require = {
     'postgres': ['psycopg2>=2.7.4'],
     'ROK': ['requests'],
     'sap_hana': ['pyhdb>=0.3.4'],
-    'snowflake': ['snowflake-connector-python'],
+    'snowflake': ['snowflake-connector-python<=2.2.10'],
     'toucan_toco': ['toucan_client'],
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
@@ -66,7 +66,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='0.39.3',
+    version='0.39.4',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',
