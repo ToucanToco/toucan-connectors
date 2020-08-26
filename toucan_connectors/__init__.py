@@ -1,6 +1,5 @@
 import base64
 import mimetypes
-import os
 from contextlib import suppress
 from importlib import import_module
 from pathlib import Path
@@ -81,6 +80,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Google Sheets',
         'logo': 'google_sheets/google-sheets.png',
     },
+    'GoogleSheets2': {
+        'connector': 'google_sheets_2.google_sheets_2_connector.GoogleSheets2Connector',
+        'label': 'Google Sheets Modified',
+        'logo': 'google_sheets/google-sheets.png',
+    },
     'GoogleSpreadsheet': {
         'connector': 'google_spreadsheet.google_spreadsheet_connector.GoogleSpreadsheetConnector',
         'label': 'Google Spreadsheet',
@@ -148,15 +152,6 @@ CONNECTORS_REGISTRY = {
         'logo': 'wootric/wootric.png',
     },
 }
-
-GS2_CONNECTOR = os.environ.get('GS2_CONNECTOR')
-
-if GS2_CONNECTOR:
-    CONNECTORS_REGISTRY['GoogleSheets2'] = {
-        'connector': 'google_sheets_2.google_sheets_2_connector.GoogleSheets2Connector',
-        'label': 'Google Sheets Modified',
-        'logo': 'google_sheets/google-sheets.png',
-    }
 
 
 def html_base64_image_src(image_path: str) -> str:
