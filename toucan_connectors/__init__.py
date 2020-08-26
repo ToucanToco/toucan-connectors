@@ -80,6 +80,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Google Sheets',
         'logo': 'google_sheets/google-sheets.png',
     },
+    'GoogleSheets2': {
+        'connector': 'google_sheets_2.google_sheets_2_connector.GoogleSheets2Connector',
+        'label': 'Google Sheets Modified',
+        'logo': 'google_sheets/google-sheets.png',
+    },
     'GoogleSpreadsheet': {
         'connector': 'google_spreadsheet.google_spreadsheet_connector.GoogleSpreadsheetConnector',
         'label': 'Google Spreadsheet',
@@ -188,6 +193,8 @@ for connector_type, connector_infos in CONNECTORS_REGISTRY.items():
         connector_infos['connector'] = connector_cls
         with suppress(AttributeError):
             connector_infos['bearer_integration'] = connector_cls.bearer_integration
+        with suppress(AttributeError):
+            connector_infos['auth_flow'] = connector_cls.auth_flow
         # check if connector implements `get_status`,
         # which is hence different from `ToucanConnector.get_status`
         connector_infos['hasStatusCheck'] = (
