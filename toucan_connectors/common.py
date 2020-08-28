@@ -4,6 +4,7 @@ import re
 from copy import deepcopy
 
 import pyjq
+from aiohttp import ClientSession
 from jinja2 import Environment, StrictUndefined, Template, meta
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
@@ -204,3 +205,13 @@ def get_loop():
         asyncio.set_event_loop(loop)
 
     return loop
+
+
+async def fetch(url: str, session: ClientSession):
+    """Fetch data from an API."""
+    async with session.get(url) as res:
+        if res.status != 200:
+            raise Exception(
+                f'Aborting request due to error from the API: {res.status}, {res.reason}'
+            )
+        return await res.json()
