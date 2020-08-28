@@ -1,8 +1,10 @@
 import pytest
+from aiohttp import web
 
 from toucan_connectors.common import (
     NonValidVariable,
     apply_query_parameters,
+    fetch,
     nosql_apply_parameters_to_query,
 )
 
@@ -183,3 +185,41 @@ def test_bad_variable_in_query():
     with pytest.raises(NonValidVariable) as err:
         nosql_apply_parameters_to_query(query, params, handle_errors=True)
     assert str(err.value) == 'Non valid variable thing'
+
+
+# fetch tests
+
+FAKE_DATA = {'foo': 'bar', 'baz': 'fudge'}
+
+
+async def send_200_success(req: web.Request):
+    """Send a response with a success."""
+    return web.json_response(FAKE_DATA, status=200)
+
+
+async def send_401_error(req: web.Request) -> dict:
+    """Send a response with an error."""
+    return web.Response(reason='Unauthorized', status=401)
+
+
+async def test_fetch_happy(aiohttp_client, loop):
+    """It should return a properly-formed dictionary."""
+    app = web.Application(loop=loop)
+    app.router.add_get('/foo', send_200_success)
+
+    client = await aiohttp_client(app)
+    res = await fetch('/foo', client)
+
+    assert res == FAKE_DATA
+
+
+async def test_fetch_bad_response(aiohttp_client, loop):
+    """It should throw an Exception with a message if there is an error."""
+    app = web.Application(loop=loop)
+    app.router.add_get('/hotels', send_401_error)
+
+    client = await aiohttp_client(app)
+    with pytest.raises(Exception) as err:
+        await fetch('/hotels', client)
+
+    assert str(err.value) == 'Aborting request due to error from the API: 401, Unauthorized'
