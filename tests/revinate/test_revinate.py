@@ -81,7 +81,10 @@ JQ_FILTERED_DATA = [
 @pytest.mark.asyncio
 async def test__get_data_happy_case(base_connector, ds, mocker):
     """It should return valid data if everything is valid"""
-    fake_fetch = mocker.patch(fetch_fn_name, return_value=helpers.build_future(FAKE_DATA),)
+    fake_fetch = mocker.patch(
+        fetch_fn_name,
+        return_value=helpers.build_future(FAKE_DATA),
+    )
 
     fake_endpoint = f'/{ds.endpoint}?page=2&size=50'
 

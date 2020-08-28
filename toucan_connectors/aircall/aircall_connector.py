@@ -113,8 +113,20 @@ class AircallConnector(ToucanConnector):
         headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
         async with ClientSession(headers=headers) as session:
             team_data, variable_data = await asyncio.gather(
-                fetch_page('teams', [], session, limit, 0,),
-                fetch_page(dataset, [], session, limit, 0,),
+                fetch_page(
+                    'teams',
+                    [],
+                    session,
+                    limit,
+                    0,
+                ),
+                fetch_page(
+                    dataset,
+                    [],
+                    session,
+                    limit,
+                    0,
+                ),
             )
 
             team_response_list = []
@@ -135,7 +147,13 @@ class AircallConnector(ToucanConnector):
         """Triggers fetches for tags and does preliminary filtering process"""
         headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
         async with ClientSession(headers=headers) as session:
-            raw_data = await fetch_page(dataset, [], session, limit, 1,)
+            raw_data = await fetch_page(
+                dataset,
+                [],
+                session,
+                limit,
+                1,
+            )
             tags_data_list = []
             for data in raw_data:
                 tags_data_list += data['tags']

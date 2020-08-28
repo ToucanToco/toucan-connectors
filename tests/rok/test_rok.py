@@ -12,7 +12,10 @@ rds = RokDataSource(
 )
 
 rc = RokConnector(
-    name='RokConnector', host='https://rok.example.com', username='username', password='password',
+    name='RokConnector',
+    host='https://rok.example.com',
+    username='username',
+    password='password',
 )
 
 endpoint = 'https://rok.example.com/graphql'

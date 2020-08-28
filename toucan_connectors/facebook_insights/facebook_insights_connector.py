@@ -70,8 +70,7 @@ def get_page_tokens(longlived_token) -> Dict[str, str]:
 
 
 class FacebookInsightsDataSource(ToucanDataSource):
-    """cf. https://developers.facebook.com/docs/graph-api/reference/v2.8/insights
-    """
+    """cf. https://developers.facebook.com/docs/graph-api/reference/v2.8/insights"""
 
     pages: Dict[str, str]  # mapping page_id → page_token
     metrics: List[str]

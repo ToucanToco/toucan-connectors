@@ -85,13 +85,19 @@ CONNECTORS_REGISTRY = {
         'label': 'Google Spreadsheet',
         'logo': 'google_spreadsheet/google-spreadsheet.png',
     },
-    'Hive': {'connector': 'hive.hive_connector.HiveConnector', 'logo': 'hive/hive.png',},
+    'Hive': {
+        'connector': 'hive.hive_connector.HiveConnector',
+        'logo': 'hive/hive.png',
+    },
     'HttpAPI': {
         'connector': 'http_api.http_api_connector.HttpAPIConnector',
         'label': 'Http API',
         'logo': 'http_api/http-api.png',
     },
-    'Indexima': {'connector': 'hive.hive_connector.HiveConnector', 'logo': 'hive/indexima.png',},
+    'Indexima': {
+        'connector': 'hive.hive_connector.HiveConnector',
+        'logo': 'hive/indexima.png',
+    },
     'Lightspeed': {
         'connector': 'lightspeed.lightspeed_connector.LightspeedConnector',
         'logo': 'lightspeed/lightspeed.png',
@@ -100,14 +106,23 @@ CONNECTORS_REGISTRY = {
         'connector': 'micro_strategy.micro_strategy_connector.MicroStrategyConnector',
         'logo': 'micro_strategy/microstrategy.png',
     },
-    'MongoDB': {'connector': 'mongo.mongo_connector.MongoConnector', 'logo': 'mongo/mongo-db.png',},
+    'MongoDB': {
+        'connector': 'mongo.mongo_connector.MongoConnector',
+        'logo': 'mongo/mongo-db.png',
+    },
     'MSSQL': {
         'connector': 'mssql.mssql_connector.MSSQLConnector',
         'label': 'Microsoft SQL Server',
         'logo': 'mssql/mssql.png',
     },
-    'MySQL': {'connector': 'mysql.mysql_connector.MySQLConnector', 'logo': 'mysql/mysql.png',},
-    'OData': {'connector': 'odata.odata_connector.ODataConnector', 'logo': 'odata/odata.png',},
+    'MySQL': {
+        'connector': 'mysql.mysql_connector.MySQLConnector',
+        'logo': 'mysql/mysql.png',
+    },
+    'OData': {
+        'connector': 'odata.odata_connector.ODataConnector',
+        'logo': 'odata/odata.png',
+    },
     'OracleSQL': {
         'connector': 'oracle_sql.oracle_sql_connector.OracleSQLConnector',
         'label': 'Oracle SQL',
@@ -123,7 +138,10 @@ CONNECTORS_REGISTRY = {
         'label': 'Revinate',
         'logo': 'revinate/revinate.png',
     },
-    'ROK': {'connector': 'rok.rok_connector.RokConnector', 'logo': 'rok/rok.png',},
+    'ROK': {
+        'connector': 'rok.rok_connector.RokConnector',
+        'logo': 'rok/rok.png',
+    },
     'SapHana': {
         'connector': 'sap_hana.sap_hana_connector.SapHanaConnector',
         'label': 'SAP HANA',
