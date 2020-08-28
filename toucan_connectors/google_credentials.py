@@ -37,7 +37,9 @@ class GoogleCredentials(BaseModel):
         description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
     )
     client_x509_cert_url: HttpUrl = Field(
-        ..., title='Client X509 certification URL', description=CREDENTIALS_INFO_MESSAGE,
+        ...,
+        title='Client X509 certification URL',
+        description=CREDENTIALS_INFO_MESSAGE,
     )
 
     @validator('private_key')

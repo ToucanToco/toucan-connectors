@@ -41,7 +41,12 @@ def con(bearer_aircall_auth_id):
 
 def build_ds(dataset: str):
     """Builds test datasource"""
-    return AircallDataSource(name='mah_ds', domain='mah_domain', dataset=dataset, limit=1,)
+    return AircallDataSource(
+        name='mah_ds',
+        domain='mah_domain',
+        dataset=dataset,
+        limit=1,
+    )
 
 
 @pytest.mark.asyncio
@@ -241,5 +246,9 @@ def test_limit_of_zero(con, mocker):
 
 def test_datasource():
     """Tests that default dataset on datasource is 'calls'"""
-    ds = AircallDataSource(name='mah_ds', domain='test_domain', limit=1,)
+    ds = AircallDataSource(
+        name='mah_ds',
+        domain='test_domain',
+        limit=1,
+    )
     assert ds.dataset == 'calls'

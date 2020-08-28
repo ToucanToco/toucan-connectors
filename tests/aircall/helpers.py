@@ -21,7 +21,12 @@ def build_con_and_ds(dataset: str):
     Be sure to also replace the endpoints inside the aircall connector file
     """
     con = AircallConnector(name='mah_test', bearer_auth_id='abc123efg')
-    ds = AircallDataSource(name='mah_ds', domain='test_domain', dataset=dataset, limit=1,)
+    ds = AircallDataSource(
+        name='mah_ds',
+        domain='test_domain',
+        dataset=dataset,
+        limit=1,
+    )
 
     return con, ds
 
