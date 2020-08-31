@@ -1,4 +1,6 @@
 .DEFAULT_GOAL := all
+isort = isort toucan_connectors tests setup.py
+black = black -S -l 100 --target-version py36 toucan_connectors tests setup.py
 
 .PHONY: clean
 clean:
@@ -14,13 +16,14 @@ install:
 
 .PHONY: format
 format:
-	isort -rc toucan_connectors tests setup.py
-	black -S -l 100 --target-version py36 toucan_connectors tests setup.py
+	$(isort)
+	$(black)
 
 .PHONY: lint
 lint:
 	flake8 toucan_connectors tests setup.py
-	black -S -l 100 --target-version py36 --check toucan_connectors tests setup.py
+	$(isort) --check-only
+	$(black) --check
 
 .PHONY: test
 test:
