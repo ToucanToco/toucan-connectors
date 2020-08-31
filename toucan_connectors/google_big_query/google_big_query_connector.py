@@ -37,7 +37,7 @@ class GoogleBigQueryConnector(ToucanConnector):
         'to use when authenticating on behalf of a service or application',
     )
     dialect: Dialect = Field(
-        Dialect.legacy,
+        Dialect.standard,
         description='BigQuery allows you to choose between standard and legacy SQL as query syntax. '
         'The preferred query syntax is the default standard SQL. You can find more information on this '
         '<a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax">documentation</a>',
