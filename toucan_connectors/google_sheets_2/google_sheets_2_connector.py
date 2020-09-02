@@ -2,29 +2,15 @@
 
 # This will replace the old Google Sheets connector that works with the Bearer API
 import asyncio
+from contextlib import suppress
 from typing import Dict, Optional
 
 import pandas as pd
 from aiohttp import ClientSession
-from pydantic import Field
+from pydantic import Field, create_model
 
 from toucan_connectors.common import fetch, get_loop
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-
-
-async def get_data(url, access_token):
-    """Build the final request along with headers."""
-    headers = {'Authorization': f'Bearer {access_token}'}
-
-    async with ClientSession(headers=headers) as session:
-        return await fetch(url, session)
-
-
-def run_fetch(url, access_token):
-    """Run loop."""
-    loop = get_loop()
-    future = asyncio.ensure_future(get_data(url, access_token))
-    return loop.run_until_complete(future)
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class GoogleSheets2DataSource(ToucanDataSource):
@@ -54,13 +40,11 @@ class GoogleSheets2DataSource(ToucanDataSource):
     def get_form(cls, connector: 'GoogleSheets2Connector', current_config):
         """Retrieve a form filled with suggestions of available sheets."""
         # Always add the suggestions for the available sheets
-        baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
         constraints = {}
         with suppress(Exception):
             partial_endpoint = current_config['spreadsheet_id']
-            final_url = f'{self.baseroute}/{partial_endpoint}'
-            data = run_fetch(final_url, connector.access_token)
-            # data = connector.bearer_oauth_get_endpoint(current_config['spreadsheet_id'])
+            final_url = f'{connector.baseroute}{partial_endpoint}'
+            data = connector._run_fetch(final_url, connector.secrets['access_token'])
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             constraints['sheet'] = strlist_to_enum('sheet', available_sheets)
 
@@ -80,9 +64,22 @@ class GoogleSheets2Connector(ToucanConnector):
 
     secrets: Optional[Dict[str, str]]
 
+    async def _get_data(self, url, access_token):
+        """Build the final request along with headers."""
+        headers = {'Authorization': f'Bearer {access_token}'}
+
+        async with ClientSession(headers=headers) as session:
+            return await fetch(url, session)
+
     def set_secrets(self, secrets: Dict[str, str]):
         """Set the secrets from inside the main service."""
         self.secrets = secrets
+
+    def _run_fetch(self, url, access_token):
+        """Run loop."""
+        loop = get_loop()
+        future = asyncio.ensure_future(self._get_data(url, access_token))
+        return loop.run_until_complete(future)
 
     def _retrieve_data(self, data_source: GoogleSheets2DataSource) -> pd.DataFrame:
         """
@@ -99,14 +96,14 @@ class GoogleSheets2Connector(ToucanConnector):
         if data_source.sheet is None:
             # Get spreadsheet informations and retrieve all the available sheets
             # https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
-            data = run_fetch(self.baseroute, access_token)
+            data = self._run_fetch(self.baseroute, access_token)
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             data_source.sheet = available_sheets[0]
 
         # https://developers.google.com/sheets/api/samples/reading
         read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}'
         full_url = f'{self.baseroute}/{read_sheet_endpoint}/values/{data_source.sheet}'
-        data = run_fetch(full_url, access_token)['values']
+        data = self._run_fetch(full_url, access_token)['values']
         df = pd.DataFrame(data)
 
         # Since `data` is a list of lists, the columns are not set properly
