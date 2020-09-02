@@ -1,17 +1,15 @@
 import pytest
-from aiohttp import web
 from pytest import fixture
 
 import tests.general_helpers as helpers
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
     GoogleSheets2Connector,
     GoogleSheets2DataSource,
-    get_data,
-    run_fetch,
 )
 
 import_path = 'toucan_connectors.google_sheets_2.google_sheets_2_connector'
-run_fetch_fn = f'{import_path}.run_fetch'
+
+python_version_is_older = helpers.check_py_version((3, 8))
 
 
 @fixture
@@ -27,6 +25,51 @@ def ds():
         sheet='Constants',
         spreadsheet_id='1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU',
     )
+
+
+FAKE_SHEET_LIST_RESPONSE = {
+    'sheets': [
+        {
+            'properties': {'title': 'Foo'},
+        },
+        {
+            'properties': {'title': 'Bar'},
+        },
+        {
+            'properties': {'title': 'Baz'},
+        },
+    ]
+}
+
+
+def test_get_form_with_secrets(mocker, con, ds):
+    """It should return a list of spreadsheet titles."""
+    con.set_secrets({'access_token': 'foo'})
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET_LIST_RESPONSE)
+
+    result = ds.get_form(
+        connector=con,
+        current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
+    )
+    print('result ', result)
+    expected_results = ['Foo', 'Bar', 'Baz']
+    if python_version_is_older:
+        assert result['definitions']['sheet']['enum'] == expected_results
+    else:
+        assert result['properties']['sheet']['enum'] == expected_results
+
+
+def test_get_form_no_secrets(mocker, con, ds):
+    """It should return no spreadsheet titles."""
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=Exception)
+    result = ds.get_form(
+        connector=con,
+        current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
+    )
+    if python_version_is_older:
+        assert not result.get('definitions')
+    else:
+        assert not result['properties']['sheet'].get('enum')
 
 
 def test_set_secrets(mocker, con):
@@ -57,7 +100,7 @@ def test_spreadsheet_success(mocker, con, ds):
         }
     )
 
-    mocker.patch(run_fetch_fn, return_value=FAKE_SPREADSHEET)
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SPREADSHEET)
 
     df = con.get_df(ds)
 
@@ -72,7 +115,7 @@ def test_spreadsheet_success(mocker, con, ds):
 
 def test_spreadsheet_no_secrets(mocker, con, ds):
     """It should raise an exception if there no secrets passed or no access token."""
-    mocker.patch(run_fetch_fn, return_value=FAKE_SPREADSHEET)
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SPREADSHEET)
 
     with pytest.raises(Exception) as err:
         con.get_df(ds)
@@ -92,7 +135,7 @@ def test_set_columns(mocker, con, ds):
         'metadata': '...',
         'values': [['Animateur', '', '', 'Week'], ['pika', '', 'a', 'W1'], ['bulbi', '', '', 'W2']],
     }
-    mocker.patch(run_fetch_fn, return_value=fake_results)
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=fake_results)
 
     df = con.get_df(ds)
     assert df.to_dict() == {
@@ -103,20 +146,22 @@ def test_set_columns(mocker, con, ds):
     }
 
 
-def test_run_fetch(mocker):
+def test__run_fetch(mocker, con):
     """It should return a result from loops if all is ok."""
-    mocker.patch(f'{import_path}.get_data', return_value=helpers.build_future(FAKE_SPREADSHEET))
+    mocker.patch.object(
+        GoogleSheets2Connector, '_get_data', return_value=helpers.build_future(FAKE_SPREADSHEET)
+    )
 
-    result = run_fetch('/fudge', 'myaccesstoken')
+    result = con._run_fetch('/fudge', 'myaccesstoken')
 
     assert result == FAKE_SPREADSHEET
 
 
 @pytest.mark.asyncio
-async def test_get_data(mocker):
+async def test_get_data(mocker, con):
     """It should return a result from fetch if all is ok."""
     mocker.patch(f'{import_path}.fetch', return_value=helpers.build_future(FAKE_SPREADSHEET))
 
-    result = await get_data('/foo', 'myaccesstoken')
+    result = await con._get_data('/foo', 'myaccesstoken')
 
     assert result == FAKE_SPREADSHEET
