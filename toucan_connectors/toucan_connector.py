@@ -232,13 +232,16 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     @decorate_func_with_retry
     def get_df(
-        self, data_source: ToucanDataSource, permissions: Optional[dict] = None
+        self,
+        data_source: ToucanDataSource,
+        permissions: Optional[dict] = None,
     ) -> pd.DataFrame:
         """
         Method to retrieve the data as a pandas dataframe
         filtered by permissions
         """
         res = self._retrieve_data(data_source)
+
         if permissions is not None:
             permissions_query = PandasConditionTranslator.translate(permissions)
             permissions_query = apply_query_parameters(permissions_query, data_source.parameters)
