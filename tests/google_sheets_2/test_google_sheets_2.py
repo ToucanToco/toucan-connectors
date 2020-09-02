@@ -25,6 +25,12 @@ def ds():
     )
 
 
+FAKE_SPREADSHEET = {
+    'metadata': '...',
+    'values': [['country', 'city'], ['France', 'Paris'], ['England', 'London']],
+}
+
+
 @pytest.mark.asyncio
 async def test_get_data(mocker, con):
     """It should return a result from fetch if all is ok."""
