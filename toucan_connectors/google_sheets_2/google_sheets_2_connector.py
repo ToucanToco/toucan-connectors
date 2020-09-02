@@ -1,7 +1,7 @@
 """Google Sheets connector with oauth-manager setup."""
 
 # This will replace the old Google Sheets connector that works with the Bearer API
-from typing import Optional
+from typing import Dict, Optional
 
 import pandas as pd
 from pydantic import Field
@@ -28,7 +28,12 @@ class GoogleSheets2Connector(ToucanConnector):
     data_source_model: GoogleSheets2DataSource
 
     auth_flow = 'oauth2'
-    access_token: str
+
+    secrets: Optional[Dict[str, str]]
+
+    def set_secrets(self, secrets: Dict[str, str]):
+        """Set the secrets from inside the main service."""
+        self.secrets = secrets
 
     def _retrieve_data(self, data_source: GoogleSheets2DataSource) -> pd.DataFrame:
         pass
