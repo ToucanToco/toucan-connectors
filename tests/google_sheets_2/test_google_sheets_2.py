@@ -9,8 +9,6 @@ from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
 
 import_path = 'toucan_connectors.google_sheets_2.google_sheets_2_connector'
 
-python_version_is_older = helpers.check_py_version((3, 8))
-
 
 @fixture
 def con():
@@ -67,9 +65,8 @@ def test_get_form_with_secrets(mocker, con, ds):
         connector=con,
         current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
     )
-    print('result ', result)
     expected_results = ['Foo', 'Bar', 'Baz']
-    if python_version_is_older:
+    if result.get('definitions'):
         assert result['definitions']['sheet']['enum'] == expected_results
     else:
         assert result['properties']['sheet']['enum'] == expected_results
@@ -82,10 +79,10 @@ def test_get_form_no_secrets(mocker, con, ds):
         connector=con,
         current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
     )
-    if python_version_is_older:
-        assert not result.get('definitions')
-    else:
+    if result.get('properties'):
         assert not result['properties']['sheet'].get('enum')
+    else:
+        assert not result.get('definitions')
 
 
 def test_set_secrets(mocker, con):
