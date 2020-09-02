@@ -81,10 +81,6 @@ class GoogleSheets2Connector(ToucanConnector):
         future = asyncio.ensure_future(self._get_data(url, access_token))
         return loop.run_until_complete(future)
 
-    def set_secrets(self, secrets: Dict[str, str]):
-        """Set the secrets from inside the main service."""
-        self.secrets = secrets
-
     def _retrieve_data(self, data_source: GoogleSheets2DataSource) -> pd.DataFrame:
         """
         Point of entry for data retrieval in the connector
