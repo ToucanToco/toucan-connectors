@@ -3,7 +3,7 @@
 # This will replace the old Google Sheets connector that works with the Bearer API
 import asyncio
 from contextlib import suppress
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import pandas as pd
 from aiohttp import ClientSession
@@ -62,7 +62,7 @@ class GoogleSheets2Connector(ToucanConnector):
 
     baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
 
-    secrets: Optional[Dict[str, str]]
+    secrets: Optional[Dict[str, Any]]
 
     async def _get_data(self, url, access_token):
         """Build the final request along with headers."""
@@ -106,7 +106,7 @@ class GoogleSheets2Connector(ToucanConnector):
 
         # https://developers.google.com/sheets/api/samples/reading
         read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}'
-        full_url = f'{self.baseroute}/{read_sheet_endpoint}/values/{data_source.sheet}'
+        full_url = f'{self.baseroute}{read_sheet_endpoint}'
         data = self._run_fetch(full_url, access_token)['values']
         df = pd.DataFrame(data)
 
