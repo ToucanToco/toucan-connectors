@@ -96,7 +96,7 @@ class GoogleSheets2Connector(ToucanConnector):
         if data_source.sheet is None:
             # Get spreadsheet informations and retrieve all the available sheets
             # https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
-            data = self._run_fetch(self.baseroute, access_token)
+            data = self._run_fetch(f'{self.baseroute}{data_source.spreadsheet_id}', access_token)
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             data_source.sheet = available_sheets[0]
 

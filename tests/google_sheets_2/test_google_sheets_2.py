@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 from pytest import fixture
 
@@ -16,6 +18,12 @@ def con():
 
 
 @fixture
+def con_with_secrets(con):
+    con.set_secrets({'access_token': 'foo', 'refresh_token': 'bar'})
+    return con
+
+
+@fixture
 def ds():
     return GoogleSheets2DataSource(
         name='test_name',
@@ -25,7 +33,16 @@ def ds():
     )
 
 
-FAKE_SPREADSHEET = {
+@fixture
+def ds_without_sheet():
+    return GoogleSheets2DataSource(
+        name='test_name',
+        domain='test_domain',
+        spreadsheet_id='1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU',
+    )
+
+
+FAKE_SHEET = {
     'metadata': '...',
     'values': [['country', 'city'], ['France', 'Paris'], ['England', 'London']],
 }
@@ -34,11 +51,11 @@ FAKE_SPREADSHEET = {
 @pytest.mark.asyncio
 async def test_get_data(mocker, con):
     """It should return a result from fetch if all is ok."""
-    mocker.patch(f'{import_path}.fetch', return_value=helpers.build_future(FAKE_SPREADSHEET))
+    mocker.patch(f'{import_path}.fetch', return_value=helpers.build_future(FAKE_SHEET))
 
     result = await con._get_data('/foo', 'myaccesstoken')
 
-    assert result == FAKE_SPREADSHEET
+    assert result == FAKE_SHEET
 
 
 FAKE_SHEET_LIST_RESPONSE = {
@@ -56,13 +73,12 @@ FAKE_SHEET_LIST_RESPONSE = {
 }
 
 
-def test_get_form_with_secrets(mocker, con, ds):
+def test_get_form_with_secrets(mocker, con_with_secrets, ds):
     """It should return a list of spreadsheet titles."""
-    con.set_secrets({'access_token': 'foo'})
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET_LIST_RESPONSE)
 
     result = ds.get_form(
-        connector=con,
+        connector=con_with_secrets,
         current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
     )
     expected_results = ['Foo', 'Bar', 'Baz']
@@ -98,31 +114,24 @@ def test_set_secrets(mocker, con):
     spy.assert_called_once_with(con, fake_secrets)
 
 
-def test_spreadsheet_success(mocker, con, ds):
+def test_spreadsheet_success(mocker, con_with_secrets, ds):
     """It should return a spreadsheet."""
-    con.set_secrets(
-        {
-            'access_token': 'myaccesstoken',
-            'refresh_token': 'myrefreshtoken',
-        }
-    )
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
 
-    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SPREADSHEET)
-
-    df = con.get_df(ds)
+    df = con_with_secrets.get_df(ds)
 
     assert df.shape == (2, 2)
     assert df.columns.tolist() == ['country', 'city']
 
     ds.header_row = 1
-    df = con.get_df(ds)
+    df = con_with_secrets.get_df(ds)
     assert df.shape == (1, 2)
     assert df.columns.tolist() == ['France', 'Paris']
 
 
 def test_spreadsheet_no_secrets(mocker, con, ds):
     """It should raise an exception if there no secrets passed or no access token."""
-    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SPREADSHEET)
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
 
     with pytest.raises(Exception) as err:
         con.get_df(ds)
@@ -135,16 +144,15 @@ def test_spreadsheet_no_secrets(mocker, con, ds):
         con.get_df(ds)
 
 
-def test_set_columns(mocker, con, ds):
+def test_set_columns(mocker, con_with_secrets, ds):
     """It should return a well-formed column set."""
-    con.set_secrets({'access_token': 'foo', 'refresh_token': 'bar'})
     fake_results = {
         'metadata': '...',
         'values': [['Animateur', '', '', 'Week'], ['pika', '', 'a', 'W1'], ['bulbi', '', '', 'W2']],
     }
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=fake_results)
 
-    df = con.get_df(ds)
+    df = con_with_secrets.get_df(ds)
     assert df.to_dict() == {
         'Animateur': {1: 'pika', 2: 'bulbi'},
         1: {1: '', 2: ''},
@@ -153,13 +161,43 @@ def test_set_columns(mocker, con, ds):
     }
 
 
-@pytest.mark.skip(reason='Update seems to have broken this test')
 def test__run_fetch(mocker, con):
     """It should return a result from loops if all is ok."""
     mocker.patch.object(
-        GoogleSheets2Connector, '_get_data', return_value=helpers.build_future(FAKE_SPREADSHEET)
+        GoogleSheets2Connector, '_get_data', return_value=helpers.build_future(FAKE_SHEET)
     )
 
     result = con._run_fetch('/fudge', 'myaccesstoken')
 
-    assert result == FAKE_SPREADSHEET
+    assert result == FAKE_SHEET
+
+
+def test_spreadsheet_without_sheet(mocker, con_with_secrets, ds_without_sheet):
+    """
+    It should retrieve the first sheet of the spreadsheet if no sheet has been indicated
+    """
+
+    def mock_api_responses(uri: str, _token):
+        print('HERE', uri)
+        if uri.endswith('/Foo'):
+            return FAKE_SHEET
+        else:
+            return FAKE_SHEET_LIST_RESPONSE
+
+    fetch_mock: Mock = mocker.patch.object(
+        GoogleSheets2Connector, '_run_fetch', side_effect=mock_api_responses
+    )
+    df = con_with_secrets.get_df(ds_without_sheet)
+
+    assert fetch_mock.call_count == 2
+    assert (
+        fetch_mock.call_args_list[0][0][0]
+        == 'https://sheets.googleapis.com/v4/spreadsheets/1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'
+    )
+    assert (
+        fetch_mock.call_args_list[1][0][0]
+        == 'https://sheets.googleapis.com/v4/spreadsheets/1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU/values/Foo'
+    )
+
+    assert df.shape == (2, 2)
+    assert df.columns.tolist() == ['country', 'city']
