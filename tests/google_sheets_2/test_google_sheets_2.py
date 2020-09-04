@@ -73,6 +73,17 @@ FAKE_SHEET_LIST_RESPONSE = {
 }
 
 
+def get_columns_in_schema(schema):
+    """Pydantic generates schema slightly differently in python <=3.7 and in python 3.8"""
+    try:
+        if schema.get('definitions'):
+            return schema['definitions']['sheet']['enum']
+        else:
+            return schema['properties']['sheet']['enum']
+    except KeyError:
+        return None
+
+
 def test_get_form_with_secrets(mocker, con_with_secrets, ds):
     """It should return a list of spreadsheet titles."""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET_LIST_RESPONSE)
@@ -82,10 +93,7 @@ def test_get_form_with_secrets(mocker, con_with_secrets, ds):
         current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
     )
     expected_results = ['Foo', 'Bar', 'Baz']
-    if result.get('definitions'):
-        assert result['definitions']['sheet']['enum'] == expected_results
-    else:
-        assert result['properties']['sheet']['enum'] == expected_results
+    assert get_columns_in_schema(result) == expected_results
 
 
 def test_get_form_no_secrets(mocker, con, ds):
@@ -95,10 +103,7 @@ def test_get_form_no_secrets(mocker, con, ds):
         connector=con,
         current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
     )
-    if result.get('properties'):
-        assert not result['properties']['sheet'].get('enum')
-    else:
-        assert not result.get('definitions')
+    assert not get_columns_in_schema(result)
 
 
 def test_set_secrets(mocker, con):
