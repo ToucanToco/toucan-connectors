@@ -39,7 +39,7 @@ DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
   spreadsheet_id:    '<spreadsheet_id>'
-  sheetname:    '<sheetname>'
+  sheet:    '<sheet name>'
   skip_rows:    <skip_rows>
 ,
   ...

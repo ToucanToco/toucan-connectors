@@ -183,7 +183,6 @@ def test_spreadsheet_without_sheet(mocker, con_with_secrets, ds_without_sheet):
     """
 
     def mock_api_responses(uri: str, _token):
-        print('HERE', uri)
         if uri.endswith('/Foo'):
             return FAKE_SHEET
         else:
