@@ -51,6 +51,9 @@ class GoogleSheets2DataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
+Secrets = Dict[str, Any]
+
+
 class GoogleSheets2Connector(ToucanConnector):
     """The Google Sheets connector."""
 
@@ -62,7 +65,7 @@ class GoogleSheets2Connector(ToucanConnector):
 
     baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
 
-    secrets: Optional[Dict[str, Any]]
+    secrets: Optional[Secrets]
 
     async def _get_data(self, url, access_token):
         """Build the final request along with headers."""
@@ -71,7 +74,7 @@ class GoogleSheets2Connector(ToucanConnector):
         async with ClientSession(headers=headers) as session:
             return await fetch(url, session)
 
-    def set_secrets(self, secrets: Dict[str, str]):
+    def set_secrets(self, secrets: Secrets):
         """Set the secrets from inside the main service."""
         self.secrets = secrets
 

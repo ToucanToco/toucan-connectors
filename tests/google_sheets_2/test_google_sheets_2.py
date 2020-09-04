@@ -19,7 +19,7 @@ def con():
 
 @fixture
 def con_with_secrets(con):
-    con.set_secrets({'access_token': 'foo', 'refresh_token': 'bar'})
+    con.set_secrets({'access_token': 'foo', 'refresh_token': None})
     return con
 
 
@@ -111,7 +111,7 @@ def test_set_secrets(mocker, con):
     spy = mocker.spy(GoogleSheets2Connector, 'set_secrets')
     fake_secrets = {
         'access_token': 'myaccesstoken',
-        'refresh_token': 'myrefreshtoken',
+        'refresh_token': None,
     }
     con.set_secrets(fake_secrets)
 
@@ -143,7 +143,7 @@ def test_spreadsheet_no_secrets(mocker, con, ds):
 
     assert str(err.value) == 'No credentials'
 
-    con.set_secrets({'refresh_token': 'myrefreshtoken'})
+    con.set_secrets({'refresh_token': None})
 
     with pytest.raises(KeyError):
         con.get_df(ds)
