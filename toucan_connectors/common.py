@@ -211,7 +211,13 @@ async def fetch(url: str, session: ClientSession):
     """Fetch data from an API."""
     async with session.get(url) as res:
         if res.status != 200:
-            raise Exception(
+            raise HttpError(
                 f'Aborting request due to error from the API: {res.status}, {res.reason}'
             )
         return await res.json()
+
+
+class HttpError(Exception):
+    """
+    Raised when the response of an HTTP request has not a 200 status code.
+    """
