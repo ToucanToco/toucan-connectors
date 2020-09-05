@@ -49,11 +49,11 @@ FAKE_SHEET = {
 
 
 @pytest.mark.asyncio
-async def test_get_data(mocker, con):
+async def test_authentified_fetch(mocker, con):
     """It should return a result from fetch if all is ok."""
     mocker.patch(f'{import_path}.fetch', return_value=helpers.build_future(FAKE_SHEET))
 
-    result = await con._get_data('/foo', 'myaccesstoken')
+    result = await con._authentified_fetch('/foo', 'myaccesstoken')
 
     assert result == FAKE_SHEET
 
@@ -169,7 +169,7 @@ def test_set_columns(mocker, con_with_secrets, ds):
 def test__run_fetch(mocker, con):
     """It should return a result from loops if all is ok."""
     mocker.patch.object(
-        GoogleSheets2Connector, '_get_data', return_value=helpers.build_future(FAKE_SHEET)
+        GoogleSheets2Connector, '_authentified_fetch', return_value=helpers.build_future(FAKE_SHEET)
     )
 
     result = con._run_fetch('/fudge', 'myaccesstoken')
