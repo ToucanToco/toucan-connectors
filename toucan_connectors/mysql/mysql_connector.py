@@ -7,7 +7,12 @@ import pymysql
 from pydantic import Field, SecretStr, constr, create_model
 from pymysql.constants import CR, ER
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    ConnectorStatus,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 
 class MySQLDataSource(ToucanDataSource):
@@ -137,18 +142,18 @@ class MySQLConnector(ToucanConnector):
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
         return ok_checks + [new_check] + not_validated_checks
 
-    def get_status(self):
+    def get_status(self) -> ConnectorStatus:
         # Check hostname
         try:
             self.check_hostname(self.host)
         except Exception as e:
-            return {'status': False, 'details': self._get_details(0, False), 'error': str(e)}
+            return ConnectorStatus(status=False, details=self._get_details(0, False), error=str(e))
 
         # Check port
         try:
             self.check_port(self.host, self.port)
         except Exception as e:
-            return {'status': False, 'details': self._get_details(1, False), 'error': str(e)}
+            return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
 
         # Check basic access
         try:
@@ -158,13 +163,17 @@ class MySQLConnector(ToucanConnector):
 
             # Can't connect to full URI
             if error_code == CR.CR_CONN_HOST_ERROR:
-                return {'status': False, 'details': self._get_details(2, False), 'error': e.args[1]}
+                return ConnectorStatus(
+                    status=False, details=self._get_details(2, False), error=e.args[1]
+                )
 
             # Wrong user/password
             if error_code == ER.ACCESS_DENIED_ERROR:
-                return {'status': False, 'details': self._get_details(3, False), 'error': e.args[1]}
+                return ConnectorStatus(
+                    status=False, details=self._get_details(3, False), error=e.args[1]
+                )
 
-        return {'status': True, 'details': self._get_details(3, True), 'error': None}
+        return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
     @staticmethod
     def clean_response(response):

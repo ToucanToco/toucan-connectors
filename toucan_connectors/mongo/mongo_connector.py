@@ -12,6 +12,7 @@ from pydantic import Field, SecretStr, create_model, validator
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 from toucan_connectors.toucan_connector import (
+    ConnectorStatus,
     DataSlice,
     ToucanConnector,
     ToucanDataSource,
@@ -148,19 +149,23 @@ class MongoConnector(ToucanConnector):
 
         return mongo_client_kwargs
 
-    def get_status(self):
+    def get_status(self) -> ConnectorStatus:
         if self.port:
             # Check hostname
             try:
                 self.check_hostname(self.host)
             except Exception as e:
-                return {'status': False, 'details': self._get_details(0, False), 'error': str(e)}
+                return ConnectorStatus(
+                    status=False, details=self._get_details(0, False), error=str(e)
+                )
 
             # Check port
             try:
                 self.check_port(self.host, self.port)
             except Exception as e:
-                return {'status': False, 'details': self._get_details(1, False), 'error': str(e)}
+                return ConnectorStatus(
+                    status=False, details=self._get_details(1, False), error=str(e)
+                )
 
         # Check databases access
         mongo_client_kwargs = self._get_mongo_client_kwargs()
@@ -169,11 +174,11 @@ class MongoConnector(ToucanConnector):
         try:
             client.server_info()
         except pymongo.errors.ServerSelectionTimeoutError as e:
-            return {'status': False, 'details': self._get_details(2, False), 'error': str(e)}
+            return ConnectorStatus(status=False, details=self._get_details(2, False), error=str(e))
         except pymongo.errors.OperationFailure as e:
-            return {'status': False, 'details': self._get_details(3, False), 'error': str(e)}
+            return ConnectorStatus(status=False, details=self._get_details(3, False), error=str(e))
 
-        return {'status': True, 'details': self._get_details(3, True), 'error': None}
+        return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
     @cached_property
     def client(self):
