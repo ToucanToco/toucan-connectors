@@ -67,7 +67,7 @@ class GoogleSheets2Connector(ToucanConnector):
 
     secrets: Optional[Secrets]
 
-    async def _get_data(self, url, access_token):
+    async def _authentified_fetch(self, url, access_token):
         """Build the final request along with headers."""
         headers = {'Authorization': f'Bearer {access_token}'}
 
@@ -81,7 +81,7 @@ class GoogleSheets2Connector(ToucanConnector):
     def _run_fetch(self, url, access_token):
         """Run loop."""
         loop = get_loop()
-        future = asyncio.ensure_future(self._get_data(url, access_token))
+        future = asyncio.ensure_future(self._authentified_fetch(url, access_token))
         return loop.run_until_complete(future)
 
     def _retrieve_data(self, data_source: GoogleSheets2DataSource) -> pd.DataFrame:
