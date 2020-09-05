@@ -6,6 +6,7 @@ import pymysql
 import pytest
 from pydantic import ValidationError
 
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.mysql.mysql_connector import MySQLConnector, MySQLDataSource
 
 
@@ -86,42 +87,41 @@ def test_get_connection_params():
 
 
 def test_get_status_all_good(mysql_connector):
-    assert mysql_connector.get_status() == {
-        'status': True,
-        'details': [
+    assert mysql_connector.get_status() == ConnectorStatus(
+        status=True,
+        details=[
             ('Hostname resolved', True),
             ('Port opened', True),
             ('Host connection', True),
             ('Authenticated', True),
         ],
-        'error': None,
-    }
+    )
 
 
 def test_get_status_bad_host(mysql_connector):
     mysql_connector.host = 'localhot'
     status = mysql_connector.get_status()
-    assert status['status'] is False
-    assert status['details'] == [
+    assert status.status is False
+    assert status.details == [
         ('Hostname resolved', False),
         ('Port opened', None),
         ('Host connection', None),
         ('Authenticated', None),
     ]
-    assert status['error'] is not None
+    assert status.error is not None
 
 
 def test_get_status_bad_port(mysql_connector):
     mysql_connector.port = 123000
     status = mysql_connector.get_status()
-    assert status['status'] is False
-    assert status['details'] == [
+    assert status.status is False
+    assert status.details == [
         ('Hostname resolved', True),
         ('Port opened', False),
         ('Host connection', None),
         ('Authenticated', None),
     ]
-    assert 'port must be 0-65535.' in status['error']
+    assert 'port must be 0-65535.' in status.error
 
 
 def test_get_status_bad_connection(mysql_connector, unused_port, mocker):
@@ -130,28 +130,28 @@ def test_get_status_bad_connection(mysql_connector, unused_port, mocker):
         'toucan_connectors.mysql.mysql_connector.MySQLConnector.check_port', return_value=True
     )
     status = mysql_connector.get_status()
-    assert status['status'] is False
-    assert status['details'] == [
+    assert status.status is False
+    assert status.details == [
         ('Hostname resolved', True),
         ('Port opened', True),
         ('Host connection', False),
         ('Authenticated', None),
     ]
-    assert status['error'].startswith("Can't connect to MySQL server on 'localhost'")
+    assert status.error.startswith("Can't connect to MySQL server on 'localhost'")
 
 
 def test_get_status_bad_authentication(mysql_connector):
     mysql_connector.user = 'pika'
-    assert mysql_connector.get_status() == {
-        'status': False,
-        'details': [
+    assert mysql_connector.get_status() == ConnectorStatus(
+        status=False,
+        details=[
             ('Hostname resolved', True),
             ('Port opened', True),
             ('Host connection', True),
             ('Authenticated', False),
         ],
-        'error': "Access denied for user 'pika'@'172.17.0.1' (using password: YES)",
-    }
+        error="Access denied for user 'pika'@'172.17.0.1' (using password: YES)",
+    )
 
 
 def test_get_df(mocker):

@@ -5,6 +5,7 @@ import pytest
 import tenacity as tny
 from pydantic import create_model
 
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -111,11 +112,7 @@ def test_explain():
 
 
 def test_get_status():
-    assert DataConnector(name='my_name').get_status() == {
-        'status': None,
-        'details': [],
-        'error': None,
-    }
+    assert DataConnector(name='my_name').get_status() == ConnectorStatus()
 
 
 class UnreliableDataConnector(ToucanConnector):

@@ -230,4 +230,9 @@ def test_connector_status():
     """
     It should be exported as dict
     """
-    assert ConnectorStatus(status=True).to_dict() == {'status': True}
+    assert ConnectorStatus(status=True).to_dict() == {
+        'status': True,
+        'message': None,
+        'error': None,
+        'details': [],
+    }
