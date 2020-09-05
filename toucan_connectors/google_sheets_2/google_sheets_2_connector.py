@@ -9,13 +9,8 @@ import pandas as pd
 from aiohttp import ClientSession
 from pydantic import Field, create_model
 
-from toucan_connectors.common import HttpError, fetch, get_loop
-from toucan_connectors.toucan_connector import (
-    ConnectorStatus,
-    ToucanConnector,
-    ToucanDataSource,
-    strlist_to_enum,
-)
+from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class GoogleSheets2DataSource(ToucanDataSource):

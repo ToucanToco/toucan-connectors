@@ -1,4 +1,3 @@
-import dataclasses
 import logging
 import operator
 import os
@@ -6,13 +5,13 @@ import socket
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Iterable, List, NamedTuple, Optional, Tuple, Type
+from typing import Iterable, List, NamedTuple, Optional, Type
 
 import pandas as pd
 import tenacity as tny
 from pydantic import BaseModel
 
-from toucan_connectors.common import apply_query_parameters
+from toucan_connectors.common import ConnectorStatus, apply_query_parameters
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 
 try:
@@ -166,17 +165,6 @@ def decorate_func_with_retry(func):
             return func(self, *args, **kwargs)
 
     return get_func_and_retry
-
-
-@dataclasses.dataclass()
-class ConnectorStatus:
-    status: Optional[bool] = None
-    message: Optional[str] = None
-    error: Optional[str] = None
-    details: Optional[List[Tuple[str, Optional[bool]]]] = dataclasses.field(default_factory=list)
-
-    def to_dict(self):
-        return dataclasses.asdict(self)
 
 
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
