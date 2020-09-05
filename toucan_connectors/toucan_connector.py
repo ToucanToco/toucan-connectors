@@ -3,9 +3,10 @@ import operator
 import os
 import socket
 from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import reduce, wraps
-from typing import Iterable, List, NamedTuple, Optional, Type
+from typing import Iterable, List, NamedTuple, Optional, Tuple, Type
 
 import pandas as pd
 import tenacity as tny
@@ -167,6 +168,14 @@ def decorate_func_with_retry(func):
     return get_func_and_retry
 
 
+@dataclass
+class ConnectorStatus:
+    status: Optional[bool] = None
+    message: Optional[str] = None
+    error: Optional[str] = None
+    details: Optional[List[Tuple[str, Optional[bool]]]] = field(default_factory=list)
+
+
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
     """Abstract base class for all toucan connectors.
 
@@ -283,7 +292,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((host, port))
 
-    def get_status(self) -> dict:
+    def get_status(self) -> ConnectorStatus:
         """
         Check if connection can be made.
         Returns
@@ -291,6 +300,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
           'status': True/False/None  # the status of the connection (None if no check has been made)
           'details': [(< type of check >, True/False/None), (...), ...]
           'error': < error message >  # if a check raised an error, return it
+          'message': < status message > # optionally provides some additional info, such as the user account connected
         }
         e.g.
         {
@@ -304,4 +314,4 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
           'error': 'port must be 0-65535'
         }
         """
-        return {'status': None, 'details': [], 'error': None}
+        return ConnectorStatus()
