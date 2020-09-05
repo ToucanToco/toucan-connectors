@@ -7,12 +7,8 @@ import pymysql
 from pydantic import Field, SecretStr, constr, create_model
 from pymysql.constants import CR, ER
 
-from toucan_connectors.toucan_connector import (
-    ConnectorStatus,
-    ToucanConnector,
-    ToucanDataSource,
-    strlist_to_enum,
-)
+from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class MySQLDataSource(ToucanDataSource):

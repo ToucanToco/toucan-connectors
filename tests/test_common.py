@@ -2,6 +2,7 @@ import pytest
 from aiohttp import web
 
 from toucan_connectors.common import (
+    ConnectorStatus,
     NonValidVariable,
     apply_query_parameters,
     fetch,
@@ -223,3 +224,10 @@ async def test_fetch_bad_response(aiohttp_client, loop):
         await fetch('/hotels', client)
 
     assert str(err.value) == 'Aborting request due to error from the API: 401, Unauthorized'
+
+
+def test_connector_status():
+    """
+    It should be exported as dict
+    """
+    assert ConnectorStatus(status=True).to_dict() == {'status': True}

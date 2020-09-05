@@ -1,7 +1,9 @@
 import ast
 import asyncio
+import dataclasses
 import re
 from copy import deepcopy
+from typing import List, Optional, Tuple
 
 import pyjq
 from aiohttp import ClientSession
@@ -221,3 +223,14 @@ class HttpError(Exception):
     """
     Raised when the response of an HTTP request has not a 200 status code.
     """
+
+
+@dataclasses.dataclass()
+class ConnectorStatus:
+    status: Optional[bool] = None
+    message: Optional[str] = None
+    error: Optional[str] = None
+    details: Optional[List[Tuple[str, Optional[bool]]]] = dataclasses.field(default_factory=list)
+
+    def to_dict(self):
+        return dataclasses.asdict(self)
