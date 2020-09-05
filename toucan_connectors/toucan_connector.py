@@ -1,9 +1,9 @@
+import dataclasses
 import logging
 import operator
 import os
 import socket
 from abc import ABCMeta, abstractmethod
-from dataclasses import dataclass, field
 from enum import Enum
 from functools import reduce, wraps
 from typing import Iterable, List, NamedTuple, Optional, Tuple, Type
@@ -168,12 +168,15 @@ def decorate_func_with_retry(func):
     return get_func_and_retry
 
 
-@dataclass
+@dataclasses.dataclass()
 class ConnectorStatus:
     status: Optional[bool] = None
     message: Optional[str] = None
     error: Optional[str] = None
-    details: Optional[List[Tuple[str, Optional[bool]]]] = field(default_factory=list)
+    details: Optional[List[Tuple[str, Optional[bool]]]] = dataclasses.field(default_factory=list)
+
+    def to_dict(self):
+        return dataclasses.asdict(self)
 
 
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
