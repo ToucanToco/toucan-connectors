@@ -4,6 +4,7 @@ import pytest
 from pytest import fixture
 
 import tests.general_helpers as helpers
+from toucan_connectors.common import HttpError
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
     GoogleSheets2Connector,
     GoogleSheets2DataSource,
@@ -205,3 +206,36 @@ def test_spreadsheet_without_sheet(mocker, con_with_secrets, ds_without_sheet):
 
     assert df.shape == (2, 2)
     assert df.columns.tolist() == ['country', 'city']
+
+
+def test_get_status_no_secrets(mocker, con):
+    """
+    It should fail if no secrets are provided
+    """
+    assert con.get_status().status is False
+
+
+def test_get_status_success(mocker, con_with_secrets):
+    """
+    It should fail if no secrets are provided
+    """
+    fetch_mock: Mock = mocker.patch.object(
+        GoogleSheets2Connector, '_run_fetch', return_value={'email': 'foo@bar.baz'}
+    )
+
+    connector_status = con_with_secrets.get_status()
+    assert connector_status.status is True
+    assert 'foo@bar.baz' in connector_status.message
+
+    fetch_mock.assert_called_once_with(
+        'https://www.googleapis.com/oauth2/v2/userinfo?alt=json', 'foo'
+    )
+
+
+def test_get_status_api_down(mocker, con_with_secrets):
+    """
+    It should fail if no secrets are provided
+    """
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', side_effect=HttpError)
+
+    assert con_with_secrets.get_status().status is False

@@ -9,8 +9,13 @@ import pandas as pd
 from aiohttp import ClientSession
 from pydantic import Field, create_model
 
-from toucan_connectors.common import fetch, get_loop
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.common import HttpError, fetch, get_loop
+from toucan_connectors.toucan_connector import (
+    ConnectorStatus,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 
 class GoogleSheets2DataSource(ToucanDataSource):
@@ -123,3 +128,21 @@ class GoogleSheets2Connector(ToucanConnector):
         df = df[data_source.header_row + 1 :]
 
         return df
+
+    def get_status(self) -> ConnectorStatus:
+        """
+        Test the Google Sheets connexion.
+
+        If successful, returns a message with the email of the connected user account.
+        """
+        if not self.secrets or 'access_token' not in self.secrets:
+            return ConnectorStatus(status=False, error='Credentials are missing')
+
+        access_token = self.secrets['access_token']
+        try:
+            user_info = self._run_fetch(
+                'https://www.googleapis.com/oauth2/v2/userinfo?alt=json', access_token
+            )
+            return ConnectorStatus(status=True, message=f"Connected as {user_info.get('email')}")
+        except HttpError:
+            return ConnectorStatus(status=False, error="Couldn't retrieve user infos")
