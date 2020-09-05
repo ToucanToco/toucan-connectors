@@ -8,6 +8,7 @@ import pymongo.errors
 import pytest
 from bson.son import SON
 
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.mongo.mongo_connector import (
     MongoConnector,
     MongoDataSource,
@@ -346,56 +347,56 @@ def test_normalize_query():
 
 
 def test_status_all_good(mongo_connector):
-    assert mongo_connector.get_status() == {
-        'status': True,
-        'details': [
+    assert mongo_connector.get_status() == ConnectorStatus(
+        status=True,
+        details=[
             ('Hostname resolved', True),
             ('Port opened', True),
             ('Host connection', True),
             ('Authenticated', True),
         ],
-        'error': None,
-    }
+        error=None,
+    )
 
 
 def test_status_bad_host(mongo_connector):
     mongo_connector.host = 'localhot'
     mongo_connector.port = 42
     status = mongo_connector.get_status()
-    assert status['status'] is False
-    assert status['details'] == [
+    assert status.status is False
+    assert status.details == [
         ('Hostname resolved', False),
         ('Port opened', None),
         ('Host connection', None),
         ('Authenticated', None),
     ]
-    assert len(status['error']) > 0
+    assert len(status.error) > 0
 
 
 def test_status_bad_port(mongo_connector):
     mongo_connector.port += 1
     status = mongo_connector.get_status()
-    assert status['status'] is False
-    assert status['details'] == [
+    assert status.status is False
+    assert status.details == [
         ('Hostname resolved', True),
         ('Port opened', False),
         ('Host connection', None),
         ('Authenticated', None),
     ]
-    assert 'Connection refused' in status['error']
+    assert 'Connection refused' in status.error
 
 
 def test_status_bad_port2(mongo_connector):
     mongo_connector.port = 123000
     status = mongo_connector.get_status()
-    assert status['status'] is False
-    assert status['details'] == [
+    assert status.status is False
+    assert status.details == [
         ('Hostname resolved', True),
         ('Port opened', False),
         ('Host connection', None),
         ('Authenticated', None),
     ]
-    assert 'port must be 0-65535.' in status['error']
+    assert 'port must be 0-65535.' in status.error
 
 
 def test_status_unreachable(mongo_connector, mocker):
@@ -403,29 +404,29 @@ def test_status_unreachable(mongo_connector, mocker):
         'pymongo.MongoClient.server_info',
         side_effect=pymongo.errors.ServerSelectionTimeoutError('qwe'),
     )
-    assert mongo_connector.get_status() == {
-        'status': False,
-        'details': [
+    assert mongo_connector.get_status() == ConnectorStatus(
+        status=False,
+        details=[
             ('Hostname resolved', True),
             ('Port opened', True),
             ('Host connection', False),
             ('Authenticated', None),
         ],
-        'error': 'qwe',
-    }
+        error='qwe',
+    )
 
 
 def test_status_bad_username(mongo_connector):
     mongo_connector.username = 'bibou'
     status = mongo_connector.get_status()
-    assert status['status'] is False
-    assert status['details'] == [
+    assert status.status is False
+    assert status.details == [
         ('Hostname resolved', True),
         ('Port opened', True),
         ('Host connection', True),
         ('Authenticated', False),
     ]
-    assert 'Authentication failed' in status['error']
+    assert 'Authentication failed' in status.error
 
 
 def test_get_form_empty_query(mongo_connector):
