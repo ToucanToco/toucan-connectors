@@ -61,6 +61,8 @@ class GoogleSheets2Connector(ToucanConnector):
 
     auth_flow = 'oauth2'
 
+    auth_flow_id: Optional[str]
+
     # The following should be hidden properties
 
     baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
