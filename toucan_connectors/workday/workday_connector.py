@@ -14,17 +14,23 @@ import zeep
 from workday.auth import AnonymousAuthentication, WsSecurityCredentialAuthentication
 
 
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
+def convert_zeep_object(obj):
+    if isinstance(obj, zeep.xsd.valueobjects.CompoundValue):
+        obj = zeep.helpers.serialize_object(obj)
+
+    if isinstance(obj, list):
+        return [convert_zeep_object(sub) for sub in obj]
+
+    if isinstance(obj, dict):
+        return {k: convert_zeep_object(v) for k, v in obj.items()}
 
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
-    if isinstance(obj, decimal.Decimal):
-        return (str(obj) for obj in [obj])
-    if isinstance(obj, types.GeneratorType):
-        return list(obj)
-    raise TypeError('Type %s not serializable' % type(obj))
 
+    if isinstance(obj, decimal.Decimal):
+        return str(obj)
+
+    return obj
 
 class WorkdayDataSource(ToucanDataSource):
     service: str = Field(
@@ -96,21 +102,16 @@ class WorkdayConnector(ToucanConnector):
 
         num_page = data.total_pages
 
-        data_json = json.loads(
-            json.dumps(zeep.helpers.serialize_object(data.data), default=json_serial)
-        )
+        data_json = convert_zeep_object(data.data)
 
         df = pd.DataFrame(transform_with_jq(data_json, data_source.filter))
 
         if num_page > 1:
             for i in range(num_page - 1):
-                data_next = json.loads(
-                    json.dumps(zeep.helpers.serialize_object(data.next().data), default=json_serial)
-                )
+                data_next = convert_zeep_object(data.next().data)
                 df = df.append(
                     pd.DataFrame(transform_with_jq(data_next, data_source.filter)),
                     ignore_index=True,
                 )
 
         return df
-
