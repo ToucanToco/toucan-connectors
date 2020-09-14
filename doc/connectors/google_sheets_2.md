@@ -5,6 +5,7 @@
 * `type`: `"GoogleSheets2"`
 * `name`: str, required
 * `auth_flow`: str
+* `auth_flow_id`: str
 * `baseroute`: str
 * `secrets`: dict
 
@@ -13,6 +14,8 @@ The `auth_flow` property marks this as being a connector that uses the connector
 The `baseroute` is fixed and is 'https://sheets.googleapis.com/v4/spreadsheets/'.
 
 The `secrets` dictionary contains the `access_token` and a `refresh_token` (if there is one). Though `secrets` is optional during the initial creation of the connector, it is necessary for when the user wants to make requests to the connector. If there is no `access_token`, an Exception is thrown.
+
+The `auth_flow_id` property is like an identifier that is used to identify the secrets associated with the connector.
 
 
 ```coffee
