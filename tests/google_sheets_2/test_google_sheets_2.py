@@ -8,6 +8,7 @@ from toucan_connectors.common import HttpError
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
     GoogleSheets2Connector,
     GoogleSheets2DataSource,
+    GoogleSheets2HiddenProperties,
 )
 
 import_path = 'toucan_connectors.google_sheets_2.google_sheets_2_connector'
@@ -15,12 +16,14 @@ import_path = 'toucan_connectors.google_sheets_2.google_sheets_2_connector'
 
 @fixture
 def con():
-    return GoogleSheets2Connector(name='test_name')
+    con = GoogleSheets2Connector(name='test_name', auth_flow_id='bar')
+    con.set_hidden_properties(secrets=None)
+    return con
 
 
 @fixture
-def con_with_secrets(con):
-    con.set_secrets({'access_token': 'foo', 'refresh_token': None})
+def con_with_hidden_properties(con):
+    con.set_hidden_properties(secrets={'access_token': 'foo', 'refresh_token': None})
     return con
 
 
@@ -85,12 +88,12 @@ def get_columns_in_schema(schema):
         return None
 
 
-def test_get_form_with_secrets(mocker, con_with_secrets, ds):
+def test_get_form_with_secrets(mocker, con_with_hidden_properties, ds):
     """It should return a list of spreadsheet titles."""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET_LIST_RESPONSE)
 
     result = ds.get_form(
-        connector=con_with_secrets,
+        connector=con_with_hidden_properties,
         current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
     )
     expected_results = ['Foo', 'Bar', 'Baz']
@@ -108,29 +111,36 @@ def test_get_form_no_secrets(mocker, con, ds):
 
 
 def test_set_secrets(mocker, con):
-    """It should set secrets on the connector."""
-    spy = mocker.spy(GoogleSheets2Connector, 'set_secrets')
+    """It should set secrets and auth_flow_id in the connector's hidden properties."""
+    spy = mocker.spy(GoogleSheets2HiddenProperties, 'set_hidden_properties')
     fake_secrets = {
         'access_token': 'myaccesstoken',
         'refresh_token': None,
     }
-    con.set_secrets(fake_secrets)
+    con.set_hidden_properties(secrets=fake_secrets)
 
-    assert con.secrets == fake_secrets
-    spy.assert_called_once_with(con, fake_secrets)
+    assert con.hidden_properties.get_hidden_properties() == {
+        'secrets': fake_secrets,
+    }
+    spy.assert_called_once_with(
+        GoogleSheets2HiddenProperties(
+            secrets={'access_token': 'myaccesstoken', 'refresh_token': None}
+        ),
+        hidden_properties={'secrets': fake_secrets},
+    )
 
 
-def test_spreadsheet_success(mocker, con_with_secrets, ds):
+def test_spreadsheet_success(mocker, con_with_hidden_properties, ds):
     """It should return a spreadsheet."""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
 
-    df = con_with_secrets.get_df(ds)
+    df = con_with_hidden_properties.get_df(ds)
 
     assert df.shape == (2, 2)
     assert df.columns.tolist() == ['country', 'city']
 
     ds.header_row = 1
-    df = con_with_secrets.get_df(ds)
+    df = con_with_hidden_properties.get_df(ds)
     assert df.shape == (1, 2)
     assert df.columns.tolist() == ['France', 'Paris']
 
@@ -144,13 +154,13 @@ def test_spreadsheet_no_secrets(mocker, con, ds):
 
     assert str(err.value) == 'No credentials'
 
-    con.set_secrets({'refresh_token': None})
+    con.set_hidden_properties(secrets={'refresh_token': None})
 
     with pytest.raises(KeyError):
         con.get_df(ds)
 
 
-def test_set_columns(mocker, con_with_secrets, ds):
+def test_set_columns(mocker, con_with_hidden_properties, ds):
     """It should return a well-formed column set."""
     fake_results = {
         'metadata': '...',
@@ -158,7 +168,7 @@ def test_set_columns(mocker, con_with_secrets, ds):
     }
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=fake_results)
 
-    df = con_with_secrets.get_df(ds)
+    df = con_with_hidden_properties.get_df(ds)
     assert df.to_dict() == {
         'Animateur': {1: 'pika', 2: 'bulbi'},
         1: {1: '', 2: ''},
@@ -178,7 +188,7 @@ def test__run_fetch(mocker, con):
     assert result == FAKE_SHEET
 
 
-def test_spreadsheet_without_sheet(mocker, con_with_secrets, ds_without_sheet):
+def test_spreadsheet_without_sheet(mocker, con_with_hidden_properties, ds_without_sheet):
     """
     It should retrieve the first sheet of the spreadsheet if no sheet has been indicated
     """
@@ -192,7 +202,7 @@ def test_spreadsheet_without_sheet(mocker, con_with_secrets, ds_without_sheet):
     fetch_mock: Mock = mocker.patch.object(
         GoogleSheets2Connector, '_run_fetch', side_effect=mock_api_responses
     )
-    df = con_with_secrets.get_df(ds_without_sheet)
+    df = con_with_hidden_properties.get_df(ds_without_sheet)
 
     assert fetch_mock.call_count == 2
     assert (
@@ -215,7 +225,7 @@ def test_get_status_no_secrets(mocker, con):
     assert con.get_status().status is False
 
 
-def test_get_status_success(mocker, con_with_secrets):
+def test_get_status_success(mocker, con_with_hidden_properties):
     """
     It should fail if no secrets are provided
     """
@@ -223,7 +233,7 @@ def test_get_status_success(mocker, con_with_secrets):
         GoogleSheets2Connector, '_run_fetch', return_value={'email': 'foo@bar.baz'}
     )
 
-    connector_status = con_with_secrets.get_status()
+    connector_status = con_with_hidden_properties.get_status()
     assert connector_status.status is True
     assert 'foo@bar.baz' in connector_status.message
 
@@ -232,10 +242,10 @@ def test_get_status_success(mocker, con_with_secrets):
     )
 
 
-def test_get_status_api_down(mocker, con_with_secrets):
+def test_get_status_api_down(mocker, con_with_hidden_properties):
     """
     It should fail if no secrets are provided
     """
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', side_effect=HttpError)
 
-    assert con_with_secrets.get_status().status is False
+    assert con_with_hidden_properties.get_status().status is False

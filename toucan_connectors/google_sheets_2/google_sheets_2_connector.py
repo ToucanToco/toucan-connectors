@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 import pandas as pd
 from aiohttp import ClientSession
-from pydantic import Field, create_model
+from pydantic import BaseModel, Field, create_model
 
 from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
@@ -43,8 +43,11 @@ class GoogleSheets2DataSource(ToucanDataSource):
         constraints = {}
         with suppress(Exception):
             partial_endpoint = current_config['spreadsheet_id']
-            final_url = f'{connector.baseroute}{partial_endpoint}'
-            data = connector._run_fetch(final_url, connector.secrets['access_token'])
+            final_url = f'{connector._baseroute}{partial_endpoint}'
+            data = connector._run_fetch(
+                final_url,
+                connector.hidden_properties.get_hidden_properties()['secrets']['access_token'],
+            )
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             constraints['sheet'] = strlist_to_enum('sheet', available_sheets)
 
@@ -54,20 +57,41 @@ class GoogleSheets2DataSource(ToucanDataSource):
 Secrets = Dict[str, Any]
 
 
+class GoogleSheets2HiddenProperties(BaseModel):
+    """
+    This class contains dynamic hidden properties for Google Sheets 2 that are not flags
+
+    - secrets
+    """
+
+    secrets: Optional[Secrets]
+
+    def get_hidden_properties(self):
+        """Get hidden properties stored in this class."""
+        return {k: v for k, v in self.__dict__.items()}
+
+    def set_hidden_properties(self, hidden_properties):
+        """Set hidden properties to be stored in this class."""
+        for k, v in hidden_properties.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+
+
 class GoogleSheets2Connector(ToucanConnector):
     """The Google Sheets connector."""
 
+    # dynamic, non-hidden variables
     data_source_model: GoogleSheets2DataSource
-
-    auth_flow = 'oauth2'
-
     auth_flow_id: Optional[str]
 
-    # The following should be hidden properties
+    # flagging variable; required for initiating the oauth dance
+    _auth_flow = 'oauth2'
 
-    baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
+    # static variable
+    _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
 
-    secrets: Optional[Secrets]
+    # hidden dynamic variables
+    hidden_properties: Optional[GoogleSheets2HiddenProperties]
 
     async def _authentified_fetch(self, url, access_token):
         """Build the final request along with headers."""
@@ -76,9 +100,11 @@ class GoogleSheets2Connector(ToucanConnector):
         async with ClientSession(headers=headers) as session:
             return await fetch(url, session)
 
-    def set_secrets(self, secrets: Secrets):
-        """Set the secrets from inside the main service."""
-        self.secrets = secrets
+    def set_hidden_properties(self, secrets: Secrets):
+        """Set the hidden properties from inside the main service."""
+        hidden_properties = GoogleSheets2HiddenProperties()
+        hidden_properties.set_hidden_properties(hidden_properties={'secrets': secrets})
+        self.hidden_properties = hidden_properties
 
     def _run_fetch(self, url, access_token):
         """Run loop."""
@@ -93,21 +119,23 @@ class GoogleSheets2Connector(ToucanConnector):
         Requires:
         - Datasource
         """
-        if not self.secrets:
+        hidden_properties = self.hidden_properties.get_hidden_properties()
+        secrets = hidden_properties.get('secrets')
+        if hidden_properties is None or secrets is None:
             raise Exception('No credentials')
 
-        access_token = self.secrets['access_token']
+        access_token = secrets['access_token']
 
         if data_source.sheet is None:
             # Get spreadsheet informations and retrieve all the available sheets
             # https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
-            data = self._run_fetch(f'{self.baseroute}{data_source.spreadsheet_id}', access_token)
+            data = self._run_fetch(f'{self._baseroute}{data_source.spreadsheet_id}', access_token)
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             data_source.sheet = available_sheets[0]
 
         # https://developers.google.com/sheets/api/samples/reading
         read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}'
-        full_url = f'{self.baseroute}{read_sheet_endpoint}'
+        full_url = f'{self._baseroute}{read_sheet_endpoint}'
 
         data = self._run_fetch(full_url, access_token)['values']
         df = pd.DataFrame(data)
@@ -132,10 +160,11 @@ class GoogleSheets2Connector(ToucanConnector):
 
         If successful, returns a message with the email of the connected user account.
         """
-        if not self.secrets or 'access_token' not in self.secrets:
+        secrets = self.hidden_properties.get_hidden_properties().get('secrets')
+        if not secrets or 'access_token' not in secrets:
             return ConnectorStatus(status=False, error='Credentials are missing')
 
-        access_token = self.secrets['access_token']
+        access_token = secrets['access_token']
         try:
             user_info = self._run_fetch(
                 'https://www.googleapis.com/oauth2/v2/userinfo?alt=json', access_token

@@ -204,8 +204,8 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
             raise TypeError(f'{cls.__name__} has no {e} attribute.')
         if 'bearer_integration' in cls.__fields__:
             cls.bearer_integration = cls.__fields__['bearer_integration'].default
-        if 'auth_flow' in cls.__fields__:
-            cls.auth_flow = cls.__fields__['auth_flow'].default
+        if '_auth_flow' in cls.__fields__:
+            cls._auth_flow = cls.__fields__['_auth_flow'].default
 
     def bearer_oauth_get_endpoint(
         self,
