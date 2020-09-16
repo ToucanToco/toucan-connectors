@@ -110,8 +110,8 @@ def test_get_form_no_secrets(mocker, con, ds):
     assert not get_columns_in_schema(result)
 
 
-def test_set_secrets(mocker, con):
-    """It should set secrets and auth_flow_id in the connector's hidden properties."""
+def test_set_hidden_properties(mocker, con):
+    """It should set secrets in the connector's hidden properties."""
     spy = mocker.spy(GoogleSheets2HiddenProperties, 'set_hidden_properties')
     fake_secrets = {
         'access_token': 'myaccesstoken',

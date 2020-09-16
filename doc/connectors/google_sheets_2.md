@@ -4,16 +4,16 @@
 
 * `type`: `"GoogleSheets2"`
 * `name`: str, required
-* `auth_flow`: str
+* `_auth_flow`: str
 * `auth_flow_id`: str
-* `baseroute`: str
-* `secrets`: dict
+* `_baseroute`: str
+* `hidden_properties`: GoogleSheets2HiddenProperties
 
-The `auth_flow` property marks this as being a connector that uses the connector_oauth_manager for the oauth dance.
+The `_auth_flow` property marks this as being a connector that uses the connector_oauth_manager for the oauth dance. It is hidden from being rendered in the front but appears in the front as a flag for initiating the oauth dance. It is a static *flag*.
 
-The `baseroute` is fixed and is 'https://sheets.googleapis.com/v4/spreadsheets/'.
+The `_baseroute` is fixed and is 'https://sheets.googleapis.com/v4/spreadsheets/'. It too is hidden from being rendered in the front. It is a static *non-flag*
 
-The `secrets` dictionary contains the `access_token` and a `refresh_token` (if there is one). Though `secrets` is optional during the initial creation of the connector, it is necessary for when the user wants to make requests to the connector. If there is no `access_token`, an Exception is thrown.
+The `hidden_properties` propertie contains the `access_token` and a `refresh_token` (if there is one) in a class called `GoogleSheets2HiddenProperties`. Though `hidden_properties` is optional during the initial creation of the connector, it is necessary for when the user wants to make requests to the connector. If there is no `access_token`, an Exception is thrown. This is a dynamic *non-flag* property.
 
 The `auth_flow_id` property is like an identifier that is used to identify the secrets associated with the connector.
 
@@ -22,6 +22,7 @@ The `auth_flow_id` property is like an identifier that is used to identify the s
 DATA_PROVIDERS: [
   type:    'GoogleSheets'
   name:    '<name>'
+  auth_flow_id: '<auth_flow_id>'
 ,
   ...
 ]
