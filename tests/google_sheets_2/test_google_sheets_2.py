@@ -184,7 +184,7 @@ def test_spreadsheet_without_sheet(mocker, con_with_secrets, ds_without_sheet):
     """
 
     def mock_api_responses(uri: str, _token):
-        if uri.endswith('/Foo'):
+        if '/Foo' in uri:
             return FAKE_SHEET
         else:
             return FAKE_SHEET_LIST_RESPONSE
@@ -201,7 +201,7 @@ def test_spreadsheet_without_sheet(mocker, con_with_secrets, ds_without_sheet):
     )
     assert (
         fetch_mock.call_args_list[1][0][0]
-        == 'https://sheets.googleapis.com/v4/spreadsheets/1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU/values/Foo'
+        == 'https://sheets.googleapis.com/v4/spreadsheets/1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU/values/Foo?valueRenderOption=UNFORMATTED_VALUE'
     )
 
     assert df.shape == (2, 2)
@@ -217,7 +217,7 @@ def test_get_status_no_secrets(mocker, con):
 
 def test_get_status_success(mocker, con_with_secrets):
     """
-    It should fail if no secrets are provided
+    It should fail if no secrets are provided  
     """
     fetch_mock: Mock = mocker.patch.object(
         GoogleSheets2Connector, '_run_fetch', return_value={'email': 'foo@bar.baz'}
@@ -239,3 +239,12 @@ def test_get_status_api_down(mocker, con_with_secrets):
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', side_effect=HttpError)
 
     assert con_with_secrets.get_status().status is False
+
+def test_get_decimal_separator(mocker, con_with_secrets, ds):
+    """
+    It should returns number data in float type
+    """
+    fake_results = {'metadata': '...', 'values': [['Number'], [1.3], [1.2]]}
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=fake_results)
+    df = con_with_secrets.get_df(ds)
+    assert df.to_dict() == {'Number': {1: 1.3, 2: 1.2}}
