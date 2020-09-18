@@ -217,7 +217,7 @@ def test_get_status_no_secrets(mocker, con):
 
 def test_get_status_success(mocker, con_with_secrets):
     """
-    It should fail if no secrets are provided  
+    It should fail if no secrets are provided
     """
     fetch_mock: Mock = mocker.patch.object(
         GoogleSheets2Connector, '_run_fetch', return_value={'email': 'foo@bar.baz'}
@@ -239,6 +239,7 @@ def test_get_status_api_down(mocker, con_with_secrets):
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', side_effect=HttpError)
 
     assert con_with_secrets.get_status().status is False
+
 
 def test_get_decimal_separator(mocker, con_with_secrets, ds):
     """
