@@ -4,16 +4,13 @@
 
 * `type`: `"GoogleSheets2"`
 * `name`: str, required
-* `auth_flow`: str
+* `_auth_flow`: str
 * `auth_flow_id`: str
-* `baseroute`: str
-* `secrets`: dict
+* `_baseroute`: str
 
-The `auth_flow` property marks this as being a connector that uses the connector_oauth_manager for the oauth dance.
+The `_auth_flow` property marks this as being a connector that requires initiating the oauth dance and prevents it from being in the schema.
 
-The `baseroute` is fixed and is 'https://sheets.googleapis.com/v4/spreadsheets/'.
-
-The `secrets` dictionary contains the `access_token` and a `refresh_token` (if there is one). Though `secrets` is optional during the initial creation of the connector, it is necessary for when the user wants to make requests to the connector. If there is no `access_token`, an Exception is thrown.
+The `_baseroute` is fixed and is 'https://sheets.googleapis.com/v4/spreadsheets/'. This is also hidden from rendering.
 
 The `auth_flow_id` property is like an identifier that is used to identify the secrets associated with the connector.
 
@@ -22,6 +19,7 @@ The `auth_flow_id` property is like an identifier that is used to identify the s
 DATA_PROVIDERS: [
   type:    'GoogleSheets'
   name:    '<name>'
+  auth_flow_id: '<auth_flow_id>'
 ,
   ...
 ]
