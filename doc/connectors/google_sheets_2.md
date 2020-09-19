@@ -36,7 +36,7 @@ the url: https://docs.google.com/spreadsheets/d/<spreadsheet_id_is_here>/edit?pr
 * `sheet`: str. By default, the extractor returns the first sheet.
 * `header_row`: int, default to 0. Row of the header of the spreadsheet
 
-Values are retrieved with the parameter valueRenderOption=UNFORMATTED_VALUE to escape the rendering based on the locale defined in google sheets.
+Values are retrieved with the parameter [valueRenderOption](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get#body.QUERY_PARAMETERS.value_render_option) set to `UNFORMATTED_VALUE` to escape the rendering based on the locale defined in google sheets.
 
 ```coffee
 DATA_SOURCES: [
