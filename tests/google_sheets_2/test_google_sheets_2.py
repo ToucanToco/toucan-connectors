@@ -236,11 +236,11 @@ def test_get_status_api_down(mocker, con, fake_kwargs):
     assert con.get_status().status is False
 
 
-def test_get_decimal_separator(mocker, con, ds):
+def test_get_decimal_separator(mocker, con, ds, fake_kwargs):
     """
     It should returns number data in float type
     """
     fake_results = {'metadata': '...', 'values': [['Number'], [1.3], [1.2]]}
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=fake_results)
-    df = con.get_df(ds)
+    df = con.get_df(ds, **fake_kwargs)
     assert df.to_dict() == {'Number': {1: 1.3, 2: 1.2}}
