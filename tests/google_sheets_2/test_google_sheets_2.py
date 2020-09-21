@@ -1,3 +1,4 @@
+from functools import partial
 from unittest.mock import Mock
 
 import pytest
@@ -8,6 +9,7 @@ from toucan_connectors.common import HttpError
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
     GoogleSheets2Connector,
     GoogleSheets2DataSource,
+    NoCredentialsError,
 )
 
 import_path = 'toucan_connectors.google_sheets_2.google_sheets_2_connector'
@@ -16,12 +18,6 @@ import_path = 'toucan_connectors.google_sheets_2.google_sheets_2_connector'
 @fixture
 def con():
     return GoogleSheets2Connector(name='test_name')
-
-
-@fixture
-def con_with_secrets(con):
-    con.set_secrets({'access_token': 'foo', 'refresh_token': None})
-    return con
 
 
 @fixture
@@ -41,6 +37,14 @@ def ds_without_sheet():
         domain='test_domain',
         spreadsheet_id='1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU',
     )
+
+
+@fixture
+def fake_kwargs():
+    def fake_fetch_secrets(small_app_id, connector_type, auth_flow_id):
+        return {'access_token': 'myaccesstoken'}
+
+    return {'secrets': partial(fake_fetch_secrets, 'laputa', 'GoogleSheets2')}
 
 
 FAKE_SHEET = {
@@ -85,13 +89,14 @@ def get_columns_in_schema(schema):
         return None
 
 
-def test_get_form_with_secrets(mocker, con_with_secrets, ds):
+def test_get_form_with_secrets(mocker, con, ds, fake_kwargs):
     """It should return a list of spreadsheet titles."""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET_LIST_RESPONSE)
 
     result = ds.get_form(
-        connector=con_with_secrets,
+        connector=con,
         current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
+        **fake_kwargs,
     )
     expected_results = ['Foo', 'Bar', 'Baz']
     assert get_columns_in_schema(result) == expected_results
@@ -107,50 +112,41 @@ def test_get_form_no_secrets(mocker, con, ds):
     assert not get_columns_in_schema(result)
 
 
-def test_set_secrets(mocker, con):
-    """It should set secrets on the connector."""
-    spy = mocker.spy(GoogleSheets2Connector, 'set_secrets')
-    fake_secrets = {
-        'access_token': 'myaccesstoken',
-        'refresh_token': None,
-    }
-    con.set_secrets(fake_secrets)
-
-    assert con.secrets == fake_secrets
-    spy.assert_called_once_with(con, fake_secrets)
-
-
-def test_spreadsheet_success(mocker, con_with_secrets, ds):
+def test_spreadsheet_success(mocker, con, ds, fake_kwargs):
     """It should return a spreadsheet."""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
 
-    df = con_with_secrets.get_df(ds)
+    df = con.get_df(ds, **fake_kwargs)
 
     assert df.shape == (2, 2)
     assert df.columns.tolist() == ['country', 'city']
 
     ds.header_row = 1
-    df = con_with_secrets.get_df(ds)
+    df = con.get_df(ds, **fake_kwargs)
     assert df.shape == (1, 2)
     assert df.columns.tolist() == ['France', 'Paris']
 
 
 def test_spreadsheet_no_secrets(mocker, con, ds):
-    """It should raise an exception if there no secrets passed or no access token."""
+    """It should raise an exception if there are no secrets returned or any document in database."""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
-
-    with pytest.raises(Exception) as err:
-        con.get_df(ds)
+    bogus_fake_kwargs = {'secrets': None}
+    with pytest.raises(NoCredentialsError) as err:
+        con.get_df(ds, **bogus_fake_kwargs)
 
     assert str(err.value) == 'No credentials'
 
-    con.set_secrets({'refresh_token': None})
+    # Function that returns an empty dict, as if when no document is found in database
+    def fake_fetch_secrets(small_app_id, connector_type, auth_flow_id):
+        return {}
 
-    with pytest.raises(KeyError):
-        con.get_df(ds)
+    empty_secrets_kwargs = {'secrets': partial(fake_fetch_secrets, 'laputa', 'GoogleSheets2')}
+
+    with pytest.raises(NoCredentialsError):
+        con.get_df(ds, **empty_secrets_kwargs)
 
 
-def test_set_columns(mocker, con_with_secrets, ds):
+def test_set_columns(mocker, con, ds, fake_kwargs):
     """It should return a well-formed column set."""
     fake_results = {
         'metadata': '...',
@@ -158,7 +154,7 @@ def test_set_columns(mocker, con_with_secrets, ds):
     }
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=fake_results)
 
-    df = con_with_secrets.get_df(ds)
+    df = con.get_df(ds, **fake_kwargs)
     assert df.to_dict() == {
         'Animateur': {1: 'pika', 2: 'bulbi'},
         1: {1: '', 2: ''},
@@ -178,7 +174,7 @@ def test__run_fetch(mocker, con):
     assert result == FAKE_SHEET
 
 
-def test_spreadsheet_without_sheet(mocker, con_with_secrets, ds_without_sheet):
+def test_spreadsheet_without_sheet(mocker, con, ds_without_sheet, fake_kwargs):
     """
     It should retrieve the first sheet of the spreadsheet if no sheet has been indicated
     """
@@ -192,7 +188,7 @@ def test_spreadsheet_without_sheet(mocker, con_with_secrets, ds_without_sheet):
     fetch_mock: Mock = mocker.patch.object(
         GoogleSheets2Connector, '_run_fetch', side_effect=mock_api_responses
     )
-    df = con_with_secrets.get_df(ds_without_sheet)
+    df = con.get_df(ds_without_sheet, **fake_kwargs)
 
     assert fetch_mock.call_count == 2
     assert (
@@ -215,30 +211,29 @@ def test_get_status_no_secrets(mocker, con):
     assert con.get_status().status is False
 
 
-def test_get_status_success(mocker, con_with_secrets):
+def test_get_status_success(mocker, con, fake_kwargs):
     """
-    It should fail if no secrets are provided
+    It should fail if no secrets are provided.
     """
     fetch_mock: Mock = mocker.patch.object(
         GoogleSheets2Connector, '_run_fetch', return_value={'email': 'foo@bar.baz'}
     )
 
-    connector_status = con_with_secrets.get_status()
+    connector_status = con.get_status(**fake_kwargs)
     assert connector_status.status is True
     assert 'foo@bar.baz' in connector_status.message
 
     fetch_mock.assert_called_once_with(
-        'https://www.googleapis.com/oauth2/v2/userinfo?alt=json', 'foo'
+        'https://www.googleapis.com/oauth2/v2/userinfo?alt=json', 'myaccesstoken'
     )
 
 
-def test_get_status_api_down(mocker, con_with_secrets):
+def test_get_status_api_down(mocker, con, fake_kwargs):
     """
-    It should fail if no secrets are provided
+    It should fail if the third-party api is down.
     """
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', side_effect=HttpError)
-
-    assert con_with_secrets.get_status().status is False
+    assert con.get_status().status is False
 
 
 def test_get_decimal_separator(mocker, con_with_secrets, ds):
@@ -247,5 +242,5 @@ def test_get_decimal_separator(mocker, con_with_secrets, ds):
     """
     fake_results = {'metadata': '...', 'values': [['Number'], [1.3], [1.2]]}
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=fake_results)
-    df = con_with_secrets.get_df(ds)
+    df = con.get_df(ds)
     assert df.to_dict() == {'Number': {1: 1.3, 2: 1.2}}

@@ -13,6 +13,10 @@ from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
+class NoCredentialsError(Exception):
+    """Raised when no secrets avaiable."""
+
+
 class GoogleSheets2DataSource(ToucanDataSource):
     """
     Google Spreadsheet 2 data source class.
@@ -37,14 +41,15 @@ class GoogleSheets2DataSource(ToucanDataSource):
     )
 
     @classmethod
-    def get_form(cls, connector: 'GoogleSheets2Connector', current_config):
+    def get_form(cls, connector: 'GoogleSheets2Connector', current_config, **kwargs):
         """Retrieve a form filled with suggestions of available sheets."""
         # Always add the suggestions for the available sheets
         constraints = {}
         with suppress(Exception):
             partial_endpoint = current_config['spreadsheet_id']
-            final_url = f'{connector.baseroute}{partial_endpoint}'
-            data = connector._run_fetch(final_url, connector.secrets['access_token'])
+            final_url = f'{connector._baseroute}{partial_endpoint}'
+            secrets = kwargs.get('secrets')(connector.auth_flow_id)
+            data = connector._run_fetch(final_url, secrets['access_token'])
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             constraints['sheet'] = strlist_to_enum('sheet', available_sheets)
 
@@ -59,15 +64,12 @@ class GoogleSheets2Connector(ToucanConnector):
 
     data_source_model: GoogleSheets2DataSource
 
-    auth_flow = 'oauth2'
+    _auth_flow = 'oauth2'
 
     auth_flow_id: Optional[str]
 
-    # The following should be hidden properties
-
-    baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
-
-    secrets: Optional[Secrets]
+    # TODO: turn into a class property
+    _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
 
     async def _authentified_fetch(self, url, access_token):
         """Build the final request along with headers."""
@@ -76,32 +78,30 @@ class GoogleSheets2Connector(ToucanConnector):
         async with ClientSession(headers=headers) as session:
             return await fetch(url, session)
 
-    def set_secrets(self, secrets: Secrets):
-        """Set the secrets from inside the main service."""
-        self.secrets = secrets
-
     def _run_fetch(self, url, access_token):
         """Run loop."""
         loop = get_loop()
         future = asyncio.ensure_future(self._authentified_fetch(url, access_token))
         return loop.run_until_complete(future)
 
-    def _retrieve_data(self, data_source: GoogleSheets2DataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GoogleSheets2DataSource, **kwargs) -> pd.DataFrame:
         """
         Point of entry for data retrieval in the connector
 
         Requires:
         - Datasource
+        - Secrets
         """
-        if not self.secrets:
-            raise Exception('No credentials')
-
-        access_token = self.secrets['access_token']
+        try:
+            secrets = kwargs.get('secrets')(self.auth_flow_id)
+            access_token = secrets['access_token']
+        except Exception:
+            raise NoCredentialsError('No credentials')
 
         if data_source.sheet is None:
             # Get spreadsheet informations and retrieve all the available sheets
             # https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
-            data = self._run_fetch(f'{self.baseroute}{data_source.spreadsheet_id}', access_token)
+            data = self._run_fetch(f'{self._baseroute}{data_source.spreadsheet_id}', access_token)
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             data_source.sheet = available_sheets[0]
 
@@ -109,6 +109,7 @@ class GoogleSheets2Connector(ToucanConnector):
         read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}?valueRenderOption=UNFORMATTED_VALUE'
         full_url = f'{self.baseroute}{read_sheet_endpoint}'
         # Rajouter le param FORMATTED_VALUE pour le séparateur de décimal dans la Baseroute
+
         data = self._run_fetch(full_url, access_token)['values']
         df = pd.DataFrame(data)
 
@@ -126,16 +127,18 @@ class GoogleSheets2Connector(ToucanConnector):
 
         return df
 
-    def get_status(self) -> ConnectorStatus:
+    def get_status(self, **kwargs) -> ConnectorStatus:
         """
         Test the Google Sheets connexion.
 
         If successful, returns a message with the email of the connected user account.
         """
-        if not self.secrets or 'access_token' not in self.secrets:
+        try:
+            secrets = kwargs.get('secrets')(self.auth_flow_id)
+            access_token = secrets['access_token']
+        except Exception:
             return ConnectorStatus(status=False, error='Credentials are missing')
 
-        access_token = self.secrets['access_token']
         try:
             user_info = self._run_fetch(
                 'https://www.googleapis.com/oauth2/v2/userinfo?alt=json', access_token
