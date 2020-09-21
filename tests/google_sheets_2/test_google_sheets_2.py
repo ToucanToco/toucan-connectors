@@ -236,7 +236,7 @@ def test_get_status_api_down(mocker, con, fake_kwargs):
     assert con.get_status().status is False
 
 
-def test_get_decimal_separator(mocker, con_with_secrets, ds):
+def test_get_decimal_separator(mocker, con, ds):
     """
     It should returns number data in float type
     """
