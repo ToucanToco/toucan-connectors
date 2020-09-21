@@ -312,8 +312,3 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         }
         """
         return ConnectorStatus()
-
-    def set_get_secrets(self, get_secrets):
-        print(self)
-        if self.auth_flow_id:
-            self._get_secrets = get_secrets(self.auth_flow_id)
