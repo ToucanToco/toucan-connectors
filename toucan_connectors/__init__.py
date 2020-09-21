@@ -194,7 +194,7 @@ for connector_type, connector_infos in CONNECTORS_REGISTRY.items():
         with suppress(AttributeError):
             connector_infos['bearer_integration'] = connector_cls.bearer_integration
         with suppress(AttributeError):
-            connector_infos['auth_flow'] = connector_cls.auth_flow
+            connector_infos['_auth_flow'] = connector_cls._auth_flow
         # check if connector implements `get_status`,
         # which is hence different from `ToucanConnector.get_status`
         connector_infos['hasStatusCheck'] = (

@@ -204,8 +204,6 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
             raise TypeError(f'{cls.__name__} has no {e} attribute.')
         if 'bearer_integration' in cls.__fields__:
             cls.bearer_integration = cls.__fields__['bearer_integration'].default
-        if 'auth_flow' in cls.__fields__:
-            cls.auth_flow = cls.__fields__['auth_flow'].default
 
     def bearer_oauth_get_endpoint(
         self,
@@ -227,7 +225,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         return RetryPolicy(**kwargs)
 
     @abstractmethod
-    def _retrieve_data(self, data_source: ToucanDataSource):
+    def _retrieve_data(self, data_source: ToucanDataSource, **kwargs):
         """Main method to retrieve a pandas dataframe"""
 
     @decorate_func_with_retry
@@ -235,12 +233,19 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         self,
         data_source: ToucanDataSource,
         permissions: Optional[dict] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Method to retrieve the data as a pandas dataframe
         filtered by permissions
         """
-        res = self._retrieve_data(data_source)
+        # This conditional prevents passing secrets in kwargs to connectors that can't use them
+        # inspect module's signature object can't be used here in Python 3.6 because it is not
+        # generated the same way as in 3.7 and 3.8; this can be eventually replaced
+        if hasattr(self, '_auth_flow'):
+            res = self._retrieve_data(data_source, **kwargs)
+        else:
+            res = self._retrieve_data(data_source)
 
         if permissions is not None:
             permissions_query = PandasConditionTranslator.translate(permissions)
@@ -254,6 +259,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
+        **kwargs,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
@@ -263,7 +269,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         - limit is the number of rows to retrieve
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
         """
-        df = self.get_df(data_source, permissions)
+        df = self.get_df(data_source, permissions, **kwargs)
         if limit is not None:
             return DataSlice(df[offset : offset + limit], len(df))
         else:
@@ -306,3 +312,8 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         }
         """
         return ConnectorStatus()
+
+    def set_get_secrets(self, get_secrets):
+        print(self)
+        if self.auth_flow_id:
+            self._get_secrets = get_secrets(self.auth_flow_id)
