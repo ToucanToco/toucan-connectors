@@ -48,7 +48,7 @@ class GoogleSheets2DataSource(ToucanDataSource):
         with suppress(Exception):
             partial_endpoint = current_config['spreadsheet_id']
             final_url = f'{connector._baseroute}{partial_endpoint}'
-            secrets = kwargs.get('secrets')(connector.auth_flow_id)
+            secrets = kwargs.get('secrets')(auth_flow_id=connector.auth_flow_id)
             data = connector._run_fetch(final_url, secrets['access_token'])
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             constraints['sheet'] = strlist_to_enum('sheet', available_sheets)
@@ -106,9 +106,9 @@ class GoogleSheets2Connector(ToucanConnector):
             data_source.sheet = available_sheets[0]
 
         # https://developers.google.com/sheets/api/samples/reading
-        read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}'
+        read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}?valueRenderOption=UNFORMATTED_VALUE'
         full_url = f'{self._baseroute}{read_sheet_endpoint}'
-
+        # Rajouter le param FORMATTED_VALUE pour le séparateur de décimal dans la Baseroute
         data = self._run_fetch(full_url, access_token)['values']
         df = pd.DataFrame(data)
 
@@ -133,7 +133,7 @@ class GoogleSheets2Connector(ToucanConnector):
         If successful, returns a message with the email of the connected user account.
         """
         try:
-            secrets = kwargs.get('secrets')(self.auth_flow_id)
+            secrets = kwargs.get('secrets')(auth_flow_id=self.auth_flow_id)
             access_token = secrets['access_token']
         except Exception:
             return ConnectorStatus(status=False, error='Credentials are missing')
