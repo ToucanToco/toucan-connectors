@@ -93,7 +93,7 @@ class GoogleSheets2Connector(ToucanConnector):
         - Secrets
         """
         try:
-            secrets = kwargs.get('secrets')(self.auth_flow_id)
+            secrets = kwargs.get('secrets')(auth_flow_id=self.auth_flow_id)
             access_token = secrets['access_token']
         except Exception:
             raise NoCredentialsError('No credentials')
