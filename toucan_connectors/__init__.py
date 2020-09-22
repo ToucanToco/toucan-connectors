@@ -16,6 +16,11 @@ CONNECTORS_REGISTRY = {
         'connector': 'aircall.aircall_connector.AircallConnector',
         'logo': 'aircall/Aircall.svg',
     },
+    'Aircall2': {
+        'connector': 'aircall_2.aircall_2_connector.Aircall2Connector',
+        'label': 'Aircall Modified',
+        'logo': 'aircall/Aircall.svg',
+    },
     'AWSDocumentDB': {
         'connector': 'mongo.mongo_connector.MongoConnector',
         'label': 'Amazon Document DB',

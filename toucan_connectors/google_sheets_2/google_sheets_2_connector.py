@@ -10,6 +10,7 @@ from aiohttp import ClientSession
 from pydantic import Field, create_model
 
 from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
+from toucan_connectors.secrets_common import retrieve_secrets_from_kwargs
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -92,11 +93,7 @@ class GoogleSheets2Connector(ToucanConnector):
         - Datasource
         - Secrets
         """
-        try:
-            secrets = kwargs.get('secrets')(auth_flow_id=self.auth_flow_id)
-            access_token = secrets['access_token']
-        except Exception:
-            raise NoCredentialsError('No credentials')
+        access_token = retrieve_secrets_from_kwargs(auth_flow_id=self.auth_flow_id, **kwargs)
 
         if data_source.sheet is None:
             # Get spreadsheet informations and retrieve all the available sheets
@@ -132,12 +129,7 @@ class GoogleSheets2Connector(ToucanConnector):
 
         If successful, returns a message with the email of the connected user account.
         """
-        try:
-            secrets = kwargs.get('secrets')(auth_flow_id=self.auth_flow_id)
-            access_token = secrets['access_token']
-        except Exception:
-            return ConnectorStatus(status=False, error='Credentials are missing')
-
+        access_token = retrieve_secrets_from_kwargs(auth_flow_id=self.auth_flow_id, **kwargs)
         try:
             user_info = self._run_fetch(
                 'https://www.googleapis.com/oauth2/v2/userinfo?alt=json', access_token
