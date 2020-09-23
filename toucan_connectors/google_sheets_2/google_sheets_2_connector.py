@@ -14,10 +14,6 @@ from toucan_connectors.secrets_common import retrieve_secrets_from_kwargs
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
-class NoCredentialsError(Exception):
-    """Raised when no secrets avaiable."""
-
-
 class GoogleSheets2DataSource(ToucanDataSource):
     """
     Google Spreadsheet 2 data source class.
@@ -129,7 +125,12 @@ class GoogleSheets2Connector(ToucanConnector):
 
         If successful, returns a message with the email of the connected user account.
         """
-        access_token = retrieve_secrets_from_kwargs(auth_flow_id=self.auth_flow_id, **kwargs)
+        try:
+            secrets = kwargs.get('secrets')(auth_flow_id=self.auth_flow_id)
+            access_token = secrets['access_token']
+        except Exception:
+            return ConnectorStatus(status=False, error='Credentials are missing')
+
         try:
             user_info = self._run_fetch(
                 'https://www.googleapis.com/oauth2/v2/userinfo?alt=json', access_token

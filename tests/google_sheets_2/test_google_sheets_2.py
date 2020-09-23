@@ -9,8 +9,8 @@ from toucan_connectors.common import HttpError
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
     GoogleSheets2Connector,
     GoogleSheets2DataSource,
-    NoCredentialsError,
 )
+from toucan_connectors.secrets_common import NoCredentialsError
 
 import_path = 'toucan_connectors.google_sheets_2.google_sheets_2_connector'
 
