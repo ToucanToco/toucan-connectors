@@ -6,8 +6,6 @@ from toucan_connectors.common import FilterSchema, transform_with_jq
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 import decimal
-import json
-import types
 from datetime import date, datetime
 
 import zeep
@@ -31,6 +29,7 @@ def convert_zeep_object(obj):
         return str(obj)
 
     return obj
+
 
 class WorkdayDataSource(ToucanDataSource):
     service: str = Field(

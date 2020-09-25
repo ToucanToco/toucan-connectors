@@ -199,4 +199,3 @@ def test_exceptions_wrong_service(connector):
     print(connector.get_df(data_sourceWrong))
     with pytest.raises(workday.exceptions.WsdlNotProvidedError):
         connector.get_df(data_sourceWrong)
-
