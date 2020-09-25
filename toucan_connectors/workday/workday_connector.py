@@ -1,15 +1,14 @@
-import pandas as pd
-import workday
-from pydantic import Field
-
-from toucan_connectors.common import FilterSchema, transform_with_jq
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-
 import decimal
 from datetime import date, datetime
 
+import pandas as pd
+import workday
 import zeep
+from pydantic import Field
 from workday.auth import AnonymousAuthentication, WsSecurityCredentialAuthentication
+
+from toucan_connectors.common import FilterSchema, transform_with_jq
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 def convert_zeep_object(obj):
