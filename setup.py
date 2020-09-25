@@ -31,7 +31,7 @@ extras_require = {
     'sap_hana': ['pyhdb>=0.3.4'],
     'snowflake': ['snowflake-connector-python'],
     'toucan_toco': ['toucan_client'],
-    'workday': ['zeep', 'workday']
+    'workday': ['workday', 'zeep']
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
