@@ -35,11 +35,13 @@ def data_source():
     )
 
 
+@pytest.mark.skip(reason="It's alive")
 def test_get_df_Get_Workers(connector, data_source):
     df = connector.get_df(data_source)
     assert df.shape == (2, 2)
 
 
+@pytest.mark.skip(reason="It's alive")
 def test_get_df_Get_Absences(connector):
     data_source_absence = WorkdayDataSource(
         name='myWorkdayDataSource',
@@ -61,6 +63,7 @@ def test_get_df_Get_Absences(connector):
     assert df.shape == (2, 3)
 
 
+@pytest.mark.skip(reason="It's alive")
 def test_get_df_Get_Locations(connector):
     data_source_absence = WorkdayDataSource(
         name='myWorkdayDataSource',
@@ -81,6 +84,7 @@ def test_get_df_Get_Locations(connector):
     assert df.shape == (1, 2)
 
 
+@pytest.mark.skip(reason="It's alive")
 def test_exceptions_wrong_password(data_source):
     connectorWrong = WorkdayConnector(
         name='myWorkdayConnector',
@@ -94,6 +98,7 @@ def test_exceptions_wrong_password(data_source):
         connectorWrong.get_df(data_source)
 
 
+@pytest.mark.skip(reason="It's alive")
 def test_exceptions_wrong_username(data_source):
     connectorWrong = WorkdayConnector(
         name='myWorkdayConnector',
@@ -107,6 +112,7 @@ def test_exceptions_wrong_username(data_source):
         connectorWrong.get_df(data_source)
 
 
+@pytest.mark.skip(reason="It's alive")
 def test_exceptions_wrong_tenant(data_source):
     connectorWrong = WorkdayConnector(
         name='myWorkdayConnector',
@@ -120,6 +126,7 @@ def test_exceptions_wrong_tenant(data_source):
         connectorWrong.get_df(data_source)
 
 
+@pytest.mark.skip(reason="It's alive")
 def test_exceptions_wrong_WSDL(connector):
     data_sourceWrong = WorkdayDataSource(
         name='myWorkdayDataSource',
@@ -141,6 +148,7 @@ def test_exceptions_wrong_WSDL(connector):
         connector.get_df(data_sourceWrong)
 
 
+@pytest.mark.skip(reason="It's alive")
 def test_exceptions_wrong_operation(connector):
     data_sourceWrong = WorkdayDataSource(
         name='myWorkdayDataSource',
@@ -162,6 +170,7 @@ def test_exceptions_wrong_operation(connector):
         connector.get_df(data_sourceWrong)
 
 
+@pytest.mark.skip(reason="It's alive")
 def test_exceptions_wrong_query(connector):
     data_sourceWrong = WorkdayDataSource(
         name='myWorkdayDataSource',
@@ -196,6 +205,5 @@ def test_exceptions_wrong_service(connector):
         },
         filter='[.Worker[].Worker_Data | {User_ID: .User_ID, Worker_ID: .Worker_ID}]',
     )
-    print(connector.get_df(data_sourceWrong))
     with pytest.raises(workday.exceptions.WsdlNotProvidedError):
         connector.get_df(data_sourceWrong)
