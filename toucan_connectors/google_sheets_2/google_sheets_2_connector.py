@@ -14,10 +14,10 @@ from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 AUTHORIZATION_URL: str = (
-    'https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent'
+    "https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent"
 )
-SCOPE: str = 'openid email https://www.googleapis.com/auth/spreadsheets.readonly'
-TOKEN_URL: str = 'https://oauth2.googleapis.com/token'
+SCOPE: str = "openid email https://www.googleapis.com/auth/spreadsheets.readonly"
+TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
 
 class NoCredentialsError(Exception):
@@ -48,14 +48,15 @@ class GoogleSheets2DataSource(ToucanDataSource):
     )
 
     @classmethod
-    def get_form(cls, connector: 'GoogleSheets2Connector', current_config):
+    def get_form(cls, connector: 'GoogleSheets2Connector', current_config, **kwargs):
         """Retrieve a form filled with suggestions of available sheets."""
         # Always add the suggestions for the available sheets
         constraints = {}
         with suppress(Exception):
             partial_endpoint = current_config['spreadsheet_id']
             final_url = f'{connector._baseroute}{partial_endpoint}'
-            data = connector._run_fetch(final_url)
+            secrets = kwargs.get('secrets')(auth_flow_id=connector.auth_flow_id)
+            data = connector._run_fetch(final_url, secrets['access_token'])
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             constraints['sheet'] = strlist_to_enum('sheet', available_sheets)
 
@@ -81,17 +82,16 @@ class GoogleSheets2Connector(ToucanConnector):
         super().__init__(
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
         )
-        # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
         self.__dict__['_oauth2_connector'] = OAuth2Connector(
-            name=self.auth_flow_id,
+            name=kwargs['name'],
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,
             **{k: v for k, v in kwargs.items() if k in OAuth2Connector.init_params},
         )
 
-    def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+    def build_authorization_url(self):
+        return self.__dict__['_oauth2_connector'].build_authorization_url()
 
     def retrieve_tokens(self, authorization_response: str):
         return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
@@ -99,20 +99,17 @@ class GoogleSheets2Connector(ToucanConnector):
     def get_access_token(self):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
-    async def _fetch(self, url, headers=None):
+    async def _authentified_fetch(self, url):
         """Build the final request along with headers."""
+        headers = {'Authorization': f'Bearer {self.get_access_token()}'}
+
         async with ClientSession(headers=headers) as session:
             return await fetch(url, session)
 
     def _run_fetch(self, url):
         """Run loop."""
-        access_token = self.get_access_token()
-        if not access_token:
-            raise NoCredentialsError('No credentials')
-        headers = {'Authorization': f'Bearer {access_token}'}
-
         loop = get_loop()
-        future = asyncio.ensure_future(self._fetch(url, headers))
+        future = asyncio.ensure_future(self._authentified_fetch(url))
         return loop.run_until_complete(future)
 
     def _retrieve_data(self, data_source: GoogleSheets2DataSource) -> pd.DataFrame:

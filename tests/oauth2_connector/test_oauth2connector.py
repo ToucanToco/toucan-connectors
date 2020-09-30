@@ -1,14 +1,33 @@
-import json
-from datetime import datetime
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
 
-from toucan_connectors.oauth2_connector.oauth2connector import NoOAuth2RefreshToken, OAuth2Connector
+from toucan_connectors.oauth2_connector.oauth2connector import (
+    NoOAuth2RefreshToken,
+    OAuth2Connector,
+    OAuth2Session,
+    SecretsKeeper,
+)
 
 FAKE_AUTHORIZATION_URL = 'http://localhost:4242/foobar'
 FAKE_TOKEN_URL = 'http://service/token_endpoint'
-SCOPE: str = 'openid email https://www.googleapis.com/auth/spreadsheets.readonly'
+SCOPE: str = "openid email https://www.googleapis.com/auth/spreadsheets.readonly"
+
+
+@pytest.fixture
+def secrets_keeper():
+    class SimpleSecretsKeeper(SecretsKeeper):
+        def __init__(self):
+            self.store = {}
+
+        def load(self, key: str) -> Any:
+            return self.store[key]
+
+        def save(self, key: str, value: Any):
+            self.store[key] = value
+
+    return SimpleSecretsKeeper()
 
 
 @pytest.fixture
@@ -33,9 +52,8 @@ def test_build_authorization_url(mocker, oauth2_connector, secrets_keeper):
         'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.create_authorization_url',
         return_value=('authorization_url', 'state'),
     )
-
     url = oauth2_connector.build_authorization_url()
-    assert mock_create_authorization_url.called
+    mock_create_authorization_url.assert_called_once_with(FAKE_AUTHORIZATION_URL)
     assert url == 'authorization_url'
     assert secrets_keeper.load('test')['state'] == 'state'
 
@@ -44,13 +62,13 @@ def test_retrieve_tokens(mocker, oauth2_connector, secrets_keeper):
     """
     It should retrieve tokens and save them
     """
-    secrets_keeper.save('test', {'state': json.dumps({'token': 'the_token'})})
+    secrets_keeper.save('test', {'state': 'dummy_state'})
     mock_fetch_token: Mock = mocker.patch(
         'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.fetch_token',
         return_value={'access_token': 'dummy_token'},
     )
 
-    oauth2_connector.retrieve_tokens(f'http://localhost/?state={json.dumps({"token": "the_token"})}')
+    oauth2_connector.retrieve_tokens('http://localhost/?state=dummy_state')
     mock_fetch_token.assert_called()
     assert secrets_keeper.load('test')['access_token'] == 'dummy_token'
 
@@ -59,10 +77,10 @@ def test_fail_retrieve_tokens(oauth2_connector, secrets_keeper):
     """
     It should fail ig the stored state does not match the received state
     """
-    secrets_keeper.save('test', {'state': json.dumps({'token': 'the_token'})})
+    secrets_keeper.save('test', {'state': 'dummy_state'})
 
     with pytest.raises(AssertionError):
-        oauth2_connector.retrieve_tokens(f'http://localhost/?state={json.dumps({"token": "bad_token"})}')
+        oauth2_connector.retrieve_tokens('http://localhost/?state=bad_state')
 
 
 def test_get_access_token(oauth2_connector, secrets_keeper):
@@ -79,7 +97,7 @@ def test_get_access_token_expired(mocker, oauth2_connector, secrets_keeper):
     """
     secrets_keeper.save(
         'test',
-        {'access_token': 'dummy_token', 'expires_at': datetime.fromtimestamp(0), 'refresh_token': 'dummy_refresh_token'},
+        {'access_token': 'dummy_token', 'expires_at': 0, 'refresh_token': 'dummy_refresh_token'},
     )
 
     mock_refresh_token: Mock = mocker.patch(
@@ -95,7 +113,7 @@ def test_get_access_token_expired_no_refresh_token(mocker, oauth2_connector, sec
     """
     It should fail to refresh the token if no refresh token is provided
     """
-    secrets_keeper.save('test', {'access_token': 'dummy_token', 'expires_at': datetime.fromtimestamp(0)})
+    secrets_keeper.save('test', {'access_token': 'dummy_token', 'expires_at': 0})
 
     mock_refresh_token: Mock = mocker.patch(
         'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token',
