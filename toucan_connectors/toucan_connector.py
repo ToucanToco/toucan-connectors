@@ -225,7 +225,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         return RetryPolicy(**kwargs)
 
     @abstractmethod
-    def _retrieve_data(self, data_source: ToucanDataSource, **kwargs):
+    def _retrieve_data(self, data_source: ToucanDataSource):
         """Main method to retrieve a pandas dataframe"""
 
     @decorate_func_with_retry
@@ -242,10 +242,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         # This conditional prevents passing secrets in kwargs to connectors that can't use them
         # inspect module's signature object can't be used here in Python 3.6 because it is not
         # generated the same way as in 3.7 and 3.8; this can be eventually replaced
-        if hasattr(self, '_auth_flow'):
-            res = self._retrieve_data(data_source, **kwargs)
-        else:
-            res = self._retrieve_data(data_source)
+        res = self._retrieve_data(data_source)
 
         if permissions is not None:
             permissions_query = PandasConditionTranslator.translate(permissions)
