@@ -1,3 +1,4 @@
+authlib == 0.14
 aioresponses >= 0.6.0
 black
 cryptography >= 2.7.0
