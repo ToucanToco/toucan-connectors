@@ -24,6 +24,7 @@ RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r'([ )])', RE_JINJA + r'()$']
 
 RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
+RE_NAMED_PARAM = r'%\([a-zA-Z1-9_]*\)s'
 
 
 class NonValidVariable(Exception):
@@ -234,3 +235,17 @@ class ConnectorStatus:
 
     def to_dict(self):
         return dataclasses.asdict(self)
+
+
+def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> str:
+    """Takes a query in pyformat paramstyle and transforms it in qmark
+       by replacing placeholders by ? and returning values in right order
+    ex :
+        ('select * from test where id > %(id_nb)s and price > %(price)s;', {"id_nb":1, "price":10}
+    returns:
+        ('select * from test where id > ? and price > ?;', [1, 10])"""
+
+    extracted_params = re.findall(RE_NAMED_PARAM, query_string)
+    qparams = [m[2:-2] for m in extracted_params]
+    ordered_values = [params_values.get(p) for p in qparams]
+    return re.sub(RE_NAMED_PARAM, '?', query_string), ordered_values

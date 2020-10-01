@@ -5,6 +5,7 @@ from toucan_connectors.common import (
     ConnectorStatus,
     NonValidVariable,
     apply_query_parameters,
+    convert_to_qmark_paramstyle,
     fetch,
     nosql_apply_parameters_to_query,
 )
@@ -236,3 +237,33 @@ def test_connector_status():
         'error': None,
         'details': [],
     }
+
+
+@pytest.mark.parametrize(
+    'query, params, expected_query, expected_ordered_values',
+    [
+        (
+            'select * from test where id > %(id_nb)s and price > %(price)s;',
+            {'id_nb': 1, 'price': 10},
+            'select * from test where id > ? and price > ?;',
+            [1, 10],
+        ),
+        (
+            'select * from test where id > %(id_nb)s and id < %(id_nb)s + 1;',
+            {'id_nb': 1},
+            'select * from test where id > ? and id < ? + 1;',
+            [1, 1],
+        ),
+        (
+            'select * from test where id > %(id_nb)s and price > %(price)s;',
+            {'id_nb': 1},
+            'select * from test where id > ? and price > ?;',
+            [1, None],
+        ),
+    ],
+)
+def test_convert_pyformat_to_qmark(query, params, expected_query, expected_ordered_values):
+    """It should return query in qmark paramstyle and names of extracted params"""
+    converted_query, ordered_values = convert_to_qmark_paramstyle(query, params)
+    assert ordered_values == expected_ordered_values
+    assert converted_query == expected_query

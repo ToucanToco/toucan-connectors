@@ -128,6 +128,10 @@ CONNECTORS_REGISTRY = {
         'connector': 'odata.odata_connector.ODataConnector',
         'logo': 'odata/odata.png',
     },
+    'Odbc': {
+        'connector': 'odbc.odbc_connector.OdbcConnector',
+        'logo': 'odbc/odbc.png',
+    },
     'OracleSQL': {
         'connector': 'oracle_sql.oracle_sql_connector.OracleSQLConnector',
         'label': 'Oracle SQL',
