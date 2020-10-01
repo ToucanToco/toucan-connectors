@@ -14,10 +14,10 @@ from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 AUTHORIZATION_URL: str = (
-    "https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent"
+    'https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent'
 )
-SCOPE: str = "openid email https://www.googleapis.com/auth/spreadsheets.readonly"
-TOKEN_URL: str = "https://oauth2.googleapis.com/token"
+SCOPE: str = 'openid email https://www.googleapis.com/auth/spreadsheets.readonly'
+TOKEN_URL: str = 'https://oauth2.googleapis.com/token'
 
 
 class NoCredentialsError(Exception):
