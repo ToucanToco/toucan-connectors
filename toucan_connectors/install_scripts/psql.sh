@@ -17,4 +17,13 @@ cd /tmp/unixODBC-2.3.9
 make
 make install
 export LD_LIBRARY_PATH=/usr/local/lib/
+
+if [[ ! -e "/usr/lib/psqlodbcw.so" ]];then
+    echo "Driver file doesn't exist copying";
+    cp /usr/lib/x86_64-linux-gnu/odbc/psqlodbcw.so /usr/lib/psqlodbcw.so;
+fi
+
+
+
+
 touch ~/odbcdriver-installed
