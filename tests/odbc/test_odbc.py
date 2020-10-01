@@ -9,7 +9,7 @@ from toucan_connectors.odbc.odbc_connector import OdbcConnector, OdbcDataSource
 
 def test_postgres_driver_installed():
     """
-    This test aims to check that pgodbc is installed on the server
+    Check that pgodbc is installed
     """
     assert 'PostgreSQL Unicode' in pyodbc.drivers()
 
@@ -59,20 +59,22 @@ def test_raise_on_empty_query():
 
 
 def test_odbc_get_df(mocker):
-    mockdbc = mocker.patch('pyodbc.connect')
-    mockdas = mocker.patch('pandas.read_sql')
+    mock_pyodbc_connect = mocker.patch('pyodbc.connect')
+    mock_pandas_read_sql = mocker.patch('pandas.read_sql')
 
     odbc_connector = OdbcConnector(name='test', connection_string='blah')
 
     ds = OdbcDataSource(
         domain='test',
         name='test',
-        query='SELECT Name, CountryCode, Population  from city LIMIT 2;',
+        query='SELECT Name, CountryCode, Population from city LIMIT 2;',
     )
     odbc_connector.get_df(ds)
-    mockdbc.assert_called_once_with('blah', autocommit=False, ansi=False)
-    mockdas.assert_called_once_with(
-        'SELECT Name, CountryCode, Population  from city LIMIT 2;', con=mockdbc(), params=[]
+    mock_pyodbc_connect.assert_called_once_with('blah', autocommit=False, ansi=False)
+    mock_pandas_read_sql.assert_called_once_with(
+        'SELECT Name, CountryCode, Population from city LIMIT 2;',
+        con=mock_pyodbc_connect(),
+        params=[],
     )
 
 
@@ -86,8 +88,8 @@ def test_retrieve_response(odbc_connector):
 
 def test_query_variability(mocker):
     """ It should connect to the database and retrieve the response to the query """
-    mockdbc = mocker.patch('pyodbc.connect')
-    mockdas = mocker.patch('pandas.read_sql')
+    mock_pyodbc_connect = mocker.patch('pyodbc.connect')
+    mock_pandas_read_sql = mocker.patch('pandas.read_sql')
     odbc_connector = OdbcConnector(name='test', connection_string='blah')
 
     ds = OdbcDataSource(
@@ -99,6 +101,8 @@ def test_query_variability(mocker):
 
     odbc_connector.get_df(ds)
 
-    mockdas.assert_called_once_with(
-        'select * from test where id_nb > ? and price > ?;', con=mockdbc(), params=[1, 10]
+    mock_pandas_read_sql.assert_called_once_with(
+        'select * from test where id_nb > ? and price > ?;',
+        con=mock_pyodbc_connect(),
+        params=[1, 10],
     )

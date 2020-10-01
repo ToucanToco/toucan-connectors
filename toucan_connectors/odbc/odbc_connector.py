@@ -12,19 +12,18 @@ class OdbcDataSource(ToucanDataSource):
 
 class OdbcConnector(ToucanConnector):
     """
-    Import data from ODBC apis
+    Import data through ODBC apis
     """
 
     data_source_model: OdbcDataSource
 
     connection_string: str = Field(..., description='The connection string')
-    autocommit: bool = False
     ansi: bool = False
     connect_timeout: int = None
 
     def get_connection_params(self):
         con_params = {
-            'autocommit': self.autocommit,
+            'autocommit': False,
             'ansi': self.ansi,
             'timeout': self.connect_timeout,
         }

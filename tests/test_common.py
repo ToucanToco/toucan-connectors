@@ -263,7 +263,7 @@ def test_connector_status():
     ],
 )
 def test_convert_pyformat_to_qmark(query, params, expected_query, expected_ordered_values):
-    """It should return query in qmark paramstyle and names of extracted params"""
+    """It should return query in qmark paramstyle and values of extracted params"""
     converted_query, ordered_values = convert_to_qmark_paramstyle(query, params)
     assert ordered_values == expected_ordered_values
     assert converted_query == expected_query
