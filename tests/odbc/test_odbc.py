@@ -14,7 +14,6 @@ def test_postgres_driver_installed():
     assert 'PostgreSQL Unicode' in pyodbc.drivers()
 
 
-
 @pytest.fixture(scope='module')
 def postgres_server(service_container):
     def check(host_port):
@@ -71,9 +70,7 @@ def test_odbc_get_df(mocker):
         query='SELECT Name, CountryCode, Population  from city LIMIT 2;',
     )
     odbc_connector.get_df(ds)
-
     mockdbc.assert_called_once_with('blah', autocommit=False, ansi=False)
-
     mockdas.assert_called_once_with(
         'SELECT Name, CountryCode, Population  from city LIMIT 2;', con=mockdbc(), params=[]
     )
@@ -82,7 +79,6 @@ def test_odbc_get_df(mocker):
 def test_retrieve_response(odbc_connector):
     """ It should connect to the database and retrieve the response to the query """
     ds = OdbcDataSource(query='select * from City;', domain='test', name='test')
-
     res = odbc_connector.get_df(ds)
     assert isinstance(res, pd.DataFrame)
     assert res.shape[0] > 1

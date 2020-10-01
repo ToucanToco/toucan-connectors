@@ -17,12 +17,4 @@ cd /tmp/unixODBC-2.3.9
 make
 make install
 export LD_LIBRARY_PATH=/usr/local/lib/
-
-INSTFILE=`odbc_config --odbcinstini`
-if [[ -e $INSTFILE ]];
-    then
-    echo "deleting $INSTFILE "
-    rm $INSTFILE
-fi
-
 touch ~/odbcdriver-installed
