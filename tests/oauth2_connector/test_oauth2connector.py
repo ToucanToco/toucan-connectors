@@ -6,13 +6,12 @@ import pytest
 from toucan_connectors.oauth2_connector.oauth2connector import (
     NoOAuth2RefreshToken,
     OAuth2Connector,
-    OAuth2Session,
     SecretsKeeper,
 )
 
 FAKE_AUTHORIZATION_URL = 'http://localhost:4242/foobar'
 FAKE_TOKEN_URL = 'http://service/token_endpoint'
-SCOPE: str = "openid email https://www.googleapis.com/auth/spreadsheets.readonly"
+SCOPE: str = 'openid email https://www.googleapis.com/auth/spreadsheets.readonly'
 
 
 @pytest.fixture
