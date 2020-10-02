@@ -233,15 +233,11 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         self,
         data_source: ToucanDataSource,
         permissions: Optional[dict] = None,
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Method to retrieve the data as a pandas dataframe
         filtered by permissions
         """
-        # This conditional prevents passing secrets in kwargs to connectors that can't use them
-        # inspect module's signature object can't be used here in Python 3.6 because it is not
-        # generated the same way as in 3.7 and 3.8; this can be eventually replaced
         res = self._retrieve_data(data_source)
 
         if permissions is not None:
@@ -256,7 +252,6 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
-        **kwargs,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
@@ -266,7 +261,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         - limit is the number of rows to retrieve
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
         """
-        df = self.get_df(data_source, permissions, **kwargs)
+        df = self.get_df(data_source, permissions)
         if limit is not None:
             return DataSlice(df[offset : offset + limit], len(df))
         else:
