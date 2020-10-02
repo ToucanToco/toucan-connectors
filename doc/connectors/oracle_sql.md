@@ -7,7 +7,7 @@ Alternatively, you can refer to the Oracle website [installation instructions](h
 
 * `type`: `"OracleSQL"`
 * `name`: str, required
-* `dsn`: str following the [DSN pattern](https://en.wikipedia.org/wiki/Data_source_name), required. The `host`, `port` and `service name` part of the dsn are required. For example: `localhost:80/service` 
+* `dsn`: str following the [DSN pattern](https://en.wikipedia.org/wiki/Data_source_name), required. The `host`, `port` and `service name` part of the dsn are required. For example: `localhost:80/service`
 * `user`: str
 * `password`: str
 * `encoding`: str

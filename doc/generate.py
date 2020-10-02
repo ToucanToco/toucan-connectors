@@ -1,7 +1,7 @@
 # Script to generate a connector documentation.
 import collections
-import sys
 import os
+import sys
 from contextlib import suppress
 
 import toucan_connectors
@@ -89,7 +89,7 @@ def generate(klass):
     li.append(',\n  ...\n]\n```')
     doc.append('\n'.join(li))
 
-    return '\n\n'.join([l for l in doc if l is not None])
+    return '\n\n'.join([line for line in doc if line is not None])
 
 
 def get_connectors():
@@ -115,7 +115,7 @@ def generate_summmary(connectors):
     connectors = collections.OrderedDict(sorted(connectors.items()))
     for key, value in connectors.items():
         doc.append(f'* [{key}](connectors/{value}.md)')
-    doc = '\n\n'.join([l for l in doc if l is not None])
+    doc = '\n\n'.join([line for line in doc if line is not None])
     file_name = 'doc/connectors.md'
     with open(file_name, 'w') as file:
         file.write(doc)
