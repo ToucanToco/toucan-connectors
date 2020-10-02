@@ -48,15 +48,14 @@ class GoogleSheets2DataSource(ToucanDataSource):
     )
 
     @classmethod
-    def get_form(cls, connector: 'GoogleSheets2Connector', current_config, **kwargs):
+    def get_form(cls, connector: 'GoogleSheets2Connector', current_config):
         """Retrieve a form filled with suggestions of available sheets."""
         # Always add the suggestions for the available sheets
         constraints = {}
         with suppress(Exception):
             partial_endpoint = current_config['spreadsheet_id']
             final_url = f'{connector._baseroute}{partial_endpoint}'
-            secrets = kwargs.get('secrets')(auth_flow_id=connector.auth_flow_id)
-            data = connector._run_fetch(final_url, secrets['access_token'])
+            data = connector._run_fetch(final_url)
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             constraints['sheet'] = strlist_to_enum('sheet', available_sheets)
 
@@ -99,17 +98,20 @@ class GoogleSheets2Connector(ToucanConnector):
     def get_access_token(self):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
-    async def _authentified_fetch(self, url):
+    async def _fetch(self, url, headers=None):
         """Build the final request along with headers."""
-        headers = {'Authorization': f'Bearer {self.get_access_token()}'}
-
         async with ClientSession(headers=headers) as session:
             return await fetch(url, session)
 
     def _run_fetch(self, url):
         """Run loop."""
+        access_token = self.get_access_token()
+        if not access_token:
+            raise NoCredentialsError('No credentials')
+        headers = {'Authorization': f'Bearer {access_token}'}
+
         loop = get_loop()
-        future = asyncio.ensure_future(self._authentified_fetch(url))
+        future = asyncio.ensure_future(self._fetch(url, headers))
         return loop.run_until_complete(future)
 
     def _retrieve_data(self, data_source: GoogleSheets2DataSource) -> pd.DataFrame:

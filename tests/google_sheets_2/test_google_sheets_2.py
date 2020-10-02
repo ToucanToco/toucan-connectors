@@ -3,14 +3,12 @@ from unittest.mock import Mock
 import pytest
 from pytest import fixture
 
-import tests.general_helpers as helpers
 from toucan_connectors.common import HttpError
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
     GoogleSheets2Connector,
     GoogleSheets2DataSource,
     NoCredentialsError,
 )
-from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 
 import_path = 'toucan_connectors.google_sheets_2.google_sheets_2_connector'
 
@@ -61,7 +59,7 @@ FAKE_SHEET = {
 @pytest.mark.asyncio
 async def test_authentified_fetch(mocker, con):
     """It should return a result from fetch if all is ok."""
-    mocker.patch(f'{import_path}.fetch', return_value=helpers.build_future(FAKE_SHEET))
+    mocker.patch(f'{import_path}.fetch', return_value=FAKE_SHEET)
 
     result = await con._fetch('/foo')
 
@@ -70,15 +68,9 @@ async def test_authentified_fetch(mocker, con):
 
 FAKE_SHEET_LIST_RESPONSE = {
     'sheets': [
-        {
-            'properties': {'title': 'Foo'},
-        },
-        {
-            'properties': {'title': 'Bar'},
-        },
-        {
-            'properties': {'title': 'Baz'},
-        },
+        {'properties': {'title': 'Foo'}},
+        {'properties': {'title': 'Bar'}},
+        {'properties': {'title': 'Baz'}},
     ]
 }
 
@@ -162,9 +154,7 @@ def test_set_columns(mocker, con, ds):
 
 def test__run_fetch(mocker, con):
     """It should return a result from loops if all is ok."""
-    mocker.patch.object(
-        GoogleSheets2Connector, '_fetch', return_value=helpers.build_future(FAKE_SHEET)
-    )
+    mocker.patch.object(GoogleSheets2Connector, '_fetch', return_value=FAKE_SHEET)
 
     result = con._run_fetch('/fudge')
 
@@ -201,18 +191,10 @@ def test_spreadsheet_without_sheet(mocker, con, ds_without_sheet):
     assert df.columns.tolist() == ['country', 'city']
 
 
-def test_get_status_no_secrets(con, remove_secrets):
+def test_get_status_no_secrets(mocker, con):
     """
     It should fail if no secrets are provided
     """
-    assert con.get_status().status is False
-
-
-def test_get_status_secrets_error(mocker, con):
-    """
-    It should fail if secrets can't be retrieved
-    """
-    mocker.patch(f'{import_path}.OAuth2Connector.get_access_token', side_effect=Exception)
     assert con.get_status().status is False
 
 
@@ -248,15 +230,3 @@ def test_get_decimal_separator(mocker, con, ds):
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=fake_results)
     df = con.get_df(ds)
     assert df.to_dict() == {'Number': {1: 1.3, 2: 1.2}}
-
-
-def test_delegate_oauth2_methods(mocker, con):
-    """
-    It should proxy OAuth2Connectors methods
-    """
-    mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
-    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
-    con.build_authorization_url()
-    mock_oauth2_connector.build_authorization_url.assert_called()
-    con.retrieve_tokens('toto')
-    mock_oauth2_connector.retrieve_tokens.assert_called_with('toto')
