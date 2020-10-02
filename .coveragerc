@@ -13,4 +13,5 @@ exclude_lines =
 # Files to exclude from consideration
 omit =
     # Utilities for OAuth2 connectors testing
-    toucan_connectors/oauth2_connector/quickstart
+    oauth_connector_quickstart.py
+    toucan_connectors/oauth2_connector/oauth2_authorization_webserver.py
