@@ -2,12 +2,15 @@ import socket
 import time
 from contextlib import suppress
 from os import environ, getenv, path
+from typing import Any
 
 import pytest
 import yaml
 from docker import APIClient
 from docker.tls import TLSConfig
 from slugify import slugify
+
+from toucan_connectors.oauth2_connector.oauth2connector import SecretsKeeper
 
 
 def pytest_addoption(parser):
@@ -152,3 +155,18 @@ def bearer_aircall_auth_id(bearer_api_key):
     if not bearer_aircall_auth_id:
         pytest.skip("'BEARER_AIRCALL_AUTH_ID' is not set")
     return bearer_aircall_auth_id
+
+
+@pytest.fixture
+def secrets_keeper():
+    class SimpleSecretsKeeper(SecretsKeeper):
+        def __init__(self):
+            self.store = {}
+
+        def load(self, key: str) -> Any:
+            return self.store[key]
+
+        def save(self, key: str, value: Any):
+            self.store[key] = value
+
+    return SimpleSecretsKeeper()

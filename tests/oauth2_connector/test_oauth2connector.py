@@ -1,32 +1,12 @@
-from typing import Any
 from unittest.mock import Mock
 
 import pytest
 
-from toucan_connectors.oauth2_connector.oauth2connector import (
-    NoOAuth2RefreshToken,
-    OAuth2Connector,
-    SecretsKeeper,
-)
+from toucan_connectors.oauth2_connector.oauth2connector import NoOAuth2RefreshToken, OAuth2Connector
 
 FAKE_AUTHORIZATION_URL = 'http://localhost:4242/foobar'
 FAKE_TOKEN_URL = 'http://service/token_endpoint'
 SCOPE: str = 'openid email https://www.googleapis.com/auth/spreadsheets.readonly'
-
-
-@pytest.fixture
-def secrets_keeper():
-    class SimpleSecretsKeeper(SecretsKeeper):
-        def __init__(self):
-            self.store = {}
-
-        def load(self, key: str) -> Any:
-            return self.store[key]
-
-        def save(self, key: str, value: Any):
-            self.store[key] = value
-
-    return SimpleSecretsKeeper()
 
 
 @pytest.fixture
