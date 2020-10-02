@@ -5,8 +5,8 @@
  Unless the spreadsheet is public, you will have to manually share it.
 
  Open the google spreadsheet inside your web browser. Inside the File menu, there a
- Share option. Click on it and enter the email address of your service account. 
- 
+ Share option. Click on it and enter the email address of your service account.
+
  If you are on Toucan Toco's cloud, it is:
  ```
  toucanserviceaccount@testproj-204816.iam.gserviceaccount.com
@@ -68,7 +68,7 @@ DATA_PROVIDERS: [
 ## Data source configuration
 
 * `domain`: str, required
-* `name`: str, required. Should match the data provider name 
+* `name`: str, required. Should match the data provider name
 * `spreadsheet_id`: str, required. Id of the spreadsheet which can be found inside
 the url: https://docs.google.com/spreadsheets/d/<spreadsheet_id_is_here>/edit?pref=2&pli=1#gid=0,
 * `sheetname`: str. By default, the extractor return the first sheet.

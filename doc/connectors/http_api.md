@@ -2,11 +2,11 @@
 
 This is a generic connector to get data from any HTTP APIs (REST style APIs).
 
-This type of data source combines the features of Python’s [requests](http://docs.python-requests.org/) 
+This type of data source combines the features of Python’s [requests](http://docs.python-requests.org/)
 library to get data from any API with the filtering langage [jq](https://stedolan.github.io/jq/) for
 flexbile transformations of the responses.
 
-Please see our [complete tutorial](https://docs.toucantoco.com/concepteur/tutorials/18-jq.html) for 
+Please see our [complete tutorial](https://docs.toucantoco.com/concepteur/tutorials/18-jq.html) for
 an example of advanced use of this connector.
 
 ## Data provider configuration
@@ -14,9 +14,9 @@ an example of advanced use of this connector.
 * `type`: `"HttpAPI"`
 * `name`: str, required
 * `baseroute`: str, required
-* `auth`: `{type: "basic|digest|oauth1|oauth2_backend|custom_token_server", args: [...], kwargs: {...}}` 
-    cf. [requests auth](http://docs.python-requests.org/en/master/) and 
-    [requests oauthlib](https://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow) doc. 
+* `auth`: `{type: "basic|digest|oauth1|oauth2_backend|custom_token_server", args: [...], kwargs: {...}}`
+    cf. [requests auth](http://docs.python-requests.org/en/master/) and
+    [requests oauthlib](https://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow) doc.
 * `template`: dict. See below.
 
 ```coffee
@@ -35,8 +35,8 @@ DATA_PROVIDERS: [
 
 ### Template
 
-You can use this object to avoid repetition in data sources. 
-The values of the three attributes will be used or overridden by 
+You can use this object to avoid repetition in data sources.
+The values of the three attributes will be used or overridden by
 all data sources using this provider.
 
 * `json`: dict

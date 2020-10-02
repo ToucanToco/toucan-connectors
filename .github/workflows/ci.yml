@@ -51,7 +51,7 @@ jobs:
 
     - name: Install psql-odbc dependencies
       run: sudo bash toucan_connectors/install_scripts/psql.sh
-      
+
     - name: install
       run: make install
 

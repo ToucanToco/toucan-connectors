@@ -5385,4 +5385,3 @@ COMMIT;
 ANALYZE city;
 ANALYZE country;
 ANALYZE countrylanguage;
-
