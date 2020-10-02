@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := all
 isort = isort toucan_connectors tests setup.py
-black = black -S -l 100 --target-version py36 toucan_connectors tests setup.py
+black = black toucan_connectors tests setup.py
 
 .PHONY: clean
 clean:
