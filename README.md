@@ -19,6 +19,12 @@ You can then install:
 
 You should be able to run basic tests `pytest tests/test_connector.py`
 
+Consider installing [pre-commit](https://pre-commit.com) to profit form linting hooks:
+```
+$ pip install pre-commit
+$ pre-commit install
+```
+
 :warning: To test and use `mssql` (and `azure_mssql`) you need to install the Microsoft ODBC driver for SQL Server for
 [Linux](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15)
 or [MacOS](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/install-microsoft-odbc-driver-sql-server-macos?view=sql-server-ver15)
