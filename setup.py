@@ -25,6 +25,7 @@ extras_require = {
     'mssql': ['pyodbc'],
     'mysql': ['PyMySQL>=0.8.0'],
     'odata': auth_deps + ['tctc_odata'],
+    'odbc': ['pyodbc'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'ROK': ['requests'],
