@@ -1,14 +1,18 @@
+"""
+Use this file to initiate the OAuth2 dance and test the connectors that requires it.
+"""
+
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
     GoogleSheets2Connector,
     GoogleSheets2DataSource,
 )
-from toucan_connectors.oauth2_connector.oauth2_authorization_webserver import (
-    JsonFileSecretsKeeper,
-    get_authorization_response,
-)
 
+from .helpers import JsonFileSecretsKeeper, get_authorization_response
+
+# Get these info from the provider
 CLIENT_ID = ''
 CLIENT_SECRET = ''
+# ...and give this one to the provider
 REDIRECT_URI = 'http://localhost:34097/'
 
 google_sheets_conn = GoogleSheets2Connector(
@@ -17,7 +21,7 @@ google_sheets_conn = GoogleSheets2Connector(
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
     redirect_uri=REDIRECT_URI,
-    secrets_keeper=JsonFileSecretsKeeper(filename="secrets.json"),
+    secrets_keeper=JsonFileSecretsKeeper(filename='secrets.json'),
 )
 sample_data_source_ss = GoogleSheets2DataSource(
     name='test',
@@ -25,8 +29,12 @@ sample_data_source_ss = GoogleSheets2DataSource(
     spreadsheet_id='1L5YraXEToFv7p0HMke7gXI4IhJotdT0q5bk_PInI1hA',
 )
 
-# authorization_response = get_authorization_response(google_sheets_conn.build_authorization_url(), 'localhost', 34097)
-# google_sheets_conn.retrieve_tokens(authorization_response)
+# The OAuth2 authorization process
+authorization_response = get_authorization_response(
+    google_sheets_conn.build_authorization_url(), 'localhost', 34097
+)
+google_sheets_conn.retrieve_tokens(authorization_response)
 
+# The actual data request
 df = google_sheets_conn.get_df(data_source=sample_data_source_ss)
 print(df)
