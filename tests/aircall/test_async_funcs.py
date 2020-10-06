@@ -1,7 +1,6 @@
 """Module containing tests with fake server"""
 import pytest
 
-import tests.general_helpers as helpers
 from tests.aircall.helpers import assert_called_with
 from toucan_connectors.aircall.aircall_connector import fetch_page
 
@@ -12,7 +11,6 @@ async def test_fetch_page_with_no_next(mocker):
     """Bearer version: tests that no next page returns an array of one response"""
     dataset = 'tags'
     fake_data = {'data': {'stuff': 'stuff'}, 'meta': {'next_page_link': None, 'current_page': 1}}
-    fake_data = helpers.build_future(fake_data)
     fake_fetch = mocker.patch(fetch_fn_name, return_value=fake_data)
     result = await fetch_page(dataset, [], {}, 10, 0)
     assert len(result) == 1
@@ -35,7 +33,6 @@ async def test_fetch_page_with_next_page(mocker):
         },
         {'data': {'stuff': 'stuff'}, 'meta': {'next_page_link': None, 'current_page': 2}},
     ]
-    data_list = [helpers.build_future(item) for item in data_list]
     fake_fetch = mocker.patch(fetch_fn_name, side_effect=data_list)
 
     # limit is 10 and run is 0 i.e. this is the first run
@@ -64,7 +61,6 @@ async def test_fetch_page_with_low_limit(mocker):
         },
         {'data': {'stuff': 'stuff'}, 'meta': {'next_page_link': None, 'current_page': 3}},
     ]
-    data_list = [helpers.build_future(item) for item in data_list]
     fake_fetch = mocker.patch(fetch_fn_name, side_effect=data_list)
     # limit is only 1 and run is 0 i.e. this is the first run
     res = await fetch_page(dataset, [], {}, 1, 0)
@@ -79,7 +75,6 @@ async def test_fetch_page_with_no_meta(mocker):
     """Tests that no meta object in response is not an issue"""
     dataset = 'calls'
     fake_data = {'data': {'stuff': 'stuff'}}
-    fake_data = helpers.build_future(fake_data)
     fake_fetch = mocker.patch(fetch_fn_name, return_value=fake_data)
     # despite there being a limit of 10 runs, only one run should occur
     res = await fetch_page(dataset, [], {}, 10, 0)
@@ -93,7 +88,6 @@ async def test_fetch_page_with_error(mocker):
     """
     dataset = 'tags'
     fake_data = {'error': 'Oops!', 'troubleshoot': 'Blah blah blah'}
-    fake_data = helpers.build_future(fake_data)
     fake_fetch = mocker.patch(fetch_fn_name, return_value=fake_data)
     with pytest.raises(Exception) as e:
         await fetch_page(dataset, [], {}, 1, 0)

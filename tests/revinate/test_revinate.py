@@ -3,7 +3,6 @@ from _pyjq import ScriptRuntimeError
 from aiohttp import web
 from pydantic import ValidationError
 
-import tests.general_helpers as helpers
 from toucan_connectors.revinate.revinate_connector import (
     RevinateAuthentication,
     RevinateConnector,
@@ -83,7 +82,7 @@ async def test__get_data_happy_case(base_connector, ds, mocker):
     """It should return valid data if everything is valid"""
     fake_fetch = mocker.patch(
         fetch_fn_name,
-        return_value=helpers.build_future(FAKE_DATA),
+        return_value=FAKE_DATA,
     )
 
     fake_endpoint = f'/{ds.endpoint}?page=2&size=50'
@@ -97,7 +96,7 @@ async def test__get_data_happy_case(base_connector, ds, mocker):
 @pytest.mark.asyncio
 async def test__get_data_w_bad_jq_filter(base_connector, ds, mocker):
     """It should throw a ValueError if jq filter is not valid"""
-    fake_fetch = mocker.patch(fetch_fn_name, return_value=helpers.build_future(FAKE_DATA))
+    fake_fetch = mocker.patch(fetch_fn_name, return_value=FAKE_DATA)
 
     with pytest.raises(ValueError):
         await base_connector._get_data(f'/{ds.endpoint}', 'putzes')
@@ -108,7 +107,7 @@ async def test__get_data_w_bad_jq_filter(base_connector, ds, mocker):
 @pytest.mark.asyncio
 async def test__get_data_w_incorrect_filter(base_connector, ds, mocker):
     """It should return an array with None if the jq filter does not match the data"""
-    fake_fetch = mocker.patch(fetch_fn_name, return_value=helpers.build_future(FAKE_DATA))
+    fake_fetch = mocker.patch(fetch_fn_name, return_value=FAKE_DATA)
 
     with pytest.raises(ScriptRuntimeError):
         await base_connector._get_data(f'/{ds.endpoint}', '.putzes')
@@ -132,13 +131,11 @@ async def test__get_data_w_no_content(base_connector, ds, mocker):
     """It should still succeed even with an empty content array"""
     mocker.patch(
         fetch_fn_name,
-        return_value=helpers.build_future(
-            {
-                'links': [{'rel': '', 'href': '', 'templated': False}],
-                'content': [],
-                'page': {'size': 50, 'totalElements': 498, 'totalPages': 10, 'number': 2},
-            }
-        ),
+        return_value={
+            'links': [{'rel': '', 'href': '', 'templated': False}],
+            'content': [],
+            'page': {'size': 50, 'totalElements': 498, 'totalPages': 10, 'number': 2},
+        },
     )
 
     result = await base_connector._get_data(f'/{ds.endpoint}', '.')
@@ -149,7 +146,7 @@ async def test__get_data_w_no_content(base_connector, ds, mocker):
 def test__run_fetch(base_connector, ds, mocker):
     """It should call _run_fetch and produce a dict"""
     fake__get_data = mocker.patch.object(
-        RevinateConnector, '_get_data', return_value=helpers.build_future(JQ_FILTERED_DATA)
+        RevinateConnector, '_get_data', return_value=JQ_FILTERED_DATA
     )
 
     result = base_connector._run_fetch(f'/{ds.endpoint}', '.')

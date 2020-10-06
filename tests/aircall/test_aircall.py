@@ -1,7 +1,6 @@
 import pytest
 from pydantic import ValidationError
 
-import tests.general_helpers as helpers
 from tests.aircall.mock_results import (
     fake_tags,
     fake_teams,
@@ -54,7 +53,6 @@ async def test__get_data_tags_case(con, mocker):
     """Tests with tags happy case"""
     dataset = 'tags'
     fake_res = fake_tags
-    fake_res = helpers.build_future(fake_res)
     fake_fetch_page = mocker.patch(fetch_fn_name, return_value=fake_res)
     ds = build_ds(dataset)
     res = await con._get_tags(ds.dataset, 10)
@@ -78,7 +76,6 @@ async def test__get_data_users_case(con, mocker):
     """Tests users call happy case"""
     dataset = 'users'
     fake_res = [fake_teams, fake_users]
-    fake_res = [helpers.build_future(item) for item in fake_res]
     fake_fetch_page = mocker.patch(fetch_fn_name, side_effect=fake_res)
     ds = build_ds(dataset)
     res = await con._get_data(ds.dataset, 10)
@@ -182,7 +179,6 @@ def test__retrieve_data_no_teams_case(con, mocker):
 def test__retrieve_tags_from_fetch(con, mocker):
     """Tests _retrieve_tags from the fetch_page function"""
     fake_res = fake_tags
-    fake_res = helpers.build_future(fake_tags)
     mocker.patch(fetch_fn_name, return_value=fake_res)
     ds = build_ds('tags')
 
@@ -198,7 +194,6 @@ def test__retrieve_tags_from_fetch(con, mocker):
 def test__retrieve_users_from_fetch(con, mocker):
     """Tests _retrieve_data for users from fetch_page function"""
     fake_res = [fake_teams, fake_users]
-    fake_res = [helpers.build_future(item) for item in fake_res]
     mocker.patch(fetch_fn_name, side_effect=fake_res)
     ds = build_ds('users')
 

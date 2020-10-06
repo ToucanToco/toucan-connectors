@@ -4,7 +4,6 @@ from unittest.mock import Mock
 import pytest
 from pytest import fixture
 
-import tests.general_helpers as helpers
 from toucan_connectors.common import HttpError
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
     GoogleSheets2Connector,
@@ -56,7 +55,7 @@ FAKE_SHEET = {
 @pytest.mark.asyncio
 async def test_authentified_fetch(mocker, con):
     """It should return a result from fetch if all is ok."""
-    mocker.patch(f'{import_path}.fetch', return_value=helpers.build_future(FAKE_SHEET))
+    mocker.patch(f'{import_path}.fetch', return_value=FAKE_SHEET)
 
     result = await con._authentified_fetch('/foo', 'myaccesstoken')
 
@@ -65,15 +64,9 @@ async def test_authentified_fetch(mocker, con):
 
 FAKE_SHEET_LIST_RESPONSE = {
     'sheets': [
-        {
-            'properties': {'title': 'Foo'},
-        },
-        {
-            'properties': {'title': 'Bar'},
-        },
-        {
-            'properties': {'title': 'Baz'},
-        },
+        {'properties': {'title': 'Foo'}},
+        {'properties': {'title': 'Bar'}},
+        {'properties': {'title': 'Baz'}},
     ]
 }
 
@@ -165,9 +158,7 @@ def test_set_columns(mocker, con, ds, fake_kwargs):
 
 def test__run_fetch(mocker, con):
     """It should return a result from loops if all is ok."""
-    mocker.patch.object(
-        GoogleSheets2Connector, '_authentified_fetch', return_value=helpers.build_future(FAKE_SHEET)
-    )
+    mocker.patch.object(GoogleSheets2Connector, '_authentified_fetch', return_value=FAKE_SHEET)
 
     result = con._run_fetch('/fudge', 'myaccesstoken')
 
