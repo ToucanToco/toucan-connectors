@@ -66,6 +66,7 @@ def generate(klass):
     * `dataset`: Dataset, required
     """
     klassname = klass.__name__.replace('Connector','')
+    #Retrieving class name from __name__ as type is no longer in the right format
     doc = [f'# {klassname} connector', doc_or_empty(klass), '## Data provider configuration']
 
     li = [f'* `type`: `"{klassname}"`']
