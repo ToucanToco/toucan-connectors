@@ -1,5 +1,4 @@
-import json
-from os import path
+from abc import ABC, abstractmethod
 from time import time
 from typing import Any
 from urllib import parse as url_parse
@@ -7,32 +6,18 @@ from urllib import parse as url_parse
 from authlib.integrations.requests_client import OAuth2Session
 
 
-class SecretsKeeper:
+class SecretsKeeper(ABC):
+    @abstractmethod
     def save(self, key: str, value):
-        pass
+        """
+        Save secrets in a secrets repository
+        """
 
+    @abstractmethod
     def load(self, key: str) -> Any:
-        pass
-
-
-class JsonFileSecretsKeeper:
-    def __init__(self, filename: str):
-        self.filename = filename
-
-    def load_file(self) -> dict:
-        if not path.exists(self.filename):
-            return {}
-        with open(self.filename, 'r') as f:
-            return json.load(f)
-
-    def save(self, key: str, value):
-        values = self.load_file()
-        values[key] = value
-        with open(self.filename, 'w') as f:
-            json.dump(values, f)
-
-    def load(self, key: str) -> Any:
-        return self.load_file()[key]
+        """
+        Load secrets from the secrets repository
+        """
 
 
 class OAuth2Connector:

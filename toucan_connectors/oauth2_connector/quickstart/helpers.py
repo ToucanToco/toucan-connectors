@@ -1,6 +1,12 @@
+"""
+This provide a helper to test OAuth2 connectors locally
+"""
+import json
 import webbrowser
 import wsgiref.simple_server
 import wsgiref.util
+from sys import path
+from typing import Any
 
 
 class _RedirectWSGIApp(object):
@@ -44,3 +50,23 @@ def get_authorization_response(authorization_url, host, port):
     local_server = wsgiref.simple_server.make_server(host, port, app)
     local_server.handle_request()
     return app.last_request_uri
+
+
+class JsonFileSecretsKeeper:
+    def __init__(self, filename: str):
+        self.filename = filename
+
+    def load_file(self) -> dict:
+        if not path.exists(self.filename):
+            return {}
+        with open(self.filename, 'r') as f:
+            return json.load(f)
+
+    def save(self, key: str, value):
+        values = self.load_file()
+        values[key] = value
+        with open(self.filename, 'w') as f:
+            json.dump(values, f)
+
+    def load(self, key: str) -> Any:
+        return self.load_file()[key]

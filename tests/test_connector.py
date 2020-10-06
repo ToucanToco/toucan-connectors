@@ -12,7 +12,6 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 
-
 class DataSource(ToucanDataSource):
     query: str
 

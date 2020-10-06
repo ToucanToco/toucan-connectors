@@ -9,3 +9,8 @@ exclude_lines =
 
     # Don't cover NotImplemented methods (specially useful for abstract classes)
     raise NotImplementedError
+
+# Files to exclude from consideration
+omit =
+    # Utilities for OAuth2 connectors testing
+    toucan_connectors/oauth2_connector/quickstart
