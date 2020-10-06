@@ -11,7 +11,7 @@ configured with dictionaries (cf. `DataSource` class) and returning
 [Pandas DataFrames](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html).
 
 ## Setup
-In order to work you need `make` and `Python 3.6`, `3.7` or `3.8` (consider
+In order to work you need `make` and `Python 3.8` (consider
 running `pip install -U pip setuptools` if needed)
 You can then install:
 - the main dependencies by typing `pip install -e .`
