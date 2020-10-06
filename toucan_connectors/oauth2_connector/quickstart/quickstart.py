@@ -2,12 +2,12 @@
 Use this file to initiate the OAuth2 dance and test the connectors that requires it.
 """
 
+from helpers import JsonFileSecretsKeeper, get_authorization_response
+
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
     GoogleSheets2Connector,
     GoogleSheets2DataSource,
 )
-
-from .helpers import JsonFileSecretsKeeper, get_authorization_response
 
 # Get these info from the provider
 CLIENT_ID = ''
@@ -31,7 +31,7 @@ sample_data_source_ss = GoogleSheets2DataSource(
 
 # The OAuth2 authorization process
 authorization_response = get_authorization_response(
-    google_sheets_conn.build_authorization_url(), 'localhost', 34097
+    google_sheets_conn.build_authorization_url()[0], 'localhost', 34097
 )
 google_sheets_conn.retrieve_tokens(authorization_response)
 
