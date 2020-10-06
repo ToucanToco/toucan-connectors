@@ -2,6 +2,23 @@
 
 Connector to [ROK](https://www.rok-solution.fr/).
 
+Two authentication methods are available:
+- username with password
+- username and a specific JWT, signed by the secret shared with the ROK instance
+
+The later mode is useful to be able to do requests from multiple users with the same connector instance. However, be aware that the server using this must be trusted by ROK, as it can impersonate any user.
+This trust is materialized by a shared secrets, provided by the ROK team.
+A common practice would be to parametrize the username, and let only the trusted server to fill it.
+An example of such configuration would be:
+    {
+      "type": "ROK",
+      "name": "user_specific_ROK_data",
+      "username": "{{ user.username }}",
+      "authentified_with_rok_token": true,
+      "secret": "xxxxxx", 
+      ...
+    }
+
 ## Data provider configuration
 
 * `type`: `"ROK"`
@@ -9,6 +26,7 @@ Connector to [ROK](https://www.rok-solution.fr/).
 * `host`: str, required
 * `username`: str, required
 * `password`: str, required
+* `secret`: str, default to None
 
 ```coffee
 DATA_PROVIDERS: [
@@ -16,7 +34,8 @@ DATA_PROVIDERS: [
   name:    '<name>'
   host:    'https://rok.example.com'
   username: '<username>',
-  password: '<password>'
+  password: '<password>',
+  secret: <secret>
 ,
   ...
 ]
