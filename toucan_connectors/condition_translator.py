@@ -1,14 +1,8 @@
-import sys
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, List, TypeVar, Union
+from typing import Any, List, Literal, TypeVar, Union
 
 from pydantic import BaseModel
-
-if sys.version_info < (3, 8):
-    from typing_extensions import Literal
-else:
-    from typing import Literal
 
 Number = Union[int, float]
 
