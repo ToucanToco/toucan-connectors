@@ -3,7 +3,6 @@ import collections
 import sys
 import os
 from contextlib import suppress
-import toucan_connectors
 from importlib import import_module
 
 def doc_or_empty(klass):
