@@ -1,6 +1,6 @@
 import pytest
 import responses
-from jwt import encode, decode
+from jwt import decode, encode
 from toucan_connectors.rok.rok_connector import RokConnector, RokDataSource
 
 rds = RokDataSource(
@@ -92,7 +92,6 @@ def test_rok_with_jwt():
     assert df['b'].sum() == 2
 
 
-
 @responses.activate
 def test_rok_with_jwt(ROK_con, ROK_ds):
     """Check that we correctly retrieve the data with the crafted token"""
@@ -172,3 +171,13 @@ def test_live_instance():
 
     df = live_rc.get_df(live_rds)
     assert not df.empty
+
+
+@pytest.mark.skip(reason='Waiting for ROK to provide secret')
+def test_live_instance_jwt(ROK_con, ROK_ds):
+    import os
+
+    ROK_con.secret = os.environ['CONNECTORS_TESTS_ROK_SECRET']
+    df = ROK_con.get_df(ROK_ds)
+    assert not df.empty
+    

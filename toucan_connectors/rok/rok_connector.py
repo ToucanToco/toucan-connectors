@@ -23,7 +23,7 @@ class RokConnector(ToucanConnector):
     host: str
     username: str 
     password: str
-    secret: str = None
+    secret: str  = None
 
 
     def _retrieve_data(self, data_source: RokDataSource) -> pd.DataFrame:
@@ -36,49 +36,39 @@ class RokConnector(ToucanConnector):
             {authenticateUsingJWT(database: $database, token: $token)}"""
 
             payload = {
-                'database': data_source.database,
-                'username': self.username,
-                'iat': datetime.utcnow(),
-            }
-
-            if not self.secret:
-                raise ValueError('secret not defined')
-
-
-        if data_source.live_data:
-            auth_query = """
-            query Auth($database: String!, $token: Token!)
-            {authenticateUsingJWT(database: $database, $token: $token)}"""
-
-            payload = {
             'database':data_source.database,
             'username':self.username,
             'iat': datetime.utcnow()
             }
+
+            if not self.secret:
+                raise ValueError('secret not defined')
 
             encoded_payload = encode(payload, self.secret, algorithm='HS256')
             auth_vars = {
                 'database': data_source.database,
                 'jwt_token': encoded_payload.decode('utf-8')
             }
-            encoded_auth_res = requests.post(
+            auth_res = requests.post(
                 endpoint, json={'query': auth_query, 'variables': auth_vars}
             ).json()
-            rok_token = decode(encoded_auth_res['data']['token'], self.secret, algorithm='HS256')
+            rok_token = auth_res['data']['token']
             payload = {'query': data_source.query, 'variables': data_source.parameters}
-            headers = {'Token': encode(rok_token, self.secret, algorithm='HS256')} #Est-ce que l'on doit le ré encoder ?
+            headers = {'Token': rok_token}
 
         else:
+            endpoint = f'{endpoint}?DatabaseName={data_source.database}'
+
             auth_query = """
             query Auth($database: String!, $user: String!, $password: String!)
             {authenticate(database: $database, user: $user, password: $password)}"""
             auth_vars = {
-                'database': data_source.database,
-                'user': self.username,
-                'password': self.password,
+            'database': data_source.database,
+            'user': self.username,
+            'password': self.password,
             }
             auth_res = requests.post(
-                endpoint, json={'query': auth_query, 'variables': auth_vars}
+            endpoint, json={'query': auth_query, 'variables': auth_vars}
             ).json()
 
             if 'errors' in auth_res:
