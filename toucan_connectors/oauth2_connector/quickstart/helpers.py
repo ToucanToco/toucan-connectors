@@ -5,7 +5,7 @@ import json
 import webbrowser
 import wsgiref.simple_server
 import wsgiref.util
-from sys import path
+from os import path
 from typing import Any
 
 
