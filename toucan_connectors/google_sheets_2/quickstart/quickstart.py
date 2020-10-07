@@ -31,7 +31,7 @@ sample_data_source_ss = GoogleSheets2DataSource(
 
 # The OAuth2 authorization process
 authorization_response = get_authorization_response(
-    google_sheets_conn.build_authorization_url()[0], 'localhost', 34097
+    google_sheets_conn.build_authorization_url(), 'localhost', 34097
 )
 google_sheets_conn.retrieve_tokens(authorization_response)
 
