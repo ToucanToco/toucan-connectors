@@ -56,7 +56,7 @@ class OAuth2Connector:
         self.secrets_keeper.save(self._connector_name, {'state': state})
         return uri
 
-    def retrieve_tokens(self, authorization_response: str):
+    def retrieve_tokens(self, authorization_response: str, **kwargs):
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)
         client = OAuth2Session(
@@ -65,8 +65,9 @@ class OAuth2Connector:
             redirect_uri=self.redirect_uri,
         )
         assert self.secrets_keeper.load(self._connector_name)['state'] == url_params['state'][0]
-
-        token = client.fetch_token(self.token_url, authorization_response=authorization_response)
+        token = client.fetch_token(
+            self.token_url, authorization_response=authorization_response, **kwargs
+        )
         self.secrets_keeper.save(self._connector_name, token)
 
     def get_access_token(self) -> str:
