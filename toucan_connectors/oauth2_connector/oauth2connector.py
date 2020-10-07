@@ -76,6 +76,7 @@ class OAuth2Connector:
         If necessary, this token will be refreshed
         """
         token = self.secrets_keeper.load(self._connector_name)
+
         if 'expires_at' in token and token['expires_at'] < time():
             if 'refresh_token' not in token:
                 raise NoOAuth2RefreshToken
@@ -86,6 +87,7 @@ class OAuth2Connector:
             new_token = client.refresh_token(self.token_url, refresh_token=token['refresh_token'])
             self.secrets_keeper.save(self._connector_name, new_token)
         return self.secrets_keeper.load(self._connector_name)['access_token']
+
 
 
 class NoOAuth2RefreshToken(Exception):

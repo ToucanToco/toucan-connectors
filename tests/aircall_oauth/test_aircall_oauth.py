@@ -55,7 +55,6 @@ def con(secrets_keeper):
         redirect_uri='https://redirect.me/',
     )
 
-
 def build_ds(dataset: str):
     """Builds test datasource"""
     return Aircall_oauthDataSource(
@@ -90,7 +89,6 @@ def test__run_fetch(mocker, con):
     result = con._run_fetch('/foos')
 
     assert result == FAKE_FETCH_RES
-
 
 @pytest.mark.asyncio
 async def test__get_data_tags_case(con, mocker):
@@ -197,7 +195,6 @@ def test_run_fetches_for_tags(con, mocker):
     dataset = 'tags'
     spy = mocker.spy(Aircall_oauthConnector, 'run_fetches_for_tags')
     mocker.patch(f'{import_path}.fetch_page', return_value=helpers.build_future(fake_tags))
-
     ds = build_ds(dataset)
     con.run_fetches_for_tags(dataset, ds.limit)
     assert spy.call_count == 1
@@ -321,14 +318,11 @@ def test_get_status_api_down(mocker, con):
     """
     It should fail if the third-party api is down.
     """
-    mocker.patch.object(Aircall_oauthConnector, '_run_fetch', side_effect=HttpError)
+    mocker.patch.object(Aircall_oauthConnector, 'get_access_token', side_effect=HttpError)
     assert con.get_status().status is False
 
 
-# def test_specific_retrieve_token(mocker, con):
-
-
-def test_delegate_oauth2_methods(mocker, con):
+def test_build_authorization_url(mocker, con):
     """
     It should proxy OAuth2Connectors methods
     """
@@ -338,8 +332,28 @@ def test_delegate_oauth2_methods(mocker, con):
     con.__dict__['_oauth2_connector'] = mock_oauth2_connector
     con.build_authorization_url()
     mock_oauth2_connector.build_authorization_url.assert_called()
-    # TODO extract this test in a specific one
+
+
+def test_specific_retrieve_token(mocker, con):
+    """Check that the Aircall_oAUthConnector way of retrieving access token works"""
+    mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
+    mock_oauth2_connector.client_id = 'test_client_id'
+    mock_oauth2_connector.client_secret = 'test_client_secret'
+    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    con.__dict__['_oauth2_connector'].authorization_url = 'https://authorization.url'
     con.retrieve_tokens('toto')
     mock_oauth2_connector.retrieve_tokens.assert_called_with(
         'toto', client_id='test_client_id', client_secret='test_client_secret'
     )
+
+
+@pytest.mark.asyncio
+async def test__get_data_no_secrets(mocker, con, remove_secrets):
+    """It should raise an exception if there are no secrets returned during the fetch"""
+    dataset = 'users'
+    fake_res = [fake_teams, fake_users]
+    fake_res = [helpers.build_future(item) for item in fake_res]
+    ds = build_ds(dataset)
+    with pytest.raises(NoCredentialsError) as err:
+        await con._get_data(ds.dataset, 10)
+    assert str(err.value) == 'No credentials'

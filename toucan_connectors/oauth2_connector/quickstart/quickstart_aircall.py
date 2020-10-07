@@ -38,4 +38,4 @@ aircall_conn.retrieve_tokens(authorization_response.replace('http', 'https').rep
 
 # The actual data request
 # Print the retrieved Token, thus ending the oAuth Dance
-print("retrieved aircall token %s" % aircall_conn.get_access_token())
+print('retrieved aircall token %s' % aircall_conn.get_access_token())
