@@ -39,6 +39,10 @@ def strlist_to_enum(field: str, strlist: List[str], default_value=...) -> tuple:
     return StrEnum(field, {v: v for v in strlist}), default_value
 
 
+def is_oauth2_connector(cls):
+    return hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2'
+
+
 class ToucanDataSource(BaseModel):
     domain: str
     name: str
