@@ -26,15 +26,15 @@ class OAuth2Connector:
     init_params = ['client_secret', 'client_id', 'redirect_uri', 'secrets_keeper']
 
     def __init__(
-        self,
-        name: str,
-        authorization_url: str,
-        scope: str,
-        client_id: str,
-        client_secret: str,
-        secrets_keeper: SecretsKeeper,
-        redirect_uri: str,
-        token_url: str,
+            self,
+            name: str,
+            authorization_url: str,
+            scope: str,
+            client_id: str,
+            client_secret: str,
+            secrets_keeper: SecretsKeeper,
+            redirect_uri: str,
+            token_url: str,
     ):
         self.auth_flow_id = name
         self.authorization_url = authorization_url
@@ -69,7 +69,8 @@ class OAuth2Connector:
             client_secret=self.client_secret,
             redirect_uri=self.redirect_uri,
         )
-        assert self.secrets_keeper.load(self.auth_flow_id)['state'] == url_params['state'][0]
+        assert json.loads(self.secrets_keeper.load(self.auth_flow_id)['state'])['token'] == \
+               json.loads(url_params['state'][0])['token']
 
         token = client.fetch_token(self.token_url, authorization_response=authorization_response)
         self.secrets_keeper.save(self.auth_flow_id, token)
