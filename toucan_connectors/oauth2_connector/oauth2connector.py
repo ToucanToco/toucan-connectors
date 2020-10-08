@@ -69,7 +69,10 @@ class OAuth2Connector:
             client_secret=self.client_secret,
             redirect_uri=self.redirect_uri,
         )
-        assert json.loads(self.secrets_keeper.load(self.auth_flow_id)['state'])['token'] == \
+        saved_flow = self.secrets_keeper.load(self.auth_flow_id)
+        if saved_flow is None:
+            raise AuthFlowNotFound()
+        assert json.loads(saved_flow['state'])['token'] == \
                json.loads(url_params['state'][0])['token']
 
         token = client.fetch_token(self.token_url, authorization_response=authorization_response)
@@ -96,4 +99,9 @@ class OAuth2Connector:
 class NoOAuth2RefreshToken(Exception):
     """
     Raised when no refresh token is available to get new access tokens
+    """
+
+class AuthFlowNotFound(Exception):
+    """
+    Raised when we could not match the given state
     """
