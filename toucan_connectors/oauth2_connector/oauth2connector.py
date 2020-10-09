@@ -97,7 +97,6 @@ class OAuth2Connector:
             self.secrets_keeper.save(self.auth_flow_id, new_token)
         return self.secrets_keeper.load(self.auth_flow_id)['access_token']
 
-
 class NoOAuth2RefreshToken(Exception):
     """
     Raised when no refresh token is available to get new access tokens
