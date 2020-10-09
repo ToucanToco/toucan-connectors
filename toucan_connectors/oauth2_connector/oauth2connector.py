@@ -26,15 +26,15 @@ class OAuth2Connector:
     init_params = ['client_secret', 'client_id', 'redirect_uri', 'secrets_keeper']
 
     def __init__(
-            self,
-            name: str,
-            authorization_url: str,
-            scope: str,
-            client_id: str,
-            client_secret: str,
-            secrets_keeper: SecretsKeeper,
-            redirect_uri: str,
-            token_url: str,
+        self,
+        name: str,
+        authorization_url: str,
+        scope: str,
+        client_id: str,
+        client_secret: str,
+        secrets_keeper: SecretsKeeper,
+        redirect_uri: str,
+        token_url: str,
     ):
         self.auth_flow_id = name
         self.authorization_url = authorization_url
@@ -72,8 +72,9 @@ class OAuth2Connector:
         saved_flow = self.secrets_keeper.load(self.auth_flow_id)
         if saved_flow is None:
             raise AuthFlowNotFound()
-        assert json.loads(saved_flow['state'])['token'] == \
-               json.loads(url_params['state'][0])['token']
+        assert (
+            json.loads(saved_flow['state'])['token'] == json.loads(url_params['state'][0])['token']
+        )
 
         token = client.fetch_token(self.token_url, authorization_response=authorization_response)
         self.secrets_keeper.save(self.auth_flow_id, token)
@@ -101,6 +102,7 @@ class NoOAuth2RefreshToken(Exception):
     """
     Raised when no refresh token is available to get new access tokens
     """
+
 
 class AuthFlowNotFound(Exception):
     """
