@@ -61,7 +61,7 @@ class OAuth2Connector:
         self.secrets_keeper.save(self.auth_flow_id, {'state': state})
         return uri
 
-    def retrieve_tokens(self, authorization_response: str, **kwargs):
+    def retrieve_tokens(self, authorization_response: str):
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)
         client = OAuth2Session(
@@ -96,6 +96,7 @@ class OAuth2Connector:
             new_token = client.refresh_token(self.token_url, refresh_token=token['refresh_token'])
             self.secrets_keeper.save(self.auth_flow_id, new_token)
         return self.secrets_keeper.load(self.auth_flow_id)['access_token']
+
 
 class NoOAuth2RefreshToken(Exception):
     """
