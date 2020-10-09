@@ -1,5 +1,6 @@
 """Helpers functions for setting up tests for AirCall connector"""
 
+
 def assert_called_with(fake_func, expected_params=[], expected_count=None):
     """Tests mock function with called/awaited depending on Python version"""
     if expected_count is not None:
