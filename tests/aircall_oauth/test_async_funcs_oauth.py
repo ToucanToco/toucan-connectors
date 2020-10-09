@@ -19,9 +19,7 @@ async def test_fetch_page_with_no_next(mocker):
     assert 'data' in first_dict
     assert 'meta' in first_dict
 
-    assert_called_with(
-        fake_fetch, ['https://api.aircall.io/v1/tags?per_page=50&page=1', {}]
-    )
+    assert_called_with(fake_fetch, ['https://api.aircall.io/v1/tags?per_page=50&page=1', {}])
 
 
 async def test_fetch_page_with_next_page(mocker):
@@ -44,9 +42,7 @@ async def test_fetch_page_with_next_page(mocker):
     fake_res = await fetch_page(dataset, [], {}, 10, 0)
     assert len(fake_res) == 2
 
-    assert_called_with(
-        fake_fetch, ['https://api.aircall.io/v1/calls?per_page=50&page=2', {}], 2
-    )
+    assert_called_with(fake_fetch, ['https://api.aircall.io/v1/calls?per_page=50&page=2', {}], 2)
 
 
 async def test_fetch_page_with_low_limit(mocker):
@@ -69,9 +65,7 @@ async def test_fetch_page_with_low_limit(mocker):
     res = await fetch_page(dataset, [], {}, 1, 0)
     assert len(res) == 1
 
-    assert_called_with(
-        fake_fetch, ['https://api.aircall.io/v1/users?per_page=50&page=1', {}]
-    )
+    assert_called_with(fake_fetch, ['https://api.aircall.io/v1/users?per_page=50&page=1', {}])
 
 
 async def test_fetch_page_with_no_meta(mocker):
