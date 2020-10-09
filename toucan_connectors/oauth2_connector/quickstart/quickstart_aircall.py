@@ -32,8 +32,7 @@ sample_data_source_ss = Aircall_oauthDataSource(
 authorization_response = get_authorization_response(
     aircall_conn.build_authorization_url(), 'localhost', 35000
 )
-# As we cannot change the redirect URI set by Aircall I manually added
-# 127.0.0.1       api-rachelle.toucantoco.guru in /etc/hosts
+# Here we edited our /etc/hosts file to redirect the uri given by aircall to our localhost
 aircall_conn.retrieve_tokens(authorization_response.replace('http', 'https').replace(':35000', ''))
 
 # The actual data request
