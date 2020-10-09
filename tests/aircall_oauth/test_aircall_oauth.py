@@ -13,8 +13,8 @@ from tests.aircall.mock_results import (
     more_filtered_users,
 )
 from toucan_connectors.aircall_oauth.aircall_oauth_connector import (
-    Aircall_oauthConnector,
-    Aircall_oauthDataSource,
+    AircallOauthConnector,
+    AircallOauthDataSource,
     NoCredentialsError,
 )
 from toucan_connectors.common import HttpError
@@ -45,7 +45,7 @@ FAKE_FETCH_RES = 'FAKE RESULTS'
 @pytest.fixture
 def con(secrets_keeper):
     secrets_keeper.save('test', {'access_token': 'access_token'})
-    return Aircall_oauthConnector(
+    return AircallOauthConnector(
         name='test',
         auth_flow_id='test',
         client_id='test_client_id',
@@ -57,7 +57,7 @@ def con(secrets_keeper):
 
 def build_ds(dataset: str):
     """Builds test datasource"""
-    return Aircall_oauthDataSource(
+    return AircallOauthDataSource(
         name='mah_ds',
         domain='mah_domain',
         dataset=dataset,
@@ -82,7 +82,7 @@ async def test_authentified_fetch(mocker, con):
 
 def test__run_fetch(mocker, con):
     """It should return a result from loops if all is ok."""
-    mocker.patch.object(Aircall_oauthConnector, '_fetch', return_value=FAKE_FETCH_RES)
+    mocker.patch.object(AircallOauthConnector, '_fetch', return_value=FAKE_FETCH_RES)
 
     result = con._run_fetch('/foos')
 
@@ -137,7 +137,7 @@ def test__retrieve_data_users_happy_case(con, mocker):
     # NOTE: this test is only cursory because 'users' call is tested more
     # thoroughly in helpers test file
     run_fetches_mock = mocker.patch.object(
-        Aircall_oauthConnector, 'run_fetches', return_value=[filtered_teams, filtered_users]
+        AircallOauthConnector, 'run_fetches', return_value=[filtered_teams, filtered_users]
     )
     ds = build_ds('users')
     df = con._retrieve_data(ds)
@@ -150,7 +150,7 @@ def test__retrieve_data_users_happy_case(con, mocker):
 def test__retrieve_data_calls_happy_case(con, mocker):
     """Tests case when calls call has data"""
     run_fetches_mock = mocker.patch.object(
-        Aircall_oauthConnector, 'run_fetches', return_value=[filtered_teams, filtered_calls]
+        AircallOauthConnector, 'run_fetches', return_value=[filtered_teams, filtered_calls]
     )
     ds = build_ds('calls')
 
@@ -166,7 +166,7 @@ def test__retrieve_data_calls_happy_case(con, mocker):
 def test__retrieve_data_tags_happy_case(con, mocker):
     """Tests case when tags call has data"""
     run_fetches_mock = mocker.patch.object(
-        Aircall_oauthConnector, 'run_fetches_for_tags', return_value=filtered_tags
+        AircallOauthConnector, 'run_fetches_for_tags', return_value=filtered_tags
     )
     ds = build_ds('tags')
 
@@ -179,7 +179,7 @@ def test__retrieve_data_tags_happy_case(con, mocker):
 def test__retrieve_data_no_data_case(con, mocker):
     """Tests case when there is no data returned"""
     run_fetches_mock = mocker.patch.object(
-        Aircall_oauthConnector, 'run_fetches', return_value=[[], []]
+        AircallOauthConnector, 'run_fetches', return_value=[[], []]
     )
     ds = build_ds('users')
 
@@ -192,7 +192,7 @@ def test__retrieve_data_no_data_case(con, mocker):
 def test_run_fetches_for_tags(con, mocker):
     """Tests the loop generator function for tags call"""
     dataset = 'tags'
-    spy = mocker.spy(Aircall_oauthConnector, 'run_fetches_for_tags')
+    spy = mocker.spy(AircallOauthConnector, 'run_fetches_for_tags')
     mocker.patch(f'{import_path}.fetch_page', return_value=fake_tags)
     ds = build_ds(dataset)
     con.run_fetches_for_tags(dataset, ds.limit)
@@ -202,7 +202,7 @@ def test_run_fetches_for_tags(con, mocker):
 def test_run_fetches(con, mocker):
     """Tests the loop generator function for calls/users call"""
     dataset = 'users'
-    spy = mocker.spy(Aircall_oauthConnector, 'run_fetches')
+    spy = mocker.spy(AircallOauthConnector, 'run_fetches')
     mocker.patch(f'{import_path}.fetch_page', return_values=[fake_teams, fake_users])
     ds = build_ds(dataset)
     con.run_fetches(ds.dataset, ds.limit)
@@ -212,7 +212,7 @@ def test_run_fetches(con, mocker):
 def test__retrieve_data_no_teams_case(con, mocker):
     """Tests case when there is no team data but there is calls data"""
     run_fetches_mock = mocker.patch.object(
-        Aircall_oauthConnector, 'run_fetches', return_value=[[], filtered_calls]
+        AircallOauthConnector, 'run_fetches', return_value=[[], filtered_calls]
     )
     ds = build_ds('calls')
     df = con._retrieve_data(ds)
@@ -257,14 +257,14 @@ def test_bad_limit():
     """Tests case when user passes a bad limit"""
     # limit less than 1 (want to be able to do at least one run)
     with pytest.raises(ValidationError):
-        Aircall_oauthDataSource(name='bar', domain='test_domain', dataset='tags', limit=-6)
+        AircallOauthDataSource(name='bar', domain='test_domain', dataset='tags', limit=-6)
 
 
 def test_default_limit(con, mocker):
     """If no limit is provided, the default is chosen"""
-    ds = Aircall_oauthDataSource(name='mah_ds', domain='test_domain', dataset='tags')
+    ds = AircallOauthDataSource(name='mah_ds', domain='test_domain', dataset='tags')
     mock_run_fetches_for_tags = mocker.patch.object(
-        Aircall_oauthConnector, 'run_fetches_for_tags', return_value=filtered_tags
+        AircallOauthConnector, 'run_fetches_for_tags', return_value=filtered_tags
     )
 
     con._retrieve_data(ds)
@@ -276,21 +276,21 @@ def test_default_limit(con, mocker):
 def test_limit_of_zero(con, mocker):
     """A limit of zero triggers no fetch"""
     # Test the calls/users branch
-    ds_calls = Aircall_oauthDataSource(name='bar', domain='test_domain', dataset='calls', limit=0)
-    spy_calls = mocker.spy(Aircall_oauthConnector, 'run_fetches')
+    ds_calls = AircallOauthDataSource(name='bar', domain='test_domain', dataset='calls', limit=0)
+    spy_calls = mocker.spy(AircallOauthConnector, 'run_fetches')
     con._retrieve_data(ds_calls)
     assert spy_calls.call_count == 0
 
     # Test the tags branch
-    ds_tags = Aircall_oauthDataSource(name='baz', domain='test_domain', dataset='calls', limit=0)
-    spy_tags = mocker.spy(Aircall_oauthConnector, 'run_fetches_for_tags')
+    ds_tags = AircallOauthDataSource(name='baz', domain='test_domain', dataset='calls', limit=0)
+    spy_tags = mocker.spy(AircallOauthConnector, 'run_fetches_for_tags')
     con._retrieve_data(ds_tags)
     assert spy_tags.call_count == 0
 
 
 def test_datasource():
     """Tests that default dataset on datasource is 'calls'"""
-    ds = Aircall_oauthDataSource(
+    ds = AircallOauthDataSource(
         name='mah_ds',
         domain='test_domain',
         limit=1,
@@ -317,7 +317,7 @@ def test_get_status_api_down(mocker, con):
     """
     It should fail if the third-party api is down.
     """
-    mocker.patch.object(Aircall_oauthConnector, 'get_access_token', side_effect=HttpError)
+    mocker.patch.object(AircallOauthConnector, 'get_access_token', side_effect=HttpError)
     assert con.get_status().status is False
 
 
@@ -334,7 +334,7 @@ def test_build_authorization_url(mocker, con):
 
 
 def test_specific_retrieve_token(mocker, con):
-    """Check that the Aircall_oAUthConnector way of retrieving access token works"""
+    """Check that the AircallOauthConnector way of retrieving access token works"""
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'test_client_id'
     mock_oauth2_connector.client_secret = 'test_client_secret'
