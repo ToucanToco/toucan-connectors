@@ -1,7 +1,7 @@
 """Module containing tests for AirCall helpers"""
 import pandas as pd
 
-from tests.aircall.mock_results import (
+from tests.aircall_oauth.mock_results import (
     fake_calls,
     fake_calls_no_user,
     fake_calls_none,
@@ -15,7 +15,7 @@ from tests.aircall.mock_results import (
     more_filtered_teams,
     more_filtered_users,
 )
-from toucan_connectors.aircall.helpers import (
+from toucan_connectors.aircall_oauth.helpers import (
     DICTIONARY_OF_FORMATTERS,
     build_df,
     build_empty_df,
