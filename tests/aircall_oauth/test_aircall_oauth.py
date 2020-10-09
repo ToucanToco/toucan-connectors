@@ -83,7 +83,6 @@ async def test_authentified_fetch(mocker, con):
 def test__run_fetch(mocker, con):
     """It should return a result from loops if all is ok."""
     mocker.patch.object(AircallOauthConnector, '_fetch', return_value=FAKE_FETCH_RES)
-
     result = con._run_fetch('/foos')
 
     assert result == FAKE_FETCH_RES
