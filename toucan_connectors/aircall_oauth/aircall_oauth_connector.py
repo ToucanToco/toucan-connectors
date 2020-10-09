@@ -2,6 +2,7 @@ import asyncio
 import logging
 from enum import Enum
 from typing import List, Optional, Tuple
+
 import pandas as pd
 from aiohttp import ClientSession
 from pydantic import Field

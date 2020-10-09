@@ -1,7 +1,6 @@
 import pytest
 from pydantic import ValidationError
 
-import tests.general_helpers as helpers
 from tests.aircall.mock_results import (
     fake_tags,
     fake_teams,
@@ -16,8 +15,8 @@ from tests.aircall.mock_results import (
 from toucan_connectors.aircall_oauth.aircall_oauth_connector import (
     Aircall_oauthConnector,
     Aircall_oauthDataSource,
+    NoCredentialsError,
 )
-
 from toucan_connectors.common import HttpError
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 
@@ -55,6 +54,7 @@ def con(secrets_keeper):
         redirect_uri='https://redirect.me/',
     )
 
+
 def build_ds(dataset: str):
     """Builds test datasource"""
     return Aircall_oauthDataSource(
@@ -73,7 +73,7 @@ def remove_secrets(secrets_keeper, con):
 @pytest.mark.asyncio
 async def test_authentified_fetch(mocker, con):
     """It should return a result from fetch if all is ok."""
-    mocker.patch(f'{import_path}.fetch', return_value=helpers.build_future(FAKE_FETCH_RES))
+    mocker.patch(f'{import_path}.fetch', return_value=FAKE_FETCH_RES)
 
     result = await con._fetch('/foo')
 
@@ -82,20 +82,19 @@ async def test_authentified_fetch(mocker, con):
 
 def test__run_fetch(mocker, con):
     """It should return a result from loops if all is ok."""
-    mocker.patch.object(
-        Aircall_oauthConnector, '_fetch', return_value=helpers.build_future(FAKE_FETCH_RES)
-    )
+    mocker.patch.object(Aircall_oauthConnector, '_fetch', return_value=FAKE_FETCH_RES)
 
     result = con._run_fetch('/foos')
 
     assert result == FAKE_FETCH_RES
+
 
 @pytest.mark.asyncio
 async def test__get_data_tags_case(con, mocker):
     """Tests with tags happy case"""
     dataset = 'tags'
     fake_res = fake_tags
-    fake_res = helpers.build_future(fake_res)
+    fake_res = fake_res
     fake_fetch_page = mocker.patch(fetch_fn_name, return_value=fake_res)
     ds = build_ds(dataset)
     res = await con._get_tags(ds.dataset, 10)
@@ -119,7 +118,7 @@ async def test__get_data_users_case(con, mocker):
     """Tests users call happy case"""
     dataset = 'users'
     fake_res = [fake_teams, fake_users]
-    fake_res = [helpers.build_future(item) for item in fake_res]
+    fake_res = [item for item in fake_res]
     fake_fetch_page = mocker.patch(fetch_fn_name, side_effect=fake_res)
     ds = build_ds(dataset)
     res = await con._get_data(ds.dataset, 10)
@@ -194,7 +193,7 @@ def test_run_fetches_for_tags(con, mocker):
     """Tests the loop generator function for tags call"""
     dataset = 'tags'
     spy = mocker.spy(Aircall_oauthConnector, 'run_fetches_for_tags')
-    mocker.patch(f'{import_path}.fetch_page', return_value=helpers.build_future(fake_tags))
+    mocker.patch(f'{import_path}.fetch_page', return_value=fake_tags)
     ds = build_ds(dataset)
     con.run_fetches_for_tags(dataset, ds.limit)
     assert spy.call_count == 1
@@ -227,7 +226,7 @@ def test__retrieve_data_no_teams_case(con, mocker):
 def test__retrieve_tags_from_fetch(con, mocker):
     """Tests _retrieve_tags from the fetch_page function"""
     fake_res = fake_tags
-    fake_res = helpers.build_future(fake_tags)
+    fake_res = fake_tags
     mocker.patch(fetch_fn_name, return_value=fake_res)
     ds = build_ds('tags')
 
@@ -243,7 +242,7 @@ def test__retrieve_tags_from_fetch(con, mocker):
 def test__retrieve_users_from_fetch(con, mocker):
     """Tests _retrieve_data for users from fetch_page function"""
     fake_res = [fake_teams, fake_users]
-    fake_res = [helpers.build_future(item) for item in fake_res]
+    fake_res = [item for item in fake_res]
     mocker.patch(fetch_fn_name, side_effect=fake_res)
     ds = build_ds('users')
 
@@ -352,7 +351,7 @@ async def test__get_data_no_secrets(mocker, con, remove_secrets):
     """It should raise an exception if there are no secrets returned during the fetch"""
     dataset = 'users'
     fake_res = [fake_teams, fake_users]
-    fake_res = [helpers.build_future(item) for item in fake_res]
+    fake_res = [item for item in fake_res]
     ds = build_ds(dataset)
     with pytest.raises(NoCredentialsError) as err:
         await con._get_data(ds.dataset, 10)
