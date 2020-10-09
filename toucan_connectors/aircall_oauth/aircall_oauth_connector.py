@@ -17,7 +17,7 @@ from .helpers import DICTIONARY_OF_FORMATTERS, build_df, build_empty_df
 AUTHORIZATION_URL: str = 'https://dashboard-v2.aircall.io/oauth/authorize'
 SCOPE: str = 'public_api'
 TOKEN_URL: str = 'https://api.aircall.io/v1/oauth/token'
-BASE_ROUTE: str = 'https://api.aircall.io/v1/'
+BASE_ROUTE: str = 'https://api.aircall.io/v1'
 
 
 class NoCredentialsError(Exception):
