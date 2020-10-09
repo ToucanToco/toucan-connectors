@@ -1,4 +1,4 @@
-# Aircall_oauth connector
+# AircallOAuth connector
 
 This is a connector for [Aircall](https://developer.aircall.io/api-references/#endpoints)
     using oAuth for authentication
@@ -7,7 +7,7 @@ A quickstart script is available in toucan-connectors/oauth2_connector/quickstar
 
 ## Data provider configuration
 
-* `type`: `"Aircall_oauth"`
+* `type`: `"AircallOauth"`
 * `name`: str, required
 * `type`: str
 * `auth_flow_id`: str

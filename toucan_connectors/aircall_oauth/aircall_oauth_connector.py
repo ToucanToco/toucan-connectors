@@ -7,7 +7,7 @@ import pandas as pd
 from aiohttp import ClientSession
 from pydantic import Field
 
-from toucan_connectors.common import ConnectorStatus, HttpError, get_loop
+from toucan_connectors.common import ConnectorStatus, get_loop
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -18,6 +18,7 @@ AUTHORIZATION_URL: str = 'https://dashboard-v2.aircall.io/oauth/authorize'
 SCOPE: str = 'public_api'
 TOKEN_URL: str = 'https://api.aircall.io/v1/oauth/token'
 BASE_ROUTE: str = 'https://api.aircall.io/v1'
+NO_CREDENTIALS_ERROR = 'No credentials'
 
 
 class NoCredentialsError(Exception):
@@ -64,14 +65,13 @@ async def fetch_page(
             )
         else:
             logging.getLogger(__file__).error('Aborting Aircall requests')
-            raise Exception(f'Aborting Aircall requests due to {aircall_error}')
+            raise AircallException(f'Aborting Aircall requests due to {aircall_error}')
 
     delay_counter = 0
     data_list.append(data)
 
     next_page_link = None
     meta_data = data.get('meta')
-
     if meta_data is not None:
         next_page_link: Optional[str] = meta_data.get('next_page_link')
 
@@ -99,12 +99,12 @@ async def fetch(new_endpoint, session: ClientSession) -> dict:
         return await res.json()
 
 
-class Aircall_oauthDataSource(ToucanDataSource):
+class AircallOauthDataSource(ToucanDataSource):
     limit: int = Field(MAX_RUNS, description='Limit of entries (default is 1 run)', ge=-1)
     dataset: AircallDataset = 'calls'
 
 
-class Aircall_oauthConnector(ToucanConnector):
+class AircallOauthConnector(ToucanConnector):
     """
     This is a connector for [Aircall](https://developer.aircall.io/api-references/#endpoints)
     using oAuth for authentication
@@ -112,7 +112,7 @@ class Aircall_oauthConnector(ToucanConnector):
 
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[str]
-    data_source_model: Aircall_oauthDataSource
+    data_source_model: AircallOauthDataSource
 
     def __init__(self, **kwargs):
         super().__init__(
@@ -148,7 +148,7 @@ class Aircall_oauthConnector(ToucanConnector):
         """Run loop."""
         access_token = self.get_access_token()
         if not access_token:
-            raise NoCredentialsError('No credentials')
+            raise NoCredentialsError(NO_CREDENTIALS_ERROR)
         headers = {'Authorization': f'Bearer {access_token}'}
 
         loop = get_loop()
@@ -159,7 +159,7 @@ class Aircall_oauthConnector(ToucanConnector):
         """Triggers fetches for data and does preliminary filtering process"""
         access_token = self.get_access_token()
         if not access_token:
-            raise NoCredentialsError('No credentials')
+            raise NoCredentialsError(NO_CREDENTIALS_ERROR)
         headers = {'Authorization': f'Bearer {access_token}'}
 
         async with ClientSession(headers=headers) as session:
@@ -196,7 +196,7 @@ class Aircall_oauthConnector(ToucanConnector):
         """Triggers fetches for tags and does preliminary filtering process"""
         access_token = self.get_access_token()
         if not access_token:
-            raise NoCredentialsError('No credentials')
+            raise NoCredentialsError(NO_CREDENTIALS_ERROR)
         headers = {'Authorization': f'Bearer {access_token}'}
 
         async with ClientSession(headers=headers) as session:
@@ -224,7 +224,7 @@ class Aircall_oauthConnector(ToucanConnector):
         future = asyncio.ensure_future(self._get_tags(dataset, limit))
         return loop.run_until_complete(future)
 
-    def _retrieve_data(self, data_source: Aircall_oauthDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: AircallOauthDataSource) -> pd.DataFrame:
         """retrieves data from AirCall API"""
         dataset = data_source.dataset
         empty_df = build_empty_df(dataset)
@@ -258,7 +258,7 @@ class Aircall_oauthConnector(ToucanConnector):
             return ConnectorStatus(status=False, error='Credentials are missing')
         if not access_token:
             return ConnectorStatus(status=False, error='Credentials are missing')
-        try:
-            return ConnectorStatus(status=True)
-        except HttpError:
-            return ConnectorStatus(status=False, error="couldn't access API")
+
+
+class AircallException(Exception):
+    """Raised when an error occured when querying Aircall's API"""
