@@ -6,4 +6,3 @@ from toucan_connectors.downcase(TYPE).downcase(TYPE)_connector import cap(TYPE)C
 
 def test_get_df():
     pass
-

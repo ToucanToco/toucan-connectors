@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.8]
 
     steps:
     - uses: actions/checkout@v2
@@ -49,6 +49,9 @@ jobs:
     - name: Install mssql dependencies
       run: sudo bash toucan_connectors/install_scripts/mssql.sh
 
+    - name: Install psql-odbc dependencies
+      run: sudo bash toucan_connectors/install_scripts/psql.sh
+
     - name: install
       run: make install
 
@@ -64,12 +67,9 @@ jobs:
         BEARER_API_KEY: ${{ secrets.BEARER_API_KEY }}
         BEARER_AIRCALL_AUTH_ID: ${{ secrets.BEARER_AIRCALL_AUTH_ID }}
 
-    - name: coverage
-      run: pip install codecov && codecov --token=3e56598d-bfe8-4741-a973-f4b70bd2c280
-
     - name: SonarCloud Scan
       # Only executed for one of the tested python version
-      if: ${{ always() && matrix['python-version'] == 3.6 }}
+      if: ${{ always() && matrix['python-version'] == 3.8 }}
       uses: sonarsource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

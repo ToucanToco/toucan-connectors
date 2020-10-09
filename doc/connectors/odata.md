@@ -5,9 +5,9 @@
 * `type`: `"OData"`
 * `name`: str, required
 * `baseroute`: str, required
-* `auth`: `{type: "basic|digest|oauth1|oauth2_backend|custom_token_server", args: [...], kwargs: {...}}` 
-    cf. [requests auth](http://docs.python-requests.org/en/master/) and 
-    [requests oauthlib](https://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow) doc. 
+* `auth`: `{type: "basic|digest|oauth1|oauth2_backend|custom_token_server", args: [...], kwargs: {...}}`
+    cf. [requests auth](http://docs.python-requests.org/en/master/) and
+    [requests oauthlib](https://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow) doc.
 
 ```coffee
 DATA_PROVIDERS: [

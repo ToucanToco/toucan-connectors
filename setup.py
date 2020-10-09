@@ -25,6 +25,7 @@ extras_require = {
     'mssql': ['pyodbc'],
     'mysql': ['PyMySQL>=0.8.0'],
     'odata': auth_deps + ['tctc_odata'],
+    'odbc': ['pyodbc'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'ROK': ['requests'],
@@ -50,8 +51,6 @@ install_requires = [
 classifiers = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: BSD License',
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
 ]
 
@@ -67,7 +66,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='0.41.4',
+    version='0.42.0',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',
