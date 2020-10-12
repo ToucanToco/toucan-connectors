@@ -95,7 +95,7 @@ class AircallDataset(str, Enum):
 
 class AircallDataSource(ToucanDataSource):
     limit: int = Field(MAX_RUNS, description='Limit of entries (default is 1 run)', ge=-1)
-    dataset: AircallDataset = 'calls'
+    dataset: AircallDataset = AircallDataset('calls')
 
 
 class AircallConnector(ToucanConnector):
