@@ -111,14 +111,14 @@ async def test__get_data_tags_unhappy_case(con, mocker):
     with pytest.raises(Exception):
         await con._get_tags(ds.dataset, 10)
 
+
 @pytest.mark.asyncio
-async def  test__get_data_tags_no_secret(con, mocker, remove_secrets):
+async def test__get_data_tags_no_secret(con, mocker, remove_secrets):
     """Checks that we have an exception as we secret was removed"""
     dataset = 'tags'
     ds = build_ds(dataset)
     with pytest.raises(NoCredentialsError):
         await con._get_tags(ds.dataset, 10)
-
 
 
 @pytest.mark.asyncio
@@ -364,6 +364,7 @@ async def test__get_data_no_secrets(mocker, con, remove_secrets):
     with pytest.raises(NoCredentialsError) as err:
         await con._get_data(ds.dataset, 10)
     assert str(err.value) == 'No credentials'
+
 
 def test__run_fetch_no_secret(mocker, con, remove_secrets):
     """Check that an exception is raised as no access token is available"""
