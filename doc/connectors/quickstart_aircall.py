@@ -4,9 +4,9 @@ Use this file to initiate the OAuth2 dance and test the connectors that requires
 
 from helpers import JsonFileSecretsKeeper, get_authorization_response
 
-from toucan_connectors.aircall_oauth.aircall_oauth_connector import (
-    AircallOauthConnector,
-    AircallOauthDataSource,
+from toucan_connectors.aircall.aircall_connector import (
+    AircallConnector,
+    AircallDataSource,
 )
 
 # Get these info from the provider
@@ -15,7 +15,7 @@ CLIENT_SECRET = ''
 # ...and give this one to the provider
 REDIRECT_URI = ''
 
-aircall_conn = AircallOauthConnector(
+aircall_conn = AircallConnector(
     name='test',
     auth_flow_id='test',
     client_id=CLIENT_ID,
@@ -23,7 +23,7 @@ aircall_conn = AircallOauthConnector(
     redirect_uri=REDIRECT_URI,
     secrets_keeper=JsonFileSecretsKeeper(filename='secrets_aircall.json'),
 )
-sample_data_source_ss = AircallOauthDataSource(
+sample_data_source_ss = AircallDataSource(
     name='test', domain='test-connector', limit=10, dataset='calls'
 )
 
