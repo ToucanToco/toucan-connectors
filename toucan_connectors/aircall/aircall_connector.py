@@ -107,7 +107,7 @@ class AircallDataSource(ToucanDataSource):
 class AircallConnector(ToucanConnector):
     """
     This is a connector for [Aircall](https://developer.aircall.io/api-references/#endpoints)
-    using oAuth for authentication
+    using oAuth2 for authentication
     """
 
     _auth_flow = 'oauth2'
@@ -130,6 +130,11 @@ class AircallConnector(ToucanConnector):
         return self.__dict__['_oauth2_connector'].build_authorization_url()
 
     def retrieve_tokens(self, authorization_response: str):
+        """
+        In the Aircall oAuth2 authentication process, client_id & client_secret
+        must be sent in the body of the request so we have to set them in
+        the mother class. This way they'll be added to her get_access_token method
+        """
         client_id = self.__dict__['_oauth2_connector'].client_id
         client_secret = self.__dict__['_oauth2_connector'].client_secret
         return self.__dict__['_oauth2_connector'].retrieve_tokens(
@@ -254,6 +259,8 @@ class AircallConnector(ToucanConnector):
         """
         try:
             access_token = self.get_access_token()
+            if access_token:
+                return ConnectorStatus(status=True)
         except Exception:
             return ConnectorStatus(status=False, error='Credentials are missing')
         if not access_token:

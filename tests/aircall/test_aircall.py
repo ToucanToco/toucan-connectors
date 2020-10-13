@@ -327,6 +327,17 @@ def test_get_status_api_down(mocker, con):
     assert con.get_status().status is False
 
 
+def test_get_status_ok(mocker, con):
+    """
+    Check that we get the connector status set to True if
+    the access token is correctly retrieved
+    """
+    mocker.patch.object(
+        AircallConnector, 'get_access_token', return_value={'access_token': 'access_token'}
+    )
+    assert con.get_status().status is True
+
+
 def test_build_authorization_url(mocker, con):
     """
     It should proxy OAuth2Connectors methods
