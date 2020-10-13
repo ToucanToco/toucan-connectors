@@ -1,21 +1,24 @@
 # Aircall connector
 
-Aircall Connector using Bearer to handle all the OAuth connection
+This is a connector for [Aircall](https://developer.aircall.io/api-references/#endpoints)
+    using oAuth for authentication
+
+A quickstart script is available in toucan-connectors/doc/connectors/quickstart_aircall.py
 
 ## Data provider configuration
 
 * `type`: `"Aircall"`
 * `name`: str, required
-* `bearer_auth_id`: str, required.
+* `type`: str
+* `auth_flow_id`: str
 
-The `bearer_auth_id` is a token retrieved by the front-end
-to let Bearer handle the OAuth dance for you.
+The `auth_flow_id` will be used to identify tokens relative to this connector in the secrets database.
 
 ```coffee
 DATA_PROVIDERS: [
-  type:    'Aircall'
+  type:    '<type>'
   name:    '<name>'
-  bearer_auth_id: '<bearer_auth_id>'
+  auth_flow_id:    '<auth_flow_id>'
 ,
   ...
 ]
@@ -26,14 +29,15 @@ DATA_PROVIDERS: [
 
 * `domain`: str, required
 * `name`: str, required
-* `endpoint`: str, required
-* `filter`: str, optional.
+* `limit`: int (not empty), default to 1
+* `dataset`: AircallDataset, default to calls
 
 ```coffee
 DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
-  endpoint:    '<endpoint>'
+  limit:    '<limit>'
+  dataset:    '<dataset>'
 ,
   ...
 ]
