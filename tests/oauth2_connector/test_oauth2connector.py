@@ -4,11 +4,14 @@ from unittest.mock import Mock
 
 import pytest
 
+from toucan_connectors.google_sheets_2.google_sheets_2_connector import GoogleSheets2Connector
 from toucan_connectors.oauth2_connector.oauth2connector import (
     AuthFlowNotFound,
     NoOAuth2RefreshToken,
     OAuth2Connector,
 )
+from toucan_connectors.postgres.postgresql_connector import PostgresConnector
+from toucan_connectors.toucan_connector import is_oauth2_connector
 
 FAKE_AUTHORIZATION_URL = 'http://localhost:4242/foobar'
 FAKE_TOKEN_URL = 'http://service/token_endpoint'
@@ -125,3 +128,8 @@ def test_should_throw_if_authflow_id_not_found(oauth2_connector, secrets_keeper)
         oauth2_connector.retrieve_tokens(
             f'http://localhost/?state={json.dumps({"token": "bad_token"})}'
         )
+
+
+def test_should_return_if_is_oauth2_connector(oauth2_connector):
+    assert is_oauth2_connector(GoogleSheets2Connector) is True
+    assert is_oauth2_connector(PostgresConnector) is False
