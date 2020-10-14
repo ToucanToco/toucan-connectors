@@ -3,7 +3,7 @@
 This is a connector for [Aircall](https://developer.aircall.io/api-references/#endpoints)
     using oAuth for authentication
 
-A quickstart script is available in toucan-connectors/doc/connectors/quickstart_aircall.py
+A quickstart script is available in toucan-connectors/quickstart/aircall/quickstart.py
 
 ## Data provider configuration
 
