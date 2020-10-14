@@ -4,11 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from toucan_connectors.oauth2_connector.oauth2connector import (
-    AuthFlowNotFound,
-    NoOAuth2RefreshToken,
-    OAuth2Connector,
-)
+from toucan_connectors.oauth2_connector.oauth2connector import NoOAuth2RefreshToken, OAuth2Connector, AuthFlowNotFound
 
 FAKE_AUTHORIZATION_URL = 'http://localhost:4242/foobar'
 FAKE_TOKEN_URL = 'http://service/token_endpoint'
