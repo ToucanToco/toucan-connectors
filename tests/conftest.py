@@ -164,6 +164,8 @@ def secrets_keeper():
             self.store = {}
 
         def load(self, key: str) -> Any:
+            if key not in self.store:
+                return None
             return self.store[key]
 
         def save(self, key: str, value: Any):
