@@ -1,16 +1,16 @@
+import json
+
 import pytest
 import responses
-from jwt import encode
 
-import datetime
 from toucan_connectors.rok.rok_connector import (
     InvalidAuthenticationMethodError,
+    InvalidJWTError,
+    InvalidUsernameError,
     NoROKSecretAvailableError,
     RokConnector,
     RokDataSource,
 )
-import mock
-import json
 
 endpoint = 'https://rok.example.com/graphql'
 
@@ -18,6 +18,11 @@ endpoint = 'https://rok.example.com/graphql'
 @pytest.fixture
 def remove_secret(rok_connector_with_secret):
     rok_connector_with_secret.secret = None
+
+
+@pytest.fixture
+def activate_authentication_with_token(rok_connector_with_secret):
+    rok_connector_with_secret.authenticated_with_token = True
 
 
 @pytest.fixture
@@ -52,7 +57,8 @@ def rok_connector_with_secret():
         name='RokConnector',
         host='https://rok.example.com',
         username='username',
-        secret='mylittlesecret',
+        secret='mylittlesecret==',  # base64 encoded
+        authenticated_with_token=True,
     )
 
 
@@ -63,17 +69,23 @@ def rok_ds_jwt():
         domain='RokData',
         database='database',
         query='{some query}',
-        filter='.data',
+        filter='.data.entities.company.companies',
         live_data=True,
     )
 
 
 @responses.activate
-
-def test_rok(rok_ds, rok_connector):
-
-    responses.add(responses.POST, endpoint, json={'data': {'authenticate': 'some_token'}})
-    responses.add(responses.POST, endpoint, json={'data': {'a': 1, 'b': 2}})
+def test_rok_with_password(rok_ds, rok_connector):
+    responses.add(
+        responses.POST,
+        f'{endpoint}?DatabaseName={rok_ds.database}',
+        json={'data': {'authenticate': 'some_token'}},
+    )
+    responses.add(
+        responses.POST,
+        f'{endpoint}?DatabaseName={rok_ds.database}',
+        json={'data': {'a': 1, 'b': 2}},
+    )
 
     df = rok_connector.get_df(rok_ds)
     assert df['a'].sum() == 1
@@ -81,79 +93,37 @@ def test_rok(rok_ds, rok_connector):
 
 
 @responses.activate
-def test_rok_with_jwt(rok_connector_with_secret, rok_ds_jwt):
+def test_rok_with_jwt(rok_connector_with_secret, rok_ds_jwt, activate_authentication_with_token):
     """Check that we correctly retrieve the data with the crafted token"""
-    # first we did a query with our jwt to get the ROK tokens
-    # Here we mock ROK's response with the ROK tokens
+    # if our JWT is correctly crafted then ROK will reply with the data related to the provided query
 
-    #Mocker retrieve with token
-    #Mocker retrieve with pw
-    data = {
-        'token': encode(
-            {'rok_token': 'rok_token'}, rok_connector_with_secret.secret, algorithm='HS256'
-        ).decode('utf-8')
-    }
-    responses.add(responses.POST, endpoint, json={'data': data})
-    # Finally we query ROK to retrieve the data with the ROK Token
-    responses.add(responses.POST, endpoint, json={'data': {'a': 1, 'b': 2}})
+    responses.add(
+        responses.POST,
+        endpoint,
+        json={'data': {'entities': {'company': {'companies': [{'code': 'aaa'}, {'code': 'bbb'}]}}}},
+    )
     df = rok_connector_with_secret.get_df(rok_ds_jwt)
-    assert df['a'].sum() == 1
-    assert df['b'].sum() == 2
+    assert df['code'][0] == 'aaa'
+    assert df['code'][1] == 'bbb'
+
 
 @responses.activate
-def test_retrieve_token_with_jwt(rok_connector_with_secret, rok_ds_jwt, mocker):
-    """check that we correctly retrieve the rok token using a jwt"""
+def test_wrong_jwt(rok_connector_with_secret, rok_ds_jwt):
+    """Check that an exception is raised if the jwt is not validated by ROK"""
+    responses.add(method=responses.POST, url='http://bla.bla', body='<Fault xmlns= ...')
 
-    # This is the data returned by ROK, a token encrypted with the shared secret
-    rok_token = {
-        'token': encode(
-            {'rok_token': 'rok_token'}, rok_connector_with_secret.secret, algorithm='HS256'
-        ).decode('utf-8')
-    }
-    # Mocks the utcnow function for the iat field in the data we'll send
-    patched = mocker.patch('toucan_connectors.rok.rok_connector.datetime')
-    patched.utcnow.return_value = datetime.datetime(2020, 10, 9)
+    with pytest.raises(InvalidJWTError):
+        rok_connector_with_secret.retrieve_data_with_jwt(rok_ds_jwt, endpoint='http://bla.bla')
 
-    auth_query = """
-        query Auth($database: String!, $token: String!)
-        {authenticateUsingJWT(database: $database, token: $token)}"""   
-
-    payload = {
-            'database': rok_ds_jwt.database,
-            'username': 'username',
-            'iat': datetime.datetime(2020, 10, 9),
-        }
-    encoded_payload = encode(payload, rok_connector_with_secret.secret, algorithm='HS256')
-    auth_vars = {
-                'database': rok_ds_jwt.database,
-                'jwt_token': encoded_payload.decode('utf-8'),
-            }
-    # Mocks the response we wait from ROK JWT authentication API
-    responses.add(
-        method=responses.POST,
-        url='http://bla.bla',
-        json={'data':rok_token},
-
-    )   
-    token = rok_connector_with_secret.retrieve_token_with_jwt(
-        rok_ds_jwt.database,
-        endpoint='http://bla.bla')
-
-    assert responses.assert_call_count("http://bla.bla", 1) is True
-    assert json.loads(responses.calls[0].request.body) == {'query': auth_query, 'variables': auth_vars}
 
 @responses.activate
-def test_error_retrieve_token_with_jwt(rok_connector_with_secret, rok_ds_jwt, mocker):
-    """Check we get an error if the ROK api replies with an error"""
-    responses.add(
-        method=responses.POST,
-        url='http://bla.bla',
-        json={'errors':'Unrecognized JWT token'})
+def test_wrong_query(rok_connector_with_secret, rok_ds_jwt):
+    """Check that we have an error when using an invalid query"""
+    responses.add(responses.POST, endpoint, json={'errors': ['some data error message']})
 
-    with pytest.raises(ValueError) as err:
-        token = rok_connector_with_secret.retrieve_token_with_jwt(
-        rok_ds_jwt.database,
-        endpoint='http://bla.bla')
+    with pytest.raises(ValueError):
+        rok_connector_with_secret.get_df(rok_ds_jwt)
+
 
 @responses.activate
 def test_retrieve_token_with_password(rok_connector, rok_ds):
@@ -172,28 +142,24 @@ def test_retrieve_token_with_password(rok_connector, rok_ds):
     responses.add(
         method=responses.POST,
         url='http://bla.bla',
-        json={'data':{'authenticate':'rok_token'}},
-    )   
-    token = rok_connector.retrieve_token_with_password(
-        rok_ds.database,
-        endpoint='http://bla.bla')
+        json={'data': {'authenticate': 'rok_token'}},
+    )
+    rok_connector.retrieve_token_with_password(rok_ds.database, endpoint='http://bla.bla')
 
-    assert responses.assert_call_count("http://bla.bla", 1) is True
-    assert json.loads(responses.calls[0].request.body) == {'query': auth_query, 'variables': auth_vars}
+    assert responses.assert_call_count('http://bla.bla', 1) is True
+    assert json.loads(responses.calls[0].request.body) == {
+        'query': auth_query,
+        'variables': auth_vars,
+    }
 
 
 @responses.activate
-def test_error_retrieve_token_with_password(rok_connector, rok_ds, mocker):
+def test_error_retrieve_token_with_password(rok_connector, rok_ds):
     """Check we get an error if the ROK api replies with an error"""
-    responses.add(
-        method=responses.POST,
-        url='http://bla.bla',
-        json={'errors':'Wrong password'})
+    responses.add(method=responses.POST, url='http://bla.bla', json={'errors': 'Wrong password'})
 
-    with pytest.raises(ValueError) as err:
-        token = rok_connector.retrieve_token_with_password(
-        rok_ds.database,
-        endpoint='http://bla.bla')
+    with pytest.raises(ValueError):
+        rok_connector.retrieve_token_with_password(rok_ds.database, endpoint='http://bla.bla')
 
 
 def test_live_data_no_secret(rok_connector_with_secret, rok_ds_jwt, remove_secret):
@@ -218,7 +184,6 @@ def test_rok_auth_error(rok_ds, rok_connector):
 
 @responses.activate
 def test_rok_data_error(rok_ds, rok_connector):
-
     responses.add(responses.POST, endpoint, json={'data': {'authenticate': 'some_token'}})
     responses.add(responses.POST, endpoint, json={'errors': ['some data error message']})
 
@@ -226,9 +191,49 @@ def test_rok_data_error(rok_ds, rok_connector):
         rok_connector.get_df(rok_ds)
 
 
-@pytest.mark.skip(reason='Requires a live instance')
+@responses.activate
+def test_wrong_username(rok_ds_jwt, rok_connector_with_secret):
+    """
+    check that an error is triggered when the connector
+    tries to authenticate with a wrong username
+    """
+    responses.add(
+        responses.POST,
+        'https://rok.example.com/graphql',
+        json={
+            'Message': 'JwtLogon: The user is not authenticated!',
+            'StackTrace': '',
+            'ErrorCode': 1,
+            'ExceptionCategory': 1,
+            'ExceptionParamsFormat': None,
+        },
+    )
+    with pytest.raises(InvalidUsernameError):
+        rok_connector_with_secret.get_df(rok_ds_jwt)
+
+
+@responses.activate
+def test_error_message_from_rok(rok_ds_jwt, rok_connector_with_secret):
+    """
+    Check that an error is triggered if we have an error response from ROK
+    """
+    responses.add(
+        responses.POST,
+        'https://rok.example.com/graphql',
+        json={
+            'Message': 'Random Error message',
+            'StackTrace': '',
+            'ErrorCode': 1,
+            'ExceptionCategory': 1,
+            'ExceptionParamsFormat': None,
+        },
+    )
+    with pytest.raises(ValueError):
+        rok_connector_with_secret.get_df(rok_ds_jwt)
+
+
+@pytest.mark.skip(reason='Requires live instance wih username/password Authentication')
 def test_live_instance():
-    import os
 
     live_rds = RokDataSource(
         name='RokConnector',
@@ -240,19 +245,39 @@ def test_live_instance():
 
     live_rc = RokConnector(
         name='RokConnector',
-        host='https://demo.rok-solution.com',
-        username=os.environ['CONNECTORS_TESTS_ROK_USERNAME'],
-        password=os.environ['CONNECTORS_TESTS_ROK_PASSWORD'],
+        host='',
+        username='',
+        password='',
     )
 
     df = live_rc.get_df(live_rds)
-    assert not df.empty
+    print(df)
+    assert len(df.values) > 1
 
 
-@pytest.mark.skip(reason='Waiting for ROK to provide secret')
-def test_live_instance_jwt(ROK_con, ROK_ds):
-    import os
+@pytest.mark.skip(reason='Requires live instance wih JWT Authentication')
+def test_live_instance_jwt():
+    """
+    Check that we are able to retrieve data from ROK's demo instance
+    with a ROK Connector authenticated with a JWT
+    """
 
-    ROK_con.secret = os.environ['CONNECTORS_TESTS_ROK_SECRET']
-    df = ROK_con.get_df(ROK_ds)
-    assert not df.empty
+    live_rc_jwt = RokConnector(
+        name='RokConnector',
+        host='',
+        username='',
+        secret='',
+        authenticated_with_token=True,
+    )
+
+    live_rds = RokDataSource(
+        name='RokConnector',
+        domain='RokData',
+        database='ToucanToco',
+        query='{entities{company{companies{code}}}}',
+        filter='.data.entities.company.companies',
+        live_data=True,
+    )
+
+    df = live_rc_jwt.get_df(live_rds)
+    assert len(df.values) > 1

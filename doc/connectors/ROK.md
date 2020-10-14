@@ -24,9 +24,10 @@ An example of such configuration would be:
 * `type`: `"ROK"`
 * `name`: str, required
 * `host`: str, required
-* `username`: str, required
-* `password`: str, required
+* `username`: str, default to None
+* `password`: str, default to None
 * `secret`: str, default to None
+* `authenticated_with_token`: bool, default to False
 
 ```coffee
 DATA_PROVIDERS: [
@@ -35,7 +36,8 @@ DATA_PROVIDERS: [
   host:    'https://rok.example.com'
   username: '<username>',
   password: '<password>',
-  secret: <secret>
+  secret: '<secret>',
+  authenticated_with_token: '<authenticated_with_token>'
 ,
   ...
 ]
