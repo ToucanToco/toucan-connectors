@@ -12,7 +12,7 @@ CONNECTORS_REGISTRY = {
         'label': 'Adobe Analytics',
         'logo': 'adobe_analytics/adobe-analytics.png',
     },
-    'Aircall': {
+    'AircallConnector': {
         'connector': 'aircall.aircall_connector.AircallConnector',
         'logo': 'aircall/Aircall.svg',
     },
