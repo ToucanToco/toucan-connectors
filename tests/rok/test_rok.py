@@ -283,32 +283,56 @@ def test_live_instance_jwt():
     assert len(df.values) > 1
 
 
+@pytest.mark.parametrize(
+    'data_source_params, data_source_date_viewid, query, expected',
+    [
+        (
+            None,
+            {'start_date': '10/07/2019', 'end_date': '10/08/2020', 'viewId': '3333'},
+            '{cartographies{dataTracking(startUtcDate:"%(start_date)s", endUtcDate:"%(end_date)s", viewId:"%(viewId)s"{procedureInstancesWithRuleReportings{procedureInstance{id shortDescriptionSetter}}}}}',
+            ['10/07/2019'],
+        ),
+        (
+            {'foo': 'bar'},
+            {'start_date': None, 'end_date': None, 'viewId': None},
+            '{cartographies{dataTracking(startUtcDate:"%(start_date)s", endUtcDate:"%(end_date)s", foo: "%(foo)s", viewId:"%(viewId)s"{procedureInstancesWithRuleReportings{procedureInstance{id shortDescriptionSetter}}}}}',
+            ['None', 'bar'],
+        ),
+        (
+            {'foo': 'bar'},
+            {'start_date': None, 'end_date': None, 'viewId': None},
+            '{cartographies{dataTracking(startUtcDate:"0", endUtcDate:"1", foo: "2", viewId:"3"{procedureInstancesWithRuleReportings{procedureInstance{id shortDescriptionSetter}}}}}',
+            ['1'],
+        ),
+    ],
+)
 @responses.activate
-def test_interpolate_parameters_pw(rok_connector, rok_ds, mocker):
-    """check that the query is correctly built with interpolated variables in pw authentication mode"""
+def test_interpolate_parameters(
+    rok_connector, rok_ds, mocker, data_source_params, data_source_date_viewid, query, expected
+):
+    """
+    check that the query is correctly built with interpolated variables
+    first case: parameters in the form are set, no parameters in data_source json and placeholders are available in the query
+    second case: parameters in the form are not set, a parameter exists in data_source json and placeholders are defined in the query
+    third case: parameters in the form are not set, a parameter exists in data_source json but no placeholder defined in the query
+    If the conceptor tries a query with placeholders but no matching parameters it will fail, but he is aware of this when using variables in query
+    """
     mocker.patch.object(
         RokConnector, 'retrieve_token_with_password', return_value='fake_authentication_token'
     )
+
     responses.add(
         method=responses.POST,
         url='https://rok.example.com/graphql?DatabaseName=database',
         json={'foo': 'bar'},
     )
-    rok_ds.query = '{cartographies{dataTracking(startUtcDate:"%(start_date)s", endUtcDate:"%(end_date)s", viewId:"%(viewId)s"{procedureInstancesWithRuleReportings{procedureInstance{id shortDescriptionSetter}}}}}'
-    rok_ds.parameters = {'start_date': '10/07/2019', 'end_date': '10/08/2020', 'viewId': '3333'}
+
+    rok_ds.query = query
+    rok_ds.start_date = data_source_date_viewid['start_date']
+    rok_ds.end_date = data_source_date_viewid['end_date']
+    rok_ds.viewId = data_source_date_viewid['viewId']
+    rok_ds.parameters = data_source_params
     rok_connector.get_df(rok_ds)
-    assert '10/07/2019' in json.loads(responses.calls[0].request.body)['query']
 
-
-@responses.activate
-def test_interpolate_parameters_jwt(rok_connector_with_secret, rok_ds_jwt):
-    """check that the query is correctly built with interpolated variables in jwt authentication mode"""
-    responses.add(
-        method=responses.POST,
-        url='https://rok.example.com/graphql',
-        json={'foo': 'bar'},
-    )
-    rok_ds_jwt.query = '{cartographies{dataTracking(startUtcDate:"%(start_date)s", endUtcDate:"%(end_date)s", viewId:"%(viewId)s"{procedureInstancesWithRuleReportings{procedureInstance{id shortDescriptionSetter}}}}}'
-    rok_ds_jwt.parameters = {'start_date': '10/07/2019', 'end_date': '10/08/2020', 'viewId': '3333'}
-    rok_connector_with_secret.get_df(rok_ds_jwt)
-    assert '10/07/2019' in json.loads(responses.calls[0].request.body)['query']
+    for e in expected:
+        assert e in json.loads(responses.calls[0].request.body)['query']

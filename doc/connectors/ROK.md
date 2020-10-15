@@ -19,6 +19,9 @@ An example of such configuration would be:
       ...
     }
 
+start_date, end_date and viewId can be specified in the data source's definition.
+If set, the data source's query must have placeholders like %(start_date)s for this parameters to be used.
+
 ## Data provider configuration
 
 * `type`: `"ROK"`
@@ -51,6 +54,9 @@ DATA_PROVIDERS: [
 * `database`: str, required
 * `query`: GQL str, required
 * `filter`: str, [`jq` filter](https://stedolan.github.io/jq/manual/), required
+* `start_date`: str
+* `end_date`: str
+* `viewId`: str
 
 ```coffee
 DATA_SOURCES: [
@@ -59,6 +65,9 @@ DATA_SOURCES: [
   database: '<database>'
   query: '<query>'
   filter:    '<filter>'
+  start_date: '<start_date>'
+  end_date: '<end_date>'
+  viewId: '<viewId>'
 ,
   ...
 ]

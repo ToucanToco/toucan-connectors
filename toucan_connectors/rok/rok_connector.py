@@ -1,12 +1,12 @@
 import base64
 import json
 from datetime import datetime, timedelta
-from json import JSONDecodeError
 
 import pandas as pd
 import requests
 from jwt import encode
 from pydantic import Field
+from simplejson import JSONDecodeError
 
 from toucan_connectors.common import (
     FilterSchema,
@@ -20,6 +20,9 @@ class RokDataSource(ToucanDataSource):
     database: str
     query: str = Field(..., description='GQL string')
     filter: str = FilterSchema
+    start_date: str = None
+    end_date: str = None
+    viewId: str = None
 
 
 class InvalidJWTError(Exception):
@@ -48,6 +51,20 @@ class RokConnector(ToucanConnector):
     def _retrieve_data(self, data_source: RokDataSource) -> pd.DataFrame:
         # Endpoint depends on the authentication mode
         endpoint = f'{self.host}/graphql'
+        date_viewid_parameters = {
+            'start_date': data_source.start_date,
+            'end_date': data_source.end_date,
+            'viewId': data_source.viewId,
+        }
+
+        if data_source.parameters:
+            data_source.query = nosql_apply_parameters_to_query(
+                data_source.query, {**data_source.parameters, **date_viewid_parameters}
+            )
+        else:
+            data_source.query = nosql_apply_parameters_to_query(
+                data_source.query, date_viewid_parameters
+            )
 
         if self.authenticated_with_token:
             if not data_source.live_data:
@@ -64,9 +81,6 @@ class RokConnector(ToucanConnector):
             # First retrieve the authentication token
             rok_token = self.retrieve_token_with_password(data_source.database, endpoint)
             # Then retrieve the data
-            data_source.query = nosql_apply_parameters_to_query(
-                data_source.query, data_source.parameters
-            )
             payload = {'query': data_source.query}
             res = requests.post(endpoint, json=payload, headers={'Token': rok_token}).json()
 
@@ -96,11 +110,6 @@ class RokConnector(ToucanConnector):
             'Accept': 'application/json',
             'Content-Type': 'application/json',
         }
-
-        data_source.query = nosql_apply_parameters_to_query(
-            data_source.query, data_source.parameters
-        )
-
         try:
             res = requests.post(
                 url=endpoint, data=json.dumps({'query': data_source.query}), headers=headers
