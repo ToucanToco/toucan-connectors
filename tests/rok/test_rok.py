@@ -281,3 +281,34 @@ def test_live_instance_jwt():
 
     df = live_rc_jwt.get_df(live_rds)
     assert len(df.values) > 1
+
+
+@responses.activate
+def test_interpolate_parameters_pw(rok_connector, rok_ds, mocker):
+    """check that the query is correctly built with interpolated variables in pw authentication mode"""
+    mocker.patch.object(
+        RokConnector, 'retrieve_token_with_password', return_value='fake_authentication_token'
+    )
+    responses.add(
+        method=responses.POST,
+        url='https://rok.example.com/graphql?DatabaseName=database',
+        json={'foo': 'bar'},
+    )
+    rok_ds.query = '{cartographies{dataTracking(startUtcDate:"%(start_date)s", endUtcDate:"%(end_date)s", viewId:"%(viewId)s"{procedureInstancesWithRuleReportings{procedureInstance{id shortDescriptionSetter}}}}}'
+    rok_ds.parameters = {'start_date': '10/07/2019', 'end_date': '10/08/2020', 'viewId': '3333'}
+    rok_connector.get_df(rok_ds)
+    assert '10/07/2019' in json.loads(responses.calls[0].request.body)['query']
+
+
+@responses.activate
+def test_interpolate_parameters_jwt(rok_connector_with_secret, rok_ds_jwt):
+    """check that the query is correctly built with interpolated variables in jwt authentication mode"""
+    responses.add(
+        method=responses.POST,
+        url='https://rok.example.com/graphql',
+        json={'foo': 'bar'},
+    )
+    rok_ds_jwt.query = '{cartographies{dataTracking(startUtcDate:"%(start_date)s", endUtcDate:"%(end_date)s", viewId:"%(viewId)s"{procedureInstancesWithRuleReportings{procedureInstance{id shortDescriptionSetter}}}}}'
+    rok_ds_jwt.parameters = {'start_date': '10/07/2019', 'end_date': '10/08/2020', 'viewId': '3333'}
+    rok_connector_with_secret.get_df(rok_ds_jwt)
+    assert '10/07/2019' in json.loads(responses.calls[0].request.body)['query']

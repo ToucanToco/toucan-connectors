@@ -8,7 +8,11 @@ import requests
 from jwt import encode
 from pydantic import Field
 
-from toucan_connectors.common import FilterSchema, transform_with_jq
+from toucan_connectors.common import (
+    FilterSchema,
+    nosql_apply_parameters_to_query,
+    transform_with_jq,
+)
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -60,7 +64,10 @@ class RokConnector(ToucanConnector):
             # First retrieve the authentication token
             rok_token = self.retrieve_token_with_password(data_source.database, endpoint)
             # Then retrieve the data
-            payload = {'query': data_source.query, 'variables': data_source.parameters}
+            data_source.query = nosql_apply_parameters_to_query(
+                data_source.query, data_source.parameters
+            )
+            payload = {'query': data_source.query}
             res = requests.post(endpoint, json=payload, headers={'Token': rok_token}).json()
 
         if 'errors' in res:
@@ -89,6 +96,10 @@ class RokConnector(ToucanConnector):
             'Accept': 'application/json',
             'Content-Type': 'application/json',
         }
+
+        data_source.query = nosql_apply_parameters_to_query(
+            data_source.query, data_source.parameters
+        )
 
         try:
             res = requests.post(
