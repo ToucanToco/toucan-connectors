@@ -58,13 +58,10 @@ class RokConnector(ToucanConnector):
         }
 
         if data_source.parameters:
-            data_source.query = nosql_apply_parameters_to_query(
-                data_source.query, {**data_source.parameters, **date_viewid_parameters}
-            )
+            parameters = {**data_source.parameters, **date_viewid_parameters}
         else:
-            data_source.query = nosql_apply_parameters_to_query(
-                data_source.query, date_viewid_parameters
-            )
+            parameters = date_viewid_parameters
+        data_source.query = nosql_apply_parameters_to_query(data_source.query, parameters)
 
         if self.authenticated_with_token:
             if not data_source.live_data:
