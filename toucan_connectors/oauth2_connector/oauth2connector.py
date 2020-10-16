@@ -15,6 +15,7 @@ class SecretsKeeper(ABC):
         """
         Save secrets in a secrets repository
         """
+
     @abstractmethod
     def load(self, key: str) -> Any:
         """
