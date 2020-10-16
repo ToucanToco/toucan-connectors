@@ -6,12 +6,7 @@ import tenacity as tny
 from pydantic import create_model
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import (
-    RetryPolicy,
-    ToucanConnector,
-    ToucanDataSource,
-    strlist_to_enum,
-)
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class DataSource(ToucanDataSource):
@@ -102,35 +97,6 @@ def test_get_slice():
     res = DataConnector(name='my_name').get_slice({}, offset=2, limit=2)
     assert res.df.reset_index(drop=True).equals(pd.DataFrame({'A': [3, 4]}))
     assert res.total_count == 5
-
-
-def test_get_slice_w_secrets(mocker):
-    """It should pass secrets on in kwargs if an auth flow connector."""
-
-    class AuthFlowDataConnector(ToucanConnector):
-        type = 'MyAuthFlow'
-        data_source_model = 'asd'
-        _auth_flow = 'oauth2'
-
-        def _retrieve_data(self, datasource, **kwargs):
-            return pd.DataFrame({'foo': ['bar', 'baz']})
-
-    spy = mocker.spy(AuthFlowDataConnector, '_retrieve_data')
-    fake_kwargs = {'secrets': 'secretsecrets'}
-    connector = AuthFlowDataConnector(name='my_connector')
-    res = connector.get_slice({}, **fake_kwargs)
-    assert res.total_count == 2
-    spy.assert_called_once_with(
-        AuthFlowDataConnector(
-            name='my_connector',
-            retry_policy=RetryPolicy(
-                max_attempts=1, max_delay=0.0, wait_time=0.0, retry_on=(), logger=None
-            ),
-            type='MyAuthFlow',
-        ),
-        {},
-        **fake_kwargs,
-    )
 
 
 def test_explain():

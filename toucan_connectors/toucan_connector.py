@@ -39,6 +39,10 @@ def strlist_to_enum(field: str, strlist: List[str], default_value=...) -> tuple:
     return StrEnum(field, {v: v for v in strlist}), default_value
 
 
+def is_oauth2_connector(cls):
+    return hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2'
+
+
 class ToucanDataSource(BaseModel):
     domain: str
     name: str
@@ -225,7 +229,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         return RetryPolicy(**kwargs)
 
     @abstractmethod
-    def _retrieve_data(self, data_source: ToucanDataSource, **kwargs):
+    def _retrieve_data(self, data_source: ToucanDataSource):
         """Main method to retrieve a pandas dataframe"""
 
     @decorate_func_with_retry
@@ -233,19 +237,12 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         self,
         data_source: ToucanDataSource,
         permissions: Optional[dict] = None,
-        **kwargs,
     ) -> pd.DataFrame:
         """
         Method to retrieve the data as a pandas dataframe
         filtered by permissions
         """
-        # This conditional prevents passing secrets in kwargs to connectors that can't use them
-        # inspect module's signature object can't be used here in Python 3.6 because it is not
-        # generated the same way as in 3.7 and 3.8; this can be eventually replaced
-        if hasattr(self, '_auth_flow'):
-            res = self._retrieve_data(data_source, **kwargs)
-        else:
-            res = self._retrieve_data(data_source)
+        res = self._retrieve_data(data_source)
 
         if permissions is not None:
             permissions_query = PandasConditionTranslator.translate(permissions)
@@ -259,7 +256,6 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
-        **kwargs,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
@@ -269,7 +265,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         - limit is the number of rows to retrieve
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
         """
-        df = self.get_df(data_source, permissions, **kwargs)
+        df = self.get_df(data_source, permissions)
         if limit is not None:
             return DataSlice(df[offset : offset + limit], len(df))
         else:

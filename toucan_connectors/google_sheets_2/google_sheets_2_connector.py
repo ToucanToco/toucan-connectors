@@ -10,7 +10,14 @@ from aiohttp import ClientSession
 from pydantic import Field, create_model
 
 from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
+from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+
+AUTHORIZATION_URL: str = (
+    'https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent'
+)
+SCOPE: str = 'openid email https://www.googleapis.com/auth/spreadsheets.readonly'
+TOKEN_URL: str = 'https://oauth2.googleapis.com/token'
 
 
 class NoCredentialsError(Exception):
@@ -48,8 +55,7 @@ class GoogleSheets2DataSource(ToucanDataSource):
         with suppress(Exception):
             partial_endpoint = current_config['spreadsheet_id']
             final_url = f'{connector._baseroute}{partial_endpoint}'
-            secrets = kwargs.get('secrets')(auth_flow_id=connector.auth_flow_id)
-            data = connector._run_fetch(final_url, secrets['access_token'])
+            data = connector._run_fetch(final_url)
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             constraints['sheet'] = strlist_to_enum('sheet', available_sheets)
 
@@ -71,20 +77,45 @@ class GoogleSheets2Connector(ToucanConnector):
     # TODO: turn into a class property
     _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
 
-    async def _authentified_fetch(self, url, access_token):
-        """Build the final request along with headers."""
-        headers = {'Authorization': f'Bearer {access_token}'}
+    def __init__(self, **kwargs):
+        super().__init__(
+            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
+        )
+        # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
+        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+            name=self.auth_flow_id,
+            authorization_url=AUTHORIZATION_URL,
+            scope=SCOPE,
+            token_url=TOKEN_URL,
+            **{k: v for k, v in kwargs.items() if k in OAuth2Connector.init_params},
+        )
 
+    def build_authorization_url(self, **kwargs):
+        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+
+    def retrieve_tokens(self, authorization_response: str):
+        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+
+    def get_access_token(self):
+        return self.__dict__['_oauth2_connector'].get_access_token()
+
+    async def _fetch(self, url, headers=None):
+        """Build the final request along with headers."""
         async with ClientSession(headers=headers) as session:
             return await fetch(url, session)
 
-    def _run_fetch(self, url, access_token):
+    def _run_fetch(self, url):
         """Run loop."""
+        access_token = self.get_access_token()
+        if not access_token:
+            raise NoCredentialsError('No credentials')
+        headers = {'Authorization': f'Bearer {access_token}'}
+
         loop = get_loop()
-        future = asyncio.ensure_future(self._authentified_fetch(url, access_token))
+        future = asyncio.ensure_future(self._fetch(url, headers))
         return loop.run_until_complete(future)
 
-    def _retrieve_data(self, data_source: GoogleSheets2DataSource, **kwargs) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GoogleSheets2DataSource) -> pd.DataFrame:
         """
         Point of entry for data retrieval in the connector
 
@@ -92,16 +123,10 @@ class GoogleSheets2Connector(ToucanConnector):
         - Datasource
         - Secrets
         """
-        try:
-            secrets = kwargs.get('secrets')(auth_flow_id=self.auth_flow_id)
-            access_token = secrets['access_token']
-        except Exception:
-            raise NoCredentialsError('No credentials')
-
         if data_source.sheet is None:
             # Get spreadsheet informations and retrieve all the available sheets
             # https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
-            data = self._run_fetch(f'{self._baseroute}{data_source.spreadsheet_id}', access_token)
+            data = self._run_fetch(f'{self._baseroute}{data_source.spreadsheet_id}')
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             data_source.sheet = available_sheets[0]
 
@@ -109,7 +134,7 @@ class GoogleSheets2Connector(ToucanConnector):
         read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}?valueRenderOption=UNFORMATTED_VALUE'
         full_url = f'{self._baseroute}{read_sheet_endpoint}'
         # Rajouter le param FORMATTED_VALUE pour le séparateur de décimal dans la Baseroute
-        data = self._run_fetch(full_url, access_token)['values']
+        data = self._run_fetch(full_url)['values']
         df = pd.DataFrame(data)
 
         # Since `data` is a list of lists, the columns are not set properly
@@ -126,22 +151,22 @@ class GoogleSheets2Connector(ToucanConnector):
 
         return df
 
-    def get_status(self, **kwargs) -> ConnectorStatus:
+    def get_status(self) -> ConnectorStatus:
         """
         Test the Google Sheets connexion.
 
         If successful, returns a message with the email of the connected user account.
         """
         try:
-            secrets = kwargs.get('secrets')(auth_flow_id=self.auth_flow_id)
-            access_token = secrets['access_token']
+            access_token = self.get_access_token()
         except Exception:
             return ConnectorStatus(status=False, error='Credentials are missing')
 
+        if not access_token:
+            return ConnectorStatus(status=False, error='Credentials are missing')
+
         try:
-            user_info = self._run_fetch(
-                'https://www.googleapis.com/oauth2/v2/userinfo?alt=json', access_token
-            )
+            user_info = self._run_fetch('https://www.googleapis.com/oauth2/v2/userinfo?alt=json')
             return ConnectorStatus(status=True, message=f"Connected as {user_info.get('email')}")
         except HttpError:
             return ConnectorStatus(status=False, error="Couldn't retrieve user infos")

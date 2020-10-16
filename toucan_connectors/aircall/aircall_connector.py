@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 from enum import Enum
 from typing import List, Optional, Tuple
 
@@ -8,14 +7,28 @@ import pandas as pd
 from aiohttp import ClientSession
 from pydantic import Field
 
-from toucan_connectors.common import get_loop
+from toucan_connectors.common import ConnectorStatus, get_loop
+from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 from .constants import MAX_RUNS, PER_PAGE
 from .helpers import DICTIONARY_OF_FORMATTERS, build_df, build_empty_df
 
-BASE_ROUTE = 'https://proxy.bearer.sh/aircall_oauth'
-BEARER_API_KEY = os.environ.get('BEARER_API_KEY')
+AUTHORIZATION_URL: str = 'https://dashboard-v2.aircall.io/oauth/authorize'
+SCOPE: str = 'public_api'
+TOKEN_URL: str = 'https://api.aircall.io/v1/oauth/token'
+BASE_ROUTE: str = 'https://api.aircall.io/v1'
+NO_CREDENTIALS_ERROR = 'No credentials'
+
+
+class NoCredentialsError(Exception):
+    """Raised when no secrets avaiable."""
+
+
+class AircallDataset(str, Enum):
+    calls = 'calls'
+    tags = 'tags'
+    users = 'users'
 
 
 async def fetch_page(
@@ -52,14 +65,13 @@ async def fetch_page(
             )
         else:
             logging.getLogger(__file__).error('Aborting Aircall requests')
-            raise Exception(f'Aborting Aircall requests due to {aircall_error}')
+            raise AircallException(f'Aborting Aircall requests due to {aircall_error}')
 
     delay_counter = 0
     data_list.append(data)
 
     next_page_link = None
     meta_data = data.get('meta')
-
     if meta_data is not None:
         next_page_link: Optional[str] = meta_data.get('next_page_link')
 
@@ -87,12 +99,6 @@ async def fetch(new_endpoint, session: ClientSession) -> dict:
         return await res.json()
 
 
-class AircallDataset(str, Enum):
-    calls = 'calls'
-    tags = 'tags'
-    users = 'users'
-
-
 class AircallDataSource(ToucanDataSource):
     limit: int = Field(MAX_RUNS, description='Limit of entries (default is 1 run)', ge=-1)
     dataset: AircallDataset = 'calls'
@@ -101,16 +107,66 @@ class AircallDataSource(ToucanDataSource):
 class AircallConnector(ToucanConnector):
     """
     This is a connector for [Aircall](https://developer.aircall.io/api-references/#endpoints)
-    using [Bearer.sh](https://app.bearer.sh/)
+    using oAuth2 for authentication
     """
 
+    _auth_flow = 'oauth2'
+    auth_flow_id: Optional[str]
     data_source_model: AircallDataSource
-    bearer_integration = 'aircall_oauth'
-    bearer_auth_id: str
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
+        )
+        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+            name=kwargs['name'],
+            authorization_url=AUTHORIZATION_URL,
+            scope=SCOPE,
+            token_url=TOKEN_URL,
+            **{k: v for k, v in kwargs.items() if k in OAuth2Connector.init_params},
+        )
+
+    def build_authorization_url(self):
+        return self.__dict__['_oauth2_connector'].build_authorization_url()
+
+    def retrieve_tokens(self, authorization_response: str):
+        """
+        In the Aircall oAuth2 authentication process, client_id & client_secret
+        must be sent in the body of the request so we have to set them in
+        the mother class. This way they'll be added to her get_access_token method
+        """
+        client_id = self.__dict__['_oauth2_connector'].client_id
+        client_secret = self.__dict__['_oauth2_connector'].client_secret
+        return self.__dict__['_oauth2_connector'].retrieve_tokens(
+            authorization_response, client_id=client_id, client_secret=client_secret
+        )
+
+    def get_access_token(self):
+        return self.__dict__['_oauth2_connector'].get_access_token()
+
+    async def _fetch(self, url, headers=None):
+        """Build the final request along with headers."""
+        async with ClientSession(headers=headers) as session:
+            return await fetch(url, session)
+
+    def _run_fetch(self, url):
+        """Run loop."""
+        access_token = self.get_access_token()
+        if not access_token:
+            raise NoCredentialsError(NO_CREDENTIALS_ERROR)
+        headers = {'Authorization': f'Bearer {access_token}'}
+
+        loop = get_loop()
+        future = asyncio.ensure_future(self._fetch(url, headers))
+        return loop.run_until_complete(future)
 
     async def _get_data(self, dataset: str, limit) -> Tuple[List[dict], List[dict]]:
         """Triggers fetches for data and does preliminary filtering process"""
-        headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
+        access_token = self.get_access_token()
+        if not access_token:
+            raise NoCredentialsError(NO_CREDENTIALS_ERROR)
+        headers = {'Authorization': f'Bearer {access_token}'}
+
         async with ClientSession(headers=headers) as session:
             team_data, variable_data = await asyncio.gather(
                 fetch_page(
@@ -128,14 +184,12 @@ class AircallConnector(ToucanConnector):
                     0,
                 ),
             )
-
             team_response_list = []
             variable_response_list = []
             if len(team_data) > 0:
                 for data in team_data:
                     for team_obj in data['teams']:
                         team_response_list += DICTIONARY_OF_FORMATTERS['teams'](team_obj)
-
             if len(variable_data) > 0:
                 for data in variable_data:
                     variable_response_list += [
@@ -145,7 +199,11 @@ class AircallConnector(ToucanConnector):
 
     async def _get_tags(self, dataset: str, limit) -> List[dict]:
         """Triggers fetches for tags and does preliminary filtering process"""
-        headers = {'Authorization': BEARER_API_KEY, 'Bearer-Auth-Id': self.bearer_auth_id}
+        access_token = self.get_access_token()
+        if not access_token:
+            raise NoCredentialsError(NO_CREDENTIALS_ERROR)
+        headers = {'Authorization': f'Bearer {access_token}'}
+
         async with ClientSession(headers=headers) as session:
             raw_data = await fetch_page(
                 dataset,
@@ -194,3 +252,20 @@ class AircallConnector(ToucanConnector):
             return build_df(
                 dataset, [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
             )
+
+    def get_status(self) -> ConnectorStatus:
+        """
+        Test the Aircall connexion.
+        """
+        try:
+            access_token = self.get_access_token()
+            if access_token:
+                return ConnectorStatus(status=True)
+        except Exception:
+            return ConnectorStatus(status=False, error='Credentials are missing')
+        if not access_token:
+            return ConnectorStatus(status=False, error='Credentials are missing')
+
+
+class AircallException(Exception):
+    """Raised when an error occured when querying Aircall's API"""
