@@ -10,7 +10,10 @@ from aiohttp import ClientSession
 from pydantic import Field, create_model
 
 from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
-from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector, OAuth2ConnectorConfig
+from toucan_connectors.oauth2_connector.oauth2connector import (
+    OAuth2Connector,
+    OAuth2ConnectorConfig,
+)
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 AUTHORIZATION_URL: str = (
