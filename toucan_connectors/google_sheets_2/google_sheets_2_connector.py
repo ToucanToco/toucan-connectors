@@ -10,7 +10,7 @@ from aiohttp import ClientSession
 from pydantic import Field, create_model
 
 from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
-from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
+from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector, OauthConnectorConfig
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 AUTHORIZATION_URL: str = (
@@ -62,9 +62,6 @@ class GoogleSheets2DataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-Secrets = Dict[str, Any]
-
-
 class GoogleSheets2Connector(ToucanConnector):
     """The Google Sheets connector."""
 
@@ -76,6 +73,10 @@ class GoogleSheets2Connector(ToucanConnector):
 
     # TODO: turn into a class property
     _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
+
+    @staticmethod
+    def get_form():
+        return OauthConnectorConfig.schema()
 
     def __init__(self, **kwargs):
         super().__init__(

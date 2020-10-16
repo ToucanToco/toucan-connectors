@@ -43,6 +43,10 @@ def is_oauth2_connector(cls):
     return hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2'
 
 
+def get_form(cls):
+    if hasattr(cls, 'get_form'):
+        return getattr(cls, 'get_form')()
+
 class ToucanDataSource(BaseModel):
     domain: str
     name: str

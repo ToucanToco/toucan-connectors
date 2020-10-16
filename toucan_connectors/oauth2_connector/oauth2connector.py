@@ -6,6 +6,7 @@ from urllib import parse as url_parse
 
 from authlib.common.security import generate_token
 from authlib.integrations.requests_client import OAuth2Session
+from pydantic import BaseModel
 
 
 class SecretsKeeper(ABC):
@@ -14,12 +15,16 @@ class SecretsKeeper(ABC):
         """
         Save secrets in a secrets repository
         """
-
     @abstractmethod
     def load(self, key: str) -> Any:
         """
         Load secrets from the secrets repository
         """
+
+
+class OauthConnectorConfig(BaseModel):
+    client_id: str
+    client_secret: str
 
 
 class OAuth2Connector:
