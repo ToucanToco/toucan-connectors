@@ -91,7 +91,7 @@ def test_get_form_with_secrets(mocker, con, ds):
     """It should return a list of spreadsheet titles."""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET_LIST_RESPONSE)
 
-    result = ds.get_form(
+    result = ds.get_connector_config_form(
         connector=con,
         current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
     )
@@ -102,7 +102,7 @@ def test_get_form_with_secrets(mocker, con, ds):
 def test_get_form_no_secrets(mocker, con, ds, remove_secrets):
     """It should return no spreadsheet titles."""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=Exception)
-    result = ds.get_form(
+    result = ds.get_connector_config_form(
         connector=con,
         current_config={'spreadsheet_id': '1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU'},
     )
