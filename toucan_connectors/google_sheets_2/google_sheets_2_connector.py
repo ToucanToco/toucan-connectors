@@ -75,7 +75,7 @@ class GoogleSheets2Connector(ToucanConnector):
     _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
 
     @staticmethod
-    def get_form():
+    def get_connector_config_form():
         return GoogleSheets2Connector.ConnectorConfig.schema()
 
     class ConnectorConfig(OauthConnectorConfig):
@@ -86,6 +86,7 @@ class GoogleSheets2Connector(ToucanConnector):
         the Google Dashboard: https://console.developers.google.com/apis/dashboard.
         Create a 'Web Application
         """
+
         pass
 
     def __init__(self, **kwargs):
