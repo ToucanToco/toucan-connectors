@@ -23,7 +23,7 @@ class SecretsKeeper(ABC):
         """
 
 
-class OauthConnectorConfig(BaseModel):
+class OAuth2ConnectorConfig(BaseModel):
     client_id: str
     client_secret: str
 

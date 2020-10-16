@@ -10,7 +10,7 @@ from aiohttp import ClientSession
 from pydantic import Field, create_model
 
 from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
-from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector, OauthConnectorConfig
+from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector, OAuth2ConnectorConfig
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 AUTHORIZATION_URL: str = (
@@ -78,7 +78,7 @@ class GoogleSheets2Connector(ToucanConnector):
     def get_connector_config_form():
         return GoogleSheets2Connector.ConnectorConfig.schema()
 
-    class ConnectorConfig(OauthConnectorConfig):
+    class ConnectorConfig(OAuth2ConnectorConfig):
         """
         The connector configuration for Google OAuth.
         You will need to provide a client_id and a client_secret
