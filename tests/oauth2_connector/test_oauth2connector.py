@@ -9,6 +9,7 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
     AuthFlowNotFound,
     NoOAuth2RefreshToken,
     OAuth2Connector,
+    OAuth2ConnectorConfig,
 )
 from toucan_connectors.postgres.postgresql_connector import PostgresConnector
 from toucan_connectors.toucan_connector import is_oauth2_connector
@@ -24,9 +25,7 @@ def oauth2_connector(secrets_keeper):
         name='test',
         authorization_url=FAKE_AUTHORIZATION_URL,
         scope=SCOPE,
-        client_id='',
-        client_secret='',
-        redirect_uri='',
+        config=OAuth2ConnectorConfig(client_id='', client_secret='', redirect_uri=''),
         token_url=FAKE_TOKEN_URL,
         secrets_keeper=secrets_keeper,
     )
