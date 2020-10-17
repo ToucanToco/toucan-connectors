@@ -9,7 +9,7 @@ from typing import Iterable, List, NamedTuple, Optional, Type
 
 import pandas as pd
 import tenacity as tny
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters
 from toucan_connectors.pandas_translator import PandasConditionTranslator
@@ -37,15 +37,6 @@ def strlist_to_enum(field: str, strlist: List[str], default_value=...) -> tuple:
     By default, the field is considered required.
     """
     return StrEnum(field, {v: v for v in strlist}), default_value
-
-
-def is_oauth2_connector(cls):
-    return hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2'
-
-
-def get_connector_config_form(cls):
-    if hasattr(cls, 'get_connector_config_form'):
-        return getattr(cls, 'get_connector_config_form')()
 
 
 class ToucanDataSource(BaseModel):
@@ -174,6 +165,29 @@ def decorate_func_with_retry(func):
             return func(self, *args, **kwargs)
 
     return get_func_and_retry
+
+
+def is_oauth2_connector(cls):
+    return hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2'
+
+
+class ConnectorConfigForm(BaseModel):
+    documentation_md: str = Field(description='This field contains documentation as a md string')
+    config_schema: dict = Field(description='The schema for the configuration form')
+
+
+def get_connector_config_form(cls) -> Optional[ConnectorConfigForm]:
+    """
+    Some connectors requires 2 steps of configuration.
+    First one by an administrator
+    Second one by an end user
+    eg. a connector using an oauth2 flow will need to have some parameters, such as client_id and client_secret
+    provided by an administrator, and not by an end user.
+    To document this, ToucanConnector subclasses can implement as a @classmethod 'get_connector_config_form' that will
+    return which fields SHOULD be provided by an administrator
+    """
+    if hasattr(cls, 'get_connector_config_form'):
+        return getattr(cls, 'get_connector_config_form')()
 
 
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
