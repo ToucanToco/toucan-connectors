@@ -8,7 +8,10 @@ from aiohttp import ClientSession
 from pydantic import Field
 
 from toucan_connectors.common import ConnectorStatus, get_loop
-from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
+from toucan_connectors.oauth2_connector.oauth2connector import (
+    OAuth2Connector,
+    OAuth2ConnectorConfig,
+)
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 from .constants import MAX_RUNS, PER_PAGE
@@ -123,7 +126,12 @@ class AircallConnector(ToucanConnector):
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,
-            **{k: v for k, v in kwargs.items() if k in OAuth2Connector.init_params},
+            secrets_keeper=kwargs['secrets_keeper'],
+            config=OAuth2ConnectorConfig(
+                client_id=kwargs['client_id'],
+                client_secret=kwargs['client_secret'],
+                redirect_uri=kwargs['redirect_uri'],
+            ),
         )
 
     def build_authorization_url(self):
