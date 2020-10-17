@@ -2,7 +2,9 @@
 
 # This will replace the old Google Sheets connector that works with the Bearer API
 import asyncio
+import os
 from contextlib import suppress
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -14,7 +16,12 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
 )
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    ConnectorConfigForm,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 AUTHORIZATION_URL: str = (
     'https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent'
@@ -78,19 +85,11 @@ class GoogleSheets2Connector(ToucanConnector):
     _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
 
     @staticmethod
-    def get_connector_config_form():
-        return GoogleSheets2Connector.ConnectorConfig.schema()
-
-    class ConnectorConfig(OAuth2ConnectorConfig):
-        """
-        The connector configuration for Google OAuth.
-        You will need to provide a client_id and a client_secret
-        to get these, you will need to create a new app in
-        the Google Dashboard: https://console.developers.google.com/apis/dashboard.
-        Create a 'Web Application
-        """
-
-        pass
+    def get_connector_config_form() -> ConnectorConfigForm:
+        return ConnectorConfigForm(
+            documentation_md=(Path(os.path.dirname(__file__)) / 'doc.md').read_text(),
+            config_schema=OAuth2ConnectorConfig.schema(),
+        )
 
     def __init__(self, **kwargs):
         super().__init__(
@@ -102,7 +101,12 @@ class GoogleSheets2Connector(ToucanConnector):
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,
-            **{k: v for k, v in kwargs.items() if k in OAuth2Connector.init_params},
+            config=OAuth2ConnectorConfig(
+                client_id=kwargs['client_id'],
+                client_secret=kwargs['client_secret'],
+                redirect_uri=kwargs['redirect_uri'],
+            ),
+            secrets_keeper=kwargs['secrets_keeper'],
         )
 
     def build_authorization_url(self, **kwargs):

@@ -6,7 +6,15 @@ import tenacity as tny
 from pydantic import create_model
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.google_sheets_2.google_sheets_2_connector import GoogleSheets2Connector
+from toucan_connectors.mongo.mongo_connector import MongoConnector
+from toucan_connectors.oauth2_connector.oauth2connector import OAuth2ConnectorConfig
+from toucan_connectors.toucan_connector import (
+    ToucanConnector,
+    ToucanDataSource,
+    get_connector_config_form,
+    strlist_to_enum,
+)
 
 
 class DataSource(ToucanDataSource):
@@ -231,3 +239,11 @@ def test_strlist_to_enum_default_value():
         },
         'properties': {'pokemon': {'$ref': '#/definitions/pokemon'}},
     }
+
+
+def test_should_return_connector_config_form():
+    assert (
+        get_connector_config_form(GoogleSheets2Connector).config_schema
+        == OAuth2ConnectorConfig.schema()
+    )
+    assert get_connector_config_form(MongoConnector) is None
