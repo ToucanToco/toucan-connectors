@@ -16,3 +16,4 @@ python-slugify >= 1.2.5
 PyYAML >= 3.12
 responses >= 0.9.0
 psycopg2
+xmltodict
