@@ -6,7 +6,7 @@ from urllib import parse as url_parse
 
 from authlib.common.security import generate_token
 from authlib.integrations.requests_client import OAuth2Session
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 
 class SecretsKeeper(ABC):
@@ -25,7 +25,7 @@ class SecretsKeeper(ABC):
 
 class OAuth2ConnectorConfig(BaseModel):
     client_id: str
-    client_secret: str
+    client_secret: SecretStr
     redirect_uri: str
 
 
@@ -52,7 +52,7 @@ class OAuth2Connector:
         """Build an authorization request that will be sent to the client."""
         client = OAuth2Session(
             client_id=self.config.client_id,
-            client_secret=self.config.client_secret,
+            client_secret=self.config.client_secret.get_secret_value(),
             redirect_uri=self.config.redirect_uri,
             scope=self.scope,
         )
@@ -69,7 +69,7 @@ class OAuth2Connector:
         url_params = url_parse.parse_qs(url.query)
         client = OAuth2Session(
             client_id=self.config.client_id,
-            client_secret=self.config.client_secret,
+            client_secret=self.config.client_secret.get_secret_value(),
             redirect_uri=self.config.redirect_uri,
         )
         saved_flow = self.secrets_keeper.load(self.auth_flow_id)
@@ -94,7 +94,7 @@ class OAuth2Connector:
                 raise NoOAuth2RefreshToken
             client = OAuth2Session(
                 client_id=self.config.client_id,
-                client_secret=self.config.client_secret,
+                client_secret=self.config.client_secret.get_secret_value(),
             )
             new_token = client.refresh_token(self.token_url, refresh_token=token['refresh_token'])
             self.secrets_keeper.save(self.auth_flow_id, new_token)
