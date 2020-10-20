@@ -6,7 +6,7 @@ from urllib import parse as url_parse
 
 from authlib.common.security import generate_token
 from authlib.integrations.requests_client import OAuth2Session
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 
 
 class SecretsKeeper(ABC):
@@ -26,7 +26,7 @@ class SecretsKeeper(ABC):
 class OAuth2ConnectorConfig(BaseModel):
     client_id: str
     client_secret: SecretStr
-    redirect_uri: str
+    redirect_uri: str = Field(user_provided=False)
 
 
 class OAuth2Connector:
