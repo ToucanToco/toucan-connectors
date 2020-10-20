@@ -198,6 +198,13 @@ FilterSchema = Field(
     '<a href="https://stedolan.github.io/jq/manual/">documentation</a>',
 )
 
+XpathSchema = Field(
+    '',
+    description='You can define an XPath to parse the XML cdata retrieved.'
+    'For reference visit: '
+    '<a href="https://developer.mozilla.org/en-US/docs/Web/XPath">documentation</a>',
+)
+
 
 def get_loop():
     """Sets up event loop"""

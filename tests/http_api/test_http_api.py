@@ -1,10 +1,35 @@
 import json
+from xml.etree.ElementTree import ParseError
 
 import pytest
 import responses
 
 from toucan_connectors.common import transform_with_jq
 from toucan_connectors.http_api.http_api_connector import Auth, HttpAPIConnector, HttpAPIDataSource
+
+
+@pytest.fixture
+def xml_connector():
+    data_provider = {
+        'name': 'APIreturningXML',
+        'type': 'HttpAPI',
+        'baseroute': 'http://example.com/api/v1',
+        'responsetype': 'xml',
+    }
+    return HttpAPIConnector(**data_provider)
+
+
+@pytest.fixture()
+def xml_datasource():
+    data_source = {
+        'domain': 'testxml',
+        'name': 'XMLAPI',
+        'url': 'foo/xml',
+        'method': 'GET',
+        'xpath': 'output',
+        'filter': '.output.users.user',
+    }
+    return HttpAPIDataSource(**data_source)
 
 
 @pytest.fixture(scope='function')
@@ -301,3 +326,48 @@ def test_no_top_level_domain():
     c.get_df(HttpAPIDataSource(**data_source))
 
     assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_parse_xml_error(xml_connector, xml_datasource):
+    """
+    Check that the http connector returns an error if the XML
+    is invalid
+    """
+    responses.add(
+        responses.GET,
+        'http://example.com/api/v1/foo/xml',
+        content_type='application/xml',
+        body="""<?xml version='1.0' encoding='UTF-8'?><response success='true'>
+        <output><usThis is a broken XML</output></response>""",
+    )
+
+    with pytest.raises(ParseError):
+        xml_connector.get_df(xml_datasource)
+
+
+@responses.activate
+def test_parse_xml_response(xml_connector, xml_datasource):
+    """
+    Check that the http connector is able to parse an XML response
+    """
+    responses.add(
+        responses.GET,
+        'http://example.com/api/v1/foo/xml',
+        content_type='application/xml',
+        body="""<?xml version='1.0' encoding='UTF-8'?>
+            <response success="true">
+            <output>
+                <users seqNo="55">
+                    <user id="19" guid="B9ADBCB81AA2F9BAE040307F02092C2E" login="analytica@fakecompany.com" email="analytica@fakecompany.com"
+                    name="Anna Analyzer" roleId="3" timeZone="US/Pacific"/>
+                    <user id="123" guid="AAFF5218D55ABB9234660001BEC117A9" login="randomuser@fakecompany.com" email="randomuser@fakecompany.com"
+                    name="J. Random User" roleId="2" timeZone="US/Pacific"/>
+                </users>
+            </output>
+            </response>""",
+    )
+    df = xml_connector.get_df(xml_datasource)
+    assert df['login'][0] == 'analytica@fakecompany.com'
+    assert df['timeZone'][0] == 'US/Pacific'
+    assert df['id'][1] == '123'

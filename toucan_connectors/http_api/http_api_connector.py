@@ -1,17 +1,25 @@
 from enum import Enum
 from typing import List, Union
+from xml.etree.ElementTree import ParseError, fromstring, tostring
 
 import pandas as pd
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 from requests import Session
+from xmltodict import parse
 
 from toucan_connectors.auth import Auth
 from toucan_connectors.common import (
     FilterSchema,
+    XpathSchema,
     nosql_apply_parameters_to_query,
     transform_with_jq,
 )
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+
+
+class ResponseType(str, Enum):
+    json = 'json'
+    xml = 'xml'
 
 
 class Method(str, Enum):
@@ -78,12 +86,13 @@ class HttpAPIDataSource(ToucanDataSource):
     data: Union[str, dict] = Field(
         None, description='JSON object to send in the body of the HTTP request'
     )
+    xpath: str = XpathSchema
     filter: str = FilterSchema
 
 
 class HttpAPIConnector(ToucanConnector):
     data_source_model: HttpAPIDataSource
-
+    responsetype: ResponseType = Field(ResponseType.json, title='Content-type of response')
     baseroute: AnyHttpUrl = Field(..., title='Baseroute URL', description='Baseroute URL')
     cert: List[FilePath] = Field(
         None, title='Certificate', description='File path of your certificate if any'
@@ -104,20 +113,29 @@ class HttpAPIConnector(ToucanConnector):
             data (list): The response from the API in the form of a list of dict
         """
         jq_filter = query['filter']
-
+        xpath = query['xpath']
         available_params = ['url', 'method', 'params', 'data', 'json', 'headers', 'proxies']
         query = {k: v for k, v in query.items() if k in available_params}
         query['url'] = '/'.join([self.baseroute.rstrip('/'), query['url'].lstrip('/')])
+
         if self.cert:
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates
             query['cert'] = [str(c) for c in self.cert]
         res = session.request(**query)
+        if self.responsetype == 'xml':
+            try:
+                data = fromstring(res.content)
+                data = parse(tostring(data.find(xpath), method='xml'), attr_prefix='')
+            except ParseError:
+                HttpAPIConnector.logger.error(f'Could not decode {res.content!r}')
+                raise
 
-        try:
-            data = res.json()
-        except ValueError:
-            HttpAPIConnector.logger.error(f'Could not decode {res.content!r}')
-            raise
+        else:
+            try:
+                data = res.json()
+            except ValueError:
+                HttpAPIConnector.logger.error(f'Could not decode {res.content!r}')
+                raise
 
         try:
             return transform_with_jq(data, jq_filter)

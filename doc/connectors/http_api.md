@@ -4,7 +4,10 @@ This is a generic connector to get data from any HTTP APIs (REST style APIs).
 
 This type of data source combines the features of Python’s [requests](http://docs.python-requests.org/)
 library to get data from any API with the filtering langage [jq](https://stedolan.github.io/jq/) for
-flexbile transformations of the responses.
+flexible transformations of the responses.
+The connector is able to retrieve data in json or xml format depending on the responsetype defined.
+If the format is set to 'xml', an xpath can be provided in the xpath field to parse the response and then
+the jq filter can be applied to get the data in tabular format.
 
 Please see our [complete tutorial](https://docs.toucantoco.com/concepteur/tutorials/18-jq.html) for
 an example of advanced use of this connector.
@@ -18,6 +21,7 @@ an example of advanced use of this connector.
     cf. [requests auth](http://docs.python-requests.org/en/master/) and
     [requests oauthlib](https://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow) doc.
 * `template`: dict. See below.
+* `responsetype`: str, default to 'json'
 
 ```coffee
 DATA_PROVIDERS: [
@@ -28,6 +32,7 @@ DATA_PROVIDERS: [
   template:
     <headers|json|params>:
         <header key>: '<header value>'
+  responsetype: '<responsetype>'
 ,
   ...
 ]
@@ -56,9 +61,10 @@ all data sources using this provider.
 * `headers`: dict
 * `params`: dict
 * `data`: str or dict
-* `filter`: str, [`jq` filter](https://stedolan.github.io/jq/manual/), default to `"."
+* `filter`: str, [`jq` filter](https://stedolan.github.io/jq/manual/), default to "."
 * `auth`: Auth
 * `parameters`: dict
+* `xpath`: str, [xpath](https://developer.mozilla.org/en-US/docs/Web/XPath), default to ""
 
 ```coffee
 DATA_SOURCES: [
@@ -72,6 +78,7 @@ DATA_SOURCES: [
   filter:    '<filter>'
   auth:    '<auth>'
   parameters:    '<parameters>'
+  xpath: '<xpath>'
 ,
   ...
 ]
