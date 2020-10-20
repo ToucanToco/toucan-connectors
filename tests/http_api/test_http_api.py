@@ -368,4 +368,6 @@ def test_parse_xml_response(xml_connector, xml_datasource):
             </response>""",
     )
     df = xml_connector.get_df(xml_datasource)
-    assert df.shape == (2, 7)
+    assert df['login'][0] == 'analytica@fakecompany.com'
+    assert df['timeZone'][0] == 'US/Pacific'
+    assert df['id'][1] == '123'
