@@ -134,8 +134,8 @@ class AircallConnector(ToucanConnector):
             ),
         )
 
-    def build_authorization_url(self):
-        return self.__dict__['_oauth2_connector'].build_authorization_url()
+    def build_authorization_url(self, **kwargs):
+        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
 
     def retrieve_tokens(self, authorization_response: str):
         """
