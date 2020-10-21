@@ -143,11 +143,7 @@ class AircallConnector(ToucanConnector):
         must be sent in the body of the request so we have to set them in
         the mother class. This way they'll be added to her get_access_token method
         """
-        client_id = self.__dict__['_oauth2_connector'].client_id
-        client_secret = self.__dict__['_oauth2_connector'].client_secret
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(
-            authorization_response, client_id=client_id, client_secret=client_secret
-        )
+        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
 
     def get_access_token(self):
         return self.__dict__['_oauth2_connector'].get_access_token()
