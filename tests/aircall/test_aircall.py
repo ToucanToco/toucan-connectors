@@ -18,7 +18,10 @@ from toucan_connectors.aircall.aircall_connector import (
     NoCredentialsError,
 )
 from toucan_connectors.common import HttpError
-from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
+from toucan_connectors.oauth2_connector.oauth2connector import (
+    OAuth2Connector,
+    OAuth2ConnectorConfig,
+)
 
 import_path = 'toucan_connectors.aircall.aircall_connector'
 
@@ -348,19 +351,6 @@ def test_build_authorization_url(mocker, con):
     con.__dict__['_oauth2_connector'] = mock_oauth2_connector
     con.build_authorization_url()
     mock_oauth2_connector.build_authorization_url.assert_called()
-
-
-def test_specific_retrieve_token(mocker, con):
-    """Check that the AircallConnector way of retrieving access token works"""
-    mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
-    mock_oauth2_connector.client_id = 'test_client_id'
-    mock_oauth2_connector.client_secret = 'test_client_secret'
-    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
-    con.__dict__['_oauth2_connector'].authorization_url = 'https://authorization.url'
-    con.retrieve_tokens('toto')
-    mock_oauth2_connector.retrieve_tokens.assert_called_with(
-        'toto', client_id='test_client_id', client_secret='test_client_secret'
-    )
 
 
 @pytest.mark.asyncio
