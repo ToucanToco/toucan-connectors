@@ -84,7 +84,7 @@ class OAuth2Connector:
             authorization_response=authorization_response,
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
-            **kwargs
+            **kwargs,
         )
         self.secrets_keeper.save(self.auth_flow_id, token)
 
