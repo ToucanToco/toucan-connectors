@@ -18,10 +18,7 @@ from toucan_connectors.aircall.aircall_connector import (
     NoCredentialsError,
 )
 from toucan_connectors.common import HttpError
-from toucan_connectors.oauth2_connector.oauth2connector import (
-    OAuth2Connector,
-    OAuth2ConnectorConfig,
-)
+from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 
 import_path = 'toucan_connectors.aircall.aircall_connector'
 
