@@ -64,7 +64,7 @@ class OAuth2Connector:
         self.secrets_keeper.save(self.auth_flow_id, {'state': state})
         return uri
 
-    def retrieve_tokens(self, authorization_response: str):
+    def retrieve_tokens(self, authorization_response: str, **kwargs):
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)
         client = OAuth2Session(
@@ -79,7 +79,13 @@ class OAuth2Connector:
             json.loads(saved_flow['state'])['token'] == json.loads(url_params['state'][0])['token']
         )
 
-        token = client.fetch_token(self.token_url, authorization_response=authorization_response)
+        token = client.fetch_token(
+            self.token_url,
+            authorization_response=authorization_response,
+            client_id=self.config.client_id,
+            client_secret=self.config.client_secret.get_secret_value(),
+            **kwargs
+        )
         self.secrets_keeper.save(self.auth_flow_id, token)
 
     def get_access_token(self) -> str:
