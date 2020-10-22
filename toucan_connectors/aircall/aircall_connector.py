@@ -122,7 +122,7 @@ class AircallConnector(ToucanConnector):
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
         )
         self.__dict__['_oauth2_connector'] = OAuth2Connector(
-            name=kwargs['name'],
+            auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,

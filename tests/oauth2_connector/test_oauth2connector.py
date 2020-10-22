@@ -22,7 +22,7 @@ SCOPE: str = 'openid email https://www.googleapis.com/auth/spreadsheets.readonly
 @pytest.fixture
 def oauth2_connector(secrets_keeper):
     return OAuth2Connector(
-        name='test',
+        auth_flow_id='test',
         authorization_url=FAKE_AUTHORIZATION_URL,
         scope=SCOPE,
         config=OAuth2ConnectorConfig(client_id='', client_secret='', redirect_uri=''),
