@@ -97,7 +97,7 @@ class GoogleSheets2Connector(ToucanConnector):
         )
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
         self.__dict__['_oauth2_connector'] = OAuth2Connector(
-            name=self.auth_flow_id,
+            auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,

@@ -34,14 +34,14 @@ class OAuth2Connector:
 
     def __init__(
         self,
-        name: str,
+        auth_flow_id: str,
         authorization_url: str,
         scope: str,
         config: OAuth2ConnectorConfig,
         secrets_keeper: SecretsKeeper,
         token_url: str,
     ):
-        self.auth_flow_id = name
+        self.auth_flow_id = auth_flow_id
         self.authorization_url = authorization_url
         self.scope = scope
         self.config = config
