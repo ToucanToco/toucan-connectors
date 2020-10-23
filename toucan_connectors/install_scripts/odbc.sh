@@ -23,7 +23,13 @@ if [[ ! -e "/usr/lib/psqlodbcw.so" ]];then
     cp /usr/lib/x86_64-linux-gnu/odbc/psqlodbcw.so /usr/lib/psqlodbcw.so;
 fi
 
-
-
+echo "Writing PostgreSQL Driver's config in odbcinst.ini"
+echo '[PostgreSQL Unicode]
+Description = ODBC Driver for PostgreSQL
+Driver = /usr/lib/psqlodbcw.so
+Setup = /usr/lib/libodbcpsqlS.so
+Driver64 = /usr/lib64/psqlodbcw.so
+Setup64 = /usr/lib64/libodbcpsqlS.so
+FileUsage = 1' >> /usr/local/etc/odbcinst.ini
 
 touch ~/odbc-installed
