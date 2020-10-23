@@ -49,8 +49,8 @@ jobs:
     - name: Install mssql dependencies
       run: sudo bash toucan_connectors/install_scripts/mssql.sh
 
-    - name: Install psql-odbc dependencies
-      run: sudo bash toucan_connectors/install_scripts/psql.sh
+    - name: Install odbc dependencies
+      run: sudo bash toucan_connectors/install_scripts/odbc.sh
 
     - name: install
       run: make install
