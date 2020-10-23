@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -e ~/odbcdriver-installed ]]; then
+if [[ -e ~/odbc-installed ]]; then
     echo "odbc driver already installed"
     exit
 fi
@@ -26,4 +26,4 @@ fi
 
 
 
-touch ~/odbcdriver-installed
+touch ~/odbc-installed
