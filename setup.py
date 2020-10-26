@@ -37,7 +37,7 @@ extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
 install_requires = [
     'authlib',
-    'aiohttp',
+    'aiohttp<3.7.0',
     'cached_property',
     'jinja2',
     'pydantic',
