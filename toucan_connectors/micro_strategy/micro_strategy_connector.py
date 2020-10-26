@@ -81,7 +81,9 @@ class MicroStrategyConnector(ToucanConnector):
     )
 
     def _retrieve_metadata(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
-        client = Client(self.base_url, self.project_id, self.username, self.password)
+        client = Client(
+            self.base_url, self.project_id, self.username, self.password.get_secret_value()
+        )
 
         results = client.list_objects(
             [st.value for st in Subtypes], data_source.id, data_source.offset, data_source.limit
@@ -96,7 +98,9 @@ class MicroStrategyConnector(ToucanConnector):
         if data_source.dataset == Dataset.search:
             return self._retrieve_metadata(data_source)
 
-        client = Client(self.base_url, self.project_id, self.username, self.password)
+        client = Client(
+            self.base_url, self.project_id, self.username, self.password.get_secret_value()
+        )
 
         query_func = getattr(client, data_source.dataset)
         if not data_source.viewfilter:
