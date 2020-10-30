@@ -7,7 +7,9 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class OdbcDataSource(ToucanDataSource):
-    query: constr(min_length=1)
+    query: constr(min_length=1) = Field(
+        ..., description='You can write your SQL query here', widget='sql'
+    )
 
 
 class OdbcConnector(ToucanConnector):
