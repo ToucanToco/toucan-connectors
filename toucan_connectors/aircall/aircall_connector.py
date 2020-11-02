@@ -127,10 +127,10 @@ class AircallConnector(ToucanConnector):
             scope=SCOPE,
             token_url=TOKEN_URL,
             secrets_keeper=kwargs['secrets_keeper'],
+            redirect_uri=kwargs['redirect_uri'],
             config=OAuth2ConnectorConfig(
                 client_id=kwargs['client_id'],
                 client_secret=kwargs['client_secret'],
-                redirect_uri=kwargs['redirect_uri'],
             ),
         )
 
