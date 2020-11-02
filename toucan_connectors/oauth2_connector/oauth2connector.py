@@ -6,7 +6,7 @@ from urllib import parse as url_parse
 
 from authlib.common.security import generate_token
 from authlib.integrations.requests_client import OAuth2Session
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, SecretStr
 
 
 class SecretsKeeper(ABC):
@@ -26,11 +26,12 @@ class SecretsKeeper(ABC):
 class OAuth2ConnectorConfig(BaseModel):
     client_id: str
     client_secret: SecretStr
-    redirect_uri: str = Field(user_provided=False)
 
 
 class OAuth2Connector:
-    init_params = ['secrets_keeper'] + list(OAuth2ConnectorConfig.schema()['properties'].keys())
+    init_params = ['secrets_keeper', 'redirect_uri'] + list(
+        OAuth2ConnectorConfig.schema()['properties'].keys()
+    )
 
     def __init__(
         self,
@@ -38,6 +39,7 @@ class OAuth2Connector:
         authorization_url: str,
         scope: str,
         config: OAuth2ConnectorConfig,
+        redirect_uri: str,
         secrets_keeper: SecretsKeeper,
         token_url: str,
     ):
@@ -47,13 +49,14 @@ class OAuth2Connector:
         self.config = config
         self.secrets_keeper = secrets_keeper
         self.token_url = token_url
+        self.redirect_uri = redirect_uri
 
     def build_authorization_url(self, **kwargs) -> str:
         """Build an authorization request that will be sent to the client."""
         client = OAuth2Session(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
-            redirect_uri=self.config.redirect_uri,
+            redirect_uri=self.redirect_uri,
             scope=self.scope,
         )
         state = {'token': generate_token(), **kwargs}
@@ -70,7 +73,7 @@ class OAuth2Connector:
         client = OAuth2Session(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
-            redirect_uri=self.config.redirect_uri,
+            redirect_uri=self.redirect_uri,
         )
         saved_flow = self.secrets_keeper.load(self.auth_flow_id)
         if saved_flow is None:

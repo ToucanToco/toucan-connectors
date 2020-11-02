@@ -101,10 +101,10 @@ class GoogleSheets2Connector(ToucanConnector):
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,
+            redirect_uri=kwargs['redirect_uri'],
             config=OAuth2ConnectorConfig(
                 client_id=kwargs['client_id'],
                 client_secret=kwargs['client_secret'],
-                redirect_uri=kwargs['redirect_uri'],
             ),
             secrets_keeper=kwargs['secrets_keeper'],
         )
