@@ -245,7 +245,7 @@ def test_strlist_to_enum_default_value():
 
 def test_should_return_connector_config_form():
     assert (
-            get_connector_secrets_form(GoogleSheets2Connector).secrets_schema
-            == OAuth2ConnectorConfig.schema()
+        get_connector_secrets_form(GoogleSheets2Connector).secrets_schema
+        == OAuth2ConnectorConfig.schema()
     )
     assert get_connector_secrets_form(MongoConnector) is None
