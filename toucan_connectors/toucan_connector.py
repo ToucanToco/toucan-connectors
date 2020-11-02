@@ -171,12 +171,12 @@ def is_oauth2_connector(cls):
     return hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2'
 
 
-class ConnectorConfigForm(BaseModel):
+class ConnectorSecretsForm(BaseModel):
     documentation_md: str = Field(description='This field contains documentation as a md string')
-    config_schema: dict = Field(description='The schema for the configuration form')
+    secrets_schema: dict = Field(description='The schema for the configuration form')
 
 
-def get_connector_config_form(cls) -> Optional[ConnectorConfigForm]:
+def get_connector_secrets_form(cls) -> Optional[ConnectorSecretsForm]:
     """
     Some connectors requires 2 steps of configuration.
     First one by an administrator
@@ -186,8 +186,8 @@ def get_connector_config_form(cls) -> Optional[ConnectorConfigForm]:
     To document this, ToucanConnector subclasses can implement as a @classmethod 'get_connector_config_form' that will
     return which fields SHOULD be provided by an administrator
     """
-    if hasattr(cls, 'get_connector_config_form'):
-        return getattr(cls, 'get_connector_config_form')()
+    if hasattr(cls, 'get_connector_secrets_form'):
+        return getattr(cls, 'get_connector_secrets_form')()
 
 
 class ToucanConnector(BaseModel, metaclass=ABCMeta):

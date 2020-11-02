@@ -17,7 +17,7 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2ConnectorConfig,
 )
 from toucan_connectors.toucan_connector import (
-    ConnectorConfigForm,
+    ConnectorSecretsForm,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
@@ -85,10 +85,10 @@ class GoogleSheets2Connector(ToucanConnector):
     _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
 
     @staticmethod
-    def get_connector_config_form() -> ConnectorConfigForm:
-        return ConnectorConfigForm(
+    def get_connector_secrets_form() -> ConnectorSecretsForm:
+        return ConnectorSecretsForm(
             documentation_md=(Path(os.path.dirname(__file__)) / 'doc.md').read_text(),
-            config_schema=OAuth2ConnectorConfig.schema(),
+            secrets_schema=OAuth2ConnectorConfig.schema(),
         )
 
     def __init__(self, **kwargs):

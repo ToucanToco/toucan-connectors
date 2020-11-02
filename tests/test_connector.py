@@ -12,7 +12,7 @@ from toucan_connectors.oauth2_connector.oauth2connector import OAuth2ConnectorCo
 from toucan_connectors.toucan_connector import (
     ToucanConnector,
     ToucanDataSource,
-    get_connector_config_form,
+    get_connector_secrets_form,
     strlist_to_enum,
 )
 
@@ -245,7 +245,7 @@ def test_strlist_to_enum_default_value():
 
 def test_should_return_connector_config_form():
     assert (
-        get_connector_config_form(GoogleSheets2Connector).config_schema
-        == OAuth2ConnectorConfig.schema()
+            get_connector_secrets_form(GoogleSheets2Connector).secrets_schema
+            == OAuth2ConnectorConfig.schema()
     )
-    assert get_connector_config_form(MongoConnector) is None
+    assert get_connector_secrets_form(MongoConnector) is None
