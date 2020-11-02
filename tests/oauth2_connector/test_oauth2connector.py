@@ -25,7 +25,8 @@ def oauth2_connector(secrets_keeper):
         auth_flow_id='test',
         authorization_url=FAKE_AUTHORIZATION_URL,
         scope=SCOPE,
-        config=OAuth2ConnectorConfig(client_id='', client_secret='', redirect_uri=''),
+        config=OAuth2ConnectorConfig(client_id='', client_secret=''),
+        redirect_uri='',
         token_url=FAKE_TOKEN_URL,
         secrets_keeper=secrets_keeper,
     )
