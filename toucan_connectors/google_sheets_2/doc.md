@@ -1,5 +1,9 @@
-The connector configuration for Google OAuth.
-You will need to provide a client_id and a client_secret
-to get these, you will need to create a new app in
-the Google Dashboard: https://console.developers.google.com/apis/dashboard.
-Create a 'Web Application
+<div class="connector_config_modal__documentation"> 
+<p> You should create a new Web Application with OAuth credentials in your Google APIs console.
+<br><br> For a detailed tutorial on how to do that, please refer to our dedicated 
+<a href="https://docs.toucantoco.com/concepteur/tutorials/power-apps-with-data/4-google-sheets-oauth.html">documentation</a>.
+<br><br>
+ In authorized redirect URIs, you should specify:<br>
+ https://api-{{ back.instance_name }}.toucantoco.com/oauth/redirect?type=GoogleSheets2
+</p> </div>
+
