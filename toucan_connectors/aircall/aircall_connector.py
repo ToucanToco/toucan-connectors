@@ -1,6 +1,8 @@
 import asyncio
 import logging
+import os
 from enum import Enum
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 import pandas as pd
@@ -12,7 +14,11 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
 )
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import (
+    ConnectorSecretsForm,
+    ToucanConnector,
+    ToucanDataSource,
+)
 
 from .constants import MAX_RUNS, PER_PAGE
 from .helpers import DICTIONARY_OF_FORMATTERS, build_df, build_empty_df
@@ -116,6 +122,13 @@ class AircallConnector(ToucanConnector):
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[str]
     data_source_model: AircallDataSource
+
+    @staticmethod
+    def get_connector_secrets_form() -> ConnectorSecretsForm:
+        return ConnectorSecretsForm(
+            documentation_md=(Path(os.path.dirname(__file__)) / 'doc.md').read_text(),
+            secrets_schema=OAuth2ConnectorConfig.schema(),
+        )
 
     def __init__(self, **kwargs):
         super().__init__(
