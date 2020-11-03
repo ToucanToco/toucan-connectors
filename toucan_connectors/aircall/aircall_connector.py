@@ -12,7 +12,11 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
 )
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import (
+    ConnectorSecretsForm,
+    ToucanConnector,
+    ToucanDataSource,
+)
 
 from .constants import MAX_RUNS, PER_PAGE
 from .helpers import DICTIONARY_OF_FORMATTERS, build_df, build_empty_df
@@ -132,6 +136,13 @@ class AircallConnector(ToucanConnector):
                 client_id=kwargs['client_id'],
                 client_secret=kwargs['client_secret'],
             ),
+        )
+
+    @staticmethod
+    def get_connector_secrets_form() -> ConnectorSecretsForm:
+        return ConnectorSecretsForm(
+            documentation_md='',
+            secrets_schema=OAuth2ConnectorConfig.schema(),
         )
 
     def build_authorization_url(self, **kwargs):
