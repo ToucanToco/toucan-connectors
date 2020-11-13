@@ -71,7 +71,7 @@ class MicroStrategyConnector(ToucanConnector):
         examples=['https://demo.microstrategy.com/MicroStrategyLibrary2/api/'],
     )
     username: str = Field(..., description='Your login username')
-    password: SecretStr = Field(None, description='Your login password')
+    password: SecretStr = Field('', description='Your login password')
     project_id: str = Field(
         ...,
         title='projectID',
