@@ -2,6 +2,14 @@ from typing import List
 
 import pandas as pd
 
+from toucan_connectors.common import nosql_apply_parameters_to_query
+
+
+class KeyNotFoundException(Exception):
+    """
+    Raised when a key is not available in Github's Response
+    """
+
 
 def build_query_pr(organization: str) -> str:
     """
@@ -10,12 +18,9 @@ def build_query_pr(organization: str) -> str:
     pull requests data will be extracted
     :return: graphql query with the organization name
     """
-    query = (
-        """
-    query dataset($cursor_repo: String, $cursor_pr: String) {
-      organization(login: \""""
-        + organization
-        + """\") {
+    return nosql_apply_parameters_to_query(
+        """query dataset($cursor_repo: String, $cursor_pr: String) {
+      organization(login: "%(organization)s") {
         repositories(first: 1, orderBy: {field: PUSHED_AT, direction: DESC},
          after: $cursor_repo) {
           nodes {
@@ -63,9 +68,9 @@ def build_query_pr(organization: str) -> str:
         }
       }
     }
-    """
+    """,
+        {'organization': organization},
     )
-    return query
 
 
 def build_query_teams(organization: str) -> str:
@@ -75,46 +80,44 @@ def build_query_teams(organization: str) -> str:
     teams data will be extracted
     :return: graphql query with the organization name
     """
-    query = (
+    return nosql_apply_parameters_to_query(
         """query teams($cursor_teams: String, $cursor_members: String) {
-  organization(login: \""""
-        + organization
-        + """\") {
-    teams(first: 1, orderBy: {field: NAME, direction: ASC},
-     after: $cursor_teams) {
-      nodes {
-        name
-        members(first: 100, orderBy: {field: LOGIN, direction: ASC},
-         after: $cursor_members) {
-          edges {
-            node {
-              login
+      organization(login: "%(organization)s") {
+        teams(first: 1, orderBy: {field: NAME, direction: ASC},
+         after: $cursor_teams) {
+          nodes {
+            name
+            members(first: 100, orderBy: {field: LOGIN, direction: ASC},
+             after: $cursor_members) {
+              edges {
+                node {
+                  login
+                }
+              }
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
             }
           }
           pageInfo {
-            hasNextPage
             endCursor
+            hasNextPage
           }
         }
       }
-      pageInfo {
-        endCursor
-        hasNextPage
-      }
     }
-  }
-}
-"""
+""",
+        {'organization': organization},
     )
-    return query
 
 
 def format_pr_row(repository_name: str, pr_row: dict) -> dict:
     """
 
-    :param organization: the organization name from which the
+    :param repository_name: the repository name from which the
     pull requests data were extracted
-           pr_row: a dictionary with pull requests data to be formatted
+    :param pr_row: a dictionary with pull requests data to be formatted
     :return: a formatted dict with pull requests data
     """
     current_record = {}
@@ -145,16 +148,14 @@ def format_pr_row(repository_name: str, pr_row: dict) -> dict:
     return current_record
 
 
-def format_team_row(team_row: dict) -> dict:
+def format_team_row(members: dict, team_name: str) -> dict:
     """
 
-    :param team_row: a dict with team as key and logins as values
+    :param members: a list of dict representing a list of members
+    :param team_name: a str representing the team name
     :return: a dict with login as key and teams as values
     """
-    current_record = {}
-    current_record[team_row['name']] = [
-        dev.get('node').get('login') for dev in team_row.get('members').get('edges')
-    ]
+    current_record = {team_name: [dev.get('node').get('login') for dev in members.get('edges')]}
     devs = pd.DataFrame(current_record).melt()
     devs.set_index('value', drop=True, inplace=True)
     return devs.to_dict().get('variable')
@@ -176,121 +177,128 @@ def format_team_df(team_rows: List[dict]) -> pd.DataFrame:
     return team_df[['Dev', 'teams']]
 
 
-def repo_list_has_next_page(repoPages: dict) -> bool:
+def get_data(response: dict) -> dict:
     """
 
-    :param repoPages: extracted data of repositories
-    :return: a boolean indicating if the repository data extracted has
-    another page
+    :param response: a response from Github's API
+    :return: the content of the Data field in response if exists
     """
-    return (
-        repoPages.get('data')
-        .get('organization')
-        .get('repositories')
-        .get('pageInfo')
-        .get('hasNextPage')
-    )
+    data = response.get('data')
+    if data:
+        return data
+    else:
+        raise KeyNotFoundException('No Data Key Available')
 
 
-def pr_list_has_next_page(repoPages: dict) -> bool:
+def get_organization(response: dict) -> dict:
     """
-
-    :param repoPages: extracted data of pull requests
-    :return: a boolean indicating if the pull requests data extracted has
-    another page
+    :param response: a response from Github's API
+    :return: the content of the organization field in response if exists
     """
-    return (
-        repoPages.get('data')
-        .get('organization')
-        .get('repositories')
-        .get('nodes')[0]
-        .get('pullRequests')
-        .get('pageInfo')
-        .get('hasNextPage')
-    )
+    data = get_data(response)
+    organization = data.get('organization')
+    if organization:
+        return organization
+    else:
+        raise KeyNotFoundException('No Organization Key Available')
 
 
-def get_pr_cursor(repoPages: dict) -> str:
+def get_repositories(response: dict) -> dict:
     """
-
-    :param repoPages: extracted data of pull requests
-    :return: the cursor to the next pull request page as str
+    :param response: a response from Github's API
+    :return: the content of the repositories field in response if exists
     """
-    return (
-        repoPages.get('data')
-        .get('organization')
-        .get('repositories')
-        .get('nodes')[0]
-        .get('pullRequests')
-        .get('pageInfo')
-        .get('endCursor')
-    )
+    organization = get_organization(response)
+    repositories = organization.get('repositories')
+    if repositories:
+        return repositories
+    else:
+        raise KeyNotFoundException('No repositories Key Available')
 
 
-def get_repo_cursor(repoPages: dict) -> str:
+def get_teams(response):
     """
-
-    :param repoPages: extracted data of pull requests
-    :return: the cursor to the next repository page as str
+    :param response: a response from Github's API
+    :return: the content of the teams field in response if exists
     """
-    return (
-        repoPages.get('data')
-        .get('organization')
-        .get('repositories')
-        .get('pageInfo')
-        .get('endCursor')
-    )
+    organization = get_organization(response)
+    teams = organization.get('teams')
+    if teams:
+        return teams
+    else:
+        raise KeyNotFoundException('No teams Key Available')
 
 
-def team_list_has_next_page(teamPages: dict) -> bool:
+def get_nodes(response: dict) -> List[dict]:
     """
-
-    :param teamPages: extracted data of teams
-    :return: a boolean indicating if the teams data extracted has
-    another page
+    :param response: a response from Github's API
+    :return: the content of the Nodes field in response if exists
     """
-    return teamPages.get('data').get('organization').get('teams').get('pageInfo').get('hasNextPage')
+    nodes = response.get('nodes')
+    return nodes
 
 
-def get_team_list_cursor(teampages: dict) -> str:
+def get_pull_requests(repo: dict) -> dict:
     """
-
-    :param teamPages: extracted data of teams
-    :return: the cursor to the next team page as str
+    :param repo: a repo extracted from Github's API
+    :return: the content of the pull_requests field in response if exists
     """
-    return teampages.get('data').get('organization').get('teams').get('pageInfo').get('endCursor')
+    pull_requests = repo.get('pullRequests')
+
+    if pull_requests:
+        return pull_requests
+    else:
+        raise KeyNotFoundException('No Pull Requests Available')
 
 
-def members_list_has_next_page(teamPages: dict) -> bool:
+def get_members(team: dict) -> List[dict]:
     """
-
-    :param teamPages: extracted data of teams
-    :return: a boolean indicating if the members data extracted has
-    another page
+    :param team: a team extracted from Github's API
+    :return: the content of the members field in response if exists
     """
-    return (
-        teamPages.get('data')
-        .get('organization')
-        .get('teams')
-        .get('nodes')[0]
-        .get('members')
-        .get('pageInfo')
-        .get('hasNextPage')
-    )
+    members = team.get('members')
+    if members:
+        return members
+    else:
+        raise KeyNotFoundException('No Members Available')
 
 
-def get_members_list_cursor(teamPages: dict) -> str:
+def get_page_info(page: dict) -> dict:
     """
 
-    :param teamPages: extracted data of teams
-    :return: the cursor to the next members page as str
+    :param page: a page extracted from Github's API
+    :return: a dict with pagination data
     """
-    return (
-        teamPages.get('data')
-        .get('organization')
-        .get('teams')
-        .get('nodes')[0]
-        .get('members')
-        .get('pageInfo')
-        .get('endCursor')
-    )
+    page_info = page.get('pageInfo')
+    if page_info:
+        return page_info
+    else:
+        raise KeyNotFoundException('No PageInfo Key available')
+
+
+def has_next_page(page_info: dict) -> bool:
+    """
+
+    :param page_info: pagination info
+    :return: a bool indicating if response hase a next page
+    """
+    has_next_page = page_info.get('hasNextPage')
+
+    if has_next_page is None:
+        raise KeyNotFoundException('hasNextPage key not available')
+    else:
+        return has_next_page
+
+
+def get_cursor(page_info: dict) -> str:
+    """
+
+    :param page_info: pagination info
+    :return: the endcursor of current page as str
+    """
+    cursor = page_info.get('endCursor')
+
+    if cursor:
+        return cursor
+    else:
+        raise KeyNotFoundException('endCursor key not available')
