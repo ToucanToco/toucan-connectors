@@ -43,15 +43,19 @@ def build_ds(dataset: str):
     )
 
 
-def test_build_team_df(extracted_teams, gc):
+def test_build_team_dict(extracted_teams, gc):
     """
     Check that the build_team_rows function properly build
     a list of pandas dataframe with a column of devs names
     and a column of array of team names
     """
-    formatted = gc.build_team_dict(extracted_teams)
+    formatted, page_info = gc.build_team_dict(extracted_teams)
     assert formatted['foobar'] == 'faketeam'
     assert len(formatted.keys()) == 3
+    assert page_info == {
+        'hasNextPage': True,
+        'endCursor': 'Y3Vyc29yO' 'nYyOpKvbG' 'VvY2FyZWwt' 'dG91Y2Fuzg' 'Q_Ovs=',
+    }
 
 
 def test_datasource():
@@ -150,12 +154,20 @@ def test_build_pr_rows(gc, extracted_pr_list):
     """
     Check that the extracted pull requests data are properly formatted
     """
-    pr_rows = gc.build_pr_rows(extracted_pr_list)
+    pr_rows, repo_page_info, pr_page_info = gc.build_pr_rows(extracted_pr_list)
     assert len(pr_rows) == 2
     assert pr_rows[0]['Repo Name'] == 'tucblabla'
     assert pr_rows[1]['PR Name'] == 'fix(something): Fix something'
     assert 'barr' in pr_rows[0]['PR Type']
     assert pr_rows[1]['Dev'] == 'jeandupont'
+    assert repo_page_info == {
+        'hasNextPage': False,
+        'endCursor': 'Y3Vyc29yOnYyOpK5' 'MjAyMC0xMS0wOVQxN' 'DowODo0MSswMTowMM4BZVra',
+    }
+    assert pr_page_info == {
+        'hasNextPage': False,
+        'endCursor': 'Y3Vyc29y' 'OnYyOpK5M' 'jAyMC0xMS0' 'wOVQxMjoxM' 'zoyMyswMTowMM4e2z5W',
+    }
 
 
 def test_extract_pr_data_one_page(gc, mocker, extracted_pr_list, client):
@@ -302,5 +314,5 @@ def test_build_pr_rows_no_pr(gc, extracted_pr_no_pr):
     Check that only the record contains only the repo name
     as pull requests list is empty
     """
-    pr_rows = gc.build_pr_rows(extracted_pr_no_pr)
+    pr_rows, repo_page_info, pr_page_info = gc.build_pr_rows(extracted_pr_no_pr)
     assert pr_rows[0]['Repo Name'] == 'empty_repo'
