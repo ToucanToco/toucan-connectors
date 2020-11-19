@@ -23,21 +23,35 @@ def secrets_keeper():
 
 
 @pytest.fixture(scope='session')
-def extracted_pr_no_pr():
+def extracted_team_slugs():
     return {
         'data': {
             'organization': {
-                'repositories': {
+                'teams': {
                     'nodes': [
-                        {
-                            'name': 'empty_repo',
-                            'pullRequests': {
-                                'nodes': [],
-                                'pageInfo': {'hasNextPage': False, 'endCursor': None},
-                            },
-                        }
+                        {'slug': 'foo'},
+                        {'slug': 'bar'},
+                        {'slug': 'ofo'},
                     ],
-                    'pageInfo': {'hasNextPage': False, 'endCursor': None},
+                    'pageInfo': {'endCursor': 'Y3Vyc29yOnYyOpKkVGVhbc4ADwiK', 'hasNextPage': True},
+                }
+            }
+        }
+    }
+
+
+@pytest.fixture(scope='session')
+def extracted_team_slugs_2():
+    return {
+        'data': {
+            'organization': {
+                'teams': {
+                    'nodes': [
+                        {'slug': 'fob'},
+                        {'slug': 'bao'},
+                        {'slug': 'oof'},
+                    ],
+                    'pageInfo': {'endCursor': 'Y3Vyc29yOnYyOpKkVGVhbc4ADwiK', 'hasNextPage': False},
                 }
             }
         }
@@ -47,268 +61,60 @@ def extracted_pr_no_pr():
 @pytest.fixture(scope='session')
 def extracted_pr_list():
     return {
-        'data': {
-            'organization': {
-                'repositories': {
-                    'nodes': [
-                        {
-                            'name': 'tucblabla',
-                            'pullRequests': {
-                                'nodes': [
-                                    {
-                                        'createdAt': '2020-11-09T12:48:16Z',
-                                        'mergedAt': '2020-11-12T12:48:16Z',
-                                        'deletions': 3,
-                                        'additions': 3,
-                                        'title': 'fix(charts): blablabla',
-                                        'labels': {
-                                            'edges': [
-                                                {'node': {'name': 'foo'}},
-                                                {'node': {'name': 'fix'}},
-                                                {'node': {'name': 'barr'}},
-                                            ]
-                                        },
-                                        'commits': {
-                                            'edges': [
-                                                {
-                                                    'node': {
-                                                        'commit': {
-                                                            'author': {'user': {'login': 'okidoki'}}
-                                                        }
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                    },
-                                    {
-                                        'createdAt': '2020-11-09T11:13:23Z',
-                                        'mergedAt': None,
-                                        'deletions': 4,
-                                        'additions': 10,
-                                        'title': 'fix(something): Fix something',
-                                        'labels': {
-                                            'edges': [
-                                                {'node': {'name': 'foo'}},
-                                                {'node': {'name': 'fix'}},
-                                                {'node': {'name': 'barz'}},
-                                            ]
-                                        },
-                                        'commits': {
-                                            'edges': [
-                                                {
-                                                    'node': {
-                                                        'commit': {
-                                                            'author': {
-                                                                'user': {'login': 'jeand' 'upont'}
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                    },
-                                ],
-                                'pageInfo': {
-                                    'hasNextPage': False,
-                                    'endCursor': 'Y3Vyc29y'
-                                    'OnYyOpK5M'
-                                    'jAyMC0xMS0'
-                                    'wOVQxMjoxM'
-                                    'zoyMyswMTowMM4e2z5W',
-                                },
-                            },
-                        }
-                    ],
-                    'pageInfo': {
-                        'hasNextPage': False,
-                        'endCursor': 'Y3Vyc29yOnYyOpK5'
-                        'MjAyMC0xMS0wOVQxN'
-                        'DowODo0MSswMTowMM4BZVra',
-                    },
-                }
-            }
-        }
-    }
-
-
-@pytest.fixture(scope='session')
-def extracted_pr_first_repo():
-    return {
-        'data': {
-            'organization': {
-                'repositories': {
-                    'nodes': [
-                        {
-                            'name': 'lablabla',
-                            'pullRequests': {
-                                'nodes': [
-                                    {
-                                        'createdAt': '2020-11-09T12:48:16Z',
-                                        'mergedAt': '2020-11-12T12:48:16Z',
-                                        'deletions': 3,
-                                        'additions': 3,
-                                        'title': 'fix(charts): blablabla',
-                                        'labels': {
-                                            'edges': [
-                                                {'node': {'name': 'foo'}},
-                                                {'node': {'name': 'fix'}},
-                                                {'node': {'name': 'barr'}},
-                                            ]
-                                        },
-                                        'commits': {
-                                            'edges': [
-                                                {
-                                                    'node': {
-                                                        'commit': {
-                                                            'author': {'user': {'login': 'okidoki'}}
-                                                        }
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                    },
-                                    {
-                                        'createdAt': '2020-11-09T11:13:23Z',
-                                        'mergedAt': None,
-                                        'deletions': 4,
-                                        'additions': 10,
-                                        'title': 'fix(something):' ' Fix something',
-                                        'labels': {
-                                            'edges': [
-                                                {'node': {'name': 'foo'}},
-                                                {'node': {'name': 'fix'}},
-                                                {'node': {'name': 'barz'}},
-                                            ]
-                                        },
-                                        'commits': {
-                                            'edges': [
-                                                {
-                                                    'node': {
-                                                        'commit': {
-                                                            'author': {
-                                                                'user': {'login': 'jeand' 'upont'}
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                    },
-                                ],
-                                'pageInfo': {
-                                    'hasNextPage': False,
-                                    'endCursor': 'Y3Vyc2'
-                                    '9yOnYyOpK'
-                                    '5MjAyMC0xM'
-                                    'S0wOVQxMjox'
-                                    'MzoyMyswMTo'
-                                    'wMM4e2z5W',
-                                },
-                            },
-                        }
-                    ],
-                    'pageInfo': {
-                        'hasNextPage': True,
-                        'endCursor': 'Y3Vyc29y'
-                        'OnYyOpK5M'
-                        'jAyMC0xM'
-                        'S0wOVQxND'
-                        'owODo0MSsw'
-                        'MTowMM4BZVra',
-                    },
-                }
-            }
-        }
-    }
-
-
-@pytest.fixture(scope='session')
-def extracted_pr_first_prs():
-    return {
-        'data': {
-            'organization': {
-                'repositories': {
-                    'nodes': [
-                        {
-                            'name': 'lablabla',
-                            'pullRequests': {
-                                'nodes': [
-                                    {
-                                        'createdAt': '2020-11-09T12:48:16Z',
-                                        'mergedAt': '2020-11-12T12:48:16Z',
-                                        'deletions': 3,
-                                        'additions': 3,
-                                        'title': 'first pr',
-                                        'labels': {
-                                            'edges': [
-                                                {'node': {'name': 'foo'}},
-                                                {'node': {'name': 'fix'}},
-                                                {'node': {'name': 'barr'}},
-                                            ]
-                                        },
-                                        'commits': {
-                                            'edges': [
-                                                {
-                                                    'node': {
-                                                        'commit': {
-                                                            'author': {'user': {'login': 'okidoki'}}
-                                                        }
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                    },
-                                    {
-                                        'createdAt': '2020-11-09T11:13:23Z',
-                                        'mergedAt': None,
-                                        'deletions': 4,
-                                        'additions': 10,
-                                        'title': 'second pr',
-                                        'labels': {
-                                            'edges': [
-                                                {'node': {'name': 'foo'}},
-                                                {'node': {'name': 'fix'}},
-                                                {'node': {'name': 'barz'}},
-                                            ]
-                                        },
-                                        'commits': {
-                                            'edges': [
-                                                {
-                                                    'node': {
-                                                        'commit': {
-                                                            'author': {
-                                                                'user': {'login': 'jean' 'dupont'}
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                    },
-                                ],
-                                'pageInfo': {
-                                    'hasNextPage': True,
-                                    'endCursor': 'Y3Vyc29yO'
-                                    'nYyOpK5MjA'
-                                    'yMC0xMS0wO'
-                                    'VQxMjoxMzo'
-                                    'yMyswMTowMM4e2z5W',
-                                },
-                            },
-                        }
-                    ],
-                    'pageInfo': {
-                        'hasNextPage': False,
-                        'endCursor': 'Y3Vyc29yOn'
-                        'YyOpK5MjAy'
-                        'MC0xMS0wOV'
-                        'QxNDowODo0'
-                        'MSswMTowMM'
-                        '4BZVra',
-                    },
-                }
-            }
-        }
+        'nodes': [
+            {
+                'createdAt': '2020-11-18T15:58:44Z',
+                'mergedAt': '2020-11-18T15:59:44Z',
+                'deletions': 45,
+                'additions': 162,
+                'title': 'feat(something):blabla ',
+                'state': 'MERGED',
+                'labels': {
+                    'edges': [
+                        {'node': {'name': 'feature'}},
+                        {'node': {'name': '✍ NEED REVIEW ✍'}},
+                        {'node': {'name': 'label'}},
+                    ]
+                },
+                'commits': {
+                    'edges': [{'node': {'commit': {'author': {'user': {'login': 'user1'}}}}}]
+                },
+            },
+            {
+                'createdAt': '2020-11-18T15:21:21Z',
+                'mergedAt': '2020-11-19T09:52:38Z',
+                'deletions': 20,
+                'additions': 17,
+                'title': 'build: something',
+                'state': 'MERGED',
+                'labels': {
+                    'edges': [
+                        {'node': {'name': 'feature'}},
+                        {'node': {'name': 'label2'}},
+                        {'node': {'name': '✌️ TO MERGE ✌️'}},
+                    ]
+                },
+                'commits': {
+                    'edges': [{'node': {'commit': {'author': {'user': {'login': 'michel'}}}}}]
+                },
+            },
+            {
+                'createdAt': '2020-11-18T14:18:20Z',
+                'mergedAt': '2020-11-18T18:22:16Z',
+                'deletions': 69,
+                'additions': 98,
+                'title': 'chore(somethinh):bla',
+                'state': 'MERGED',
+                'labels': {'edges': [{'node': {'name': 'tech'}}]},
+                'commits': {
+                    'edges': [{'node': {'commit': {'author': {'user': {'login': 'jeanlouis'}}}}}]
+                },
+            },
+        ],
+        'pageInfo': {
+            'hasNextPage': True,
+            'endCursor': 'Y3Vyc29yOnYyOpK5MjAyMC0xMS0xOFQxNToxODoyMCswMTowMM4fL6u3',
+        },
     }
 
 
@@ -357,53 +163,22 @@ def extracted_pr():
 
 
 @pytest.fixture(scope='session')
-def extracted_team():
-    return {
-        'name': 'faketeam',
-        'members': {
-            'edges': [
-                {'node': {'login': 'foobar'}},
-                {'node': {'login': 'foobuzz'}},
-                {'node': {'login': 'barfoo'}},
-            ],
-            'pageInfo': {
-                'hasNextPage': False,
-                'endCursor': 'Y3Vyc29yOnYyOpKvbGVvY2FyZWwtdG91Y2FuzgQ_Ovs=',
-            },
-        },
-    }
-
-
-@pytest.fixture(scope='session')
-def extracted_teams():
+def extracted_team_page_1():
     return {
         'data': {
             'organization': {
-                'teams': {
-                    'nodes': [
-                        {
-                            'name': 'faketeam',
-                            'members': {
-                                'edges': [
-                                    {'node': {'login': 'foobar'}},
-                                    {'node': {'login': 'foobuzz'}},
-                                    {'node': {'login': 'barfoo'}},
-                                ],
-                                'pageInfo': {
-                                    'hasNextPage': True,
-                                    'endCursor': 'Y3Vyc29yO'
-                                    'nYyOpKvbG'
-                                    'VvY2FyZWwt'
-                                    'dG91Y2Fuzg'
-                                    'Q_Ovs=',
-                                },
-                            },
-                        }
-                    ],
-                    'pageInfo': {
-                        'endCursor': 'Y3Vyc29yOn' 'YyOpKkQ2FyZ' 'c4APmsu',
-                        'hasNextPage': True,
-                    },
+                'team': {
+                    'members': {
+                        'edges': [
+                            {'node': {'login': 'bar'}},
+                            {'node': {'login': 'foo'}},
+                            {'node': {'login': 'ofo'}},
+                        ],
+                        'pageInfo': {
+                            'hasNextPage': True,
+                            'endCursor': 'Y3Vyc29yOnYyOpKvbGVvY2FyZWwtdG91Y2FuzgQ_Ovs=',
+                        },
+                    }
                 }
             }
         }
@@ -411,174 +186,19 @@ def extracted_teams():
 
 
 @pytest.fixture(scope='session')
-def extracted_teams_one_page():
+def extracted_team_page_2():
     return {
         'data': {
             'organization': {
-                'teams': {
-                    'nodes': [
-                        {
-                            'name': 'faketeam',
-                            'members': {
-                                'edges': [
-                                    {'node': {'login': 'foobar'}},
-                                    {'node': {'login': 'foobuzz'}},
-                                    {'node': {'login': 'barfoo'}},
-                                ],
-                                'pageInfo': {
-                                    'hasNextPage': False,
-                                    'endCursor': 'Y3Vyc29yOnY'
-                                    'yOpKvbGVvY2'
-                                    'FyZWwtdG91Y2Fuzg'
-                                    'Q_Ovs=',
-                                },
-                            },
-                        }
-                    ],
-                    'pageInfo': {
-                        'endCursor': 'Y3Vyc29yOnYyOpKkQ2FyZc4APmsu',
-                        'hasNextPage': False,
-                    },
-                }
-            }
-        }
-    }
-
-
-@pytest.fixture(scope='session')
-def extracted_teams_first_member_page():
-    return {
-        'data': {
-            'organization': {
-                'teams': {
-                    'nodes': [
-                        {
-                            'name': 'faketeam',
-                            'members': {
-                                'edges': [
-                                    {'node': {'login': 'foobar'}},
-                                    {'node': {'login': 'foobuzz'}},
-                                    {'node': {'login': 'barfoo'}},
-                                ],
-                                'pageInfo': {
-                                    'hasNextPage': True,
-                                    'endCursor': 'Y3Vyc29yO'
-                                    'nYyOpKvbGV'
-                                    'vY2FyZWwtd'
-                                    'G91Y2FuzgQ_Ovs=',
-                                },
-                            },
-                        }
-                    ],
-                    'pageInfo': {
-                        'endCursor': 'Y3Vyc29yO' 'nYyOpKkQ2' 'FyZc4APmsu',
-                        'hasNextPage': False,
-                    },
-                }
-            }
-        }
-    }
-
-
-@pytest.fixture(scope='session')
-def extracted_teams_second_members_page():
-    return {
-        'data': {
-            'organization': {
-                'teams': {
-                    'nodes': [
-                        {
-                            'name': 'faketeam',
-                            'members': {
-                                'edges': [
-                                    {'node': {'login': 'foobar2'}},
-                                    {'node': {'login': 'foobuzz2'}},
-                                    {'node': {'login': 'barfoo2'}},
-                                ],
-                                'pageInfo': {
-                                    'hasNextPage': False,
-                                    'endCursor': 'Y3Vyc29yOnYy'
-                                    'OpKvbGVvY2FyZ'
-                                    'WwtdG91Y2FuzgQ'
-                                    '_Ovs=',
-                                },
-                            },
-                        }
-                    ],
-                    'pageInfo': {
-                        'endCursor': 'Y3Vyc29yOnYyOpKkQ2FyZc4APmsu',
-                        'hasNextPage': False,
-                    },
-                }
-            }
-        }
-    }
-
-
-@pytest.fixture(scope='session')
-def extracted_teams_first_team_page():
-    return {
-        'data': {
-            'organization': {
-                'teams': {
-                    'nodes': [
-                        {
-                            'name': 'faketeam',
-                            'members': {
-                                'edges': [
-                                    {'node': {'login': 'foobar'}},
-                                    {'node': {'login': 'foobuzz'}},
-                                    {'node': {'login': 'barfoo'}},
-                                ],
-                                'pageInfo': {
-                                    'hasNextPage': False,
-                                    'endCursor': 'Y3Vyc29yOnY'
-                                    'yOpKvbGVvY2F'
-                                    'yZWwtdG91Y2Fuz'
-                                    'gQ_Ovs=',
-                                },
-                            },
-                        }
-                    ],
-                    'pageInfo': {
-                        'endCursor': 'Y3Vyc29yOnYyOpKkQ2FyZc4APmsu',
-                        'hasNextPage': True,
-                    },
-                }
-            }
-        }
-    }
-
-
-@pytest.fixture(scope='session')
-def extracted_teams_second_team_page():
-    return {
-        'data': {
-            'organization': {
-                'teams': {
-                    'nodes': [
-                        {
-                            'name': 'faketeam',
-                            'members': {
-                                'edges': [
-                                    {'node': {'login': 'okidoki'}},
-                                    {'node': {'login': 'foobuzza'}},
-                                    {'node': {'login': 'jeandupont'}},
-                                ],
-                                'pageInfo': {
-                                    'hasNextPage': False,
-                                    'endCursor': 'Y3Vyc29yOn'
-                                    'YyOpKvbGVv'
-                                    'Y2FyZWwtdG9'
-                                    '1Y2FuzgQ_Ovs=',
-                                },
-                            },
-                        }
-                    ],
-                    'pageInfo': {
-                        'endCursor': 'Y3Vyc29yOnYyOpKkQ2FyZc4APmsu',
-                        'hasNextPage': False,
-                    },
+                'team': {
+                    'members': {
+                        'edges': [
+                            {'node': {'login': 'br'}},
+                            {'node': {'login': 'foo'}},
+                            {'node': {'login': 'buzz'}},
+                        ],
+                        'pageInfo': {'hasNextPage': False, 'endCursor': 'aaaaa='},
+                    }
                 }
             }
         }
@@ -610,4 +230,211 @@ def error_response():
                 ' Expected type "String!".',
             }
         ]
+    }
+
+
+@pytest.fixture(scope='session')
+def extracted_repositories_names():
+    return {
+        'data': {
+            'organization': {
+                'repositories': {
+                    'nodes': [{'name': 'repo1'}, {'name': 'repo2'}],
+                    'pageInfo': {
+                        'hasNextPage': True,
+                        'endCursor': 'Y3Vyc29yOnYyOpK5MjAyMC0xMS0xOVQxMToxMToxNyswMTowMM4BZVra',
+                    },
+                }
+            }
+        }
+    }
+
+
+@pytest.fixture(scope='session')
+def extracted_repositories_names_2():
+    return {
+        'data': {
+            'organization': {
+                'repositories': {
+                    'nodes': [{'name': 'repo3'}, {'name': 'repo4'}],
+                    'pageInfo': {
+                        'hasNextPage': False,
+                        'endCursor': 'Y3Vyc29yOnYyOpK5MjAyMC0xMS0xOVQxMToxMToxNyswMTowMM4BZVra',
+                    },
+                }
+            }
+        }
+    }
+
+
+@pytest.fixture(scope='session')
+def extracted_prs_1():
+    return {
+        'data': {
+            'organization': {
+                'repository': {
+                    'name': 'repo3',
+                    'pullRequests': {
+                        'nodes': [
+                            {
+                                'createdAt': '2020-11-18T15:58:44Z',
+                                'mergedAt': None,
+                                'deletions': 45,
+                                'additions': 162,
+                                'title': 'feat(blalbla):blalba ',
+                                'state': 'OPEN',
+                                'labels': {
+                                    'edges': [
+                                        {'node': {'name': 'feature'}},
+                                        {'node': {'name': 'Label'}},
+                                        {'node': {'name': 'Other Label'}},
+                                    ]
+                                },
+                                'commits': {
+                                    'edges': [
+                                        {
+                                            'node': {
+                                                'commit': {
+                                                    'author': {'user': {'login': 'jeanlouis'}}
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                            },
+                            {
+                                'createdAt': '2020-11-18T15:21:21Z',
+                                'mergedAt': '2020-11-19T09:52:38Z',
+                                'deletions': 20,
+                                'additions': 17,
+                                'title': 'build: something',
+                                'state': 'MERGED',
+                                'labels': {
+                                    'edges': [
+                                        {'node': {'name': 'feature'}},
+                                        {'node': {'name': 'label'}},
+                                        {'node': {'name': 'Label'}},
+                                    ]
+                                },
+                                'commits': {
+                                    'edges': [
+                                        {
+                                            'node': {
+                                                'commit': {'author': {'user': {'login': 'michel'}}}
+                                            }
+                                        }
+                                    ]
+                                },
+                            },
+                            {
+                                'createdAt': '2020-11-18T14:18:20Z',
+                                'mergedAt': '2020-11-18T18:22:16Z',
+                                'deletions': 69,
+                                'additions': 98,
+                                'title': 'chore(something): somethin',
+                                'state': 'MERGED',
+                                'labels': {'edges': [{'node': {'name': 'tech'}}]},
+                                'commits': {
+                                    'edges': [
+                                        {'node': {'commit': {'author': {'user': {'login': 'boo'}}}}}
+                                    ]
+                                },
+                            },
+                        ],
+                        'pageInfo': {
+                            'hasNextPage': True,
+                            'endCursor': 'Y3Vyc29yOnYyOpK5MjAyMC0xMS0xOFQxNToxODoyMCswMTowMM4fL6u3',
+                        },
+                    },
+                }
+            }
+        }
+    }
+
+
+@pytest.fixture(scope='session')
+def extracted_prs_2():
+    return {
+        'data': {
+            'organization': {
+                'repository': {
+                    'name': 'repo3',
+                    'pullRequests': {
+                        'nodes': [
+                            {
+                                'createdAt': '2020-11-18T15:58:44Z',
+                                'mergedAt': None,
+                                'deletions': 45,
+                                'additions': 162,
+                                'title': 'feat(blalbla):blalba ',
+                                'state': 'OPEN',
+                                'labels': {
+                                    'edges': [
+                                        {'node': {'name': 'feature'}},
+                                        {'node': {'name': 'Label'}},
+                                        {'node': {'name': 'Other Label'}},
+                                    ]
+                                },
+                                'commits': {
+                                    'edges': [
+                                        {
+                                            'node': {
+                                                'commit': {
+                                                    'author': {'user': {'login': 'jeanlouis'}}
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                            },
+                        ],
+                        'pageInfo': {'hasNextPage': False, 'endCursor': '123'},
+                    },
+                }
+            }
+        }
+    }
+
+
+@pytest.fixture(scope='session')
+def extracted_prs_3():
+    return {
+        'data': {
+            'organization': {
+                'repository': {
+                    'name': 'repo4',
+                    'pullRequests': {
+                        'nodes': [
+                            {
+                                'createdAt': '2020-11-18T15:58:44Z',
+                                'mergedAt': None,
+                                'deletions': 45,
+                                'additions': 162,
+                                'title': 'feat(blalbla):blalba ',
+                                'state': 'OPEN',
+                                'labels': {
+                                    'edges': [
+                                        {'node': {'name': 'feature'}},
+                                        {'node': {'name': 'Label'}},
+                                        {'node': {'name': 'Other Label'}},
+                                    ]
+                                },
+                                'commits': {
+                                    'edges': [
+                                        {
+                                            'node': {
+                                                'commit': {
+                                                    'author': {'user': {'login': 'jeanlouis'}}
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                            },
+                        ],
+                        'pageInfo': {'hasNextPage': False, 'endCursor': '123'},
+                    },
+                }
+            }
+        }
     }

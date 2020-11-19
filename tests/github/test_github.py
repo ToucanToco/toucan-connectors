@@ -5,9 +5,9 @@ from toucan_connectors.common import HttpError
 from toucan_connectors.github.github_connector import (
     GithubConnector,
     GithubDataSource,
-    GithubError,
     NoCredentialsError,
 )
+from toucan_connectors.github.helpers import GithubError
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 
 import_path = 'toucan_connectors.github.github_connector'
@@ -41,21 +41,6 @@ def build_ds(dataset: str):
     return GithubDataSource(
         name='mah_ds', domain='mah_domain', dataset=dataset, organization='foorganization'
     )
-
-
-def test_build_team_dict(extracted_teams, gc):
-    """
-    Check that the build_team_rows function properly build
-    a list of pandas dataframe with a column of devs names
-    and a column of array of team names
-    """
-    formatted, page_info = gc.build_team_dict(extracted_teams)
-    assert formatted['foobar'] == 'faketeam'
-    assert len(formatted.keys()) == 3
-    assert page_info == {
-        'hasNextPage': True,
-        'endCursor': 'Y3Vyc29yO' 'nYyOpKvbG' 'VvY2FyZWwt' 'dG91Y2Fuzg' 'Q_Ovs=',
-    }
 
 
 def test_datasource():
@@ -98,157 +83,6 @@ def test_get_status_ok(mocker, gc):
     assert gc.get_status().status is True
 
 
-def test_extract_teams_data_one_page(extracted_teams_one_page, mocker, gc, client):
-    """
-    Check that the extract_teams_data correctly extract teams data from
-    Github's API and return them in a list of formatted pandas DataFrames
-    """
-    mocked_api_call = mocker.patch.object(
-        client, 'execute', return_value=extracted_teams_one_page, spec=True
-    )
-    team_rows = gc.extract_teams_data(client=client, organization='foorganization')
-    mocked_api_call.assert_called_once()
-    assert len(team_rows) == 3
-
-
-def test_extract_teams_data_two_members_page(
-    extracted_teams_first_member_page, extracted_teams_second_members_page, mocker, gc, client
-):
-    """
-    Check that the extract_teams_data correctly extract teams data from
-    Github's API and return them in a list of formatted pandas DataFrames
-    """
-    mocked_api_call = mocker.patch.object(
-        client,
-        'execute',
-        side_effect=[
-            extracted_teams_first_member_page,
-            extracted_teams_second_members_page,
-        ],
-        spec=True,
-    )
-    rows = gc.extract_teams_data(client=client, organization='foorganization')
-    assert mocked_api_call.call_count == 2
-    assert len(rows) == 6
-    assert rows[rows['Dev'] == 'foobuzz']['teams'].tolist()[0] == ['faketeam']
-
-
-def test_extract_teams_data_two_teams_page(
-    extracted_teams_first_team_page, extracted_teams_second_team_page, mocker, gc, client
-):
-    """
-    Check that extraction of the members is complete if there is another page
-    """
-    mocked_api_call = mocker.patch.object(
-        client,
-        'execute',
-        side_effect=[extracted_teams_first_team_page, extracted_teams_second_team_page],
-    )
-    teams = gc.extract_teams_data(client=client, organization='foorganization')
-    assert mocked_api_call.call_count == 2
-    assert len(teams) == 6
-    assert teams[teams['Dev'] == 'foobuzza']['teams'].tolist()[0] == ['faketeam']
-
-
-def test_build_pr_rows(gc, extracted_pr_list):
-    """
-    Check that the extracted pull requests data are properly formatted
-    """
-    pr_rows, repo_page_info, pr_page_info = gc.build_pr_rows(extracted_pr_list)
-    assert len(pr_rows) == 2
-    assert pr_rows[0]['Repo Name'] == 'tucblabla'
-    assert pr_rows[1]['PR Name'] == 'fix(something): Fix something'
-    assert 'barr' in pr_rows[0]['PR Type']
-    assert pr_rows[1]['Dev'] == 'jeandupont'
-    assert repo_page_info == {
-        'hasNextPage': False,
-        'endCursor': 'Y3Vyc29yOnYyOpK5' 'MjAyMC0xMS0wOVQxN' 'DowODo0MSswMTowMM4BZVra',
-    }
-    assert pr_page_info == {
-        'hasNextPage': False,
-        'endCursor': 'Y3Vyc29y' 'OnYyOpK5M' 'jAyMC0xMS0' 'wOVQxMjoxM' 'zoyMyswMTowMM4e2z5W',
-    }
-
-
-def test_extract_pr_data_one_page(gc, mocker, extracted_pr_list, client):
-    """
-    Check that pull requests data are properly extracted
-    """
-    mocked_api_call = mocker.patch.object(client, 'execute', return_value=extracted_pr_list)
-    pr_data = gc.extract_pr_data(client=client, organization='foorganization')
-    mocked_api_call.assert_called_once()
-    assert pr_data['Repo Name'][0] == 'tucblabla'
-    assert pr_data['PR Name'][1] == 'fix(something): Fix something'
-
-
-def test_extract_pr_data_two_repo_pages(
-    gc, mocker, extracted_pr_first_repo, extracted_pr_list, client
-):
-    """
-    Check that the pr data extraction properly handles pagination on repos
-    """
-    mocked_api_call = mocker.patch.object(
-        client, 'execute', side_effect=[extracted_pr_first_repo, extracted_pr_list]
-    )
-    pr_data = gc.extract_pr_data(client=client, organization='foorganization')
-    assert mocked_api_call.call_count == 2
-    assert pr_data['Repo Name'][0] == 'lablabla'
-    assert pr_data['Repo Name'][2] == 'tucblabla'
-    assert len(pr_data) == 4
-
-
-def test_extract_pr_data_two_pr_pages(
-    gc, mocker, extracted_pr_first_prs, extracted_pr_list, client
-):
-    """
-    Check that the pr data extraction properly
-     handles pagination on pull requests
-    """
-    mocked_api_call = mocker.patch.object(
-        client, 'execute', side_effect=[extracted_pr_first_prs, extracted_pr_list]
-    )
-    pr_data = gc.extract_pr_data(client=client, organization='foorganization')
-    assert mocked_api_call.call_count == 2
-    assert pr_data['PR Name'][0] == 'first pr'
-    assert pr_data['PR Additions'][2] == 3
-    assert len(pr_data) == 4
-
-
-def test_retrieve_pull_requests(gc, mocker, extracted_pr_first_repo, extracted_pr_list):
-    """
-    Check that the build_dataset properly builds the dataset for our
-    application
-    """
-    mocked_api_call = mocker.patch(
-        'python_graphql_client.GraphqlClient.execute',
-        side_effect=[extracted_pr_first_repo, extracted_pr_list],
-    )
-    ds = build_ds('pull requests')
-    dataset = gc._retrieve_data(ds)
-    assert mocked_api_call.call_count == 2
-    assert len(dataset) == 4
-    assert dataset.iloc[2]['PR Additions'] == 3
-
-
-def test_retrieve_teams(
-    gc, mocker, extracted_teams_first_team_page, extracted_teams_second_team_page
-):
-    """
-    Check that the build_dataset properly builds the dataset for our
-    application
-    """
-    mocked_api_call = mocker.patch(
-        'python_graphql_client.GraphqlClient.execute',
-        side_effect=[extracted_teams_first_team_page, extracted_teams_second_team_page],
-    )
-    ds = build_ds('teams')
-    dataset = gc._retrieve_data(ds)
-    assert mocked_api_call.call_count == 2
-    assert len(dataset) == 6
-    assert dataset.iloc[2]['Dev'] == 'barfoo'
-    assert dataset.iloc[4]['teams'] == ['faketeam']
-
-
 def test_error_pr_extraction(mocker, gc, error_response):
     ds = build_ds('pull requests')
 
@@ -258,12 +92,11 @@ def test_error_pr_extraction(mocker, gc, error_response):
         gc._retrieve_data(ds)
 
 
-def test_error_teams_extraction(mocker, gc, error_response):
-    ds = build_ds('teams')
+def test_error_get_names(mocker, gc, error_response, client):
     mocker.patch('python_graphql_client.GraphqlClient.execute', return_value=error_response)
 
     with pytest.raises(GithubError):
-        gc._retrieve_data(ds)
+        gc.get_names(client, 'foorganization', 'teams')
 
 
 def test_build_authorization_url(mocker, gc):
@@ -309,10 +142,211 @@ def test_get_oauth_doc(gc):
     assert len(form.documentation_md) > 0
 
 
-def test_build_pr_rows_no_pr(gc, extracted_pr_no_pr):
+def test_get_names(
+    mocker,
+    gc,
+    extracted_repositories_names,
+    extracted_repositories_names_2,
+    extracted_team_slugs,
+    extracted_team_slugs_2,
+    client,
+):
     """
-    Check that only the record contains only the repo name
-    as pull requests list is empty
+    Check that get_names is able to retrieve repositories & teams names from Github's API
     """
-    pr_rows, repo_page_info, pr_page_info = gc.build_pr_rows(extracted_pr_no_pr)
-    assert pr_rows[0]['Repo Name'] == 'empty_repo'
+    ds = build_ds('pull requests')
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute',
+        side_effect=[extracted_repositories_names, extracted_repositories_names_2],
+    )
+    names = gc.get_names(client=client, organization=ds.organization, dataset=ds.dataset)
+    assert mocked_api_call.call_count == 2
+    assert 'repo1' in names
+    assert 'repo3' in names
+    ds = build_ds('teams')
+
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute',
+        side_effect=[extracted_team_slugs, extracted_team_slugs_2],
+    )
+    slugs = gc.get_names(client=client, organization=ds.organization, dataset=ds.dataset)
+    assert mocked_api_call.call_count == 2
+    assert 'bar' in slugs
+    assert 'oof' in slugs
+
+
+def test_error_get_pages(mocker, gc, error_response, client, event_loop):
+    """
+    Check that errors in response from members extraction are
+    correctly catched
+    """
+    mocker.patch('python_graphql_client.GraphqlClient.execute_async', return_value=error_response)
+
+    with pytest.raises(GithubError):
+        event_loop.run_until_complete(
+            gc.get_pages(name='foo', organization='foorganization', dataset='teams', client=client)
+        )
+
+
+def test_fetch_members_data(
+    mocker,
+    gc,
+    extracted_team_slugs,
+    extracted_team_slugs_2,
+    extracted_team_page_1,
+    extracted_team_page_2,
+    client,
+    event_loop,
+):
+    """
+    Check that _retrieve_data function is able to retrieve members dataset
+    """
+    ds = build_ds('teams')
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute',
+        side_effect=[extracted_team_slugs, extracted_team_slugs_2],
+    )
+    mocked_api_call_async = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[
+            extracted_team_page_1,
+            extracted_team_page_2,
+            extracted_team_page_2,
+            extracted_team_page_2,
+            extracted_team_page_2,
+            extracted_team_page_2,
+            extracted_team_page_2,
+        ],
+    )
+    members_dataset = event_loop.run_until_complete(
+        gc._fetch_data(dataset=ds.dataset, organization=ds.organization, client=client)
+    )
+    assert mocked_api_call.call_count == 2
+    assert mocked_api_call_async.call_count == 7
+    assert len(members_dataset) == 5
+
+
+def test_fetch_pull_requests_data(
+    mocker,
+    gc,
+    extracted_repositories_names_2,
+    extracted_prs_1,
+    extracted_prs_2,
+    extracted_prs_3,
+    client,
+    event_loop,
+):
+    """
+    Check that _retrieve_data function is able to retrieve pull requests dataset
+    """
+    ds = build_ds('pull requests')
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute', return_value=extracted_repositories_names_2
+    )
+    mocked_api_call_async = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[extracted_prs_1, extracted_prs_2, extracted_prs_3],
+    )
+    pr_dataset = event_loop.run_until_complete(
+        gc._fetch_data(dataset=ds.dataset, organization=ds.organization, client=client)
+    )
+    assert mocked_api_call.call_count == 1
+    assert mocked_api_call_async.call_count == 3
+    assert len(pr_dataset) == 5
+
+
+def test_get_pages(
+    mocker,
+    gc,
+    extracted_prs_1,
+    extracted_prs_2,
+    extracted_team_page_1,
+    extracted_team_page_2,
+    client,
+    event_loop,
+):
+    """
+    Check that get_pages is able to retrieve pull requests or members data
+    from Github's API
+    """
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[extracted_prs_1, extracted_prs_2],
+    )
+    pr_rows = event_loop.run_until_complete(
+        gc.get_pages(
+            name='repo1', organization='foorganization', dataset='pull requests', client=client
+        )
+    )
+    assert mocked_api_call.call_count == 2
+    assert len(pr_rows) == 4
+    assert pr_rows[1]['Repo Name'] == 'repo1'
+
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[extracted_team_page_1, extracted_team_page_2],
+    )
+    members_rows = event_loop.run_until_complete(
+        gc.get_pages(name='foo', organization='foorganization', dataset='teams', client=client)
+    )
+    assert mocked_api_call.call_count == 2
+    assert len(members_rows) == 2
+
+
+def test_retrieve_members_data(
+    mocker,
+    gc,
+    extracted_team_slugs,
+    extracted_team_slugs_2,
+    extracted_team_page_1,
+    extracted_team_page_2,
+    client,
+):
+    """Check that _retrieve_data is able to retrieve data from Github's API"""
+    ds = build_ds('teams')
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute',
+        side_effect=[extracted_team_slugs, extracted_team_slugs_2],
+    )
+    mocked_api_call_async = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[
+            extracted_team_page_1,
+            extracted_team_page_2,
+            extracted_team_page_2,
+            extracted_team_page_2,
+            extracted_team_page_2,
+            extracted_team_page_2,
+            extracted_team_page_2,
+        ],
+    )
+    members_dataset = gc._retrieve_data(ds)
+    assert mocked_api_call.call_count == 2
+    assert mocked_api_call_async.call_count == 7
+    assert len(members_dataset) == 5
+
+
+def test_retrieve_pull_requests_data(
+    mocker,
+    gc,
+    extracted_repositories_names_2,
+    extracted_prs_1,
+    extracted_prs_2,
+    extracted_prs_3,
+    client,
+):
+    """
+    Check that _retrieve_data function is able to retrieve pull requests dataset
+    """
+    ds = build_ds('pull requests')
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute', return_value=extracted_repositories_names_2
+    )
+    mocked_api_call_async = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[extracted_prs_1, extracted_prs_2, extracted_prs_3],
+    )
+    pr_dataset = gc._retrieve_data(ds)
+    assert mocked_api_call.call_count == 1
+    assert mocked_api_call_async.call_count == 3
+    assert len(pr_dataset) == 5

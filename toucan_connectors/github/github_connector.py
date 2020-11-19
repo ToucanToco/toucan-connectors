@@ -1,14 +1,15 @@
+import asyncio
 import logging
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import List, Optional
 
 import pandas as pd
 from pydantic import Field
 from python_graphql_client import GraphqlClient
 
-from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.common import ConnectorStatus, get_loop
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
@@ -20,19 +21,21 @@ from toucan_connectors.toucan_connector import (
 )
 
 from .helpers import (
-    build_query_pr,
-    build_query_teams,
-    format_pr_row,
-    format_team_df,
-    format_team_row,
+    dataset_formatter,
+    extraction_funcs_names,
+    extraction_funcs_pages_1,
+    extraction_funcs_pages_2,
+    extraction_keys,
+    format_functions,
     get_cursor,
-    get_members,
+    get_data,
+    get_errors,
     get_nodes,
+    get_organization,
     get_page_info,
-    get_pull_requests,
-    get_repositories,
-    get_teams,
     has_next_page,
+    queries_funcs_names,
+    queries_funcs_pages,
 )
 
 AUTHORIZATION_URL: str = 'https://github.com/login/oauth/authorize'
@@ -40,12 +43,6 @@ SCOPE: str = 'user repo read:org read:discussion'
 TOKEN_URL: str = 'https://github.com/login/oauth/access_token'
 BASE_ROUTE: str = 'https://api.github.com/graphql'
 NO_CREDENTIALS_ERROR = 'No credentials'
-
-
-class GithubError(Exception):
-    """Raised when we receive an error message
-    from Github's API
-    """
 
 
 class NoCredentialsError(Exception):
@@ -105,174 +102,115 @@ class GithubConnector(ToucanConnector):
     def get_access_token(self):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
-    def extract_pr_data(
+    def get_names(
+        self, client: GraphqlClient, organization: str, dataset: str, names=None, variables=None
+    ) -> list:
+        """
+        Retrieve either repositories names or teams names
+        :param client an authenticated python_graphql_client
+        :param organization the organization from which team names will be extracted
+        :param names a list receiving the names extracted from API
+        :variables a dict receiving pagination info
+
+        return: a list of repositories or teams names
+        """
+        if names is None:
+            names = []
+        if variables is None:
+            variables = {}
+        q = queries_funcs_names[dataset](organization=organization)
+        data = client.execute(query=q, variables=variables)
+        logging.getLogger(__file__).info(f'Request sent to Github for {dataset} names')
+        get_errors(data)
+        extracted_data = extraction_funcs_names[dataset](get_organization(get_data(data)))
+        page_info = get_page_info(extracted_data)
+        names.extend([t[extraction_keys[dataset]] for t in get_nodes(extracted_data)])
+
+        if has_next_page(page_info):
+            variables['cursor'] = get_cursor(page_info)
+            self.get_names(client, organization, names=names, variables=variables, dataset=dataset)
+
+        return names
+
+    async def get_pages(
         self,
-        client,
+        name: str,
+        client: GraphqlClient,
         organization: str,
-        repo_rows=None,
+        dataset: str,
         variables=None,
-        pr_page_limit=9,
+        data_list=None,
+        page_limit=9,
         retrieved_pages=0,
-    ) -> pd.DataFrame:
+    ) -> List[dict]:
         """
-        Extract the data needed to build the PR dataframe
-        :param organization: str, the organization's name as defined in Github
-        :param repo_rows: defaulted at None, placeholder for a list of Pull Requests
-        :param variables: a dict containing the variables for pagination
-        :param pr_page_limit: max number of pull requests pages to retrieve
-        :param retrieved_pages: number of page retrieved, incremented at during each iteration
-        :return: a Pandas DataFrame built from the list of pull requests
+        extracted pages of either members or pull requests
+        :param name a str representing the repo name
+        :param client an authenticated python_graphql_client
+        :param organization a str representing the organization
+        :param: variables dict to store pagination information
+        :param: data_list list to store extracted pull requests data
+        :param: page_limit pages limit of the extraction
+        :param: retrieved_pages int number of pages retrieved
+        :return: list of extracted data
         """
-        query = build_query_pr(organization)
         if variables is None:
             variables = {}
-        if repo_rows is None:
-            repo_rows = []
+        if data_list is None:
+            data_list = []
+        q = queries_funcs_pages[dataset](organization=organization, name=name)
+        data = await client.execute_async(query=q, variables=variables)
+        logging.getLogger(__file__).info(f'Request sent to Github for {dataset} data')
+        get_errors(data)
 
-        data = client.execute(query=query, variables=variables)
-        logging.getLogger(__file__).info(
-            f'Request sent to Github ' f'for page {retrieved_pages} ' f'and for pull requests data'
+        extracted_data = extraction_funcs_pages_1[dataset](
+            extraction_funcs_pages_2[dataset](get_organization(get_data(data)))
         )
-        errors = data.get('errors')
+        page_info = get_page_info(extracted_data)
 
-        if errors:
-            logging.getLogger(__file__).error(f'A Github error occured:' f' {errors}')
-            raise GithubError(f'Aborting query due to {errors}')
-
-        pr_rows, repo_page_info, pr_page_info = self.build_pr_rows(data)
-        repo_rows.extend(pr_rows)
-
-        if has_next_page(pr_page_info) and retrieved_pages < pr_page_limit:
-            retrieved_pages += 1
-            variables['cursor_pr'] = get_cursor(pr_page_info)
-            self.extract_pr_data(
-                client=client,
-                organization=organization,
-                repo_rows=repo_rows,
-                variables=variables,
-                retrieved_pages=retrieved_pages,
-                pr_page_limit=pr_page_limit,
-            )
-
-        elif has_next_page(repo_page_info):
-            variables['cursor_pr'] = None
-            variables['cursor_repo'] = get_cursor(repo_page_info)
-            self.extract_pr_data(
-                client=client,
-                organization=organization,
-                repo_rows=repo_rows,
-                variables=variables,
-                pr_page_limit=pr_page_limit,
-            )
-
-        return pd.DataFrame(repo_rows)
-
-    def build_pr_rows(self, extracted_data: dict) -> Tuple[dict, dict, dict]:
-        """
-        Builds a list of rows containing all the PR Data
-
-        :param extracted_data: json response from Github's API
-        :return: a list of formatted pull requests rows
-        :return: a dict with pull requests pagination information
-        """
-        rows = []
-        repos = get_repositories(extracted_data)
-        repo_page_info = get_page_info(repos)
-        repo = get_nodes(repos)[0]
-        prs = get_pull_requests(repo)
-        pr_page_info = get_page_info(prs)
-        pr_list = get_nodes(prs)
-
-        if len(pr_list) > 0:
-            for PR in pr_list:
-                rows.append(format_pr_row(repo.get('name'), PR))
+        if dataset == 'pull requests':
+            data_list.extend(format_functions[dataset](extracted_data, name))
         else:
-            rows.append({'Repo Name': repo.get('name')})
+            data_list.append(format_functions[dataset](extracted_data, name))
 
-        return rows, repo_page_info, pr_page_info
+        if has_next_page(page_info) and retrieved_pages < page_limit:
+            retrieved_pages += 1
+            variables['cursor'] = get_cursor(page_info)
+            await self.get_pages(
+                name=name,
+                client=client,
+                organization=organization,
+                dataset=dataset,
+                variables=variables,
+                data_list=data_list,
+                retrieved_pages=retrieved_pages,
+            )
 
-    def extract_teams_data(
-        self,
-        client,
-        organization,
-        members_page_limit=10,
-        teams_rows=None,
-        retrieved_pages=0,
-        variables=None,
+        return data_list
+
+    async def _fetch_data(
+        self, dataset: GithubDataSet, organization: str, client: GraphqlClient
     ) -> pd.DataFrame:
         """
-        :param organization:  str, the organization's name as defined in Github
-        :param members_page_limit: max number of members pages to retrieve
-        :param teams_rows: defaulted at None, placeholder for a list of teams
-        :param retrieved_pages: number of page retrived, incremented at during each iteration
-        :param variables: a dict containing the variables for pagination
-        :return: a Pandas DataFrame built from the list of teams
+         Builds the coroutines ran by _retrieve_data
+        :param data_source:  GithubDataSource, the GithubDataSource to query
+        :return: a Pandas DataFrame of pull requests or team memberships
         """
-        if variables is None:
-            variables = {}
-        if teams_rows is None:
-            teams_rows = []
-
-        query = build_query_teams(organization)
-        data = client.execute(query=query, variables=variables)
-        logging.getLogger(__file__).info(
-            f'Request sent to Github ' f'for page {retrieved_pages} ' f'and for teams data'
-        )
-        errors = data.get('errors')
-
-        if errors:
-            logging.getLogger(__file__).error(f'A Github ' f'error occured: {errors}')
-            raise GithubError(f'Aborting query due to {errors}')
-
-        team_dict, members_page_info = self.build_team_dict(data)
-        teams_rows.append(team_dict)
-
-        if has_next_page(members_page_info) and retrieved_pages < members_page_limit:
-            retrieved_pages += 1
-            variables = {'cursor_members': get_cursor(members_page_info)}
-            self.extract_teams_data(
-                client=client,
-                organization=organization,
-                teams_rows=teams_rows,
-                retrieved_pages=retrieved_pages,
-                variables=variables,
-                members_page_limit=members_page_limit,
-            )
-
-        teams_page_info = get_page_info(get_teams(data))
-
-        if has_next_page(teams_page_info):
-            variables = {'cursor_teams': get_cursor(teams_page_info), 'cursor_member': None}
-            self.extract_teams_data(
-                client=client,
-                organization=organization,
-                teams_rows=teams_rows,
-                variables=variables,
-                members_page_limit=members_page_limit,
-            )
-        return format_team_df(teams_rows)
-
-    def build_team_dict(self, extracted_data: dict) -> Tuple[dict, dict]:
-        """
-
-        :param extracted_data: a dict with teams
-        data extracted from Github's API
-        :return: a dict with developers names as key and
-        an array of team names as values
-        """
-        team_node = get_nodes(get_teams(extracted_data))[0]
-        team_name = team_node.get('name')
-        members = get_members(team_node)
-
-        return format_team_row(members, team_name), get_page_info(members)
+        names = self.get_names(client=client, organization=organization, dataset=dataset)
+        subtasks = [
+            self.get_pages(name=name, client=client, dataset=dataset, organization=organization)
+            for name in names
+        ]
+        unformatted_data = await asyncio.gather(*subtasks)
+        return dataset_formatter[dataset]([e for sublist in unformatted_data for e in sublist])
 
     def _retrieve_data(self, data_source: GithubDataSource) -> pd.DataFrame:
         """
 
-        :param organization:  str, the organization's name as defined in Github
         :param data_source:  GithubDataSource, the GithubDataSource to query
-        :return: a Pandas DataFrame of merged, pull requests & teams
+        :return: a Pandas DataFrame of pull requests or team memberships
         """
+
         dataset = data_source.dataset
         organization = data_source.organization
         access_token = self.get_access_token()
@@ -282,11 +220,10 @@ class GithubConnector(ToucanConnector):
 
         headers = {'Authorization': f'token {access_token}'}
         client = GraphqlClient(BASE_ROUTE, headers)
-
-        if dataset == 'pull requests':
-            return self.extract_pr_data(client=client, organization=organization)
-        elif dataset == 'teams':
-            return self.extract_teams_data(client=client, organization=organization)
+        loop = get_loop()
+        return loop.run_until_complete(
+            self._fetch_data(dataset=dataset, organization=organization, client=client)
+        )
 
     def get_status(self) -> ConnectorStatus:
         """
