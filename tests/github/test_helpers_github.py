@@ -1,31 +1,56 @@
 import pytest
 
 from toucan_connectors.github.helpers import (
+    GithubError,
     KeyNotFoundException,
+    build_query_members,
     build_query_pr,
+    build_query_repositories,
     build_query_teams,
     format_pr_row,
+    format_pr_rows,
     format_team_df,
     format_team_row,
     get_cursor,
     get_data,
+    get_edges,
+    get_errors,
     get_members,
     get_nodes,
     get_organization,
     get_page_info,
     get_pull_requests,
     get_repositories,
+    get_repository,
     get_teams,
     has_next_page,
 )
+
+
+def test_build_query_members():
+    """
+    Check that the function build_query_members return a properly built query string
+    """
+    q = build_query_members('foorganization', 'footeam')
+    assert 'foorganization' in q
+    assert 'footeam' in q
+
+
+def test_build_query_repositories():
+    """
+    Check that the function build_query_repositories return a properly built query string
+    """
+    q = build_query_repositories('foorganization')
+    assert 'foorganization' in q
 
 
 def test_build_query_pr():
     """
     Check that the function build_query_pr return a properly built query string
     """
-    q = build_query_pr('foorganization')
+    q = build_query_pr('foorganization', 'foorepo')
     assert 'foorganization' in q
+    assert 'foorepo' in q
 
 
 def test_build_query_teams():
@@ -40,10 +65,8 @@ def test_format_pr_row(extracted_pr):
     """
     Check that the formatting of pull requests data extracted from Github are
     correctly formatted
-    :param extracted_pr: a pull request extracted from Github's API
     """
-    formatted = format_pr_row('test_repo', extracted_pr)
-    assert formatted['Repo Name'] == 'test_repo'
+    formatted = format_pr_row(extracted_pr)
     assert formatted['PR Name'] == 'fix(charts): blablabla'
     assert formatted['PR Creation Date'] == '2020-11-09T12:48:16Z'
     assert formatted['PR Merging Date'] == '2020-11-12T12:48:16Z'
@@ -57,9 +80,8 @@ def test_format_pr_row_no_dev(extracted_pr_no_login):
     """
     Check that the function doesn't get dev's name as it's missing
     from extraction
-    :param extracted_pr: a pull request extracted from Github's API
     """
-    formatted = format_pr_row('test_repo', extracted_pr_no_login)
+    formatted = format_pr_row(extracted_pr_no_login)
     assert formatted['Dev'] is None
 
 
@@ -67,10 +89,18 @@ def test_format_pr_row_no_commits(extracted_pr_no_commits):
     """
     Check that the function doesn't get dev's name as no commits are
     present in extraction
-    :param extracted_pr: a pull request extracted from Github's API
     """
-    formatted = format_pr_row('test_repo', extracted_pr_no_commits)
+    formatted = format_pr_row(extracted_pr_no_commits)
     assert formatted['Dev'] is None
+
+
+def test_format_pr_rows(extracted_pr_list):
+    """
+    Check that format_pr_rows is able to format a list of prs
+    """
+    formatted = format_pr_rows(extracted_pr_list, 'buzz')
+    assert len(formatted) == 3
+    assert formatted[2]['Repo Name'] == 'buzz'
 
 
 def test_format_team_row():
@@ -113,9 +143,9 @@ def test_get_organization():
     Check that get_organization is able to retrieve the
     organization content from a given dict
     """
-    assert get_organization({'data': {'organization': 'foorganization'}}) == 'foorganization'
+    assert get_organization({'organization': 'foorganization'}) == 'foorganization'
     with pytest.raises(KeyNotFoundException):
-        get_organization({'data': {'bla': 'bla'}})
+        get_organization({'bla': 'bla'})
 
 
 def test_get_repositories():
@@ -123,9 +153,18 @@ def test_get_repositories():
     Check that get_repositories is able to retrieve
     the repositories list from a given dict
     """
-    assert get_repositories({'data': {'organization': {'repositories': 'repos'}}}) == 'repos'
+    assert get_repositories({'repositories': 'repos'}) == 'repos'
     with pytest.raises(KeyNotFoundException):
-        get_repositories({'data': {'organization': {'bla': 'bla'}}})
+        get_repositories({'bla': 'bla'})
+
+
+def test_get_repository():
+    """
+    Check that get_repository is able to retrieve the repository from dict
+    """
+    assert get_repository({'repository': 'repo1'})
+    with pytest.raises(KeyNotFoundException):
+        get_repository({'repo': 'repo1'})
 
 
 def test_get_nodes():
@@ -140,9 +179,9 @@ def test_get_teams():
     """
     Check that get_nodes is able to retrieve teams from a given dict
     """
-    assert get_teams({'data': {'organization': {'teams': 'teams'}}}) == 'teams'
+    assert get_teams({'teams': 'teams'}) == 'teams'
     with pytest.raises(KeyNotFoundException):
-        get_teams({'data': {'organization': {'bla': 'bla'}}})
+        get_teams({'bla': 'bla'})
 
 
 def test_get_pull_requests():
@@ -194,3 +233,22 @@ def test_get_cursor():
     assert get_cursor({'endCursor': 'curs'}) == 'curs'
     with pytest.raises(KeyNotFoundException):
         get_cursor({'bl': 'a'})
+
+
+def test_get_edges():
+    """
+    Check that get_edges is able to retrieve a list of edges
+    extracted from Github's Data
+    """
+    assert get_edges({'edges': ['edges']}) == ['edges']
+    with pytest.raises(KeyNotFoundException):
+        get_edges({'adges': ['adges']})
+
+
+def test_get_errors():
+    """
+    Check that get_errors is able to retrieve an error message
+    from Github's API response
+    """
+    with pytest.raises(GithubError):
+        assert get_errors({'errors': 'this is an error message'}) == 'this is an error message'
