@@ -21,10 +21,11 @@ class KeyNotFoundException(Exception):
 
 def build_query_repositories(organization: str) -> str:
     """
-
+    Builds the GraphQL query to retrieve a list of repositories
+    from Github's API
     :param organization: the organization name from which the
     repositories data will be extracted
-    :return: graphql query with the organization name
+    :return: graphql query with the sanitized organization name
     """
     return nosql_apply_parameters_to_query(
         """query repositories($cursor: String) {
@@ -47,10 +48,12 @@ def build_query_repositories(organization: str) -> str:
 
 def build_query_pr(organization: str, name: str) -> str:
     """
-
+    Builds the GraphQL query to retrieve a list of pull requests
+    from Github's API
     :param organization: the organization name from which the
     pull requests data will be extracted
-    :return: graphql query with the organization name
+    :param name a str representing the repository to extract the PRs from
+    :return: graphql query with the sanitized organization name
     """
     return nosql_apply_parameters_to_query(
         """query pr($cursor: String) {
@@ -101,10 +104,11 @@ def build_query_pr(organization: str, name: str) -> str:
 
 def build_query_teams(organization: str) -> str:
     """
-
+    Builds the GraphQL query to retrieve a list of teams
+    from Github's API
     :param organization: the organization name from which the
     teams data will be extracted
-    :return: graphql query with the organization name
+    :return: graphql query with the sanitized organization name
     """
     return nosql_apply_parameters_to_query(
         """query teams($cursor: String) {
@@ -128,12 +132,13 @@ def build_query_teams(organization: str) -> str:
 
 def build_query_members(organization: str, name: str) -> str:
     """
-
+    Builds the GraphQL query to retrieve a list of team members
+    from Github's API
     :param organization: the organization name from which the
     members data will be extracted
-    :param team: the team name from which the
+    :param team the team name from which the
     members data will be extracted
-    :return: graphql query with rendered organization and team names
+    :return: graphql query with sanitized organization and team names
     """
     return nosql_apply_parameters_to_query(
         """
@@ -162,7 +167,8 @@ def build_query_members(organization: str, name: str) -> str:
 
 def format_pr_row(pr_row: dict):
     """
-    :param pr_row: a dictionary with pull requests data to be formatted
+    Extracts and formats data extracted from a pull request
+    :param pr_row: a dictionary with a pull request data to be formatted
     :return: a formatted dict with pull requests data
     """
 
@@ -189,7 +195,7 @@ def format_pr_row(pr_row: dict):
 
 def format_pr_rows(pr_nodes: dict, repo_name: str) -> List[dict]:
     """
-
+    A wrapper function to multiprocess the pull requests formatting
     :param pr_rows: pull requests extracted from Github's API
     :param repo_name: a str representing the repository's name
     :return: a formatted dict with pull requests data
@@ -203,7 +209,7 @@ def format_pr_rows(pr_nodes: dict, repo_name: str) -> List[dict]:
 
 def format_team_row(members: dict, team_name: str) -> dict:
     """
-
+    Extracts and formats data extracted from a team
     :param members: a dict representing a list of members
     :param team_name: a str representing the team name
     :return: a dict with login as key and teams as values
@@ -216,7 +222,7 @@ def format_team_row(members: dict, team_name: str) -> dict:
 
 def format_team_df(team_rows: List[dict]) -> pd.DataFrame:
     """
-
+    Builds a Pandas DataFrame from members rows.
     :param team_rows: a list of dict with login as key and list
      of teams as value
     :return: a formatted pandas DataFrame with login in dev column and
@@ -232,7 +238,7 @@ def format_team_df(team_rows: List[dict]) -> pd.DataFrame:
 
 def get_data(response: dict) -> dict:
     """
-
+    Extracts value from a dict with data key or raises an error if the key is not available
     :param response: a response from Github's API
     :return: the content of the Data field in response if exists
     """
@@ -245,6 +251,7 @@ def get_data(response: dict) -> dict:
 
 def get_organization(data: dict) -> dict:
     """
+    Extracts value from a dict with organization key or raises an error if the key is not available
     :param data: data extracted from Github's API
     :return: the content of the organization field in response if exists
     """
@@ -257,9 +264,12 @@ def get_organization(data: dict) -> dict:
 
 def get_repositories(organization: dict) -> dict:
     """
+    Extracts value from a dict with repositories key or raises
+    an error if the key is not available
     :param organization: an organization extracted from Github's API
     :return: the content of the repositories field in response if exists
     """
+
     repositories = organization.get('repositories')
     if repositories:
         return repositories
@@ -269,6 +279,7 @@ def get_repositories(organization: dict) -> dict:
 
 def get_repository(organization: dict) -> dict:
     """
+    Extracts value from a dict with organization key or raises an error if the key is not available
     :param organization: an organization extracted from Github's API
     :return: the content of the repository field in response if exists
     """
@@ -281,6 +292,7 @@ def get_repository(organization: dict) -> dict:
 
 def get_teams(organization: dict):
     """
+    Extracts value from a dict with teams key or raises an error if the key is not available
     :param organization: an organization extracted from Github's API
     :return: the content of the teams field in response if exists
     """
@@ -293,6 +305,7 @@ def get_teams(organization: dict):
 
 def get_nodes(response: dict) -> List[dict]:
     """
+    Extracts value from a dict with nodes key or raises an error if the key is not available
     :param response: a response from Github's API
     :return: the content of the Nodes field in response if exists
     """
@@ -302,6 +315,7 @@ def get_nodes(response: dict) -> List[dict]:
 
 def get_edges(data: dict) -> List[dict]:
     """
+    Extracts value from a dict with edges key or raises an error if the key is not available
     :param data: data extracted from Github's API
     :return: the content of the Edges field in response if exists
     """
@@ -314,6 +328,7 @@ def get_edges(data: dict) -> List[dict]:
 
 def get_pull_requests(repo: dict) -> dict:
     """
+    Extracts value from a dict with pullRequests key or raises an error if the key is not available
     :param repo: a repo extracted from Github's API
     :return: the content of the pull_requests field in response if exists
     """
@@ -327,6 +342,7 @@ def get_pull_requests(repo: dict) -> dict:
 
 def get_team(organization: dict) -> dict:
     """
+    Extracts value from a dict with team key or raises an error if the key is not available
     :param organization: organization data extracted from Github's API
     :return: the content of the team field in response if exists
     """
@@ -339,6 +355,7 @@ def get_team(organization: dict) -> dict:
 
 def get_members(team: dict) -> dict:
     """
+    Extracts value from a dict with members key or raises an error if the key is not available
     :param team: a team extracted from Github's API
     :return: the content of the members field in response if exists
     """
@@ -351,7 +368,7 @@ def get_members(team: dict) -> dict:
 
 def get_page_info(page: dict) -> dict:
     """
-
+    Extracts value from a dict with pageInfo key or raises an error if the key is not available
     :param page: a page extracted from Github's API
     :return: a dict with pagination data
     """
@@ -364,6 +381,8 @@ def get_page_info(page: dict) -> dict:
 
 def get_errors(data: dict):
     """
+    Extracts value from a dict with errors key, log the errors if they exist and raises
+    a GithubError
     :param dict: data extracted from Github's API
     """
     errors = data.get('errors')
@@ -375,7 +394,7 @@ def get_errors(data: dict):
 
 def has_next_page(page_info: dict) -> bool:
     """
-
+    Extracts value from a dict with hasNextPage key, raises an error if the key is not available
     :param page_info: pagination info
     :return: a bool indicating if response hase a next page
     """
@@ -389,7 +408,7 @@ def has_next_page(page_info: dict) -> bool:
 
 def get_cursor(page_info: dict) -> str:
     """
-
+    Extracts value from a dict with endCursor key and or raises an error if the key is not available
     :param page_info: pagination info
     :return: the endcursor of current page as str
     """
@@ -403,7 +422,8 @@ def get_cursor(page_info: dict) -> str:
 
 def get_message(response: dict):
     """
-
+    Extracts value from a dict with message key, log an error if the there is a message
+    and raises a GithubError
     :param response: response from Github's API
     :return: extracted message
     """

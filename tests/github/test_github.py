@@ -1,4 +1,5 @@
 import pytest
+import responses
 from python_graphql_client import GraphqlClient
 
 from toucan_connectors.common import HttpError
@@ -44,21 +45,22 @@ def build_ds(dataset: str):
 
 
 def test_datasource():
-    """Tests that default dataset on datasource is 'teams'"""
+    """Tests that default dataset on datasource is teams'"""
     ds = GithubDataSource(name='mah_ds', domain='test_domain', organization='foorganization')
     assert ds.dataset == 'teams'
 
 
 def test_get_status_no_secrets(gc, remove_secrets):
     """
-    It should fail if no secrets are provided
+    Check that the connection status is false when no secret is defined
     """
     assert gc.get_status().status is False
 
 
 def test_get_status_secrets_error(mocker, gc):
     """
-    It should fail if secrets can't be retrieved
+    Check that the connector status is false if the
+    secret manager is not able to retrieve the access token
     """
     mocker.patch(f'{import_path}.OAuth2Connector.get_access_token', side_effect=Exception)
     assert gc.get_status().status is False
@@ -66,7 +68,7 @@ def test_get_status_secrets_error(mocker, gc):
 
 def test_get_status_api_down(mocker, gc):
     """
-    It should fail if the third-party api is down.
+    Check that the connection status is false when the secret manager receives an httperror
     """
     mocker.patch.object(GithubConnector, 'get_access_token', side_effect=HttpError)
     assert gc.get_status().status is False
@@ -329,7 +331,6 @@ def test_retrieve_members_data(
     extracted_team_slugs_2,
     extracted_team_page_1,
     extracted_team_page_2,
-    client,
 ):
     """Check that _retrieve_data is able to retrieve data from Github's API"""
     ds = build_ds('teams')
@@ -362,7 +363,6 @@ def test_retrieve_pull_requests_data(
     extracted_prs_1,
     extracted_prs_2,
     extracted_prs_3,
-    client,
 ):
     """
     Check that _retrieve_data function is able to retrieve pull requests dataset
@@ -379,3 +379,30 @@ def test_retrieve_pull_requests_data(
     assert mocked_api_call.call_count == 1
     assert mocked_api_call_async.call_count == 3
     assert len(pr_dataset) == 5
+
+
+@responses.activate
+def test_retrieve_data_organization_not_defined(
+    mocker, gc, extracted_team_slugs_2, extracted_team_page_2
+):
+    """
+    check that organization is retrieved with a request if
+    not defined in datasource
+    """
+    ds = GithubDataSource(name='mah_ds', domain='mah_domain', dataset='teams')
+    responses.add(
+        responses.GET,
+        'https://api.github.com/user/orgs',
+        json=[{'login': 'power_rangers'}],
+        status=200,
+    )
+
+    mocker.patch(
+        'python_graphql_client.GraphqlClient.execute',
+        side_effect=[extracted_team_slugs_2],
+    )
+    mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async', return_value=extracted_team_page_2
+    )
+    gc._retrieve_data(ds)
+    assert len(responses.calls) == 1

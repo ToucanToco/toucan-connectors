@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import pandas as pd
+import requests
 from pydantic import Field
 from python_graphql_client import GraphqlClient
 
@@ -45,6 +46,7 @@ AUTHORIZATION_URL: str = 'https://github.com/login/oauth/authorize'
 SCOPE: str = 'user repo read:org read:discussion'
 TOKEN_URL: str = 'https://github.com/login/oauth/access_token'
 BASE_ROUTE: str = 'https://api.github.com/graphql'
+BASE_ROUTE_REST: str = 'https://api.github.com/'
 NO_CREDENTIALS_ERROR = 'No credentials'
 
 
@@ -59,7 +61,7 @@ class GithubDataSet(str, Enum):
 
 class GithubDataSource(ToucanDataSource):
     dataset: GithubDataSet = GithubDataSet('teams')
-    organization: str = Field(..., description='The organization to extract the data from')
+    organization: str = Field(None, description='The organization to extract the data from')
 
 
 class GithubConnector(ToucanConnector):
@@ -112,6 +114,7 @@ class GithubConnector(ToucanConnector):
         Retrieve either repositories names or teams names
         :param client an authenticated python_graphql_client
         :param organization the organization from which team names will be extracted
+        :param dataset a GithubDataset the function will retrieve
         :param names a list receiving the names extracted from API
         :variables a dict receiving pagination info
 
@@ -156,10 +159,11 @@ class GithubConnector(ToucanConnector):
         retry_limit=2,
     ) -> List[dict]:
         """
-        extracted pages of either members or pull requests
+        Extracts pages of either members or pull requests
         :param name a str representing the repo name
         :param client an authenticated python_graphql_client
         :param organization a str representing the organization
+        :param dataset a GithubDataset the connector will have to retrieve
         :param: variables dict to store pagination information
         :param: data_list list to store extracted pull requests data
         :param: page_limit pages limit of the extraction
@@ -229,7 +233,10 @@ class GithubConnector(ToucanConnector):
     ) -> pd.DataFrame:
         """
          Builds the coroutines ran by _retrieve_data
-        :param data_source:  GithubDataSource, the GithubDataSource to query
+        :param data_source  GithubDataSource, the GithubDataSource to query
+        :param organization a str representing the organization from
+        which the data will be extracted
+        :param client a GraphqlClient that will make the requests to Github's API
         :return: a Pandas DataFrame of pull requests or team memberships
         """
         logging.getLogger(__file__).info(f'Starting fetch for {dataset}')
@@ -249,13 +256,20 @@ class GithubConnector(ToucanConnector):
         """
 
         dataset = data_source.dataset
-        organization = data_source.organization
         access_token = self.get_access_token()
+        organization = data_source.organization
 
         if not access_token:
             raise NoCredentialsError(NO_CREDENTIALS_ERROR)
 
         headers = {'Authorization': f'token {access_token}'}
+
+        if not organization:
+            logging.getLogger(__file__).info('Organization not defined, querying it from API')
+            organization = (
+                requests.get(f'{BASE_ROUTE_REST}user/orgs', headers=headers).json()[0].get('login')
+            )
+
         client = GraphqlClient(BASE_ROUTE, headers)
         loop = get_loop()
         return loop.run_until_complete(
@@ -265,6 +279,7 @@ class GithubConnector(ToucanConnector):
     def get_status(self) -> ConnectorStatus:
         """
         Test the Github's connexion.
+        :return: a ConnectorStatus with the current status
         """
         try:
             access_token = self.get_access_token()
