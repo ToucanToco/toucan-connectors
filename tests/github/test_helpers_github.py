@@ -99,7 +99,6 @@ def test_format_pr_rows(extracted_pr_list):
 def test_format_team_row():
     """
     Check that a team retrieved from Github's API is correctly formatted
-    :param extracted_team: a team extracted from Github's API
     """
     formatted = format_team_row(
         {'edges': [{'node': {'login': 'bla'}}, {'node': {'login': 'ba'}}]}, 'faketeam'
@@ -111,8 +110,7 @@ def test_format_team_row():
 def test_format_team_df(team_rows):
     """
     Check that the list of team retrieved from Github's
-     API is correctly built as a DataFrame
-    :param extracted_teams: a list of teams extracted from Github's API
+    API is correctly built as a DataFrame
     """
     formatted = format_team_df(team_rows)
     assert len(formatted) == 5
@@ -170,7 +168,7 @@ def test_get_nodes():
 
 def test_get_team():
     """
-    Check that get_teams is able to retrieve team from a given dict
+    Check that get_team is able to retrieve team from a given dict
     """
     assert get_team({'team': 'team'}) == 'team'
     with pytest.raises(KeyNotFoundException):
@@ -199,7 +197,7 @@ def test_get_pull_requests():
 
 def test_get_page_info():
     """
-    Check that get_page_infois able to retrieve pagination data
+    Check that get_page_info able to retrieve pagination data
     """
     assert get_page_info({'pageInfo': {'foo': 'bar'}}) == {'foo': 'bar'}
     with pytest.raises(KeyNotFoundException):
@@ -218,8 +216,7 @@ def test_get_members():
 
 def test_has_next_page():
     """
-    Check that get_page_info is able to tell if current page has a next one
-    depending on the kind of paginated data
+    Check that has_next_page is able to retrieve hasNextPage from page_info
     """
     assert has_next_page({'hasNextPage': True})
     assert not (has_next_page({'hasNextPage': False}))
@@ -230,7 +227,6 @@ def test_has_next_page():
 def test_get_cursor():
     """
     Check that get_cursor is able to retrieve pagination cursor
-    depending on the kind of paginated data
     """
     assert get_cursor({'endCursor': 'curs'}) == 'curs'
     with pytest.raises(KeyNotFoundException):
