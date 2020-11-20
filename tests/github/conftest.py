@@ -119,7 +119,7 @@ def extracted_pr_list():
 
 
 @pytest.fixture(scope='session')
-def extracted_pr_no_login():
+def extracted_pr_no_commits_2():
     return {
         'createdAt': '2020-11-09T12:48:16Z',
         'mergedAt': '2020-11-12T12:48:16Z',
@@ -128,18 +128,6 @@ def extracted_pr_no_login():
         'title': 'fix(charts): blablabla',
         'labels': {'edges': [{'node': {'name': 'foo'}}]},
         'commits': {'edges': [{'node': {'commit': {'author': {'user': None}}}}]},
-    }
-
-
-@pytest.fixture(scope='session')
-def extracted_pr_no_commits():
-    return {
-        'createdAt': '2020-11-09T12:48:16Z',
-        'mergedAt': '2020-11-12T12:48:16Z',
-        'deletions': 3,
-        'additions': 3,
-        'title': 'fix(charts): blablabla',
-        'labels': {'edges': [{'node': {'name': 'foo'}}]},
     }
 
 
@@ -159,6 +147,25 @@ def extracted_pr():
             ]
         },
         'commits': {'edges': [{'node': {'commit': {'author': {'user': {'login': 'okidoki'}}}}}]},
+    }
+
+
+@pytest.fixture(scope='session')
+def extracted_pr_no_commits():
+    return {
+        'createdAt': '2020-11-09T12:48:16Z',
+        'mergedAt': '2020-11-12T12:48:16Z',
+        'deletions': 3,
+        'additions': 3,
+        'title': 'fix(charts): blablabla',
+        'labels': {
+            'edges': [
+                {'node': {'name': 'foo'}},
+                {'node': {'name': 'fix'}},
+                {'node': {'name': 'need review'}},
+            ]
+        },
+        'commits': {'edges': None},
     }
 
 

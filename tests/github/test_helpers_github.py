@@ -16,12 +16,14 @@ from toucan_connectors.github.helpers import (
     get_edges,
     get_errors,
     get_members,
+    get_message,
     get_nodes,
     get_organization,
     get_page_info,
     get_pull_requests,
     get_repositories,
     get_repository,
+    get_team,
     get_teams,
     has_next_page,
 )
@@ -74,15 +76,6 @@ def test_format_pr_row(extracted_pr):
     assert formatted['PR Deletions'] == 3
     assert formatted['PR Type'] == ['foo', 'fix', 'need review']
     assert formatted['Dev'] == 'okidoki'
-
-
-def test_format_pr_row_no_dev(extracted_pr_no_login):
-    """
-    Check that the function doesn't get dev's name as it's missing
-    from extraction
-    """
-    formatted = format_pr_row(extracted_pr_no_login)
-    assert formatted['Dev'] is None
 
 
 def test_format_pr_row_no_commits(extracted_pr_no_commits):
@@ -175,9 +168,18 @@ def test_get_nodes():
     assert get_nodes({'nodes': ['node']}) == ['node']
 
 
+def test_get_team():
+    """
+    Check that get_teams is able to retrieve team from a given dict
+    """
+    assert get_team({'team': 'team'}) == 'team'
+    with pytest.raises(KeyNotFoundException):
+        get_team({'bla': 'bla'})
+
+
 def test_get_teams():
     """
-    Check that get_nodes is able to retrieve teams from a given dict
+    Check that get_teams is able to retrieve teams from a given dict
     """
     assert get_teams({'teams': 'teams'}) == 'teams'
     with pytest.raises(KeyNotFoundException):
@@ -251,4 +253,16 @@ def test_get_errors():
     from Github's API response
     """
     with pytest.raises(GithubError):
-        assert get_errors({'errors': 'this is an error message'}) == 'this is an error message'
+        assert (
+            get_errors({'errors': ['this is an error message', 'and another error']})
+            == 'this is an error message'
+        )
+
+
+def test_get_message():
+    """
+    Check that get_message is able to extra a message from Github's
+    API response
+    """
+    with pytest.raises(GithubError):
+        assert get_message({'documentation_url': 'bla', 'message': 'bla'}) == 'bla'

@@ -21,6 +21,8 @@ from toucan_connectors.toucan_connector import (
 )
 
 from .helpers import (
+    GithubError,
+    KeyNotFoundException,
     dataset_formatter,
     extraction_funcs_names,
     extraction_funcs_pages_1,
@@ -30,6 +32,7 @@ from .helpers import (
     get_cursor,
     get_data,
     get_errors,
+    get_message,
     get_nodes,
     get_organization,
     get_page_info,
@@ -55,7 +58,7 @@ class GithubDataSet(str, Enum):
 
 
 class GithubDataSource(ToucanDataSource):
-    dataset: GithubDataSet = GithubDataSet('pull requests')
+    dataset: GithubDataSet = GithubDataSet('teams')
     organization: str = Field(..., description='The organization to extract the data from')
 
 
@@ -120,15 +123,22 @@ class GithubConnector(ToucanConnector):
             variables = {}
         q = queries_funcs_names[dataset](organization=organization)
         data = client.execute(query=q, variables=variables)
-        logging.getLogger(__file__).info(f'Request sent to Github for {dataset} names')
-        get_errors(data)
-        extracted_data = extraction_funcs_names[dataset](get_organization(get_data(data)))
-        page_info = get_page_info(extracted_data)
-        names.extend([t[extraction_keys[dataset]] for t in get_nodes(extracted_data)])
 
-        if has_next_page(page_info):
-            variables['cursor'] = get_cursor(page_info)
-            self.get_names(client, organization, names=names, variables=variables, dataset=dataset)
+        try:
+            get_errors(data)
+            get_message(data)
+
+            extracted_data = extraction_funcs_names[dataset](get_organization(get_data(data)))
+            page_info = get_page_info(extracted_data)
+            names.extend([t[extraction_keys[dataset]] for t in get_nodes(extracted_data)])
+
+            if has_next_page(page_info):
+                variables['cursor'] = get_cursor(page_info)
+                self.get_names(
+                    client, organization, names=names, variables=variables, dataset=dataset
+                )
+        except (GithubError, KeyNotFoundException) as g:
+            logging.getLogger(__file__).error(f'Aborting query due to {g}')
 
         return names
 
@@ -140,8 +150,10 @@ class GithubConnector(ToucanConnector):
         dataset: str,
         variables=None,
         data_list=None,
-        page_limit=9,
+        page_limit=50,
         retrieved_pages=0,
+        retries=0,
+        retry_limit=2,
     ) -> List[dict]:
         """
         extracted pages of either members or pull requests
@@ -152,6 +164,8 @@ class GithubConnector(ToucanConnector):
         :param: data_list list to store extracted pull requests data
         :param: page_limit pages limit of the extraction
         :param: retrieved_pages int number of pages retrieved
+        :param: retries the number of retries done when we got an error
+        :param: retry_limit the max number of retries the connector can do
         :return: list of extracted data
         """
         if variables is None:
@@ -160,31 +174,53 @@ class GithubConnector(ToucanConnector):
             data_list = []
         q = queries_funcs_pages[dataset](organization=organization, name=name)
         data = await client.execute_async(query=q, variables=variables)
-        logging.getLogger(__file__).info(f'Request sent to Github for {dataset} data')
-        get_errors(data)
 
-        extracted_data = extraction_funcs_pages_1[dataset](
-            extraction_funcs_pages_2[dataset](get_organization(get_data(data)))
-        )
-        page_info = get_page_info(extracted_data)
-
-        if dataset == 'pull requests':
-            data_list.extend(format_functions[dataset](extracted_data, name))
-        else:
-            data_list.append(format_functions[dataset](extracted_data, name))
-
-        if has_next_page(page_info) and retrieved_pages < page_limit:
-            retrieved_pages += 1
-            variables['cursor'] = get_cursor(page_info)
-            await self.get_pages(
-                name=name,
-                client=client,
-                organization=organization,
-                dataset=dataset,
-                variables=variables,
-                data_list=data_list,
-                retrieved_pages=retrieved_pages,
+        try:
+            get_message(data)
+            get_errors(data)
+            extracted_data = extraction_funcs_pages_1[dataset](
+                extraction_funcs_pages_2[dataset](get_organization(get_data(data)))
             )
+            page_info = get_page_info(extracted_data)
+
+            if dataset == 'pull requests':
+                data_list.extend(format_functions[dataset](extracted_data, name))
+            else:
+                data_list.append(format_functions[dataset](extracted_data, name))
+
+            if has_next_page(page_info) and retrieved_pages < page_limit:
+                retrieved_pages += 1
+                variables['cursor'] = get_cursor(page_info)
+                await self.get_pages(
+                    name=name,
+                    client=client,
+                    organization=organization,
+                    dataset=dataset,
+                    variables=variables,
+                    data_list=data_list,
+                    retrieved_pages=retrieved_pages,
+                )
+
+        except GithubError:
+            logging.getLogger(__file__).info('Retrying in 15 seconds')
+            await asyncio.sleep(15)
+            retries += 1
+            if retries <= retry_limit:
+                await self.get_pages(
+                    name=name,
+                    client=client,
+                    organization=organization,
+                    dataset=dataset,
+                    variables=variables,
+                    data_list=data_list,
+                    retrieved_pages=retrieved_pages,
+                    retries=retries,
+                )
+            else:
+                raise GithubError('Max number of retries reached, aborting connection')
+
+        except KeyNotFoundException as k:
+            logging.getLogger(__file__).error(f'{k}')
 
         return data_list
 
@@ -196,6 +232,7 @@ class GithubConnector(ToucanConnector):
         :param data_source:  GithubDataSource, the GithubDataSource to query
         :return: a Pandas DataFrame of pull requests or team memberships
         """
+        logging.getLogger(__file__).info(f'Starting fetch for {dataset}')
         names = self.get_names(client=client, organization=organization, dataset=dataset)
         subtasks = [
             self.get_pages(name=name, client=client, dataset=dataset, organization=organization)

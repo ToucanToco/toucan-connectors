@@ -44,9 +44,9 @@ def build_ds(dataset: str):
 
 
 def test_datasource():
-    """Tests that default dataset on datasource is 'pull requests'"""
+    """Tests that default dataset on datasource is 'teams'"""
     ds = GithubDataSource(name='mah_ds', domain='test_domain', organization='foorganization')
-    assert ds.dataset == 'pull requests'
+    assert ds.dataset == 'teams'
 
 
 def test_get_status_no_secrets(gc, remove_secrets):
@@ -83,20 +83,31 @@ def test_get_status_ok(mocker, gc):
     assert gc.get_status().status is True
 
 
-def test_error_pr_extraction(mocker, gc, error_response):
+def test_error_pr_extraction(
+    mocker, gc, error_response, extracted_repositories_names, extracted_prs_2
+):
+    """
+    Check that previously retrieved data is returned if a page is corrupt
+    """
     ds = build_ds('pull requests')
+    mocker.patch(
+        'python_graphql_client.GraphqlClient.execute',
+        side_effect=[extracted_repositories_names, error_response],
+    )
+    mocker.patch('python_graphql_client.GraphqlClient.execute_async', return_value=extracted_prs_2)
+    assert len(gc._retrieve_data(ds)) > 0
 
-    mocker.patch('python_graphql_client.GraphqlClient.execute', return_value=error_response)
 
-    with pytest.raises(GithubError):
-        gc._retrieve_data(ds)
-
-
-def test_error_get_names(mocker, gc, error_response, client):
-    mocker.patch('python_graphql_client.GraphqlClient.execute', return_value=error_response)
-
-    with pytest.raises(GithubError):
-        gc.get_names(client, 'foorganization', 'teams')
+def test_error_get_names(mocker, gc, extracted_team_slugs, client, error_response):
+    """
+    Check that previously retrieved data is returned if a page is corrupt
+    """
+    mocker.patch(
+        'python_graphql_client.GraphqlClient.execute',
+        side_effect=[extracted_team_slugs, error_response],
+    )
+    result = gc.get_names(client, 'foorganization', 'teams')
+    assert len(result) > 0
 
 
 def test_build_authorization_url(mocker, gc):
@@ -180,12 +191,30 @@ def test_error_get_pages(mocker, gc, error_response, client, event_loop):
     Check that errors in response from members extraction are
     correctly catched
     """
-    mocker.patch('python_graphql_client.GraphqlClient.execute_async', return_value=error_response)
+    mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[error_response, error_response, error_response],
+    )
+    mocker.patch('toucan_connectors.github.github_connector.asyncio.sleep', return_value=None)
 
     with pytest.raises(GithubError):
         event_loop.run_until_complete(
             gc.get_pages(name='foo', organization='foorganization', dataset='teams', client=client)
         )
+
+
+def test_corrupt_get_pages(mocker, gc, client, event_loop, extracted_team_page_1):
+    """
+    Check that previously retrieved data is returned if a page is corrupt
+    """
+    mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[extracted_team_page_1, {'corrupt': 'data'}],
+    )
+    result = event_loop.run_until_complete(
+        gc.get_pages(name='foo', organization='foorganization', dataset='teams', client=client)
+    )
+    assert result == [{'bar': 'foo', 'foo': 'foo', 'ofo': 'foo'}]
 
 
 def test_fetch_members_data(
