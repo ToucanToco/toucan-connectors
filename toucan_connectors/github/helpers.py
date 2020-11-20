@@ -58,7 +58,7 @@ def build_query_pr(organization: str, name: str) -> str:
             repository(name: "%(repo_name)s") {
                 name
                 pullRequests(orderBy: {field: CREATED_AT, direction: DESC},
-                 first: 90, after: $cursor) {
+                 first: 100, after: $cursor) {
                   nodes {
                     createdAt
                     mergedAt
@@ -175,22 +175,15 @@ def format_pr_row(pr_row: dict):
     current_record['PR Type'] = [
         label.get('node').get('name') for label in pr_row.get('labels').get('edges')
     ]
-    if pr_row.get('commits'):
-        if len(pr_row.get('commits')) > 0:
-            user = (
-                pr_row.get('commits')
-                .get('edges')[0]
-                .get('node')
-                .get('commit')
-                .get('author')
-                .get('user')
-            )
-        if user:
-            current_record['Dev'] = user.get('login')
-        else:
-            current_record['Dev'] = None
-    else:
+    try:
+        edges = get_edges(pr_row.get('commits'))
+        current_record['Dev'] = (
+            edges[0].get('node').get('commit').get('author').get('user').get('login')
+        )
+
+    except KeyNotFoundException:
         current_record['Dev'] = None
+
     return current_record
 
 
@@ -375,8 +368,9 @@ def get_errors(data: dict):
     """
     errors = data.get('errors')
     if errors:
-        logging.getLogger(__file__).error(f'A Github error occured:' f' {errors}')
-        raise GithubError(f'Aborting query due to {errors}')
+        for error in errors:
+            logging.getLogger(__file__).error(f'A Github error occured:' f' {error}')
+        raise GithubError(f'Retrying query due to {errors}')
 
 
 def has_next_page(page_info: dict) -> bool:
@@ -405,6 +399,19 @@ def get_cursor(page_info: dict) -> str:
         return cursor
     else:
         raise KeyNotFoundException('endCursor key not available')
+
+
+def get_message(response: dict):
+    """
+
+    :param response: response from Github's API
+    :return: extracted message
+    """
+    message = response.get('message')
+
+    if message:
+        logging.getLogger(__file__).error(f'A Github error occured:' f' {message}')
+        raise GithubError(f'API sent {message}')
 
 
 extraction_funcs_names = {'pull requests': get_repositories, 'teams': get_teams}
