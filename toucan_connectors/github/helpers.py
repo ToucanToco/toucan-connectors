@@ -1,5 +1,4 @@
 import logging
-from multiprocessing import Pool
 from typing import List
 
 import pandas as pd
@@ -178,16 +177,15 @@ def format_pr_row(pr_row: dict):
     current_record['PR Merging Date'] = pr_row.get('mergedAt')
     current_record['PR Additions'] = pr_row.get('additions')
     current_record['PR Deletions'] = pr_row.get('deletions')
-    current_record['PR Type'] = [
-        label.get('node').get('name') for label in pr_row.get('labels').get('edges')
-    ]
     try:
-        edges = get_edges(pr_row.get('commits'))
-        current_record['Dev'] = (
-            edges[0].get('node').get('commit').get('author').get('user').get('login')
-        )
 
-    except KeyNotFoundException:
+        current_record['PR Type'] = [
+            label['node'].get('name') for label in pr_row['labels'].get('edges')
+        ]
+        edges = get_edges(pr_row.get('commits'))
+        current_record['Dev'] = edges[0]['node']['commit']['author']['user']['login']
+
+    except (AttributeError, TypeError, KeyNotFoundException):
         current_record['Dev'] = None
 
     return current_record
@@ -202,8 +200,7 @@ def format_pr_rows(pr_nodes: dict, repo_name: str) -> List[dict]:
     """
 
     pull_requests = get_nodes(pr_nodes)
-    with Pool() as p:
-        formatted = p.map(format_pr_row, pull_requests)
+    formatted = [format_pr_row(pr) for pr in pull_requests]
     return [dict(r, **{'Repo Name': repo_name}) for r in formatted]
 
 
@@ -388,7 +385,7 @@ def get_errors(data: dict):
     errors = data.get('errors')
     if errors:
         for error in errors:
-            logging.getLogger(__file__).error(f'A Github error occured:' f' {error}')
+            logging.getLogger(__name__).error(f'A Github error occured:' f' {error}')
         raise GithubError(f'Retrying query due to {errors}')
 
 
@@ -430,7 +427,7 @@ def get_message(response: dict):
     message = response.get('message')
 
     if message:
-        logging.getLogger(__file__).error(f'A Github error occured:' f' {message}')
+        logging.getLogger(__name__).error(f'A Github error occured:' f' {message}')
         raise GithubError(f'API sent {message}')
 
 

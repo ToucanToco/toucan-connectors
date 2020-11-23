@@ -141,7 +141,7 @@ class GithubConnector(ToucanConnector):
                     client, organization, names=names, variables=variables, dataset=dataset
                 )
         except (GithubError, KeyNotFoundException) as g:
-            logging.getLogger(__file__).error(f'Aborting query due to {g}')
+            logging.getLogger(__name__).error(f'Aborting query due to {g}')
 
         return names
 
@@ -153,7 +153,7 @@ class GithubConnector(ToucanConnector):
         dataset: str,
         variables=None,
         data_list=None,
-        page_limit=50,
+        page_limit=30,
         retrieved_pages=0,
         retries=0,
         retry_limit=2,
@@ -206,8 +206,8 @@ class GithubConnector(ToucanConnector):
                 )
 
         except GithubError:
-            logging.getLogger(__file__).info('Retrying in 15 seconds')
-            await asyncio.sleep(15)
+            logging.getLogger(__name__).info('Retrying in 30 seconds')
+            await asyncio.sleep(30)
             retries += 1
             if retries <= retry_limit:
                 await self.get_pages(
@@ -224,7 +224,7 @@ class GithubConnector(ToucanConnector):
                 raise GithubError('Max number of retries reached, aborting connection')
 
         except KeyNotFoundException as k:
-            logging.getLogger(__file__).error(f'{k}')
+            logging.getLogger(__name__).error(f'{k}')
 
         return data_list
 
@@ -239,7 +239,7 @@ class GithubConnector(ToucanConnector):
         :param client a GraphqlClient that will make the requests to Github's API
         :return: a Pandas DataFrame of pull requests or team memberships
         """
-        logging.getLogger(__file__).info(f'Starting fetch for {dataset}')
+        logging.getLogger(__name__).info(f'Starting fetch for {dataset}')
         names = self.get_names(client=client, organization=organization, dataset=dataset)
         subtasks = [
             self.get_pages(name=name, client=client, dataset=dataset, organization=organization)
@@ -265,7 +265,7 @@ class GithubConnector(ToucanConnector):
         headers = {'Authorization': f'token {access_token}'}
 
         if not organization:
-            logging.getLogger(__file__).info('Organization not defined, querying it from API')
+            logging.getLogger(__name__).info('Organization not defined, querying it from API')
             organization = (
                 requests.get(f'{BASE_ROUTE_REST}user/orgs', headers=headers).json()[0].get('login')
             )
