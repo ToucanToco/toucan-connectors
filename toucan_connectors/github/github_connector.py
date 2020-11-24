@@ -153,10 +153,10 @@ class GithubConnector(ToucanConnector):
         dataset: str,
         variables=None,
         data_list=None,
-        page_limit=30,
+        page_limit=50,
         retrieved_pages=0,
         retries=0,
-        retry_limit=2,
+        retry_limit=4,
     ) -> List[dict]:
         """
         Extracts pages of either members or pull requests
@@ -206,8 +206,8 @@ class GithubConnector(ToucanConnector):
                 )
 
         except GithubError:
-            logging.getLogger(__name__).info('Retrying in 30 seconds')
-            await asyncio.sleep(30)
+            logging.getLogger(__name__).info('Retrying in 1 second')
+            await asyncio.sleep(1)
             retries += 1
             if retries <= retry_limit:
                 await self.get_pages(
