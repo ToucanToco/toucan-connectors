@@ -1,13 +1,14 @@
 import asyncio
 import logging
 import os
+from contextlib import suppress
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional
 
 import pandas as pd
 import requests
-from pydantic import Field
+from pydantic import Field, create_model
 from python_graphql_client import GraphqlClient
 
 from toucan_connectors.common import ConnectorStatus, get_loop
@@ -19,6 +20,7 @@ from toucan_connectors.toucan_connector import (
     ConnectorSecretsForm,
     ToucanConnector,
     ToucanDataSource,
+    strlist_to_enum,
 )
 
 from .helpers import (
@@ -61,7 +63,29 @@ class GithubDataSet(str, Enum):
 
 class GithubDataSource(ToucanDataSource):
     dataset: GithubDataSet = GithubDataSet('teams')
-    organization: str = Field(None, description='The organization to extract the data from')
+    organization: Optional[str] = Field(
+        None, title='Organization', description='The organization to extract the data from'
+    )
+
+    @classmethod
+    def get_form(cls, connector: 'GithubConnector', current_config, **kwargs):
+        """Retrieve a form filled with suggestions of available organizations."""
+        # Always add the suggestions for the available organizations
+        constraints = {}
+
+        with suppress(Exception):
+            access_token = connector.get_access_token()
+
+            if not access_token:
+                raise NoCredentialsError('No credentials')
+
+            headers = {'Authorization': f'Bearer {access_token}'}
+            logging.getLogger(__name__).info('Retrieving organization')
+            data = requests.get(f'{BASE_ROUTE_REST}user/orgs', headers=headers).json()
+            available_organization = [str(x['login']) for x in data]
+            constraints['organization'] = strlist_to_enum('organization', available_organization)
+
+        return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
 class GithubConnector(ToucanConnector):
@@ -254,7 +278,6 @@ class GithubConnector(ToucanConnector):
         :param data_source:  GithubDataSource, the GithubDataSource to query
         :return: a Pandas DataFrame of pull requests or team memberships
         """
-
         dataset = data_source.dataset
         access_token = self.get_access_token()
         organization = data_source.organization
@@ -263,13 +286,6 @@ class GithubConnector(ToucanConnector):
             raise NoCredentialsError(NO_CREDENTIALS_ERROR)
 
         headers = {'Authorization': f'token {access_token}'}
-
-        if not organization:
-            logging.getLogger(__name__).info('Organization not defined, querying it from API')
-            organization = (
-                requests.get(f'{BASE_ROUTE_REST}user/orgs', headers=headers).json()[0].get('login')
-            )
-
         client = GraphqlClient(BASE_ROUTE, headers)
         loop = get_loop()
         return loop.run_until_complete(
