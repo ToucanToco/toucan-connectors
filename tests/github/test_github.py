@@ -388,27 +388,32 @@ def test_retrieve_pull_requests_data(
 
 
 @responses.activate
-def test_retrieve_data_organization_not_defined(
-    mocker, gc, extracted_team_slugs_2, extracted_team_page_2
-):
+def test_datasource_get_form_with_secret(gc):
     """
-    check that organization is retrieved with a request if
-    not defined in datasource
+    check that organizations are retrieved with a request
     """
     ds = GithubDataSource(name='mah_ds', domain='mah_domain', dataset='teams')
     responses.add(
         responses.GET,
         'https://api.github.com/user/orgs',
-        json=[{'login': 'power_rangers'}],
+        json=[{'login': 'power_rangers'}, {'login': 'teletubbies'}],
         status=200,
     )
-
-    mocker.patch(
-        'python_graphql_client.GraphqlClient.execute',
-        side_effect=[extracted_team_slugs_2],
-    )
-    mocker.patch(
-        'python_graphql_client.GraphqlClient.execute_async', return_value=extracted_team_page_2
-    )
-    gc._retrieve_data(ds)
+    ds.get_form(connector=gc, current_config={})
     assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_datasource_get_form_no_secret(gc, remove_secrets):
+    """
+    check that no organizations are retrieved
+    """
+    ds = GithubDataSource(name='mah_ds', domain='mah_domain', dataset='teams')
+    responses.add(
+        responses.GET,
+        'https://api.github.com/user/orgs',
+        json=[{'login': 'power_rangers'}, {'login': 'teletubbies'}],
+        status=200,
+    )
+    res = ds.get_form(connector=gc, current_config={})
+    assert 'organization' not in res['definitions'].keys()
