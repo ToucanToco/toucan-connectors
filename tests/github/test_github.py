@@ -195,7 +195,13 @@ def test_error_get_pages(mocker, gc, error_response, client, event_loop):
     """
     mocker.patch(
         'python_graphql_client.GraphqlClient.execute_async',
-        side_effect=[error_response, error_response, error_response],
+        side_effect=[
+            error_response,
+            error_response,
+            error_response,
+            error_response,
+            error_response,
+        ],
     )
     mocker.patch('toucan_connectors.github.github_connector.asyncio.sleep', return_value=None)
 
