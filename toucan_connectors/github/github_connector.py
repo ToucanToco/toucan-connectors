@@ -66,6 +66,7 @@ class GithubDataSource(ToucanDataSource):
     organization: Optional[str] = Field(
         None, title='Organization', description='The organization to extract the data from'
     )
+    page_limit: int = Field(9, description='Limit of entries (default is 10 pages)', ge=0)
 
     @classmethod
     def get_form(cls, connector: 'GithubConnector', current_config, **kwargs):
@@ -175,9 +176,9 @@ class GithubConnector(ToucanConnector):
         client: GraphqlClient,
         organization: str,
         dataset: str,
+        page_limit: int,
         variables=None,
         data_list=None,
-        page_limit=50,
         retrieved_pages=0,
         retries=0,
         retry_limit=4,
@@ -227,11 +228,12 @@ class GithubConnector(ToucanConnector):
                     variables=variables,
                     data_list=data_list,
                     retrieved_pages=retrieved_pages,
+                    page_limit=page_limit,
                 )
 
         except GithubError:
-            logging.getLogger(__name__).info('Retrying in 1 second')
-            await asyncio.sleep(1)
+            logging.getLogger(__name__).info('Retrying in 15 seconds')
+            await asyncio.sleep(15)
             retries += 1
             if retries <= retry_limit:
                 await self.get_pages(
@@ -243,6 +245,7 @@ class GithubConnector(ToucanConnector):
                     data_list=data_list,
                     retrieved_pages=retrieved_pages,
                     retries=retries,
+                    page_limit=page_limit,
                 )
             else:
                 raise GithubError('Max number of retries reached, aborting connection')
@@ -253,7 +256,7 @@ class GithubConnector(ToucanConnector):
         return data_list
 
     async def _fetch_data(
-        self, dataset: GithubDataSet, organization: str, client: GraphqlClient
+        self, dataset: GithubDataSet, organization: str, client: GraphqlClient, page_limit: int
     ) -> pd.DataFrame:
         """
          Builds the coroutines ran by _retrieve_data
@@ -261,12 +264,19 @@ class GithubConnector(ToucanConnector):
         :param organization a str representing the organization from
         which the data will be extracted
         :param client a GraphqlClient that will make the requests to Github's API
+        :param page_limit max number of pages to be retrieved by get_pages
         :return: a Pandas DataFrame of pull requests or team memberships
         """
         logging.getLogger(__name__).info(f'Starting fetch for {dataset}')
         names = self.get_names(client=client, organization=organization, dataset=dataset)
         subtasks = [
-            self.get_pages(name=name, client=client, dataset=dataset, organization=organization)
+            self.get_pages(
+                name=name,
+                client=client,
+                dataset=dataset,
+                organization=organization,
+                page_limit=page_limit,
+            )
             for name in names
         ]
         unformatted_data = await asyncio.gather(*subtasks)
@@ -289,7 +299,12 @@ class GithubConnector(ToucanConnector):
         client = GraphqlClient(BASE_ROUTE, headers)
         loop = get_loop()
         return loop.run_until_complete(
-            self._fetch_data(dataset=dataset, organization=organization, client=client)
+            self._fetch_data(
+                dataset=dataset,
+                organization=organization,
+                client=client,
+                page_limit=data_source.page_limit,
+            )
         )
 
     def get_status(self) -> ConnectorStatus:
