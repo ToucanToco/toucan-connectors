@@ -435,3 +435,37 @@ def test_datasource_get_form_no_secret(gc, remove_secrets):
     )
     res = ds.get_form(connector=gc, current_config={})
     assert 'organization' not in res['definitions'].keys()
+
+
+def test_get_slice(gc, mocker, extracted_repositories_names_2, extracted_prs_1, extracted_prs_2):
+    """Check that get_slice returns only three pages of data"""
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute', return_value=extracted_repositories_names_2
+    )
+    mocked_api_call_async = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[extracted_prs_1, extracted_prs_2, extracted_prs_2, extracted_prs_2],
+    )
+    ds = build_ds('pull requests')
+    df, rows = gc.get_slice(ds)
+    assert mocked_api_call.call_count == 1
+    assert mocked_api_call_async.call_count == 3
+    assert len(df) == 5
+
+
+def test_get_slice_limit(
+    gc, mocker, extracted_repositories_names_2, extracted_prs_1, extracted_prs_2
+):
+    """Check that get_slice returns only three pages of data"""
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute', return_value=extracted_repositories_names_2
+    )
+    mocked_api_call_async = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[extracted_prs_1, extracted_prs_2, extracted_prs_2, extracted_prs_2],
+    )
+    ds = build_ds('pull requests')
+    df, rows = gc.get_slice(ds, limit=2)
+    assert mocked_api_call.call_count == 1
+    assert mocked_api_call_async.call_count == 3
+    assert len(df) == 2

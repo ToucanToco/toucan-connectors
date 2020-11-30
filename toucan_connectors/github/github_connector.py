@@ -18,6 +18,7 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
 )
 from toucan_connectors.toucan_connector import (
     ConnectorSecretsForm,
+    DataSlice,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
@@ -67,6 +68,11 @@ class GithubDataSource(ToucanDataSource):
         None, title='Organization', description='The organization to extract the data from'
     )
     page_limit: int = Field(9, description='Limit of entries (default is 10 pages)', ge=0)
+    entities_limit: int = Field(
+        None,
+        title='Entities Limit',
+        description='Max Number of entities such as teams and repositories to extract',
+    )
 
     @classmethod
     def get_form(cls, connector: 'GithubConnector', current_config, **kwargs):
@@ -133,7 +139,12 @@ class GithubConnector(ToucanConnector):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
     def get_names(
-        self, client: GraphqlClient, organization: str, dataset: str, names=None, variables=None
+        self,
+        client: GraphqlClient,
+        organization: str,
+        dataset: str,
+        names=None,
+        variables=None,
     ) -> list:
         """
         Retrieve either repositories names or teams names
@@ -256,15 +267,21 @@ class GithubConnector(ToucanConnector):
         return data_list
 
     async def _fetch_data(
-        self, dataset: GithubDataSet, organization: str, client: GraphqlClient, page_limit: int
+        self,
+        dataset: GithubDataSet,
+        organization: str,
+        client: GraphqlClient,
+        page_limit: int,
+        names_limit=None,
     ) -> pd.DataFrame:
         """
          Builds the coroutines ran by _retrieve_data
-        :param data_source  GithubDataSource, the GithubDataSource to query
+        :param dataset  GithubDataSet, the GithubDataSet to query
         :param organization a str representing the organization from
         which the data will be extracted
         :param client a GraphqlClient that will make the requests to Github's API
         :param page_limit max number of pages to be retrieved by get_pages
+        :param names_limit number max of "names" (teams/repos) to extract the data from
         :return: a Pandas DataFrame of pull requests or team memberships
         """
         logging.getLogger(__name__).info(f'Starting fetch for {dataset}')
@@ -277,7 +294,7 @@ class GithubConnector(ToucanConnector):
                 organization=organization,
                 page_limit=page_limit,
             )
-            for name in names
+            for name in names[:names_limit]
         ]
         unformatted_data = await asyncio.gather(*subtasks)
         return dataset_formatter[dataset]([e for sublist in unformatted_data for e in sublist])
@@ -304,8 +321,38 @@ class GithubConnector(ToucanConnector):
                 organization=organization,
                 client=client,
                 page_limit=data_source.page_limit,
+                names_limit=data_source.entities_limit,
             )
         )
+
+    def get_slice(
+        self,
+        data_source: GithubDataSource,
+        permissions: Optional[dict] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
+    ) -> DataSlice:
+        """
+        Method to retrieve a part of the data as a pandas dataframe
+        and the total size filtered with permissions
+
+        - offset is the index of the starting row
+        - limit is the number of pages to retrieve
+        Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
+        """
+        preview_datasource = GithubDataSource(
+            page_limit=1,
+            dataset=data_source.dataset,
+            domain=f'preview_{data_source.domain}',
+            name=data_source.name,
+            organization=data_source.organization,
+            entities_limit=3,
+        )
+        df = self.get_df(preview_datasource, permissions)
+        if limit is not None:
+            return DataSlice(df[offset : offset + limit], len(df))
+        else:
+            return DataSlice(df[offset:], len(df))
 
     def get_status(self) -> ConnectorStatus:
         """
