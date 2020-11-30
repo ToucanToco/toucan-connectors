@@ -10,7 +10,7 @@ clean:
 
 .PHONY: install
 install:
-	pip3 install -U setuptools pip
+	pip3 install -U setuptools pip==20.2
 	pip3 install -r requirements-testing.txt --ignore-installed
 	pip3 install '.[all]'
 
