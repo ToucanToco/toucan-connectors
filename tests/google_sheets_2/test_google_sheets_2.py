@@ -251,3 +251,21 @@ def test_delegate_oauth2_methods(mocker, con):
     mock_oauth2_connector.build_authorization_url.assert_called()
     con.retrieve_tokens('toto')
     mock_oauth2_connector.retrieve_tokens.assert_called_with('toto')
+
+
+def test_get_slice(mocker, con, ds):
+    """It should return a slice of spreadsheet"""
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
+
+    df, rows = con.get_slice(ds, limit=1)
+
+    assert df.shape == (1, 2)
+
+
+def test_get_slice_no_limit(mocker, con, ds):
+    """It should return a slice of spreadsheet"""
+    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
+
+    df, rows = con.get_slice(ds, limit=None)
+
+    assert df.shape == (2, 2)

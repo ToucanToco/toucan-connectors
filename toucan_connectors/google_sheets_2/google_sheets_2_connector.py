@@ -18,6 +18,7 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
 )
 from toucan_connectors.toucan_connector import (
     ConnectorSecretsForm,
+    DataSlice,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
@@ -189,3 +190,24 @@ class GoogleSheets2Connector(ToucanConnector):
             return ConnectorStatus(status=True, message=f"Connected as {user_info.get('email')}")
         except HttpError:
             return ConnectorStatus(status=False, error="Couldn't retrieve user infos")
+
+    def get_slice(
+        self,
+        data_source: GoogleSheets2DataSource,
+        permissions: Optional[dict] = None,
+        offset: int = 0,
+        limit=50,
+    ) -> DataSlice:
+        """
+        Method to retrieve a part of the data as a pandas dataframe
+        and the total size filtered with permissions
+
+        - offset is the index of the starting row
+        - limit is the number of pages to retrieve
+        Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
+        """
+        df = self.get_df(data_source, permissions)
+        if limit is not None:
+            return DataSlice(df[offset : offset + limit], len(df))
+        else:
+            return DataSlice(df[offset:], len(df))
