@@ -16,6 +16,7 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
 )
 from toucan_connectors.toucan_connector import (
     ConnectorSecretsForm,
+    DataSlice,
     ToucanConnector,
     ToucanDataSource,
 )
@@ -282,6 +283,33 @@ class AircallConnector(ToucanConnector):
             return ConnectorStatus(status=False, error='Credentials are missing')
         if not access_token:
             return ConnectorStatus(status=False, error='Credentials are missing')
+
+    def get_slice(
+        self,
+        data_source: AircallDataSource,
+        permissions: Optional[dict] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
+    ) -> DataSlice:
+        """
+        Method to retrieve a part of the data as a pandas dataframe
+        and the total size filtered with permissions
+
+        - offset is the index of the starting row
+        - limit is the number of pages to retrieve
+        Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
+        """
+        preview_datasource = AircallDataSource(
+            limit=1,
+            dataset=data_source.dataset,
+            domain=f'preview_{data_source.domain}',
+            name=data_source.name,
+        )
+        df = self.get_df(preview_datasource, permissions)
+        if limit is not None:
+            return DataSlice(df[offset : offset + limit], len(df))
+        else:
+            return DataSlice(df[offset:], len(df))
 
 
 class AircallException(Exception):
