@@ -8,7 +8,7 @@ bearer_deps = ['bearer']
 extras_require = {
     'adobe': ['adobe_analytics'],
     'aircall': bearer_deps,
-    'azure_mssql': ['pyodbc'],
+    'azure_mssql': ['pyodbc>=3'],
     'dataiku': ['dataiku-api-client'],
     'elasticsearch': ['elasticsearch'],
     'facebook': ['facebook-sdk'],
@@ -23,10 +23,10 @@ extras_require = {
     'http_api': auth_deps + ['xmltodict'],
     'lightspeed': bearer_deps,
     'mongo': ['pymongo>=3.6.1'],
-    'mssql': ['pyodbc'],
+    'mssql': ['pyodbc>=3'],
     'mysql': ['PyMySQL>=0.8.0'],
     'odata': auth_deps + ['tctc_odata'],
-    'odbc': ['pyodbc'],
+    'odbc': ['pyodbc>=3'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'ROK': ['requests', 'pyjwt', 'simplejson'],
@@ -67,7 +67,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='0.44.1',
+    version='0.44.2',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',
