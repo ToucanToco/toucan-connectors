@@ -89,6 +89,42 @@ def test__run_fetch(mocker, con):
 
 
 @pytest.mark.asyncio
+async def test_get_slice(con, mocker):
+    """Check that get_slice returns only one page of data"""
+    run_fetches_mock = mocker.patch.object(
+        AircallConnector, 'run_fetches', return_value=[filtered_teams, filtered_calls]
+    )
+    ds = build_ds('calls')
+
+    df, rows = con.get_slice(ds)
+    assert run_fetches_mock.call_count == 1
+    assert df.shape == (10, 10)
+    assert list(df.columns) == columns_for_calls
+    assert df['team'].isna().sum() == 0
+    assert df['team'].eq('Team 1').sum() == 6
+    assert df['team'].eq('Team 2').sum() == 4
+
+
+@pytest.mark.asyncio
+async def test_get_slice_limit(con, mocker):
+    """
+    Check that get_slice returns only one page of data
+    with 2 rows
+    """
+    run_fetches_mock = mocker.patch.object(
+        AircallConnector, 'run_fetches', return_value=[filtered_teams, filtered_calls]
+    )
+    ds = build_ds('calls')
+    df, rows = con.get_slice(ds, limit=2)
+    assert run_fetches_mock.call_count == 1
+    assert df.shape == (2, 10)
+    assert list(df.columns) == columns_for_calls
+    assert df['team'].isna().sum() == 0
+    assert df['team'].eq('Team 1').sum() == 2
+    assert df['team'].eq('Team 2').sum() == 0
+
+
+@pytest.mark.asyncio
 async def test__get_data_tags_case(con, mocker):
     """Tests with tags happy case"""
     dataset = 'tags'
