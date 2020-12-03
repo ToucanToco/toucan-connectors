@@ -469,3 +469,17 @@ def test_get_slice_limit(
     assert mocked_api_call.call_count == 1
     assert mocked_api_call_async.call_count == 3
     assert len(df) == 2
+
+
+@responses.activate
+def test_get_organizations(gc):
+    """Check that get_organizations is able to retrieve a list of organization"""
+    responses.add(
+        responses.GET,
+        'https://api.github.com/user/orgs',
+        json=[{'login': 'power_rangers'}, {'login': 'teletubbies'}],
+        status=200,
+    )
+    res = gc.get_organizations()
+    assert len(responses.calls) == 1
+    assert res == ['power_rangers', 'teletubbies']
