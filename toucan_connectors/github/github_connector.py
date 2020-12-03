@@ -79,19 +79,9 @@ class GithubDataSource(ToucanDataSource):
         """Retrieve a form filled with suggestions of available organizations."""
         # Always add the suggestions for the available organizations
         constraints = {}
-
         with suppress(Exception):
-            access_token = connector.get_access_token()
-
-            if not access_token:
-                raise NoCredentialsError('No credentials')
-
-            headers = {'Authorization': f'Bearer {access_token}'}
-            logging.getLogger(__name__).info('Retrieving organization')
-            data = requests.get(f'{BASE_ROUTE_REST}user/orgs', headers=headers).json()
-            available_organization = [str(x['login']) for x in data]
-            constraints['organization'] = strlist_to_enum('organization', available_organization)
-
+            available_organizations = connector.get_organizations()
+            constraints['organization'] = strlist_to_enum('organization', available_organizations)
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
@@ -126,6 +116,19 @@ class GithubConnector(ToucanConnector):
 
     def build_authorization_url(self, **kwargs):
         return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+
+    def get_organizations(self):
+        """Retrieve a list of organizations available to the connector"""
+
+        access_token = self.get_access_token()
+
+        if not access_token:
+            raise NoCredentialsError('No credentials')
+
+        headers = {'Authorization': f'Bearer {access_token}'}
+        logging.getLogger(__name__).info('Retrieving organization')
+        data = requests.get(f'{BASE_ROUTE_REST}user/orgs', headers=headers).json()
+        return [str(x['login']) for x in data]
 
     def retrieve_tokens(self, authorization_response: str):
         """
