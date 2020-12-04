@@ -260,7 +260,7 @@ def test_get_slice(mocker, con, ds):
     )
 
     df, rows = con.get_slice(ds, limit=2)
-    assert '!1:2' in run_fetch_mock.call_args_list[0][0][0]
+    assert '!1:3' in run_fetch_mock.call_args_list[0][0][0]
     assert df.shape == (2, 2)
 
 
