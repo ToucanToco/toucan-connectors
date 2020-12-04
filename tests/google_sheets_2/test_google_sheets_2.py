@@ -255,11 +255,13 @@ def test_delegate_oauth2_methods(mocker, con):
 
 def test_get_slice(mocker, con, ds):
     """It should return a slice of spreadsheet"""
-    mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
+    run_fetch_mock = mocker.patch.object(
+        GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET
+    )
 
-    df, rows = con.get_slice(ds, limit=1)
-
-    assert df.shape == (1, 2)
+    df, rows = con.get_slice(ds, limit=2)
+    assert '!1:2' in run_fetch_mock.call_args_list[0][0][0]
+    assert df.shape == (2, 2)
 
 
 def test_get_slice_no_limit(mocker, con, ds):
