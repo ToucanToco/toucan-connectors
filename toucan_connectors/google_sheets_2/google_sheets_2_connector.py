@@ -57,6 +57,9 @@ class GoogleSheets2DataSource(ToucanDataSource):
     header_row: int = Field(
         0, title='Header row', description='Row of the header of the spreadsheet'
     )
+    rows_limit: int = Field(
+        None, title='Rows limit', description='Maximum number of rows to retrieve'
+    )
 
     @classmethod
     def get_form(cls, connector: 'GoogleSheets2Connector', current_config, **kwargs):
@@ -150,8 +153,13 @@ class GoogleSheets2Connector(ToucanConnector):
             available_sheets = [str(x['properties']['title']) for x in data['sheets']]
             data_source.sheet = available_sheets[0]
 
+        if data_source.rows_limit:
+            ranges = f'!1:{data_source.rows_limit}'
+        else:
+            ranges = ''
+
         # https://developers.google.com/sheets/api/samples/reading
-        read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}?valueRenderOption=UNFORMATTED_VALUE'
+        read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}{ranges}?valueRenderOption=UNFORMATTED_VALUE'
         full_url = f'{self._baseroute}{read_sheet_endpoint}'
         # Rajouter le param FORMATTED_VALUE pour le séparateur de décimal dans la Baseroute
         data = self._run_fetch(full_url)['values']
@@ -206,7 +214,15 @@ class GoogleSheets2Connector(ToucanConnector):
         - limit is the number of pages to retrieve
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
         """
-        df = self.get_df(data_source, permissions)
+        preview_datasource = GoogleSheets2DataSource(
+            domain=data_source.domain,
+            name=data_source.name,
+            spreadsheet_id=data_source.spreadsheet_id,
+            sheet=data_source.sheet,
+            header_row=data_source.header_row,
+            rows_limit=limit,
+        )
+        df = self.get_df(preview_datasource, permissions)
         if limit is not None:
             return DataSlice(df[offset : offset + limit], len(df))
         else:
