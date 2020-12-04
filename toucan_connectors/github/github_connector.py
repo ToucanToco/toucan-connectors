@@ -67,7 +67,7 @@ class GithubDataSource(ToucanDataSource):
     organization: Optional[str] = Field(
         None, title='Organization', description='The organization to extract the data from'
     )
-    page_limit: int = Field(9, description='Limit of entries (default is 10 pages)', ge=0)
+    page_limit: int = Field(10, description='Limit of entries (default is 10 pages)', ge=0)
     entities_limit: int = Field(
         None,
         title='Entities Limit',
@@ -216,6 +216,7 @@ class GithubConnector(ToucanConnector):
         if data_list is None:
             data_list = []
         q = queries_funcs_pages[dataset](organization=organization, name=name)
+        await asyncio.sleep(0.200)
         data = await client.execute_async(query=q, variables=variables)
 
         try:
