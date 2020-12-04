@@ -154,7 +154,7 @@ class GoogleSheets2Connector(ToucanConnector):
             data_source.sheet = available_sheets[0]
 
         if data_source.rows_limit:
-            ranges = f'!1:{data_source.rows_limit}'
+            ranges = f'!1:{data_source.rows_limit+1}'
         else:
             ranges = ''
 
