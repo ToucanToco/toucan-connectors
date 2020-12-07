@@ -31,7 +31,7 @@ extras_require = {
     'postgres': ['psycopg2>=2.7.4'],
     'ROK': ['requests', 'pyjwt', 'simplejson'],
     'sap_hana': ['pyhdb>=0.3.4'],
-    'snowflake': ['snowflake-connector-python<=2.2.10'],
+    'snowflake': ['snowflake-connector-python'],
     'toucan_toco': ['toucan_client'],
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
