@@ -433,8 +433,8 @@ def test_datasource_get_form_no_secret(gc, remove_secrets):
         json=[{'login': 'power_rangers'}, {'login': 'teletubbies'}],
         status=200,
     )
-    res = ds.get_form(connector=gc, current_config={})
-    assert 'organization' not in res['definitions'].keys()
+    with pytest.raises(NoCredentialsError):
+        ds.get_form(connector=gc, current_config={})
 
 
 def test_get_slice(gc, mocker, extracted_repositories_names_2, extracted_prs_1, extracted_prs_2):
@@ -480,6 +480,6 @@ def test_get_organizations(gc):
         json=[{'login': 'power_rangers'}, {'login': 'teletubbies'}],
         status=200,
     )
-    res = gc.get_organizations()
+    res = gc.get_organizations(access_token='bla')
     assert len(responses.calls) == 1
     assert res == ['power_rangers', 'teletubbies']
