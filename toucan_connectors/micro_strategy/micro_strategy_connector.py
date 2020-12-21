@@ -97,7 +97,8 @@ class MicroStrategyConnector(ToucanConnector):
         """Retrieves cube or report data, flattens return dataframe"""
         if data_source.dataset == Dataset.search:
             return self._retrieve_metadata(data_source)
-
+        if not self.password:
+            self.password = SecretStr('')
         client = Client(
             self.base_url, self.project_id, self.username, self.password.get_secret_value()
         )
