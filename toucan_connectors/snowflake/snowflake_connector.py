@@ -2,6 +2,7 @@ from os import path
 
 import pandas as pd
 import snowflake.connector
+from jinja2 import Template
 from pydantic import Field, SecretStr, constr
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
@@ -56,8 +57,8 @@ class SnowflakeConnector(ToucanConnector):
             user=self.user,
             password=self.password.get_secret_value(),
             account=self.account,
-            database=data_source.database,
-            warehouse=data_source.warehouse,
+            database=Template(data_source.database).render(),
+            warehouse=Template(data_source.warehouse).render(),
             ocsp_response_cache_filename=self.ocsp_response_cache_filename,
         )
 
