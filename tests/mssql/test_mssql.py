@@ -114,7 +114,9 @@ def test_mssql_get_df(mocker):
     )
 
     reasq.assert_called_once_with(
-        'SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3', con=snock()
+        'SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3',
+        con=snock(),
+        params=[],
     )
 
 
@@ -133,3 +135,27 @@ def test_get_df(mssql_connector, mssql_datasource):
     res = mssql_connector.get_df(datasource)
     res['Name'] = res['Name'].str.rstrip()
     assert res.equals(expected)
+
+
+def test_query_variability(mocker):
+    """ It should connect to the database and retrieve the response to the query """
+    mock_pyodbc_connect = mocker.patch('pyodbc.connect')
+    mock_pandas_read_sql = mocker.patch('pandas.read_sql')
+    con = MSSQLConnector(
+        name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!', port=22
+    )
+
+    ds = MSSQLDataSource(
+        query='select * from test where id_nb > %(id_nb)s and price > %(price)s;',
+        domain='test',
+        name='test',
+        parameters={'price': 10, 'id_nb': 1},
+    )
+
+    con.get_df(ds)
+
+    mock_pandas_read_sql.assert_called_once_with(
+        'select * from test where id_nb > ? and price > ?;',
+        con=mock_pyodbc_connect(),
+        params=[1, 10],
+    )
