@@ -2,6 +2,7 @@ import pandas as pd
 import pyodbc
 from pydantic import Field, SecretStr, constr
 
+from toucan_connectors.common import convert_to_qmark_paramstyle
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -61,7 +62,13 @@ class MSSQLConnector(ToucanConnector):
 
     def _retrieve_data(self, datasource):
         connection = pyodbc.connect(**self.get_connection_params(datasource.database))
-        df = pd.read_sql(datasource.query, con=connection)
+
+        query_params = datasource.parameters or {}
+        query_params = {k: f'{v}' for k, v in query_params.items()}  # add enclosing quotes
+        converted_query, ordered_values = convert_to_qmark_paramstyle(
+            datasource.query, datasource.parameters
+        )
+        df = pd.read_sql(converted_query, con=connection, params=ordered_values)
 
         connection.close()
         return df
