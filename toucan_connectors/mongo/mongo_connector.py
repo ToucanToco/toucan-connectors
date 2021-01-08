@@ -36,7 +36,7 @@ def normalize_query(query, parameters):
     return query
 
 
-def apply_permissions(query, permissions_condition: dict):
+def apply_condition_filter(query, permissions_condition: dict):
     if permissions_condition:
         permissions = MongoConditionTranslator.translate(permissions_condition)
         if isinstance(query, dict):
@@ -207,7 +207,7 @@ class MongoConnector(ToucanConnector):
 
     @decorate_func_with_retry
     def get_df(self, data_source, permissions=None):
-        data_source.query = apply_permissions(data_source.query, permissions)
+        data_source.query = apply_condition_filter(data_source.query, permissions)
         return self._retrieve_data(data_source)
 
     @decorate_func_with_retry
@@ -221,7 +221,7 @@ class MongoConnector(ToucanConnector):
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
         if offset or limit is not None:
-            data_source.query = apply_permissions(data_source.query, permissions)
+            data_source.query = apply_condition_filter(data_source.query, permissions)
             data_source.query = normalize_query(data_source.query, data_source.parameters)
 
             df_facet = []
@@ -267,7 +267,7 @@ class MongoConnector(ToucanConnector):
     def explain(self, data_source, permissions=None):
         client = pymongo.MongoClient(**self._get_mongo_client_kwargs())
         self.validate_database_and_collection(data_source.database, data_source.collection)
-        data_source.query = apply_permissions(data_source.query, permissions)
+        data_source.query = apply_condition_filter(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
 
         agg_cmd = SON(
