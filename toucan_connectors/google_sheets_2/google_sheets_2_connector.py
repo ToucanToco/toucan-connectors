@@ -44,7 +44,10 @@ class GoogleSheets2DataSource(ToucanDataSource):
     - sheet
     - header_row
     """
-
+    domain: str = Field(
+        ...,
+        title='dataset',
+        )
     spreadsheet_id: str = Field(
         ...,
         title='ID of the spreadsheet',
@@ -59,6 +62,10 @@ class GoogleSheets2DataSource(ToucanDataSource):
     )
     rows_limit: int = Field(
         None, title='Rows limit', description='Maximum number of rows to retrieve'
+    )
+    parameters : dict = Field(
+        None,
+        description='Additional URL parameters'
     )
 
     @classmethod
