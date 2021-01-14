@@ -1,3 +1,4 @@
+import json
 from unittest.mock import Mock
 
 import pytest
@@ -271,3 +272,10 @@ def test_get_slice_no_limit(mocker, con, ds):
     df, rows = con.get_slice(ds, limit=None)
 
     assert df.shape == (2, 2)
+
+
+def test_schema_fields_order(con, ds):
+    schema_props_keys = list(json.loads(GoogleSheets2DataSource.schema_json())['properties'].keys())
+    assert schema_props_keys[0] == 'domain'
+    assert schema_props_keys[1] == 'spreadsheet_id'
+    assert schema_props_keys[2] == 'sheet'
