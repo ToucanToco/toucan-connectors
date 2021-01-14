@@ -5,7 +5,7 @@ import asyncio
 import os
 from contextlib import suppress
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional, Type
 
 import pandas as pd
 from aiohttp import ClientSession
@@ -44,10 +44,11 @@ class GoogleSheets2DataSource(ToucanDataSource):
     - sheet
     - header_row
     """
+
     domain: str = Field(
         ...,
         title='dataset',
-        )
+    )
     spreadsheet_id: str = Field(
         ...,
         title='ID of the spreadsheet',
@@ -63,10 +64,15 @@ class GoogleSheets2DataSource(ToucanDataSource):
     rows_limit: int = Field(
         None, title='Rows limit', description='Maximum number of rows to retrieve'
     )
-    parameters : dict = Field(
-        None,
-        description='Additional URL parameters'
-    )
+    parameters: dict = Field(None, description='Additional URL parameters')
+
+    class Config:
+        @staticmethod
+        def schema_extra(schema: Dict[str, Any], model: Type['GoogleSheets2DataSource']) -> None:
+            keys = schema['properties'].keys()
+            prio_keys = ['domain', 'spreadsheet_id', 'sheet']
+            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
 
     @classmethod
     def get_form(cls, connector: 'GoogleSheets2Connector', current_config, **kwargs):
