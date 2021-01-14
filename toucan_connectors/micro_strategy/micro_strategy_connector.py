@@ -41,7 +41,7 @@ class MicroStrategyDataSource(ToucanDataSource):
         None,
         title='View filters',
         description='You can apply Microstrategy View Filters here. Please find configuration details in our '
-        '<a href="https://docs.toucantoco.com/concepteur/power-apps-with-data/02-add-data-to-small-app.html#microstrategy-connector" target="_blank"> '
+        '<a href="https://docs.toucantoco.com/concepteur/power-apps-with-data/01-add-data-to-small-app.html#microstrategy-connector" target="_blank"> '
         'documentation</a>',
     )
     offset: int = Field(
