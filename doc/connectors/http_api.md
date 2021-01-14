@@ -9,7 +9,7 @@ The connector is able to retrieve data in json or xml format depending on the re
 If the format is set to 'xml', an xpath can be provided in the xpath field to parse the response and then
 the jq filter can be applied to get the data in tabular format.
 
-Please see our [complete tutorial](https://docs.toucantoco.com/concepteur/tutorials/18-jq.html) for
+Please see our [complete tutorial](https://docs.toucantoco.com/concepteur/tutorials/connectors/3-http-connector.html#how-to-use-the-http-connector) for
 an example of advanced use of this connector.
 
 ## Data provider configuration

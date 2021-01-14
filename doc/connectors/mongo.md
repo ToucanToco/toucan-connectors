@@ -25,11 +25,7 @@ DATA_PROVIDERS: [
 ]
 ```
 
-
 ## Data source configuration
-
-Supports simple, multiples and aggregation queries as desribed in
-     [our documentation](https://docs.toucantoco.com/concepteur/data-sources/02-data-query.html)
 
 * `domain`: str, required
 * `name`: str, required
