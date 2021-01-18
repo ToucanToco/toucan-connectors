@@ -260,6 +260,12 @@ def test_connector_status():
             'select * from test where id > ? and price > ?;',
             [1, None],
         ),
+        (
+            'select * from inventory where quantity in %(quantities)s;',
+            {'quantities': [150, 154]},
+            'select * from inventory where quantity in (?,?);',
+            [150, 154],
+        ),
     ],
 )
 def test_convert_pyformat_to_qmark(query, params, expected_query, expected_ordered_values):
