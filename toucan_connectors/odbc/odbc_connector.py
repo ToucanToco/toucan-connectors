@@ -35,8 +35,6 @@ class OdbcConnector(ToucanConnector):
     def _retrieve_data(self, datasource: OdbcDataSource) -> pd.DataFrame:
 
         connection = pyodbc.connect(self.connection_string, **self.get_connection_params())
-        query_params = datasource.parameters or {}
-        query_params = {k: f'{v}' for k, v in query_params.items()}  # add enclosing quotes
         converted_query, ordered_values = convert_to_qmark_paramstyle(
             datasource.query, datasource.parameters
         )

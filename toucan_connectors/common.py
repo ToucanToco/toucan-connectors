@@ -255,4 +255,22 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> str:
     extracted_params = re.findall(RE_NAMED_PARAM, query_string)
     qparams = [m[2:-2] for m in extracted_params]
     ordered_values = [params_values.get(p) for p in qparams]
-    return re.sub(RE_NAMED_PARAM, '?', query_string), ordered_values
+
+    # Check if we need to replace a list
+    for i, o in enumerate(ordered_values):
+        if type(o) is list:
+            # in the query string, replace the ? at index i by the number of item
+            # in the provided parameter of type list
+            query_string = query_string.replace(
+                extracted_params[i], f'({",".join(len(ordered_values[i])*["?"])})'
+            )
+
+    flattened_values = []
+    for val in ordered_values:
+        if type(val) is list:
+            for v in val:
+                flattened_values.append(v)
+        else:
+            flattened_values.append(val)
+
+    return re.sub(RE_NAMED_PARAM, '?', query_string), flattened_values
