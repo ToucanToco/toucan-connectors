@@ -8,6 +8,7 @@ from typing import List, Optional, Tuple
 import pyjq
 from aiohttp import ClientSession
 from jinja2 import Environment, StrictUndefined, Template, meta
+from jinja2.nativetypes import NativeEnvironment
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
 
@@ -16,7 +17,6 @@ from toucan_data_sdk.utils.helpers import slugify
 RE_PARAM = r'%\(([^(%\()]*)\)s'
 RE_JINJA = r'{{([^({{)}]*)}}'
 
-RE_PARAM_ALONE = r'^' + RE_PARAM + '$'
 RE_JINJA_ALONE = r'^' + RE_JINJA + '$'
 
 # Identify jinja params with no quotes around or complex condition
@@ -71,26 +71,25 @@ def nosql_apply_parameters_to_query(query, parameters, handle_errors=False):
             return {key: _render_query(value, parameters) for key, value in deepcopy(query).items()}
         elif isinstance(query, list):
             return [_render_query(elt, parameters) for elt in deepcopy(query)]
-        elif type(query) is str:
+        elif isinstance(query, str):
             if not _has_parameters(query):
                 return query
-            clean_p = deepcopy(parameters)
+
+            # Replace param templating with jinja templating:
+            query = re.sub(RE_PARAM, r'{{ \g<1> }}', query)
+
             # Add quotes to string parameters to keep type if not complex
-            if re.match(RE_PARAM_ALONE, query) or re.match(RE_JINJA_ALONE, query):
+            clean_p = deepcopy(parameters)
+            if re.match(RE_JINJA_ALONE, query):
                 clean_p = _prepare_parameters(clean_p)
 
-            # Render jinja then render parameters `%()s`
-            res = Template(query).render(clean_p) % clean_p
-
-            # Remove extra quotes with literal_eval
-            try:
-                res = ast.literal_eval(res)
-                if isinstance(res, str):
-                    return res
-                else:
-                    return _prepare_result(res)
-            except (SyntaxError, ValueError):
-                return res
+            env = NativeEnvironment()
+            res = env.from_string(query).render(clean_p)
+            # NativeEnvironment's render() isn't recursive, so we need to
+            # apply recursively the literal_eval by hand for lists and dicts:
+            if isinstance(res, (list, dict)):
+                return _prepare_result(res)
+            return res
         else:
             return query
 

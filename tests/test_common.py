@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import pytest
 from aiohttp import web
 
@@ -142,9 +144,28 @@ def test_apply_parameter_to_query_do_nothing():
             {'code': 'Paris_France', 'domain': 'Test'},
         ),
         ({'code': '{{city}}_{{country}}', 'domain': 'Test'}, None, {'domain': 'Test'}),
+        (
+            {'column': 'date', 'operator': 'eq', 'value': '{{ t + delta }}'},
+            {'t': datetime(2020, 12, 31), 'delta': timedelta(days=1)},
+            {'column': 'date', 'operator': 'eq', 'value': datetime(2021, 1, 1)},
+        ),
+        (
+            {'column': 'date', 'operator': 'eq', 'value': '{{ t.strftime("%d/%m/%Y") }}'},
+            {'t': datetime(2020, 12, 31)},
+            {'column': 'date', 'operator': 'eq', 'value': '31/12/2020'},
+        ),
+        (
+            {'column': 'date', 'operator': 'in', 'value': '{{ allowed_dates }}'},
+            {'allowed_dates': [datetime(2020, 12, 31), datetime(2021, 1, 1)]},
+            {
+                'column': 'date',
+                'operator': 'in',
+                'value': [datetime(2020, 12, 31), datetime(2021, 1, 1)],
+            },
+        ),
     ],
 )
-def test_apply_parameter_to_query(query, params, expected):
+def test_nosql_apply_parameters_to_query(query, params, expected):
     assert nosql_apply_parameters_to_query(query, params) == expected
 
 
