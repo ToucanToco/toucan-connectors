@@ -310,6 +310,19 @@ def test_get_df_with_regex(mongo_connector, mongo_datasource):
     pd.testing.assert_series_equal(df['country'], pd.Series(['France', 'Germany'], name='country'))
 
 
+def test_get_df_with_regex_with_projection_stage(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(
+        collection='test_col',
+        query=[{'$match': {'domain': 'domain1'}}, {'$addFields': {'new_country_col': '$country'}}],
+    )
+    df = mongo_connector.get_df_with_regex(
+        datasource, field='new_country_col', regex=re.compile('r.*a')
+    )
+    pd.testing.assert_series_equal(
+        df['new_country_col'], pd.Series(['France', 'Germany'], name='new_country_col')
+    )
+
+
 def test_get_df_with_regex_with_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df_with_regex(
