@@ -156,6 +156,11 @@ CONNECTORS_REGISTRY = {
         'connector': 'rok.rok_connector.RokConnector',
         'logo': 'rok/rok.png',
     },
+    'Salesforce': {
+        'connector': 'salesforce.salesforce_connector.SalesforceConnector',
+        'label': 'Salesforce',
+        'logo': 'salesforce/salesforce.png',
+    },
     'SapHana': {
         'connector': 'sap_hana.sap_hana_connector.SapHanaConnector',
         'label': 'SAP HANA',
