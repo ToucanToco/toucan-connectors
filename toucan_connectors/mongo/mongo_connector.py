@@ -255,10 +255,10 @@ class MongoConnector(ToucanConnector):
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
-        data_source.query[0]['$match'] = {
-            '$and': [data_source.query[0]['$match']]
-            + [{field: {'$regex': Regex.from_native(regex)}}]
-        }
+        # We simply append the match regex at the end of the query,
+        # Mongo will then optimize the pipeline to move the match regex to its most convenient position
+        # (c.f https://docs.mongodb.com/manual/core/aggregation-pipeline-optimization/#pipeline-sequence-optimization)
+        data_source.query.append({'$match': {field: {'$regex': Regex.from_native(regex)}}})
         return self.get_slice(data_source, permissions, limit=limit).df
 
     @decorate_func_with_retry
