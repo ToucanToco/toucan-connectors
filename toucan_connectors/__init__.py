@@ -159,7 +159,7 @@ CONNECTORS_REGISTRY = {
     'Salesforce': {
         'connector': 'salesforce.salesforce_connector.SalesforceConnector',
         'label': 'Salesforce',
-        'logo': 'salesforce/salesforce.png',
+        'logo': 'salesforce/salesforce.jpg',
     },
     'SapHana': {
         'connector': 'sap_hana.sap_hana_connector.SapHanaConnector',
