@@ -40,6 +40,8 @@
 
 * [SapHanaConnector](connectors/sap_hana.md)
 
+* [SalesforceConnector](connectors/salesforce.md)
+
 * [SnowflakeConnector](connectors/snowflake.md)
 
 * [ToucanTocoConnector](connectors/toucan_toco.md)
