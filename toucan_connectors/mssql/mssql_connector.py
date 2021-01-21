@@ -64,9 +64,8 @@ class MSSQLConnector(ToucanConnector):
         connection = pyodbc.connect(**self.get_connection_params(datasource.database))
 
         query_params = datasource.parameters or {}
-        query_params = {k: f'{v}' for k, v in query_params.items()}  # add enclosing quotes
         converted_query, ordered_values = convert_to_qmark_paramstyle(
-            datasource.query, datasource.parameters
+            datasource.query, query_params
         )
         df = pd.read_sql(converted_query, con=connection, params=ordered_values)
 

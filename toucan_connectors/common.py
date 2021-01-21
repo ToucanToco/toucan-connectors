@@ -274,3 +274,11 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> str:
             flattened_values.append(val)
 
     return re.sub(RE_NAMED_PARAM, '?', query_string), flattened_values
+
+
+def adapt_param_type(params):
+    """Adapts provided params when a conversion is needed. For example, when
+    passing a list parameter it should be converted to tuple in order for
+    postgres to correctly interpret them as an array.
+    """
+    return {k: (tuple(v) if isinstance(v, list) else v) for (k, v) in params.items()}
