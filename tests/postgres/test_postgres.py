@@ -110,3 +110,18 @@ def test_get_df_db(postgres_connector):
     assert not df.empty
     assert set(df.columns) == expected_columns
     assert df.shape == (24, 5)
+
+
+def test_get_df_array_interpolation(postgres_connector):
+    data_source_spec = {
+        'domain': 'Postgres test',
+        'type': 'external_database',
+        'name': 'Some Postgres provider',
+        'database': 'postgres_db',
+        'query': 'SELECT * FROM City WHERE id in %(ids)s',
+        'parameters': {'ids': [1, 2]},
+    }
+    data_source = PostgresDataSource(**data_source_spec)
+    df = postgres_connector.get_df(data_source)
+    assert not df.empty
+    assert df.shape == (2, 5)

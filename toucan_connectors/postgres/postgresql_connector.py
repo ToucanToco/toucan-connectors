@@ -2,6 +2,7 @@ import pandas as pd
 import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr
 
+from toucan_connectors.common import adapt_param_type
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -57,7 +58,7 @@ class PostgresConnector(ToucanConnector):
         connection = pgsql.connect(**self.get_connection_params(database=data_source.database))
 
         query_params = data_source.parameters or {}
-        df = pd.read_sql(data_source.query, con=connection, params=query_params)
+        df = pd.read_sql(data_source.query, con=connection, params=adapt_param_type(query_params))
 
         connection.close()
 

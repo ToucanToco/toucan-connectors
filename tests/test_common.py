@@ -4,6 +4,7 @@ from aiohttp import web
 from toucan_connectors.common import (
     ConnectorStatus,
     NonValidVariable,
+    adapt_param_type,
     apply_query_parameters,
     convert_to_qmark_paramstyle,
     fetch,
@@ -273,3 +274,7 @@ def test_convert_pyformat_to_qmark(query, params, expected_query, expected_order
     converted_query, ordered_values = convert_to_qmark_paramstyle(query, params)
     assert ordered_values == expected_ordered_values
     assert converted_query == expected_query
+
+
+def test_adapt_param_type():
+    assert adapt_param_type({'test': [1, 2], 'id': 1}) == {'test': (1, 2), 'id': 1}

@@ -159,3 +159,16 @@ def test_query_variability(mocker):
         con=mock_pyodbc_connect(),
         params=[1, 10],
     )
+    mock_pandas_read_sql = mocker.patch('pandas.read_sql')
+    ds = MSSQLDataSource(
+        query='select * from test where id_nb in %(ids)s;',
+        domain='test',
+        name='test',
+        parameters={'ids': [1, 2]},
+    )
+    con.get_df(ds)
+    mock_pandas_read_sql.assert_called_once_with(
+        'select * from test where id_nb in (?,?);',
+        con=mock_pyodbc_connect(),
+        params=[1, 2],
+    )
