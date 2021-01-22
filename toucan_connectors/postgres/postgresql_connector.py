@@ -1,16 +1,70 @@
 import pandas as pd
 import psycopg2 as pgsql
-from pydantic import Field, SecretStr, constr
+from pydantic import Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import adapt_param_type
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class PostgresDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
     query: constr(min_length=1) = Field(
-        ..., description='You can write your SQL query here', widget='sql'
+        None,
+        description='You can write a custom query against your '
+        'database here. It will take precedence over '
+        'the "table" parameter above',
+        widget='sql',
     )
+    table: constr(min_length=1) = Field(
+        None,
+        description='The name of the data table that you want to '
+        'get (equivalent to "SELECT * FROM '
+        'your_table")',
+    )
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        query = data.get('query')
+        table = data.get('table')
+        if query is None and table is None:
+            raise ValueError("'query' or 'table' must be set")
+        elif query is None and table is not None:
+            self.query = f'select * from {table} limit 50;'
+
+    @classmethod
+    def get_form(cls, connector: 'PostgresConnector', current_config):
+        """
+        Method to retrieve the form with a current config
+        For example, once the connector is set,
+        - we are able to give suggestions for the `database` field
+        - if `database` is set, we are able to give suggestions for the `table` field
+        """
+        connection = pgsql.connect(
+            **connector.get_connection_params(database=current_config.get('database'))
+        )
+
+        # Add constraints to the schema
+        # the key has to be a valid field
+        # the value is either <default value> or a tuple ( <type>, <default value> )
+        # If the field is required, the <default value> has to be '...' (cf pydantic doc)
+        constraints = {}
+
+        # # Always add the suggestions for the available databases
+        with connection.cursor() as cursor:
+            cursor.execute("""select datname from pg_database where datistemplate = false;""")
+            res = cursor.fetchall()
+            available_dbs = [db_name for (db_name,) in res]
+            constraints['database'] = strlist_to_enum('database', available_dbs)
+
+            if 'database' in current_config:
+                cursor.execute(
+                    """select table_schema, table_name from information_schema.tables
+                where table_schema NOT IN ('pg_catalog', 'information_schema');"""
+                )
+                res = cursor.fetchall()
+                available_tables = [table_name for (_, table_name) in res]
+                constraints['table'] = strlist_to_enum('table', available_tables)
+        return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
 class PostgresConnector(ToucanConnector):
