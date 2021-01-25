@@ -1,9 +1,9 @@
 import pandas as pd
 import pyodbc
-from pydantic import Field, SecretStr, constr
+from pydantic import Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import convert_to_qmark_paramstyle
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class MSSQLDataSource(ToucanDataSource):
@@ -14,9 +14,67 @@ class MSSQLDataSource(ToucanDataSource):
         description='The name of the database you want to query. '
         "By default SQL Server selects the user's default database",
     )
-    query: constr(min_length=1) = Field(
-        ..., description='You can write your SQL query here', widget='sql'
+    table: constr(min_length=1) = Field(
+        None,
+        description='The name of the data table that you want to '
+        'get (equivalent to "SELECT * FROM '
+        'your_table")',
     )
+    query: constr(min_length=1) = Field(
+        None,
+        description='You can write a custom query against your '
+        'database here. It will take precedence over '
+        'the "table" parameter above',
+        widget='sql',
+    )
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        query = data.get('query')
+        table = data.get('table')
+        if query is None and table is None:
+            raise ValueError("'query' or 'table' must be set")
+        elif query is None and table is not None:
+            self.query = f'select TOP 10 * from {table};'
+
+    @classmethod
+    def get_form(cls, connector: 'MSSQLConnector', current_config):
+        """
+        Method to retrieve the form with a current config
+        For example, once the connector is set,
+        - we are able to give suggestions for the `database` field
+        - if `database` is set, we are able to give suggestions for the `table` field
+        """
+        if current_config.get('database'):
+            connection = pyodbc.connect(
+                **connector.get_connection_params(database=current_config.get('database'))
+            )
+        else:
+            connection = pyodbc.connect(**connector.get_connection_params(database='tempdb'))
+        # Add constraints to the schema
+        # the key has to be a valid field
+        # the value is either <default value> or a tuple ( <type>, <default value> )
+        # If the field is required, the <default value> has to be '...' (cf pydantic doc)
+        constraints = {}
+
+        # # Always add the suggestions for the available databases
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT name FROM sys.databases;')
+            res = cursor.fetchall()
+            available_dbs = [r[0] for r in res]
+            constraints['database'] = strlist_to_enum('database', available_dbs)
+
+            if 'database' in current_config:
+                cursor.execute('SELECT TABLE_NAME FROM  INFORMATION_SCHEMA.TABLES;')
+                res = cursor.fetchall()
+                available_tables = [
+                    table_name
+                    for (table_name,) in res
+                    if not ('spt_' in table_name) and not ('MSreplication_options' in table_name)
+                ]
+                constraints['table'] = strlist_to_enum('table', available_tables)
+
+        return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
 class MSSQLConnector(ToucanConnector):

@@ -50,16 +50,22 @@ def mssql_connector(mssql_server):
 
 @pytest.fixture
 def mssql_datasource():
-    def f(query):
-        return MSSQLDataSource(name='mycon', domain='mydomain', query=query)
+    def f(query, database):
+        return MSSQLDataSource(name='mycon', domain='mydomain', query=query, database=database)
 
     return f
 
 
-def test_datasource(mssql_datasource):
+def test_datasource():
     with pytest.raises(pydantic.ValidationError):
-        mssql_datasource(query='')
-    mssql_datasource(query='ok')
+        MSSQLDataSource(name='mycon', domain='mydomain', database='ubuntu', query='')
+
+    with pytest.raises(ValueError) as exc_info:
+        MSSQLDataSource(name='mycon', domain='mydomain', database='ubuntu')
+    assert "'query' or 'table' must be set" in str(exc_info.value)
+
+    ds = MSSQLDataSource(name='mycon', domain='mydomain', database='ubuntu', table='test')
+    assert ds.query == 'select TOP 10 * from test;'
 
 
 def test_connection_params():
@@ -123,7 +129,8 @@ def test_mssql_get_df(mocker):
 def test_get_df(mssql_connector, mssql_datasource):
     """ It should connect to the default database and retrieve the response to the query """
     datasource = mssql_datasource(
-        query='SELECT Name, CountryCode, Population ' 'FROM City WHERE ID BETWEEN 1 AND 3'
+        query='SELECT Name, CountryCode, Population ' 'FROM City WHERE ID BETWEEN 1 AND 3',
+        database='master',
     )
     expected = pd.DataFrame(
         {'Name': ['Kabul', 'Qandahar', 'Herat'], 'Population': [1780000, 237500, 186800]}
@@ -150,6 +157,7 @@ def test_query_variability(mocker):
         domain='test',
         name='test',
         parameters={'price': 10, 'id_nb': 1},
+        database='db',
     )
 
     con.get_df(ds)
@@ -164,6 +172,7 @@ def test_query_variability(mocker):
         query='select * from test where id_nb in %(ids)s;',
         domain='test',
         name='test',
+        database='db',
         parameters={'ids': [1, 2]},
     )
     con.get_df(ds)
@@ -172,3 +181,38 @@ def test_query_variability(mocker):
         con=mock_pyodbc_connect(),
         params=[1, 2],
     )
+
+
+def test_get_form_empty_query(mssql_connector):
+    """It should give suggestions of the databases without changing the rest"""
+    current_config = {}
+    form = MSSQLDataSource.get_form(mssql_connector, current_config)
+
+    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
+    assert form['definitions']['database'] == {
+        'title': 'database',
+        'description': 'An enumeration.',
+        'type': 'string',
+        'enum': ['master', 'tempdb', 'model', 'msdb'],
+    }
+
+
+def test_get_form_query_with_good_database(mssql_connector):
+    """It should give suggestions of the databases without changing the rest"""
+    current_config = {'database': 'master'}
+    form = MSSQLDataSource.get_form(mssql_connector, current_config)
+
+    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
+    assert form['definitions']['database'] == {
+        'title': 'database',
+        'description': 'An enumeration.',
+        'type': 'string',
+        'enum': ['master', 'tempdb', 'model', 'msdb'],
+    }
+    assert form['properties']['table'] == {'$ref': '#/definitions/table'}
+    assert form['definitions']['table'] == {
+        'title': 'table',
+        'description': 'An enumeration.',
+        'type': 'string',
+        'enum': ['City'],
+    }
