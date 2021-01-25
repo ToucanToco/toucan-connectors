@@ -72,3 +72,19 @@ def test_get_df_db(oracle_connector):
     assert set(df.columns) == {'ID', 'NAME', 'COUNTRYCODE', 'DISTRICT', 'POPULATION'}
 
     assert len(df[df['POPULATION'] > 500000]) == 5
+
+
+def test_get_form_empty_query(oracle_connector):
+    """It should give suggestions of the databases without changing the rest"""
+    current_config = {}
+    form = OracleSQLDataSource.get_form(oracle_connector, current_config)
+    assert 'CITY' in form['definitions']['table']['enum']
+
+
+def test_datasource():
+    with pytest.raises(ValueError) as exc_info:
+        OracleSQLDataSource(name='mycon', domain='mydomain')
+        assert "'query' or 'table' must be set" in str(exc_info.value)
+
+    ds = OracleSQLDataSource(name='mycon', domain='mydomain', table='test')
+    assert ds.query == 'select * from test limit 50'

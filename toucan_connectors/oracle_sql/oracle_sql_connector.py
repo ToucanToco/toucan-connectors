@@ -1,14 +1,49 @@
 import cx_Oracle
 import pandas as pd
-from pydantic import Field, SecretStr, constr
+from pydantic import Field, SecretStr, constr, create_model
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class OracleSQLDataSource(ToucanDataSource):
     query: constr(min_length=1) = Field(
-        ..., description='You can write your SQL query here', widget='sql'
+        None, description='You can write your SQL query here', widget='sql'
     )
+    table: constr(min_length=1) = Field(
+        None,
+        description='The name of the data table that you want to '
+        'get (equivalent to "SELECT * FROM '
+        'your_table")',
+    )
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        query = data.get('query')
+        table = data.get('table')
+        if query is None and table is None:
+            raise ValueError("'query' or 'table' must be set")
+        elif query is None and table is not None:
+            self.query = f'select * from {table} limit 50'
+
+    @classmethod
+    def get_form(cls, connector: 'OracleSQLConnector', current_config):
+        """
+        Method to retrieve the form with a current config
+        For example, once the connector is set,
+        - we are able to give suggestions for the `database` field
+        - if `database` is set, we are able to give suggestions for the `table` field
+        """
+        connection = cx_Oracle.connect(**connector.get_connection_params())
+
+        constraints = {}
+
+        # # Always add the suggestions for the available databases
+        with connection.cursor() as cursor:
+            cursor.execute("""select table_name from USER_TABLES""")
+            res = cursor.fetchall()
+            available_tables = [table_name for (table_name,) in res]
+            constraints['table'] = strlist_to_enum('table', available_tables)
+        return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
 class OracleSQLConnector(ToucanConnector):
