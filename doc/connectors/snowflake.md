@@ -8,6 +8,7 @@ Import data from Snowflake data warehouse.
 * `name`: str, required
 * `user`: str, required
 * `password`: str, required
+* `default_warehouse`: str, name of the default warehouse to be used in a data source if no warehouse was specified in the concerned data source
 * `account`: str, required
 * `ocsp_response_cache_filename`: str, path to the location used to store [ocsp cache] (https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses)
 

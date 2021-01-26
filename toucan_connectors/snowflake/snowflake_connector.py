@@ -28,6 +28,12 @@ class SnowflakeDataSource(ToucanDataSource):
         ..., description='You can write your SQL query here', widget='sql'
     )
 
+    @classmethod
+    def get_form(cls, connector: 'SnowflakeConnector', current_config):
+        res = cls.schema()
+        res['properties']['warehouse']['default'] = connector.default_warehouse
+        return res
+
 
 class SnowflakeConnector(ToucanConnector):
     """
@@ -38,6 +44,9 @@ class SnowflakeConnector(ToucanConnector):
 
     user: str = Field(..., description='Your login username')
     password: SecretStr = Field(..., description='Your login password')
+    default_warehouse: str = Field(
+        ..., description='The default warehouse that shall be used for any data source'
+    )
     account: str = Field(
         ...,
         description='The full name of your Snowflake account. '
@@ -53,17 +62,22 @@ class SnowflakeConnector(ToucanConnector):
     )
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
+        warehouse = data_source.warehouse
+        # Default to default warehouse if not specified in `data_source`
+        if self.default_warehouse and not warehouse:
+            warehouse = self.default_warehouse
+
         connection = snowflake.connector.connect(
             user=self.user,
             password=self.password.get_secret_value(),
             account=self.account,
             database=Template(data_source.database).render(),
-            warehouse=Template(data_source.warehouse).render(),
+            warehouse=Template(warehouse).render(),
             ocsp_response_cache_filename=self.ocsp_response_cache_filename,
         )
 
         # https://docs.snowflake.net/manuals/sql-reference/sql/use-warehouse.html
-        connection.cursor().execute(f'USE WAREHOUSE {data_source.warehouse}')
+        connection.cursor().execute(f'USE WAREHOUSE {warehouse}')
 
         query = nosql_apply_parameters_to_query(data_source.query, data_source.parameters)
         df = pd.read_sql(query, con=connection)
