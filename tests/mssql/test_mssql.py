@@ -48,14 +48,6 @@ def mssql_connector(mssql_server):
     )
 
 
-@pytest.fixture
-def mssql_datasource():
-    def f(query, database):
-        return MSSQLDataSource(name='mycon', domain='mydomain', query=query, database=database)
-
-    return f
-
-
 def test_datasource():
     with pytest.raises(pydantic.ValidationError):
         MSSQLDataSource(name='mycon', domain='mydomain', database='ubuntu', query='')
@@ -65,7 +57,7 @@ def test_datasource():
     assert "'query' or 'table' must be set" in str(exc_info.value)
 
     ds = MSSQLDataSource(name='mycon', domain='mydomain', database='ubuntu', table='test')
-    assert ds.query == 'select TOP 10 * from test;'
+    assert ds.query == 'select * from test;'
 
 
 def test_connection_params():
@@ -126,12 +118,15 @@ def test_mssql_get_df(mocker):
     )
 
 
-def test_get_df(mssql_connector, mssql_datasource):
+def test_get_df(mssql_connector):
     """ It should connect to the default database and retrieve the response to the query """
-    datasource = mssql_datasource(
+    datasource = MSSQLDataSource(
+        name='mycon',
+        domain='mydomain',
         query='SELECT Name, CountryCode, Population ' 'FROM City WHERE ID BETWEEN 1 AND 3',
         database='master',
     )
+
     expected = pd.DataFrame(
         {'Name': ['Kabul', 'Qandahar', 'Herat'], 'Population': [1780000, 237500, 186800]}
     )
@@ -210,9 +205,4 @@ def test_get_form_query_with_good_database(mssql_connector):
         'enum': ['master', 'tempdb', 'model', 'msdb'],
     }
     assert form['properties']['table'] == {'$ref': '#/definitions/table'}
-    assert form['definitions']['table'] == {
-        'title': 'table',
-        'description': 'An enumeration.',
-        'type': 'string',
-        'enum': ['City'],
-    }
+    assert 'City' in form['definitions']['table']['enum']
