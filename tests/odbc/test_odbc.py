@@ -20,7 +20,7 @@ def postgres_server(service_container):
         conn = psycopg2.connect(
             host='127.0.0.1',
             port=host_port,
-            database='ubuntu',
+            database='postgres_db',
             user='ubuntu',
             password='ilovetoucan',
         )
@@ -38,7 +38,7 @@ def odbc_connector(postgres_server):
         name='test',
         connection_string=(
             'DRIVER={PostgreSQL Unicode};'
-            'DATABASE=ubuntu;'
+            'DATABASE=postgres_db;'
             'UID=ubuntu;'
             'PWD=ilovetoucan;'
             'SERVER=127.0.0.1;'

@@ -37,7 +37,7 @@ mysql:
 postgres:
   image: postgres
   environment:
-    - POSTGRES_DB=ubuntu
+    - POSTGRES_DB=postgres_db
     - POSTGRES_USER=ubuntu
     - POSTGRES_PASSWORD=ilovetoucan
   ports:
