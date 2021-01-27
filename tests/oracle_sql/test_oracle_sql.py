@@ -87,4 +87,4 @@ def test_datasource():
         assert "'query' or 'table' must be set" in str(exc_info.value)
 
     ds = OracleSQLDataSource(name='mycon', domain='mydomain', table='test')
-    assert ds.query == 'select * from test limit 50'
+    assert ds.query == 'select * from test'

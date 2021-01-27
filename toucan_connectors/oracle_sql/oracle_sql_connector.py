@@ -23,7 +23,7 @@ class OracleSQLDataSource(ToucanDataSource):
         if query is None and table is None:
             raise ValueError("'query' or 'table' must be set")
         elif query is None and table is not None:
-            self.query = f'select * from {table} limit 50'
+            self.query = f'select * from {table}'
 
     @classmethod
     def get_form(cls, connector: 'OracleSQLConnector', current_config):
@@ -39,9 +39,11 @@ class OracleSQLDataSource(ToucanDataSource):
 
         # # Always add the suggestions for the available databases
         with connection.cursor() as cursor:
-            cursor.execute("""select table_name from USER_TABLES""")
+            cursor.execute("""select table_name from ALL_TABLES""")
             res = cursor.fetchall()
-            available_tables = [table_name for (table_name,) in res]
+            # Filter tables starting with an '_' because strlist_to_enum cannot
+            # set attributes starting with '_'
+            available_tables = [table_name for (table_name,) in res if table_name[0] != '_']
             constraints['table'] = strlist_to_enum('table', available_tables)
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
