@@ -29,7 +29,7 @@ class PostgresDataSource(ToucanDataSource):
         if query is None and table is None:
             raise ValueError("'query' or 'table' must be set")
         elif query is None and table is not None:
-            self.query = f'select * from {table} limit 50;'
+            self.query = f'select * from {table};'
 
     @classmethod
     def get_form(cls, connector: 'PostgresConnector', current_config):
@@ -40,7 +40,7 @@ class PostgresDataSource(ToucanDataSource):
         - if `database` is set, we are able to give suggestions for the `table` field
         """
         connection = pgsql.connect(
-            **connector.get_connection_params(database=current_config.get('database'))
+            **connector.get_connection_params(database=current_config.get('database', 'postgres'))
         )
 
         # Add constraints to the schema

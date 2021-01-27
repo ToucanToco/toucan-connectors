@@ -12,7 +12,7 @@ def postgres_server(service_container):
         conn = psycopg2.connect(
             host='127.0.0.1',
             port=host_port,
-            database='ubuntu',
+            database='postgres_db',
             user='ubuntu',
             password='ilovetoucan',
         )
@@ -64,7 +64,7 @@ def test_datasource():
     assert "'query' or 'table' must be set" in str(exc_info.value)
 
     ds = PostgresDataSource(name='mycon', domain='mydomain', database='ubuntu', table='test')
-    assert ds.query == 'select * from test limit 50;'
+    assert ds.query == 'select * from test;'
 
 
 def test_postgress_get_df(mocker):
@@ -78,13 +78,13 @@ def test_postgress_get_df(mocker):
     ds = PostgresDataSource(
         domain='test',
         name='test',
-        database='ubuntu',
+        database='postgres_db',
         query='SELECT Name, CountryCode, Population FROM City LIMIT 2;',
     )
     postgres_connector.get_df(ds)
 
     snock.assert_called_once_with(
-        host='localhost', dbname='ubuntu', user='ubuntu', password='ilovetoucan', port=22
+        host='localhost', dbname='postgres_db', user='ubuntu', password='ilovetoucan', port=22
     )
 
     reasq.assert_called_once_with(
@@ -97,7 +97,7 @@ def test_retrieve_response(postgres_connector):
     ds = PostgresDataSource(
         domain='test',
         name='test',
-        database='ubuntu',
+        database='postgres_db',
         query='SELECT Name, CountryCode, Population FROM City LIMIT 2;',
     )
     res = postgres_connector.get_df(ds)
@@ -111,7 +111,7 @@ def test_get_df_db(postgres_connector):
         'domain': 'Postgres test',
         'type': 'external_database',
         'name': 'Some Postgres provider',
-        'database': 'ubuntu',
+        'database': 'postgres_db',
         'query': 'SELECT * FROM City WHERE Population > %(max_pop)s',
         'parameters': {'max_pop': 5000000},
     }
@@ -129,7 +129,7 @@ def test_get_df_array_interpolation(postgres_connector):
         'domain': 'Postgres test',
         'type': 'external_database',
         'name': 'Some Postgres provider',
-        'database': 'ubuntu',
+        'database': 'postgres_db',
         'query': 'SELECT * FROM City WHERE id in %(ids)s',
         'parameters': {'ids': [1, 2]},
     }
@@ -148,20 +148,20 @@ def test_get_form_empty_query(postgres_connector):
         'title': 'database',
         'description': 'An enumeration.',
         'type': 'string',
-        'enum': ['postgres', 'ubuntu'],
+        'enum': ['postgres', 'postgres_db'],
     }
 
 
 def test_get_form_query_with_good_database(postgres_connector, mocker):
     """It should give suggestions of the collections"""
-    current_config = {'database': 'ubuntu'}
+    current_config = {'database': 'postgres_db'}
     form = PostgresDataSource.get_form(postgres_connector, current_config)
     assert form['properties']['database'] == {'$ref': '#/definitions/database'}
     assert form['definitions']['database'] == {
         'title': 'database',
         'description': 'An enumeration.',
         'type': 'string',
-        'enum': ['postgres', 'ubuntu'],
+        'enum': ['postgres', 'postgres_db'],
     }
     assert form['properties']['table'] == {'$ref': '#/definitions/table'}
     assert form['definitions']['table'] == {
