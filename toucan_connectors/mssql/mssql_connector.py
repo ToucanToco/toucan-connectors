@@ -35,7 +35,7 @@ class MSSQLDataSource(ToucanDataSource):
         if query is None and table is None:
             raise ValueError("'query' or 'table' must be set")
         elif query is None and table is not None:
-            self.query = f'select TOP 10 * from {table};'
+            self.query = f'select * from {table};'
 
     @classmethod
     def get_form(cls, connector: 'MSSQLConnector', current_config):
@@ -45,12 +45,9 @@ class MSSQLDataSource(ToucanDataSource):
         - we are able to give suggestions for the `database` field
         - if `database` is set, we are able to give suggestions for the `table` field
         """
-        if current_config.get('database'):
-            connection = pyodbc.connect(
-                **connector.get_connection_params(database=current_config.get('database'))
-            )
-        else:
-            connection = pyodbc.connect(**connector.get_connection_params(database='tempdb'))
+        connection = pyodbc.connect(
+            **connector.get_connection_params(database=current_config.get('database', 'tempdb'))
+        )
         # Add constraints to the schema
         # the key has to be a valid field
         # the value is either <default value> or a tuple ( <type>, <default value> )
@@ -67,11 +64,7 @@ class MSSQLDataSource(ToucanDataSource):
             if 'database' in current_config:
                 cursor.execute('SELECT TABLE_NAME FROM  INFORMATION_SCHEMA.TABLES;')
                 res = cursor.fetchall()
-                available_tables = [
-                    table_name
-                    for (table_name,) in res
-                    if not ('spt_' in table_name) and not ('MSreplication_options' in table_name)
-                ]
+                available_tables = [table_name for (table_name,) in res]
                 constraints['table'] = strlist_to_enum('table', available_tables)
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
