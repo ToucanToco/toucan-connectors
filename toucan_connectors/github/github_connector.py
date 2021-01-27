@@ -196,6 +196,7 @@ class GithubConnector(ToucanConnector):
         retrieved_pages=0,
         retries=0,
         retry_limit=4,
+        latest_retrieved_object=None,
     ) -> List[dict]:
         """
         Extracts pages of either members or pull requests
@@ -226,15 +227,32 @@ class GithubConnector(ToucanConnector):
                 extraction_funcs_pages_2[dataset](get_organization(get_data(data)))
             )
             page_info = get_page_info(extracted_data)
+            formatted_data = format_functions[dataset](extracted_data, name)
+
+            # Check if the extraction script can see a previously extracted object (e.g PR)
+            # in current page
+
+            if latest_retrieved_object and dataset == 'pull requests':
+                # check if latest_retrieved_object is in current page
+                if latest_retrieved_object in [pr['PR Name'] for pr in formatted_data]:
+                    # if yes, remove all PR after the already retrieved one
+                    formatted_data = formatted_data[
+                        : [pr['PR Name'] for pr in formatted_data].index(latest_retrieved_object)
+                    ]
+
+                    if dataset == 'pull requests':
+                        data_list.extend(formatted_data)
+                        return data_list
 
             if dataset == 'pull requests':
-                data_list.extend(format_functions[dataset](extracted_data, name))
+                data_list.extend(formatted_data)
             else:
-                data_list.append(format_functions[dataset](extracted_data, name))
+                data_list.append(formatted_data)
 
             if has_next_page(page_info) and retrieved_pages < page_limit:
                 retrieved_pages += 1
                 variables['cursor'] = get_cursor(page_info)
+
                 await self.get_pages(
                     name=name,
                     client=client,
@@ -244,6 +262,7 @@ class GithubConnector(ToucanConnector):
                     data_list=data_list,
                     retrieved_pages=retrieved_pages,
                     page_limit=page_limit,
+                    latest_retrieved_object=latest_retrieved_object,
                 )
 
         except GithubError:
@@ -261,6 +280,7 @@ class GithubConnector(ToucanConnector):
                     retrieved_pages=retrieved_pages,
                     retries=retries,
                     page_limit=page_limit,
+                    latest_retrieved_object=latest_retrieved_object,
                 )
             else:
                 raise GithubError('Max number of retries reached, aborting connection')
@@ -277,6 +297,7 @@ class GithubConnector(ToucanConnector):
         client: GraphqlClient,
         page_limit: int,
         names_limit=None,
+        latest_retrieved_object=None,
     ) -> pd.DataFrame:
         """
          Builds the coroutines ran by _retrieve_data
@@ -286,6 +307,7 @@ class GithubConnector(ToucanConnector):
         :param client a GraphqlClient that will make the requests to Github's API
         :param page_limit max number of pages to be retrieved by get_pages
         :param names_limit number max of "names" (teams/repos) to extract the data from
+        :param latest_retrieved_object a dict with object as key and entity as value e. g {'repo':'pr: stuff'}
         :return: a Pandas DataFrame of pull requests or team memberships
         """
         logging.getLogger(__name__).info(f'Starting fetch for {dataset}')
@@ -297,6 +319,9 @@ class GithubConnector(ToucanConnector):
                 dataset=dataset,
                 organization=organization,
                 page_limit=page_limit,
+                latest_retrieved_object=latest_retrieved_object[name]
+                if latest_retrieved_object
+                else None,
             )
             for name in names[:names_limit]
         ]
