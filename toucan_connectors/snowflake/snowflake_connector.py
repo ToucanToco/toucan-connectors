@@ -1,3 +1,4 @@
+from enum import Enum
 from os import path
 
 import pandas as pd
@@ -35,6 +36,11 @@ class SnowflakeDataSource(ToucanDataSource):
         return res
 
 
+class AuthenticationMethod(str, Enum):
+    PLAIN: str = 'snowflake'
+    OAUTH: str = 'oauth'
+
+
 class SnowflakeConnector(ToucanConnector):
     """
     Import data from Snowflake data warehouse.
@@ -42,17 +48,25 @@ class SnowflakeConnector(ToucanConnector):
 
     data_source_model: SnowflakeDataSource
 
-    user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(..., description='Your login password')
-    default_warehouse: str = Field(
-        ..., description='The default warehouse that shall be used for any data source'
+    authentication_method: AuthenticationMethod = Field(
+        ...,
+        title='Authentication Method',
+        description='The authentication mechanism that will be used to connect to your snowflake data source',
     )
+
+    user: str = Field(..., description='Your login username')
+    password: SecretStr = Field(None, description='Your login password')
+    oauth_token: str = Field(None, description='Your oauth token')
     account: str = Field(
         ...,
         description='The full name of your Snowflake account. '
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
+    )
+
+    default_warehouse: str = Field(
+        ..., description='The default warehouse that shall be used for any data source'
     )
     ocsp_response_cache_filename: Path = Field(
         None,
@@ -61,19 +75,34 @@ class SnowflakeConnector(ToucanConnector):
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses" target="_blank">OCSP cache file</a>',
     )
 
+    def get_connection_params(self):
+        res = {
+            'user': self.user,
+            'account': self.account,
+            'authenticator': self.authentication_method,
+        }
+
+        if self.authentication_method == AuthenticationMethod.PLAIN and self.password:
+            res['password'] = self.password.get_secret_value()
+
+        if self.authentication_method == AuthenticationMethod.OAUTH:
+            res['token'] = Template(self.oauth_token).render()
+
+        return res
+
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         warehouse = data_source.warehouse
         # Default to default warehouse if not specified in `data_source`
         if self.default_warehouse and not warehouse:
             warehouse = self.default_warehouse
 
+        connection_params = self.get_connection_params()
+
         connection = snowflake.connector.connect(
-            user=self.user,
-            password=self.password.get_secret_value(),
-            account=self.account,
             database=Template(data_source.database).render(),
             warehouse=Template(warehouse).render(),
             ocsp_response_cache_filename=self.ocsp_response_cache_filename,
+            **connection_params,
         )
 
         # https://docs.snowflake.net/manuals/sql-reference/sql/use-warehouse.html
