@@ -1,12 +1,27 @@
 import pytest
 
-from toucan_connectors.snowflake import SnowflakeConnector, SnowflakeDataSource
+from toucan_connectors.snowflake import (
+    AuthenticationMethod,
+    SnowflakeConnector,
+    SnowflakeDataSource,
+)
 
 sc = SnowflakeConnector(
     name='test_name',
+    authentication_method=AuthenticationMethod.PLAIN,
     user='test_user',
     password='test_password',
     account='test_account',
+    default_warehouse='default_wh',
+)
+
+sc_oauth = SnowflakeConnector(
+    name='test_name',
+    authentication_method=AuthenticationMethod.OAUTH,
+    user='test_user',
+    password='test_password',
+    account='test_account',
+    oauth_token='tUh7G0lJs6TjjGzVkv5DAOD4cSFPK5o2',
     default_warehouse='default_wh',
 )
 
@@ -36,6 +51,7 @@ def test_snowflake(mocker):
         account='test_account',
         database='test_database',
         warehouse='test_warehouse',
+        authenticator='snowflake',
         ocsp_response_cache_filename=None,
     )
 
@@ -76,6 +92,39 @@ def test_snowflake_data_source_default_warehouse(mocker):
         database='db',
         warehouse='default_wh',
         ocsp_response_cache_filename=None,
+        authenticator='snowflake',
+    )
+
+
+def test_snowflake_oauth_auth(mocker):
+    snow_mock = mocker.patch('snowflake.connector.connect')
+
+    sc_oauth.get_df(sd)
+
+    snow_mock.assert_called_once_with(
+        user='test_user',
+        account='test_account',
+        authenticator=AuthenticationMethod.OAUTH,
+        database='test_database',
+        warehouse='test_warehouse',
+        token='tUh7G0lJs6TjjGzVkv5DAOD4cSFPK5o2',
+        ocsp_response_cache_filename=None,
+    )
+
+
+def test_snowflake_plain_auth(mocker):
+    snow_mock = mocker.patch('snowflake.connector.connect')
+
+    sc.get_df(sd)
+
+    snow_mock.assert_called_once_with(
+        user='test_user',
+        account='test_account',
+        password='test_password',
+        authenticator=AuthenticationMethod.PLAIN,
+        database='test_database',
+        warehouse='test_warehouse',
+        ocsp_response_cache_filename=None,
     )
 
 
@@ -86,6 +135,7 @@ def test_missing_cache_file():
         )
 
     SnowflakeConnector(
+        authentication_method=AuthenticationMethod.PLAIN,
         user='',
         password='',
         account='',
