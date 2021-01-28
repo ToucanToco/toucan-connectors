@@ -373,7 +373,7 @@ def extracted_prs_2():
                                 'mergedAt': None,
                                 'deletions': 45,
                                 'additions': 162,
-                                'title': 'feat(blalbla):blalba ',
+                                'title': 'feat(blalbla):bla',
                                 'state': 'OPEN',
                                 'labels': {
                                     'edges': [
@@ -393,7 +393,7 @@ def extracted_prs_2():
                                         }
                                     ]
                                 },
-                            },
+                            }
                         ],
                         'pageInfo': {'hasNextPage': False, 'endCursor': '123'},
                     },
