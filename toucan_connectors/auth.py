@@ -1,7 +1,10 @@
+from datetime import datetime
 from enum import Enum
 from typing import List
 
+import jwt
 import pyjq
+import requests
 from oauthlib.oauth2 import BackendApplicationClient
 from pydantic import BaseModel, Field
 from requests import Session
@@ -16,6 +19,30 @@ def oauth2_backend(token_url, client_id, client_secret):
         token_url=token_url, client_id=client_id, client_secret=client_secret
     )
     return OAuth2Session(client_id=client_id, token=token)
+
+
+def oauth2_oidc(*args, **kwargs) -> Session:
+    """
+    Get a valid access token with the provided refresh_token
+    """
+    id_token = kwargs['id_token']
+    #  check that the id_token is not expired
+    decoded = jwt.decode(kwargs['id_token'], verify=False, options={'verify_signature': False})
+    if datetime.fromtimestamp(decoded['exp']) < datetime.now():
+        response = requests.post(
+            kwargs['token_endpoint'],
+            data={
+                'grant_type': 'refresh_token',
+                'client_id': kwargs['client_id'],
+                'client_secret': kwargs['client_secret'],
+                'refresh_token': kwargs['refresh_token'],
+            },
+        )
+        id_token = response.json()['id_token']  # we don't store it as of now
+
+    session = requests.Session()
+    session.headers.update({'Authorization': f'Bearer {id_token}'})
+    return session
 
 
 class CustomTokenServer(AuthBase):
@@ -56,13 +83,14 @@ class AuthType(str, Enum):
     digest = 'digest'
     oauth1 = 'oauth1'
     oauth2_backend = 'oauth2_backend'
+    oauth2_oidc = 'oauth2_oidc'
     custom_token_server = 'custom_token_server'
 
 
 class Auth(BaseModel):
     type: AuthType = Field(
         ...,
-        description='As we rely on the python request lirary, we suggest that you '
+        description='As we rely on the python request library, we suggest that you '
         'refer to the dedicated '
         '<a href="https://2.python-requests.org/en/master/user/authentication/">documentation</a> '
         'for more details.',
@@ -86,9 +114,9 @@ class Auth(BaseModel):
             'digest': HTTPDigestAuth,
             'oauth1': OAuth1,
             'oauth2_backend': oauth2_backend,
+            'oauth2_oidc': oauth2_oidc,
             'custom_token_server': CustomTokenServer,
         }.get(self.type.value)
-
         kwargs = {} if not self.kwargs else self.kwargs
         auth_instance = auth_class(*self.args, **kwargs)
 

@@ -2,6 +2,7 @@ import json
 from xml.etree.ElementTree import ParseError
 
 import pytest
+import requests
 import responses
 
 from toucan_connectors.common import transform_with_jq
@@ -371,3 +372,39 @@ def test_parse_xml_response(xml_connector, xml_datasource):
     assert df['login'][0] == 'analytica@fakecompany.com'
     assert df['timeZone'][0] == 'US/Pacific'
     assert df['id'][1] == '123'
+
+
+@responses.activate
+def test_oauth2_oidc_authentication(mocker):
+    data_provider = {
+        'type': 'HttpAPI',
+        'name': 'bidule-api',
+        'baseroute': 'https://api.bidule.com',
+        'auth': {
+            'type': 'oauth2_oidc',
+            'args': [],
+            'kwargs': {
+                'id_token': 'id_token_test',
+                'refresh_token': 'refresh_tokenètest',
+                'client_id': 'provided_client_id',
+                'client_secret': 'provided_client_secret',
+                'token_endpoint': 'https://api.bidule.com/token',
+            },
+        },
+    }
+    data_source = {
+        'domain': 'test',
+        'name': 'bidule-api',
+        'url': '/data',
+        'parameters': {'some': 'variable'},
+        'method': 'GET',
+    }
+    c = HttpAPIConnector(**data_provider)
+    session = requests.Session()
+    session.headers.update({'Authorization': 'Bearer MyNiceToken'})
+    mock_session = mocker.patch('toucan_connectors.auth.oauth2_oidc')
+    responses.add(
+        method=responses.GET, url='https://api.bidule.com/data', json={'ultimecia': 'citadel'}
+    )
+    c.get_df(HttpAPIDataSource(**data_source))
+    mock_session.assert_called_once()
