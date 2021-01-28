@@ -121,7 +121,9 @@ class HttpAPIConnector(ToucanConnector):
         if self.cert:
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates
             query['cert'] = [str(c) for c in self.cert]
+
         res = session.request(**query)
+
         if self.responsetype == 'xml':
             try:
                 data = fromstring(res.content)
