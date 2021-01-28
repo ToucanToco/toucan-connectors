@@ -337,7 +337,7 @@ def test_get_pages(
 
     mocked_api_call = mocker.patch(
         'python_graphql_client.GraphqlClient.execute_async',
-        side_effect=[extracted_prs_1],
+        side_effect=[extracted_prs_1, extracted_prs_2],
     )
     pr_rows = event_loop.run_until_complete(
         gc.get_pages(
@@ -346,12 +346,12 @@ def test_get_pages(
             dataset='pull requests',
             client=client,
             page_limit=1000,
-            latest_retrieved_object='build: something',
+            latest_retrieved_object='feat(blalbla):bla',
         )
     )
-    assert mocked_api_call.call_count == 1
-    assert len(pr_rows) == 1
-    assert pr_rows[-1]['PR Name'] == 'feat(blalbla):blalba '
+    assert mocked_api_call.call_count == 2
+    assert len(pr_rows) == 3
+    assert pr_rows[-1]['PR Name'] == 'chore(something): somethin'
 
     mocked_api_call = mocker.patch(
         'python_graphql_client.GraphqlClient.execute_async',

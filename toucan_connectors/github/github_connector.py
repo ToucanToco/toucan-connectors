@@ -210,6 +210,9 @@ class GithubConnector(ToucanConnector):
         :param: retrieved_pages int number of pages retrieved
         :param: retries the number of retries done when we got an error
         :param: retry_limit the max number of retries the connector can do
+        :param: latest_retrieved_object str of either the latest user name or pull request name retrieved
+        in a previous extraction. This will allow to call get_pages to extract only new object (users or pr)
+        since the last extraction
         :return: list of extracted data
         """
         if variables is None:
@@ -232,19 +235,18 @@ class GithubConnector(ToucanConnector):
             # Check if the extraction script can see a previously extracted object (e.g PR)
             # in current page
 
-            if latest_retrieved_object and dataset == 'pull requests':
+            if latest_retrieved_object and dataset == GithubDataSet('pull requests'):
                 # check if latest_retrieved_object is in current page
-                if latest_retrieved_object in [pr['PR Name'] for pr in formatted_data]:
-                    # if yes, remove all PR after the already retrieved one
-                    formatted_data = formatted_data[
-                        : [pr['PR Name'] for pr in formatted_data].index(latest_retrieved_object)
-                    ]
 
-                    if dataset == 'pull requests':
-                        data_list.extend(formatted_data)
-                        return data_list
+                try:
+                    index = [pr['PR Name'] for pr in formatted_data].index(latest_retrieved_object)
+                    formatted_data = formatted_data[:index]
+                    data_list.extend(formatted_data)
+                    return data_list
+                except ValueError:
+                    pass
 
-            if dataset == 'pull requests':
+            if dataset == GithubDataSet('pull requests'):
                 data_list.extend(formatted_data)
             else:
                 data_list.append(formatted_data)
@@ -307,7 +309,7 @@ class GithubConnector(ToucanConnector):
         :param client a GraphqlClient that will make the requests to Github's API
         :param page_limit max number of pages to be retrieved by get_pages
         :param names_limit number max of "names" (teams/repos) to extract the data from
-        :param latest_retrieved_object a dict with object as key and entity as value e. g {'repo':'pr: stuff'}
+        :param latest_retrieved_object a dict with object as key and entity as value e. g {'repo': 'plop', 'pr: stuff'}
         :return: a Pandas DataFrame of pull requests or team memberships
         """
         logging.getLogger(__name__).info(f'Starting fetch for {dataset}')
