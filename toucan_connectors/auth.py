@@ -24,6 +24,13 @@ def oauth2_backend(token_url, client_id, client_secret):
 def oauth2_oidc(*args, **kwargs) -> Session:
     """
     Get a valid access token with the provided refresh_token
+
+    Required kwargs:
+                id_token: <initial token that may need to be refreshed>,
+                refresh_token: <initial refresh_token>,
+                client_id: <oauth client id>,
+                client_secret: <oauth client secret>,
+                token_endpoint: <oauth api token endpoint>,
     """
     id_token = kwargs['id_token']
     #  check that the id_token is not expired
