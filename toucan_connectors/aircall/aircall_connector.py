@@ -49,6 +49,8 @@ async def fetch_page(
     current_pass: int,
     new_page=1,
     delay_counter=0,
+    start_date=None,
+    end_date=None,
 ) -> List[dict]:
     """
     Fetches data from AirCall API
@@ -56,6 +58,10 @@ async def fetch_page(
     dependent on existence of other pages and call limit
     """
     endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}&page={new_page}'
+
+    if start_date and end_date:
+        endpoint += f'&from={start_date}&to={end_date}'
+
     data: dict = await fetch(endpoint, session)
     logging.getLogger(__file__).info(
         f'Request sent to Aircall for page {new_page} for dataset {dataset}'
@@ -71,7 +77,15 @@ async def fetch_page(
             delay_counter += 1
             logging.getLogger(__file__).info('Retrying Aircall API')
             data_list = await fetch_page(
-                dataset, data_list, session, limit, current_pass, new_page, delay_counter
+                dataset,
+                data_list,
+                session,
+                limit,
+                current_pass,
+                new_page,
+                delay_counter,
+                start_date=start_date,
+                end_date=end_date,
             )
         else:
             logging.getLogger(__file__).error('Aborting Aircall requests')
@@ -91,13 +105,27 @@ async def fetch_page(
         if next_page_link is not None and current_pass < limit:
             next_page = meta_data['current_page'] + 1
             data_list = await fetch_page(
-                dataset, data_list, session, limit, current_pass, next_page
+                dataset,
+                data_list,
+                session,
+                limit,
+                current_pass,
+                next_page,
+                start_date=start_date,
+                end_date=end_date,
             )
     else:
         if next_page_link is not None:
             next_page = meta_data['current_page'] + 1
             data_list = await fetch_page(
-                dataset, data_list, session, limit, current_pass, next_page
+                dataset,
+                data_list,
+                session,
+                limit,
+                current_pass,
+                next_page,
+                start_date=start_date,
+                end_date=end_date,
             )
 
     return data_list
@@ -121,6 +149,7 @@ class AircallConnector(ToucanConnector):
     """
 
     _auth_flow = 'oauth2'
+    provided_token: Optional[str]
     auth_flow_id: Optional[str]
     data_source_model: AircallDataSource
 
@@ -147,6 +176,7 @@ class AircallConnector(ToucanConnector):
                 client_secret=kwargs['client_secret'],
             ),
         )
+        self.provided_token = kwargs.get('provided_token', None)
 
     def build_authorization_url(self, **kwargs):
         return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
@@ -160,6 +190,8 @@ class AircallConnector(ToucanConnector):
         return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
 
     def get_access_token(self):
+        if self.provided_token:
+            return self.provided_token
         return self.__dict__['_oauth2_connector'].get_access_token()
 
     async def _fetch(self, url, headers=None):
@@ -178,7 +210,9 @@ class AircallConnector(ToucanConnector):
         future = asyncio.ensure_future(self._fetch(url, headers))
         return loop.run_until_complete(future)
 
-    async def _get_data(self, dataset: str, limit) -> Tuple[List[dict], List[dict]]:
+    async def _get_data(
+        self, dataset: str, limit, start_date=None, end_date=None
+    ) -> Tuple[List[dict], List[dict]]:
         """Triggers fetches for data and does preliminary filtering process"""
         access_token = self.get_access_token()
         if not access_token:
@@ -195,11 +229,7 @@ class AircallConnector(ToucanConnector):
                     0,
                 ),
                 fetch_page(
-                    dataset,
-                    [],
-                    session,
-                    limit,
-                    0,
+                    dataset, [], session, limit, 0, start_date=start_date, end_date=end_date
                 ),
             )
             team_response_list = []
@@ -235,10 +265,14 @@ class AircallConnector(ToucanConnector):
                 tags_data_list += data['tags']
             return tags_data_list
 
-    def run_fetches(self, dataset, limit) -> Tuple[List[dict], List[dict]]:
+    def run_fetches(
+        self, dataset, limit, start_date=None, end_date=None
+    ) -> Tuple[List[dict], List[dict]]:
         """sets up event loop and fetches for 'calls' and 'users' datasets"""
         loop = get_loop()
-        future = asyncio.ensure_future(self._get_data(dataset, limit))
+        future = asyncio.ensure_future(
+            self._get_data(dataset, limit, start_date=start_date, end_date=end_date)
+        )
         return loop.run_until_complete(future)
 
     def run_fetches_for_tags(self, dataset, limit):
@@ -247,7 +281,9 @@ class AircallConnector(ToucanConnector):
         future = asyncio.ensure_future(self._get_tags(dataset, limit))
         return loop.run_until_complete(future)
 
-    def _retrieve_data(self, data_source: AircallDataSource) -> pd.DataFrame:
+    def _retrieve_data(
+        self, data_source: AircallDataSource, start_date=None, end_date=None
+    ) -> pd.DataFrame:
         """retrieves data from AirCall API"""
         dataset = data_source.dataset
         empty_df = build_empty_df(dataset)
@@ -266,7 +302,9 @@ class AircallConnector(ToucanConnector):
             team_data = pd.DataFrame([])
             variable_data = pd.DataFrame([])
             if limit != 0:
-                team_data, variable_data = self.run_fetches(dataset, limit)
+                team_data, variable_data = self.run_fetches(
+                    dataset, limit, start_date=start_date, end_date=end_date
+                )
             return build_df(
                 dataset, [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
             )

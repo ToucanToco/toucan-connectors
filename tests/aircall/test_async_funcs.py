@@ -134,3 +134,14 @@ async def test_fetch_page_with_error(mocker):
         await fetch_page(dataset, [], {}, 1, 0)
     fake_fetch.call_count == 4
     assert str(e.value) == 'Aborting Aircall requests due to Oops!'
+
+
+async def test_fetch_page_with_dates(mocker):
+    """
+    Tests fetch page providing start & end dates
+    """
+    dataset = 'calls'
+    fake_data = {'data': {'stuff': 'stuff'}}
+    fake_fetch = mocker.patch(fetch_fn_name, return_value=fake_data)
+    await fetch_page(dataset, [], {}, 1, 0, start_date=111111, end_date=2222222)
+    assert 'to=2222222' in fake_fetch.call_args_list[0][0][0]
