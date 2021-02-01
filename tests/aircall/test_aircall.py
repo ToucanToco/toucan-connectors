@@ -220,6 +220,17 @@ def test__retrieve_data_tags_happy_case(con, mocker):
     assert list(df.columns) == columns_for_tags
 
 
+def test__retrieve_data_calls_start_end_dates(con, mocker):
+    """Check that calls are correctly retrieved when providing
+    start and end_date"""
+    ds = build_ds('calls')
+    run_fetches_mock = mocker.patch.object(
+        AircallConnector, 'run_fetches', return_value=[filtered_teams, filtered_calls]
+    )
+    con._retrieve_data(ds, start_date=11111, end_date=2222)
+    assert run_fetches_mock.call_args_list[0][1] == {'start_date': 11111, 'end_date': 2222}
+
+
 def test__retrieve_data_no_data_case(con, mocker):
     """Tests case when there is no data returned"""
     run_fetches_mock = mocker.patch.object(AircallConnector, 'run_fetches', return_value=[[], []])
@@ -402,3 +413,12 @@ def test__run_fetch_no_secret(mocker, con, remove_secrets):
     """Check that an exception is raised as no access token is available"""
     with pytest.raises(NoCredentialsError):
         con._run_fetch('toto')
+
+
+def test_get_access_token_provided(mocker, con):
+    """
+    check that get access_token returns the provided token
+    """
+    con.provided_token = 'anicetoken'
+    returned_token = con.get_access_token()
+    assert returned_token == 'anicetoken'
