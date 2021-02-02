@@ -67,6 +67,8 @@ def test_snowflake_data_source_get_form(mocker):
         warehouse='',
     )
 
+    mocker.patch('snowflake.connector.connect')
+
     sf_form = ds.get_form(sc, {})
 
     assert 'default_wh' == sf_form['properties']['warehouse']['default']
