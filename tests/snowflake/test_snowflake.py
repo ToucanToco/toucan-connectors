@@ -74,6 +74,25 @@ def test_snowflake_data_source_get_form(mocker):
     assert 'default_wh' == sf_form['properties']['warehouse']['default']
 
 
+def test_snowflake_get_form_with_databases(mocker):
+    mocker.patch('snowflake.connector.connect')
+
+    data_source = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        warehouse='test_warehouse',
+        database='foo',
+        query='foo',
+    )
+
+    get_db_mock = mocker.patch('toucan_connectors.snowflake.SnowflakeDataSource._get_databases')
+    get_db_mock.return_value = ['foo', 'bar']
+    sf_form = data_source.get_form(sc, {})
+
+    get_db_mock.assert_called_once()
+    assert sf_form['definitions']['database']['enum'] == ['foo', 'bar']
+
+
 def test_snowflake_data_source_default_warehouse(mocker):
     snow_mock = mocker.patch('snowflake.connector.connect')
     # Avoid to call read_sql for nothing but no tests required here

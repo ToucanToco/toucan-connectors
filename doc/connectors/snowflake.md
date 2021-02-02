@@ -34,6 +34,8 @@ DATA_PROVIDERS: [
 * `database`: str
 * `warehouse`: str
 
+Be sure to create your database(s) in snowflake **before** creating the data source, if no databases are found the field `database` will be empty in the creation form.
+
 ```coffee
 DATA_SOURCES: [
   domain:    '<domain>'
