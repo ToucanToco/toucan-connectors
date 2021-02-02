@@ -4,10 +4,11 @@ from os import path
 import pandas as pd
 import snowflake.connector
 from jinja2 import Template
-from pydantic import Field, SecretStr, constr
+from pydantic import Field, SecretStr, constr, create_model
+from snowflake.connector import DictCursor
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class Path(str):
@@ -23,15 +24,31 @@ class Path(str):
 
 
 class SnowflakeDataSource(ToucanDataSource):
-    database: str = Field(None, description='The name of the database you want to query')
+    database: str = Field(..., description='The name of the database you want to query')
     warehouse: str = Field(None, description='The name of the warehouse you want to query')
     query: constr(min_length=1) = Field(
         ..., description='You can write your SQL query here', widget='sql'
     )
 
     @classmethod
+    def _get_databases(cls, connector: 'SnowflakeConnector'):
+        connection = connector.connect(cls)
+
+        # FIXME: Maybe use a generator instead of a list here?
+        return [
+            db['name']
+            # Fetch rows as dicts with column names as keys
+            for db in connection.cursor(DictCursor).execute('SHOW DATABASES').fetchall()
+            if 'name' in db
+        ]
+
+    @classmethod
     def get_form(cls, connector: 'SnowflakeConnector', current_config):
-        res = cls.schema()
+        databases = cls._get_databases(connector)
+        # Restrict the database to a list of existing databases
+        constraints = {'database': strlist_to_enum('database', databases)}
+
+        res = create_model('FormSchema', **constraints, __base__=cls).schema()
         res['properties']['warehouse']['default'] = connector.default_warehouse
         return res
 
@@ -89,6 +106,9 @@ class SnowflakeConnector(ToucanConnector):
             res['token'] = Template(self.oauth_token).render()
 
         return res
+
+    def connect(self, data_source: SnowflakeDataSource) -> snowflake.connector.SnowflakeConnection:
+        return snowflake.connector.connect(**self.get_connection_params())
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         warehouse = data_source.warehouse
