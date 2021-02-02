@@ -323,6 +323,17 @@ def test_get_df_with_regex_with_projection_stage(mongo_connector, mongo_datasour
     )
 
 
+def test_get_df_with_regex_with_integers(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(
+        collection='test_col',
+        query=[{'$match': {'domain': 'domain1'}}],
+    )
+    df = mongo_connector.get_df_with_regex(datasource, field='value', regex=re.compile('^20$'))
+    assert df.drop(columns='_id').to_dict(orient='records') == [
+        {'domain': 'domain1', 'country': 'France', 'language': 'French', 'value': 20}
+    ]
+
+
 def test_get_df_with_regex_with_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df_with_regex(
