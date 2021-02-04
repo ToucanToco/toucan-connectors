@@ -2,6 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from tests.aircall.mock_results import (
+    fake_calls,
     fake_tags,
     fake_teams,
     fake_users,
@@ -220,15 +221,30 @@ def test__retrieve_data_tags_happy_case(con, mocker):
     assert list(df.columns) == columns_for_tags
 
 
-def test__retrieve_data_calls_start_end_dates(con, mocker):
+def test__retrieve_data_calls_params(con, mocker):
     """Check that calls are correctly retrieved when providing
     start and end_date"""
     ds = build_ds('calls')
     run_fetches_mock = mocker.patch.object(
         AircallConnector, 'run_fetches', return_value=[filtered_teams, filtered_calls]
     )
-    con._retrieve_data(ds, start_date=11111, end_date=2222)
-    assert run_fetches_mock.call_args_list[0][1] == {'start_date': 11111, 'end_date': 2222}
+    con._retrieve_data(ds, query_params={'from': 1609459200, 'to': 1612137599})
+    assert run_fetches_mock.call_args_list[0][0][2] == {'from': 1609459200, 'to': 1612137599}
+
+
+@pytest.mark.asyncio
+async def test__get_data_calls_params(con, mocker):
+    """Tests users call happy case"""
+    ds = build_ds('calls')
+    fake_res = [fake_teams, fake_calls]
+    fake_res = [item for item in fake_res]
+    fake_fetch_page = mocker.patch(fetch_fn_name, side_effect=fake_res)
+    await con._get_data(ds.dataset, 10, query_params={'from': 1609459200, 'to': 1612137599})
+    assert fake_fetch_page.call_args_list[0][1]['query_params'] is None
+    assert fake_fetch_page.call_args_list[1][1]['query_params'] == {
+        'from': 1609459200,
+        'to': 1612137599,
+    }
 
 
 def test__retrieve_data_no_data_case(con, mocker):
