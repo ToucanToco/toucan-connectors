@@ -26,6 +26,17 @@ async def test_fetch(aiohttp_client, loop):
     assert res == FAKE_DATA
 
 
+async def test_fetch_with_params(aiohttp_client, loop):
+    """It should return a properly-formed dictionary."""
+    app = web.Application(loop=loop)
+    app.router.add_get('/foo', send_200_success)
+
+    client = await aiohttp_client(app)
+    res = await fetch('/foo', client, query_params={'foo': 'bar'})
+
+    assert res == FAKE_DATA
+
+
 async def test_fetch_page_with_no_next(mocker):
     """Bearer version: tests that no next page returns an array of one response"""
     dataset = 'tags'
@@ -136,12 +147,12 @@ async def test_fetch_page_with_error(mocker):
     assert str(e.value) == 'Aborting Aircall requests due to Oops!'
 
 
-async def test_fetch_page_with_dates(mocker):
+async def test_fetch_page_with_params(mocker):
     """
     Tests fetch page providing start & end dates
     """
     dataset = 'calls'
     fake_data = {'data': {'stuff': 'stuff'}}
     fake_fetch = mocker.patch(fetch_fn_name, return_value=fake_data)
-    await fetch_page(dataset, [], {}, 1, 0, start_date=111111, end_date=2222222)
-    assert 'to=2222222' in fake_fetch.call_args_list[0][0][0]
+    await fetch_page(dataset, [], {}, 1, 0, query_params={'from': 1609459200, 'to': 1612137599})
+    assert fake_fetch.call_args_list[0][0][2] == {'from': 1609459200, 'to': 1612137599}
