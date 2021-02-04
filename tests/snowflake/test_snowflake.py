@@ -58,6 +58,18 @@ def test_snowflake(mocker):
     reasq.assert_called_once_with('test_query with bar and pikachu', con=snock())
 
 
+def test_snowflake_get_connection_params_no_auth_method(mocker):
+    res = SnowflakeConnector(
+        name='test',
+        user='test',
+        password='test_password',
+        account='test_account',
+        default_warehouse='test_wh',
+    ).get_connection_params()
+
+    assert res['authenticator'] == AuthenticationMethod.PLAIN
+
+
 def test_snowflake_data_source_get_form(mocker):
     ds = SnowflakeDataSource(
         name='test',

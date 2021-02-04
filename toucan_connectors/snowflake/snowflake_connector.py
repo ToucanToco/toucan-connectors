@@ -66,7 +66,7 @@ class SnowflakeConnector(ToucanConnector):
     data_source_model: SnowflakeDataSource
 
     authentication_method: AuthenticationMethod = Field(
-        ...,
+        None,
         title='Authentication Method',
         description='The authentication mechanism that will be used to connect to your snowflake data source',
     )
@@ -99,7 +99,12 @@ class SnowflakeConnector(ToucanConnector):
             'authenticator': self.authentication_method,
         }
 
-        if self.authentication_method == AuthenticationMethod.PLAIN and self.password:
+        if not self.authentication_method:
+            # Default to User/Password authentication method if the parameter
+            # was not set when the connector was created
+            res['authenticator'] = AuthenticationMethod.PLAIN
+
+        if res['authenticator'] == AuthenticationMethod.PLAIN and self.password:
             res['password'] = self.password.get_secret_value()
 
         if self.authentication_method == AuthenticationMethod.OAUTH:

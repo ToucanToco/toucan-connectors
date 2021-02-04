@@ -6,6 +6,7 @@ Import data from Snowflake data warehouse.
 
 * `type`: `"Snowflake"`
 * `name`: str, required
+* `authentication_method`, str, the authentication mechanism that will be used against Snowflake's APIs (default: plain text)
 * `user`: str, required
 * `password`: str, required
 * `default_warehouse`: str, name of the default warehouse to be used in a data source if no warehouse was specified in the concerned data source
