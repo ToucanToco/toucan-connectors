@@ -1,5 +1,6 @@
 from enum import Enum
 from os import path
+from typing import List
 
 import pandas as pd
 import snowflake.connector
@@ -32,7 +33,7 @@ class SnowflakeDataSource(ToucanDataSource):
 
     @classmethod
     def _get_databases(cls, connector: 'SnowflakeConnector'):
-        connection = connector.connect(cls)
+        connection = connector.connect()
 
         # FIXME: Maybe use a generator instead of a list here?
         return [
@@ -45,8 +46,12 @@ class SnowflakeDataSource(ToucanDataSource):
     @classmethod
     def get_form(cls, connector: 'SnowflakeConnector', current_config):
         databases = cls._get_databases(connector)
-        # Restrict the database to a list of existing databases
-        constraints = {'database': strlist_to_enum('database', databases)}
+        warehouses = connector._get_warehouses()
+        # Restrict some fields to lists of existing counterparts
+        constraints = {
+            'database': strlist_to_enum('database', databases),
+            'warehouse': strlist_to_enum('warehouse', warehouses),
+        }
 
         res = create_model('FormSchema', **constraints, __base__=cls).schema()
         res['properties']['warehouse']['default'] = connector.default_warehouse
@@ -112,8 +117,16 @@ class SnowflakeConnector(ToucanConnector):
 
         return res
 
-    def connect(self, data_source: SnowflakeDataSource) -> snowflake.connector.SnowflakeConnection:
+    def connect(self) -> snowflake.connector.SnowflakeConnection:
         return snowflake.connector.connect(**self.get_connection_params())
+
+    def _get_warehouses(self) -> List[str]:
+        connection = self.connect()
+        return [
+            warehouse['name']
+            for warehouse in connection.cursor(DictCursor).execute('SHOW WAREHOUSES').fetchall()
+            if 'name' in warehouse
+        ]
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         warehouse = data_source.warehouse
