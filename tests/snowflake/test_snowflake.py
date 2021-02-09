@@ -1,3 +1,5 @@
+from unittest.mock import call
+
 import pytest
 
 from toucan_connectors.snowflake import (
@@ -37,13 +39,18 @@ sd = SnowflakeDataSource(
 
 def test_snowflake(mocker):
     snock = mocker.patch('snowflake.connector.connect')
-    reasq = mocker.patch('pandas.read_sql')
 
     sc.get_df(sd)
 
-    snock.return_value.cursor.return_value.execute.assert_called_once_with(
-        'USE WAREHOUSE test_warehouse'
-    )
+    expected_calls = [
+        call('test_query with %(foo)s and {{ pokemon }}', {'foo': 'bar', 'pokemon': 'pikachu'}),
+    ]
+
+    mock_execute = snock.return_value.cursor.return_value.execute
+
+    mock_execute.assert_has_calls(expected_calls)
+
+    mock_execute.return_value.fetchall.assert_called_once()
 
     snock.assert_called_once_with(
         user='test_user',
@@ -54,8 +61,6 @@ def test_snowflake(mocker):
         authenticator='snowflake',
         ocsp_response_cache_filename=None,
     )
-
-    reasq.assert_called_once_with('test_query with bar and pikachu', con=snock())
 
 
 def test_snowflake_get_connection_params_no_auth_method(mocker):
@@ -135,9 +140,9 @@ def test_snowflake_data_source_default_warehouse(mocker):
 
     sc.get_df(ds)
 
-    snow_mock.return_value.cursor.return_value.execute.assert_called_once_with(
-        'USE WAREHOUSE default_wh'
-    )
+    expected_calls = [call('foo', None)]
+
+    snow_mock.return_value.cursor.return_value.execute.assert_has_calls(expected_calls)
 
     snow_mock.assert_called_once_with(
         user='test_user',
@@ -180,6 +185,58 @@ def test_snowflake_plain_auth(mocker):
         warehouse='test_warehouse',
         ocsp_response_cache_filename=None,
     )
+
+
+def test_snowflake_execute_select_query(mocker):
+    snow_mock = mocker.patch('snowflake.connector.connect')
+    cursor_mock = snow_mock.return_value.cursor.return_value.execute.return_value
+
+    connector = SnowflakeConnector(
+        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
+    )
+
+    data_source = SnowflakeDataSource(
+        name='test',
+        domain='test',
+        database='test',
+        warehouse='test',
+        query='foo',
+    )
+
+    data_source.query = 'SELECT * FROM foo;'
+
+    connector.get_df(data_source)
+
+    data_source.query = 'select * from foo;'
+
+    connector.get_df(data_source)
+
+    assert cursor_mock.fetch_pandas_all.call_count == 2
+    cursor_mock.fetchall.assert_not_called()
+
+
+def test_snowflake_execute_other_query(mocker):
+    snow_mock = mocker.patch('snowflake.connector.connect')
+    cursor_mock = snow_mock.return_value.cursor.return_value.execute.return_value
+
+    connector = SnowflakeConnector(
+        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
+    )
+
+    data_source = SnowflakeDataSource(
+        name='test',
+        domain='test',
+        database='test',
+        warehouse='test',
+        query='foo',
+    )
+
+    data_source.query = 'SHOW TABLES;'
+
+    connector.get_df(data_source)
+
+    cursor_mock.fetch_pandas_all.assert_not_called()
+    cursor_mock.fetchall.assert_called_once()
 
 
 def test_missing_cache_file():
