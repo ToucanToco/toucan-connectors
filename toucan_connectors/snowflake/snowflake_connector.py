@@ -1,6 +1,6 @@
 from enum import Enum
 from os import path
-from typing import List
+from typing import Dict, List
 
 import pandas as pd
 import snowflake.connector
@@ -8,7 +8,6 @@ from jinja2 import Template
 from pydantic import Field, SecretStr, constr, create_model
 from snowflake.connector import DictCursor
 
-from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -117,8 +116,8 @@ class SnowflakeConnector(ToucanConnector):
 
         return res
 
-    def connect(self) -> snowflake.connector.SnowflakeConnection:
-        return snowflake.connector.connect(**self.get_connection_params())
+    def connect(self, **kwargs) -> snowflake.connector.SnowflakeConnection:
+        return snowflake.connector.connect(**self.get_connection_params(), **kwargs)
 
     def _get_warehouses(self) -> List[str]:
         connection = self.connect()
@@ -128,26 +127,42 @@ class SnowflakeConnector(ToucanConnector):
             if 'name' in warehouse
         ]
 
+    def _execute_query(self, cursor, query: str, query_parameters: Dict):
+        """Executes `query` against Snowflake's client and retrieves the
+        results.
+
+        Args:
+            cursor (SnowflakeCursor): A snowflake database cursor
+            query (str): The query that will be executed against a database
+            query_parameters (Dict): The eventual parameters that will be applied to `query`
+
+        Returns: A pandas DataFrame
+        """
+        query_res = cursor.execute(query, query_parameters)
+
+        # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
+        # `fetch_pandas_all` will only work with `SELECT` queries, if the
+        # query does not contains 'SELECT' then we're defaulting to the usual
+        # `fetchall`.
+        if 'SELECT' in query.upper():
+            return query_res.fetch_pandas_all()
+        else:
+            return pd.DataFrame.from_dict(query_res.fetchall())
+
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         warehouse = data_source.warehouse
         # Default to default warehouse if not specified in `data_source`
         if self.default_warehouse and not warehouse:
             warehouse = self.default_warehouse
 
-        connection_params = self.get_connection_params()
-
-        connection = snowflake.connector.connect(
+        connection = self.connect(
             database=Template(data_source.database).render(),
             warehouse=Template(warehouse).render(),
             ocsp_response_cache_filename=self.ocsp_response_cache_filename,
-            **connection_params,
         )
+        cursor = connection.cursor(DictCursor)
 
-        # https://docs.snowflake.net/manuals/sql-reference/sql/use-warehouse.html
-        connection.cursor().execute(f'USE WAREHOUSE {warehouse}')
-
-        query = nosql_apply_parameters_to_query(data_source.query, data_source.parameters)
-        df = pd.read_sql(query, con=connection)
+        df = self._execute_query(cursor, data_source.query, data_source.parameters)
 
         connection.close()
 
