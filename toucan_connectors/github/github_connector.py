@@ -321,7 +321,7 @@ class GithubConnector(ToucanConnector):
                 dataset=dataset,
                 organization=organization,
                 page_limit=page_limit,
-                latest_retrieved_object=latest_retrieved_object[name]
+                latest_retrieved_object=latest_retrieved_object.get(name)
                 if latest_retrieved_object
                 else None,
             )
