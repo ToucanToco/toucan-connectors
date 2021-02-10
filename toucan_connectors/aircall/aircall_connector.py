@@ -84,7 +84,7 @@ async def fetch_page(
                 current_pass,
                 new_page,
                 delay_counter,
-                query_params,
+                query_params=query_params,
             )
         else:
             logging.getLogger(__file__).error('Aborting Aircall requests')
@@ -104,13 +104,25 @@ async def fetch_page(
         if next_page_link is not None and current_pass < limit:
             next_page = meta_data['current_page'] + 1
             data_list = await fetch_page(
-                dataset, data_list, session, limit, current_pass, next_page, query_params
+                dataset,
+                data_list,
+                session,
+                limit,
+                current_pass,
+                next_page,
+                query_params=query_params,
             )
     else:
         if next_page_link is not None:
             next_page = meta_data['current_page'] + 1
             data_list = await fetch_page(
-                dataset, data_list, session, limit, current_pass, next_page, query_params
+                dataset,
+                data_list,
+                session,
+                limit,
+                current_pass,
+                next_page,
+                query_params=query_params,
             )
 
     return data_list
