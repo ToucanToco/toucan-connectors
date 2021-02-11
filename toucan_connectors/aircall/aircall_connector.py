@@ -49,6 +49,7 @@ async def fetch_page(
     current_pass: int,
     new_page=1,
     delay_counter=0,
+    *,
     query_params=None,
 ) -> List[dict]:
     """

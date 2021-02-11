@@ -3,7 +3,7 @@ import pytest
 from aiohttp import web
 
 from tests.aircall.helpers import assert_called_with
-from toucan_connectors.aircall.aircall_connector import fetch, fetch_page
+from toucan_connectors.aircall.aircall_connector import AircallDataset, fetch, fetch_page
 
 fetch_fn_name = 'toucan_connectors.aircall.aircall_connector.fetch'
 
@@ -156,3 +156,15 @@ async def test_fetch_page_with_params(mocker):
     fake_fetch = mocker.patch(fetch_fn_name, return_value=fake_data)
     await fetch_page(dataset, [], {}, 1, 0, query_params={'from': 1609459200, 'to': 1612137599})
     assert fake_fetch.call_args_list[0][0][2] == {'from': 1609459200, 'to': 1612137599}
+
+
+async def test_query_params_not_named_arg(mocker):
+    """
+    Check that fetch_page fails if query params are not given
+    as named arg
+    """
+    ds = AircallDataset('calls')
+    params = {'bla': 'bla'}
+
+    with pytest.raises(TypeError):
+        await fetch_page(ds, [], 'session', 0, 0, 0, 0, params)
