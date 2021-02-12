@@ -92,8 +92,8 @@ def test_format_pr_rows(extracted_pr_list):
     Check that format_pr_rows is able to format a list of prs
     """
     formatted = format_pr_rows(extracted_pr_list, 'buzz')
-    assert len(formatted) == 3
-    assert formatted[2]['Repo Name'] == 'buzz'
+    assert len(formatted) == 2  # CLOSED PR should be filtered out
+    assert formatted[1]['Repo Name'] == 'buzz'
 
 
 def test_format_team_row():

@@ -183,7 +183,9 @@ def format_pr_row(pr_row: dict):
             label['node'].get('name') for label in pr_row['labels'].get('edges')
         ]
         edges = get_edges(pr_row.get('commits'))
-        current_record['Dev'] = edges[0]['node']['commit']['author']['user']['login']
+        # Here we choose to select the author of the last commit as the author of the PR
+        # It's less wrong than choosing the author of the first commit in case of rebase
+        current_record['Dev'] = edges[-1]['node']['commit']['author']['user']['login']
 
     except (AttributeError, TypeError, KeyNotFoundException):
         current_record['Dev'] = None
@@ -200,7 +202,11 @@ def format_pr_rows(pr_nodes: dict, repo_name: str) -> List[dict]:
     """
 
     pull_requests = get_nodes(pr_nodes)
-    formatted = [format_pr_row(pr) for pr in pull_requests]
+    formatted = [
+        format_pr_row(pr)
+        for pr in pull_requests
+        if pr.get('state') != 'CLOSED'  # we ignore closed PR in KPIs
+    ]
     return [dict(r, **{'Repo Name': repo_name}) for r in formatted]
 
 
