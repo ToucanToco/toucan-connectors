@@ -2,12 +2,15 @@ import asyncio
 import logging
 import os
 from contextlib import suppress
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional
 
+import numpy as np
 import pandas as pd
 import requests
+from dateutil import relativedelta
 from pydantic import Field, create_model
 from python_graphql_client import GraphqlClient
 
@@ -51,6 +54,9 @@ TOKEN_URL: str = 'https://github.com/login/oauth/access_token'
 BASE_ROUTE: str = 'https://api.github.com/graphql'
 BASE_ROUTE_REST: str = 'https://api.github.com/'
 NO_CREDENTIALS_ERROR = 'No credentials'
+start = datetime.strftime(
+    datetime.now() - relativedelta.relativedelta(years=1), '%Y-%m-%dT%H:%M:%SZ'
+)
 
 
 class NoCredentialsError(Exception):
@@ -244,6 +250,21 @@ class GithubConnector(ToucanConnector):
                     data_list.extend(formatted_data)
                     return data_list
                 except ValueError:
+                    pass
+
+            # For now we want to retrieve only max 1 year of Pull requests
+            # TODO change this to be able to receive a start date for extraction as a parameter
+            if dataset == GithubDataSet('pull requests'):
+                try:
+                    # Find the first index where PR Creation Date is < start
+                    # Throws IndexError if such index cannot be found
+                    index = np.where(
+                        np.array([pr['PR Creation Date'] for pr in formatted_data]) < start
+                    )[0][0]
+                    formatted_data = formatted_data[:index]
+                    data_list.extend(formatted_data)
+                    return data_list
+                except (IndexError, TypeError):
                     pass
 
             if dataset == GithubDataSet('pull requests'):

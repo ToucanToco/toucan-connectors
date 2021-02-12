@@ -301,7 +301,7 @@ def test_fetch_pull_requests_data(
     )
     assert mocked_api_call.call_count == 1
     assert mocked_api_call_async.call_count == 3
-    assert len(pr_dataset) == 5
+    assert len(pr_dataset) == 4
 
 
 def test_get_pages(
@@ -309,6 +309,7 @@ def test_get_pages(
     gc,
     extracted_prs_1,
     extracted_prs_2,
+    extracted_prs_3,
     extracted_team_page_1,
     extracted_team_page_2,
     client,
@@ -318,6 +319,8 @@ def test_get_pages(
     Check that get_pages is able to retrieve pull requests or members data
     from Github's API
     """
+    mocked_datetime = mocker.patch('toucan_connectors.github.github_connector.datetime')
+    mocked_datetime.strftime.return_value = '2020-02-12T00:00:00Z'
     mocked_api_call = mocker.patch(
         'python_graphql_client.GraphqlClient.execute_async',
         side_effect=[extracted_prs_1, extracted_prs_2],
@@ -364,6 +367,23 @@ def test_get_pages(
     )
     assert mocked_api_call.call_count == 2
     assert len(members_rows) == 2
+
+    mocked_api_call = mocker.patch(
+        'python_graphql_client.GraphqlClient.execute_async',
+        side_effect=[extracted_prs_1, extracted_prs_3],
+    )
+    pr_rows = event_loop.run_until_complete(
+        gc.get_pages(
+            name='repo1',
+            organization='foorganization',
+            dataset='pull requests',
+            client=client,
+            page_limit=1000,
+        )
+    )
+    assert mocked_api_call.call_count == 2
+    assert len(pr_rows) == 3
+    assert pr_rows[-1]['PR Name'] == 'chore(something): somethin'
 
 
 def test_retrieve_members_data(
@@ -420,7 +440,7 @@ def test_retrieve_pull_requests_data(
     pr_dataset = gc._retrieve_data(ds)
     assert mocked_api_call.call_count == 1
     assert mocked_api_call_async.call_count == 3
-    assert len(pr_dataset) == 5
+    assert len(pr_dataset) == 4
 
 
 @responses.activate
