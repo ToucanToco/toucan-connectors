@@ -413,7 +413,7 @@ def extracted_prs_3():
                     'pullRequests': {
                         'nodes': [
                             {
-                                'createdAt': '2020-11-18T15:58:44Z',
+                                'createdAt': '2020-01-18T15:58:44Z',
                                 'mergedAt': None,
                                 'deletions': 45,
                                 'additions': 162,
