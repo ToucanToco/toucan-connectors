@@ -104,7 +104,7 @@ def extracted_pr_list():
                 'deletions': 69,
                 'additions': 98,
                 'title': 'chore(somethinh):bla',
-                'state': 'MERGED',
+                'state': 'CLOSED',
                 'labels': {'edges': [{'node': {'name': 'tech'}}]},
                 'commits': {
                     'edges': [{'node': {'commit': {'author': {'user': {'login': 'jeanlouis'}}}}}]
