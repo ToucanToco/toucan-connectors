@@ -32,15 +32,14 @@ class SnowflakeDataSource(ToucanDataSource):
 
     @classmethod
     def _get_databases(cls, connector: 'SnowflakeConnector'):
-        connection = connector.connect()
-
         # FIXME: Maybe use a generator instead of a list here?
-        return [
-            db['name']
-            # Fetch rows as dicts with column names as keys
-            for db in connection.cursor(DictCursor).execute('SHOW DATABASES').fetchall()
-            if 'name' in db
-        ]
+        with connector.connect() as connection:
+            return [
+                db['name']
+                # Fetch rows as dicts with column names as keys
+                for db in connection.cursor(DictCursor).execute('SHOW DATABASES').fetchall()
+                if 'name' in db
+            ]
 
     @classmethod
     def get_form(cls, connector: 'SnowflakeConnector', current_config):
@@ -101,6 +100,7 @@ class SnowflakeConnector(ToucanConnector):
             'user': self.user,
             'account': self.account,
             'authenticator': self.authentication_method,
+            'application': 'ToucanToco',
         }
 
         if not self.authentication_method:
@@ -120,12 +120,12 @@ class SnowflakeConnector(ToucanConnector):
         return snowflake.connector.connect(**self.get_connection_params(), **kwargs)
 
     def _get_warehouses(self) -> List[str]:
-        connection = self.connect()
-        return [
-            warehouse['name']
-            for warehouse in connection.cursor(DictCursor).execute('SHOW WAREHOUSES').fetchall()
-            if 'name' in warehouse
-        ]
+        with self.connect() as connection:
+            return [
+                warehouse['name']
+                for warehouse in connection.cursor(DictCursor).execute('SHOW WAREHOUSES').fetchall()
+                if 'name' in warehouse
+            ]
 
     def _execute_query(self, cursor, query: str, query_parameters: Dict):
         """Executes `query` against Snowflake's client and retrieves the

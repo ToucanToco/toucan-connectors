@@ -60,6 +60,7 @@ def test_snowflake(mocker):
         warehouse='test_warehouse',
         authenticator='snowflake',
         ocsp_response_cache_filename=None,
+        application='ToucanToco',
     )
 
 
@@ -152,6 +153,7 @@ def test_snowflake_data_source_default_warehouse(mocker):
         warehouse='default_wh',
         ocsp_response_cache_filename=None,
         authenticator='snowflake',
+        application='ToucanToco',
     )
 
 
@@ -168,6 +170,7 @@ def test_snowflake_oauth_auth(mocker):
         warehouse='test_warehouse',
         token='tUh7G0lJs6TjjGzVkv5DAOD4cSFPK5o2',
         ocsp_response_cache_filename=None,
+        application='ToucanToco',
     )
 
 
@@ -184,6 +187,7 @@ def test_snowflake_plain_auth(mocker):
         database='test_database',
         warehouse='test_warehouse',
         ocsp_response_cache_filename=None,
+        application='ToucanToco',
     )
 
 
