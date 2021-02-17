@@ -54,7 +54,7 @@ TOKEN_URL: str = 'https://github.com/login/oauth/access_token'
 BASE_ROUTE: str = 'https://api.github.com/graphql'
 BASE_ROUTE_REST: str = 'https://api.github.com/'
 NO_CREDENTIALS_ERROR = 'No credentials'
-start = datetime.strftime(
+extraction_start_date = datetime.strftime(
     datetime.now() - relativedelta.relativedelta(years=1), '%Y-%m-%dT%H:%M:%SZ'
 )
 
@@ -253,13 +253,14 @@ class GithubConnector(ToucanConnector):
                     pass
 
             # For now we want to retrieve only max 1 year of Pull requests
-            # TODO change this to be able to receive a start date for extraction as a parameter
+            # TODO change this to be able to receive a extraction_start_date date for extraction as a parameter
             if dataset == GithubDataSet('pull requests'):
                 try:
-                    # Find the first index where PR Creation Date is < start
+                    # Find the first index where PR Creation Date is < extraction_start_date
                     # Throws IndexError if such index cannot be found
                     index = np.where(
-                        np.array([pr['PR Creation Date'] for pr in formatted_data]) < start
+                        np.array([pr['PR Creation Date'] for pr in formatted_data])
+                        < extraction_start_date
                     )[0][0]
                     formatted_data = formatted_data[:index]
                     data_list.extend(formatted_data)
