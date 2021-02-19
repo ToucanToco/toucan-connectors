@@ -1,9 +1,11 @@
 from contextlib import suppress
+from datetime import datetime
 from enum import Enum
 from os import path
 from typing import Dict, List
 
 import pandas as pd
+import requests
 import snowflake.connector
 from jinja2 import Template
 from pydantic import Field, SecretStr, constr, create_model
@@ -22,6 +24,10 @@ class Path(str):
         if not path.exists(v):
             raise ValueError(f'path does not exists: {v}')
         return v
+
+
+class SnowflakeConnectorException(Exception):
+    """Raised when something wrong happened in a snowflake context"""
 
 
 class SnowflakeDataSource(ToucanDataSource):
@@ -79,6 +85,7 @@ class SnowflakeConnector(ToucanConnector):
     user: str = Field(..., description='Your login username')
     password: SecretStr = Field(None, description='Your login password')
     oauth_token: str = Field(None, description='Your oauth token')
+    oauth_args: dict = Field(None, description='Named arguments for an OIDC auth')
     account: str = Field(
         ...,
         description='The full name of your Snowflake account. '
@@ -114,12 +121,51 @@ class SnowflakeConnector(ToucanConnector):
             res['password'] = self.password.get_secret_value()
 
         if self.authentication_method == AuthenticationMethod.OAUTH:
-            res['token'] = Template(self.oauth_token).render()
+            if self.oauth_token is not None:
+                res['token'] = Template(self.oauth_token).render()
+
+            if self.oauth_args and 'access_token' in self.oauth_args:
+                res['token'] = self.oauth_args['access_token']
 
         return res
 
+    def _refresh_oauth_token(self):
+        """Regenerates an oauth token if configuration was provided and if the given token has expired."""
+        if 'token_endpoint' in self.oauth_args and 'refresh_token' in self.oauth_args:
+            if datetime.fromtimestamp(self.oauth_args['exp']) < datetime.now():
+                content_type = 'application/json'
+                # Content-Type may need to be overridden
+                if 'content_type' in self.oauth_args:
+                    content_type = self.oauth_args['content_type']
+
+                res = requests.post(
+                    Template(self.oauth_args['token_endpoint']).render(),
+                    data={
+                        'grant_type': 'refresh_token',
+                        'client_id': Template(self.oauth_args['client_id']).render(),
+                        'client_secret': Template(self.oauth_args['client_secret']).render(),
+                        'refresh_token': Template(self.oauth_args['refresh_token']).render(),
+                    },
+                    headers={'Content-Type': content_type},
+                )
+
+                # Check if the request has a status_code equals to 200 and raise if not
+                # https://github.com/psf/requests/blob/master/requests/models.py#L936-L943
+                if not res.ok:  # pragma: no cover
+                    res.raise_for_status()
+
+                recieved_payload = res.json()
+
+                self.oauth_args['access_token'] = recieved_payload['access_token']
+                self.oauth_args['id_token'] = recieved_payload['id_token']
+                self.oauth_args['exp'] = datetime.now().timestamp() + recieved_payload['expires_in']
+
     def connect(self, **kwargs) -> snowflake.connector.SnowflakeConnection:
-        return snowflake.connector.connect(**self.get_connection_params(), **kwargs)
+        if self.oauth_args and self.authentication_method == AuthenticationMethod.OAUTH:
+            self._refresh_oauth_token()
+        connection_params = self.get_connection_params()
+
+        return snowflake.connector.connect(**connection_params, **kwargs)
 
     def _get_warehouses(self) -> List[str]:
         with self.connect() as connection:
