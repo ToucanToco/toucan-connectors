@@ -1,6 +1,8 @@
+import copy
 from unittest.mock import call
 
 import pytest
+from requests.models import HTTPError
 
 from toucan_connectors.snowflake import (
     AuthenticationMethod,
@@ -35,6 +37,16 @@ sd = SnowflakeDataSource(
     query='test_query with %(foo)s and {{ pokemon }}',
     parameters={'foo': 'bar', 'pokemon': 'pikachu'},
 )
+
+OAUTH_ARGS = {
+    'content_type': 'application/x-www-form-urlencoded',
+    'client_id': 'client_id',
+    'client_secret': 'client_s3cr3t',
+    'secret': 's3cr3t',
+    'refresh_token': 'baba au rhum',
+    'exp': 1337,
+    'token_endpoint': 'http://example.com/endpoint',
+}
 
 
 def test_snowflake(mocker):
@@ -258,3 +270,74 @@ def test_missing_cache_file():
         default_warehouse='bleh',
         ocsp_response_cache_filename=__file__,
     )
+
+
+def test_specified_oauth_args(mocker):
+    mocker.patch('snowflake.connector.connect')
+
+    sf = copy.deepcopy(sc_oauth)
+    sf.oauth_args = copy.deepcopy(OAUTH_ARGS)
+
+    data_source = SnowflakeDataSource(
+        name='test',
+        domain='test',
+        database='test',
+        warehouse='test',
+        query='bar',
+    )
+
+    req_mock = mocker.patch('requests.post')
+    req_mock.return_value.status_code = 200
+
+    sf._retrieve_data(data_source)
+
+    assert req_mock.call_count == 1
+
+
+def test_oauth_args_missing_endpoint(mocker):
+    mocker.patch('snowflake.connector.connect')
+    req_mock = mocker.patch('requests.post')
+
+    sf = copy.deepcopy(sc_oauth)
+
+    oauth_args = copy.deepcopy(OAUTH_ARGS)
+    oauth_args.pop('token_endpoint')
+    sf.oauth_args = oauth_args
+
+    sf._retrieve_data(sd)
+
+    assert req_mock.call_count == 0
+
+
+def test_oauth_args_endpoint_not_200(mocker):
+    mocker.patch('snowflake.connector.connect')
+    req_mock = mocker.patch('requests.post')
+
+    sf = copy.deepcopy(sc_oauth)
+    oauth_args = copy.deepcopy(OAUTH_ARGS)
+    sf.oauth_args = oauth_args
+
+    req_mock.return_value.status_code = 401
+
+    def fake_raise_for_status():
+        raise HTTPError('Unauthorized')
+
+    req_mock.return_value.raise_for_status = lambda: fake_raise_for_status
+
+    try:
+        sf._retrieve_data(sd)
+    except Exception as e:
+        assert str(e) == 'Unauthorized'
+    assert req_mock.call_count == 1
+
+
+def test_oauth_args_wrong_type_of_auth(mocker):
+    mocker.patch('snowflake.connector.connect')
+    sf = copy.deepcopy(sc)
+    sf.oauth_args = copy.deepcopy(OAUTH_ARGS)
+
+    spy = mocker.spy(SnowflakeConnector, '_refresh_oauth_token')
+
+    sf._retrieve_data(sd)
+
+    assert spy.call_count == 0
