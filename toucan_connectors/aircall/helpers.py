@@ -89,7 +89,7 @@ def format_calls_data(call_obj: dict) -> dict:
         }
 
 
-def format_teams_data(team_obj: dict) -> dict:
+def format_teams_data(team_obj: dict):
     """Provides a filter for teams"""
     if team_obj:
         return list(

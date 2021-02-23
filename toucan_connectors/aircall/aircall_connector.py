@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import os
+import time
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -31,6 +33,10 @@ BASE_ROUTE: str = 'https://api.aircall.io/v1'
 NO_CREDENTIALS_ERROR = 'No credentials'
 
 
+class AircallRateLimitExhaustedException(Exception):
+    """Raised when the extraction reached the max amount of request"""
+
+
 class NoCredentialsError(Exception):
     """Raised when no secrets avaiable."""
 
@@ -58,73 +64,90 @@ async def fetch_page(
     dependent on existence of other pages and call limit
     """
     endpoint = f'{BASE_ROUTE}/{dataset}?per_page={PER_PAGE}&page={new_page}'
-
-    if query_params:
-        data: dict = await fetch(endpoint, session, query_params)
-    else:
-        data: dict = await fetch(endpoint, session)
-
-    logging.getLogger(__file__).info(
-        f'Request sent to Aircall for page {new_page} for dataset {dataset}'
-    )
-
-    aircall_error = data.get('error')
-    if aircall_error:
-        logging.getLogger(__file__).error(f'Aircall error has occurred: {aircall_error}')
-        delay_timer = 1
-        max_num_of_retries = 3
-        await asyncio.sleep(delay_timer)
-        if delay_counter < max_num_of_retries:
-            delay_counter += 1
-            logging.getLogger(__file__).info('Retrying Aircall API')
-            data_list = await fetch_page(
-                dataset,
-                data_list,
-                session,
-                limit,
-                current_pass,
-                new_page,
-                delay_counter,
-                query_params=query_params,
-            )
+    try:
+        if query_params:
+            data: dict = await fetch(endpoint, session, query_params)
         else:
-            logging.getLogger(__file__).error('Aborting Aircall requests')
-            raise AircallException(f'Aborting Aircall requests due to {aircall_error}')
+            data: dict = await fetch(endpoint, session)
 
-    delay_counter = 0
-    data_list.append(data)
+        logging.getLogger(__file__).info(
+            f'Request sent to Aircall for page {new_page} for dataset {dataset}'
+        )
 
-    next_page_link = None
-    meta_data = data.get('meta')
-    if meta_data is not None:
-        next_page_link: Optional[str] = meta_data.get('next_page_link')
+        aircall_error = data.get('error')
+        if aircall_error:
+            logging.getLogger(__file__).error(f'Aircall error has occurred: {aircall_error}')
+            delay_timer = 1
+            max_num_of_retries = 3
+            await asyncio.sleep(delay_timer)
+            if delay_counter < max_num_of_retries:
+                delay_counter += 1
+                logging.getLogger(__file__).info('Retrying Aircall API')
+                data_list = await fetch_page(
+                    dataset,
+                    data_list,
+                    session,
+                    limit,
+                    current_pass,
+                    new_page,
+                    delay_counter,
+                    query_params=query_params,
+                )
+            else:
+                logging.getLogger(__file__).error('Aborting Aircall requests')
+                raise AircallException(f'Aborting Aircall requests due to {aircall_error}')
 
-    if limit > -1:
-        current_pass += 1
+        delay_counter = 0
+        data_list.append(data)
 
-        if next_page_link is not None and current_pass < limit:
-            next_page = meta_data['current_page'] + 1
-            data_list = await fetch_page(
-                dataset,
-                data_list,
-                session,
-                limit,
-                current_pass,
-                next_page,
-                query_params=query_params,
-            )
-    else:
-        if next_page_link is not None:
-            next_page = meta_data['current_page'] + 1
-            data_list = await fetch_page(
-                dataset,
-                data_list,
-                session,
-                limit,
-                current_pass,
-                next_page,
-                query_params=query_params,
-            )
+        next_page_link = None
+        meta_data = data.get('meta')
+        if meta_data is not None:
+            next_page_link: Optional[str] = meta_data.get('next_page_link')
+
+        if limit > -1:
+            current_pass += 1
+
+            if next_page_link is not None and current_pass < limit:
+                next_page = meta_data['current_page'] + 1
+                data_list = await fetch_page(
+                    dataset,
+                    data_list,
+                    session,
+                    limit,
+                    current_pass,
+                    next_page,
+                    query_params=query_params,
+                )
+        else:
+            if next_page_link is not None:
+                next_page = meta_data['current_page'] + 1
+                data_list = await fetch_page(
+                    dataset,
+                    data_list,
+                    session,
+                    limit,
+                    current_pass,
+                    next_page,
+                    query_params=query_params,
+                )
+
+    except AircallRateLimitExhaustedException as a:
+        reset_timestamp = int(a.args[0])
+        delay = reset_timestamp - (int(datetime.timestamp(datetime.utcnow())) + 1)
+        logging.getLogger(__file__).info(f'Rate limit reached, pausing {delay} seconds')
+        time.sleep(delay)
+        logging.getLogger(__file__).info('Extraction restarted')
+        data_list = await fetch_page(
+            dataset,
+            data_list,
+            session,
+            limit,
+            current_pass,
+            new_page,
+            delay_counter,
+            query_params=query_params,
+        )
 
     return data_list
 
@@ -132,6 +155,11 @@ async def fetch_page(
 async def fetch(new_endpoint, session: ClientSession, query_params=None) -> dict:
     """The basic fetch function"""
     async with session.get(new_endpoint, params=query_params) as res:
+        try:
+            rate_limit_reset = res.headers['X-AircallApi-Reset']
+            raise AircallRateLimitExhaustedException(rate_limit_reset)
+        except KeyError:
+            pass
         return await res.json()
 
 
@@ -294,6 +322,7 @@ class AircallConnector(ToucanConnector):
             variable_data = pd.DataFrame([])
             if limit != 0:
                 team_data, variable_data = self.run_fetches(dataset, limit, query_params)
+
             return build_df(
                 dataset, [empty_df, pd.DataFrame(team_data), pd.DataFrame(variable_data)]
             )
