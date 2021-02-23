@@ -30,6 +30,7 @@ from toucan_connectors.toucan_connector import (
 from .helpers import (
     GithubError,
     KeyNotFoundException,
+    RateLimitExhaustedException,
     dataset_formatter,
     extraction_funcs_names,
     extraction_funcs_pages_1,
@@ -43,6 +44,7 @@ from .helpers import (
     get_nodes,
     get_organization,
     get_page_info,
+    get_rate_limit_info,
     has_next_page,
     queries_funcs_names,
     queries_funcs_pages,
@@ -236,6 +238,7 @@ class GithubConnector(ToucanConnector):
                 extraction_funcs_pages_2[dataset](get_organization(get_data(data)))
             )
             page_info = get_page_info(extracted_data)
+            get_rate_limit_info(extracted_data)
             formatted_data = format_functions[dataset](extracted_data, name)
 
             # Check if the extraction script can see a previously extracted object (e.g PR)
@@ -311,6 +314,11 @@ class GithubConnector(ToucanConnector):
 
         except KeyNotFoundException as k:
             logging.getLogger(__name__).error(f'{k}')
+
+        except RateLimitExhaustedException as r:
+            sleep_time = r.args[0]  # Value to wait is sent within the Exception
+            logging.getLogger(__name__).info(f'Pausing until reset, waiting {sleep_time}')
+            await asyncio.sleep(sleep_time)
 
         return data_list
 
