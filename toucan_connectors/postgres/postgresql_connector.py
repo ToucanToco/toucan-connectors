@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 import pandas as pd
 import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr, create_model
@@ -39,14 +41,9 @@ class PostgresDataSource(ToucanDataSource):
         - we are able to give suggestions for the `database` field
         - if `database` is set, we are able to give suggestions for the `table` field
         """
-
-        # Add constraints to the schema
-        # the key has to be a valid field
-        # the value is either <default value> or a tuple ( <type>, <default value> )
-        # If the field is required, the <default value> has to be '...' (cf pydantic doc)
         constraints = {}
 
-        try:
+        with suppress(Exception):
             connection = pgsql.connect(
                 **connector.get_connection_params(
                     database=current_config.get('database', 'postgres')
@@ -67,8 +64,8 @@ class PostgresDataSource(ToucanDataSource):
                     res = cursor.fetchall()
                     available_tables = [table_name for (_, table_name) in res]
                     constraints['table'] = strlist_to_enum('table', available_tables)
-        finally:
-            return create_model('FormSchema', **constraints, __base__=cls).schema()
+
+        return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
 class PostgresConnector(ToucanConnector):
