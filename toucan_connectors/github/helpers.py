@@ -462,7 +462,7 @@ def get_rate_limit_info(response: dict):
     """
     rate_limit_info = response.get('rateLimit')
     if rate_limit_info:
-        if rate_limit_info['remaining'] == 0:
+        if rate_limit_info['remaining'] < 100:  # Raise the Exception Before reaching the limit
             logging.getLogger(__name__).info('Rate limit exhausted')
             resetAt_date = datetime.strptime(rate_limit_info['resetAt'], '%Y-%m-%dT%H:%M:%SZ')
             timetowait = (resetAt_date - datetime.utcnow()).seconds + 1  # adding 1 sec to round up

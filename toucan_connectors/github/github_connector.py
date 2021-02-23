@@ -197,7 +197,7 @@ class GithubConnector(ToucanConnector):
         data_list=None,
         retrieved_pages=0,
         retries=0,
-        retry_limit=4,
+        retry_limit=2,
         latest_retrieved_object=None,
     ) -> List[dict]:
         """
@@ -228,11 +228,11 @@ class GithubConnector(ToucanConnector):
         try:
             get_message(data)
             get_errors(data)
+            data_value = get_data(data)
             extracted_data = extraction_funcs_pages_1[dataset](
-                extraction_funcs_pages_2[dataset](get_organization(get_data(data)))
+                extraction_funcs_pages_2[dataset](get_organization(data_value))
             )
             page_info = get_page_info(extracted_data)
-            get_rate_limit_info(extracted_data)
             formatted_data = format_functions[dataset](extracted_data, name)
 
             # Check if the extraction script can see a previously extracted object (e.g PR)
@@ -257,6 +257,7 @@ class GithubConnector(ToucanConnector):
             if has_next_page(page_info) and retrieved_pages < page_limit:
                 retrieved_pages += 1
                 variables['cursor'] = get_cursor(page_info)
+                get_rate_limit_info(data_value)
 
                 await self.get_pages(
                     name=name,
@@ -285,6 +286,7 @@ class GithubConnector(ToucanConnector):
                     retrieved_pages=retrieved_pages,
                     retries=retries,
                     page_limit=page_limit,
+                    retry_limit=retry_limit,
                     latest_retrieved_object=latest_retrieved_object,
                 )
             else:
@@ -297,6 +299,19 @@ class GithubConnector(ToucanConnector):
             sleep_time = r.args[0]  # Value to wait is sent within the Exception
             logging.getLogger(__name__).info(f'Pausing until reset, waiting {sleep_time}')
             await asyncio.sleep(sleep_time)
+            await self.get_pages(
+                name=name,
+                client=client,
+                organization=organization,
+                dataset=dataset,
+                variables=variables,
+                data_list=data_list,
+                retrieved_pages=retrieved_pages,
+                retries=retries,
+                page_limit=page_limit,
+                retry_limit=retry_limit,
+                latest_retrieved_object=latest_retrieved_object,
+            )
 
         return data_list
 

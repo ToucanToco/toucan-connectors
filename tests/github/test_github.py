@@ -503,12 +503,12 @@ def test_get_organizations(gc):
     assert res == ['power_rangers', 'teletubbies']
 
 
-def test_get_rate_limit_exhausted(gc, mocker, extracted_prs_4, event_loop, client):
+def test_get_rate_limit_exhausted(gc, mocker, extracted_prs_4, extracted_prs_3, event_loop, client):
     """Check that the connector is paused when rate limit is exhausted"""
     mockedsleep = mocker.patch(
         'toucan_connectors.github.github_connector.asyncio.sleep', return_value=None
     )
-    mocker.patch('python_graphql_client.GraphqlClient.execute_async', return_value=extracted_prs_4)
+    mocker.patch('python_graphql_client.GraphqlClient.execute_async', side_effect=[extracted_prs_4, extracted_prs_3])
     event_loop.run_until_complete(
         gc.get_pages(
             name='repo1',
@@ -519,4 +519,4 @@ def test_get_rate_limit_exhausted(gc, mocker, extracted_prs_4, event_loop, clien
         )
     )
 
-    assert mockedsleep.call_count == 2
+    assert mockedsleep.call_count == 3

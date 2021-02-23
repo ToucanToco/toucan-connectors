@@ -3,7 +3,12 @@ import pytest
 from aiohttp import web
 
 from tests.aircall.helpers import assert_called_with
-from toucan_connectors.aircall.aircall_connector import AircallDataset, fetch, fetch_page
+from toucan_connectors.aircall.aircall_connector import (
+    AircallDataset,
+    AircallRateLimitExhaustedException,
+    fetch,
+    fetch_page,
+)
 
 fetch_fn_name = 'toucan_connectors.aircall.aircall_connector.fetch'
 
@@ -15,6 +20,18 @@ async def send_200_success(req: web.Request):
     return web.json_response(FAKE_DATA, status=200)
 
 
+async def send_rate_limit(req: web.Request):
+    """Send an error response with details in headers"""
+    return web.json_response(
+        text='ERROR',
+        headers={
+            'X-AircallApi-Limit': '60',
+            'X-AircallApi-Remaining': '0',
+            'X-AircallApi-Reset': '1614093780',
+        },
+    )
+
+
 async def test_fetch(aiohttp_client, loop):
     """It should return a properly-formed dictionary."""
     app = web.Application(loop=loop)
@@ -24,6 +41,16 @@ async def test_fetch(aiohttp_client, loop):
     res = await fetch('/foo', client)
 
     assert res == FAKE_DATA
+
+
+async def test_fetch_limit(aiohttp_client, loop):
+    """It should raise an AircallRateLimitExhaustedException"""
+    app = web.Application(loop=loop)
+    app.router.add_get('/foo', send_rate_limit)
+
+    client = await aiohttp_client(app)
+    with pytest.raises(AircallRateLimitExhaustedException):
+        await fetch('/foo', client)
 
 
 async def test_fetch_with_params(aiohttp_client, loop):
@@ -168,3 +195,18 @@ async def test_query_params_not_named_arg(mocker):
 
     with pytest.raises(TypeError):
         await fetch_page(ds, [], 'session', 0, 0, 0, 0, params)
+
+
+async def test_fetch_page_rate_limited(mocker):
+    """
+    Check that fetch_page is able to pause when
+    an AircallRateLimitExhaustedException exception is throw by fetch
+    """
+    ds = AircallDataset('calls')
+    fake_data = {'data': {'stuff': 'stuff'}}
+    mocker.patch(
+        fetch_fn_name, side_effect=[AircallRateLimitExhaustedException('16100000'), fake_data]
+    )
+    mockedsleep = mocker.patch('toucan_connectors.aircall.aircall_connector.time.sleep')
+    await fetch_page(ds, [], 'session', 0, 0, 0, 0)
+    mockedsleep.assert_called_once()
