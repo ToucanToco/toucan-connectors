@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import List
 
 import pandas as pd
@@ -89,12 +90,16 @@ def build_query_pr(organization: str, name: str) -> str:
                       }
                     }
                   }
-                  pageInfo {
-                    hasNextPage
-                    endCursor
+                    pageInfo {
+                      hasNextPage
+                      endCursor
+                    }
                   }
                 }
               }
+              rateLimit {
+                remaining
+                resetAt
               }
             }""",
         {'organization': organization, 'repo_name': name},
@@ -123,8 +128,12 @@ def build_query_teams(organization: str) -> str:
                   }
                 }
               }
-        }
-        """,
+              rateLimit {
+                remaining
+                resetAt
+              }
+            }
+            """,
         {'organization': organization},
     )
 
@@ -435,6 +444,29 @@ def get_message(response: dict):
     if message:
         logging.getLogger(__name__).error(f'A Github error occured:' f' {message}')
         raise GithubError(f'API sent {message}')
+
+
+class RateLimitExhaustedException(Exception):
+    """Raised when remaining resources from API is 0"""
+
+
+def get_rate_limit_info(response: dict):
+    """
+    Extract rate limit info from response.
+    If remaining resources is 0 then throw an exception with
+    reset time.
+    rate_limit part is like this:
+        "rateLimit": {
+      "remaining": 4994,
+      "resetAt": "2021-02-23T13:26:47Z" UTC TIME !
+    """
+    rate_limit_info = response.get('rateLimit')
+    if rate_limit_info:
+        if rate_limit_info['remaining'] == 0:
+            logging.getLogger(__name__).info('Rate limit exhausted')
+            resetAt_date = datetime.strptime(rate_limit_info['resetAt'], '%Y-%m-%dT%H:%M:%SZ')
+            timetowait = (resetAt_date - datetime.utcnow()).seconds + 1  # adding 1 sec to round up
+            raise RateLimitExhaustedException(timetowait)
 
 
 extraction_funcs_names = {'pull requests': get_repositories, 'teams': get_teams}

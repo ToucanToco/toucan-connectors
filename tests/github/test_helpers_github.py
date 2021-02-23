@@ -3,6 +3,7 @@ import pytest
 from toucan_connectors.github.helpers import (
     GithubError,
     KeyNotFoundException,
+    RateLimitExhaustedException,
     build_query_members,
     build_query_pr,
     build_query_repositories,
@@ -21,6 +22,7 @@ from toucan_connectors.github.helpers import (
     get_organization,
     get_page_info,
     get_pull_requests,
+    get_rate_limit_info,
     get_repositories,
     get_repository,
     get_team,
@@ -262,3 +264,12 @@ def test_get_message():
     """
     with pytest.raises(GithubError):
         assert get_message({'documentation_url': 'bla', 'message': 'bla'}) == 'bla'
+
+
+def test_get_rate_limit_info():
+    """
+    Check that get_rate_limit_info is able to extract
+    rate limit info from the API response
+    """
+    with pytest.raises(RateLimitExhaustedException):
+        get_rate_limit_info({'rateLimit': {'remaining': 0, 'resetAt': '2021-02-23T13:26:47Z'}})

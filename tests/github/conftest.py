@@ -445,3 +445,48 @@ def extracted_prs_3():
             }
         }
     }
+
+
+@pytest.fixture(scope='session')
+def extracted_prs_4():
+    return {
+        'data': {
+            'organization': {
+                'repository': {
+                    'name': 'repo4',
+                    'pullRequests': {
+                        'nodes': [
+                            {
+                                'createdAt': '2020-11-18T15:58:44Z',
+                                'mergedAt': None,
+                                'deletions': 45,
+                                'additions': 162,
+                                'title': 'feat(blalbla):blalba ',
+                                'state': 'OPEN',
+                                'labels': {
+                                    'edges': [
+                                        {'node': {'name': 'feature'}},
+                                        {'node': {'name': 'Label'}},
+                                        {'node': {'name': 'Other Label'}},
+                                    ]
+                                },
+                                'commits': {
+                                    'edges': [
+                                        {
+                                            'node': {
+                                                'commit': {
+                                                    'author': {'user': {'login': 'jeanlouis'}}
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                            },
+                        ],
+                        'pageInfo': {'hasNextPage': False, 'endCursor': '123'},
+                        'rateLimit': {'remaining': 0, 'resetAt': '2021-02-23T13:26:47Z'},
+                    },
+                }
+            }
+        }
+    }
