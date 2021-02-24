@@ -70,19 +70,19 @@ async def fetch_page(
         else:
             data: dict = await fetch(endpoint, session)
 
-        logging.getLogger(__file__).info(
+        logging.getLogger(__name__).info(
             f'Request sent to Aircall for page {new_page} for dataset {dataset}'
         )
 
         aircall_error = data.get('error')
         if aircall_error:
-            logging.getLogger(__file__).error(f'Aircall error has occurred: {aircall_error}')
+            logging.getLogger(__name__).error(f'Aircall error has occurred: {aircall_error}')
             delay_timer = 1
             max_num_of_retries = 3
             await asyncio.sleep(delay_timer)
             if delay_counter < max_num_of_retries:
                 delay_counter += 1
-                logging.getLogger(__file__).info('Retrying Aircall API')
+                logging.getLogger(__name__).info('Retrying Aircall API')
                 data_list = await fetch_page(
                     dataset,
                     data_list,
@@ -94,7 +94,7 @@ async def fetch_page(
                     query_params=query_params,
                 )
             else:
-                logging.getLogger(__file__).error('Aborting Aircall requests')
+                logging.getLogger(__name__).error('Aborting Aircall requests')
                 raise AircallException(f'Aborting Aircall requests due to {aircall_error}')
 
         delay_counter = 0
@@ -135,9 +135,9 @@ async def fetch_page(
     except AircallRateLimitExhaustedException as a:
         reset_timestamp = int(a.args[0])
         delay = reset_timestamp - (int(datetime.timestamp(datetime.utcnow())) + 1)
-        logging.getLogger(__file__).info(f'Rate limit reached, pausing {delay} seconds')
+        logging.getLogger(__name__).info(f'Rate limit reached, pausing {delay} seconds')
         time.sleep(delay)
-        logging.getLogger(__file__).info('Extraction restarted')
+        logging.getLogger(__name__).info('Extraction restarted')
         data_list = await fetch_page(
             dataset,
             data_list,
