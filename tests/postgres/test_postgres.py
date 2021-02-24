@@ -3,7 +3,11 @@ import psycopg2
 import pytest
 from pydantic import ValidationError
 
-from toucan_connectors.postgres.postgresql_connector import PostgresConnector, PostgresDataSource
+from toucan_connectors.postgres.postgresql_connector import (
+    PostgresConnector,
+    PostgresDataSource,
+    pgsql,
+)
 
 
 @pytest.fixture(scope='module')
@@ -170,3 +174,10 @@ def test_get_form_query_with_good_database(postgres_connector, mocker):
         'type': 'string',
         'enum': ['city', 'country', 'countrylanguage'],
     }
+
+
+def test_get_form_connection_fails(mocker, postgres_connector):
+    """It should return a form even if connect fails"""
+    mocker.patch.object(pgsql, 'connect').side_effect = IOError
+    form = PostgresDataSource.get_form(postgres_connector, current_config={})
+    assert 'table' in form['properties']

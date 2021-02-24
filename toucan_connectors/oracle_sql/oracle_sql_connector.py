@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 import cx_Oracle
 import pandas as pd
 from pydantic import Field, SecretStr, constr, create_model
@@ -33,18 +35,18 @@ class OracleSQLDataSource(ToucanDataSource):
         - we are able to give suggestions for the `database` field
         - if `database` is set, we are able to give suggestions for the `table` field
         """
-        connection = cx_Oracle.connect(**connector.get_connection_params())
-
         constraints = {}
 
-        # # Always add the suggestions for the available databases
-        with connection.cursor() as cursor:
-            cursor.execute("""select table_name from ALL_TABLES""")
-            res = cursor.fetchall()
-            # Filter tables starting with an '_' because strlist_to_enum cannot
-            # set attributes starting with '_'
-            available_tables = [table_name for (table_name,) in res if table_name[0] != '_']
-            constraints['table'] = strlist_to_enum('table', available_tables)
+        with suppress(Exception):
+            connection = cx_Oracle.connect(**connector.get_connection_params())
+            with connection.cursor() as cursor:
+                cursor.execute("""select table_name from ALL_TABLES""")
+                res = cursor.fetchall()
+                # Filter tables starting with an '_' because strlist_to_enum cannot
+                # set attributes starting with '_'
+                available_tables = [table_name for (table_name,) in res if table_name[0] != '_']
+                constraints['table'] = strlist_to_enum('table', available_tables)
+
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 

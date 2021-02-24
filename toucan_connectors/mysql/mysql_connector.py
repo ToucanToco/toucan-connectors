@@ -1,4 +1,5 @@
 import re
+from contextlib import suppress
 from typing import Optional
 
 import numpy as np
@@ -56,31 +57,27 @@ class MySQLDataSource(ToucanDataSource):
         - we are able to give suggestions for the `database` field
         - if `database` is set, we are able to give suggestions for the `table` field
         """
-        connection = pymysql.connect(
-            **connector.get_connection_params(
-                cursorclass=None, database=current_config.get('database')
-            )
-        )
-
-        # Add constraints to the schema
-        # the key has to be a valid field
-        # the value is either <default value> or a tuple ( <type>, <default value> )
-        # If the field is required, the <default value> has to be '...' (cf pydantic doc)
         constraints = {}
 
-        # # Always add the suggestions for the available databases
-        with connection.cursor() as cursor:
-            cursor.execute('SHOW DATABASES;')
-            res = cursor.fetchall()
-            # res = (('information_schema',), ('mysql_db',))
-            available_dbs = [db_name for (db_name,) in res]
-            constraints['database'] = strlist_to_enum('database', available_dbs)
-
-            if 'database' in current_config:
-                cursor.execute('SHOW TABLES;')
+        with suppress(Exception):
+            connection = pymysql.connect(
+                **connector.get_connection_params(
+                    cursorclass=None, database=current_config.get('database')
+                )
+            )
+            # Always add the suggestions for the available databases
+            with connection.cursor() as cursor:
+                cursor.execute('SHOW DATABASES;')
                 res = cursor.fetchall()
-                available_tables = [table_name for (table_name,) in res]
-                constraints['table'] = strlist_to_enum('table', available_tables)
+                # res = (('information_schema',), ('mysql_db',))
+                available_dbs = [db_name for (db_name,) in res]
+                constraints['database'] = strlist_to_enum('database', available_dbs)
+
+                if 'database' in current_config:
+                    cursor.execute('SHOW TABLES;')
+                    res = cursor.fetchall()
+                    available_tables = [table_name for (table_name,) in res]
+                    constraints['table'] = strlist_to_enum('table', available_tables)
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 

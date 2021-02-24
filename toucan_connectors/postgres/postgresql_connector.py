@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 import pandas as pd
 import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr, create_model
@@ -39,31 +41,30 @@ class PostgresDataSource(ToucanDataSource):
         - we are able to give suggestions for the `database` field
         - if `database` is set, we are able to give suggestions for the `table` field
         """
-        connection = pgsql.connect(
-            **connector.get_connection_params(database=current_config.get('database', 'postgres'))
-        )
-
-        # Add constraints to the schema
-        # the key has to be a valid field
-        # the value is either <default value> or a tuple ( <type>, <default value> )
-        # If the field is required, the <default value> has to be '...' (cf pydantic doc)
         constraints = {}
 
-        # # Always add the suggestions for the available databases
-        with connection.cursor() as cursor:
-            cursor.execute("""select datname from pg_database where datistemplate = false;""")
-            res = cursor.fetchall()
-            available_dbs = [db_name for (db_name,) in res]
-            constraints['database'] = strlist_to_enum('database', available_dbs)
-
-            if 'database' in current_config:
-                cursor.execute(
-                    """select table_schema, table_name from information_schema.tables
-                where table_schema NOT IN ('pg_catalog', 'information_schema');"""
+        with suppress(Exception):
+            connection = pgsql.connect(
+                **connector.get_connection_params(
+                    database=current_config.get('database', 'postgres')
                 )
+            )
+            # # Always add the suggestions for the available databases
+            with connection.cursor() as cursor:
+                cursor.execute("""select datname from pg_database where datistemplate = false;""")
                 res = cursor.fetchall()
-                available_tables = [table_name for (_, table_name) in res]
-                constraints['table'] = strlist_to_enum('table', available_tables)
+                available_dbs = [db_name for (db_name,) in res]
+                constraints['database'] = strlist_to_enum('database', available_dbs)
+
+                if 'database' in current_config:
+                    cursor.execute(
+                        """select table_schema, table_name from information_schema.tables
+                    where table_schema NOT IN ('pg_catalog', 'information_schema');"""
+                    )
+                    res = cursor.fetchall()
+                    available_tables = [table_name for (_, table_name) in res]
+                    constraints['table'] = strlist_to_enum('table', available_tables)
+
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 

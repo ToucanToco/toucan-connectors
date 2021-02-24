@@ -1,3 +1,4 @@
+from contextlib import suppress
 from enum import Enum
 from os import path
 from typing import Dict, List
@@ -43,13 +44,14 @@ class SnowflakeDataSource(ToucanDataSource):
 
     @classmethod
     def get_form(cls, connector: 'SnowflakeConnector', current_config):
-        databases = cls._get_databases(connector)
-        warehouses = connector._get_warehouses()
-        # Restrict some fields to lists of existing counterparts
-        constraints = {
-            'database': strlist_to_enum('database', databases),
-            'warehouse': strlist_to_enum('warehouse', warehouses),
-        }
+        constraints = {}
+
+        with suppress(Exception):
+            databases = cls._get_databases(connector)
+            warehouses = connector._get_warehouses()
+            # Restrict some fields to lists of existing counterparts
+            constraints['database'] = strlist_to_enum('database', databases)
+            constraints['warehouse'] = strlist_to_enum('warehouse', warehouses)
 
         res = create_model('FormSchema', **constraints, __base__=cls).schema()
         res['properties']['warehouse']['default'] = connector.default_warehouse
