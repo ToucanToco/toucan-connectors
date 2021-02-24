@@ -1,4 +1,6 @@
 """Module containing tests with fake server"""
+from datetime import datetime
+
 import pytest
 from aiohttp import web
 
@@ -205,8 +207,14 @@ async def test_fetch_page_rate_limited(mocker):
     ds = AircallDataset('calls')
     fake_data = {'data': {'stuff': 'stuff'}}
     mocker.patch(
-        fetch_fn_name, side_effect=[AircallRateLimitExhaustedException('16100000'), fake_data]
+        fetch_fn_name, side_effect=[AircallRateLimitExhaustedException('1610000003'), fake_data]
     )
+    mockeddatetime = mocker.patch('toucan_connectors.aircall.aircall_connector.datetime')
+    mocked_utcnow = mockeddatetime.utcnow
+    mocked_utcnow.return_value = datetime(2021, 1, 7, 6, 13, 20)
+    mocked_timestamp = mockeddatetime.timestamp
+    mocked_timestamp.return_value = 1610000001
     mockedsleep = mocker.patch('toucan_connectors.aircall.aircall_connector.time.sleep')
     await fetch_page(ds, [], 'session', 0, 0, 0, 0)
     mockedsleep.assert_called_once()
+    assert mockedsleep.call_args_list[0][0][0] == 1
