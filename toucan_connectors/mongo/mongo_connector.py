@@ -1,5 +1,4 @@
 import json
-from contextlib import suppress
 from functools import _lru_cache_wrapper, lru_cache
 from typing import Optional, Pattern, Union
 
@@ -75,16 +74,16 @@ class MongoDataSource(ToucanDataSource):
         - if `database` is set, we are able to give suggestions for the `collection` field
         """
         constraints = {}
-        with suppress(Exception):
-            client = pymongo.MongoClient(**connector._get_mongo_client_kwargs())
-            # Always add the suggestions for the available databases
-            available_databases = client.list_database_names()
-            constraints['database'] = strlist_to_enum('database', available_databases)
 
-            if 'database' in current_config:
-                validate_database(client, current_config['database'])
-                available_cols = client[current_config['database']].list_collection_names()
-                constraints['collection'] = strlist_to_enum('collection', available_cols)
+        client = pymongo.MongoClient(**connector._get_mongo_client_kwargs())
+        # Always add the suggestions for the available databases
+        available_databases = client.list_database_names()
+        constraints['database'] = strlist_to_enum('database', available_databases)
+
+        if 'database' in current_config:
+            validate_database(client, current_config['database'])
+            available_cols = client[current_config['database']].list_collection_names()
+            constraints['collection'] = strlist_to_enum('collection', available_cols)
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
