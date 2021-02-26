@@ -104,6 +104,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Http API',
         'logo': 'http_api/http-api.png',
     },
+    'Hubspot': {
+        'connector': 'hubspot.hubspot_connector.HubspotConnector',
+        'label': 'Hubspot',
+        'logo': 'hubspot/hubspot.png',
+    },
     'Indexima': {
         'connector': 'hive.hive_connector.HiveConnector',
         'logo': 'hive/indexima.png',
