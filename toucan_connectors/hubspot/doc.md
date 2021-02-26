@@ -1,0 +1,5 @@
+Please contact your Hubspot support to get a client_id/secret_id.
+
+Hubspot will ask you a redirect URI. You can provide the following URL: **{{redirect_uri}}**
+
+For more information, please visit: [Hubspot Documentation](https://developers.hubspot.com/docs/api/working-with-oauth)
