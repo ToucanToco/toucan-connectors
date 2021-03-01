@@ -117,6 +117,10 @@ CONNECTORS_REGISTRY = {
         'connector': 'lightspeed.lightspeed_connector.LightspeedConnector',
         'logo': 'lightspeed/lightspeed.png',
     },
+    'LinkedinAds': {
+        'connector': 'linkedinads.linkedinads_connector.LinkedinadsConnector',
+        'logo': 'linkedinads/linkedinads.png',
+    },
     'MicroStrategy': {
         'connector': 'micro_strategy.micro_strategy_connector.MicroStrategyConnector',
         'logo': 'micro_strategy/microstrategy.png',
