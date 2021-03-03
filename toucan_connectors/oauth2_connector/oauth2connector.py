@@ -109,6 +109,12 @@ class OAuth2Connector:
             self.secrets_keeper.save(self.auth_flow_id, new_token)
         return self.secrets_keeper.load(self.auth_flow_id)['access_token']
 
+    def get_refresh_token(self) -> str:
+        """
+        Return the refresh token, used to obtain an access token
+        """
+        return self.secrets_keeper.load(self.auth_flow_id)['refresh_token']
+
 
 class NoOAuth2RefreshToken(Exception):
     """

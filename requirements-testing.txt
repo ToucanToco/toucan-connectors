@@ -22,3 +22,4 @@ python_graphql_client
 clickhouse_driver
 lxml==4.2.5
 zeep
+mock
