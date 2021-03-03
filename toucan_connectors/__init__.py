@@ -70,6 +70,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Google Analytics',
         'logo': 'google_analytics/google-analytics.png',
     },
+    'GoogleAdwords': {
+        'connector': 'google_adwords.google_adwords_connector.GoogleAdwordsConnector',
+        'label': 'Google Adwords',
+        'logo': 'google_adwords/google_adwords.jpg',
+    },
     'GoogleBigQuery': {
         'connector': 'google_big_query.google_big_query_connector.GoogleBigQueryConnector',
         'label': 'Google Big Query',

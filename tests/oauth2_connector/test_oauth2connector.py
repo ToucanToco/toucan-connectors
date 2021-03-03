@@ -133,3 +133,14 @@ def test_should_throw_if_authflow_id_not_found(oauth2_connector, secrets_keeper)
 def test_should_return_if_is_oauth2_connector(oauth2_connector):
     assert is_oauth2_connector(GoogleSheets2Connector) is True
     assert is_oauth2_connector(HttpAPIConnector) is False
+
+
+def test_get_refresh_token(mocker, oauth2_connector):
+    mocked_keeper = mocker.patch.object(
+        oauth2_connector,
+        'secrets_keeper',
+    )
+    mocked_load = mocked_keeper.load
+    mocked_load.return_value = {'refresh_token': 'bla'}
+    token = oauth2_connector.get_refresh_token()
+    assert token == 'bla'
