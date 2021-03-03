@@ -5,6 +5,7 @@ from xml.etree.ElementTree import ParseError, fromstring, tostring
 import pandas as pd
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 from requests import Session
+from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 from xmltodict import parse
 
 from toucan_connectors.auth import Auth
@@ -88,6 +89,7 @@ class HttpAPIDataSource(ToucanDataSource):
     )
     xpath: str = XpathSchema
     filter: str = FilterSchema
+    flatten_column: str = Field(None, description='Column containing nested rows')
 
 
 class HttpAPIConnector(ToucanConnector):
@@ -163,4 +165,7 @@ class HttpAPIConnector(ToucanConnector):
                     template[k].update(query[k])
                 query[k] = template[k]
 
-        return pd.DataFrame(self.do_request(query, session))
+        res = pd.DataFrame(self.do_request(query, session))
+        if data_source.flatten_column:
+            return json_to_table(res, columns=[data_source.flatten_column])
+        return res
