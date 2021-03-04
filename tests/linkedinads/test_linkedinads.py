@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 import responses
 from pytest import fixture
@@ -42,11 +43,11 @@ def ds():
         start_date='01/01/2021',
         end_date='31/01/2021',
         time_granularity=TimeGranularity.all,
+        flatten_column='nested',
         parameters={
             'objectiveType': 'VIDEO_VIEW',
             'campaigns': 'urn:li:sponsoredCampaign:123456,urn:li:sponsoredCampaign:654321',
         },
-        filter='.',
     )
 
 
@@ -82,7 +83,11 @@ def test_get_status_success(mocker, con):
 
 @responses.activate
 def test__retrieve_data(con, ds):
-    responses.add(method='GET', url='https://api.linkedin.com/v2/adAnalyticsV2?', json='blabla')
+    responses.add(
+        method='GET',
+        url='https://api.linkedin.com/v2/adAnalyticsV2?',
+        json={'elements': [{'bla': 'bla', 'nested': {'kikoo': 'lool'}}]},
+    )
     con.get_df(ds)
     assert len(responses.calls) == 1
     assert responses.calls[0].request.headers['Authorization'] == 'Bearer coucou'
@@ -101,20 +106,23 @@ def test__retrieve_data(con, ds):
 
 
 @responses.activate
+def test__retrieve_data_no_nested_col(con, ds):
+    ds.flatten_column = None
+    responses.add(
+        method='GET',
+        url='https://api.linkedin.com/v2/adAnalyticsV2?',
+        json={'elements': [{'bla': 'bla'}]},
+    )
+    res = con.get_df(ds)
+    expected = pd.DataFrame([{'bla': 'bla'}])
+    assert res['bla'][0] == expected['bla'][0]
+
+
+@responses.activate
 def test__retrieve_data_http_error(con, ds):
     responses.add(method='GET', url='https://api.linkedin.com/v2/adAnalyticsV2?', status=400)
     with pytest.raises(HttpError):
         con.get_df(ds)
-
-
-@responses.activate
-def test__retrieve_data_jq_error(mocker, con, ds):
-    responses.add(method='GET', url='https://api.linkedin.com/v2/adAnalyticsV2?', json='blabla')
-    mocker.patch(f'{import_path}.transform_with_jq', side_effect=ValueError)
-    mocklogger = mocker.patch(f'{import_path}.LinkedinadsConnector.logger')
-    mockederror = mocklogger.error
-    con.get_df(ds)
-    mockederror.assert_called_once()
 
 
 def test_get_connectors_secrets_form(con):
@@ -150,7 +158,7 @@ def test_schema_extra(ds):
     schema = {
         'properties': {
             'time_granularity': 'bar',
-            'filter': 'bar',
+            'flatten_column': 'bar',
             'parameters': 'bar',
             'finder_methods': 'bar',
             'start_date': 'bar',
@@ -165,7 +173,7 @@ def test_schema_extra(ds):
             'start_date': 'bar',
             'end_date': 'bar',
             'time_granularity': 'bar',
-            'filter': 'bar',
+            'flatten_column': 'bar',
             'parameters': 'bar',
         }
     }

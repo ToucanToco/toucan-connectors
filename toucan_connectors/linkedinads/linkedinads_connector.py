@@ -7,8 +7,10 @@ from typing import Any, Dict, Optional, Type
 import pandas as pd
 import requests
 from pydantic import Field
+from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 
-from toucan_connectors.common import ConnectorStatus, FilterSchema, HttpError, transform_with_jq
+from toucan_connectors.common import ConnectorStatus, HttpError
+from toucan_connectors.http_api.http_api_connector import Template
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
@@ -58,9 +60,8 @@ class LinkedinadsDataSource(ToucanDataSource):
         title='Time granularity',
         description='Granularity of the dataset, default all result grouped',
     )
-    filter: str = (
-        FilterSchema  # TODO to remove once json unnesting will be available in postprocess
-    )
+    flatten_column: str = Field(None, description='Column containing nested rows')
+
     parameters: dict = Field(
         None,
         description='See https://docs.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting for more information',
@@ -75,7 +76,7 @@ class LinkedinadsDataSource(ToucanDataSource):
                 'start_date',
                 'end_date',
                 'time_granularity',
-                'filter',
+                'flatten_column',
                 'parameters',
             ]
             new_keys = prio_keys + [k for k in keys if k not in prio_keys]
@@ -89,6 +90,10 @@ class LinkedinadsConnector(ToucanConnector):
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[str]
     _baseroute = 'https://api.linkedin.com/v2/adAnalyticsV2?q='
+    template: Template = Field(
+        None,
+        description='You can provide a custom template that will be used for every HTTP request',
+    )
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
@@ -173,16 +178,16 @@ class LinkedinadsConnector(ToucanConnector):
 
         try:
             assert res.ok
-            data = res.json()
+            data = res.json().get('elements')
 
         except AssertionError:
             raise HttpError(res.text)
 
-        jqfilter = data_source.filter
-        try:
-            return pd.DataFrame(transform_with_jq(data, jqfilter))
-        except ValueError:
-            LinkedinadsConnector.logger.error(f'Could not transform {data} using {jqfilter}')
+        res = pd.DataFrame(data)
+
+        if data_source.flatten_column:
+            return json_to_table(res, columns=[data_source.flatten_column])
+        return res
 
     def get_status(self) -> ConnectorStatus:
         """
