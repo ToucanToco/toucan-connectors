@@ -17,7 +17,6 @@ from toucan_connectors.toucan_connector import (
 )
 
 AUTHORIZATION_URL: str = 'https://app.hubspot.com/oauth/authorize'
-# TODO: list scopes
 SCOPE: str = 'oauth contacts content forms business-intelligence'
 TOKEN_URL: str = 'https://api.hubapi.com/oauth/v1/token'
 HUBSPOT_ENDPOINTS: dict = {
@@ -104,20 +103,37 @@ class HubspotConnector(ToucanConnector):
             if data_source.object_type and data_source.dataset == HubspotDataset.webanalytics:
                 query_params['objectType'] = data_source.object_type
 
-            req = requests.get(endpoint, params=query_params, headers=headers)
-            # throw if the request's status is not 200
-            req.raise_for_status()
-            res = req.json()
-            data = [*res['results']]
+            response = None
+            res = None
+            data = []
 
-            while 'paging' in res and 'next' in res['paging']:
-                query_params['after'] = res['paging']['next']['after']
-                req = requests.get(endpoint, params=query_params, headers=headers)
-                req.raise_for_status()
-                res = req.json()
+            while not response or 'paging' in res and 'next' in res['paging']:
+                if response:
+                    query_params['after'] = res['paging']['next']['after']
+
+                response = requests.get(endpoint, params=query_params, headers=headers)
+                # throw if the request's status is not 200
+                response.raise_for_status()
+                res = response.json()
                 # Flatten the results
-                data.append(*res.get('results'))
+                for r in res.get('results'):
+                    data.append(r)
 
+            # Here we are returning only the `properties` label that contains the useful data
+            # The following is an example of what can be returned by HubSpot's APIs
+            # {
+            #   "results": [
+            #     {
+            #       "properties": {
+            #         "company": "Biglytics",
+            #         "createdate": "2019-10-30T03:30:17.883Z",
+            #         "email": "bcooper@biglytics.net",
+            #         "firstname": "Bryan",
+            #         [...]
+            #       }
+            #     }
+            #   ],
+            # }
             return pd.DataFrame(data)['properties']
         except Exception as e:
             raise HubspotConnectorException(f'retrieve_data failed with: {str(e)}')
