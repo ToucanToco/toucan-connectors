@@ -14,7 +14,7 @@ The `auth_flow_id` will be used to identify tokens relative to this connector in
 ```coffee
 DATA_PROVIDERS: [
   type:    'Hubspot'
-  name:    '<name>'
+  name:    'Hubspot Connector'
   auth_flow_id:    '<auth_flow_id>'
 ,
   ...
@@ -24,16 +24,23 @@ DATA_PROVIDERS: [
 ## Data source configuration
 
 * `domain`: str, required
-* `name`: str, required
-* `dataset`: HubspotDataset, default to contacts
+* `name`: str, name given to the Hubspot provider as defined in `DATA_PROVIDERS`
+* `dataset`: HubspotDataset
+  * Possible values:
+    * `contacts` (default value)
+    * `content`
+    * `products`
+    * `web-analytics`
 * `object_type`: HubspotObjectType, optional but needed for the `web-analytics` dataset
+  * Possible values:
+    * `contact`
 
 ```coffee
 DATA_SOURCES: [
-  domain:    '<domain>'
-  name:    '<name>'
-  limit:    '<limit>'
-  dataset:    '<dataset>'
+  domain:    'example_domain'
+  name:    'Hubspot Connector'
+  dataset:    'web-analytics'
+  object_type: 'contact'
 ,
   ...
 ]

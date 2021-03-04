@@ -1,4 +1,4 @@
-Please contact your Hubspot support to get a client_id/secret_id.
+Please contact your Hubspot support to get a client_id/client_secret.
 
 Hubspot will ask you a redirect URI. You can provide the following URL: **{{redirect_uri}}**
 
