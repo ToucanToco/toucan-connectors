@@ -258,6 +258,7 @@ class MongoConnector(ToucanConnector):
                 '$regexMatch': {
                     'input': {'$toString': f'${field}'},
                     'regex': regex.pattern,
+                    'options': 'i' # i -> Case insensitivity
                 }
             }
         }
