@@ -333,6 +333,7 @@ def test_get_df_with_regex_with_integers(mongo_connector, mongo_datasource):
         {'domain': 'domain1', 'country': 'France', 'language': 'French', 'value': 20}
     ]
 
+
 def test_get_df_with_regex_case_sensitiveness(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(
         collection='test_col',
@@ -342,6 +343,7 @@ def test_get_df_with_regex_case_sensitiveness(mongo_connector, mongo_datasource)
     assert df.drop(columns='_id').to_dict(orient='records') == [
         {'domain': 'domain1', 'country': 'France', 'language': 'French', 'value': 20}
     ]
+
 
 def test_get_df_with_regex_with_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
