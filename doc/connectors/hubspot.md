@@ -28,9 +28,11 @@ DATA_PROVIDERS: [
 * `dataset`: HubspotDataset
   * Possible values:
     * `contacts` (default value)
-    * `content`
+    * `companies`
+    * `deals`
     * `products`
     * `web-analytics`
+    * `email-events`
 * `object_type`: HubspotObjectType, optional but needed for the `web-analytics` dataset
   * Possible values:
     * `contact`
