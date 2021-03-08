@@ -17,7 +17,7 @@ import_path = 'toucan_connectors.linkedinads.linkedinads_connector'
 
 
 @fixture
-def con(secrets_keeper):
+def connector(secrets_keeper):
     secrets_keeper.save('test', {'access_token': 'coucou'})
     return LinkedinadsConnector(
         name='test',
@@ -30,12 +30,12 @@ def con(secrets_keeper):
 
 
 @fixture
-def remove_secrets(secrets_keeper, con):
+def remove_secrets(secrets_keeper, connector):
     secrets_keeper.save('test', {'access_token': None})
 
 
 @fixture
-def ds():
+def create_datasource():
     return LinkedinadsDataSource(
         name='test_name',
         domain='test_domain',
@@ -51,44 +51,44 @@ def ds():
     )
 
 
-def test_no_secrets(mocker, con, ds, remove_secrets):
+def test_no_secrets(mocker, connector, create_datasource, remove_secrets):
     """It should raise an exception if there are no secrets returned or any document in database."""
     with pytest.raises(NoCredentialsError) as err:
-        con.get_df(ds)
+        connector.get_df(create_datasource)
 
     assert str(err.value) == 'No credentials'
 
 
-def test_get_status_no_secrets(con, remove_secrets):
+def test_get_status_no_secrets(connector, remove_secrets):
     """
     It should fail if no secrets are provided
     """
-    assert con.get_status().status is False
+    assert connector.get_status().status is False
 
 
-def test_get_status_secrets_error(mocker, con):
+def test_get_status_secrets_error(mocker, connector):
     """
     It should fail if secrets can't be retrieved
     """
     mocker.patch(f'{import_path}.OAuth2Connector.get_access_token', side_effect=Exception)
-    assert con.get_status().status is False
+    assert connector.get_status().status is False
 
 
-def test_get_status_success(mocker, con):
+def test_get_status_success(mocker, connector):
     mocker.patch(f'{import_path}.OAuth2Connector.get_access_token', return_value='bla')
-    connector_status = con.get_status()
+    connector_status = connector.get_status()
     assert connector_status.status is True
     assert 'Connector status OK' in connector_status.message
 
 
 @responses.activate
-def test__retrieve_data(con, ds):
+def test__retrieve_data(connector, create_datasource):
     responses.add(
         method='GET',
         url='https://api.linkedin.com/v2/adAnalyticsV2?',
         json={'elements': [{'bla': 'bla', 'nested': {'kikoo': 'lool'}}]},
     )
-    con.get_df(ds)
+    connector.get_df(create_datasource)
     assert len(responses.calls) == 1
     assert responses.calls[0].request.headers['Authorization'] == 'Bearer coucou'
     assert (
@@ -106,32 +106,32 @@ def test__retrieve_data(con, ds):
 
 
 @responses.activate
-def test__retrieve_data_no_nested_col(con, ds):
-    ds.flatten_column = None
+def test__retrieve_data_no_nested_col(connector, create_datasource):
+    create_datasource.flatten_column = None
     responses.add(
         method='GET',
         url='https://api.linkedin.com/v2/adAnalyticsV2?',
         json={'elements': [{'bla': 'bla'}]},
     )
-    res = con.get_df(ds)
+    res = connector.get_df(create_datasource)
     expected = pd.DataFrame([{'bla': 'bla'}])
     assert res['bla'][0] == expected['bla'][0]
 
 
 @responses.activate
-def test__retrieve_data_http_error(con, ds):
+def test__retrieve_data_http_error(connector, create_datasource):
     responses.add(method='GET', url='https://api.linkedin.com/v2/adAnalyticsV2?', status=400)
     with pytest.raises(HttpError):
-        con.get_df(ds)
+        connector.get_df(create_datasource)
 
 
-def test_get_connectors_secrets_form(con):
-    text = con.get_connector_secrets_form()
+def test_get_connectors_secrets_form(connector):
+    text = connector.get_connector_secrets_form()
     assert 'Linkedin' in text.documentation_md
 
 
-def test_build_authorization_url(con):
-    assert con.build_authorization_url().startswith(
+def test_build_authorization_url(connector):
+    assert connector.build_authorization_url().startswith(
         'https://www.linkedin.com/oauth/v2/authorization?'
         'response_type=code'
         '&client_id=CLIENT_ID'
@@ -140,7 +140,7 @@ def test_build_authorization_url(con):
     )
 
 
-def test_retrieve_tokens(mocker, con):
+def test_retrieve_tokens(mocker, connector):
     """
     Check that the retrieve_tokens method properly returns
     tokens
@@ -148,13 +148,13 @@ def test_retrieve_tokens(mocker, con):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'test_client_id'
     mock_oauth2_connector.client_secret = 'test_client_secret'
-    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
-    con.retrieve_tokens('bla')
+    connector.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    connector.retrieve_tokens('bla')
     mock_oauth2_connector.retrieve_tokens.assert_called()
 
 
-def test_schema_extra(ds):
-    conf = ds.Config
+def test_schema_extra(create_datasource):
+    conf = create_datasource.Config
     schema = {
         'properties': {
             'time_granularity': 'bar',
