@@ -94,6 +94,11 @@ class SnowflakeConnector(ToucanConnector):
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
     )
+    role: str = Field(
+        None,
+        description='The user role that you want to connect with. '
+        'See more details <a href="https://docs.snowflake.com/en/user-guide/admin-user-management.html#user-roles" target="_blank">here</a>.',
+    )
 
     default_warehouse: str = Field(
         ..., description='The default warehouse that shall be used for any data source'
@@ -124,6 +129,9 @@ class SnowflakeConnector(ToucanConnector):
         if self.authentication_method == AuthenticationMethod.OAUTH:
             if self.oauth_token is not None:
                 res['token'] = Template(self.oauth_token).render()
+
+        if self.role != '':
+            res['role'] = self.role
 
         return res
 
