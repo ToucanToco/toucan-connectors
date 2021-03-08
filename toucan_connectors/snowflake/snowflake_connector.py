@@ -4,6 +4,7 @@ from enum import Enum
 from os import path
 from typing import Dict, List
 
+import jwt
 import pandas as pd
 import requests
 import snowflake.connector
@@ -124,15 +125,17 @@ class SnowflakeConnector(ToucanConnector):
             if self.oauth_token is not None:
                 res['token'] = Template(self.oauth_token).render()
 
-            if self.oauth_args and 'access_token' in self.oauth_args:
-                res['token'] = self.oauth_args['access_token']
-
         return res
 
     def _refresh_oauth_token(self):
         """Regenerates an oauth token if configuration was provided and if the given token has expired."""
         if 'token_endpoint' in self.oauth_args and 'refresh_token' in self.oauth_args:
-            if datetime.fromtimestamp(self.oauth_args['exp']) < datetime.now():
+            access_token = jwt.decode(
+                Template(self.oauth_token).render(),
+                verify=False,
+                options={'verify_signature': False},
+            )
+            if datetime.fromtimestamp(access_token['exp']) < datetime.now():
                 content_type = 'application/json'
                 # Content-Type may need to be overridden
                 if 'content_type' in self.oauth_args:
@@ -154,11 +157,7 @@ class SnowflakeConnector(ToucanConnector):
                 if not res.ok:  # pragma: no cover
                     res.raise_for_status()
 
-                recieved_payload = res.json()
-
-                self.oauth_args['access_token'] = recieved_payload['access_token']
-                self.oauth_args['id_token'] = recieved_payload['id_token']
-                self.oauth_args['exp'] = datetime.now().timestamp() + recieved_payload['expires_in']
+                self.oauth_args['access_token'] = res.json().get('access_token')
 
     def connect(self, **kwargs) -> snowflake.connector.SnowflakeConnection:
         if self.oauth_args and self.authentication_method == AuthenticationMethod.OAUTH:
