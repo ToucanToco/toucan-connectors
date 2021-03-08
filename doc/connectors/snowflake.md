@@ -17,7 +17,6 @@ Import data from Snowflake data warehouse.
     * `client_id` (required): a client id, this value can be templated
     * `client_secret` (required): a client secret, this value can be templated
     * `content_type` (optional): the default content type used to refresh a token is `application/json`, setting this value will override the default one
-    * `exp` (required): a timestamp that defines the expiration time of the provided `oauth_token`
 * `default_warehouse`: str, name of the default warehouse to be used in a data source if no warehouse was specified in the concerned data source
 * `account`: str, required
 * `ocsp_response_cache_filename`: str, path to the location used to store [ocsp cache] (https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses)

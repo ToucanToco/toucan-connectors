@@ -1,6 +1,8 @@
 import copy
+from datetime import datetime, timedelta
 from unittest.mock import call
 
+import jwt
 import pytest
 from requests.models import HTTPError
 
@@ -25,7 +27,7 @@ sc_oauth = SnowflakeConnector(
     user='test_user',
     password='test_password',
     account='test_account',
-    oauth_token='tUh7G0lJs6TjjGzVkv5DAOD4cSFPK5o2',
+    oauth_token=jwt.encode({'exp': 42}, key='clef'),
     default_warehouse='default_wh',
 )
 
@@ -42,9 +44,7 @@ OAUTH_ARGS = {
     'content_type': 'application/x-www-form-urlencoded',
     'client_id': 'client_id',
     'client_secret': 'client_s3cr3t',
-    'secret': 's3cr3t',
     'refresh_token': 'baba au rhum',
-    'exp': 1337,
     'token_endpoint': 'http://example.com/endpoint',
 }
 
@@ -180,7 +180,7 @@ def test_snowflake_oauth_auth(mocker):
         authenticator=AuthenticationMethod.OAUTH,
         database='test_database',
         warehouse='test_warehouse',
-        token='tUh7G0lJs6TjjGzVkv5DAOD4cSFPK5o2',
+        token=sc_oauth.oauth_token,
         ocsp_response_cache_filename=None,
         application='ToucanToco',
     )
@@ -278,6 +278,8 @@ def test_specified_oauth_args(mocker):
     sf = copy.deepcopy(sc_oauth)
     sf.oauth_args = copy.deepcopy(OAUTH_ARGS)
 
+    sf.oauth_token = jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
+
     data_source = SnowflakeDataSource(
         name='test',
         domain='test',
@@ -309,6 +311,22 @@ def test_oauth_args_missing_endpoint(mocker):
     assert req_mock.call_count == 0
 
 
+def test_oauth_refresh_token(mocker):
+    mocker.patch('snowflake.connector.connect')
+    req_mock = mocker.patch('requests.post')
+    sf = copy.deepcopy(sc_oauth)
+    sf.oauth_args = copy.deepcopy(OAUTH_ARGS)
+
+    req_mock.return_value.json = lambda: {
+        'access_token': 'baba_au_rhum',
+    }
+
+    sf._retrieve_data(sd)
+
+    assert req_mock.call_count == 1
+    assert sf.oauth_args['access_token'] == 'baba_au_rhum'
+
+
 def test_oauth_args_endpoint_not_200(mocker):
     mocker.patch('snowflake.connector.connect')
     req_mock = mocker.patch('requests.post')
@@ -316,6 +334,7 @@ def test_oauth_args_endpoint_not_200(mocker):
     sf = copy.deepcopy(sc_oauth)
     oauth_args = copy.deepcopy(OAUTH_ARGS)
     sf.oauth_args = oauth_args
+    sf.oauth_token = jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
 
     req_mock.return_value.status_code = 401
 
