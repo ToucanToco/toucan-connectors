@@ -73,7 +73,41 @@ def test_snowflake(mocker):
         authenticator='snowflake',
         ocsp_response_cache_filename=None,
         application='ToucanToco',
+        role=None,
     )
+
+
+def test_snowflake_custom_role(mocker):
+    snock = mocker.patch('snowflake.connector.connect')
+
+    connector = copy.deepcopy(sc)
+    connector.role = 'TEST'
+
+    connector.get_df(sd)
+
+    snock.assert_called_once_with(
+        user='test_user',
+        password='test_password',
+        account='test_account',
+        database='test_database',
+        warehouse='test_warehouse',
+        authenticator='snowflake',
+        ocsp_response_cache_filename=None,
+        application='ToucanToco',
+        role='TEST',
+    )
+
+
+def test_snowflake_custom_role_empty(mocker):
+    snock = mocker.patch('snowflake.connector.connect')
+
+    connector = copy.deepcopy(sc)
+    connector.role = ''
+
+    connector.get_df(sd)
+
+    _, kwargs = snock.call_args_list[0]
+    assert 'role' not in kwargs
 
 
 def test_snowflake_get_connection_params_no_auth_method(mocker):
@@ -166,6 +200,7 @@ def test_snowflake_data_source_default_warehouse(mocker):
         ocsp_response_cache_filename=None,
         authenticator='snowflake',
         application='ToucanToco',
+        role=None,
     )
 
 
@@ -183,6 +218,7 @@ def test_snowflake_oauth_auth(mocker):
         token=sc_oauth.oauth_token,
         ocsp_response_cache_filename=None,
         application='ToucanToco',
+        role=None,
     )
 
 
@@ -200,6 +236,7 @@ def test_snowflake_plain_auth(mocker):
         warehouse='test_warehouse',
         ocsp_response_cache_filename=None,
         application='ToucanToco',
+        role=None,
     )
 
 

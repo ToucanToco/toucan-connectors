@@ -19,6 +19,7 @@ Import data from Snowflake data warehouse.
     * `content_type` (optional): the default content type used to refresh a token is `application/json`, setting this value will override the default one
 * `default_warehouse`: str, name of the default warehouse to be used in a data source if no warehouse was specified in the concerned data source
 * `account`: str, required
+* `role`: str, optional: the [User Role](https://docs.snowflake.com/en/user-guide/admin-user-management.html#user-roles) that your user may need to access certain data
 * `ocsp_response_cache_filename`: str, path to the location used to store [ocsp cache] (https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses)
 
 ```coffee
