@@ -4,6 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Optional, Type
 
+import dateutil.parser
 import pandas as pd
 import requests
 from pydantic import Field
@@ -51,9 +52,13 @@ class LinkedinadsDataSource(ToucanDataSource):
     finder_methods: FinderMethod = Field(
         FinderMethod.analytics, title='Finder methods', description='Default: analytics'
     )
-    start_date: str = Field(..., title='Start date', description='Start date of the dataset')
+    start_date: str = Field(
+        ..., title='Start date', description='Start date of the dataset. Format must be dd/mm/yyyy.'
+    )
     end_date: str = Field(
-        None, title='End date', description='End date of the dataset, optional & default to today'
+        None,
+        title='End date',
+        description='End date of the dataset, optional & default to today. Format must be dd/mm/yyyy.',
     )
     time_granularity: TimeGranularity = Field(
         TimeGranularity.all,
@@ -88,7 +93,9 @@ class LinkedinadsConnector(ToucanConnector):
 
     data_source_model: LinkedinadsDataSource
     _auth_flow = 'oauth2'
-    auth_flow_id: Optional[str]
+    auth_flow_id: Optional[
+        str
+    ]  # This ID is generated & provided to the data provider during the oauth authentication process
     _baseroute = 'https://api.linkedin.com/v2/adAnalyticsV2?q='
     template: Template = Field(
         None,
@@ -144,27 +151,17 @@ class LinkedinadsConnector(ToucanConnector):
         headers = {'Authorization': f'Bearer {access_token}'}
 
         # Parse provided dates
-        splitted_start = data_source.start_date.split('/')
-        start_day, start_month, start_year = (
-            int(splitted_start[0]),
-            int(splitted_start[1]),
-            int(splitted_start[2]),
-        )
+        splitted_start = dateutil.parser.parse(data_source.start_date)
 
         # Build the query, 1 mandatory parameters
         query = (
-            f'dateRange.start.day={start_day}&dateRange.start.month={start_month}'
-            f'&dateRange.start.year={start_year}&timeGranularity={data_source.time_granularity}'
+            f'dateRange.start.day={splitted_start.day}&dateRange.start.month={splitted_start.month}'
+            f'&dateRange.start.year={splitted_start.year}&timeGranularity={data_source.time_granularity}'
         )
 
         if data_source.end_date:
-            splitted_end = data_source.end_date.split('/')
-            end_day, end_month, end_year = (
-                int(splitted_end[0]),
-                int(splitted_end[1]),
-                int(splitted_end[2]),
-            )
-            query += f'&dateRange.end.day={end_day}&dateRange.end.month={end_month}&dateRange.end.year={end_year}'
+            splitted_end = dateutil.parser.parse(data_source.end_date)
+            query += f'&dateRange.end.day={splitted_end.day}&dateRange.end.month={splitted_end.month}&dateRange.end.year={splitted_end.year}'
 
         # Build the query, 2 optional array parameters
         if data_source.parameters:
@@ -191,7 +188,7 @@ class LinkedinadsConnector(ToucanConnector):
 
     def get_status(self) -> ConnectorStatus:
         """
-        Test the Google Sheets connexion.
+        Test the Linkedin Ads connexion.
 
         If successful, returns a message with the email of the connected user account.
         """
