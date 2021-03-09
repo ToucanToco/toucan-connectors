@@ -1,5 +1,6 @@
 """LinkedinAds connector"""
 import os
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Optional, Type
@@ -151,8 +152,10 @@ class LinkedinadsConnector(ToucanConnector):
         headers = {'Authorization': f'Bearer {access_token}'}
 
         # Parse provided dates
-        splitted_start = dateutil.parser.parse(data_source.start_date)
-
+        try:
+            splitted_start = datetime.strptime(data_source.start_date, '%d/%m/%Y')
+        except ValueError:
+            splitted_start = dateutil.parser.parse(data_source.start_date)
         # Build the query, 1 mandatory parameters
         query = (
             f'dateRange.start.day={splitted_start.day}&dateRange.start.month={splitted_start.month}'
@@ -160,7 +163,10 @@ class LinkedinadsConnector(ToucanConnector):
         )
 
         if data_source.end_date:
-            splitted_end = dateutil.parser.parse(data_source.end_date)
+            try:
+                splitted_end = datetime.strptime(data_source.end_date, '%d/%m/%Y')
+            except ValueError:
+                splitted_end = dateutil.parser.parse(data_source.end_date)
             query += f'&dateRange.end.day={splitted_end.day}&dateRange.end.month={splitted_end.month}&dateRange.end.year={splitted_end.year}'
 
         # Build the query, 2 optional array parameters
