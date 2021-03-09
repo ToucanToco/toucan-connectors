@@ -165,7 +165,7 @@ def test_schema_extra(create_datasource):
             'end_date': 'bar',
         }
     }
-    conf.schema_extra(schema, model='bla')
+    conf.schema_extra(schema, model=LinkedinadsDataSource)
 
     assert schema == {
         'properties': {
@@ -177,3 +177,38 @@ def test_schema_extra(create_datasource):
             'parameters': 'bar',
         }
     }
+
+
+@responses.activate
+def test__retrieve_data_date_fallback(connector, create_datasource):
+    responses.add(
+        method='GET',
+        url='https://api.linkedin.com/v2/adAnalyticsV2?',
+        json={'elements': [{'bla': 'bla', 'nested': {'kikoo': 'lool'}}]},
+    )
+    ds = LinkedinadsDataSource(
+        name='test_name',
+        domain='test_domain',
+        finder_methods=FinderMethod.analytics,
+        start_date='01-01-2021',
+        end_date='31-01-2021',
+        time_granularity=TimeGranularity.all,
+        flatten_column='nested',
+        parameters={
+            'objectiveType': 'VIDEO_VIEW',
+            'campaigns': 'urn:li:sponsoredCampaign:123456,urn:li:sponsoredCampaign:654321',
+        },
+    )
+    connector._retrieve_data(ds)
+    assert (
+        responses.calls[0].request.url == 'https://api.linkedin.com/v2/adAnalyticsV2?q=analytics'
+        '&dateRange.start.day=1'
+        '&dateRange.start.month=1'
+        '&dateRange.start.year=2021'
+        '&timeGranularity=ALL'
+        '&dateRange.end.day=31'
+        '&dateRange.end.month=1'
+        '&dateRange.end.year=2021'
+        '&objectiveType=VIDEO_VIEW'
+        '&campaigns=urn:li:sponsoredCampaign:123456,urn:li:sponsoredCampaign:654321'
+    )
