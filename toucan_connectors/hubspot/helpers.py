@@ -5,7 +5,7 @@ import pandas as pd
 from .enums import HubspotDataset
 
 
-def hubspot_api_format_v3(data: List[dict]) -> pd.DataFrame:
+def format_hubspot_api_v3(data: List[dict]) -> pd.DataFrame:
     df = pd.DataFrame(data)
     # if data is none, return just an empty dataframe
     if not data:
@@ -28,7 +28,7 @@ def format_webanalytics(data: List[dict]) -> pd.DataFrame:
             result['properties']['eventType'] = result['eventType']
         if 'occuredAt' in result:
             result['properties']['occuredAt'] = result['occuredAt']
-    return pd.DataFrame(data)['properties']
+    return pd.DataFrame([d['properties'] for d in data])
 
 
 def format_email_events(data: List[dict]) -> pd.DataFrame:
@@ -65,7 +65,7 @@ def format_email_events(data: List[dict]) -> pd.DataFrame:
 def format_hubspot_response(dataset: str, data: List[dict]) -> pd.DataFrame:
     """This function maps `data` to a formatting function tied to `dataset`.
     Some endpoints will return data in a different kind or with data that are not
-    stored under the properties, these formatting fuctions will extract these data
+    stored under the properties, these formatting functions will extract these data
     to ensure that they are retrieved by the end user.
     """
     RESPONSE_V3_FORMAT_MAPPING = [
@@ -75,16 +75,16 @@ def format_hubspot_response(dataset: str, data: List[dict]) -> pd.DataFrame:
         HubspotDataset.products,
     ]
 
-    RESPONSE_LEGACY_FORMAT_MAPPING = {
+    RESPONSE_CUSTOM_FORMAT_MAPPING = {
         HubspotDataset.webanalytics: format_webanalytics,
         HubspotDataset.emails_events: format_email_events,
     }
 
     if dataset in RESPONSE_V3_FORMAT_MAPPING:
-        return hubspot_api_format_v3(data)
+        return format_hubspot_api_v3(data)
 
-    if dataset in RESPONSE_LEGACY_FORMAT_MAPPING:
-        return RESPONSE_LEGACY_FORMAT_MAPPING[dataset](data)
+    if dataset in RESPONSE_CUSTOM_FORMAT_MAPPING:
+        return RESPONSE_CUSTOM_FORMAT_MAPPING[dataset](data)
 
 
 def has_next_page(data):

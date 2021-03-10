@@ -121,8 +121,8 @@ def test_hubspot_get_webanalytics(connector, datasource, mocker):
     assert called_endpoint[0] == HUBSPOT_ENDPOINTS['web-analytics']['url']
     assert kwargs['params'] == {'objectType': HubspotObjectType.contact}
     assert not df.empty
-    assert df[0]['eventType'] == 'party'
-    assert df[0]['occuredAt'] == '2021-03-08T12:28:40.305Z'
+    assert df['eventType'][0] == 'party'
+    assert df['occuredAt'][0] == '2021-03-08T12:28:40.305Z'
 
 
 def test_hubspot_get_email_events(connector, datasource, mocker):
