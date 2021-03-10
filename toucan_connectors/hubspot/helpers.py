@@ -1,20 +1,12 @@
-from typing import Dict, List
+from typing import List
 
 import pandas as pd
 
 from .enums import HubspotDataset
 
 
-def flatten_subdict(d: Dict, subdict_key: str) -> Dict:
-    for k, v in d[subdict_key].items():
-        d[k] = v
-    d.pop(subdict_key)
-
-
 def format_hubspot_api_v3(data: List[dict]) -> pd.DataFrame:
-    for result in data:
-        flatten_subdict(result, 'properties')
-    return pd.DataFrame(data)
+    return pd.json_normalize(data)
 
 
 def format_webanalytics(data: List[dict]) -> pd.DataFrame:
@@ -32,8 +24,7 @@ def format_webanalytics(data: List[dict]) -> pd.DataFrame:
             result['properties']['eventType'] = result['eventType']
         if 'occuredAt' in result:
             result['properties']['occuredAt'] = result['occuredAt']
-        flatten_subdict(result, 'properties')
-    return pd.DataFrame(data)
+    return pd.json_normalize(data)
 
 
 def format_email_events(data: List[dict]) -> pd.DataFrame:

@@ -201,9 +201,10 @@ def test_hubspot_retrieve_data_pagination(connector, datasource, mocker):
     df = connector.get_df(datasource)
 
     assert req_mock.call_count == 2
-    assert df['foo'][0] == 42
+    # `foo` is prefixed by properties here because the denesting done by pandas
+    assert df['properties.foo'][0] == 42
+    assert df['properties.foo'][1] == 1337
     assert df['not_property'][0] == 'moo'
-    assert df['foo'][1] == 1337
     assert numpy.isnan(df['not_property'][1])
 
 
