@@ -36,13 +36,16 @@ DATA_PROVIDERS: [
 * `object_type`: HubspotObjectType, optional but needed for the `web-analytics` dataset
   * Possible values:
     * `contact`
-
+* `properties`: dict, optional but needed for the `web-analytics` dataset
+  * Possible values:
+    * The key must follow this pattern: `objectProperty.{property}`, where property is an [object property supported by HubSpot](https://developers.hubspot.com/docs/api/crm/properties); the value can be anything.
 ```coffee
 DATA_SOURCES: [
   domain:    'example_domain'
   name:    'Hubspot Connector'
   dataset:    'web-analytics'
   object_type: 'contact'
+  properties: '<a dict of properties>'
 ,
   ...
 ]

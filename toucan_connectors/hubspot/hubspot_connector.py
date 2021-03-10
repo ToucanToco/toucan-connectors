@@ -1,9 +1,10 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 import pandas as pd
 import requests
+from pydantic import Field
 
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
@@ -52,6 +53,7 @@ class HubspotConnectorException(Exception):
 class HubspotDataSource(ToucanDataSource):
     dataset: HubspotDataset = 'contacts'
     object_type: HubspotObjectType = None
+    parameters: Dict = Field(None)
 
 
 class HubspotConnector(ToucanConnector):
@@ -139,6 +141,11 @@ class HubspotConnector(ToucanConnector):
             # The webanalytics endpoint requires an objectType query param
             if data_source.object_type and data_source.dataset == HubspotDataset.webanalytics:
                 query_params['objectType'] = data_source.object_type
+                # Add properties if specified in parameters
+                # More details are available in HubSpot's documentation: https://developers.hubspot.com/docs/api/events/web-analytics
+                properties = [p for p in data_source.parameters.keys() if 'objectProperty' in p]
+                for prop_name in properties:
+                    query_params[prop_name] = data_source.parameters[prop_name]
 
             data = self._handle_pagination(
                 HUBSPOT_ENDPOINTS[data_source.dataset], query_params, headers
