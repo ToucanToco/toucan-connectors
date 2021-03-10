@@ -1,3 +1,4 @@
+import numpy
 import pytest
 
 from toucan_connectors.hubspot.hubspot_connector import (
@@ -26,7 +27,7 @@ def connector(secrets_keeper):
 
 @pytest.fixture
 def datasource():
-    return HubspotDataSource(dataset='contacts', domain='oui', name='name')
+    return HubspotDataSource(dataset='contacts', domain='oui', name='name', parameters={})
 
 
 def test_hubspot_build_authorization_uri(connector, mocker):
@@ -57,7 +58,7 @@ def test_get_connector_secrets_form(connector, mocker):
 def test_hubspot(connector, datasource, mocker):
     req_mock = mocker.patch('requests.get')
 
-    req_mock.return_value.json = lambda: {'results': [{'properties': [{'foo': 42}]}]}
+    req_mock.return_value.json = lambda: {'results': [{'properties': {'foo': 42}}]}
 
     df = connector.get_df(datasource)
 
@@ -113,13 +114,17 @@ def test_hubspot_get_webanalytics(connector, datasource, mocker):
 
     datasource.object_type = HubspotObjectType.contact
     datasource.dataset = HubspotDataset.webanalytics
+    datasource.parameters = {'objectProperty.email': 'foo@bar.example.com'}
 
     df = connector.get_df(datasource)
 
     assert req_mock.called_once()
     called_endpoint, kwargs = req_mock.call_args
     assert called_endpoint[0] == HUBSPOT_ENDPOINTS['web-analytics']['url']
-    assert kwargs['params'] == {'objectType': HubspotObjectType.contact}
+    assert kwargs['params'] == {
+        'objectType': HubspotObjectType.contact,
+        'objectProperty.email': 'foo@bar.example.com',
+    }
     assert not df.empty
     assert df['eventType'][0] == 'party'
     assert df['occuredAt'][0] == '2021-03-08T12:28:40.305Z'
@@ -179,7 +184,7 @@ def test_hubspot_retrieve_data_pagination(connector, datasource, mocker):
     requests_json_mock = mocker.Mock()
     requests_json_mock.side_effect = [
         {
-            'results': [{'properties': [{'foo': 42}]}],
+            'results': [{'properties': {'foo': 42}, 'not_property': 'moo'}],
             'paging': {
                 'next': {
                     'after': '42',
@@ -188,16 +193,18 @@ def test_hubspot_retrieve_data_pagination(connector, datasource, mocker):
             },
         },
         {
-            'results': [{'properties': [{'foo': 1337}]}],
+            'results': [{'properties': {'foo': 1337}}],
         },
     ]
     req_mock.return_value.json = requests_json_mock
 
-    value_1, value_2 = connector.get_df(datasource)
+    df = connector.get_df(datasource)
 
     assert req_mock.call_count == 2
-    assert value_1[0]['foo'] == 42
-    assert value_2[0]['foo'] == 1337
+    assert df['foo'][0] == 42
+    assert df['not_property'][0] == 'moo'
+    assert df['foo'][1] == 1337
+    assert numpy.isnan(df['not_property'][1])
 
 
 def test_hubspot_retrieve_data_pagination_legacy(connector, datasource, mocker):
