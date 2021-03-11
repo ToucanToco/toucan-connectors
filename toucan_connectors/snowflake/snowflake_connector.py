@@ -112,11 +112,13 @@ class SnowflakeConnector(ToucanConnector):
 
     def get_connection_params(self):
         res = {
-            'user': self.user,
             'account': self.account,
             'authenticator': self.authentication_method,
             'application': 'ToucanToco',
         }
+
+        if self.user:
+            res['user'] = Template(self.user).render()
 
         if not self.authentication_method:
             # Default to User/Password authentication method if the parameter
@@ -132,8 +134,8 @@ class SnowflakeConnector(ToucanConnector):
                 decoded = jwt.decode(
                     res['token'], verify=False, options={'verify_signature': False}
                 )
-                # Override the default user if we have a sub
-                if 'sub' in decoded:
+                # Override the default user if we have a sub and no user configured
+                if 'sub' in decoded and not self.user:
                     res['user'] = decoded['sub']
 
         if self.role != '':

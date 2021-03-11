@@ -208,12 +208,11 @@ def test_snowflake_oauth_auth(mocker):
     snow_mock = mocker.patch('snowflake.connector.connect')
 
     sf = copy.deepcopy(sc_oauth)
-    sf.user = None
 
     sf.get_df(sd)
 
     snow_mock.assert_called_once_with(
-        user='snowflake_user',
+        user='test_user',
         account='test_account',
         authenticator=AuthenticationMethod.OAUTH,
         database='test_database',
