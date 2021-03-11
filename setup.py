@@ -32,6 +32,7 @@ extras_require = {
     'postgres': ['psycopg2>=2.7.4'],
     'ROK': ['requests', 'pyjwt', 'simplejson'],
     'sap_hana': ['pyhdb>=0.3.4'],
+    'soap': ['zeep', 'lxml==4.2.5'],
     'snowflake': ['snowflake-connector-python', 'pyarrow<0.18'],
     'toucan_toco': ['toucan_client'],
 }
@@ -68,7 +69,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='0.48.0',
+    version='0.49.0',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',

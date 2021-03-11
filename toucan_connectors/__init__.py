@@ -184,6 +184,11 @@ CONNECTORS_REGISTRY = {
         'connector': 'snowflake.snowflake_connector.SnowflakeConnector',
         'logo': 'snowflake/snowflake.png',
     },
+    'Soap': {
+        'connector': 'soap.soap_connector.SoapConnector',
+        'label': 'Soap',
+        'logo': 'soap/soap.png',
+    },
     'ToucanToco': {
         'connector': 'toucan_toco.toucan_toco_connector.ToucanTocoConnector',
         'label': 'Toucan Toco',
