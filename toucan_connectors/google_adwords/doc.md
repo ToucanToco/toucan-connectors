@@ -1,5 +1,5 @@
 Adwords Credentials can be configured in the : 
-[Goole API console](https://console.developers.google.com/)
+[Google API console](https://console.developers.google.com/)
 You should create a new Web Application with OAuth credentials in your Google APIs console.
 
 
