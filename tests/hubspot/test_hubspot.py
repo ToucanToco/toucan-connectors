@@ -1,3 +1,4 @@
+import numpy
 import pytest
 
 from toucan_connectors.hubspot.hubspot_connector import (
@@ -26,7 +27,7 @@ def connector(secrets_keeper):
 
 @pytest.fixture
 def datasource():
-    return HubspotDataSource(dataset='contacts', domain='oui', name='name', query='query')
+    return HubspotDataSource(dataset='contacts', domain='oui', name='name', parameters={})
 
 
 def test_hubspot_build_authorization_uri(connector, mocker):
@@ -57,11 +58,33 @@ def test_get_connector_secrets_form(connector, mocker):
 def test_hubspot(connector, datasource, mocker):
     req_mock = mocker.patch('requests.get')
 
-    req_mock.return_value.json = lambda: {'results': [{'properties': [{'foo': 42}]}]}
+    req_mock.return_value.json = lambda: {'results': [{'properties': {'foo': 42}}]}
 
-    connector.get_df(datasource)
+    df = connector.get_df(datasource)
 
     assert req_mock.called_once()
+    assert df['properties.foo'][0] == 42
+
+
+def test_hubspot_empty_return(connector, datasource, mocker):
+    req_mock = mocker.patch('requests.get')
+
+    req_mock.return_value.json = lambda: {}
+
+    df = connector.get_df(datasource)
+
+    assert df.empty
+
+
+def test_hubspot_empty_return_emails(connector, datasource, mocker):
+    req_mock = mocker.patch('requests.get')
+
+    req_mock.return_value.json = lambda: {}
+    datasource.dataset = HubspotDataset.emails_events
+
+    df = connector.get_df(datasource)
+
+    assert df.empty
 
 
 def test_hubspot_wrong_data_return(connector, datasource, mocker):
@@ -79,17 +102,81 @@ def test_hubspot_wrong_data_return(connector, datasource, mocker):
 
 def test_hubspot_get_webanalytics(connector, datasource, mocker):
     req_mock = mocker.patch('requests.get')
-    req_mock.return_value.json = lambda: {'results': [{'properties': [{'foo': 42}]}]}
+    req_mock.return_value.json = lambda: {
+        'results': [
+            {
+                'properties': {'foo': 42},
+                'eventType': 'party',
+                'occuredAt': '2021-03-08T12:28:40.305Z',
+            }
+        ]
+    }
+
+    datasource.object_type = HubspotObjectType.contact
+    datasource.dataset = HubspotDataset.webanalytics
+    datasource.parameters = {'objectProperty.email': 'foo@bar.example.com'}
+
+    df = connector.get_df(datasource)
+
+    assert req_mock.called_once()
+    called_endpoint, kwargs = req_mock.call_args
+    assert called_endpoint[0] == HUBSPOT_ENDPOINTS['web-analytics']['url']
+    assert kwargs['params'] == {
+        'objectType': HubspotObjectType.contact,
+        'objectProperty.email': 'foo@bar.example.com',
+    }
+    assert not df.empty
+    assert df['eventType'][0] == 'party'
+    assert df['occuredAt'][0] == '2021-03-08T12:28:40.305Z'
+
+
+def test_hubspot_get_email_events(connector, datasource, mocker):
+    req_mock = mocker.patch('requests.get')
+    req_mock.return_value.json = lambda: {
+        'events': [
+            {
+                'appName': 'foo',
+                'location': {
+                    'city': 'Paris',
+                    'country': 'France',
+                    'state': 'Paris',
+                },
+                'recipient': 'bar@example.com',
+                'type': 'party',
+                'browser': {'name': 'chromium'},
+            }
+        ],
+    }
+
+    datasource.dataset = HubspotDataset.emails_events
+
+    df = connector.get_df(datasource)
+
+    assert req_mock.called_once()
+    called_endpoint, _ = req_mock.call_args
+    assert called_endpoint[0] == HUBSPOT_ENDPOINTS[HubspotDataset.emails_events]['url']
+    assert not df.empty
+    assert df.iloc[0]['type'] == 'party'
+    assert df.iloc[0]['location.city'] == 'Paris'
+    assert df.iloc[0]['location.country'] == 'France'
+    assert df.iloc[0]['location.state'] == 'Paris'
+    assert df.iloc[0]['appName'] == 'foo'
+    assert df.iloc[0]['recipient'] == 'bar@example.com'
+    assert df.iloc[0]['browser.name'] == 'chromium'
+
+
+def test_hubspot_get_webanalytics_empty(connector, datasource, mocker):
+    req_mock = mocker.patch('requests.get')
+    req_mock.return_value.json = lambda: {}
 
     datasource.object_type = HubspotObjectType.contact
     datasource.dataset = HubspotDataset.webanalytics
 
-    connector.get_df(datasource)
+    df = connector.get_df(datasource)
 
-    assert req_mock.called_once()
-    called_endpoint, kwargs = req_mock.call_args
-    assert called_endpoint[0] == HUBSPOT_ENDPOINTS['web-analytics']
-    assert kwargs['params'] == {'objectType': HubspotObjectType.contact}
+    # Check that the returned DataFrame is indeed empty through the `empty` property
+    # https://pandas.pydata.org/pandas-docs/version/0.18/generated/pandas.DataFrame.empty.html
+    assert df.empty
 
 
 def test_hubspot_retrieve_data_pagination(connector, datasource, mocker):
@@ -97,7 +184,7 @@ def test_hubspot_retrieve_data_pagination(connector, datasource, mocker):
     requests_json_mock = mocker.Mock()
     requests_json_mock.side_effect = [
         {
-            'results': [{'properties': [{'foo': 42}]}],
+            'results': [{'properties': {'foo': 42}, 'not_property': 'moo'}],
             'paging': {
                 'next': {
                     'after': '42',
@@ -106,13 +193,40 @@ def test_hubspot_retrieve_data_pagination(connector, datasource, mocker):
             },
         },
         {
-            'results': [{'properties': [{'foo': 1337}]}],
+            'results': [{'properties': {'foo': 1337}}],
         },
     ]
     req_mock.return_value.json = requests_json_mock
 
-    value_1, value_2 = connector.get_df(datasource)
+    df = connector.get_df(datasource)
 
     assert req_mock.call_count == 2
-    assert value_1[0]['foo'] == 42
-    assert value_2[0]['foo'] == 1337
+    # `foo` is prefixed by properties here because the denesting done by pandas
+    assert df['properties.foo'][0] == 42
+    assert df['properties.foo'][1] == 1337
+    assert df['not_property'][0] == 'moo'
+    assert numpy.isnan(df['not_property'][1])
+
+
+def test_hubspot_retrieve_data_pagination_legacy(connector, datasource, mocker):
+    req_mock = mocker.patch('requests.get')
+    requests_json_mock = mocker.Mock()
+    requests_json_mock.side_effect = [
+        {
+            'events': [{'appId': '1337', 'appName': 'foo'}],
+            'hasMore': True,
+            'offset': 'baba_au_rhum42',
+        },
+        {
+            'events': [{'appId': '42', 'appName': 'bar'}],
+        },
+    ]
+    req_mock.return_value.json = requests_json_mock
+
+    datasource.dataset = HubspotDataset.emails_events
+
+    df = connector.get_df(datasource)
+
+    assert req_mock.call_count == 2
+    assert df.iloc[0]['appName'] == 'foo'
+    assert df.iloc[1]['appName'] == 'bar'
