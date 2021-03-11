@@ -17,7 +17,7 @@ from toucan_connectors.toucan_connector import (
 )
 
 from .enums import HubspotDataset, HubspotObjectType
-from .helpers import format_hubspot_response, has_next_page, has_next_page_legacy
+from .helpers import has_next_page, has_next_page_legacy
 
 AUTHORIZATION_URL: str = 'https://app.hubspot.com/oauth/authorize'
 SCOPE: str = 'oauth contacts content forms business-intelligence e-commerce'
@@ -37,6 +37,7 @@ HUBSPOT_ENDPOINTS: dict = {
     },
     'products': {'url': 'https://api.hubapi.com/crm/v3/objects/products', 'legacy': False},
     'web-analytics': {'url': 'https://api.hubapi.com/events/v3/events', 'legacy': False},
+    # https://legacydocs.hubspot.com/docs/methods/email/get_events?_ga=2.71868499.1363348269.1614853210-1638453014.16134
     'emails-events': {
         'url': 'https://api.hubapi.com/email/public/v1/events',
         'legacy': True,
@@ -151,12 +152,6 @@ class HubspotConnector(ToucanConnector):
                 HUBSPOT_ENDPOINTS[data_source.dataset], query_params, headers
             )
 
-            # At the current date (2021-03-10), we are handling multiple
-            # formats of data and multiple API versions of hubspot's endpoints.
-            # Instead of returning the data in the current scope, the data
-            # extraction is delegated to a bunch of specialized functions
-            # (under the `helpers.py` file) to handle these multiple API
-            # versions.
-            return format_hubspot_response(data_source.dataset, data)
+            return pd.json_normalize(data)
         except Exception as e:
             raise HubspotConnectorException(f'retrieve_data failed with: {str(e)}')

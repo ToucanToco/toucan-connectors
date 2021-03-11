@@ -157,12 +157,12 @@ def test_hubspot_get_email_events(connector, datasource, mocker):
     assert called_endpoint[0] == HUBSPOT_ENDPOINTS[HubspotDataset.emails_events]['url']
     assert not df.empty
     assert df.iloc[0]['type'] == 'party'
-    assert df.iloc[0]['city'] == 'Paris'
-    assert df.iloc[0]['country'] == 'France'
-    assert df.iloc[0]['state'] == 'Paris'
+    assert df.iloc[0]['location.city'] == 'Paris'
+    assert df.iloc[0]['location.country'] == 'France'
+    assert df.iloc[0]['location.state'] == 'Paris'
     assert df.iloc[0]['appName'] == 'foo'
     assert df.iloc[0]['recipient'] == 'bar@example.com'
-    assert df.iloc[0]['browser'] == 'chromium'
+    assert df.iloc[0]['browser.name'] == 'chromium'
 
 
 def test_hubspot_get_webanalytics_empty(connector, datasource, mocker):
