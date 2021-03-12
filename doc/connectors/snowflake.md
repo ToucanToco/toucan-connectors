@@ -7,7 +7,7 @@ Import data from Snowflake data warehouse.
 * `type`: `"Snowflake"`
 * `name`: str, required
 * `authentication_method`, str, the authentication mechanism that will be used against Snowflake's APIs (default: plain text)
-* `user`: str, optional: this username can be none if the connector is using a OIDC-based authentication
+* `user`: str, required
 * `password`: str, required
 * `oauth_token`: str, an OAuth token
 * `oauth_args`: Dict, a dict that contains furthermore information for OIDC-based authentication
