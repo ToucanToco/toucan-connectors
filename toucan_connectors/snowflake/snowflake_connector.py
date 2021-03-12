@@ -83,7 +83,7 @@ class SnowflakeConnector(ToucanConnector):
         description='The authentication mechanism that will be used to connect to your snowflake data source',
     )
 
-    user: str = Field(None, description='Your login username')
+    user: str = Field(..., description='Your login username')
     password: SecretStr = Field(None, description='Your login password')
     oauth_token: str = Field(None, description='Your oauth token')
     oauth_args: dict = Field(None, description='Named arguments for an OIDC auth')
@@ -112,13 +112,11 @@ class SnowflakeConnector(ToucanConnector):
 
     def get_connection_params(self):
         res = {
+            'user': Template(self.user).render(),
             'account': self.account,
             'authenticator': self.authentication_method,
             'application': 'ToucanToco',
         }
-
-        if self.user:
-            res['user'] = Template(self.user).render()
 
         if not self.authentication_method:
             # Default to User/Password authentication method if the parameter
@@ -131,12 +129,6 @@ class SnowflakeConnector(ToucanConnector):
         if self.authentication_method == AuthenticationMethod.OAUTH:
             if self.oauth_token is not None:
                 res['token'] = Template(self.oauth_token).render()
-                decoded = jwt.decode(
-                    res['token'], verify=False, options={'verify_signature': False}
-                )
-                # Override the default user if we have a sub and no user configured
-                if 'sub' in decoded and not self.user:
-                    res['user'] = decoded['sub']
 
         if self.role != '':
             res['role'] = self.role

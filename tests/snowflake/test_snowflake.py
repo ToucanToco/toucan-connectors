@@ -345,44 +345,6 @@ def test_specified_oauth_args(mocker):
     assert OAUTH_ARGS['content_type'] == kwargs['headers']['Content-Type']
 
 
-def test_oauth_args_empty_user(mocker):
-    snow_mock = mocker.patch('snowflake.connector.connect')
-    req_mock = mocker.patch('requests.post')
-    req_mock.return_value.json = lambda: {
-        'access_token': jwt.encode({'exp': datetime.now(), 'sub': 'user'}, key='supersecret')
-    }
-
-    sf = copy.deepcopy(sc_oauth)
-    sf.oauth_args = copy.deepcopy(OAUTH_ARGS)
-    sf.user = None
-
-    sf.oauth_token = jwt.encode(
-        {'exp': datetime.now() - timedelta(hours=24), 'sub': 'provided_user'}, key='supersecret'
-    )
-
-    data_source = SnowflakeDataSource(
-        name='test',
-        domain='test',
-        database='test',
-        warehouse='test',
-        query='bar',
-    )
-
-    sf._retrieve_data(data_source)
-
-    assert snow_mock.called_once_with(
-        user='provided_user',
-        account='test_account',
-        password='test_password',
-        authenticator=AuthenticationMethod.OAUTH,
-        database='test',
-        warehouse='test',
-        ocsp_response_cache_filename=None,
-        application='ToucanToco',
-        role=None,
-    )
-
-
 def test_oauth_args_missing_endpoint(mocker):
     mocker.patch('snowflake.connector.connect')
     req_mock = mocker.patch('requests.post')
