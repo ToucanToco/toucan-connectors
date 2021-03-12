@@ -27,7 +27,7 @@ sc_oauth = SnowflakeConnector(
     user='test_user',
     password='test_password',
     account='test_account',
-    oauth_token=jwt.encode({'exp': 42}, key='clef'),
+    oauth_token=jwt.encode({'exp': 42, 'sub': 'snowflake_user'}, key='clef'),
     default_warehouse='default_wh',
 )
 
@@ -207,7 +207,9 @@ def test_snowflake_data_source_default_warehouse(mocker):
 def test_snowflake_oauth_auth(mocker):
     snow_mock = mocker.patch('snowflake.connector.connect')
 
-    sc_oauth.get_df(sd)
+    sf = copy.deepcopy(sc_oauth)
+
+    sf.get_df(sd)
 
     snow_mock.assert_called_once_with(
         user='test_user',
@@ -315,7 +317,9 @@ def test_specified_oauth_args(mocker):
     sf = copy.deepcopy(sc_oauth)
     sf.oauth_args = copy.deepcopy(OAUTH_ARGS)
 
-    sf.oauth_token = jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
+    sf.oauth_token = jwt.encode(
+        {'exp': datetime.now() - timedelta(hours=24), 'sub': 'user'}, key='supersecret'
+    )
 
     data_source = SnowflakeDataSource(
         name='test',
@@ -327,10 +331,18 @@ def test_specified_oauth_args(mocker):
 
     req_mock = mocker.patch('requests.post')
     req_mock.return_value.status_code = 200
+    req_mock.return_value.json = lambda: {
+        'access_token': jwt.encode({'exp': datetime.now(), 'sub': 'user'}, key='supersecret')
+    }
 
     sf._retrieve_data(data_source)
 
+    url, kwargs = req_mock.call_args_list[0]
     assert req_mock.call_count == 1
+    assert OAUTH_ARGS['token_endpoint'] == url[0]
+    assert OAUTH_ARGS['client_id'] == kwargs['data']['client_id']
+    assert OAUTH_ARGS['client_secret'] == kwargs['data']['client_secret']
+    assert OAUTH_ARGS['content_type'] == kwargs['headers']['Content-Type']
 
 
 def test_oauth_args_missing_endpoint(mocker):
@@ -355,13 +367,15 @@ def test_oauth_refresh_token(mocker):
     sf.oauth_args = copy.deepcopy(OAUTH_ARGS)
 
     req_mock.return_value.json = lambda: {
-        'access_token': 'baba_au_rhum',
+        'access_token': jwt.encode(
+            {'access_token': 'baba_au_rhum', 'sub': 'mon_super_user'}, key='supersecret'
+        )
     }
 
     sf._retrieve_data(sd)
 
     assert req_mock.call_count == 1
-    assert sf.oauth_args['access_token'] == 'baba_au_rhum'
+    assert sf.oauth_token == req_mock.return_value.json()['access_token']
 
 
 def test_oauth_args_endpoint_not_200(mocker):
@@ -378,13 +392,16 @@ def test_oauth_args_endpoint_not_200(mocker):
     def fake_raise_for_status():
         raise HTTPError('Unauthorized')
 
-    req_mock.return_value.raise_for_status = lambda: fake_raise_for_status
+    req_mock.return_value.ok = False
+    req_mock.return_value.raise_for_status = lambda: fake_raise_for_status()
 
     try:
         sf._retrieve_data(sd)
     except Exception as e:
         assert str(e) == 'Unauthorized'
-    assert req_mock.call_count == 1
+        assert req_mock.call_count == 1
+    else:
+        assert False
 
 
 def test_oauth_args_wrong_type_of_auth(mocker):

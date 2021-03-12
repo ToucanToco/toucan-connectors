@@ -112,7 +112,7 @@ class SnowflakeConnector(ToucanConnector):
 
     def get_connection_params(self):
         res = {
-            'user': self.user,
+            'user': Template(self.user).render(),
             'account': self.account,
             'authenticator': self.authentication_method,
             'application': 'ToucanToco',
@@ -165,7 +165,7 @@ class SnowflakeConnector(ToucanConnector):
                 if not res.ok:  # pragma: no cover
                     res.raise_for_status()
 
-                self.oauth_args['access_token'] = res.json().get('access_token')
+                self.oauth_token = res.json().get('access_token')
 
     def connect(self, **kwargs) -> snowflake.connector.SnowflakeConnection:
         if self.oauth_args and self.authentication_method == AuthenticationMethod.OAUTH:
