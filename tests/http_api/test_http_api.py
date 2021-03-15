@@ -153,6 +153,25 @@ def test_get_df_with_json(connector, data_source, mocker):
 
 
 @responses.activate
+def test_get_df_with_json_flatten_column(connector, data_source, mocker):
+    data_source = HttpAPIDataSource(
+        name='myHttpDataSource',
+        domain='my_domain',
+        url='/comments',
+        flatten_column='products',
+    )
+
+    responses.add(
+        responses.GET,
+        'https://jsonplaceholder.typicode.com/comments',
+        json={'brand': 'brewdog', 'products': [{'name': 'punk'}, {'name': '5pm'}]},
+    )
+
+    result = connector.get_df(data_source)
+    assert list(result['products.name']) == ['punk', '5pm']
+
+
+@responses.activate
 def test_get_df_with_template(data_source, mocker):
     co = HttpAPIConnector(
         **{
