@@ -31,6 +31,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Microsoft Azure SQL',
         'logo': 'azure_mssql/sql-azure.png',
     },
+    'Clickhouse': {
+        'connector': 'clickhouse.clickhouse_connector.ClickhouseConnector',
+        'label': 'Clickhouse',
+        'logo': 'clickhouse/clickhouse.png',
+    },
     'Dataiku': {
         'connector': 'dataiku.dataiku_connector.DataikuConnector',
         'logo': 'dataiku/dataiku.png',

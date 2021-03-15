@@ -18,3 +18,4 @@ responses >= 0.9.0
 psycopg2
 xmltodict
 python_graphql_client
+clickhouse_driver

@@ -9,6 +9,7 @@ extras_require = {
     'adobe': ['adobe_analytics'],
     'aircall': bearer_deps,
     'azure_mssql': ['pyodbc>=3'],
+    'clickhouse': ['clickhouse_driver'],
     'dataiku': ['dataiku-api-client'],
     'elasticsearch': ['elasticsearch'],
     'facebook': ['facebook-sdk'],
