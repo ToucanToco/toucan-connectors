@@ -59,3 +59,15 @@ hive:
   ports:
     - 10000:10000
   command: ["/bin/bash", "-c", "/etc/bootstrap.sh && hiveserver2"]
+
+clickhouse:
+  image: yandex/clickhouse-server
+  ports:
+    - 9000:9000
+  environment:
+    CLICKHOUSE_DB: clickhouse_db
+    CLICKHOUSE_USER: ubuntu
+    CLICKHOUSE_PASSWORD: ilovetoucan
+    newtork: host
+  volumes:
+    - ./clickhouse/fixtures/toucan_entrypoint.sh:/docker-entrypoint-initdb.d/toucan_entrypoint.sh

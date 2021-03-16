@@ -1,7 +1,7 @@
 from contextlib import suppress
 
+import clickhouse_driver
 import pandas as pd
-from clickhouse_driver import connect
 from pydantic import Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import adapt_param_type
@@ -44,26 +44,28 @@ class ClickhouseDataSource(ToucanDataSource):
         constraints = {}
 
         with suppress(Exception):
-            connection = connect(
-                f'clickhouse://{connector.user}:{connector.password if connector.password else ""}@{connector.host}:{connector.port}'
+            connection = clickhouse_driver.connect(
+                f'clickhouse://{connector.user}:{connector.password.get_secret_value() if connector.password else ""}@{connector.host}:{connector.port}'
             )
 
-            ## Always add the suggestions for the available databases
+            # Always add the suggestions for the available databases
 
             with connection.cursor() as cursor:
                 cursor.execute('SHOW DATABASES')
                 res = cursor.fetchall()
-                available_dbs = [db_name for (db_name,) in res]
+                available_dbs = [db_name for (db_name,) in res if db_name != 'system']
                 constraints['database'] = strlist_to_enum('database', available_dbs)
 
                 if 'database' in current_config:
-                    cursor.execute(f"""SELECT name FROM system.tables WHERE database = '{current_config["database"]}'""")
+                    cursor.execute(
+                        f"""SELECT name FROM system.tables WHERE database = '{current_config["database"]}'"""
+                    )
                     res = cursor.fetchall()
                     available_tables = [table[0] for table in res]
                     constraints['table'] = strlist_to_enum('table', available_tables)
 
-
         return create_model('FormSchema', **constraints, __base__=cls).schema()
+
 
 class ClickhouseConnector(ToucanConnector):
     """
@@ -81,15 +83,20 @@ class ClickhouseConnector(ToucanConnector):
     password: SecretStr = Field('', description='Your login password')
 
     def get_connection_url(self, *, database='default'):
-        return f'clickhouse://{self.user}:{self.password}@{self.host}:{self.port}/{database}'
+        return f'clickhouse://{self.user}:{self.password.get_secret_value() if self.password else ""}@{self.host}:{self.port}/{database}'
 
     def _retrieve_data(self, data_source):
-        connection = connect(self.get_connection_url(database=data_source.database))
+        connection = clickhouse_driver.connect(
+            self.get_connection_url(database=data_source.database)
+        )
         query_params = data_source.parameters or {}
         df = pd.read_sql(
-            data_source.query if data_source.query else f'select * from {data_source.table} limit 50;',
+            data_source.query
+            if data_source.query
+            else f'select * from {data_source.table} limit 50;',
             con=connection,
-            params=adapt_param_type(query_params))
+            params=adapt_param_type(query_params),
+        )
 
         connection.close()
 
