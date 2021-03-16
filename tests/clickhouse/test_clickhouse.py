@@ -172,3 +172,33 @@ def test_get_form_connection_fails(mocker, clickhouse_connector):
     mocker.patch.object(clickhouse_driver, 'connect').side_effect = IOError
     form = ClickhouseDataSource.get_form(clickhouse_connector, current_config={})
     assert 'table' in form['properties']
+
+
+def test_schema_extra():
+    data_source_spec = {
+        'domain': 'Clickhouse test',
+        'type': 'external_database',
+        'name': 'Some clickhouse provider',
+        'database': 'clickhouse_db',
+        'query': 'SELECT * FROM city WHERE id in %(ids)s',
+        'parameters': {'ids': [3986, 3958]},
+    }
+    conf = ClickhouseDataSource(**data_source_spec).Config
+    schema = {
+        'properties': {
+            'query': 'bar',
+            'parameters': 'bar',
+            'table': 'bar',
+            'database': 'bar',
+        }
+    }
+    conf.schema_extra(schema, model=ClickhouseDataSource)
+
+    assert schema == {
+        'properties': {
+            'database': 'bar',
+            'table': 'bar',
+            'query': 'bar',
+            'parameters': 'bar',
+        }
+    }

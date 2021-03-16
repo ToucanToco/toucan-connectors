@@ -1,4 +1,5 @@
 from contextlib import suppress
+from typing import Any, Dict, Type
 
 import clickhouse_driver
 import pandas as pd
@@ -23,6 +24,19 @@ class ClickhouseDataSource(ToucanDataSource):
         'get (equivalent to "SELECT * FROM '
         'your_table")',
     )
+
+    class Config:
+        @staticmethod
+        def schema_extra(schema: Dict[str, Any], model: Type['ClickhouseDataSource']) -> None:
+            keys = schema['properties'].keys()
+            prio_keys = [
+                'database',
+                'table',
+                'query',
+                'parameters',
+            ]
+            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
 
     def __init__(self, **data):
         super().__init__(**data)
