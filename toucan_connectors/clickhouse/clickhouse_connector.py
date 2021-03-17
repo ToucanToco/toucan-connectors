@@ -58,10 +58,7 @@ class ClickhouseDataSource(ToucanDataSource):
         constraints = {}
 
         with suppress(Exception):
-            connection = clickhouse_driver.connect(
-                f'clickhouse://{connector.user}:{connector.password.get_secret_value() if connector.password else ""}@{connector.host}:{connector.port}'
-            )
-
+            connection = clickhouse_driver.connect(connector.get_connection_url())
             # Always add the suggestions for the available databases
 
             with connection.cursor() as cursor:
@@ -95,8 +92,11 @@ class ClickhouseConnector(ToucanConnector):
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
     password: SecretStr = Field('', description='Your login password')
+    ssl_connection: bool = Field(False, description='Create a SSL wrapped TCP connection')
 
     def get_connection_url(self, *, database='default'):
+        if self.ssl_connection:
+            return f'clickhouses://{self.user}:{self.password.get_secret_value() if self.password else ""}@{self.host}:{self.port}/{database}'
         return f'clickhouse://{self.user}:{self.password.get_secret_value() if self.password else ""}@{self.host}:{self.port}/{database}'
 
     def _retrieve_data(self, data_source):
