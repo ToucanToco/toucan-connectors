@@ -202,3 +202,24 @@ def test_schema_extra():
             'parameters': 'bar',
         }
     }
+
+
+def test_create_connections():
+    """Check that create_connection returns correctly formed connections URL"""
+    c = ClickhouseConnector(
+        name='test',
+        host='127.0.0.1',
+        user='ubuntu',
+        password='ilovetoucan',
+        port=9999,
+    )
+    assert c.get_connection_url() == 'clickhouse://ubuntu:ilovetoucan@127.0.0.1:9999/default'
+    c = ClickhouseConnector(
+        name='test',
+        host='127.0.0.1',
+        user='ubuntu',
+        password='ilovetoucan',
+        port=9999,
+        ssl_connection=True,
+    )
+    assert c.get_connection_url() == 'clickhouses://ubuntu:ilovetoucan@127.0.0.1:9999/default'
