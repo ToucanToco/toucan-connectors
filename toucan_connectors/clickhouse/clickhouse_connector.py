@@ -95,9 +95,8 @@ class ClickhouseConnector(ToucanConnector):
     ssl_connection: bool = Field(False, description='Create a SSL wrapped TCP connection')
 
     def get_connection_url(self, *, database='default'):
-        if self.ssl_connection:
-            return f'clickhouses://{self.user}:{self.password.get_secret_value() if self.password else ""}@{self.host}:{self.port}/{database}'
-        return f'clickhouse://{self.user}:{self.password.get_secret_value() if self.password else ""}@{self.host}:{self.port}/{database}'
+        proto = 'clickhouses' if self.ssl_connection else 'clickhouse'
+        return f'{proto}://{self.user}:{self.password.get_secret_value() if self.password else ""}@{self.host}:{self.port}/{database}'
 
     def _retrieve_data(self, data_source):
         connection = clickhouse_driver.connect(
