@@ -36,7 +36,7 @@ sd = SnowflakeDataSource(
     domain='test_domain',
     database='test_database',
     warehouse='test_warehouse',
-    query='test_query with %(foo)s and {{ pokemon }}',
+    query='test_query with %(foo)s and %(pokemon)s',
     parameters={'foo': 'bar', 'pokemon': 'pikachu'},
 )
 
@@ -55,7 +55,7 @@ def test_snowflake(mocker):
     sc.get_df(sd)
 
     expected_calls = [
-        call('test_query with %(foo)s and {{ pokemon }}', {'foo': 'bar', 'pokemon': 'pikachu'}),
+        call('test_query with ? and ?', ['bar', 'pikachu']),
     ]
 
     mock_execute = snock.return_value.cursor.return_value.execute
@@ -153,7 +153,7 @@ def test_snowflake_data_source_default_warehouse(mocker):
 
     sc.get_df(ds)
 
-    expected_calls = [call('foo', None)]
+    expected_calls = [call('foo', [])]
 
     snow_mock.return_value.cursor.return_value.execute.assert_has_calls(expected_calls)
 
@@ -229,6 +229,33 @@ def test_snowflake_execute_select_query(mocker):
 
     assert cursor_mock.fetch_pandas_all.call_count == 2
     cursor_mock.fetchall.assert_not_called()
+
+
+def test_snowflake_execute_select_query_with_params(mocker):
+    snow_mock = mocker.patch('snowflake.connector.connect')
+
+    connector = SnowflakeConnector(
+        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
+    )
+
+    data_source = SnowflakeDataSource(
+        name='test',
+        domain='test',
+        database='test',
+        warehouse='test',
+        query='SELECT * FROM %(formatme)s;',
+        parameters={
+            'nested': {'dictionary': 'ohno'},
+            'formatme': 'ohyeah',
+            'no_array': [{'no': 'nope'}],
+        },
+    )
+
+    connector.get_df(data_source)
+
+    snow_mock.return_value.cursor.return_value.execute.assert_called_with(
+        'SELECT * FROM ?;', ['ohyeah']
+    )
 
 
 def test_snowflake_execute_other_query(mocker):
