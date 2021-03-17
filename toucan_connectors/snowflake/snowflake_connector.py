@@ -12,6 +12,7 @@ from jinja2 import Template
 from pydantic import Field, SecretStr, constr, create_model
 from snowflake.connector import DictCursor
 
+from toucan_connectors.common import convert_to_qmark_paramstyle
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -168,6 +169,8 @@ class SnowflakeConnector(ToucanConnector):
                 self.oauth_token = res.json().get('access_token')
 
     def connect(self, **kwargs) -> snowflake.connector.SnowflakeConnection:
+        # This needs to be set before we connect
+        snowflake.connector.paramstyle = 'qmark'
         if self.oauth_args and self.authentication_method == AuthenticationMethod.OAUTH:
             self._refresh_oauth_token()
         connection_params = self.get_connection_params()
@@ -193,7 +196,9 @@ class SnowflakeConnector(ToucanConnector):
 
         Returns: A pandas DataFrame
         """
-        query_res = cursor.execute(query, query_parameters)
+        # Prevent error with dict and array values in the parameter object
+        converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
+        query_res = cursor.execute(converted_query, ordered_values)
 
         # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
         # `fetch_pandas_all` will only work with `SELECT` queries, if the
