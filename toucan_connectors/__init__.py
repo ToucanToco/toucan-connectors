@@ -56,9 +56,9 @@ CONNECTORS_REGISTRY = {
         'logo': 'facebook_insights/facebook-insights.png',
     },
     'facebook_ads': {
-        'connector': 'facebookads.facebookads_connector.FacebookadsConnector',
+        'connector': 'facebook_ads.facebook_ads_connector.FacebookAdsConnector',
         'label': 'Facebook Ads',
-        'logo': 'facebookads/facebook_logo.png',
+        'logo': 'facebook_ads/facebook_logo.png',
     },
     'Github': {
         'connector': 'github.github_connector.GithubConnector',

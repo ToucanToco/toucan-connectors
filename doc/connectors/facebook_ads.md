@@ -4,14 +4,14 @@ Import data from facebook ads API.
 
 ## Data provider configuration
 
-* `type`: `"Facebookads"`
+* `type`: `"FacebookAds"`
 * `name`: str, required
 * `token`: str, required
 * `account_id`: str, required
 
 ```javascript
 DATA_PROVIDERS: [
-  type:         'Facebookads',
+  type:         'FacebookAds',
   name:         '<name>',
   token:        '<token>',
   account_id:   '<account_id>'
