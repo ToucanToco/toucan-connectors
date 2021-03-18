@@ -17,7 +17,7 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
 )
 
-from .helpers import ALLOWED_PARAMETERS_MAP, FacebookadsDataKind, has_next_page
+from .helpers import FacebookadsDataKind, has_next_page
 
 API_BASE_ROUTE = 'https://graph.facebook.com/v10.0/'
 
@@ -39,7 +39,14 @@ class FacebookadsDataSource(ToucanDataSource):
         None, description='A set parameters that will be applied against the retrieved data.'
     )
 
-    campaign_id: str = Field(None, description='The ID of an ads campaign')
+    data_fields: str = Field(
+        None,
+        description=(
+            "A string of comma-separated fields, those fields are listed <a href='https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group'>for campaigns</a>, "
+            "<a href='https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/ads/'>for ads under a specific campaign</a> "
+            "and <a href='https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/ads/'>for all the ads under a specific account"
+        ),
+    )
 
     def determine_url(self) -> str:
         format_key_mapping = {
@@ -56,11 +63,12 @@ class FacebookadsDataSource(ToucanDataSource):
 
     def determine_query_params(self) -> Dict[str, str]:
         params = {}
-        allowed_parameters = ALLOWED_PARAMETERS_MAP[self.data_kind]
+
+        if self.data_fields:
+            params['fields'] = self.data_fields
 
         for k, v in self.parameters.items():
-            if k in allowed_parameters:
-                params[k] = v
+            params[k] = v
 
         return params
 
