@@ -119,7 +119,7 @@ class FacebookAdsConnector(ToucanConnector):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
     @staticmethod
-    def _handle_data_pagination(url: str, params: Dict) -> List[Dict]:
+    def _handle_pagination(url: str, params: Dict) -> List[Dict]:
         response = None
         response_data = None
         data = []
