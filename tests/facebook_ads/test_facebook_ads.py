@@ -2,11 +2,11 @@ from unittest.mock import call
 
 import pytest
 
+from toucan_connectors.facebook_ads.enums import FacebookAdsDataKind
 from toucan_connectors.facebook_ads.facebook_ads_connector import (
     FacebookAdsConnector,
-    FacebookadsDataSource,
+    FacebookAdsDataSource,
 )
-from toucan_connectors.facebook_ads.helpers import FacebookadsDataKind
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 
 
@@ -25,10 +25,10 @@ def connector(secrets_keeper):
 
 @pytest.fixture
 def data_source():
-    return FacebookadsDataSource(
+    return FacebookAdsDataSource(
         name='Facebook Ads sample data source',
         domain='domain',
-        data_kind=FacebookadsDataKind.campaigns,
+        data_kind=FacebookAdsDataKind.campaigns,
         parameters={},
     )
 
@@ -64,7 +64,7 @@ def test_facebook_ads_apply_query_params(connector, data_source, http_get_mock):
 
 
 def test_facebook_ads_ads_under_campaign(connector, data_source, http_get_mock):
-    data_source.data_kind = FacebookadsDataKind.ads_under_campaign
+    data_source.data_kind = FacebookAdsDataKind.ads_under_campaign
     data_source.data_fields = 'name'
 
     connector.get_df(data_source)

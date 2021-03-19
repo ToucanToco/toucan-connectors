@@ -17,14 +17,15 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
 )
 
-from .helpers import FacebookadsDataKind, has_next_page
+from .enums import FacebookAdsDataKind
+from .helpers import has_next_page
 
 API_BASE_ROUTE = 'https://graph.facebook.com/v10.0/'
 
 API_ENDPOINTS_MAPPING = {
-    FacebookadsDataKind.campaigns: 'act_{act_id}/campaigns',
-    FacebookadsDataKind.ads_under_campaign: '{campaign_id}/ads',
-    FacebookadsDataKind.all_ads: 'act_{act_id}/ads',
+    FacebookAdsDataKind.campaigns: 'act_{act_id}/campaigns',
+    FacebookAdsDataKind.ads_under_campaign: '{campaign_id}/ads',
+    FacebookAdsDataKind.all_ads: 'act_{act_id}/ads',
 }
 
 AUTHORIZATION_URL = 'https://www.facebook.com/v10.0/dialog/oauth'
@@ -32,8 +33,8 @@ SCOPES = ''
 TOKEN_URL = 'https://graph.facebook.com/v10.0/oauth/access_token'
 
 
-class FacebookadsDataSource(ToucanDataSource):
-    data_kind: FacebookadsDataKind = Field(..., description='')
+class FacebookAdsDataSource(ToucanDataSource):
+    data_kind: FacebookAdsDataKind = Field(..., description='')
 
     parameters: Dict = Field(
         None, description='A set parameters that will be applied against the retrieved data.'
@@ -50,9 +51,9 @@ class FacebookadsDataSource(ToucanDataSource):
 
     def determine_url(self) -> str:
         format_key_mapping = {
-            FacebookadsDataKind.campaigns: {'act_id': self.parameters.get('account_id')},
-            FacebookadsDataKind.all_ads: {'act_id': self.parameters.get('account_id')},
-            FacebookadsDataKind.ads_under_campaign: {
+            FacebookAdsDataKind.campaigns: {'act_id': self.parameters.get('account_id')},
+            FacebookAdsDataKind.all_ads: {'act_id': self.parameters.get('account_id')},
+            FacebookAdsDataKind.ads_under_campaign: {
                 'campaign_id': self.parameters.get('campaign_id')
             },
         }
@@ -77,7 +78,7 @@ class FacebookAdsConnector(ToucanConnector):
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[str]
 
-    data_source_model: FacebookadsDataSource
+    data_source_model: FacebookAdsDataSource
 
     def __init__(self, **kwargs) -> None:
         super().__init__(
@@ -133,7 +134,7 @@ class FacebookAdsConnector(ToucanConnector):
 
         return data
 
-    def _retrieve_data(self, data_source: FacebookadsDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: FacebookAdsDataSource) -> pd.DataFrame:
         url = data_source.determine_url()
         data = self._handle_data_pagination(
             url, {**data_source.determine_query_params(), 'access_token': self._get_access_token()}
