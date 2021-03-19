@@ -136,7 +136,7 @@ class FacebookAdsConnector(ToucanConnector):
 
     def _retrieve_data(self, data_source: FacebookAdsDataSource) -> pd.DataFrame:
         url = data_source.determine_url()
-        data = self._handle_data_pagination(
+        data = self._handle_pagination(
             url, {**data_source.determine_query_params(), 'access_token': self._get_access_token()}
         )
         return pd.DataFrame(data)
