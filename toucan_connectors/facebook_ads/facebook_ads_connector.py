@@ -29,7 +29,7 @@ API_ENDPOINTS_MAPPING = {
 }
 
 AUTHORIZATION_URL = 'https://www.facebook.com/v10.0/dialog/oauth'
-SCOPES = ''
+SCOPES = 'ads_read'
 TOKEN_URL = 'https://graph.facebook.com/v10.0/oauth/access_token'
 
 
@@ -106,7 +106,7 @@ class FacebookAdsConnector(ToucanConnector):
 
     def retrieve_tokens(self, authorization_response: str):
         """
-        In the Hubspot oAuth2 authentication process, client_id & client_secret
+        In the Facebook Ads oAuth2 authentication process, client_id & client_secret
         must be sent in the body of the request so we have to set them in
         the mother class. This way they'll be added to her get_access_token method
         """
