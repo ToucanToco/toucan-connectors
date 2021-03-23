@@ -62,6 +62,20 @@ def nosql_apply_parameters_to_query(query, parameters, handle_errors=False):
         else:
             return res
 
+    def _flatten_rendered_nested_list(origin: list, rendered: list) -> list:
+        """
+        Flatten rendered lists in the parent list, so we have the same render logic
+        as in toucan frontend's templates.
+        """
+        result = []
+        for elem, rendered_elem in zip(origin, rendered):
+            if isinstance(elem, str) and isinstance(rendered_elem, list):
+                # a list has been rendered: flatten the result
+                result += rendered_elem
+            else:
+                result.append(rendered_elem)
+        return result
+
     def _render_query(query, parameters):
         """
         Render both jinja or %()s templates in query
@@ -70,7 +84,9 @@ def nosql_apply_parameters_to_query(query, parameters, handle_errors=False):
         if isinstance(query, dict):
             return {key: _render_query(value, parameters) for key, value in deepcopy(query).items()}
         elif isinstance(query, list):
-            return [_render_query(elt, parameters) for elt in deepcopy(query)]
+            rendered_query = [_render_query(elt, parameters) for elt in deepcopy(query)]
+            rendered_query = _flatten_rendered_nested_list(query, rendered_query)
+            return rendered_query
         elif isinstance(query, str):
             if not _has_parameters(query):
                 return query
