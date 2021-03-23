@@ -164,6 +164,22 @@ def test_apply_parameter_to_query_do_nothing():
                 'value': [datetime(2020, 12, 31), datetime(2021, 1, 1)],
             },
         ),
+        # _flatten_rendered_nested_list tests below:
+        (
+            {'array': ['{{ entity_id }}', '{{ entity_array }}']},
+            {'entity_id': '1', 'entity_array': ['2']},
+            {'array': ['1', '2']},
+        ),
+        (
+            {'deep': ['{{ entity_array }}', ['4', '5']]},
+            {'entity_array': ['2', '3']},
+            {'deep': ['2', '3', ['4', '5']]},
+        ),
+        (
+            {'mixed': ['{{ entity_id }}', '{{ entity_array }}']},
+            {'entity_id': 1, 'entity_array': [True]},
+            {'mixed': [1, True]},
+        ),
     ],
 )
 def test_nosql_apply_parameters_to_query(query, params, expected):
