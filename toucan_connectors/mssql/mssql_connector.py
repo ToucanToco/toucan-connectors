@@ -2,6 +2,7 @@ from contextlib import suppress
 
 import pandas as pd
 import pyodbc
+from jinja2 import Template
 from pydantic import Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import convert_to_qmark_paramstyle
@@ -114,9 +115,8 @@ class MSSQLConnector(ToucanConnector):
         connection = pyodbc.connect(**self.get_connection_params(datasource.database))
 
         query_params = datasource.parameters or {}
-        converted_query, ordered_values = convert_to_qmark_paramstyle(
-            datasource.query, query_params
-        )
+        query = Template(datasource.query).render({'user': query_params.get('user', {})})
+        converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_params)
         df = pd.read_sql(converted_query, con=connection, params=ordered_values)
 
         connection.close()
