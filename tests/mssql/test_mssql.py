@@ -147,6 +147,7 @@ def test_query_variability(mocker):
         name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!', port=22
     )
 
+    # Test with integer values
     ds = MSSQLDataSource(
         query='select * from test where id_nb > %(id_nb)s and price > %(price)s;',
         domain='test',
@@ -154,14 +155,14 @@ def test_query_variability(mocker):
         parameters={'price': 10, 'id_nb': 1},
         database='db',
     )
-
     con.get_df(ds)
-
     mock_pandas_read_sql.assert_called_once_with(
         'select * from test where id_nb > ? and price > ?;',
         con=mock_pyodbc_connect(),
         params=[1, 10],
     )
+
+    # Test when the value is an array
     mock_pandas_read_sql = mocker.patch('pandas.read_sql')
     ds = MSSQLDataSource(
         query='select * from test where id_nb in %(ids)s;',
@@ -173,6 +174,28 @@ def test_query_variability(mocker):
     con.get_df(ds)
     mock_pandas_read_sql.assert_called_once_with(
         'select * from test where id_nb in (?,?);',
+        con=mock_pyodbc_connect(),
+        params=[1, 2],
+    )
+
+
+def test_query_variability_jinja(mocker):
+    """It should interpolate safe (server side) parameters using jinja templating"""
+    mock_pyodbc_connect = mocker.patch('pyodbc.connect')
+    mock_pandas_read_sql = mocker.patch('pandas.read_sql')
+    con = MSSQLConnector(
+        name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!', port=22
+    )
+    ds = MSSQLDataSource(
+        query='select * from {{user.attributes.table_name}} where id_nb in %(ids)s;',
+        domain='test',
+        name='test',
+        database='db',
+        parameters={'ids': [1, 2], 'user': {'attributes': {'table_name': 'blah'}}},
+    )
+    con.get_df(ds)
+    mock_pandas_read_sql.assert_called_once_with(
+        'select * from blah where id_nb in (?,?);',
         con=mock_pyodbc_connect(),
         params=[1, 2],
     )
