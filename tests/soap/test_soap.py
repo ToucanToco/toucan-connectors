@@ -130,7 +130,7 @@ def test__retrieve_data(mocker, connector):
     )
 
 
-def test__retrieve_data_scalar_response(mocker, connector):
+def test__retrieve_data_int_response(mocker, connector):
     """
     Check that the connector is able to retrieve data from SOAP API
     with scalar value
@@ -153,4 +153,105 @@ def test__retrieve_data_scalar_response(mocker, connector):
     assert_frame_equal(
         data,
         pd.DataFrame({'response': 10}, index=[0]),
+    )
+
+
+def test__retrieve_data_str_response(mocker, connector):
+    """
+    Check that the connector is able to retrieve data from SOAP API
+    with scalar value
+    """
+    ds = SoapDataSource(
+        name='foosource',
+        domain='test_domain',
+        method='fake_func',
+        parameters={'arg': 'foo'},
+    )
+
+    def fake_func(arg: str):
+        return 'Killing is my business ...and business is good'
+
+    m = Mock()
+    m.service.fake_func = fake_func
+    mocker.patch(f'{import_path}.SoapConnector.create_client', return_value=m)
+    data = connector._retrieve_data(ds)
+    assert_frame_equal(
+        data,
+        pd.DataFrame({'response': 'Killing is my business ...and business is good'}, index=[0]),
+    )
+
+
+def test__retrieve_data_dict_response(mocker, connector):
+    """
+    Check that the connector is able to retrieve data from SOAP API
+    with scalar value
+    """
+    ds = SoapDataSource(
+        name='foosource',
+        domain='test_domain',
+        method='fake_func',
+        parameters={'arg': 'foo'},
+    )
+
+    def fake_func(arg: str):
+        return {'title': 'Killing is my business ...and business is good'}
+
+    m = Mock()
+    m.service.fake_func = fake_func
+    mocker.patch(f'{import_path}.SoapConnector.create_client', return_value=m)
+    data = connector._retrieve_data(ds)
+    assert_frame_equal(
+        data,
+        pd.DataFrame({'title': 'Killing is my business ...and business is good'}, index=[0]),
+    )
+
+
+def test__retrieve_data_list_of_list_response(mocker, connector):
+    """
+    Check that the connector is able to retrieve data from SOAP API
+    with scalar value
+    """
+    ds = SoapDataSource(
+        name='foosource',
+        domain='test_domain',
+        method='fake_func',
+        parameters={'arg': 'foo'},
+    )
+
+    def fake_func(arg: str):
+        return [['fooo', 'barrr', 'boooo', 'farrr']]
+
+    m = Mock()
+    m.service.fake_func = fake_func
+    mocker.patch(f'{import_path}.SoapConnector.create_client', return_value=m)
+    data = connector._retrieve_data(ds)
+
+    assert_frame_equal(
+        data,
+        pd.DataFrame(['fooo', 'barrr', 'boooo', 'farrr']),
+    )
+
+
+def test__retrieve_data_list_of_dict_one_col_response(mocker, connector):
+    """
+    Check that the connector is able to retrieve data from SOAP API
+    with scalar value
+    """
+    ds = SoapDataSource(
+        name='foosource',
+        domain='test_domain',
+        method='fake_func',
+        parameters={'arg': 'foo'},
+    )
+
+    def fake_func(arg: str):
+        return [{'col1': ['fooo', 'barrr'], 'col2': ['boooo', 'farrrr']}]
+
+    m = Mock()
+    m.service.fake_func = fake_func
+    mocker.patch(f'{import_path}.SoapConnector.create_client', return_value=m)
+    data = connector._retrieve_data(ds)
+    assert_frame_equal(
+        data,
+        pd.DataFrame({'col1': ['fooo', 'barrr'], 'col2': ['boooo', 'farrrr']}),
     )

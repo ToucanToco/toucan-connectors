@@ -11,6 +11,10 @@ from zeep.transports import Transport
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
+class FormatNotSupportedException(Exception):
+    pass
+
+
 class SoapDataSource(ToucanDataSource):
     method: str = Field(None, title='Method', description='Name of the webservice method to use')
     parameters: dict = Field(
@@ -73,11 +77,21 @@ class SoapConnector(ToucanConnector):
         # Force the casting of response
         response = getattr(client.service, data_source.method)(**data_source.parameters)
 
-        if isinstance(response, Sequence):
-            result = pd.DataFrame(response)
+        if isinstance(response, Sequence) and not isinstance(response, str):
+            if len(response) == 1 and isinstance(response[0], list):
+                result = pd.DataFrame(response[0])
+            elif isinstance(response[0], dict) and isinstance(list(response[0].values())[0], list):
+                result = pd.DataFrame(response[0])
+            else:
+                result = pd.DataFrame(response)
+
+        elif isinstance(response, dict):
+            result = pd.DataFrame(response, index=[0])
         else:
             result = pd.DataFrame({'response': response}, index=[0])
 
-        if data_source.flatten_column:
-            return json_to_table(result, columns=[data_source.flatten_column])
-        return result
+        return (
+            json_to_table(result, columns=[data_source.flatten_column])
+            if data_source.flatten_column
+            else result
+        )
