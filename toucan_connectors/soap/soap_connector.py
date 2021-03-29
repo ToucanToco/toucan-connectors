@@ -75,22 +75,25 @@ class SoapConnector(ToucanConnector):
         response = getattr(client.service, data_source.method)(**data_source.parameters)
 
         if is_list_response(response):
-            if is_nested_list(response):
-                result = (
-                    pd.DataFrame(response[0]) if len(response[0]) > 0 else pd.DataFrame(None)
-                )  # Make sure to
-                # return a response as pandas dataframe, even if the response is empty
-            elif is_dict_of_lists(response):
-                result = (
-                    pd.DataFrame(response[0]) if len(response[0]) > 0 else pd.DataFrame(None)
-                )  # Make sure to
-                # return a response as pandas dataframe, even if the response is empty
-            else:
+            if is_nested_list(response):  # If response is like [['a', 'b',' c', 'd']]
+                result = pd.DataFrame(
+                    response[0]
+                )  # Result will be pd.DataFrame(['a', 'b', 'c', 'd'])
+            elif is_dict_of_lists(
+                response
+            ):  # If response is like [{'col1':['value', 'value'], 'col2':['value',
+                # 'value']}]
+                result = pd.DataFrame(
+                    response[0]
+                )  # Result will be pd.DataFrame({'col1':[...], 'col2':[...]})
+            else:  # Result will be directly created from response (even an empty list)
                 result = pd.DataFrame(response)
 
-        elif isinstance(response, dict):
-            result = pd.DataFrame(response, index=[0])
-        else:
+        elif isinstance(response, dict):  # In case the result is only a dict
+            result = pd.DataFrame(
+                response, index=[0]
+            )  # We need to give an index to DataFrame constructor
+        else:  # Occurs when the result is a scalar (e.g. an int or a str)
             result = pd.DataFrame({'response': response}, index=[0])
 
         return (
