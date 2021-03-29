@@ -1,4 +1,3 @@
-from collections import Sequence
 from typing import Any, Dict, Type
 
 import pandas as pd
@@ -10,9 +9,7 @@ from zeep.transports import Transport
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
-
-class FormatNotSupportedException(Exception):
-    pass
+from .helpers import is_dict_of_lists, is_list_response, is_nested_list
 
 
 class SoapDataSource(ToucanDataSource):
@@ -77,11 +74,17 @@ class SoapConnector(ToucanConnector):
         # Force the casting of response
         response = getattr(client.service, data_source.method)(**data_source.parameters)
 
-        if isinstance(response, Sequence) and not isinstance(response, str):
-            if len(response) == 1 and isinstance(response[0], list):
-                result = pd.DataFrame(response[0])
-            elif isinstance(response[0], dict) and isinstance(list(response[0].values())[0], list):
-                result = pd.DataFrame(response[0])
+        if is_list_response(response):
+            if is_nested_list(response):
+                result = (
+                    pd.DataFrame(response[0]) if len(response[0]) > 0 else pd.DataFrame(None)
+                )  # Make sure to
+                # return a response as pandas dataframe, even if the response is empty
+            elif is_dict_of_lists(response):
+                result = (
+                    pd.DataFrame(response[0]) if len(response[0]) > 0 else pd.DataFrame(None)
+                )  # Make sure to
+                # return a response as pandas dataframe, even if the response is empty
             else:
                 result = pd.DataFrame(response)
 
