@@ -105,7 +105,7 @@ def test_get_form():
             'type': {'title': 'Type', 'type': 'string'},
             'load': {'title': 'Load', 'type': 'boolean', 'default': True},
             'live_data': {'title': 'Live Data', 'type': 'boolean', 'default': False},
-            'validation': {'title': 'Validation', 'type': 'array', 'items': {}},
+            'validation': {'title': 'Validation', 'type': 'object'},
             'parameters': {'title': 'Parameters', 'type': 'object'},
         },
         'required': ['domain', 'name'],
