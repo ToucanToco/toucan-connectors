@@ -64,11 +64,13 @@ class HttpAPIDataSource(ToucanDataSource):
     method: Method = Field(Method.GET, title='HTTP Method')
     headers: dict = Field(
         None,
-        description='JSON object of HTTP headers to send with every HTTP request',
+        description='you can also setup headers in the Template section of your Connector see: <br/>'
+        'https://docs.toucantoco.com/concepteur/tutorials/connectors/3-http-connector.html#template',
         examples=['{ "content-type": "application/xml" }'],
     )
     params: dict = Field(
         None,
+        title='url param',
         description='JSON object of parameters to send in the query string of this HTTP request '
         '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
         examples=['{ "offset": 100, "limit": 50 }'],
@@ -76,6 +78,7 @@ class HttpAPIDataSource(ToucanDataSource):
     json_: dict = Field(
         None,
         alias='json',
+        title='body',
         description='JSON object of parameters to send in the body of every HTTP request',
         examples=['{ "offset": 100, "limit": 50 }'],
     )

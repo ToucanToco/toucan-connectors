@@ -45,7 +45,7 @@ class ToucanDataSource(BaseModel):
     type: str = None
     load: bool = True
     live_data: bool = False
-    validation: list = None
+    validation: dict = None
     parameters: dict = None
 
     class Config:
