@@ -82,7 +82,7 @@ def test_facebook_ads_ads_under_campaign(connector, data_source, http_get_mock):
 def test_facebook_ads_handle_pagination(connector, data_source, http_get_mock, mocker):
     requests_json_mock = mocker.Mock()
     requests_json_mock.side_effect = [
-        {'data': [{'foo': 'bar'}], 'paging': {'next': 'http://example.com/foo'}},
+        {'data': [{'foo': 'bar'}, {'foo': 'baz'}], 'paging': {'next': 'http://example.com/foo'}},
         {'data': [], 'paging': {}},
     ]
     http_get_mock.return_value.json = requests_json_mock
@@ -102,6 +102,7 @@ def test_facebook_ads_handle_pagination(connector, data_source, http_get_mock, m
     assert http_get_mock.call_count == 2
     assert http_get_mock.has_calls(expected_calls)
     assert df['foo'][0] == 'bar'
+    assert df['foo'][1] == 'baz'
 
 
 def test_facebook_ads_build_authorization_uri(connector, mocker):

@@ -130,7 +130,7 @@ class FacebookAdsConnector(ToucanConnector):
 
             response_data = response.json()
             if len(response_data.get('data')):
-                data.append(*response_data.get('data'))
+                data.extend(response_data.get('data'))
 
         return data
 
