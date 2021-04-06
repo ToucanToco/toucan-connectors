@@ -111,6 +111,9 @@ class SnowflakeConnector(ToucanConnector):
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses" target="_blank">OCSP cache file</a>',
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def get_connection_params(self):
         res = {
             'user': Template(self.user).render(),
