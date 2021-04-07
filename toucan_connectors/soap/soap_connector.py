@@ -5,6 +5,7 @@ from pydantic import Field, create_model
 from requests import Session
 from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 from zeep import Client
+from zeep.helpers import serialize_object
 from zeep.transports import Transport
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
@@ -71,7 +72,9 @@ class SoapConnector(ToucanConnector):
         # Instantiate the SOAP client
 
         client = self.create_client()
-        response = getattr(client.service, data_source.method)(**data_source.parameters)
+        response = serialize_object(
+            getattr(client.service, data_source.method)(**data_source.parameters)
+        )
         #  The connector must handle the cases where response is nested
         #  to be parsed as a tabular format
         if is_list_response(response):
