@@ -1,6 +1,7 @@
 import json
 
 import pandas as pd
+import responses
 from mock import Mock
 from pandas._testing import assert_frame_equal
 from pytest import fixture
@@ -255,3 +256,30 @@ def test__retrieve_data_list_of_dict_one_col_response(mocker, connector):
         data,
         pd.DataFrame({'col1': ['fooo', 'barrr'], 'col2': ['boooo', 'farrrr']}),
     )
+
+
+@responses.activate
+def test_serialized_response(mocker, connector, wsdl_sample, xml_response):
+    """
+    Check that the response type is a native python type,
+    not a zeep object
+    """
+
+    responses.add('GET', 'https://example.com?wsdl', body=wsdl_sample)
+    responses.add(
+        'POST',
+        'https://webservices.oorsprong.org/websamples.countryinfo/CountryInfoService.wso',
+        body=xml_response,
+    )
+
+    ds = SoapDataSource(
+        name='foosource',
+        domain='test_domain',
+        method='ListOfLanguagesByCode',
+        parameters={},
+    )
+    expected = pd.DataFrame(
+        [{'sISOCode': 'FR', 'sName': 'French'}, {'sISOCode': 'US', 'sName': 'English'}]
+    )
+    res = connector._retrieve_data(ds)
+    assert res.equals(expected)
