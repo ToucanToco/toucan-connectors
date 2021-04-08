@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Union
+from typing import Any, Dict, List, Type, Union
 from xml.etree.ElementTree import ParseError, fromstring, tostring
 
 import pandas as pd
@@ -93,6 +93,21 @@ class HttpAPIDataSource(ToucanDataSource):
     xpath: str = XpathSchema
     filter: str = FilterSchema
     flatten_column: str = Field(None, description='Column containing nested rows')
+
+    class Config:
+        @staticmethod
+        def schema_extra(schema: Dict[str, Any], model: Type['HttpAPIDataSource']) -> None:
+            keys = schema['properties'].keys()
+            last_keys = [
+                'proxies',
+                'flatten_column',
+                'data',
+                'xpath',
+                'filter',
+                'validation',
+            ]
+            new_keys = [k for k in keys if k not in last_keys] + last_keys
+            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
 
 
 class HttpAPIConnector(ToucanConnector):
