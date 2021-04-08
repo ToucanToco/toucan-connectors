@@ -33,6 +33,7 @@ DATA_PROVIDERS: [
   * [Campaigns](https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group)
   * [Ads under a campaign](https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/ads)
   * [Ads for a specific account](https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/ads)
+  * [Insights](https://developers.facebook.com/docs/marketing-api/insights/)
 
 
 ```javascript

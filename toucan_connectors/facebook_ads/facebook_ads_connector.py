@@ -26,6 +26,7 @@ API_ENDPOINTS_MAPPING = {
     FacebookAdsDataKind.campaigns: 'act_{act_id}/campaigns',
     FacebookAdsDataKind.ads_under_campaign: '{campaign_id}/ads',
     FacebookAdsDataKind.all_ads: 'act_{act_id}/ads',
+    FacebookAdsDataKind.insights: 'act_{act_id}/insights',
 }
 
 AUTHORIZATION_URL = 'https://www.facebook.com/v10.0/dialog/oauth'
@@ -56,6 +57,7 @@ class FacebookAdsDataSource(ToucanDataSource):
             FacebookAdsDataKind.ads_under_campaign: {
                 'campaign_id': self.parameters.get('campaign_id')
             },
+            FacebookAdsDataKind.insights: {'act_id': self.parameters.get('account_id')},
         }
         return urljoin(
             API_BASE_ROUTE,
