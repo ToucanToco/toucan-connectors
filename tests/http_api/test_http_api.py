@@ -427,3 +427,49 @@ def test_oauth2_oidc_authentication(mocker):
     )
     c.get_df(HttpAPIDataSource(**data_source))
     mock_session.assert_called_once()
+
+
+def test_schema_extra():
+    data_source_spec = {
+        'data': '',
+        'domain': 'Clickhouse test',
+        'filter': '',
+        'flatten_column': '',
+        'headers': {},
+        'json': {},
+        'live_data': False,
+        'load': True,
+        'method': 'GET',
+        'name': 'Some clickhouse provider',
+        'parameters': {'ids': [3986, 3958]},
+        'params': {},
+        'proxies': {},
+        'type': 'external_database',
+        'url': '',
+        'validation': {},
+        'xpath': '',
+    }
+    conf = HttpAPIDataSource(**data_source_spec).Config
+
+    schema = {
+        'properties': {
+            'data': '',
+            'proxies': {},
+            'filter': '',
+            'flatten_column': '',
+            'validation': {},
+            'xpath': '',
+        }
+    }
+    conf.schema_extra(schema, model=HttpAPIDataSource)
+
+    assert schema == {
+        'properties': {
+            'proxies': {},
+            'flatten_column': '',
+            'data': '',
+            'xpath': '',
+            'filter': '',
+            'validation': {},
+        }
+    }
