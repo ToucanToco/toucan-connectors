@@ -79,6 +79,19 @@ def test_facebook_ads_ads_under_campaign(connector, data_source, http_get_mock):
     assert given_kwargs['params']['fields'] == 'name'
 
 
+def test_facebook_ads_insights(connector, data_source, http_get_mock):
+    data_source.data_kind = FacebookAdsDataKind.insights
+
+    connector.get_df(data_source)
+
+    given_url, _ = http_get_mock.call_args
+    assert http_get_mock.called_once()
+    assert (
+        given_url[0]
+        == f'https://graph.facebook.com/v10.0/act_{data_source.parameters.get("account_id")}/insights'
+    )
+
+
 def test_facebook_ads_handle_pagination(connector, data_source, http_get_mock, mocker):
     requests_json_mock = mocker.Mock()
     requests_json_mock.side_effect = [
