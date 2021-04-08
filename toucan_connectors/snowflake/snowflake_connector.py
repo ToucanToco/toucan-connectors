@@ -1,8 +1,10 @@
+import os
+import pathlib
 from contextlib import suppress
 from datetime import datetime
 from enum import Enum
 from os import path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import jwt
 import pandas as pd
@@ -13,7 +15,22 @@ from pydantic import Field, SecretStr, constr, create_model
 from snowflake.connector import DictCursor
 
 from toucan_connectors.common import convert_to_qmark_paramstyle
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.oauth2_connector.oauth2connector import (
+    OAuth2Connector,
+    OAuth2ConnectorConfig,
+)
+from toucan_connectors.toucan_connector import (
+    ConnectorSecretsForm,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
+
+AUTHORIZATION_URL = (
+    'https://toucantocopartner.west-europe.azure.snowflakecomputing.com/oauth/authorize'
+)
+SCOPE = 'refresh_token'
+TOKEN_URL = 'https://toucantocopartner.west-europe.azure.snowflakecomputing.com/oauth/token-request'
 
 
 class Path(str):
@@ -77,6 +94,7 @@ class SnowflakeConnector(ToucanConnector):
     """
 
     data_source_model: SnowflakeDataSource
+    auth_flow_id: Optional[str]
 
     authentication_method: AuthenticationMethod = Field(
         None,
@@ -84,12 +102,12 @@ class SnowflakeConnector(ToucanConnector):
         description='The authentication mechanism that will be used to connect to your snowflake data source',
     )
 
-    user: str = Field(..., description='Your login username')
+    user: str = Field(None, description='Your login username')
     password: SecretStr = Field(None, description='Your login password')
     oauth_token: str = Field(None, description='Your oauth token')
     oauth_args: dict = Field(None, description='Named arguments for an OIDC auth')
     account: str = Field(
-        ...,
+        None,
         description='The full name of your Snowflake account. '
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
@@ -102,7 +120,7 @@ class SnowflakeConnector(ToucanConnector):
     )
 
     default_warehouse: str = Field(
-        ..., description='The default warehouse that shall be used for any data source'
+        None, description='The default warehouse that shall be used for any data source'
     )
     ocsp_response_cache_filename: Path = Field(
         None,
@@ -112,11 +130,27 @@ class SnowflakeConnector(ToucanConnector):
     )
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
+        )
+        if self.auth_flow_id:
+            self.__dict__['_oauth2_connector'] = OAuth2Connector(
+                auth_flow_id=self.auth_flow_id,
+                authorization_url=AUTHORIZATION_URL,
+                scope=SCOPE,
+                token_url=TOKEN_URL,
+                redirect_uri=kwargs['redirect_uri'],
+                config=OAuth2ConnectorConfig(
+                    client_id=kwargs['client_id'],
+                    client_secret=kwargs['client_secret'],
+                ),
+                secrets_keeper=kwargs['secrets_keeper'],
+            )
+            self.authentication_method = AuthenticationMethod.OAUTH
 
     def get_connection_params(self):
         res = {
-            'user': Template(self.user).render(),
+            'user': Template(self.user).render() if self.user else None,
             'account': self.account,
             'authenticator': self.authentication_method,
             'application': 'ToucanToco',
@@ -130,7 +164,10 @@ class SnowflakeConnector(ToucanConnector):
         if res['authenticator'] == AuthenticationMethod.PLAIN and self.password:
             res['password'] = self.password.get_secret_value()
 
-        if self.authentication_method == AuthenticationMethod.OAUTH:
+        if self.auth_flow_id and self.authentication_method == AuthenticationMethod.OAUTH:
+            res['token'] = self.get_access_token()
+
+        elif self.authentication_method == AuthenticationMethod.OAUTH:
             if self.oauth_token is not None:
                 res['token'] = Template(self.oauth_token).render()
 
@@ -170,6 +207,22 @@ class SnowflakeConnector(ToucanConnector):
                     res.raise_for_status()
 
                 self.oauth_token = res.json().get('access_token')
+
+    @staticmethod
+    def get_connector_secrets_form() -> ConnectorSecretsForm:
+        return ConnectorSecretsForm(
+            documentation_md=(pathlib.Path(os.path.dirname(__file__)) / 'doc.md').read_text(),
+            secrets_schema=OAuth2ConnectorConfig.schema(),
+        )
+
+    def build_authorization_url(self, **kwargs):
+        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+
+    def retrieve_tokens(self, authorization_response: str):
+        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+
+    def get_access_token(self):
+        return self.__dict__['_oauth2_connector'].get_access_token()
 
     def connect(self, **kwargs) -> snowflake.connector.SnowflakeConnection:
         # This needs to be set before we connect

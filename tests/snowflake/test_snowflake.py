@@ -1,11 +1,13 @@
 import copy
 from datetime import datetime, timedelta
+from pathlib import Path
 from unittest.mock import call
 
 import jwt
 import pytest
 from requests.models import HTTPError
 
+from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 from toucan_connectors.snowflake import (
     AuthenticationMethod,
     SnowflakeConnector,
@@ -47,6 +49,27 @@ OAUTH_ARGS = {
     'refresh_token': 'baba au rhum',
     'token_endpoint': 'http://example.com/endpoint',
 }
+
+
+@pytest.fixture
+def scoauthflow(secrets_keeper):
+    secrets_keeper.save('test', {'access_token': 'access_token'})
+    return SnowflakeConnector(
+        name='test',
+        auth_flow_id='test',
+        client_id='test_client_id',
+        client_secret='test_client_secret',
+        secrets_keeper=secrets_keeper,
+        redirect_uri='https://redirect.me/',
+    )
+
+
+@pytest.fixture
+def remove_secrets(secrets_keeper, scoauthflow):
+    secrets_keeper.save('test', {'access_token': None})
+
+
+import_path = 'toucan_connectors.snowflake.snowflake_connector'
 
 
 def test_snowflake(mocker):
@@ -441,3 +464,35 @@ def test_oauth_args_wrong_type_of_auth(mocker):
     sf._retrieve_data(sd)
 
     assert spy.call_count == 0
+
+
+def test_delegate_oauth2_methods(mocker):
+    """
+    It should proxy OAuth2Connectors methods
+    """
+    mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
+    sc.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    sc.build_authorization_url()
+    mock_oauth2_connector.build_authorization_url.assert_called()
+    sc.retrieve_tokens('toto')
+    mock_oauth2_connector.retrieve_tokens.assert_called_with('toto')
+    sc.get_access_token()
+    mock_oauth2_connector.get_access_token.assert_called()
+
+
+def test_get_secrets_form(mocker):
+    """Check that the doc for oAuth setup is correctly retrieved"""
+    mocker.patch(f'{import_path}.os.path.dirname', return_value='fakepath')
+    mocker.patch.object(Path, 'read_text', return_value='<h1>Awesome Doc</h1>')
+    doc = sc.get_connector_secrets_form()
+    assert doc.documentation_md == '<h1>Awesome Doc</h1>'
+
+
+def test_connection_params_oauth_flow(mocker, scoauthflow):
+    """
+    Check that we retrieve saved token when loading
+    connection params config
+    """
+    mocked_token = mocker.patch(f'{import_path}.SnowflakeConnector.get_access_token')
+    scoauthflow.get_connection_params()
+    mocked_token.assert_called_once()
