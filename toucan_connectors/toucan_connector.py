@@ -14,6 +14,8 @@ from pydantic import BaseModel, Field
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 
+OAUTH2_CAPABLE = ['SnowflakeConnector']
+
 try:
     from bearer import Bearer
 except ImportError:
@@ -169,6 +171,10 @@ def decorate_func_with_retry(func):
 
 def is_oauth2_connector(cls):
     return hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2'
+
+
+def is_oauth2_capable_connector(cls):
+    return cls.__name__ in OAUTH2_CAPABLE
 
 
 class ConnectorSecretsForm(BaseModel):
