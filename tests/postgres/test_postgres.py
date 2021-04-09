@@ -128,6 +128,24 @@ def test_get_df_db(postgres_connector):
     assert df.shape == (24, 5)
 
 
+def test_get_df_db_jinja_syntax(postgres_connector):
+    data_source_spec = {
+        'domain': 'Postgres test',
+        'type': 'external_database',
+        'name': 'Some Postgres provider',
+        'database': 'postgres_db',
+        'query': 'SELECT * FROM City WHERE Population > {{ max_pop }}',
+        'parameters': {'max_pop': 5000000},
+    }
+    expected_columns = {'id', 'name', 'countrycode', 'district', 'population'}
+    data_source = PostgresDataSource(**data_source_spec)
+    df = postgres_connector.get_df(data_source)
+
+    assert not df.empty
+    assert set(df.columns) == expected_columns
+    assert df.shape == (24, 5)
+
+
 def test_get_df_array_interpolation(postgres_connector):
     data_source_spec = {
         'domain': 'Postgres test',

@@ -8,7 +8,7 @@ import pymysql
 from pydantic import Field, SecretStr, constr, create_model
 from pymysql.constants import CR, ER
 
-from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.common import ConnectorStatus, convert_to_printf_templating_style
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -366,7 +366,7 @@ class MySQLConnector(ToucanConnector):
 
         # ----- Prepare -----
         if datasource.query:
-            query = datasource.query
+            query = convert_to_printf_templating_style(datasource.query)
             # Extract table name for logging purpose (see below)
             m = re.search(
                 r'from\s*(?P<table>[^\s]+)\s*(where|order by|group by|limit)?', query, re.I

@@ -16,6 +16,7 @@ from toucan_data_sdk.utils.helpers import slugify
 
 RE_PARAM = r'%\(([^(%\()]*)\)s'
 RE_JINJA = r'{{([^({{)}]*)}}'
+RE_SINGLE_VAR_JINJA = r'{{\s*([^\W\d]\w*)\s*}}'  # a single identifier, e.g: {{ __foo__ }}
 
 RE_JINJA_ALONE = r'^' + RE_JINJA + '$'
 
@@ -289,6 +290,15 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> str:
             flattened_values.append(val)
 
     return re.sub(RE_NAMED_PARAM, '?', query_string), flattened_values
+
+
+def convert_to_printf_templating_style(query_string: str) -> str:
+    """
+    Replaces '{{ foo }}' by '%(foo)s' in the query.
+    Useful for sql-based connectors, which, for security reasons, cannot be rendered
+    with jinja.
+    """
+    return re.sub(RE_SINGLE_VAR_JINJA, r'%(\g<1>)s', query_string)
 
 
 def adapt_param_type(params):
