@@ -5,7 +5,7 @@ import clickhouse_driver
 import pandas as pd
 from pydantic import Field, SecretStr, constr, create_model
 
-from toucan_connectors.common import adapt_param_type
+from toucan_connectors.common import adapt_param_type, convert_to_printf_templating_style
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -103,13 +103,13 @@ class ClickhouseConnector(ToucanConnector):
             self.get_connection_url(database=data_source.database)
         )
         query_params = data_source.parameters or {}
-        df = pd.read_sql(
+        query = (
             data_source.query
             if data_source.query
-            else f'select * from {data_source.table} limit 50;',
-            con=connection,
-            params=adapt_param_type(query_params),
+            else f'select * from {data_source.table} limit 50;'
         )
+        query = convert_to_printf_templating_style(query)
+        df = pd.read_sql(query, con=connection, params=adapt_param_type(query_params))
 
         connection.close()
 
