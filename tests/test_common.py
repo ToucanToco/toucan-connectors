@@ -8,6 +8,7 @@ from toucan_connectors.common import (
     NonValidVariable,
     adapt_param_type,
     apply_query_parameters,
+    convert_to_printf_templating_style,
     convert_to_qmark_paramstyle,
     fetch,
     nosql_apply_parameters_to_query,
@@ -311,6 +312,15 @@ def test_convert_pyformat_to_qmark(query, params, expected_query, expected_order
     converted_query, ordered_values = convert_to_qmark_paramstyle(query, params)
     assert ordered_values == expected_ordered_values
     assert converted_query == expected_query
+
+
+def test_convert_to_printf_templating_style():
+    """It should convert jinja templates to printf templates only for valid python identifiers"""
+    query = 'SELECT {{ a }} {{a1}}{{ _a1}} FROM {{ 1a }} {{ aa$%@%}}\n{{aa bb}} hey {{aa_bb }};'
+    expected_result = (
+        'SELECT %(a)s %(a1)s%(_a1)s FROM {{ 1a }} {{ aa$%@%}}\n{{aa bb}} hey %(aa_bb)s;'
+    )
+    assert convert_to_printf_templating_style(query) == expected_result
 
 
 def test_adapt_param_type():
