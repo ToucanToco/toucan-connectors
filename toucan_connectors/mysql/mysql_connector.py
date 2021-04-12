@@ -3,12 +3,15 @@ from contextlib import suppress
 from typing import Optional
 
 import numpy as np
-import pandas as pd
 import pymysql
 from pydantic import Field, SecretStr, constr, create_model
 from pymysql.constants import CR, ER
 
-from toucan_connectors.common import ConnectorStatus, convert_to_printf_templating_style
+from toucan_connectors.common import (
+    ConnectorStatus,
+    convert_to_printf_templating_style,
+    pandas_read_sql,
+)
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -380,7 +383,7 @@ class MySQLConnector(ToucanConnector):
         query_params = datasource.parameters or {}
 
         if not datasource.follow_relations:
-            df = pd.read_sql(query, con=connection, params=query_params)
+            df = pandas_read_sql(query, con=connection, params=query_params)
             df = self.decode_df(df)
             connection.close()
             return df
@@ -388,7 +391,7 @@ class MySQLConnector(ToucanConnector):
         # list used because we cannot reassign a variable to update the dataframe.
         # After the merge: append the new DataFrame and remove the pop the first
         # element.
-        lres = [pd.read_sql(query, con=connection, params=query_params)]
+        lres = [pandas_read_sql(query, con=connection, params=query_params)]
         MySQLConnector.logger.info(f'{table} : dumped first DataFrame')
 
         # ----- Merge -----
@@ -414,7 +417,7 @@ class MySQLConnector(ToucanConnector):
                 f"inside {table_info['f_table']}"
             )
 
-            f_df = pd.read_sql(f'select * from {table_info["f_table"]}', con=connection)
+            f_df = pandas_read_sql(f'select * from {table_info["f_table"]}', con=connection)
             suffixes = ('_' + table, '_' + table_info['f_table'])
             lres.append(
                 self._merge_drop(

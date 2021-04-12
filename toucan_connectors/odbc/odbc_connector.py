@@ -2,7 +2,11 @@ import pandas as pd
 import pyodbc
 from pydantic import Field, constr
 
-from toucan_connectors.common import convert_to_printf_templating_style, convert_to_qmark_paramstyle
+from toucan_connectors.common import (
+    convert_to_printf_templating_style,
+    convert_to_qmark_paramstyle,
+    pandas_read_sql,
+)
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -37,6 +41,6 @@ class OdbcConnector(ToucanConnector):
         connection = pyodbc.connect(self.connection_string, **self.get_connection_params())
         query = convert_to_printf_templating_style(datasource.query)
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, datasource.parameters)
-        df = pd.read_sql(converted_query, con=connection, params=ordered_values)
+        df = pandas_read_sql(converted_query, con=connection, params=ordered_values)
         connection.close()
         return df

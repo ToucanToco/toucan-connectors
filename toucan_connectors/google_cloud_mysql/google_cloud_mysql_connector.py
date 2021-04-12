@@ -2,7 +2,7 @@ import pandas as pd
 import pymysql
 from pydantic import Field, SecretStr, constr
 
-from toucan_connectors.common import convert_to_printf_templating_style
+from toucan_connectors.common import convert_to_printf_templating_style, pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -62,7 +62,7 @@ class GoogleCloudMySQLConnector(ToucanConnector):
         connection = pymysql.connect(**self.get_connection_params(database=data_source.database))
 
         query = convert_to_printf_templating_style(data_source.query)
-        df = pd.read_sql(query, con=connection)
+        df = pandas_read_sql(query, con=connection)
 
         connection.close()
 

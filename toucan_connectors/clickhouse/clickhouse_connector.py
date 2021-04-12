@@ -2,10 +2,13 @@ from contextlib import suppress
 from typing import Any, Dict, Type
 
 import clickhouse_driver
-import pandas as pd
 from pydantic import Field, SecretStr, constr, create_model
 
-from toucan_connectors.common import adapt_param_type, convert_to_printf_templating_style
+from toucan_connectors.common import (
+    adapt_param_type,
+    convert_to_printf_templating_style,
+    pandas_read_sql,
+)
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -109,7 +112,7 @@ class ClickhouseConnector(ToucanConnector):
             else f'select * from {data_source.table} limit 50;'
         )
         query = convert_to_printf_templating_style(query)
-        df = pd.read_sql(query, con=connection, params=adapt_param_type(query_params))
+        df = pandas_read_sql(query, con=connection, params=adapt_param_type(query_params))
 
         connection.close()
 

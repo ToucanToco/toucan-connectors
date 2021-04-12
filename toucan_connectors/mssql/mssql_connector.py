@@ -1,11 +1,14 @@
 from contextlib import suppress
 
-import pandas as pd
 import pyodbc
 from jinja2 import Template
 from pydantic import Field, SecretStr, constr, create_model
 
-from toucan_connectors.common import convert_to_printf_templating_style, convert_to_qmark_paramstyle
+from toucan_connectors.common import (
+    convert_to_printf_templating_style,
+    convert_to_qmark_paramstyle,
+    pandas_read_sql,
+)
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -118,7 +121,7 @@ class MSSQLConnector(ToucanConnector):
         query = convert_to_printf_templating_style(datasource.query)
         query = Template(query).render({'user': query_params.get('user', {})})
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_params)
-        df = pd.read_sql(converted_query, con=connection, params=ordered_values)
+        df = pandas_read_sql(converted_query, con=connection, params=ordered_values)
 
         connection.close()
         return df
