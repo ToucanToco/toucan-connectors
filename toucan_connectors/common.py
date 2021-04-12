@@ -310,6 +310,17 @@ def adapt_param_type(params):
     return {k: (tuple(v) if isinstance(v, list) else v) for (k, v) in params.items()}
 
 
+def extract_table_name(query: str) -> str:
+    m = re.search(r'from\s*(?P<table>[^\s;]+)\s*(where|order by|group by|limit)?', query, re.I)
+    table = m.group('table')
+    return table
+
+
+def is_interpolating_table_name(query: str) -> bool:
+    table_name = extract_table_name(query)
+    return table_name.startswith('%(')
+
+
 def pandas_read_sql(
     query: str,
     con,
@@ -329,5 +340,13 @@ def pandas_read_sql(
     if adapt_params:
         params = adapt_param_type(params)
 
-    df = pd.read_sql(query, con=con, params=params, **kwargs)
+    try:
+        df = pd.read_sql(query, con=con, params=params, **kwargs)
+    except pd.io.sql.DatabaseError:
+        if is_interpolating_table_name(query):
+            errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
+            raise pd.io.sql.DatabaseError(errmsg)
+        else:
+            raise
+
     return df

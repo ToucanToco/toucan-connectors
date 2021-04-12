@@ -10,7 +10,9 @@ from toucan_connectors.common import (
     apply_query_parameters,
     convert_to_printf_templating_style,
     convert_to_qmark_paramstyle,
+    extract_table_name,
     fetch,
+    is_interpolating_table_name,
     nosql_apply_parameters_to_query,
 )
 
@@ -325,3 +327,13 @@ def test_convert_to_printf_templating_style():
 
 def test_adapt_param_type():
     assert adapt_param_type({'test': [1, 2], 'id': 1}) == {'test': (1, 2), 'id': 1}
+
+
+def test_extract_table_name():
+    assert extract_table_name('select * from mytable;') == 'mytable'
+    assert extract_table_name('SELECT * FROM %(plop)s WHERE age > 21;') == '%(plop)s'
+
+
+def test_is_interpolating_table_name():
+    assert is_interpolating_table_name('select * from mytable;') is False
+    assert is_interpolating_table_name('SELECT * FROM %(plop)s WHERE age > 21;')
