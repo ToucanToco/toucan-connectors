@@ -310,6 +310,24 @@ def adapt_param_type(params):
     return {k: (tuple(v) if isinstance(v, list) else v) for (k, v) in params.items()}
 
 
-def pandas_read_sql(query, con, params=None, **kwargs) -> pd.DataFrame:
+def pandas_read_sql(
+    query: str,
+    con,
+    params=None,
+    adapt_params: bool = False,
+    convert_to_qmark: bool = False,
+    convert_to_printf: bool = True,
+    render_user: bool = False,
+    **kwargs,
+) -> pd.DataFrame:
+    if convert_to_printf:
+        query = convert_to_printf_templating_style(query)
+    if render_user:
+        query = Template(query).render({'user': params.get('user', {})})
+    if convert_to_qmark:
+        query, params = convert_to_qmark_paramstyle(query, params)
+    if adapt_params:
+        params = adapt_param_type(params)
+
     df = pd.read_sql(query, con=con, params=params, **kwargs)
     return df
