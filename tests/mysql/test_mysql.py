@@ -261,6 +261,22 @@ def test_get_df_db(mysql_connector):
     assert df.shape == (24, 5)
 
 
+def test_get_df_forbidden_table_interpolation(mysql_connector):
+    data_source_spec = {
+        'domain': 'MySQL test',
+        'type': 'external_database',
+        'name': 'Some MySQL provider',
+        'database': 'mysql_db',
+        'query': 'SELECT * FROM %(tablename)s WHERE Population > 5000000',
+        'parameters': {'tablename': 'City'},
+    }
+
+    data_source = MySQLDataSource(**data_source_spec)
+    with pytest.raises(pd.io.sql.DatabaseError) as e:
+        mysql_connector.get_df(data_source)
+    assert 'interpolating table name is forbidden' in str(e.value)
+
+
 def test_clean_response():
     """ It should replace None by np.nan and decode bytes data """
     response = [{'name': 'fway', 'age': 13}, {'name': b'zbruh', 'age': None}]

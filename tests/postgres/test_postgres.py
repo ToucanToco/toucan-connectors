@@ -146,6 +146,21 @@ def test_get_df_db_jinja_syntax(postgres_connector):
     assert df.shape == (24, 5)
 
 
+def test_get_df_forbidden_table_interpolation(postgres_connector):
+    data_source_spec = {
+        'domain': 'Postgres test',
+        'type': 'external_database',
+        'name': 'Some Postgres provider',
+        'database': 'postgres_db',
+        'query': 'SELECT * FROM %(tablename)s WHERE Population > 5000000',
+        'parameters': {'tablename': 'City'},
+    }
+    data_source = PostgresDataSource(**data_source_spec)
+    with pytest.raises(pd.io.sql.DatabaseError) as e:
+        postgres_connector.get_df(data_source)
+    assert 'interpolating table name is forbidden' in str(e.value)
+
+
 def test_get_df_array_interpolation(postgres_connector):
     data_source_spec = {
         'domain': 'Postgres test',
