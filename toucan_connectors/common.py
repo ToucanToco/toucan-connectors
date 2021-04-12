@@ -5,6 +5,7 @@ import re
 from copy import deepcopy
 from typing import List, Optional, Tuple
 
+import pandas as pd
 import pyjq
 from aiohttp import ClientSession
 from jinja2 import Environment, StrictUndefined, Template, meta
@@ -307,3 +308,8 @@ def adapt_param_type(params):
     postgres to correctly interpret them as an array.
     """
     return {k: (tuple(v) if isinstance(v, list) else v) for (k, v) in params.items()}
+
+
+def pandas_read_sql(query, con, params=None, **kwargs) -> pd.DataFrame:
+    df = pd.read_sql(query, con=con, params=params, **kwargs)
+    return df
