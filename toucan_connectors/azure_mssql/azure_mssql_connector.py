@@ -4,7 +4,7 @@ import pandas as pd
 import pyodbc
 from pydantic import Field, SecretStr, constr
 
-from toucan_connectors.common import convert_to_printf_templating_style, pandas_read_sql
+from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 CLOUD_HOST = 'database.windows.net'
@@ -57,8 +57,7 @@ class AzureMSSQLConnector(ToucanConnector):
     def _retrieve_data(self, datasource: AzureMSSQLDataSource) -> pd.DataFrame:
         connection = pyodbc.connect(**self.get_connection_params(database=datasource.database))
 
-        query = convert_to_printf_templating_style(datasource.query)
-        df = pandas_read_sql(query, con=connection)
+        df = pandas_read_sql(datasource.query, con=connection)
 
         connection.close()
         return df
