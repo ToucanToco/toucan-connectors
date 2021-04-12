@@ -50,7 +50,7 @@ def test_oracle_get_df(mocker):
 
     snock.assert_called_once_with(user='system', password='oracle', dsn='localhost:22/xe')
 
-    reasq.assert_called_once_with('SELECT * FROM City', con=snock())
+    reasq.assert_called_once_with('SELECT * FROM City', con=snock(), params=None)
 
 
 def test_get_df_db(oracle_connector):
