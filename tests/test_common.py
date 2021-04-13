@@ -181,6 +181,17 @@ def test_apply_parameter_to_query_do_nothing():
             {'entity_id': 1, 'entity_array': [True]},
             {'mixed': [1, True]},
         ),
+        # 'data' should remain a string in these cases:
+        (
+            {'data': '["{{ my_var }}", "bar"]'},
+            {'my_var': 'foo'},
+            {'data': '["foo", "bar"]'},
+        ),
+        (
+            {'data': '{"x": "{{ my_var }}", "y": "42"}'},
+            {'my_var': 'foo'},
+            {'data': '{"x": "foo", "y": "42"}'},
+        ),
     ],
 )
 def test_nosql_apply_parameters_to_query(query, params, expected):
