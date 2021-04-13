@@ -192,6 +192,31 @@ def test_apply_parameter_to_query_do_nothing():
             {'my_var': 'foo'},
             {'data': '{"x": "foo", "y": "42"}'},
         ),
+        # tests with {% ... %}
+        (
+            {
+                'data': '{%if count %}{{ count }}{%else%}No{%endif%} chair{% if count != 1 %}s{% endif %}'
+            },
+            {'count': 0},
+            {'data': 'No chairs'},
+        ),
+        (
+            {
+                'data': '{%if count %}{{ count }}{%else%}No{%endif%} chair{% if count != 1 %}s{% endif %}'
+            },
+            {'count': 1},
+            {'data': '1 chair'},
+        ),
+        (
+            {'data': '{%if obj %}{{ obj }}{%else%}Nothing{%endif%}'},
+            {'obj': 0},
+            {'data': 'Nothing'},
+        ),
+        (
+            {'data': '{%if obj %}{{ obj }}{%else%}Nothing{%endif%}'},
+            {'obj': 1},
+            {'data': 1},
+        ),
     ],
 )
 def test_nosql_apply_parameters_to_query(query, params, expected):
