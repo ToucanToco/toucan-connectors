@@ -32,6 +32,24 @@ class NonValidVariable(Exception):
     """ Error thrown for a non valid variable in endpoint """
 
 
+def is_jinja_alone(s: str) -> bool:
+    """
+    Return True if the given string is a jinja template alone.
+
+    For example, these strings are jinja templates alone:
+        '{{ foo }}'
+        '{{ foo + bar }}'
+        '{%if my_indic%}1{%else%}2{%endif%}'
+
+    Whereas these strings are not:
+        'Hey {{ foo }} !'
+        '{{ foo }}{{ bar }}'
+
+    In the 2nd case, we will always render the result as a string.
+    """
+    return re.match(RE_JINJA_ALONE, s) or (s.startswith('{%') and s.endswith('%}'))
+
+
 def nosql_apply_parameters_to_query(query, parameters, handle_errors=False):
     """
     WARNING : DO NOT USE THIS WITH VARIANTS OF SQL
@@ -100,7 +118,11 @@ def nosql_apply_parameters_to_query(query, parameters, handle_errors=False):
             if re.match(RE_JINJA_ALONE, query):
                 clean_p = _prepare_parameters(clean_p)
 
-            env = NativeEnvironment()
+            if is_jinja_alone(query):
+                env = NativeEnvironment()
+            else:
+                env = Environment()
+
             res = env.from_string(query).render(clean_p)
             # NativeEnvironment's render() isn't recursive, so we need to
             # apply recursively the literal_eval by hand for lists and dicts:
