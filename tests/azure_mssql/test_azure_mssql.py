@@ -42,4 +42,4 @@ def test_gcmysql_get_df(mocker):
         password='ilovetoucan',
         driver='{ODBC Driver 17 for SQL Server}',
     )
-    reasq.assert_called_once_with('my_query', con=snock())
+    reasq.assert_called_once_with('my_query', con=snock(), params=None)

@@ -44,4 +44,4 @@ def test_gcmysql_get_df(mocker):
         conv=conv,
         cursorclass=pymysql.cursors.DictCursor,
     )
-    reasq.assert_called_once_with('my_query', con=snock())
+    reasq.assert_called_once_with('my_query', con=snock(), params=None)

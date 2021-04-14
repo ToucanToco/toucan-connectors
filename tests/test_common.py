@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 
+import pandas as pd
 import pytest
 from aiohttp import web
+from pytest_mock import MockFixture
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -10,8 +12,11 @@ from toucan_connectors.common import (
     apply_query_parameters,
     convert_to_printf_templating_style,
     convert_to_qmark_paramstyle,
+    extract_table_name,
     fetch,
+    is_interpolating_table_name,
     nosql_apply_parameters_to_query,
+    pandas_read_sql,
 )
 
 
@@ -361,3 +366,45 @@ def test_convert_to_printf_templating_style():
 
 def test_adapt_param_type():
     assert adapt_param_type({'test': [1, 2], 'id': 1}) == {'test': (1, 2), 'id': 1}
+
+
+def test_extract_table_name():
+    assert extract_table_name('select * from mytable;') == 'mytable'
+    assert extract_table_name('SELECT * FROM %(plop)s WHERE age > 21;') == '%(plop)s'
+
+
+def test_is_interpolating_table_name():
+    assert is_interpolating_table_name('select * from mytable;') is False
+    assert is_interpolating_table_name('SELECT * FROM %(plop)s WHERE age > 21;')
+
+
+def test_pandas_read_sql_forbidden_interpolation(mocker: MockFixture):
+    """
+    It should enhance the error provided by pandas' read_sql when someone tries to template a table name
+    """
+    mocker.patch(
+        'toucan_connectors.common.pd.read_sql', side_effect=pd.io.sql.DatabaseError('Some error')
+    )
+    with pytest.raises(pd.io.sql.DatabaseError) as e:
+        pandas_read_sql(
+            query='SELECT * FROM %(tablename)s WHERE Population > 5000000',
+            con='sample_connexion',
+            params={'tablename': 'City'},
+        )
+    assert 'interpolating table name is forbidden' in str(e.value)
+
+
+def test_pandas_read_sql_error(mocker: MockFixture):
+    """
+    It should raise the error raised by pandas' read_sql
+    """
+    mocker.patch(
+        'toucan_connectors.common.pd.read_sql', side_effect=pd.io.sql.DatabaseError('Some error')
+    )
+    with pytest.raises(pd.io.sql.DatabaseError) as e:
+        pandas_read_sql(
+            query='SELECT * FROM CITY WHERE Population > %(max_pop)s',
+            con='sample_connexion',
+            params={'max_pop': 1_000_000},
+        )
+    assert 'Some error' in str(e.value)

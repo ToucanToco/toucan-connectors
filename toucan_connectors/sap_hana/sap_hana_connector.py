@@ -1,8 +1,7 @@
-import pandas as pd
 import pyhdb
 from pydantic import Field, SecretStr, constr
 
-from toucan_connectors.common import convert_to_printf_templating_style
+from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -34,8 +33,7 @@ class SapHanaConnector(ToucanConnector):
             self.host, self.port, self.user, self.password.get_secret_value()
         )
 
-        query = convert_to_printf_templating_style(data_source.query)
-        df = pd.read_sql(query, con=connection)
+        df = pandas_read_sql(data_source.query, con=connection)
 
         connection.close()
 

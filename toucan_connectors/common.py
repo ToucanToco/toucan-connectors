@@ -5,6 +5,7 @@ import re
 from copy import deepcopy
 from typing import List, Optional, Tuple
 
+import pandas as pd
 import pyjq
 from aiohttp import ClientSession
 from jinja2 import Environment, StrictUndefined, Template, meta
@@ -329,3 +330,45 @@ def adapt_param_type(params):
     postgres to correctly interpret them as an array.
     """
     return {k: (tuple(v) if isinstance(v, list) else v) for (k, v) in params.items()}
+
+
+def extract_table_name(query: str) -> str:
+    m = re.search(r'from\s*(?P<table>[^\s;]+)\s*(where|order by|group by|limit)?', query, re.I)
+    table = m.group('table')
+    return table
+
+
+def is_interpolating_table_name(query: str) -> bool:
+    table_name = extract_table_name(query)
+    return table_name.startswith('%(')
+
+
+def pandas_read_sql(
+    query: str,
+    con,
+    params=None,
+    adapt_params: bool = False,
+    convert_to_qmark: bool = False,
+    convert_to_printf: bool = True,
+    render_user: bool = False,
+    **kwargs,
+) -> pd.DataFrame:
+    if convert_to_printf:
+        query = convert_to_printf_templating_style(query)
+    if render_user:
+        query = Template(query).render({'user': params.get('user', {})})
+    if convert_to_qmark:
+        query, params = convert_to_qmark_paramstyle(query, params)
+    if adapt_params:
+        params = adapt_param_type(params)
+
+    try:
+        df = pd.read_sql(query, con=con, params=params, **kwargs)
+    except pd.io.sql.DatabaseError:
+        if is_interpolating_table_name(query):
+            errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
+            raise pd.io.sql.DatabaseError(errmsg)
+        else:
+            raise
+
+    return df

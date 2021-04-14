@@ -4,7 +4,7 @@ import cx_Oracle
 import pandas as pd
 from pydantic import Field, SecretStr, constr, create_model
 
-from toucan_connectors.common import convert_to_printf_templating_style
+from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -80,8 +80,7 @@ class OracleSQLConnector(ToucanConnector):
         connection = cx_Oracle.connect(**self.get_connection_params())
 
         query = data_source.query[:-1] if data_source.query.endswith(';') else data_source.query
-        query = convert_to_printf_templating_style(query)
-        df = pd.read_sql(query, con=connection)
+        df = pandas_read_sql(query, con=connection)
 
         connection.close()
 
