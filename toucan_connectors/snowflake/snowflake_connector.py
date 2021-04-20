@@ -12,7 +12,7 @@ from jinja2 import Template
 from pydantic import Field, SecretStr, constr, create_model
 from snowflake.connector import DictCursor
 
-from toucan_connectors.common import convert_to_qmark_paramstyle
+from toucan_connectors.common import ConnectorStatus, convert_to_qmark_paramstyle
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -110,6 +110,28 @@ class SnowflakeConnector(ToucanConnector):
         description='The path of the '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses" target="_blank">OCSP cache file</a>',
     )
+
+    def get_status(self) -> ConnectorStatus:
+        error = None
+        status = True
+
+        try:
+            with self.connect(login_timeout=5) as connection:
+                cursor = connection.cursor()
+                self._execute_query(cursor, 'SHOW WAREHOUSES', {})
+        except snowflake.connector.errors.ProgrammingError as e:
+            status = False
+            error = str(e)
+        except snowflake.connector.errors.DatabaseError:
+            status = False
+            error = f"Connection failed for the user '{self.user}', please check your credentials"
+
+        connector_status = ConnectorStatus(
+            status=status,
+        )
+        if error is not None:
+            connector_status.error = error
+        return connector_status
 
     def get_connection_params(self):
         res = {
