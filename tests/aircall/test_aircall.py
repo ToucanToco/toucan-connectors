@@ -72,6 +72,7 @@ def remove_secrets(secrets_keeper, con):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skip
 async def test_authentified_fetch(mocker, con):
     """It should return a result from fetch if all is ok."""
     mocker.patch(f'{import_path}.fetch', return_value=FAKE_FETCH_RES)
