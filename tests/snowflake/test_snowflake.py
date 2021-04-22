@@ -4,8 +4,10 @@ from unittest.mock import call
 
 import jwt
 import pytest
+import snowflake.connector
 from requests.models import HTTPError
 
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.snowflake import (
     AuthenticationMethod,
     SnowflakeConnector,
@@ -39,6 +41,24 @@ sd = SnowflakeDataSource(
     query='test_query with %(foo)s and %(pokemon)s',
     parameters={'foo': 'bar', 'pokemon': 'pikachu'},
 )
+
+
+@pytest.fixture
+def snowflake_connector():
+    return SnowflakeConnector(
+        name='test_name',
+        authentication_method=AuthenticationMethod.PLAIN,
+        user='test_user',
+        password='test_password',
+        account='test_account',
+        default_warehouse='default_wh',
+    )
+
+
+@pytest.fixture
+def snowflake_connection_mock(mocker):
+    return mocker.patch('snowflake.connector.connect')
+
 
 OAUTH_ARGS = {
     'content_type': 'application/x-www-form-urlencoded',
@@ -441,3 +461,42 @@ def test_oauth_args_wrong_type_of_auth(mocker):
     sf._retrieve_data(sd)
 
     assert spy.call_count == 0
+
+
+def test_get_status_all_good(snowflake_connector: SnowflakeConnector, snowflake_connection_mock):
+    assert snowflake_connector.get_status() == ConnectorStatus(
+        status=True,
+    )
+
+
+def test_get_status_credentials_nok(
+    snowflake_connector: SnowflakeConnector, snowflake_connection_mock
+):
+    def fake_raise():
+        raise snowflake.connector.errors.DatabaseError()
+
+    # We need to patch through the `__enter__` return value here since we're using a with statement
+    # in the `get_status` function to ensure that the snowflake connection is properly closed
+    # at the end of the scope
+    snowflake_connection_mock.return_value.__enter__.return_value.cursor.return_value.execute = (
+        lambda arg1, arg2: fake_raise()
+    )
+
+    assert snowflake_connector.get_status() == ConnectorStatus(
+        status=False,
+        error="Connection failed for the user 'test_user', please check your credentials",
+    )
+
+
+def test_get_status_account_nok(snowflake_connector: SnowflakeConnector, snowflake_connection_mock):
+    def fake_raise():
+        raise snowflake.connector.errors.ProgrammingError('Account nok')
+
+    # We need to patch through the `__enter__` return value here since we're using a with statement
+    # in the `get_status` function to ensure that the snowflake connection is properly closed
+    # at the end of the scope
+    snowflake_connection_mock.return_value.__enter__.return_value.cursor.return_value.execute = (
+        lambda arg1, arg2: fake_raise()
+    )
+
+    assert snowflake_connector.get_status() == ConnectorStatus(status=False, error='Account nok')
