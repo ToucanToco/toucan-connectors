@@ -5,7 +5,7 @@ import asyncio
 import os
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import pandas as pd
 from aiohttp import ClientSession
@@ -65,6 +65,7 @@ class GoogleSheets2DataSource(ToucanDataSource):
         None, title='Rows limit', description='Maximum number of rows to retrieve'
     )
     parameters: dict = Field(None, description='Additional URL parameters')
+    parse_dates: List[str] = Field([], title='Dates column', description='Columns to parse as date')
 
     class Config:
         @staticmethod
@@ -172,7 +173,7 @@ class GoogleSheets2Connector(ToucanConnector):
             ranges = ''
 
         # https://developers.google.com/sheets/api/samples/reading
-        read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}{ranges}?valueRenderOption=UNFORMATTED_VALUE'
+        read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}{ranges}?valueRenderOption=UNFORMATTED_VALUE&DateTimeRenderOption=FORMATTED_STRING'
         full_url = f'{self._baseroute}{read_sheet_endpoint}'
         # Rajouter le param FORMATTED_VALUE pour le séparateur de décimal dans la Baseroute
         data = self._run_fetch(full_url)['values']
@@ -190,6 +191,8 @@ class GoogleSheets2Connector(ToucanConnector):
         df.columns = [name or index for index, name in enumerate(df.iloc[data_source.header_row])]
         df = df[data_source.header_row + 1 :]
 
+        for date_column in data_source.parse_dates:
+            df[date_column] = pd.to_datetime(df[date_column])
         return df
 
     def get_status(self) -> ConnectorStatus:
@@ -234,6 +237,7 @@ class GoogleSheets2Connector(ToucanConnector):
             sheet=data_source.sheet,
             header_row=data_source.header_row,
             rows_limit=limit,
+            parse_dates=data_source.parse_dates,
         )
         df = self.get_df(preview_datasource, permissions)
         if limit is not None:
