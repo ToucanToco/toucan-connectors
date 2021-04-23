@@ -482,7 +482,7 @@ def test_get_status_all_good(
 ):
     execute_query_mock.return_value = pd.DataFrame({'warehouse_name': 'default_wh'}, index=[0])
     assert snowflake_connector.get_status() == ConnectorStatus(
-        status=True,
+        status=True, details=[('Connection to Snowflake', True), ('Warehouse exists', True)]
     )
 
 
@@ -491,7 +491,9 @@ def test_get_status_warehouse_does_not_exists(
 ):
     execute_query_mock.return_value = pd.DataFrame()
     assert snowflake_connector.get_status() == ConnectorStatus(
-        status=False, error="The warehouse 'default_wh' does not exists."
+        status=False,
+        error="The warehouse 'default_wh' does not exist.",
+        details=[('Connection to Snowflake', True), ('Warehouse exists', False)],
     )
 
 
@@ -504,6 +506,7 @@ def test_account_does_not_exists(
     assert snowflake_connector.get_status() == ConnectorStatus(
         status=False,
         error=f"Connection failed for the account '{snowflake_connector.account}', please check the Account field",
+        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
     )
 
 
@@ -513,6 +516,7 @@ def test_account_forbidden(snowflake_connector: SnowflakeConnector, snowflake_co
     assert snowflake_connector.get_status() == ConnectorStatus(
         status=False,
         error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",
+        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
     )
 
 
@@ -524,6 +528,7 @@ def test_get_status_credentials_nok(
     assert snowflake_connector.get_status() == ConnectorStatus(
         status=False,
         error="Connection failed for the user 'test_user', please check your credentials",
+        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
     )
 
 
@@ -532,4 +537,8 @@ def test_get_status_account_nok(
 ):
     execute_query_mock.side_effect = snowflake.connector.errors.ProgrammingError('Account nok')
 
-    assert snowflake_connector.get_status() == ConnectorStatus(status=False, error='Account nok')
+    assert snowflake_connector.get_status() == ConnectorStatus(
+        status=False,
+        error='Account nok',
+        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
+    )
