@@ -133,14 +133,14 @@ class SnowflakeConnector(ToucanConnector):
                         f"The warehouse '{self.default_warehouse}' does not exists."
                     )
 
-        except (
-            snowflake.connector.errors.OperationalError,
-            snowflake.connector.errors.ForbiddenError,
-        ):
+        except snowflake.connector.errors.OperationalError:
             # Raised when the provided account does not exists or when the
             # provided User does not have access to the provided account
             status = False
             error = f"Connection failed for the account '{self.account}', please check the Account field"
+        except snowflake.connector.errors.ForbiddenError:
+            status = False
+            error = f"Access forbidden, please check that you have access to the '{self.account}' account or try again later."
         except (
             SnowflakeConnectorWarehouseDoesNotExists,
             snowflake.connector.errors.ProgrammingError,

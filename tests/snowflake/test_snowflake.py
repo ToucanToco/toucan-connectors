@@ -14,7 +14,6 @@ from toucan_connectors.snowflake import (
     SnowflakeConnector,
     SnowflakeDataSource,
 )
-from toucan_connectors.snowflake.snowflake_connector import SnowflakeConnectorWarehouseDoesNotExists
 
 sc = SnowflakeConnector(
     name='test_name',
@@ -497,7 +496,7 @@ def test_get_status_warehouse_does_not_exists(
 
 
 def test_account_does_not_exists(
-    snowflake_connector: SnowflakeConnectorWarehouseDoesNotExists,
+    snowflake_connector: SnowflakeConnector,
     snowflake_connection_mock,
 ):
     snowflake_connection_mock.side_effect = snowflake.connector.errors.OperationalError()
@@ -508,14 +507,12 @@ def test_account_does_not_exists(
     )
 
 
-def test_account_forbidden(
-    snowflake_connector: SnowflakeConnectorWarehouseDoesNotExists, snowflake_connection_mock
-):
+def test_account_forbidden(snowflake_connector: SnowflakeConnector, snowflake_connection_mock):
     snowflake_connection_mock.side_effect = snowflake.connector.errors.ForbiddenError()
 
     assert snowflake_connector.get_status() == ConnectorStatus(
         status=False,
-        error=f"Connection failed for the account '{snowflake_connector.account}', please check the Account field",
+        error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",
     )
 
 
