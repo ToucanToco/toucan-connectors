@@ -32,6 +32,10 @@ class SnowflakeConnectorException(Exception):
     """Raised when something wrong happened in a snowflake context"""
 
 
+class SnowflakeConnectorWarehouseDoesNotExists(Exception):
+    """Raised when the specified default warehouse does not exists"""
+
+
 class SnowflakeDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
     warehouse: str = Field(None, description='The name of the warehouse you want to query')
@@ -119,10 +123,33 @@ class SnowflakeConnector(ToucanConnector):
             with self.connect(login_timeout=5) as connection:
                 cursor = connection.cursor()
                 self._execute_query(cursor, 'SHOW WAREHOUSES', {})
-        except snowflake.connector.errors.ProgrammingError as e:
+
+                # Check if the default specified warehouse exists
+                res = self._execute_query(
+                    cursor, f"SHOW WAREHOUSES LIKE '{self.default_warehouse}'", {}
+                )
+                if res.empty:
+                    raise SnowflakeConnectorWarehouseDoesNotExists(
+                        f"The warehouse '{self.default_warehouse}' does not exists."
+                    )
+
+        except (
+            snowflake.connector.errors.OperationalError,
+            snowflake.connector.errors.ForbiddenError,
+        ):
+            # Raised when the provided account does not exists or when the
+            # provided User does not have access to the provided account
+            status = False
+            error = f"Connection failed for the account '{self.account}', please check the Account field"
+        except (
+            SnowflakeConnectorWarehouseDoesNotExists,
+            snowflake.connector.errors.ProgrammingError,
+        ) as e:
+            # Raised when the Warehouse does not exists or when something unexpected happened
             status = False
             error = str(e)
         except snowflake.connector.errors.DatabaseError:
+            # Raised when the provided User/Password aren't correct
             status = False
             error = f"Connection failed for the user '{self.user}', please check your credentials"
 
