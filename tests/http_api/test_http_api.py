@@ -58,6 +58,8 @@ def test_transform_with_jq():
     ]
 
 
+# As of 04/23/2021 this test fails because the jsonplaceholder API returns an error
+@pytest.mark.skip()
 def test_get_df(connector, data_source):
     df = connector.get_df(data_source)
     assert df.shape == (500, 5)
