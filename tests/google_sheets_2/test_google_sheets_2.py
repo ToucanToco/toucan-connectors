@@ -1,3 +1,4 @@
+import datetime
 import json
 from unittest.mock import Mock
 
@@ -279,3 +280,24 @@ def test_schema_fields_order(con, ds):
     assert schema_props_keys[0] == 'domain'
     assert schema_props_keys[1] == 'spreadsheet_id'
     assert schema_props_keys[2] == 'sheet'
+
+
+def test_parse_datetime(mocker, con):
+    ds = GoogleSheets2DataSource(
+        name='test_name',
+        domain='test_domain',
+        sheet='Constants',
+        spreadsheet_id='1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU',
+        parse_dates=['a_date'],
+    )
+    fake_result = {
+        'metadata': '...',
+        'values': [
+            ['country', 'city', 'a_date'],
+            ['France', 'Paris', '2001-02-02'],
+            ['England', 'London', '2010-08-09'],
+        ],
+    }
+    mocker.patch(f'{import_path}.fetch', return_value=fake_result)
+    df, rows = con.get_slice(ds, limit=2)
+    assert df['a_date'].iloc[0] == datetime.datetime(year=2001, month=2, day=2)
