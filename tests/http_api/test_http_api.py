@@ -58,7 +58,6 @@ def test_transform_with_jq():
     ]
 
 
-@pytest.mark.skip(reason='This uses an real api. https://jsonplaceholder.typicode.com is down')
 def test_get_df(connector, data_source):
     df = connector.get_df(data_source)
     assert df.shape == (500, 5)
