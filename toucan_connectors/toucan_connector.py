@@ -9,7 +9,7 @@ from typing import Iterable, List, NamedTuple, Optional, Type
 
 import pandas as pd
 import tenacity as tny
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field
 
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters
 from toucan_connectors.pandas_translator import PandasConditionTranslator
@@ -190,12 +190,6 @@ def get_connector_secrets_form(cls) -> Optional[ConnectorSecretsForm]:
         return getattr(cls, 'get_connector_secrets_form')()
 
 
-class ConnectorSecretData(BaseModel):
-    client_secret: Optional[SecretStr]
-    password: Optional[SecretStr]
-    api_secret: Optional[SecretStr]
-
-
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
     """Abstract base class for all toucan connectors.
 
@@ -220,6 +214,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     retry_policy: Optional[RetryPolicy] = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
     type: str = None
+    secrets_storage_version = '1'
 
     class Config:
         extra = 'forbid'
