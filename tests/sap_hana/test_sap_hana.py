@@ -5,7 +5,7 @@ from toucan_connectors.sap_hana.sap_hana_connector import SapHanaConnector, SapH
 
 
 def test_no_user():
-    """ It should raise an error as no user is given """
+    """It should raise an error as no user is given"""
     with pytest.raises(ValidationError):
         SapHanaConnector(host='some_host', name='test')
 

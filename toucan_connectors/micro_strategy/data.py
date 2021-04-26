@@ -90,12 +90,12 @@ def get_metric_names(data: dict) -> dict:
 
 
 def flatten_json(json_root: dict, attributes: dict, metrics: dict) -> list:
-    """ Entry into recursive function to pull data from JSON based on attributes & metrics."""
+    """Entry into recursive function to pull data from JSON based on attributes & metrics."""
     row = {}
     table = []
 
     def flatten(nodes: dict, attributes: dict, metrics: dict, row: dict, table: list):
-        """ Recursive function that will traverse JSON to flatten data."""
+        """Recursive function that will traverse JSON to flatten data."""
         if isinstance(nodes, dict):
             for node in nodes:
                 # it appears 'depth' is an indicator when data elements are coming

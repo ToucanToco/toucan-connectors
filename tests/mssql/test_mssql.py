@@ -119,7 +119,7 @@ def test_mssql_get_df(mocker):
 
 
 def test_get_df(mssql_connector):
-    """ It should connect to the default database and retrieve the response to the query """
+    """It should connect to the default database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
         name='mycon',
         domain='mydomain',
@@ -140,7 +140,7 @@ def test_get_df(mssql_connector):
 
 
 def test_query_variability(mocker):
-    """ It should connect to the database and retrieve the response to the query """
+    """It should connect to the database and retrieve the response to the query"""
     mock_pyodbc_connect = mocker.patch('pyodbc.connect')
     mock_pandas_read_sql = mocker.patch('pandas.read_sql')
     con = MSSQLConnector(

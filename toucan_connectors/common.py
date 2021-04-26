@@ -30,7 +30,7 @@ RE_NAMED_PARAM = r'%\([a-zA-Z1-9_]*\)s'
 
 
 class NonValidVariable(Exception):
-    """ Error thrown for a non valid variable in endpoint """
+    """Error thrown for a non valid variable in endpoint"""
 
 
 def is_jinja_alone(s: str) -> bool:

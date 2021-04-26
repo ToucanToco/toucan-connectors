@@ -155,7 +155,7 @@ def test_get_status_bad_authentication(mysql_connector):
 
 
 def test_get_df(mocker):
-    """ It should call the sql extractor """
+    """It should call the sql extractor"""
     snock = mocker.patch('pymysql.connect')
     reasq = mocker.patch('pandas.read_sql')
     mocker.patch(
@@ -195,7 +195,7 @@ def test_get_df(mocker):
 
 
 def test_get_df_db_follow(mysql_connector):
-    """" It should extract the table City and make some merge with some foreign key """
+    """ " It should extract the table City and make some merge with some foreign key"""
     data_sources_spec = [
         {
             'domain': 'MySQL test',
@@ -242,7 +242,7 @@ def test_get_df_db_follow(mysql_connector):
 
 
 def test_get_df_db(mysql_connector):
-    """" It should extract the table City without merges """
+    """ " It should extract the table City without merges"""
     data_source_spec = {
         'domain': 'MySQL test',
         'type': 'external_database',
@@ -278,7 +278,7 @@ def test_get_df_forbidden_table_interpolation(mysql_connector):
 
 
 def test_clean_response():
-    """ It should replace None by np.nan and decode bytes data """
+    """It should replace None by np.nan and decode bytes data"""
     response = [{'name': 'fway', 'age': 13}, {'name': b'zbruh', 'age': None}]
     res = MySQLConnector.clean_response(response)
 
