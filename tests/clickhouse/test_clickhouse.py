@@ -42,7 +42,7 @@ def clickhouse_connector(clickhouse_server):
 
 
 def test_no_user():
-    """ It should raise an error as no user is given """
+    """It should raise an error as no user is given"""
     with pytest.raises(ValidationError):
         ClickhouseConnector(host='some_host', name='test')
 
@@ -90,7 +90,7 @@ def test_clickhouse_get_df(mocker):
 
 
 def test_retrieve_response(clickhouse_connector):
-    """ It should connect to the database and retrieve the response to the query """
+    """It should connect to the database and retrieve the response to the query"""
     ds = ClickhouseDataSource(
         domain='test',
         name='test',
@@ -103,7 +103,7 @@ def test_retrieve_response(clickhouse_connector):
 
 
 def test_get_df_db(clickhouse_connector):
-    """ It should extract the table City and make some merge with some foreign key. """
+    """It should extract the table City and make some merge with some foreign key."""
     data_source_spec = {
         'domain': 'Clickhouse test',
         'type': 'external_database',

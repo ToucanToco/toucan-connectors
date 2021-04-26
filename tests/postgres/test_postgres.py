@@ -40,13 +40,13 @@ def postgres_connector(postgres_server):
 
 
 def test_no_user():
-    """ It should raise an error as no user is given """
+    """It should raise an error as no user is given"""
     with pytest.raises(ValidationError):
         PostgresConnector(host='some_host', name='test')
 
 
 def test_open_connection():
-    """ It should not open a connection """
+    """It should not open a connection"""
     with pytest.raises(psycopg2.OperationalError):
         ds = PostgresDataSource(domain='pika', name='pika', database='circle_test', query='q')
         PostgresConnector(name='test', host='lolcathost', user='ubuntu', connect_timeout=1).get_df(
@@ -97,7 +97,7 @@ def test_postgress_get_df(mocker):
 
 
 def test_retrieve_response(postgres_connector):
-    """ It should connect to the database and retrieve the response to the query """
+    """It should connect to the database and retrieve the response to the query"""
     ds = PostgresDataSource(
         domain='test',
         name='test',
@@ -110,7 +110,7 @@ def test_retrieve_response(postgres_connector):
 
 
 def test_get_df_db(postgres_connector):
-    """ It should extract the table City and make some merge with some foreign key. """
+    """It should extract the table City and make some merge with some foreign key."""
     data_source_spec = {
         'domain': 'Postgres test',
         'type': 'external_database',

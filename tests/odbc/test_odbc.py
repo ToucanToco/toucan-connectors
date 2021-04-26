@@ -48,7 +48,7 @@ def odbc_connector(postgres_server):
 
 
 def test_invalid_connection_string():
-    """ It should raise an error as the connection string is invalid"""
+    """It should raise an error as the connection string is invalid"""
     with pytest.raises(ValidationError):
         OdbcConnector(name='test')
 
@@ -79,7 +79,7 @@ def test_odbc_get_df(mocker):
 
 
 def test_retrieve_response(odbc_connector):
-    """ It should connect to the database and retrieve the response to the query """
+    """It should connect to the database and retrieve the response to the query"""
     ds = OdbcDataSource(query='select * from City;', domain='test', name='test')
     res = odbc_connector.get_df(ds)
     assert isinstance(res, pd.DataFrame)
@@ -87,7 +87,7 @@ def test_retrieve_response(odbc_connector):
 
 
 def test_query_variability(mocker):
-    """ It should connect to the database and retrieve the response to the query """
+    """It should connect to the database and retrieve the response to the query"""
     mock_pyodbc_connect = mocker.patch('pyodbc.connect')
     mock_pandas_read_sql = mocker.patch('pandas.read_sql')
     odbc_connector = OdbcConnector(name='test', connection_string='blah')

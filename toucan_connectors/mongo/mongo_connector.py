@@ -89,7 +89,7 @@ class MongoDataSource(ToucanDataSource):
 
 
 class MongoConnector(ToucanConnector):
-    """ Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
+    """Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
 
     data_source_model: MongoDataSource
 
