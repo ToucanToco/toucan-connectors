@@ -66,14 +66,6 @@ def execute_query_mock(mocker):
     return mocker.patch.object(SnowflakeConnector, '_execute_query')
 
 
-@pytest.fixture
-def with_statement_cursor_mock(snowflake_connection_mock):
-    # We need to patch through the `__enter__` return value here since we're using a with statement
-    # in the `get_status` function to ensure that the snowflake connection is properly closed
-    # at the end of the scope
-    return snowflake_connection_mock.return_value.__enter__.return_value.cursor.return_value
-
-
 OAUTH_ARGS = {
     'content_type': 'application/x-www-form-urlencoded',
     'client_id': 'client_id',
