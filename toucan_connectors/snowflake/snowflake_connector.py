@@ -2,7 +2,7 @@ from contextlib import suppress
 from datetime import datetime
 from enum import Enum
 from os import path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import jwt
 import pandas as pd
@@ -30,6 +30,10 @@ class Path(str):
 
 class SnowflakeConnectorException(Exception):
     """Raised when something wrong happened in a snowflake context"""
+
+
+class SnowflakeConnectorWarehouseDoesNotExists(Exception):
+    """Raised when the specified default warehouse does not exists"""
 
 
 class SnowflakeDataSource(ToucanDataSource):
@@ -111,27 +115,60 @@ class SnowflakeConnector(ToucanConnector):
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses" target="_blank">OCSP cache file</a>',
     )
 
-    def get_status(self) -> ConnectorStatus:
-        error = None
-        status = True
+    @staticmethod
+    def _get_status_details(index: int, status: Optional[bool]):
+        checks = ['Connection to Snowflake', 'Warehouse exists']
+        ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
+        new_check = (checks[index], status)
+        not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
+        return ok_checks + [new_check] + not_validated_checks
 
+    def get_status(self) -> ConnectorStatus:
         try:
             with self.connect(login_timeout=5) as connection:
                 cursor = connection.cursor()
                 self._execute_query(cursor, 'SHOW WAREHOUSES', {})
-        except snowflake.connector.errors.ProgrammingError as e:
-            status = False
-            error = str(e)
-        except snowflake.connector.errors.DatabaseError:
-            status = False
-            error = f"Connection failed for the user '{self.user}', please check your credentials"
 
-        connector_status = ConnectorStatus(
-            status=status,
-        )
-        if error is not None:
-            connector_status.error = error
-        return connector_status
+                # Check if the default specified warehouse exists
+                res = self._execute_query(
+                    cursor, f"SHOW WAREHOUSES LIKE '{self.default_warehouse}'", {}
+                )
+                if res.empty:
+                    raise SnowflakeConnectorWarehouseDoesNotExists(
+                        f"The warehouse '{self.default_warehouse}' does not exist."
+                    )
+
+        except SnowflakeConnectorWarehouseDoesNotExists as e:
+            return ConnectorStatus(
+                status=False, details=self._get_status_details(1, False), error=str(e)
+            )
+        except snowflake.connector.errors.OperationalError:
+            # Raised when the provided account does not exists or when the
+            # provided User does not have access to the provided account
+            return ConnectorStatus(
+                status=False,
+                details=self._get_status_details(0, False),
+                error=f"Connection failed for the account '{self.account}', please check the Account field",
+            )
+        except snowflake.connector.errors.ForbiddenError:
+            return ConnectorStatus(
+                status=False,
+                details=self._get_status_details(0, False),
+                error=f"Access forbidden, please check that you have access to the '{self.account}' account or try again later.",
+            )
+        except snowflake.connector.errors.ProgrammingError as e:
+            return ConnectorStatus(
+                status=False, details=self._get_status_details(0, False), error=str(e)
+            )
+        except snowflake.connector.errors.DatabaseError:
+            # Raised when the provided User/Password aren't correct
+            return ConnectorStatus(
+                status=False,
+                details=self._get_status_details(0, False),
+                error=f"Connection failed for the user '{self.user}', please check your credentials",
+            )
+
+        return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
 
     def get_connection_params(self):
         res = {

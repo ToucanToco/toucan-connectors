@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from unittest.mock import call
 
 import jwt
+import pandas as pd
 import pytest
 import snowflake.connector
 from requests.models import HTTPError
@@ -58,6 +59,11 @@ def snowflake_connector():
 @pytest.fixture
 def snowflake_connection_mock(mocker):
     return mocker.patch('snowflake.connector.connect')
+
+
+@pytest.fixture
+def execute_query_mock(mocker):
+    return mocker.patch.object(SnowflakeConnector, '_execute_query')
 
 
 OAUTH_ARGS = {
@@ -463,40 +469,68 @@ def test_oauth_args_wrong_type_of_auth(mocker):
     assert spy.call_count == 0
 
 
-def test_get_status_all_good(snowflake_connector: SnowflakeConnector, snowflake_connection_mock):
+def test_get_status_all_good(
+    snowflake_connector: SnowflakeConnector, snowflake_connection_mock, execute_query_mock
+):
+    execute_query_mock.return_value = pd.DataFrame({'warehouse_name': 'default_wh'}, index=[0])
     assert snowflake_connector.get_status() == ConnectorStatus(
-        status=True,
+        status=True, details=[('Connection to Snowflake', True), ('Warehouse exists', True)]
+    )
+
+
+def test_get_status_warehouse_does_not_exists(
+    snowflake_connector: SnowflakeConnector, snowflake_connection_mock, execute_query_mock
+):
+    execute_query_mock.return_value = pd.DataFrame()
+    assert snowflake_connector.get_status() == ConnectorStatus(
+        status=False,
+        error="The warehouse 'default_wh' does not exist.",
+        details=[('Connection to Snowflake', True), ('Warehouse exists', False)],
+    )
+
+
+def test_account_does_not_exists(
+    snowflake_connector: SnowflakeConnector,
+    snowflake_connection_mock,
+):
+    snowflake_connection_mock.side_effect = snowflake.connector.errors.OperationalError()
+
+    assert snowflake_connector.get_status() == ConnectorStatus(
+        status=False,
+        error=f"Connection failed for the account '{snowflake_connector.account}', please check the Account field",
+        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
+    )
+
+
+def test_account_forbidden(snowflake_connector: SnowflakeConnector, snowflake_connection_mock):
+    snowflake_connection_mock.side_effect = snowflake.connector.errors.ForbiddenError()
+
+    assert snowflake_connector.get_status() == ConnectorStatus(
+        status=False,
+        error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",
+        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
     )
 
 
 def test_get_status_credentials_nok(
     snowflake_connector: SnowflakeConnector, snowflake_connection_mock
 ):
-    def fake_raise():
-        raise snowflake.connector.errors.DatabaseError()
-
-    # We need to patch through the `__enter__` return value here since we're using a with statement
-    # in the `get_status` function to ensure that the snowflake connection is properly closed
-    # at the end of the scope
-    snowflake_connection_mock.return_value.__enter__.return_value.cursor.return_value.execute = (
-        lambda arg1, arg2: fake_raise()
-    )
+    snowflake_connection_mock.side_effect = snowflake.connector.errors.DatabaseError()
 
     assert snowflake_connector.get_status() == ConnectorStatus(
         status=False,
         error="Connection failed for the user 'test_user', please check your credentials",
+        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
     )
 
 
-def test_get_status_account_nok(snowflake_connector: SnowflakeConnector, snowflake_connection_mock):
-    def fake_raise():
-        raise snowflake.connector.errors.ProgrammingError('Account nok')
+def test_get_status_account_nok(
+    snowflake_connector: SnowflakeConnector, snowflake_connection_mock, execute_query_mock
+):
+    execute_query_mock.side_effect = snowflake.connector.errors.ProgrammingError('Account nok')
 
-    # We need to patch through the `__enter__` return value here since we're using a with statement
-    # in the `get_status` function to ensure that the snowflake connection is properly closed
-    # at the end of the scope
-    snowflake_connection_mock.return_value.__enter__.return_value.cursor.return_value.execute = (
-        lambda arg1, arg2: fake_raise()
+    assert snowflake_connector.get_status() == ConnectorStatus(
+        status=False,
+        error='Account nok',
+        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
     )
-
-    assert snowflake_connector.get_status() == ConnectorStatus(status=False, error='Account nok')
