@@ -323,6 +323,32 @@ def test_snowflake_execute_select_query_with_params(mocker):
     )
 
 
+def test_snowflake_execute_select_query_with_params_jinja_syntax(mocker):
+    """It should convert jinja templating to printf templating"""
+    snow_mock = mocker.patch('snowflake.connector.connect')
+    connector = SnowflakeConnector(
+        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
+    )
+    data_source = SnowflakeDataSource(
+        name='test',
+        domain='test',
+        database='test',
+        warehouse='test',
+        query='SELECT * FROM {{ formatme }};',
+        parameters={
+            'nested': {'dictionary': 'ohno'},
+            'formatme': 'ohyeah',
+            'no_array': [{'no': 'nope'}],
+        },
+    )
+
+    connector.get_df(data_source)
+
+    snow_mock.return_value.cursor.return_value.execute.assert_called_with(
+        'SELECT * FROM ?;', ['ohyeah']
+    )
+
+
 def test_snowflake_execute_other_query(mocker):
     snow_mock = mocker.patch('snowflake.connector.connect')
     cursor_mock = snow_mock.return_value.cursor.return_value.execute.return_value

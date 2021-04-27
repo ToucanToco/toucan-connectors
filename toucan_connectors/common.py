@@ -26,7 +26,7 @@ RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r'([ )])', RE_JINJA + r'()$']
 
 RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
-RE_NAMED_PARAM = r'%\([a-zA-Z1-9_]*\)s'
+RE_NAMED_PARAM = r'%\([a-zA-Z0-9_]*\)s'
 
 
 class NonValidVariable(Exception):
