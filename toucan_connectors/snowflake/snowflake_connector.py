@@ -12,7 +12,11 @@ from jinja2 import Template
 from pydantic import Field, SecretStr, constr, create_model
 from snowflake.connector import DictCursor
 
-from toucan_connectors.common import ConnectorStatus, convert_to_qmark_paramstyle
+from toucan_connectors.common import (
+    ConnectorStatus,
+    convert_to_printf_templating_style,
+    convert_to_qmark_paramstyle,
+)
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -256,6 +260,7 @@ class SnowflakeConnector(ToucanConnector):
         Returns: A pandas DataFrame
         """
         # Prevent error with dict and array values in the parameter object
+        query = convert_to_printf_templating_style(query)
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
         query_res = cursor.execute(converted_query, ordered_values)
 
