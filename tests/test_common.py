@@ -346,6 +346,12 @@ def test_connector_status():
             'select * from inventory where quantity in (?,?);',
             [150, 154],
         ),
+        (
+            'select * from test where price > %(__front_var_0__)s;',
+            {'__front_var_0__': 1},
+            'select * from test where price > ?;',
+            [1],
+        ),
     ],
 )
 def test_convert_pyformat_to_qmark(query, params, expected_query, expected_ordered_values):
