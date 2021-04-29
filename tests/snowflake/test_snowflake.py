@@ -9,11 +9,13 @@ import snowflake.connector
 from requests.models import HTTPError
 
 from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.postgres.postgresql_connector import PostgresConnector
 from toucan_connectors.snowflake import (
     AuthenticationMethod,
     SnowflakeConnector,
     SnowflakeDataSource,
 )
+from toucan_connectors.toucan_connector import needs_sso_credentials
 
 sc = SnowflakeConnector(
     name='test_name',
@@ -560,3 +562,8 @@ def test_get_status_account_nok(
         error='Account nok',
         details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
     )
+
+
+def test_needs_sso_credentials():
+    assert needs_sso_credentials(SnowflakeConnector)
+    assert not needs_sso_credentials(PostgresConnector)

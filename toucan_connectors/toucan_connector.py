@@ -171,6 +171,10 @@ def is_oauth2_connector(cls):
     return hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2'
 
 
+def needs_sso_credentials(cls) -> bool:
+    return hasattr(cls, '_sso_credentials_access') and getattr(cls, '_sso_credentials_access')
+
+
 class ConnectorSecretsForm(BaseModel):
     documentation_md: str = Field(description='This field contains documentation as a md string')
     secrets_schema: dict = Field(description='The schema for the configuration form')

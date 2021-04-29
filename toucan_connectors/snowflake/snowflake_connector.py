@@ -2,7 +2,7 @@ from contextlib import suppress
 from datetime import datetime
 from enum import Enum
 from os import path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import jwt
 import pandas as pd
@@ -83,6 +83,11 @@ class SnowflakeConnector(ToucanConnector):
     """
     Import data from Snowflake data warehouse.
     """
+
+    _sso_credentials_access: bool = True
+
+    sso_credentials_keeper: Any = None
+    user_tokens_keeper: Any = None
 
     data_source_model: SnowflakeDataSource
 
