@@ -187,7 +187,7 @@ def test_spreadsheet_without_sheet(mocker, con, ds_without_sheet):
     )
     assert (
         fetch_mock.call_args_list[1][0][0]
-        == 'https://sheets.googleapis.com/v4/spreadsheets/1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU/values/Foo?valueRenderOption=UNFORMATTED_VALUE&DateTimeRenderOption=FORMATTED_STRING'
+        == 'https://sheets.googleapis.com/v4/spreadsheets/1SMnhnmBm-Tup3SfhS03McCf6S4pS2xqjI6CAXSSBpHU/values/Foo?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING'
     )
 
     assert df.shape == (2, 2)
