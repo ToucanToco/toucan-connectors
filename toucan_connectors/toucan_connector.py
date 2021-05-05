@@ -215,8 +215,8 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     """
 
     name: str = Field(...)
-    retry_policy: Optional[RetryPolicy] = Field(RetryPolicy())
-    _retry_on: Iterable[Type[BaseException]] = Field(())
+    retry_policy: Optional[RetryPolicy] = RetryPolicy()
+    _retry_on: Iterable[Type[BaseException]] = ()
     type: str = Field(None)
     secrets_storage_version = Field('1', hidden=True)
 
