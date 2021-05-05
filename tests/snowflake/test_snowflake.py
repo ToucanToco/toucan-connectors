@@ -1,4 +1,5 @@
 import copy
+import json
 from datetime import datetime, timedelta
 from unittest.mock import call
 
@@ -457,6 +458,25 @@ def test_oauth_refresh_token(mocker):
 
     assert req_mock.call_count == 1
     assert sf.oauth_token == req_mock.return_value.json()['access_token']
+
+
+def test_schema_fields_order():
+    schema_props_keys = list(json.loads(SnowflakeConnector.schema_json())['properties'].keys())
+    assert schema_props_keys[0] == 'type'
+    assert schema_props_keys[1] == 'name'
+    assert schema_props_keys[2] == 'account'
+    assert schema_props_keys[3] == 'authentication_method'
+    assert schema_props_keys[4] == 'user'
+    assert schema_props_keys[5] == 'password'
+    assert schema_props_keys[6] == 'oauth_token'
+    assert schema_props_keys[7] == 'oauth_args'
+    assert schema_props_keys[8] == 'role'
+    assert schema_props_keys[9] == 'default_warehouse'
+    assert schema_props_keys[10] == 'ocsp_response_cache_filename'
+    assert schema_props_keys[11] == 'retry_policy'
+    assert schema_props_keys[12] == 'secrets_storage_version'
+    assert schema_props_keys[13] == 'sso_credentials_keeper'
+    assert schema_props_keys[14] == 'user_tokens_keeper'
 
 
 def test_oauth_args_endpoint_not_200(mocker):

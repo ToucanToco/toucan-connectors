@@ -142,7 +142,6 @@ class SnowflakeConnector(ToucanConnector):
                 'oauth_args',
                 'role',
                 'default_warehouse',
-                'role',
                 'ocsp_response_cache_filename',
                 'retry_policy',
                 'secrets_storage_version',
