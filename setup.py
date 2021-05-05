@@ -2,53 +2,53 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
-auth_deps = ['oauthlib', 'requests_oauthlib']
-bearer_deps = ['bearer']
+auth_deps = ['oauthlib==3.1.0', 'requests_oauthlib==1.3.0']
+bearer_deps = ['bearer==3.1.0']
 
 extras_require = {
-    'adobe': ['adobe_analytics'],
+    'adobe': ['adobe_analytics==1.2.3'],
     'aircall': bearer_deps,
-    'azure_mssql': ['pyodbc>=3'],
-    'clickhouse': ['clickhouse_driver'],
-    'dataiku': ['dataiku-api-client'],
-    'elasticsearch': ['elasticsearch'],
-    'facebook': ['facebook-sdk'],
-    'github': ['python_graphql_client'],
-    'google_analytics': ['google-api-python-client', 'oauth2client'],
-    'google_adwords': ['googleads'],
-    'google_big_query': ['pandas_gbq'],
-    'google_cloud_mysql': ['PyMySQL>=0.8.0'],
-    'google_my_business': ['google-api-python-client>=1.7.5'],
+    'azure_mssql': ['pyodbc==4.0.30'],
+    'clickhouse': ['clickhouse_driver==0.2.0'],  #
+    'dataiku': ['dataiku-api-client==8.0.0'],
+    'elasticsearch': ['elasticsearch==7.12.0'],
+    'facebook': ['facebook-sdk==3.1.0'],
+    'github': ['python_graphql_client==0.4.3'],  #
+    'google_analytics': ['google-api-python-client==2.1.0', 'oauth2client==4.1.3'],
+    'google_adwords': ['googleads==27.0.0'],
+    'google_big_query': ['pandas_gbq==0.15.0'],
+    'google_cloud_mysql': ['PyMySQL==1.0.2'],
+    'google_my_business': ['google-api-python-client==2.1.0'],
     'google_sheets': bearer_deps,
-    'google_spreadsheet': ['gspread>=3', 'oauth2client'],
-    'hive': ['pyhive[hive]'],
-    'http_api': auth_deps + ['xmltodict'],
+    'google_spreadsheet': ['gspread==3.7.0', 'oauth2client==4.1.3'],
+    'hive': ['pyhive[hive]==0.6.3'],
+    'http_api': auth_deps + ['xmltodict==0.12.0'],  #
     'lightspeed': bearer_deps,
-    'mongo': ['pymongo>=3.6.1'],
-    'mssql': ['pyodbc>=3'],
-    'mysql': ['PyMySQL>=0.8.0'],
-    'odata': auth_deps + ['tctc_odata'],
-    'odbc': ['pyodbc>=3'],
-    'oracle_sql': ['cx_Oracle>=6.2.1'],
-    'postgres': ['psycopg2>=2.7.4'],
-    'ROK': ['requests', 'pyjwt', 'simplejson'],
-    'sap_hana': ['pyhdb>=0.3.4'],
-    'soap': ['zeep', 'lxml==4.2.5'],
+    'mongo': ['pymongo==3.11.3'],
+    'mssql': ['pyodbc==4.0.30'],
+    'mysql': ['PyMySQL==1.0.2'],
+    'odata': auth_deps + ['tctc_odata==0.3'],
+    'odbc': ['pyodbc==4.0.30'],
+    'oracle_sql': ['cx_Oracle==8.1.0'],
+    'postgres': ['psycopg2==2.8.6'],  #
+    'ROK': ['requests==2.23.0', 'pyjwt==2.0.1', 'simplejson==3.17.2'],
+    'sap_hana': ['pyhdb==0.3.4'],
+    'soap': ['zeep==4.0.0', 'lxml==4.2.5'],
     'snowflake': ['snowflake-connector-python==2.4.1'],
-    'toucan_toco': ['toucan_client'],
+    'toucan_toco': ['toucan_client==1.0.1'],
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
 install_requires = [
-    'authlib',
-    'aiohttp<3.7.0',
+    'authlib==0.15.3',  #
+    'aiohttp==3.6.3',
     'cached_property',
-    'jinja2',
-    'pydantic',
-    'pyjq',
-    'requests<2.24.0',
-    'tenacity',
-    'toucan_data_sdk',
+    'jinja2==2.11.3',
+    'pydantic==1.8.1',
+    'pyjq==2.5.1',
+    'requests==2.23.0',
+    'tenacity==7.0.0',
+    'toucan_data_sdk==7.4.2',
     'typing-extensions; python_version < "3.8"',
 ]
 
