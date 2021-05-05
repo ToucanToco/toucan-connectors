@@ -2,7 +2,7 @@ from contextlib import suppress
 from datetime import datetime
 from enum import Enum
 from os import path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
 import jwt
 import pandas as pd
@@ -91,23 +91,27 @@ class SnowflakeConnector(ToucanConnector):
 
     data_source_model: SnowflakeDataSource
 
-    authentication_method: AuthenticationMethod = Field(
-        None,
-        title='Authentication Method',
-        description='The authentication mechanism that will be used to connect to your snowflake data source',
-    )
-
-    user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(None, description='Your login password')
-    oauth_token: str = Field(None, description='Your oauth token')
-    oauth_args: dict = Field(None, description='Named arguments for an OIDC auth')
     account: str = Field(
         ...,
         description='The full name of your Snowflake account. '
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
+        placeholder='your_account_name.region_id.cloud_platform',
     )
+
+    authentication_method: AuthenticationMethod = Field(
+        AuthenticationMethod.PLAIN.value,
+        title='Authentication Method',
+        description='The authentication mechanism that will be used to connect to your snowflake data source',
+        checkbox=False,
+    )
+
+    user: str = Field(..., description='Your login username')
+    password: SecretStr = Field(None, description='Your login password')
+    oauth_token: str = Field(None, description='Your oauth token')
+    oauth_args: dict = Field(None, description='Named arguments for an OIDC auth')
+
     role: str = Field(
         None,
         description='The user role that you want to connect with. '
@@ -115,7 +119,7 @@ class SnowflakeConnector(ToucanConnector):
     )
 
     default_warehouse: str = Field(
-        ..., description='The default warehouse that shall be used for any data source'
+        None, description='The default warehouse that shall be used for any data source'
     )
     ocsp_response_cache_filename: Path = Field(
         None,
@@ -123,6 +127,30 @@ class SnowflakeConnector(ToucanConnector):
         description='The path of the '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses" target="_blank">OCSP cache file</a>',
     )
+
+    class Config:
+        @staticmethod
+        def schema_extra(schema: Dict[str, Any], mode: Type['SnowflakeConnector']) -> None:
+            ordered_keys = [
+                'type',
+                'name',
+                'account',
+                'authentication_method',
+                'user',
+                'password',
+                'oauth_token',
+                'oauth_args',
+                'role',
+                'default_warehouse',
+                'role',
+                'ocsp_response_cache_filename',
+                'retry_policy',
+                'secrets_storage_version',
+                'sso_credentials_keeper',
+                'user_tokens_keeper',
+            ]
+            schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
+            print(schema)
 
     @staticmethod
     def _get_status_details(index: int, status: Optional[bool]):

@@ -214,16 +214,17 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     the `_retry_on` class attribute in your concrete connector class.
     """
 
-    name: str
-    retry_policy: Optional[RetryPolicy] = RetryPolicy()
-    _retry_on: Iterable[Type[BaseException]] = ()
-    type: str = None
-    secrets_storage_version = '1'
+    name: str = Field(...)
+    retry_policy: Optional[RetryPolicy] = Field(RetryPolicy())
+    _retry_on: Iterable[Type[BaseException]] = Field(())
+    type: str = Field(None)
+    secrets_storage_version = Field('1', hidden=True)
 
     class Config:
         extra = 'forbid'
         validate_assignment = True
 
+    @classmethod
     def __init_subclass__(cls):
         try:
             cls.data_source_model = cls.__fields__.pop('data_source_model').type_
