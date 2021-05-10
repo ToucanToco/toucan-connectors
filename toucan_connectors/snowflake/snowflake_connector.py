@@ -74,11 +74,6 @@ class SnowflakeDataSource(ToucanDataSource):
         return res
 
 
-
-class AuthenticationMethod2:
-    value: list(AuthenticationMethod)
-
-
 class AuthenticationMethod(str, Enum):
     PLAIN: str = 'snowflake'
     OAUTH: str = 'oauth'
@@ -115,6 +110,7 @@ class SnowflakeConnector(ToucanConnector):
             }
         }
     )
+    """
     authentication_method_2: Dict = Field(
         AuthenticationMethod.PLAIN.vlaue,
         title='Authentication method new',
@@ -125,6 +121,7 @@ class SnowflakeConnector(ToucanConnector):
             }
         }
     )
+    """
 
     user: str = Field(..., description='Your login username')
     password: SecretStr = Field(None, description='Your login password')
