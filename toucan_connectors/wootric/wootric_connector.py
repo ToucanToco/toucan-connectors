@@ -45,9 +45,7 @@ def fetch_wootric_data(query, props_fetched=None, batch_size=5, max_pages=30):
     - `props_fetched`: if specified, a list of properties to pick in the json documents
       returned by wootric
 
-    - `batch_size`: number of requests to batch together. i.e. if `batch_size=5`, then the
-      API will be queried by batches of 5 queries until data is exhausted or `max_pages`
-      is reached.
+    - `batch_size`: number of documents fetch by request
 
     - `max_pages`: maximum number of pages to crawl.
     """
