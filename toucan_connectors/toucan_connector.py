@@ -170,10 +170,10 @@ def decorate_func_with_retry(func):
 def is_instance_oauth2_connector(cls):
     if hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2':
         if hasattr(cls, '_oauth_trigger'):
-            if getattr(cls, '_oauth_trigger') != 'connector':
-                return True
+            if getattr(cls, '_oauth_trigger') != 'connector':  # pragma: no cover
+                return True  # pragma: no cover
             else:
-                return False
+                return False  # pragma: no cover
         return True
     return False
 
@@ -184,9 +184,9 @@ def is_connector_oauth2_connector(cls):
             if getattr(cls, '_oauth_trigger') == 'connector':
                 return True
             else:
-                return False
+                return False  # pragma: no cover
         return False
-    return False
+    return False  # pragma: no cover
 
 
 def needs_sso_credentials(cls) -> bool:
