@@ -7,6 +7,7 @@ from typing import List, Optional
 import pandas as pd
 import requests
 from aiohttp import ClientSession
+from pydantic import Field
 
 from toucan_connectors.common import get_loop
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -51,18 +52,13 @@ def fetch_wootric_data(query, props_fetched=None, batch_size=5, max_pages=30):
     - `max_pages`: maximum number of pages to crawl.
     """
     all_data = []
-    for page in range(1, max_pages + 1, batch_size):
-        lastpage = min(page + batch_size, max_pages + 1)
-        urls = [f'{query}&page={pagenum}' for pagenum in range(page, lastpage)]
-        responses = batch_fetch(urls)
-        data = chain.from_iterable(responses)
-        if props_fetched is None:
-            all_data.extend(data)
-        else:
-            all_data.extend([{prop: d[prop] for prop in props_fetched} for d in data])
-        # last response is empty, it means that wootric doesn't have any data left
-        if not responses[-1]:
-            break
+    urls = [f'{query}&page={pagenum}&per_page={batch_size}' for pagenum in range(1, max_pages + 1)]
+    responses = batch_fetch(urls)
+    data = chain.from_iterable(responses)
+    if props_fetched is None:
+        all_data.extend(data)
+    else:
+        all_data.extend([{prop: d[prop] for prop in props_fetched} for d in data])
     return all_data
 
 
@@ -99,8 +95,10 @@ def wootric_url(route):
 class WootricDataSource(ToucanDataSource):
     query: str
     properties: Optional[List[str]] = None
-    batch_size: int = 5
-    max_pages: int = 30
+    batch_size: int = Field(
+        5, description="Number of records returned on each page, max 50", ge=1, lte=50
+    )
+    max_pages: int = Field(10, description="Number of returned page, max 30", ge=1, lte=30)
 
 
 class WootricConnector(ToucanConnector):
@@ -130,6 +128,9 @@ class WootricConnector(ToucanConnector):
 
     def _retrieve_data(self, data_source: WootricDataSource) -> pd.DataFrame:
         """Return the concatenated data for all pages."""
+        print(f'data_source {data_source}')
+        print(f'batch_size: {data_source.batch_size}')
+        print(f'max_pages: {data_source.max_pages}')
         baseroute = wootric_url(f'{self.api_version}/{data_source.query}')
         query = f'{baseroute}?access_token={access_token(self)}'
         all_data = fetch_wootric_data(
