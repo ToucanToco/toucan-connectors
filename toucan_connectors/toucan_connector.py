@@ -167,8 +167,26 @@ def decorate_func_with_retry(func):
     return get_func_and_retry
 
 
-def is_oauth2_connector(cls):
-    return hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2'
+def is_instance_oauth2_connector(cls):
+    if hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2':
+        if hasattr(cls, '_oauth_trigger'):
+            if getattr(cls, '_oauth_trigger') != 'connector':
+                return True
+            else:
+                return False
+        return True
+    return False
+
+
+def is_connector_oauth2_connector(cls):
+    if hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2':
+        if hasattr(cls, '_oauth_trigger'):
+            if getattr(cls, '_oauth_trigger') == 'connector':
+                return True
+            else:
+                return False
+        return False
+    return False
 
 
 def needs_sso_credentials(cls) -> bool:
