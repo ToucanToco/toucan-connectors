@@ -94,9 +94,9 @@ class WootricDataSource(ToucanDataSource):
     query: str
     properties: Optional[List[str]] = None
     batch_size: int = Field(
-        5, description="Number of records returned on each page, max 50", ge=1, lte=50
+        5, description='Number of records returned on each page, max 50', ge=1, lte=50
     )
-    max_pages: int = Field(10, description="Number of returned page, max 30", ge=1, lte=30)
+    max_pages: int = Field(10, description='Number of returned page, max 30', ge=1, lte=30)
 
 
 class WootricConnector(ToucanConnector):
