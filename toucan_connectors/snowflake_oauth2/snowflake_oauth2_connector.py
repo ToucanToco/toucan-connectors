@@ -37,7 +37,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     )
     auth_flow_id: str = Field(None, **{'ui.hidden': True})
     _auth_flow = 'oauth2'
-    oauth2_credentials_location = Field('connector', **{'ui.hidden': True})
+    oauth_trigger = Field('connector', **{'ui.hidden': True})
     oauth2_version = Field('1', **{'ui.hidden': True})
     role: str = Field(..., Title='Role', description='Role to use for queries')
     account: str = Field(

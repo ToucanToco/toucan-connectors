@@ -194,6 +194,10 @@ CONNECTORS_REGISTRY = {
         'connector': 'snowflake.snowflake_connector.SnowflakeConnector',
         'logo': 'snowflake/snowflake.png',
     },
+    'SnowflakeoAuth2': {
+        'connector': 'snowflake_oauth2.snowflake_oauth2_connector.SnowflakeoAuth2Connector',
+        'logo': 'snowflake/snowflake.png',
+    },
     'Soap': {
         'connector': 'soap.soap_connector.SoapConnector',
         'label': 'Soap',
