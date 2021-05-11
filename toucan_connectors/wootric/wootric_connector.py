@@ -30,6 +30,7 @@ async def _batch_fetch(urls):
 
 def batch_fetch(urls):
     """fetch asyncrhonously `urls` in a single batch"""
+    print(urls)
     loop = get_loop()
     future = asyncio.ensure_future(_batch_fetch(urls))
     return loop.run_until_complete(future)
@@ -50,13 +51,21 @@ def fetch_wootric_data(query, props_fetched=None, batch_size=5, max_pages=30):
     - `max_pages`: maximum number of pages to crawl.
     """
     all_data = []
-    urls = [f'{query}&page={pagenum}&per_page={batch_size}' for pagenum in range(1, max_pages + 1)]
-    responses = batch_fetch(urls)
-    data = chain.from_iterable(responses)
-    if props_fetched is None:
-        all_data.extend(data)
-    else:
-        all_data.extend([{prop: d[prop] for prop in props_fetched} for d in data])
+    per_batch = 10
+    for page in range(1, max_pages + 1, per_batch):
+        page_to_crawl = max_pages if page + per_batch > max_pages else per_batch
+        urls = [
+            f'{query}&page={pagenum}&per_page={batch_size}'
+            for pagenum in range(1, page + page_to_crawl)
+        ]
+        responses = batch_fetch(urls)
+        data = chain.from_iterable(responses)
+        if props_fetched is None:
+            all_data.extend(data)
+        else:
+            all_data.extend([{prop: d[prop] for prop in props_fetched} for d in data])
+        if not responses[-1]:
+            break
     return all_data
 
 
@@ -126,9 +135,6 @@ class WootricConnector(ToucanConnector):
 
     def _retrieve_data(self, data_source: WootricDataSource) -> pd.DataFrame:
         """Return the concatenated data for all pages."""
-        print(f'data_source {data_source}')
-        print(f'batch_size: {data_source.batch_size}')
-        print(f'max_pages: {data_source.max_pages}')
         baseroute = wootric_url(f'{self.api_version}/{data_source.query}')
         query = f'{baseroute}?access_token={access_token(self)}'
         all_data = fetch_wootric_data(
