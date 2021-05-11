@@ -12,7 +12,11 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
 )
-from toucan_connectors.toucan_connector import is_oauth2_connector
+from toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector import SnowflakeoAuth2Connector
+from toucan_connectors.toucan_connector import (
+    is_connector_oauth2_connector,
+    is_instance_oauth2_connector,
+)
 
 FAKE_AUTHORIZATION_URL = 'http://localhost:4242/foobar'
 FAKE_TOKEN_URL = 'http://service/token_endpoint'
@@ -130,9 +134,14 @@ def test_should_throw_if_authflow_id_not_found(oauth2_connector, secrets_keeper)
         )
 
 
-def test_should_return_if_is_oauth2_connector(oauth2_connector):
-    assert is_oauth2_connector(GoogleSheets2Connector) is True
-    assert is_oauth2_connector(HttpAPIConnector) is False
+def test_should_return_if_is_instance_oauth2_connector(oauth2_connector):
+    assert is_instance_oauth2_connector(GoogleSheets2Connector) is True
+    assert is_instance_oauth2_connector(HttpAPIConnector) is False
+
+
+def test_should_return_if_is_connector_oauth2_connector(oauth2_connector):
+    assert is_connector_oauth2_connector(GoogleSheets2Connector) is False
+    assert is_connector_oauth2_connector(SnowflakeoAuth2Connector) is True
 
 
 def test_get_refresh_token(mocker, oauth2_connector):
