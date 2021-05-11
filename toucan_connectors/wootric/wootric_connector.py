@@ -30,7 +30,6 @@ async def _batch_fetch(urls):
 
 def batch_fetch(urls):
     """fetch asyncrhonously `urls` in a single batch"""
-    print(urls)
     loop = get_loop()
     future = asyncio.ensure_future(_batch_fetch(urls))
     return loop.run_until_complete(future)
@@ -46,7 +45,7 @@ def fetch_wootric_data(query, props_fetched=None, batch_size=5, max_pages=30):
     - `props_fetched`: if specified, a list of properties to pick in the json documents
       returned by wootric
 
-    - `batch_size`: number of documents fetch by request
+    - `batch_size`: number of documents fetched by request
 
     - `max_pages`: maximum number of pages to crawl.
     """
@@ -103,9 +102,9 @@ class WootricDataSource(ToucanDataSource):
     query: str
     properties: Optional[List[str]] = None
     batch_size: int = Field(
-        5, description='Number of records returned on each page, max 50', ge=1, lte=50
+        5, title='batch size', description='Number of records returned on each page, max 50', ge=1, lte=50
     )
-    max_pages: int = Field(10, description='Number of returned page, max 30', ge=1, lte=30)
+    max_pages: int = Field(10, titile='max pages', description='Number of returned page, max 30', ge=1, lte=30)
 
 
 class WootricConnector(ToucanConnector):
