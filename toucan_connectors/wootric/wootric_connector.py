@@ -109,7 +109,7 @@ class WootricDataSource(ToucanDataSource):
         le=50,
     )
     max_pages: int = Field(
-        10, titile='max pages', description='Number of returned page, max 30', ge=1, le=30
+        10, title='max pages', description='Number of returned page, max 30', ge=1, le=30
     )
 
 
