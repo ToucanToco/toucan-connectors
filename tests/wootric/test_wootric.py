@@ -21,8 +21,8 @@ def test_fetch_data_stop_before_end():
     with aioresponses() as aiomock:
         base_query = 'https://api.wootric.com/v1/responses?access_token=x'
         for i in range(8):
-            aiomock.get(f'{base_query}&page={i}', status=200, payload=[{'page': i}])
-        data = woot.fetch_wootric_data(base_query, max_pages=6)
+            aiomock.get(f'{base_query}&page={i}&per_page=10', status=200, payload=[{'page': i}])
+        data = woot.fetch_wootric_data(base_query, max_pages=6, batch_size=10)
         assert data == [
             {'page': 1},
             {'page': 2},
@@ -37,10 +37,10 @@ def test_fetch_data_stop_when_no_data():
     with aioresponses() as aiomock:
         base_query = 'https://api.wootric.com/v1/responses?access_token=x'
         for i in range(8):
-            aiomock.get(f'{base_query}&page={i}', status=200, payload=[{'page': i}])
+            aiomock.get(f'{base_query}&page={i}&per_page=10', status=200, payload=[{'page': i}])
         for i in range(8, 11):
-            aiomock.get(f'{base_query}&page={i}', status=200, payload=[])
-        data = woot.fetch_wootric_data(base_query)
+            aiomock.get(f'{base_query}&page={i}&per_page=10', status=200, payload=[])
+        data = woot.fetch_wootric_data(base_query, batch_size=10, max_pages=13)
         assert data == [
             {'page': 1},
             {'page': 2},
@@ -53,32 +53,35 @@ def test_fetch_data_stop_when_no_data():
 
 
 def test_fetch_data_custom_batch_size(mocker):
+    max_pages = 3
     with aioresponses() as aiomock:
         base_query = 'https://api.wootric.com/v1/responses?access_token=x'
         for i in range(8):
-            aiomock.get(f'{base_query}&page={i}', status=200, payload=[{'page': i}])
+            aiomock.get(f'{base_query}&page={i}&per_page=10', status=200, payload=[{'page': i}])
         for i in range(8, 11):
-            aiomock.get(f'{base_query}&page={i}', status=200, payload=[])
+            aiomock.get(f'{base_query}&page={i}&per_page=10', status=200, payload=[])
         mocker.spy(woot, 'batch_fetch')
-        data = woot.fetch_wootric_data(base_query, batch_size=3)
+        data = woot.fetch_wootric_data(base_query, max_pages=max_pages, batch_size=10)
         assert data == [
             {'page': 1},
             {'page': 2},
             {'page': 3},
-            {'page': 4},
-            {'page': 5},
-            {'page': 6},
-            {'page': 7},
         ]
-        assert woot.batch_fetch.call_count == 3
+        assert woot.batch_fetch.call_count == 1
 
 
 def test_fetch_data_filter_props():
     with aioresponses() as aiomock:
         base_query = 'https://api.wootric.com/v1/responses?access_token=x'
         for i in range(8):
-            aiomock.get(f'{base_query}&page={i}', status=200, payload=[{'page': i, 'x': 1, 'y': 2}])
-        data = woot.fetch_wootric_data(base_query, props_fetched=('page', 'y'), max_pages=6)
+            aiomock.get(
+                f'{base_query}&page={i}&per_page=10',
+                status=200,
+                payload=[{'page': i, 'x': 1, 'y': 2}],
+            )
+        data = woot.fetch_wootric_data(
+            base_query, props_fetched=('page', 'y'), max_pages=6, batch_size=10
+        )
         assert data == [
             {'page': 1, 'y': 2},
             {'page': 2, 'y': 2},
@@ -96,8 +99,8 @@ def test_wootric_get_df(empty_token_cache):
         domain='test',
         query='responses',
         properties=['page', 'y'],
-        batch_size=3,
-        max_pages=10,
+        batch_size=10,
+        max_pages=3,
     )
     connector = woot.WootricConnector(
         name='wootric', type='wootric', client_id='cid', client_secret='cs'
@@ -110,20 +113,20 @@ def test_wootric_get_df(empty_token_cache):
     with aioresponses() as aiomock:
         base_query = 'https://api.wootric.com/v1/responses?access_token=x'
         for i in range(8):
-            aiomock.get(f'{base_query}&page={i}', status=200, payload=[{'page': i, 'x': 1, 'y': 2}])
+            aiomock.get(
+                f'{base_query}&page={i}&per_page=10',
+                status=200,
+                payload=[{'page': i, 'x': 1, 'y': 2}],
+            )
         for i in range(8, 11):
-            aiomock.get(f'{base_query}&page={i}', status=200, payload=[])
+            aiomock.get(f'{base_query}&page={i}&per_page=10', status=200, payload=[])
         df = connector.get_df(datasource)
-    assert df.shape == (7, 2)
+    assert df.shape == (3, 2)
     assert set(df.columns) == {'page', 'y'}
     assert df[['page', 'y']].values.tolist() == [
         [1, 2],
         [2, 2],
         [3, 2],
-        [4, 2],
-        [5, 2],
-        [6, 2],
-        [7, 2],
     ]
 
 
