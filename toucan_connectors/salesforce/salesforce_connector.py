@@ -50,6 +50,8 @@ class SalesforceConnector(ToucanConnector):
         title='instance url',
         description='Baseroute URL of the salesforces instance to query (without the trailing slash)',
     )
+    _oauth_trigger = 'instance'
+    oauth2_version = Field('1', **{'ui.hidden': True})
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:

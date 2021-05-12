@@ -81,6 +81,8 @@ class GithubDataSource(ToucanDataSource):
         title='Entities Limit',
         description='Max Number of entities such as teams and repositories to extract',
     )
+    _oauth_trigger = 'instance'
+    oauth2_version = Field('1', **{'ui.hidden': True})
 
     @classmethod
     def get_form(cls, connector: 'GithubConnector', current_config, **kwargs):

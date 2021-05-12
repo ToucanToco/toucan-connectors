@@ -20,28 +20,29 @@ class SnowflakeoAuth2DataSource(SnowflakeDataSource):
 
 class SnowflakeoAuth2Connector(ToucanConnector):
     client_id: str = Field(
-        ..., Title='Client ID', description='The client id of you Snowflake integration'
+        ..., title='Client ID', description='The client id of you Snowflake integration'
     )
     client_secret: SecretStr = Field(
-        ..., Title='Client Secret', description='The client secret of your Snowflake integration'
+        ..., title='Client Secret', description='The client secret of your Snowflake integration'
     )
     redirect_uri: str = Field(
-        None, Title='Redirect URI', description='The redirect URI called during the oauth2 flow'
+        None, title='Redirect URI', description='The redirect URI called during the oauth2 flow'
     )
     authorization_url: str = Field(
-        ..., Title='Authorization URL', description='The authorization URL', **{'ui.hidden': True}
+        ..., title='Authorization URL', description='The authorization URL', **{'ui.hidden': True}
     )
     scope: str = Field(None, Title='Scope', description='The scope the integration')
     token_url: str = Field(
-        None, Title='Token URL', description='The URL to refresh the access token'
+        None, title='Token URL', description='The URL to refresh the access token'
     )
     auth_flow_id: str = Field(None, **{'ui.hidden': True})
     _auth_flow = 'oauth2'
     _oauth_trigger = 'connector'
     oauth2_version = Field('1', **{'ui.hidden': True})
-    role: str = Field(..., Title='Role', description='Role to use for queries')
+    role: str = Field(..., title='Role', description='Role to use for queries')
     account: str = Field(
         ...,
+        title='Account',
         description='The full name of your Snowflake account. '
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
