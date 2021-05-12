@@ -178,6 +178,8 @@ class AircallConnector(ToucanConnector):
     provided_token: Optional[str]
     auth_flow_id: Optional[str]
     data_source_model: AircallDataSource
+    _oauth_trigger = 'instance'
+    oauth2_version = Field('1', **{'ui.hidden': True})
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
