@@ -218,9 +218,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     retry_policy: Optional[RetryPolicy] = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
     type: str = Field(None)
-    secrets_storage_version = Field('1', **{
-        'ui.hidden': True
-    })
+    secrets_storage_version = Field('1', **{'ui.hidden': True})
 
     class Config:
         extra = 'forbid'

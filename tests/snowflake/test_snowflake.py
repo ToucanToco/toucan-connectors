@@ -100,7 +100,6 @@ def test_snowflake(mocker):
         database='test_database',
         warehouse='test_warehouse',
         authenticator='snowflake',
-        ocsp_response_cache_filename=None,
         application='ToucanToco',
         role=None,
     )
@@ -121,7 +120,6 @@ def test_snowflake_custom_role(mocker):
         database='test_database',
         warehouse='test_warehouse',
         authenticator='snowflake',
-        ocsp_response_cache_filename=None,
         application='ToucanToco',
         role='TEST',
     )
@@ -226,7 +224,6 @@ def test_snowflake_data_source_default_warehouse(mocker):
         account='test_account',
         database='db',
         warehouse='default_wh',
-        ocsp_response_cache_filename=None,
         authenticator='snowflake',
         application='ToucanToco',
         role=None,
@@ -247,7 +244,6 @@ def test_snowflake_oauth_auth(mocker):
         database='test_database',
         warehouse='test_warehouse',
         token=sc_oauth.oauth_token,
-        ocsp_response_cache_filename=None,
         application='ToucanToco',
         role=None,
     )
@@ -261,11 +257,10 @@ def test_snowflake_plain_auth(mocker):
     snow_mock.assert_called_once_with(
         user='test_user',
         account='test_account',
-        password='test_password',
         authenticator=AuthenticationMethod.PLAIN,
+        password='test_password',
         database='test_database',
         warehouse='test_warehouse',
-        ocsp_response_cache_filename=None,
         application='ToucanToco',
         role=None,
     )
@@ -357,7 +352,12 @@ def test_snowflake_execute_other_query(mocker):
     cursor_mock = snow_mock.return_value.cursor.return_value.execute.return_value
 
     connector = SnowflakeConnector(
-        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
+        name='test',
+        account='test',
+        authentication_method='snowflake',
+        user='test',
+        password='test',
+        default_warehouse='default_wh',
     )
 
     data_source = SnowflakeDataSource(
@@ -389,7 +389,6 @@ def test_missing_cache_file():
         account='',
         name='',
         default_warehouse='bleh',
-        ocsp_response_cache_filename=__file__,
     )
 
 
@@ -462,9 +461,22 @@ def test_oauth_refresh_token(mocker):
 
 def test_schema_fields_order():
     schema_props_keys = list(json.loads(SnowflakeConnector.schema_json())['properties'].keys())
-    ordered_keys = ['type', 'name', 'account', 'authentication_method', 'user', 'password', 'oauth_token', 'oauth_args',
-                    'role', 'default_warehouse', 'ocsp_response_cache_filename', 'retry_policy',
-                    'secrets_storage_version', 'sso_credentials_keeper', 'user_tokens_keeper']
+    ordered_keys = [
+        'type',
+        'name',
+        'account',
+        'authentication_method',
+        'user',
+        'password',
+        'oauth_token',
+        'oauth_args',
+        'role',
+        'default_warehouse',
+        'retry_policy',
+        'secrets_storage_version',
+        'sso_credentials_keeper',
+        'user_tokens_keeper',
+    ]
     assert schema_props_keys == ordered_keys
 
 

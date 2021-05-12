@@ -94,9 +94,9 @@ class SnowflakeConnector(ToucanConnector):
     account: str = Field(
         ...,
         description='The full name of your Snowflake account. '
-                    'It might require the region and cloud platform where your account is located, '
-                    'in the form of: "your_account_name.region_id.cloud_platform". See more details '
-                    '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
+        'It might require the region and cloud platform where your account is located, '
+        'in the form of: "your_account_name.region_id.cloud_platform". See more details '
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
         placeholder='your_account_name.region_id.cloud_platform',
     )
 
@@ -104,24 +104,8 @@ class SnowflakeConnector(ToucanConnector):
         AuthenticationMethod.PLAIN.value,
         title='Authentication Method',
         description='The authentication mechanism that will be used to connect to your snowflake data source',
-        **{
-            'ui': {
-                'checkbox': False
-            }
-        }
+        **{'ui': {'checkbox': False}},
     )
-    """
-    authentication_method_2: Dict = Field(
-        AuthenticationMethod.PLAIN.vlaue,
-        title='Authentication method new',
-        description='Test authentication method new',
-        **{
-            'ui': {
-                'checkbox': False
-            }
-        }
-    )
-    """
 
     user: str = Field(..., description='Your login username')
     password: SecretStr = Field(None, description='Your login password')
@@ -131,22 +115,16 @@ class SnowflakeConnector(ToucanConnector):
     role: str = Field(
         None,
         description='The user role that you want to connect with. '
-                    'See more details <a href="https://docs.snowflake.com/en/user-guide/admin-user-management.html#user-roles" target="_blank">here</a>.',
+        'See more details <a href="https://docs.snowflake.com/en/user-guide/admin-user-management.html#user-roles" target="_blank">here</a>.',
     )
 
     default_warehouse: str = Field(
         None, description='The default warehouse that shall be used for any data source'
     )
-    ocsp_response_cache_filename: Path = Field(
-        None,
-        title='OCSP response cache filename',
-        description='The path of the '
-                    '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-example.html#caching-ocsp-responses" target="_blank">OCSP cache file</a>',
-    )
 
     class Config:
         @staticmethod
-        def schema_extra(schema: Dict[str, Any], mode: Type['SnowflakeConnector']) -> None:
+        def schema_extra(schema: Dict[str, Any], model: Type['SnowflakeConnector']) -> None:
             ordered_keys = [
                 'type',
                 'name',
@@ -158,7 +136,6 @@ class SnowflakeConnector(ToucanConnector):
                 'oauth_args',
                 'role',
                 'default_warehouse',
-                'ocsp_response_cache_filename',
                 'retry_policy',
                 'secrets_storage_version',
                 'sso_credentials_keeper',
@@ -327,9 +304,7 @@ class SnowflakeConnector(ToucanConnector):
             warehouse = self.default_warehouse
 
         connection = self.connect(
-            database=Template(data_source.database).render(),
-            warehouse=Template(warehouse).render(),
-            ocsp_response_cache_filename=self.ocsp_response_cache_filename,
+            database=Template(data_source.database).render(), warehouse=Template(warehouse).render()
         )
         cursor = connection.cursor(DictCursor)
 
