@@ -10,7 +10,7 @@ import requests
 import snowflake.connector
 from jinja2 import Template
 from pydantic import Field, SecretStr, constr, create_model
-from snowflake.connector import DictCursor
+from snowflake.connector import DictCursor, ProgrammingError
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -43,6 +43,8 @@ class SnowflakeConnectorWarehouseDoesNotExists(Exception):
 class SnowflakeDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
     warehouse: str = Field(None, description='The name of the warehouse you want to query')
+    query_timeout: float = Field(10.0, description='time, in second, before the query timeout')
+
     query: constr(min_length=1) = Field(
         ..., description='You can write your SQL query here', widget='sql'
     )
@@ -253,7 +255,7 @@ class SnowflakeConnector(ToucanConnector):
                 if 'name' in warehouse
             ]
 
-    def _execute_query(self, cursor, query: str, query_parameters: Dict):
+    def _execute_query(self, cursor, query: str, query_parameters: Dict, query_timeout):
         """Executes `query` against Snowflake's client and retrieves the
         results.
 
@@ -267,7 +269,19 @@ class SnowflakeConnector(ToucanConnector):
         # Prevent error with dict and array values in the parameter object
         query = convert_to_printf_templating_style(query)
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
-        query_res = cursor.execute(converted_query, ordered_values)
+
+        # execute query with timeout.
+        # cf https://docs.snowflake.com/en/user-guide/python-connector-example.html
+        cursor.execute("begin")
+        try:
+            query_res = cursor.execute(converted_query, ordered_values, timeout=query_timeout)
+        except ProgrammingError as e:
+            cursor.execute('rollback')
+            if e.errno == 604:
+                raise TimeoutError(e)
+
+
+        cursor.execute('commit')
 
         # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
         # `fetch_pandas_all` will only work with `SELECT` queries, if the
@@ -284,15 +298,12 @@ class SnowflakeConnector(ToucanConnector):
         if self.default_warehouse and not warehouse:
             warehouse = self.default_warehouse
 
-        connection = self.connect(
+        with self.connect(
             database=Template(data_source.database).render(),
             warehouse=Template(warehouse).render(),
             ocsp_response_cache_filename=self.ocsp_response_cache_filename,
-        )
-        cursor = connection.cursor(DictCursor)
-
-        df = self._execute_query(cursor, data_source.query, data_source.parameters)
-
-        connection.close()
+        ) as connection:
+            cursor = connection.cursor(DictCursor)
+            df = self._execute_query(cursor, data_source.query, data_source.parameters, data_source.query_timeout)
 
         return df
