@@ -10,7 +10,7 @@ extras_require = {
     'aircall': bearer_deps,
     'azure_mssql': ['pyodbc==4.0.30'],
     'clickhouse': ['clickhouse_driver==0.2.0'],  #
-    # 'dataiku': ['dataiku-api-client==8.0.0'],
+    'dataiku': ['dataiku-api-client==8.0.0'],
     'elasticsearch': ['elasticsearch==7.12.0'],
     'facebook': ['facebook-sdk==3.1.0'],
     'github': ['python_graphql_client==0.4.3'],  #
