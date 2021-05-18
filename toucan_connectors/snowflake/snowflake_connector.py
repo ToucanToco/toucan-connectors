@@ -286,12 +286,10 @@ class SnowflakeConnector(ToucanConnector):
             if e.errno == 604:
                 raise TimeoutError(e)
 
-
         # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
         # `fetch_pandas_all` will only work with `SELECT` queries, if the
         # query does not contains 'SELECT' then we're defaulting to the usual
         # `fetchall`.
-
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         warehouse = data_source.warehouse
@@ -305,6 +303,8 @@ class SnowflakeConnector(ToucanConnector):
             ocsp_response_cache_filename=self.ocsp_response_cache_filename,
         ) as connection:
             cursor = connection.cursor(DictCursor)
-            df = self._execute_query(cursor, data_source.query, data_source.parameters, data_source.query_timeout)
+            df = self._execute_query(
+                cursor, data_source.query, data_source.parameters, data_source.query_timeout
+            )
 
         return df

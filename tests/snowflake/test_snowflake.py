@@ -59,6 +59,19 @@ def snowflake_connector():
 
 
 @pytest.fixture
+def snowflake_datasource():
+    return SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='test_database',
+        warehouse='test_warehouse',
+        query='test_query with %(foo)s and %(pokemon)s',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
+        query_timeout=5.0,
+    )
+
+
+@pytest.fixture
 def snowflake_connection_mock(mocker):
     return mocker.patch('snowflake.connector.connect')
 
@@ -567,3 +580,12 @@ def test_get_status_account_nok(
 def test_needs_sso_credentials():
     assert needs_sso_credentials(SnowflakeConnector)
     assert not needs_sso_credentials(PostgresConnector)
+
+
+def test_timeout(mocker, snowflake_connector, snowflake_datasource):
+    connect_mock = mocker.patch('snowflake.connector.connect')
+    cursor_mock = connect_mock.return_value.__enter__.return_value.cursor.return_value.execute
+
+    snowflake_connector.get_df(snowflake_datasource)
+
+    assert cursor_mock.call_args_list[1].kwargs['timeout'] == snowflake_datasource.query_timeout
