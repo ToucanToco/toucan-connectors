@@ -178,6 +178,10 @@ def get_oauth2_configuration(cls):
     return oauth2_enabled, oauth2_credentials_location
 
 
+def is_oauth2_connector(cls) -> bool:
+    return get_oauth2_configuration(cls)[0]
+
+
 def needs_sso_credentials(cls) -> bool:
     return hasattr(cls, '_sso_credentials_access') and getattr(cls, '_sso_credentials_access')
 
