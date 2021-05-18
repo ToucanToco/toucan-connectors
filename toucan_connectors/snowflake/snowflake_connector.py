@@ -272,25 +272,26 @@ class SnowflakeConnector(ToucanConnector):
 
         # execute query with timeout.
         # cf https://docs.snowflake.com/en/user-guide/python-connector-example.html
-        cursor.execute("begin")
         try:
+            cursor.execute('begin')
             query_res = cursor.execute(converted_query, ordered_values, timeout=query_timeout)
+            if 'SELECT' in query.upper():
+                values = query_res.fetch_pandas_all()
+            else:
+                values = pd.DataFrame.from_dict(query_res.fetchall())
+            cursor.execute('commit')
+            return values
         except ProgrammingError as e:
             cursor.execute('rollback')
             if e.errno == 604:
                 raise TimeoutError(e)
 
 
-        cursor.execute('commit')
-
         # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
         # `fetch_pandas_all` will only work with `SELECT` queries, if the
         # query does not contains 'SELECT' then we're defaulting to the usual
         # `fetchall`.
-        if 'SELECT' in query.upper():
-            return query_res.fetch_pandas_all()
-        else:
-            return pd.DataFrame.from_dict(query_res.fetchall())
+
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         warehouse = data_source.warehouse
