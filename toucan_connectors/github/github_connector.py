@@ -99,6 +99,7 @@ class GithubConnector(ToucanConnector):
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[str]
     data_source_model: GithubDataSource
+    _oauth_trigger = 'instance'
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:

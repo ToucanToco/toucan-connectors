@@ -178,8 +178,9 @@ def get_oauth2_configuration(cls):
     return oauth2_enabled, oauth2_credentials_location
 
 
+# Deprecated
 def is_oauth2_connector(cls) -> bool:
-    return get_oauth2_configuration(cls)[0]
+    return get_oauth2_configuration(cls)[0]  # pragma: no cover
 
 
 def needs_sso_credentials(cls) -> bool:
