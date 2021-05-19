@@ -10,7 +10,7 @@ import requests
 import snowflake.connector
 from jinja2 import Template
 from pydantic import Field, SecretStr, constr, create_model
-from snowflake.connector import DictCursor, ProgrammingError
+from snowflake.connector import DictCursor
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -274,20 +274,15 @@ class SnowflakeConnector(ToucanConnector):
 
         # execute query with timeout.
         # cf https://docs.snowflake.com/en/user-guide/python-connector-example.html
-        try:
-            query_res = cursor.execute(converted_query, ordered_values)
-            if 'SELECT' in query.upper():
-                values = query_res.fetch_pandas_all()
+        query_res = cursor.execute(converted_query, ordered_values)
+        if 'SELECT' in query.upper():
+            values = query_res.fetch_pandas_all()
+        else:
+            if max_rows is None:
+                values = pd.DataFrame.from_dict(query_res.fetchall())
             else:
-                if max_rows is None:
-                    values = pd.DataFrame.from_dict(query_res.fetchall())
-                else:
-                    values = pd.DataFrame.from_dict(query_res.fetch_many(max_rows))
-            return values
-        except ProgrammingError as e:
-            if e.errno == 604:
-                raise TimeoutError(e)
-            raise e
+                values = pd.DataFrame.from_dict(query_res.fetch_many(max_rows))
+        return values
 
         # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
         # `fetch_pandas_all` will only work with `SELECT` queries, if the
