@@ -43,7 +43,7 @@ class SnowflakeConnectorWarehouseDoesNotExists(Exception):
 class SnowflakeDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
     warehouse: str = Field(None, description='The name of the warehouse you want to query')
-    query_timeout: float = Field(10.0, description='time, in second, before the query timeout')
+    max_rows: Optional[int] = Field(None, description='maximum number of result')
 
     query: constr(min_length=1) = Field(
         ..., description='You can write your SQL query here', widget='sql'
@@ -255,7 +255,9 @@ class SnowflakeConnector(ToucanConnector):
                 if 'name' in warehouse
             ]
 
-    def _execute_query(self, cursor, query: str, query_parameters: Dict, query_timeout):
+    def _execute_query(
+        self, cursor, query: str, query_parameters: Dict, max_rows: Optional[int] = None
+    ):
         """Executes `query` against Snowflake's client and retrieves the
         results.
 
@@ -273,18 +275,19 @@ class SnowflakeConnector(ToucanConnector):
         # execute query with timeout.
         # cf https://docs.snowflake.com/en/user-guide/python-connector-example.html
         try:
-            cursor.execute('begin')
-            query_res = cursor.execute(converted_query, ordered_values, timeout=query_timeout)
+            query_res = cursor.execute(converted_query, ordered_values)
             if 'SELECT' in query.upper():
                 values = query_res.fetch_pandas_all()
             else:
-                values = pd.DataFrame.from_dict(query_res.fetchall())
-            cursor.execute('commit')
+                if max_rows is None:
+                    values = pd.DataFrame.from_dict(query_res.fetchall())
+                else:
+                    values = pd.DataFrame.from_dict(query_res.fetch_many(max_rows))
             return values
         except ProgrammingError as e:
-            cursor.execute('rollback')
             if e.errno == 604:
                 raise TimeoutError(e)
+            raise e
 
         # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
         # `fetch_pandas_all` will only work with `SELECT` queries, if the
@@ -304,7 +307,7 @@ class SnowflakeConnector(ToucanConnector):
         ) as connection:
             cursor = connection.cursor(DictCursor)
             df = self._execute_query(
-                cursor, data_source.query, data_source.parameters, data_source.query_timeout
+                cursor, data_source.query, data_source.parameters, data_source.max_rows
             )
 
         return df
