@@ -272,9 +272,11 @@ class SnowflakeConnector(ToucanConnector):
         query = convert_to_printf_templating_style(query)
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
 
-        # execute query with timeout.
-        # cf https://docs.snowflake.com/en/user-guide/python-connector-example.html
         query_res = cursor.execute(converted_query, ordered_values)
+        # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
+        # `fetch_pandas_all` will only work with `SELECT` queries, if the
+        # query does not contains 'SELECT' then we're defaulting to the usual
+        # `fetchall`.
         if 'SELECT' in query.upper():
             if max_rows is None:
                 values = query_res.fetch_pandas_all()
@@ -286,11 +288,6 @@ class SnowflakeConnector(ToucanConnector):
             else:
                 values = pd.DataFrame.from_dict(query_res.fetchmany(max_rows))
         return values
-
-        # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
-        # `fetch_pandas_all` will only work with `SELECT` queries, if the
-        # query does not contains 'SELECT' then we're defaulting to the usual
-        # `fetchall`.
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         warehouse = data_source.warehouse
