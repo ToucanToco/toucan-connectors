@@ -475,7 +475,7 @@ def test_oauth_refresh_token(mocker):
     sf._retrieve_data(sd)
 
     assert req_mock.call_count == 1
-    assert sf.oauth_token.encode('utf8') == req_mock.return_value.json()['access_token']
+    assert sf.oauth_token == req_mock.return_value.json()['access_token']
 
 
 def test_oauth_args_endpoint_not_200(mocker):
