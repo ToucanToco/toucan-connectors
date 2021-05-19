@@ -59,6 +59,19 @@ def snowflake_connector():
 
 
 @pytest.fixture
+def snowflake_datasource():
+    return SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='test_database',
+        warehouse='test_warehouse',
+        query='test_query with %(foo)s and %(pokemon)s',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
+        max_rows=10,
+    )
+
+
+@pytest.fixture
 def snowflake_connection_mock(mocker):
     return mocker.patch('snowflake.connector.connect')
 
@@ -78,7 +91,7 @@ OAUTH_ARGS = {
 
 
 def test_snowflake(mocker):
-    snock = mocker.patch('snowflake.connector.connect')
+    connect_mock = mocker.patch('snowflake.connector.connect')
 
     sc.get_df(sd)
 
@@ -86,13 +99,13 @@ def test_snowflake(mocker):
         call('test_query with ? and ?', ['bar', 'pikachu']),
     ]
 
-    mock_execute = snock.return_value.cursor.return_value.execute
+    mock_execute = connect_mock.return_value.__enter__.return_value.cursor.return_value.execute
 
     mock_execute.assert_has_calls(expected_calls)
 
     mock_execute.return_value.fetchall.assert_called_once()
 
-    snock.assert_called_once_with(
+    connect_mock.assert_called_once_with(
         user='test_user',
         password='test_password',
         account='test_account',
@@ -217,7 +230,9 @@ def test_snowflake_data_source_default_warehouse(mocker):
 
     expected_calls = [call('foo', [])]
 
-    snow_mock.return_value.cursor.return_value.execute.assert_has_calls(expected_calls)
+    snow_mock.return_value.__enter__.return_value.cursor.return_value.execute.assert_has_calls(
+        expected_calls
+    )
 
     snow_mock.assert_called_once_with(
         user='test_user',
@@ -272,7 +287,9 @@ def test_snowflake_plain_auth(mocker):
 
 def test_snowflake_execute_select_query(mocker):
     snow_mock = mocker.patch('snowflake.connector.connect')
-    cursor_mock = snow_mock.return_value.cursor.return_value.execute.return_value
+    cursor_mock = (
+        snow_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
+    )
 
     connector = SnowflakeConnector(
         name='test', user='test', password='test', account='test', default_warehouse='default_wh'
@@ -320,7 +337,7 @@ def test_snowflake_execute_select_query_with_params(mocker):
 
     connector.get_df(data_source)
 
-    snow_mock.return_value.cursor.return_value.execute.assert_called_with(
+    snow_mock.return_value.__enter__.return_value.cursor.return_value.execute.assert_called_with(
         'SELECT * FROM ?;', ['ohyeah']
     )
 
@@ -346,14 +363,16 @@ def test_snowflake_execute_select_query_with_params_jinja_syntax(mocker):
 
     connector.get_df(data_source)
 
-    snow_mock.return_value.cursor.return_value.execute.assert_called_with(
+    snow_mock.return_value.__enter__.return_value.cursor.return_value.execute.assert_called_with(
         'SELECT * FROM ?;', ['ohyeah']
     )
 
 
 def test_snowflake_execute_other_query(mocker):
     snow_mock = mocker.patch('snowflake.connector.connect')
-    cursor_mock = snow_mock.return_value.cursor.return_value.execute.return_value
+    cursor_mock = (
+        snow_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
+    )
 
     connector = SnowflakeConnector(
         name='test', user='test', password='test', account='test', default_warehouse='default_wh'
@@ -567,3 +586,44 @@ def test_get_status_account_nok(
 def test_needs_sso_credentials():
     assert needs_sso_credentials(SnowflakeConnector)
     assert not needs_sso_credentials(PostgresConnector)
+
+
+def test_timeout(mocker, snowflake_connector, snowflake_datasource):
+    connect_mock = mocker.patch('snowflake.connector.connect')
+    cursor_mock = (
+        connect_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
+    )
+
+    snowflake_connector.get_df(snowflake_datasource)
+
+    cursor_mock.fetchmany.assert_called_once()
+
+
+def test_select_max_row(mocker, snowflake_connector):
+    connect_mock = mocker.patch('snowflake.connector.connect')
+    cursor_mock = (
+        connect_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
+    )
+
+    ds = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='test_database',
+        warehouse='test_warehouse',
+        query='select * from buz',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
+        max_rows=10,
+    )
+    snowflake_connector.get_df(ds)
+
+    cursor_mock.fetchmany.assert_called_once()
+
+
+def test_max_row(mocker, snowflake_connector, snowflake_datasource):
+    connect_mock = mocker.patch('snowflake.connector.connect')
+    cursor_mock = (
+        connect_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
+    )
+    snowflake_connector.get_df(snowflake_datasource)
+
+    cursor_mock.fetchmany.assert_called_once()

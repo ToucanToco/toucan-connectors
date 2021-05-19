@@ -43,6 +43,8 @@ class SnowflakeConnectorWarehouseDoesNotExists(Exception):
 class SnowflakeDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
     warehouse: str = Field(None, description='The name of the warehouse you want to query')
+    max_rows: Optional[int] = Field(None, description='maximum number of result')
+
     query: constr(min_length=1) = Field(
         ..., description='You can write your SQL query here', widget='sql'
     )
@@ -253,7 +255,9 @@ class SnowflakeConnector(ToucanConnector):
                 if 'name' in warehouse
             ]
 
-    def _execute_query(self, cursor, query: str, query_parameters: Dict):
+    def _execute_query(
+        self, cursor, query: str, query_parameters: Dict, max_rows: Optional[int] = None
+    ):
         """Executes `query` against Snowflake's client and retrieves the
         results.
 
@@ -267,16 +271,23 @@ class SnowflakeConnector(ToucanConnector):
         # Prevent error with dict and array values in the parameter object
         query = convert_to_printf_templating_style(query)
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
-        query_res = cursor.execute(converted_query, ordered_values)
 
+        query_res = cursor.execute(converted_query, ordered_values)
         # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
         # `fetch_pandas_all` will only work with `SELECT` queries, if the
         # query does not contains 'SELECT' then we're defaulting to the usual
         # `fetchall`.
         if 'SELECT' in query.upper():
-            return query_res.fetch_pandas_all()
+            if max_rows is None:
+                values = query_res.fetch_pandas_all()
+            else:
+                values = pd.DataFrame.from_dict(query_res.fetchmany(max_rows))
         else:
-            return pd.DataFrame.from_dict(query_res.fetchall())
+            if max_rows is None:
+                values = pd.DataFrame.from_dict(query_res.fetchall())
+            else:
+                values = pd.DataFrame.from_dict(query_res.fetchmany(max_rows))
+        return values
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         warehouse = data_source.warehouse
@@ -284,15 +295,14 @@ class SnowflakeConnector(ToucanConnector):
         if self.default_warehouse and not warehouse:
             warehouse = self.default_warehouse
 
-        connection = self.connect(
+        with self.connect(
             database=Template(data_source.database).render(),
             warehouse=Template(warehouse).render(),
             ocsp_response_cache_filename=self.ocsp_response_cache_filename,
-        )
-        cursor = connection.cursor(DictCursor)
-
-        df = self._execute_query(cursor, data_source.query, data_source.parameters)
-
-        connection.close()
+        ) as connection:
+            cursor = connection.cursor(DictCursor)
+            df = self._execute_query(
+                cursor, data_source.query, data_source.parameters, data_source.max_rows
+            )
 
         return df
