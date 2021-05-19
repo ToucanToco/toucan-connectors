@@ -276,12 +276,15 @@ class SnowflakeConnector(ToucanConnector):
         # cf https://docs.snowflake.com/en/user-guide/python-connector-example.html
         query_res = cursor.execute(converted_query, ordered_values)
         if 'SELECT' in query.upper():
-            values = query_res.fetch_pandas_all()
+            if max_rows is None:
+                values = query_res.fetch_pandas_all()
+            else:
+                values = pd.DataFrame.from_dict(query_res.fetchmany(max_rows))
         else:
             if max_rows is None:
                 values = pd.DataFrame.from_dict(query_res.fetchall())
             else:
-                values = pd.DataFrame.from_dict(query_res.fetch_many(max_rows))
+                values = pd.DataFrame.from_dict(query_res.fetchmany(max_rows))
         return values
 
         # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
