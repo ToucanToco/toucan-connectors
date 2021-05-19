@@ -25,20 +25,14 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     client_secret: SecretStr = Field(
         ..., title='Client Secret', description='The client secret of your Snowflake integration'
     )
-    redirect_uri: str = Field(
-        None, title='Redirect URI', description='The redirect URI called during the oauth2 flow'
-    )
-    authorization_url: str = Field(
-        ..., title='Authorization URL', description='The authorization URL', **{'ui.hidden': True}
-    )
+    authorization_url: str = Field(None, **{'ui.hidden': True})
     scope: str = Field(None, Title='Scope', description='The scope the integration')
-    token_url: str = Field(
-        None, title='Token URL', description='The URL to refresh the access token'
-    )
+    token_url: str = Field(None, **{'ui.hidden': True})
     auth_flow_id: str = Field(None, **{'ui.hidden': True})
     _auth_flow = 'oauth2'
     _oauth_trigger = 'connector'
     oauth2_version = Field('1', **{'ui.hidden': True})
+    redirect_uri: str = Field(None, **{'ui.hidden': True})
     role: str = Field(..., title='Role', description='Role to use for queries')
     account: str = Field(
         ...,
@@ -46,12 +40,17 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         description='The full name of your Snowflake account. '
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
-        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" targte="_blank">here</a>.',
     )
     data_source_model: SnowflakeoAuth2DataSource
+    default_warehouse: str = Field(
+        ..., description='The default warehouse that shall be used for any data source'
+    )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**{k: v for k, v in kwargs.items() if k != 'secrets_keeper'})
+        self.token_url = f'https://{self.account}.snowflakecomputing.com/oauth/token-request'
+        self.authorization_url = f'https://{self.account}.snowflakecomputing.com/oauth/authorize'
         self.__dict__['_oauth2_connector'] = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=self.authorization_url,
