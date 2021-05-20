@@ -17,7 +17,12 @@ from toucan_connectors.common import (
     convert_to_printf_templating_style,
     convert_to_qmark_paramstyle,
 )
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    DataSlice,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 
 class Path(str):
@@ -308,7 +313,9 @@ class SnowflakeConnector(ToucanConnector):
                 values = pd.DataFrame.from_dict(query_res.fetchmany(max_rows))
         return values
 
-    def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
+    def _fetch_data(
+        self, data_source: SnowflakeDataSource, max_rows: Optional[int]
+    ) -> pd.DataFrame:
         warehouse = data_source.warehouse
         # Default to default warehouse if not specified in `data_source`
         if self.default_warehouse and not warehouse:
@@ -319,8 +326,21 @@ class SnowflakeConnector(ToucanConnector):
             warehouse=Template(warehouse).render(),
         ) as connection:
             cursor = connection.cursor(DictCursor)
-            df = self._execute_query(
-                cursor, data_source.query, data_source.parameters, data_source.max_rows
-            )
+            df = self._execute_query(cursor, data_source.query, data_source.parameters, max_rows)
 
         return df
+
+    def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
+        return self._fetch_data(data_source, data_source.max_rows)
+
+    def get_slice(
+        self,
+        data_source: SnowflakeDataSource,
+        permissions: Optional[dict] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
+    ) -> DataSlice:
+
+        rows_to_fetch = max(data_source.max_rows or 0, offset + limit)
+        df = self._fetch_data(data_source, rows_to_fetch)
+        return df[offset:]
