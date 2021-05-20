@@ -82,6 +82,8 @@ class GoogleAdwordsConnector(ToucanConnector):
     auth_flow_id: Optional[str]
     developer_token: str = None
     client_customer_id: str = None
+    _oauth_trigger = 'instance'
+    oauth2_version = Field('1', **{'ui.hidden': True})
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:

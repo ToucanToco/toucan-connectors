@@ -96,7 +96,8 @@ class GoogleSheets2Connector(ToucanConnector):
     data_source_model: GoogleSheets2DataSource
 
     _auth_flow = 'oauth2'
-
+    _oauth_trigger = 'instance'
+    oauth2_version = Field('1', **{'ui.hidden': True})
     auth_flow_id: Optional[str]
 
     # TODO: turn into a class property
