@@ -68,7 +68,6 @@ def snowflake_datasource():
         warehouse='test_warehouse',
         query='test_query with %(foo)s and %(pokemon)s',
         parameters={'foo': 'bar', 'pokemon': 'pikachu'},
-        max_rows=10,
     )
 
 
@@ -609,23 +608,11 @@ def test_needs_sso_credentials():
     assert not needs_sso_credentials(PostgresConnector)
 
 
-def test_timeout(mocker, snowflake_connector, snowflake_datasource):
+def test_get_slice(mocker, snowflake_connector):
     connect_mock = mocker.patch('snowflake.connector.connect')
     cursor_mock = (
         connect_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
     )
-
-    snowflake_connector.get_df(snowflake_datasource)
-
-    cursor_mock.fetchmany.assert_called_once()
-
-
-def test_select_max_row(mocker, snowflake_connector):
-    connect_mock = mocker.patch('snowflake.connector.connect')
-    cursor_mock = (
-        connect_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
-    )
-
     ds = SnowflakeDataSource(
         name='test_name',
         domain='test_domain',
@@ -633,18 +620,25 @@ def test_select_max_row(mocker, snowflake_connector):
         warehouse='test_warehouse',
         query='select * from buz',
         parameters={'foo': 'bar', 'pokemon': 'pikachu'},
-        max_rows=10,
     )
-    snowflake_connector.get_df(ds)
+    snowflake_connector.get_slice(ds, None, offset=0, limit=1)
 
-    cursor_mock.fetchmany.assert_called_once()
+    cursor_mock.fetchmany.assert_called_once_with(1)
 
 
-def test_max_row(mocker, snowflake_connector, snowflake_datasource):
+def test_get_slice_with_offset(mocker, snowflake_connector):
     connect_mock = mocker.patch('snowflake.connector.connect')
     cursor_mock = (
         connect_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
     )
-    snowflake_connector.get_df(snowflake_datasource)
+    ds = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='test_database',
+        warehouse='test_warehouse',
+        query='select * from buz',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
+    )
+    snowflake_connector.get_slice(ds, None, offset=100, limit=10)
 
-    cursor_mock.fetchmany.assert_called_once()
+    cursor_mock.fetchmany.assert_called_once_with(110)
