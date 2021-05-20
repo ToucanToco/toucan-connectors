@@ -23,7 +23,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         ..., title='Client ID', description='The client id of you Snowflake integration'
     )
     client_secret: SecretStr = Field(
-        ..., title='Client Secret', description='The client secret of your Snowflake integration'
+        '', title='Client Secret', description='The client secret of your Snowflake integration'
     )
     authorization_url: str = Field(None, **{'ui.hidden': True})
     scope: str = Field(None, Title='Scope', description='The scope the integration')
