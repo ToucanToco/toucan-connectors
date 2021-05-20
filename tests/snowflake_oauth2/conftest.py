@@ -11,11 +11,11 @@ def snowflake_oauth2_connector(secrets_keeper):
         account='acc',
         client_id='clientid',
         client_secret='clientsecret',
-        authorization_url='https://foo.bar/laputa/oauth/redirect',
         scope='all:your:data',
         token_url='https://acc.token',
         secrets_keeper=secrets_keeper,
         role='testrole',
+        default_warehouse='aqualy',
     )
 
 
