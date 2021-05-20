@@ -48,7 +48,6 @@ class SnowflakeConnectorWarehouseDoesNotExists(Exception):
 class SnowflakeDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
     warehouse: str = Field(None, description='The name of the warehouse you want to query')
-    max_rows: Optional[int] = Field(None, description='maximum number of result')
 
     query: constr(min_length=1) = Field(
         ..., description='You can write your SQL query here', widget='sql'
@@ -313,7 +312,7 @@ class SnowflakeConnector(ToucanConnector):
         return df
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
-        return self._fetch_data(data_source, data_source.max_rows)
+        return self._fetch_data(data_source, None)
 
     def get_slice(
         self,
@@ -323,6 +322,6 @@ class SnowflakeConnector(ToucanConnector):
         limit: Optional[int] = None,
     ) -> DataSlice:
 
-        rows_to_fetch = max(data_source.max_rows or 0, offset + limit)
+        rows_to_fetch = offset + limit
         df = self._fetch_data(data_source, rows_to_fetch)
         return df[offset:]
