@@ -310,7 +310,8 @@ class SnowflakeConnector(ToucanConnector):
                 values = pd.DataFrame.from_dict(query_res.fetchall())
             else:
                 values = pd.DataFrame.from_dict(query_res.fetchmany(max_rows))
-        return values
+
+            return values
 
     def _fetch_data(
         self, data_source: SnowflakeDataSource, max_rows: Optional[int]
@@ -342,4 +343,5 @@ class SnowflakeConnector(ToucanConnector):
 
         rows_to_fetch = offset + limit
         df = self._fetch_data(data_source, rows_to_fetch)
-        return df[offset:]
+
+        return DataSlice(df[offset:], len(df[offset:]))
