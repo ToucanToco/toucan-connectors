@@ -645,3 +645,21 @@ def test_get_slice(mocker, snowflake_connector):
     snowflake_connector.get_slice(ds, None, offset=0, limit=1)
 
     cursor_mock.fetchmany.assert_called_once_with(1)
+
+
+def test_get_slice_with_offset(mocker, snowflake_connector):
+    connect_mock = mocker.patch('snowflake.connector.connect')
+    cursor_mock = (
+        connect_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
+    )
+    ds = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='test_database',
+        warehouse='test_warehouse',
+        query='select * from buz',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
+    )
+    snowflake_connector.get_slice(ds, None, offset=100, limit=10)
+
+    cursor_mock.fetchmany.assert_called_once_with(110)
