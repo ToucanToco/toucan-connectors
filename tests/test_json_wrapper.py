@@ -21,7 +21,7 @@ def test_json_dumps():
 
 
 def test_json_dump():
-    with open(path_dumps, "w+") as f:
+    with open(path_dumps, 'w+') as f:
         JsonWrapper.dump(json_json, f)
     with open(path_dumps, 'r') as f:
         result = JsonWrapper.load(f)
