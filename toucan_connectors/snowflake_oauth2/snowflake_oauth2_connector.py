@@ -20,27 +20,40 @@ class SnowflakeoAuth2DataSource(SnowflakeDataSource):
 
 class SnowflakeoAuth2Connector(ToucanConnector):
     client_id: str = Field(
-        ..., title='Client ID', description='The client id of you Snowflake integration'
+        '',
+        title='Client ID',
+        description='The client id of you Snowflake integration',
+        **{'ui.required': True},
     )
     client_secret: SecretStr = Field(
-        '', title='Client Secret', description='The client secret of your Snowflake integration'
+        '',
+        title='Client Secret',
+        description='The client secret of your Snowflake integration',
+        **{'ui.required': True},
     )
     authorization_url: str = Field(None, **{'ui.hidden': True})
-    scope: str = Field(None, Title='Scope', description='The scope the integration')
+    scope: str = Field(
+        None, Title='Scope', description='The scope the integration', placeholder='refresh_token'
+    )
     token_url: str = Field(None, **{'ui.hidden': True})
     auth_flow_id: str = Field(None, **{'ui.hidden': True})
     _auth_flow = 'oauth2'
     _oauth_trigger = 'connector'
     oauth2_version = Field('1', **{'ui.hidden': True})
     redirect_uri: str = Field(None, **{'ui.hidden': True})
-    role: str = Field(..., title='Role', description='Role to use for queries')
+    role: str = Field(
+        ...,
+        title='Role',
+        description='Role to use for queries',
+        placeholder='PUBLIC',
+    )
     account: str = Field(
         ...,
         title='Account',
         description='The full name of your Snowflake account. '
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
-        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" targte="_blank">here</a>.',
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
     )
     data_source_model: SnowflakeoAuth2DataSource
     default_warehouse: str = Field(
