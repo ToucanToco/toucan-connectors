@@ -1,12 +1,13 @@
 """
 This provide a helper to test OAuth2 connectors locally
 """
-import json
 import webbrowser
 import wsgiref.simple_server
 import wsgiref.util
 from sys import path
 from typing import Any
+
+from toucan_connectors.json_wrapper import JsonWrapper
 
 
 class _RedirectWSGIApp(object):
@@ -60,13 +61,13 @@ class JsonFileSecretsKeeper:
         if not path.exists(self.filename):
             return {}
         with open(self.filename, 'r') as f:
-            return json.load(f)
+            return JsonWrapper.load(f)
 
     def save(self, key: str, value):
         values = self.load_file()
         values[key] = value
         with open(self.filename, 'w') as f:
-            json.dump(values, f)
+            JsonWrapper.dump(values, f)
 
     def load(self, key: str) -> Any:
         return self.load_file()[key]

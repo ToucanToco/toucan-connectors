@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 from datetime import datetime, timedelta
 from itertools import chain
@@ -11,6 +10,7 @@ from aiohttp import ClientSession
 from pydantic import Field
 
 from toucan_connectors.common import get_loop
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 _TOKEN_CACHE = None  # internal cache to avoid re-requesting OAUTH access_token
@@ -19,7 +19,7 @@ _TOKEN_CACHE = None  # internal cache to avoid re-requesting OAUTH access_token
 async def fetch(session, url):
     """aiohttp version of requests.get(...).json()"""
     async with session.get(url) as response:
-        return json.loads(await response.read())
+        return JsonWrapper.loads(await response.read())
 
 
 async def _batch_fetch(urls):

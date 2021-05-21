@@ -1,5 +1,4 @@
 import copy
-import json
 from datetime import datetime, timedelta
 from unittest.mock import call
 
@@ -10,6 +9,7 @@ import snowflake.connector
 from requests.models import HTTPError
 
 from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.postgres.postgresql_connector import PostgresConnector
 from toucan_connectors.snowflake import (
     AuthenticationMethod,
@@ -478,7 +478,9 @@ def test_oauth_refresh_token(mocker):
 
 
 def test_schema_fields_order():
-    schema_props_keys = list(json.loads(SnowflakeConnector.schema_json())['properties'].keys())
+    schema_props_keys = list(
+        JsonWrapper.loads(SnowflakeConnector.schema_json())['properties'].keys()
+    )
     ordered_keys = [
         'type',
         'name',

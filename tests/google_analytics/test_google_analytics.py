@@ -1,11 +1,10 @@
-import json
-
 import pytest
 
 from toucan_connectors.google_analytics.google_analytics_connector import (
     GoogleAnalyticsConnector,
     GoogleAnalyticsDataSource,
 )
+from toucan_connectors.json_wrapper import JsonWrapper
 
 
 def test_google_analytics(mocker):
@@ -35,7 +34,7 @@ def test_google_analytics(mocker):
         },
     )
 
-    fixture = json.load(open('tests/google_analytics/fixtures/reports.json'))
+    fixture = JsonWrapper.load(open('tests/google_analytics/fixtures/reports.json'))
     module = 'toucan_connectors.google_analytics.google_analytics_connector'
     mocker.patch(f'{module}.ServiceAccountCredentials.from_json_keyfile_dict')
     mocker.patch(f'{module}.build')

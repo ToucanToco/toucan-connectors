@@ -1,8 +1,7 @@
-import json
-
 import pytest
 import responses
 
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.rok.rok_connector import (
     InvalidAuthenticationMethodError,
     InvalidJWTError,
@@ -147,7 +146,7 @@ def test_retrieve_token_with_password(rok_connector, rok_ds):
     rok_connector.retrieve_token_with_password(rok_ds.database, endpoint='http://bla.bla')
 
     assert responses.assert_call_count('http://bla.bla', 1) is True
-    assert json.loads(responses.calls[0].request.body) == {
+    assert JsonWrapper.loads(responses.calls[0].request.body) == {
         'query': auth_query,
         'variables': auth_vars,
     }
@@ -335,4 +334,4 @@ def test_interpolate_parameters(
     rok_connector.get_df(rok_ds)
 
     for e in expected:
-        assert e in json.loads(responses.calls[0].request.body)['query']
+        assert e in JsonWrapper.loads(responses.calls[0].request.body)['query']
