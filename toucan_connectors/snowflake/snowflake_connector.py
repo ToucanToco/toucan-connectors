@@ -311,7 +311,7 @@ class SnowflakeConnector(ToucanConnector):
             else:
                 values = pd.DataFrame.from_dict(query_res.fetchmany(max_rows))
 
-            return values
+        return values
 
     def _fetch_data(
         self, data_source: SnowflakeDataSource, max_rows: Optional[int]
