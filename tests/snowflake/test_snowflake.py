@@ -6,7 +6,9 @@ from unittest.mock import call
 import jwt
 import pandas as pd
 import pytest
+import responses
 import snowflake.connector
+from pydantic import SecretStr
 from requests.models import HTTPError
 
 from toucan_connectors.common import ConnectorStatus
@@ -27,15 +29,39 @@ sc = SnowflakeConnector(
     default_warehouse='default_wh',
 )
 
-sc_oauth = SnowflakeConnector(
-    name='test_name',
-    authentication_method=AuthenticationMethod.OAUTH,
-    user='test_user',
-    password='test_password',
-    account='test_account',
-    oauth_token=jwt.encode({'exp': 42, 'sub': 'snowflake_user'}, key='clef'),
-    default_warehouse='default_wh',
-)
+
+OAUTH_TOKEN_ENDPOINT = 'http://example.com/endpoint'
+OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE = 'application/x-www-form-urlencoded'
+OAUTH_ACCESS_TOKEN = jwt.encode({'exp': 42, 'sub': 'snowflake_user'}, key='clef')
+OAUTH_REFRESH_TOKEN = 'baba au rhum'
+OAUTH_CLIENT_ID = 'client_id'
+OAUTH_CLIENT_SECRET = 'client_s3cr3t'
+
+
+@pytest.fixture
+def sc_oauth(mocker):
+    user_tokens_keeper = mocker.Mock(
+        access_token=SecretStr(OAUTH_ACCESS_TOKEN),
+        refresh_token=SecretStr(OAUTH_REFRESH_TOKEN),
+        update_tokens=mocker.Mock(),
+    )
+    sso_credentials_keeper = mocker.Mock(
+        client_id=OAUTH_CLIENT_ID,
+        client_secret=SecretStr(OAUTH_CLIENT_SECRET),
+    )
+    return SnowflakeConnector(
+        name='test_name',
+        authentication_method=AuthenticationMethod.OAUTH,
+        user='test_user',
+        password='test_password',
+        account='test_account',
+        token_endpoint=OAUTH_TOKEN_ENDPOINT,
+        token_endpoint_content_type=OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE,
+        user_tokens_keeper=user_tokens_keeper,
+        sso_credentials_keeper=sso_credentials_keeper,
+        default_warehouse='default_wh',
+    )
+
 
 sd = SnowflakeDataSource(
     name='test_name',
@@ -79,15 +105,6 @@ def snowflake_connection_mock(mocker):
 @pytest.fixture
 def execute_query_mock(mocker):
     return mocker.patch.object(SnowflakeConnector, '_execute_query')
-
-
-OAUTH_ARGS = {
-    'content_type': 'application/x-www-form-urlencoded',
-    'client_id': 'client_id',
-    'client_secret': 'client_s3cr3t',
-    'refresh_token': 'baba au rhum',
-    'token_endpoint': 'http://example.com/endpoint',
-}
 
 
 def test_snowflake(mocker):
@@ -244,12 +261,17 @@ def test_snowflake_data_source_default_warehouse(mocker):
     )
 
 
-def test_snowflake_oauth_auth(mocker):
+@responses.activate
+def test_snowflake_oauth_auth(mocker, sc_oauth):
+    responses.add(
+        responses.POST,
+        OAUTH_TOKEN_ENDPOINT,
+        json={'access_token': 'aaa', 'refresh_token': 'bbb'},
+    )
+
     snow_mock = mocker.patch('snowflake.connector.connect')
 
-    sf = copy.deepcopy(sc_oauth)
-
-    sf.get_df(sd)
+    sc_oauth.get_df(sd)
 
     snow_mock.assert_called_once_with(
         user='test_user',
@@ -257,7 +279,7 @@ def test_snowflake_oauth_auth(mocker):
         authenticator=AuthenticationMethod.OAUTH,
         database='test_database',
         warehouse='test_warehouse',
-        token=sc_oauth.oauth_token,
+        token=sc_oauth.user_tokens_keeper.access_token.get_secret_value(),
         application='ToucanToco',
         role=None,
     )
@@ -410,14 +432,11 @@ def test_missing_cache_file():
     )
 
 
-def test_specified_oauth_args(mocker):
+def test_specified_oauth_args(mocker, sc_oauth):
     mocker.patch('snowflake.connector.connect')
 
-    sf = copy.deepcopy(sc_oauth)
-    sf.oauth_args = copy.deepcopy(OAUTH_ARGS)
-
-    sf.oauth_token = jwt.encode(
-        {'exp': datetime.now() - timedelta(hours=24), 'sub': 'user'}, key='supersecret'
+    sc_oauth.user_tokens_keeper.access_token = SecretStr(
+        jwt.encode({'exp': datetime.now() - timedelta(hours=24), 'sub': 'user'}, key='supersecret')
     )
 
     data_source = SnowflakeDataSource(
@@ -434,47 +453,44 @@ def test_specified_oauth_args(mocker):
         'access_token': jwt.encode({'exp': datetime.now(), 'sub': 'user'}, key='supersecret')
     }
 
-    sf._retrieve_data(data_source)
+    sc_oauth._retrieve_data(data_source)
 
     url, kwargs = req_mock.call_args_list[0]
     assert req_mock.call_count == 1
-    assert OAUTH_ARGS['token_endpoint'] == url[0]
-    assert OAUTH_ARGS['client_id'] == kwargs['data']['client_id']
-    assert OAUTH_ARGS['client_secret'] == kwargs['data']['client_secret']
-    assert OAUTH_ARGS['content_type'] == kwargs['headers']['Content-Type']
+    assert OAUTH_TOKEN_ENDPOINT == url[0]
+    assert OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE == kwargs['headers']['Content-Type']
+    assert OAUTH_CLIENT_ID == kwargs['data']['client_id']
+    assert OAUTH_CLIENT_SECRET == kwargs['data']['client_secret']
 
 
-def test_oauth_args_missing_endpoint(mocker):
+def test_oauth_args_missing_endpoint(mocker, sc_oauth):
     mocker.patch('snowflake.connector.connect')
     req_mock = mocker.patch('requests.post')
 
-    sf = copy.deepcopy(sc_oauth)
+    sc_oauth.token_endpoint = None
 
-    oauth_args = copy.deepcopy(OAUTH_ARGS)
-    oauth_args.pop('token_endpoint')
-    sf.oauth_args = oauth_args
-
-    sf._retrieve_data(sd)
+    sc_oauth._retrieve_data(sd)
 
     assert req_mock.call_count == 0
 
 
-def test_oauth_refresh_token(mocker):
+@responses.activate
+def test_oauth_refresh_token(mocker, sc_oauth):
     mocker.patch('snowflake.connector.connect')
-    req_mock = mocker.patch('requests.post')
-    sf = copy.deepcopy(sc_oauth)
-    sf.oauth_args = copy.deepcopy(OAUTH_ARGS)
 
-    req_mock.return_value.json = lambda: {
-        'access_token': jwt.encode(
-            {'access_token': 'baba_au_rhum', 'sub': 'mon_super_user'}, key='supersecret'
-        )
-    }
+    new_token = jwt.encode(
+        {'access_token': 'baba_au_rhum', 'sub': 'mon_super_user'}, key='supersecret'
+    )
 
-    sf._retrieve_data(sd)
+    responses.add(
+        responses.POST,
+        OAUTH_TOKEN_ENDPOINT,
+        json={'access_token': new_token, 'refresh_token': 'bbb'},
+    )
 
-    assert req_mock.call_count == 1
-    assert sf.oauth_token == req_mock.return_value.json()['access_token']
+    sc_oauth._retrieve_data(sd)
+    assert sc_oauth.user_tokens_keeper.update_tokens.call_count == 1
+    assert sc_oauth.user_tokens_keeper.update_tokens.call_args[1]['access_token'] == new_token
 
 
 def test_schema_fields_order():
@@ -486,8 +502,8 @@ def test_schema_fields_order():
         'authentication_method',
         'user',
         'password',
-        'oauth_token',
-        'oauth_args',
+        'token_endpoint',
+        'token_endpoint_content_type',
         'role',
         'default_warehouse',
         'retry_policy',
@@ -498,14 +514,13 @@ def test_schema_fields_order():
     assert schema_props_keys == ordered_keys
 
 
-def test_oauth_args_endpoint_not_200(mocker):
+def test_oauth_args_endpoint_not_200(mocker, sc_oauth):
     mocker.patch('snowflake.connector.connect')
     req_mock = mocker.patch('requests.post')
 
-    sf = copy.deepcopy(sc_oauth)
-    oauth_args = copy.deepcopy(OAUTH_ARGS)
-    sf.oauth_args = oauth_args
-    sf.oauth_token = jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
+    sc_oauth.user_tokens_keeper.access_token = SecretStr(
+        jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
+    )
 
     req_mock.return_value.status_code = 401
 
@@ -516,7 +531,7 @@ def test_oauth_args_endpoint_not_200(mocker):
     req_mock.return_value.raise_for_status = lambda: fake_raise_for_status()
 
     try:
-        sf._retrieve_data(sd)
+        sc_oauth._retrieve_data(sd)
     except Exception as e:
         assert str(e) == 'Unauthorized'
         assert req_mock.call_count == 1
@@ -524,14 +539,13 @@ def test_oauth_args_endpoint_not_200(mocker):
         assert False
 
 
-def test_oauth_args_wrong_type_of_auth(mocker):
+def test_oauth_args_wrong_type_of_auth(mocker, sc_oauth):
     mocker.patch('snowflake.connector.connect')
-    sf = copy.deepcopy(sc)
-    sf.oauth_args = copy.deepcopy(OAUTH_ARGS)
 
+    sc_oauth.authentication_method = AuthenticationMethod.PLAIN
     spy = mocker.spy(SnowflakeConnector, '_refresh_oauth_token')
 
-    sf._retrieve_data(sd)
+    sc_oauth._retrieve_data(sd)
 
     assert spy.call_count == 0
 
