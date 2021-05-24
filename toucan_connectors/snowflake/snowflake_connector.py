@@ -115,7 +115,7 @@ class SnowflakeConnector(ToucanConnector):
 
     user: str = Field(..., description='Your login username')
     password: SecretStr = Field(None, description='Your login password')
-    token_endpoint: str = Field(..., description='The token endpoint')
+    token_endpoint: Optional[str] = Field(None, description='The token endpoint')
     token_endpoint_content_type: str = Field(
         'application/json',
         description='The content type to use when requesting the token endpoint',
