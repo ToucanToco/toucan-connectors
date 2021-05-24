@@ -111,7 +111,7 @@ def test_snowflake(mocker):
         account='test_account',
         database='test_database',
         warehouse='test_warehouse',
-        authenticator='snowflake',
+        authenticator='Snowflake (ID + Password)',
         application='ToucanToco',
         role=None,
     )
@@ -131,7 +131,7 @@ def test_snowflake_custom_role(mocker):
         account='test_account',
         database='test_database',
         warehouse='test_warehouse',
-        authenticator='snowflake',
+        authenticator='Snowflake (ID + Password)',
         application='ToucanToco',
         role='TEST',
     )
@@ -238,7 +238,7 @@ def test_snowflake_data_source_default_warehouse(mocker):
         account='test_account',
         database='db',
         warehouse='default_wh',
-        authenticator='snowflake',
+        authenticator='Snowflake (ID + Password)',
         application='ToucanToco',
         role=None,
     )
@@ -372,7 +372,7 @@ def test_snowflake_execute_other_query(mocker):
     connector = SnowflakeConnector(
         name='test',
         account='test',
-        authentication_method='snowflake',
+        authentication_method='Snowflake (ID + Password)',
         user='test',
         password='test',
         default_warehouse='default_wh',
@@ -543,7 +543,7 @@ def test_get_status_all_good(
 ):
     execute_query_mock.return_value = pd.DataFrame({'warehouse_name': 'default_wh'}, index=[0])
     assert snowflake_connector.get_status() == ConnectorStatus(
-        status=True, details=[('Connection to Snowflake', True), ('Warehouse exists', True)]
+        status=True, details=[('Connection to Snowflake', True), ('Default warehouse exists', True)]
     )
 
 
@@ -554,7 +554,7 @@ def test_get_status_warehouse_does_not_exists(
     assert snowflake_connector.get_status() == ConnectorStatus(
         status=False,
         error="The warehouse 'default_wh' does not exist.",
-        details=[('Connection to Snowflake', True), ('Warehouse exists', False)],
+        details=[('Connection to Snowflake', True), ('Default warehouse exists', False)],
     )
 
 
@@ -567,7 +567,7 @@ def test_account_does_not_exists(
     assert snowflake_connector.get_status() == ConnectorStatus(
         status=False,
         error=f"Connection failed for the account '{snowflake_connector.account}', please check the Account field",
-        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
+        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
 
 
@@ -577,7 +577,7 @@ def test_account_forbidden(snowflake_connector: SnowflakeConnector, snowflake_co
     assert snowflake_connector.get_status() == ConnectorStatus(
         status=False,
         error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",
-        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
+        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
 
 
@@ -589,7 +589,7 @@ def test_get_status_credentials_nok(
     assert snowflake_connector.get_status() == ConnectorStatus(
         status=False,
         error="Connection failed for the user 'test_user', please check your credentials",
-        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
+        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
 
 
@@ -601,7 +601,7 @@ def test_get_status_account_nok(
     assert snowflake_connector.get_status() == ConnectorStatus(
         status=False,
         error='Account nok',
-        details=[('Connection to Snowflake', False), ('Warehouse exists', None)],
+        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
 
 
