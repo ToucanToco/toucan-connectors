@@ -1,7 +1,8 @@
 import pandas as pd
 import snowflake as pysnowflake
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, constr
 from snowflake.connector import DictCursor
+from typing import List
 
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
@@ -15,8 +16,7 @@ from toucan_connectors.toucan_connector import ToucanConnector
 
 
 class SnowflakeoAuth2DataSource(SnowflakeDataSource):
-    """Nothing reimplemented from inherited class"""
-
+    """"""
 
 class SnowflakeoAuth2Connector(ToucanConnector):
     client_id: str = Field(
@@ -83,10 +83,18 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     def retrieve_tokens(self, authorization_response: str):
         return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
 
+    def _get_warehouses(self) -> List[str]:
+        with self.connect() as connection:
+            return [
+                warehouse['name']
+                for warehouse in connection.cursor(DictCursor).execute('SHOW WAREHOUSES').fetchall()
+                if 'name' in warehouse
+            ]
+
     def get_access_token(self):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
-    def connect(self, database: str, warehouse: str) -> pysnowflake.connector.SnowflakeConnection:
+    def connect(self, **kwargs) -> pysnowflake.connector.SnowflakeConnection:
         connection_params = {
             'account': self.account,
             'authenticator': AuthenticationMethod.OAUTH,
@@ -94,10 +102,10 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             'token': self.get_access_token(),
         }
         return pysnowflake.connector.connect(
-            **connection_params, database=database, warehouse=warehouse
+            **connection_params, **kwargs
         )
 
-    def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> pd.DataFrame:
         connection = self.connect(
             database=data_source.database,
             warehouse=data_source.warehouse,
