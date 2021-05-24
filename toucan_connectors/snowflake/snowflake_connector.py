@@ -81,8 +81,8 @@ class SnowflakeDataSource(ToucanDataSource):
 
 
 class AuthenticationMethod(str, Enum):
-    PLAIN: str = 'snowflake'
-    OAUTH: str = 'oauth'
+    PLAIN: str = 'Snowflake (ID + Password)'
+    OAUTH: str = 'oAuth'
 
 
 class SnowflakeConnector(ToucanConnector):
@@ -151,7 +151,7 @@ class SnowflakeConnector(ToucanConnector):
 
     @staticmethod
     def _get_status_details(index: int, status: Optional[bool]):
-        checks = ['Connection to Snowflake', 'Warehouse exists']
+        checks = ['Connection to Snowflake', 'Default warehouse exists']
         ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
