@@ -43,18 +43,20 @@ def test_connect(mocker, snowflake_oauth2_connector, snowflake_data_source):
     Check that connect method correctly provide connection args to pysnowflake.connect
     """
     mocked_connect = mocker.patch('snowflake.connector.connect')
-    mocker.patch.object(SnowflakeoAuth2Connector, 'get_access_token', return_value='shiny token')
-    snowflake_oauth2_connector.connect(
-        snowflake_data_source.database, snowflake_data_source.warehouse
+    mocked_get_access = mocker.patch.object(
+        SnowflakeoAuth2Connector, 'get_access_token', return_value='shiny token'
     )
+    snowflake_oauth2_connector.connect(database='test_database', warehouse='test_warehouse')
     assert mocked_connect.call_args_list[0][1] == {
         'account': 'acc',
         'authenticator': 'oAuth',
         'application': 'ToucanToco',
         'token': 'shiny token',
+        'role': 'testrole',
         'database': 'test_database',
         'warehouse': 'test_warehouse',
     }
+    assert mocked_get_access.call_count == 1
 
 
 def test__retrieve_data(mocker, snowflake_oauth2_connector, snowflake_data_source):
@@ -65,4 +67,20 @@ def test__retrieve_data(mocker, snowflake_oauth2_connector, snowflake_data_sourc
     assert mocked_connect.call_args_list[0][1] == {
         'database': 'test_database',
         'warehouse': 'test_warehouse',
+    }
+
+
+def test_get__warehouses(mocker, snowflake_oauth2_connector):
+    """Check that _get_warehouses correctly connects & retrieve a warehouse list"""
+    mocked_connect = mocker.patch('snowflake.connector.connect')
+    mocker.patch.object(SnowflakeoAuth2Connector, 'get_access_token', return_value='shiny token')
+    snowflake_oauth2_connector._get_warehouses()
+    assert mocked_connect.call_args_list[0][1] == {
+        'account': 'acc',
+        'authenticator': 'oauth',
+        'application': 'ToucanToco',
+        'token': 'shiny token',
+        'role': 'testrole',
+        'database': None,
+        'warehouse': None,
     }
