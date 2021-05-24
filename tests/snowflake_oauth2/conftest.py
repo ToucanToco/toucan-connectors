@@ -1,7 +1,9 @@
 import pytest
 
-from toucan_connectors.snowflake import SnowflakeDataSource
-from toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector import SnowflakeoAuth2Connector
+from toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector import (
+    SnowflakeoAuth2Connector,
+    SnowflakeoAuth2DataSource,
+)
 
 
 @pytest.fixture
@@ -21,7 +23,7 @@ def snowflake_oauth2_connector(secrets_keeper):
 
 @pytest.fixture
 def snowflake_data_source():
-    return SnowflakeDataSource(
+    return SnowflakeoAuth2DataSource(
         name='test_name',
         domain='test_domain',
         database='test_database',

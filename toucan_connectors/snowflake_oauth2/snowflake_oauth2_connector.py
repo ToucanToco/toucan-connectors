@@ -1,8 +1,9 @@
+from typing import List
+
 import pandas as pd
 import snowflake as pysnowflake
-from pydantic import Field, SecretStr, constr
+from pydantic import Field, SecretStr
 from snowflake.connector import DictCursor
-from typing import List
 
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
@@ -16,7 +17,8 @@ from toucan_connectors.toucan_connector import ToucanConnector
 
 
 class SnowflakeoAuth2DataSource(SnowflakeDataSource):
-    """"""
+    """ """
+
 
 class SnowflakeoAuth2Connector(ToucanConnector):
     client_id: str = Field(
@@ -94,15 +96,16 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     def get_access_token(self):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
-    def connect(self, **kwargs) -> pysnowflake.connector.SnowflakeConnection:
+    def connect(self, database=None, warehouse=None) -> pysnowflake.connector.SnowflakeConnection:
         connection_params = {
             'account': self.account,
             'authenticator': AuthenticationMethod.OAUTH,
             'application': 'ToucanToco',
             'token': self.get_access_token(),
+            'role': self.role if self.role else '',
         }
         return pysnowflake.connector.connect(
-            **connection_params, **kwargs
+            **connection_params, database=database, warehouse=warehouse
         )
 
     def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> pd.DataFrame:
