@@ -1,4 +1,3 @@
-import json
 from abc import ABC, abstractmethod
 from time import time
 from typing import Any
@@ -7,6 +6,8 @@ from urllib import parse as url_parse
 from authlib.common.security import generate_token
 from authlib.integrations.requests_client import OAuth2Session
 from pydantic import BaseModel, SecretStr
+
+from toucan_connectors.json_wrapper import JsonWrapper
 
 
 class SecretsKeeper(ABC):
@@ -61,7 +62,7 @@ class OAuth2Connector:
         )
         state = {'token': generate_token(), **kwargs}
         uri, state = client.create_authorization_url(
-            self.authorization_url, state=json.dumps(state)
+            self.authorization_url, state=JsonWrapper.dumps(state)
         )
 
         self.secrets_keeper.save(self.auth_flow_id, {'state': state})
@@ -79,7 +80,8 @@ class OAuth2Connector:
         if saved_flow is None:
             raise AuthFlowNotFound()
         assert (
-            json.loads(saved_flow['state'])['token'] == json.loads(url_params['state'][0])['token']
+            JsonWrapper.loads(saved_flow['state'])['token']
+            == JsonWrapper.loads(url_params['state'][0])['token']
         )
 
         token = client.fetch_token(

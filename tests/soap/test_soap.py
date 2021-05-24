@@ -1,11 +1,10 @@
-import json
-
 import pandas as pd
 import responses
 from mock import Mock
 from pandas._testing import assert_frame_equal
 from pytest import fixture
 
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.soap.soap_connector import SoapConnector, SoapDataSource
 
 import_path = 'toucan_connectors.soap.soap_connector'
@@ -32,7 +31,7 @@ def create_datasource():
 
 
 def test_schema_fields_order(connector, create_datasource):
-    schema_props_keys = list(json.loads(SoapDataSource.schema_json())['properties'].keys())
+    schema_props_keys = list(JsonWrapper.loads(SoapDataSource.schema_json())['properties'].keys())
     assert schema_props_keys[0] == 'domain'
     assert schema_props_keys[1] == 'method'
     assert schema_props_keys[2] == 'parameters'

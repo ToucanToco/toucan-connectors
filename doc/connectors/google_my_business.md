@@ -66,7 +66,7 @@ in `API & Services` > `Credentials` > `OAuth 2.0 client IDs.`
 Then, in a virtualenv with `google_auth_oauthlib` and `google-api-python-client` package, you can use this python code to get your credentials:
 
 ```python
-import json
+from toucan_connectors.json_wrapper import JsonWrapper
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
@@ -75,7 +75,7 @@ SCOPES = ["https://www.googleapis.com/auth/business.manage"]
 
 flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
 credentials = flow.run_console()
-json_credentials = json.dumps({
+json_credentials = JsonWrapper.dumps({
     "token": credentials.token,
     "refresh_token": credentials.refresh_token,
     "token_uri": credentials.token_uri,

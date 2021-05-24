@@ -1,5 +1,4 @@
 import datetime
-import json
 from unittest.mock import Mock
 
 import pytest
@@ -11,6 +10,7 @@ from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
     GoogleSheets2DataSource,
     NoCredentialsError,
 )
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 
 import_path = 'toucan_connectors.google_sheets_2.google_sheets_2_connector'
@@ -276,7 +276,9 @@ def test_get_slice_no_limit(mocker, con, ds):
 
 
 def test_schema_fields_order(con, ds):
-    schema_props_keys = list(json.loads(GoogleSheets2DataSource.schema_json())['properties'].keys())
+    schema_props_keys = list(
+        JsonWrapper.loads(GoogleSheets2DataSource.schema_json())['properties'].keys()
+    )
     assert schema_props_keys[0] == 'domain'
     assert schema_props_keys[1] == 'spreadsheet_id'
     assert schema_props_keys[2] == 'sheet'

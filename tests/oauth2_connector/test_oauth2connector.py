@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from unittest.mock import Mock
 
@@ -6,6 +5,7 @@ import pytest
 
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import GoogleSheets2Connector
 from toucan_connectors.http_api.http_api_connector import HttpAPIConnector
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import (
     AuthFlowNotFound,
     NoOAuth2RefreshToken,
@@ -43,6 +43,7 @@ def test_build_authorization_url(mocker, oauth2_connector, secrets_keeper):
     )
 
     url = oauth2_connector.build_authorization_url()
+
     assert mock_create_authorization_url.called
     assert url == 'authorization_url'
     assert secrets_keeper.load('test')['state'] == 'state'
@@ -52,14 +53,14 @@ def test_retrieve_tokens(mocker, oauth2_connector, secrets_keeper):
     """
     It should retrieve tokens and save them
     """
-    secrets_keeper.save('test', {'state': json.dumps({'token': 'the_token'})})
+    secrets_keeper.save('test', {'state': JsonWrapper.dumps({'token': 'the_token'})})
     mock_fetch_token: Mock = mocker.patch(
         'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.fetch_token',
         return_value={'access_token': 'dummy_token'},
     )
 
     oauth2_connector.retrieve_tokens(
-        f'http://localhost/?state={json.dumps({"token": "the_token"})}'
+        f'http://localhost/?state={JsonWrapper.dumps({"token": "the_token"})}'
     )
     mock_fetch_token.assert_called()
     assert secrets_keeper.load('test')['access_token'] == 'dummy_token'
@@ -69,11 +70,11 @@ def test_fail_retrieve_tokens(oauth2_connector, secrets_keeper):
     """
     It should fail ig the stored state does not match the received state
     """
-    secrets_keeper.save('test', {'state': json.dumps({'token': 'the_token'})})
+    secrets_keeper.save('test', {'state': JsonWrapper.dumps({'token': 'the_token'})})
 
     with pytest.raises(AssertionError):
         oauth2_connector.retrieve_tokens(
-            f'http://localhost/?state={json.dumps({"token": "bad_token"})}'
+            f'http://localhost/?state={JsonWrapper.dumps({"token": "bad_token"})}'
         )
 
 
@@ -127,7 +128,7 @@ def test_get_access_token_expired_no_refresh_token(mocker, oauth2_connector, sec
 def test_should_throw_if_authflow_id_not_found(oauth2_connector, secrets_keeper):
     with pytest.raises(AuthFlowNotFound):
         oauth2_connector.retrieve_tokens(
-            f'http://localhost/?state={json.dumps({"token": "bad_token"})}'
+            f'http://localhost/?state={JsonWrapper.dumps({"token": "bad_token"})}'
         )
 
 

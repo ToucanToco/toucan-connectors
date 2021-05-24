@@ -1,8 +1,7 @@
-import json
-
 import pytest
 import responses
 
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.micro_strategy.data import fill_viewfilter_with_ids, get_definition
 from toucan_connectors.micro_strategy.micro_strategy_connector import (
     MicroStrategyConnector,
@@ -46,7 +45,7 @@ mc = MicroStrategyConnector(
 
 @responses.activate
 def test_micro_strategy():
-    js = json.load(open('tests/micro_strategy/fixtures/fixture.json'))
+    js = JsonWrapper.load(open('tests/micro_strategy/fixtures/fixture.json'))
 
     # login
     responses.add(
@@ -81,7 +80,7 @@ def test_micro_strategy():
 
 @responses.activate
 def test_search():
-    js = json.load(open('tests/micro_strategy/fixtures/fixture_search.json'))
+    js = JsonWrapper.load(open('tests/micro_strategy/fixtures/fixture_search.json'))
 
     # login
     responses.add(
@@ -103,7 +102,7 @@ def test_search():
 
 
 def test_fill_viewfilter_with_ids():
-    results = json.load(open('tests/micro_strategy/fixtures/fixture.json'))
+    results = JsonWrapper.load(open('tests/micro_strategy/fixtures/fixture.json'))
     dfn = get_definition(results)
     viewfilter = {
         'plop': {'attribute': 'Call Center'},
@@ -131,7 +130,7 @@ def test_fill_viewfilter_with_ids():
 
 @responses.activate
 def test_viewfilter():
-    js = json.load(open('tests/micro_strategy/fixtures/fixture.json'))
+    js = JsonWrapper.load(open('tests/micro_strategy/fixtures/fixture.json'))
     expected_viewfilter = {
         'operator': 'Equals',
         'operands': [
@@ -171,7 +170,7 @@ def test_viewfilter():
     df = mc.get_df(md_filtered)
     assert df.shape == (100, 40)
 
-    viewfilter = json.loads(responses.calls[2].request.body)['viewFilter']
+    viewfilter = JsonWrapper.loads(responses.calls[2].request.body)['viewFilter']
     assert viewfilter == expected_viewfilter
 
 
