@@ -7,6 +7,10 @@ from pathlib import Path
 from .toucan_connector import DataSlice, ToucanConnector, ToucanDataSource
 
 CONNECTORS_REGISTRY = {
+    'AAA_Example': {
+        'connector': 'example.example_connector.ExampleConnect',
+        'label': 'AAA_Example',
+    },
     'AdobeAnalytics': {
         'connector': 'adobe_analytics.adobe_analytics_connector.AdobeAnalyticsConnector',
         'label': 'Adobe Analytics',
