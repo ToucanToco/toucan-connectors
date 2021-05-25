@@ -20,6 +20,10 @@ except ImportError:
     pass
 
 
+class Category(str, Enum):
+    SQL: str = 'SQL'
+
+
 class DataSlice(NamedTuple):
     df: pd.DataFrame  # the dataframe of the slice
     total_count: int  # the length of the raw dataframe (without slicing)

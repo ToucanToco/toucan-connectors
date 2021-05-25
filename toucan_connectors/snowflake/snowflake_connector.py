@@ -18,6 +18,7 @@ from toucan_connectors.common import (
     convert_to_qmark_paramstyle,
 )
 from toucan_connectors.toucan_connector import (
+    Category,
     DataSlice,
     ToucanConnector,
     ToucanDataSource,
@@ -130,6 +131,7 @@ class SnowflakeConnector(ToucanConnector):
     default_warehouse: str = Field(
         None, description='The default warehouse that shall be used for any data source'
     )
+    category: Category = Field(Category.SQL, title='category', **{'ui': {'checkbox': False}})
 
     class Config:
         @staticmethod

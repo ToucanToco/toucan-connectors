@@ -47,15 +47,11 @@ def test_connect(mocker, snowflake_oauth2_connector, snowflake_data_source):
         SnowflakeoAuth2Connector, 'get_access_token', return_value='shiny token'
     )
     snowflake_oauth2_connector.connect(database='test_database', warehouse='test_warehouse')
-    assert mocked_connect.call_args_list[0][1] == {
-        'account': 'acc',
-        'authenticator': 'oAuth',
-        'application': 'ToucanToco',
-        'token': 'shiny token',
-        'role': 'testrole',
-        'database': 'test_database',
-        'warehouse': 'test_warehouse',
-    }
+    assert mocked_connect.call_args_list[0][1]['account'] == 'acc'
+    assert mocked_connect.call_args_list[0][1]['database'] == 'test_database'
+    assert mocked_connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
+    assert mocked_connect.call_args_list[0][1]['role'] == 'testrole'
+    assert mocked_connect.call_args_list[0][1]['token'] == 'shiny token'
     assert mocked_get_access.call_count == 1
 
 
@@ -75,12 +71,8 @@ def test_get__warehouses(mocker, snowflake_oauth2_connector):
     mocked_connect = mocker.patch('snowflake.connector.connect')
     mocker.patch.object(SnowflakeoAuth2Connector, 'get_access_token', return_value='shiny token')
     snowflake_oauth2_connector._get_warehouses()
-    assert mocked_connect.call_args_list[0][1] == {
-        'account': 'acc',
-        'authenticator': 'oauth',
-        'application': 'ToucanToco',
-        'token': 'shiny token',
-        'role': 'testrole',
-        'database': None,
-        'warehouse': None,
-    }
+    assert mocked_connect.call_args_list[0][1]['account'] == 'acc'
+    assert mocked_connect.call_args_list[0][1]['database'] is None
+    assert mocked_connect.call_args_list[0][1]['warehouse'] is None
+    assert mocked_connect.call_args_list[0][1]['role'] == 'testrole'
+    assert mocked_connect.call_args_list[0][1]['token'] == 'shiny token'
