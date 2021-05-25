@@ -21,7 +21,7 @@ except ImportError:
 
 
 class Category(str, Enum):
-    SQL: str = 'SQL'
+    SNOWFLAKE: str = 'Snowflake'
 
 
 class DataSlice(NamedTuple):

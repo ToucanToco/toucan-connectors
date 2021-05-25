@@ -131,7 +131,7 @@ class SnowflakeConnector(ToucanConnector):
     default_warehouse: str = Field(
         None, description='The default warehouse that shall be used for any data source'
     )
-    category: Category = Field(Category.SQL, title='category', **{'ui': {'checkbox': False}})
+    category: Category = Field(Category.SNOWFLAKE, title='category', **{'ui': {'checkbox': False}})
 
     class Config:
         @staticmethod

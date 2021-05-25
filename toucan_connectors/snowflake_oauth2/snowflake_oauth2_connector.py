@@ -61,7 +61,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     default_warehouse: str = Field(
         ..., description='The default warehouse that shall be used for any data source'
     )
-    category: Category = Field(Category.SQL, title='category', **{'ui': {'checkbox': False}})
+    category: Category = Field(Category.SNOWFLAKE, title='category', **{'ui': {'checkbox': False}})
 
     def __init__(self, **kwargs):
         super().__init__(**{k: v for k, v in kwargs.items() if k != 'secrets_keeper'})
