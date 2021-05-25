@@ -1,4 +1,3 @@
-import json
 from functools import _lru_cache_wrapper, lru_cache
 from typing import Optional, Pattern, Union
 
@@ -9,6 +8,7 @@ from cached_property import cached_property
 from pydantic import Field, SecretStr, create_model, validator
 
 from toucan_connectors.common import ConnectorStatus, nosql_apply_parameters_to_query
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
@@ -113,7 +113,7 @@ class MongoConnector(ToucanConnector):
         return password
 
     def __hash__(self):
-        return hash(id(self)) + hash(json.dumps(self._get_mongo_client_kwargs()))
+        return hash(id(self)) + hash(JsonWrapper.dumps(self._get_mongo_client_kwargs()))
 
     def __enter__(self):
         return self

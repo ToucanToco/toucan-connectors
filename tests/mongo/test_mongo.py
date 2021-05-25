@@ -1,4 +1,3 @@
-import json
 import os
 import re
 
@@ -9,6 +8,7 @@ import pytest
 from bson.son import SON
 
 from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.mongo.mongo_connector import (
     MongoConnector,
     MongoDataSource,
@@ -27,7 +27,7 @@ def mongo_server(service_container):
         docs_path = f'{os.path.dirname(__file__)}/fixtures/docs.json'
         with open(docs_path) as f:
             docs_json = f.read()
-        docs = json.loads(docs_json)
+        docs = JsonWrapper.loads(docs_json)
         client['toucan']['test_col'].insert_many(docs)
 
         client.close()

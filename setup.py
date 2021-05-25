@@ -10,7 +10,7 @@ extras_require = {
     'aircall': bearer_deps,
     'azure_mssql': ['pyodbc==4.0.30'],
     'clickhouse': ['clickhouse_driver==0.2.0'],  #
-    'dataiku': ['dataiku-api-client==8.0.0'],
+    'dataiku': ['dataiku-api-client==9.0.0'],
     'elasticsearch': ['elasticsearch==7.12.0'],
     'facebook': ['facebook-sdk==3.1.0'],
     'github': ['python_graphql_client==0.4.3'],  #
@@ -31,7 +31,7 @@ extras_require = {
     'odbc': ['pyodbc==4.0.30'],
     'oracle_sql': ['cx_Oracle==8.1.0'],
     'postgres': ['psycopg2==2.8.6'],  #
-    'ROK': ['requests==2.23.0', 'pyjwt==2.0.1', 'simplejson==3.17.2'],
+    'ROK': ['requests==2.21.0', 'pyjwt==2.0.1', 'simplejson==3.17.2'],
     'sap_hana': ['pyhdb==0.3.4'],
     'soap': ['zeep==4.0.0', 'lxml==4.2.5'],
     'snowflake': ['snowflake-connector-python==2.4.1'],
@@ -45,8 +45,8 @@ install_requires = [
     'cached_property',
     'jinja2==2.11.3',
     'pydantic==1.8.1',
-    'pyjq==2.5.1',
-    'requests==2.23.0',
+    'pyjq==2.5.2',
+    'requests==2.21.0',
     'tenacity==7.0.0',
     'toucan_data_sdk==7.4.2',
     'typing-extensions; python_version < "3.8"',
@@ -70,7 +70,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='0.53.7',
+    version='0.53.9',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',

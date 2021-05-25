@@ -49,7 +49,7 @@ def test_connect(mocker, snowflake_oauth2_connector, snowflake_data_source):
     )
     assert mocked_connect.call_args_list[0][1] == {
         'account': 'acc',
-        'authenticator': 'oauth',
+        'authenticator': 'oAuth',
         'application': 'ToucanToco',
         'token': 'shiny token',
         'database': 'test_database',

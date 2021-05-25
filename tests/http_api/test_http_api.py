@@ -1,4 +1,3 @@
-import json
 from xml.etree.ElementTree import ParseError
 
 import pytest
@@ -7,6 +6,7 @@ import responses
 
 from toucan_connectors.common import transform_with_jq
 from toucan_connectors.http_api.http_api_connector import Auth, HttpAPIConnector, HttpAPIDataSource
+from toucan_connectors.json_wrapper import JsonWrapper
 
 
 @pytest.fixture
@@ -215,7 +215,7 @@ def test_get_df_with_template_overide(data_source, mocker):
     co.get_df(data_source)
 
     h = responses.calls[0].request.headers
-    j = json.loads(responses.calls[0].request.body)
+    j = JsonWrapper.loads(responses.calls[0].request.body)
     assert 'Authorization' in h
     assert h['Authorization'] == data_source.headers['Authorization']
     assert 'B' in h and h['B']

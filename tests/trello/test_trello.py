@@ -1,12 +1,11 @@
-import json
-
 import numpy as np
 import responses
 
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.trello.trello_connector import TrelloConnector, TrelloDataSource
 
 with open('tests/trello/fixtures/fixture.json') as f:
-    mock_trello_api_json_responses = json.load(f)
+    mock_trello_api_json_responses = JsonWrapper.load(f)
 
 trello_connector = TrelloConnector(name='trello')
 

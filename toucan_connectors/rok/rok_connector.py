@@ -1,5 +1,4 @@
 import base64
-import json
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -13,6 +12,7 @@ from toucan_connectors.common import (
     nosql_apply_parameters_to_query,
     transform_with_jq,
 )
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -109,7 +109,7 @@ class RokConnector(ToucanConnector):
         }
         try:
             res = requests.post(
-                url=endpoint, data=json.dumps({'query': data_source.query}), headers=headers
+                url=endpoint, data=JsonWrapper.dumps({'query': data_source.query}), headers=headers
             ).json()
 
         except JSONDecodeError:
