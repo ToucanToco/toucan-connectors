@@ -115,8 +115,11 @@ class SnowflakeConnector(ToucanConnector):
 
     user: str = Field(..., description='Your login username')
     password: SecretStr = Field(None, description='Your login password')
-    oauth_token: str = Field(None, description='Your oauth token')
-    oauth_args: dict = Field(None, description='Named arguments for an OIDC auth')
+    token_endpoint: Optional[str] = Field(None, description='The token endpoint')
+    token_endpoint_content_type: str = Field(
+        'application/json',
+        description='The content type to use when requesting the token endpoint',
+    )
 
     role: str = Field(
         None,
@@ -138,8 +141,8 @@ class SnowflakeConnector(ToucanConnector):
                 'authentication_method',
                 'user',
                 'password',
-                'oauth_token',
-                'oauth_args',
+                'token_endpoint',
+                'token_endpoint_content_type',
                 'role',
                 'default_warehouse',
                 'retry_policy',
@@ -156,6 +159,25 @@ class SnowflakeConnector(ToucanConnector):
         new_check = (checks[index], status)
         not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
         return ok_checks + [new_check] + not_validated_checks
+
+    @property
+    def access_token(self) -> Optional[str]:
+        return self.user_tokens_keeper and self.user_tokens_keeper.access_token.get_secret_value()
+
+    @property
+    def refresh_token(self) -> Optional[str]:
+        return self.user_tokens_keeper and self.user_tokens_keeper.refresh_token.get_secret_value()
+
+    @property
+    def client_id(self) -> Optional[str]:
+        return self.sso_credentials_keeper and self.sso_credentials_keeper.client_id
+
+    @property
+    def client_secret(self) -> Optional[str]:
+        return (
+            self.sso_credentials_keeper
+            and self.sso_credentials_keeper.client_secret.get_secret_value()
+        )
 
     def get_status(self) -> ConnectorStatus:
         try:
@@ -221,8 +243,8 @@ class SnowflakeConnector(ToucanConnector):
             res['password'] = self.password.get_secret_value()
 
         if self.authentication_method == AuthenticationMethod.OAUTH:
-            if self.oauth_token is not None:
-                res['token'] = Template(self.oauth_token).render()
+            if self.access_token is not None:
+                res['token'] = self.access_token
 
         if self.role != '':
             res['role'] = self.role
@@ -231,40 +253,34 @@ class SnowflakeConnector(ToucanConnector):
 
     def _refresh_oauth_token(self):
         """Regenerates an oauth token if configuration was provided and if the given token has expired."""
-        if 'token_endpoint' in self.oauth_args and 'refresh_token' in self.oauth_args:
+        if self.token_endpoint and self.refresh_token:
             access_token = jwt.decode(
-                Template(self.oauth_token).render(),
+                self.access_token,
                 verify=False,
                 options={'verify_signature': False},
             )
             if datetime.fromtimestamp(access_token['exp']) < datetime.now():
-                content_type = 'application/json'
-                # Content-Type may need to be overridden
-                if 'content_type' in self.oauth_args:
-                    content_type = self.oauth_args['content_type']
-
                 res = requests.post(
-                    Template(self.oauth_args['token_endpoint']).render(),
+                    self.token_endpoint,
                     data={
                         'grant_type': 'refresh_token',
-                        'client_id': Template(self.oauth_args['client_id']).render(),
-                        'client_secret': Template(self.oauth_args['client_secret']).render(),
-                        'refresh_token': Template(self.oauth_args['refresh_token']).render(),
+                        'client_id': self.client_id,
+                        'client_secret': self.client_secret,
+                        'refresh_token': self.refresh_token,
                     },
-                    headers={'Content-Type': content_type},
+                    headers={'Content-Type': self.token_endpoint_content_type},
                 )
+                res.raise_for_status()
 
-                # Check if the request has a status_code equals to 200 and raise if not
-                # https://github.com/psf/requests/blob/master/requests/models.py#L936-L943
-                if not res.ok:  # pragma: no cover
-                    res.raise_for_status()
-
-                self.oauth_token = res.json().get('access_token')
+                self.user_tokens_keeper.update_tokens(
+                    access_token=res.json().get('access_token'),
+                    refresh_token=res.json().get('refresh_token'),
+                )
 
     def connect(self, **kwargs) -> snowflake.connector.SnowflakeConnection:
         # This needs to be set before we connect
         snowflake.connector.paramstyle = 'qmark'
-        if self.oauth_args and self.authentication_method == AuthenticationMethod.OAUTH:
+        if self.authentication_method == AuthenticationMethod.OAUTH:
             self._refresh_oauth_token()
         connection_params = self.get_connection_params()
 
