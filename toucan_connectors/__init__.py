@@ -182,8 +182,8 @@ CONNECTORS_REGISTRY = {
     },
     'Salesforce': {
         'connector': 'salesforce.salesforce_connector.SalesforceConnector',
-        'label': 'Salesforce',
-        'logo': 'salesforce/salesforce.jpg',
+        'label': 'Salesforce Service Cloud (SFSC)',
+        'logo': 'salesforce/salesforce-service-cloud.png',
     },
     'SapHana': {
         'connector': 'sap_hana.sap_hana_connector.SapHanaConnector',
