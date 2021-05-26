@@ -7,220 +7,25 @@ from pathlib import Path
 from .toucan_connector import DataSlice, ToucanConnector, ToucanDataSource
 
 CONNECTORS_REGISTRY = {
-    'AAA_Example': {
-        'connector': 'example.example_connector.ExampleConnect',
+    'ExampleConnector2': {
+        'connector': 'exampleconnector2.exampleconnector2_connector.Exampleconnector2Connector',
         'label': 'AAA_Example',
     },
-    'AdobeAnalytics': {
-        'connector': 'adobe_analytics.adobe_analytics_connector.AdobeAnalyticsConnector',
-        'label': 'Adobe Analytics',
-        'logo': 'adobe_analytics/adobe-analytics.png',
-    },
-    'Aircall': {
-        'connector': 'aircall.aircall_connector.AircallConnector',
-        'logo': 'aircall/Aircall.svg',
-    },
-    'AWSDocumentDB': {
-        'connector': 'mongo.mongo_connector.MongoConnector',
-        'label': 'Amazon Document DB',
-        'logo': 'aws/aws.png',
-    },
-    'AWSRedshift': {
-        'connector': 'postgres.postgresql_connector.PostgresConnector',
-        'label': 'Amazon Redshift',
-        'logo': 'aws/aws.png',
-    },
-    'AzureMSSQL': {
-        'connector': 'azure_mssql.azure_mssql_connector.AzureMSSQLConnector',
-        'label': 'Microsoft Azure SQL',
-        'logo': 'azure_mssql/sql-azure.png',
-    },
-    'Clickhouse': {
-        'connector': 'clickhouse.clickhouse_connector.ClickhouseConnector',
-        'label': 'Clickhouse',
-        'logo': 'clickhouse/clickhouse.png',
-    },
-    'Dataiku': {
-        'connector': 'dataiku.dataiku_connector.DataikuConnector',
-        'logo': 'dataiku/dataiku.png',
-    },
-    'DatabricksDeltaLake': {
-        'connector': 'azure_mssql.azure_mssql_connector.AzureMSSQLConnector',
-        'label': 'Databricks Delta Lake',
-        'logo': 'databricks_delta_lake/databricks.png',
-    },
-    'Denodo': {
-        'connector': 'postgres.postgresql_connector.PostgresConnector',
-        'label': 'Denodo',
-        'logo': 'denodo/denodo.png',
-    },
-    'elasticsearch': {
-        'connector': 'elasticsearch.elasticsearch_connector.ElasticsearchConnector',
-        'label': 'Elasticsearch',
-        'logo': 'elasticsearch/elasticsearch.png',
-    },
-    'facebook_insights': {
-        'connector': 'facebook_insights.facebook_insights_connector.FacebookInsightsConnector',
-        'label': 'Facebook Insights',
-        'logo': 'facebook_insights/facebook-insights.png',
-    },
-    'facebook_ads': {
-        'connector': 'facebook_ads.facebook_ads_connector.FacebookAdsConnector',
-        'label': 'Facebook Ads',
-        'logo': 'facebook_ads/facebook_logo.png',
-    },
+
     'Github': {
         'connector': 'github.github_connector.GithubConnector',
         'label': 'Github Connector',
         'logo': 'github/GitHub_Logo.png',
-    },
-    'GoogleAnalytics': {
-        'connector': 'google_analytics.google_analytics_connector.GoogleAnalyticsConnector',
-        'label': 'Google Analytics',
-        'logo': 'google_analytics/google-analytics.png',
-    },
-    'GoogleAdwords': {
-        'connector': 'google_adwords.google_adwords_connector.GoogleAdwordsConnector',
-        'label': 'Google Adwords',
-        'logo': 'google_adwords/google_adwords.jpg',
-    },
-    'GoogleBigQuery': {
-        'connector': 'google_big_query.google_big_query_connector.GoogleBigQueryConnector',
-        'label': 'Google Big Query',
-        'logo': 'google_big_query/google-bigquery.png',
-    },
-    'GoogleCloudMySQL': {
-        'connector': 'google_cloud_mysql.google_cloud_mysql_connector.GoogleCloudMySQLConnector',
-        'label': 'Google Cloud MySQL',
-        'logo': 'google_cloud_mysql/google-cloud-mysql.png',
-    },
-    'google_my_business': {
-        'connector': 'google_my_business.google_my_business_connector.GoogleMyBusinessConnector',
-        'label': 'Google My Business',
-        'logo': 'google_my_business/google-my-business.png',
-    },
-    'GoogleSheets': {
-        'connector': 'google_sheets.google_sheets_connector.GoogleSheetsConnector',
-        'label': 'Google Sheets (Legacy)',
-        'logo': 'google_sheets/google-sheets.png',
-    },
-    'GoogleSheets2': {
-        'connector': 'google_sheets_2.google_sheets_2_connector.GoogleSheets2Connector',
-        'label': 'Google Sheets',
-        'logo': 'google_sheets/google-sheets.png',
-    },
-    'GoogleSpreadsheet': {
-        'connector': 'google_spreadsheet.google_spreadsheet_connector.GoogleSpreadsheetConnector',
-        'label': 'Google Spreadsheet',
-        'logo': 'google_spreadsheet/google-spreadsheet.png',
-    },
-    'Hive': {
-        'connector': 'hive.hive_connector.HiveConnector',
-        'logo': 'hive/hive.png',
     },
     'HttpAPI': {
         'connector': 'http_api.http_api_connector.HttpAPIConnector',
         'label': 'Http API',
         'logo': 'http_api/http-api.png',
     },
-    'Hubspot': {
-        'connector': 'hubspot.hubspot_connector.HubspotConnector',
-        'label': 'Hubspot',
-        'logo': 'hubspot/hubspot.png',
-    },
-    'Indexima': {
-        'connector': 'hive.hive_connector.HiveConnector',
-        'logo': 'hive/indexima.png',
-    },
-    'Lightspeed': {
-        'connector': 'lightspeed.lightspeed_connector.LightspeedConnector',
-        'logo': 'lightspeed/lightspeed.png',
-    },
-    'LinkedinAds': {
-        'connector': 'linkedinads.linkedinads_connector.LinkedinadsConnector',
-        'logo': 'linkedinads/linkedinads.png',
-    },
-    'MicroStrategy': {
-        'connector': 'micro_strategy.micro_strategy_connector.MicroStrategyConnector',
-        'logo': 'micro_strategy/microstrategy.png',
-    },
-    'MongoDB': {
-        'connector': 'mongo.mongo_connector.MongoConnector',
-        'logo': 'mongo/mongo-db.png',
-    },
-    'MSSQL': {
-        'connector': 'mssql.mssql_connector.MSSQLConnector',
-        'label': 'Microsoft SQL Server',
-        'logo': 'mssql/mssql.png',
-    },
-    'MySQL': {
-        'connector': 'mysql.mysql_connector.MySQLConnector',
-        'logo': 'mysql/mysql.png',
-    },
-    'OData': {
-        'connector': 'odata.odata_connector.ODataConnector',
-        'logo': 'odata/odata.png',
-    },
-    'Odbc': {
-        'connector': 'odbc.odbc_connector.OdbcConnector',
-        'logo': 'odbc/odbc.png',
-    },
-    'OracleSQL': {
-        'connector': 'oracle_sql.oracle_sql_connector.OracleSQLConnector',
-        'label': 'Oracle SQL',
-        'logo': 'oracle_sql/oracle-sql.png',
-    },
-    'Postgres': {
-        'connector': 'postgres.postgresql_connector.PostgresConnector',
-        'label': 'PostgreSQL',
-        'logo': 'postgres/postgres.png',
-    },
-    'Revinate': {
-        'connector': 'revinate.revinate_connector.RevinateConnector',
-        'label': 'Revinate',
-        'logo': 'revinate/revinate.png',
-    },
-    'ROK': {
-        'connector': 'rok.rok_connector.RokConnector',
-        'logo': 'rok/rok.png',
-    },
-    'Salesforce': {
-        'connector': 'salesforce.salesforce_connector.SalesforceConnector',
-        'label': 'Salesforce',
-        'logo': 'salesforce/salesforce.jpg',
-    },
-    'SapHana': {
-        'connector': 'sap_hana.sap_hana_connector.SapHanaConnector',
-        'label': 'SAP HANA',
-        'logo': 'sap_hana/sap-hana.png',
-    },
     'Snowflake': {
         'connector': 'snowflake.snowflake_connector.SnowflakeConnector',
         'logo': 'snowflake/snowflake.png',
         'label': 'Snowflake',
-    },
-    'SnowflakeoAuth2': {
-        'connector': 'snowflake_oauth2.snowflake_oauth2_connector.SnowflakeoAuth2Connector',
-        'logo': 'snowflake/snowflake.png',
-        'label': 'SnowflakeOAuth2',
-    },
-    'Soap': {
-        'connector': 'soap.soap_connector.SoapConnector',
-        'label': 'Soap',
-        'logo': 'soap/soap.png',
-    },
-    'ToucanToco': {
-        'connector': 'toucan_toco.toucan_toco_connector.ToucanTocoConnector',
-        'label': 'Toucan Toco',
-        'logo': 'toucan_toco/toucan.png',
-    },
-    'Trello': {
-        'connector': 'trello.trello_connector.TrelloConnector',
-        'logo': 'trello/trello.png',
-    },
-    'Wootric': {
-        'connector': 'wootric.wootric_connector.WootricConnector',
-        'logo': 'wootric/wootric.png',
     },
 }
 

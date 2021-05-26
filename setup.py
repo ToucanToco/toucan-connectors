@@ -6,6 +6,7 @@ auth_deps = ['oauthlib==3.1.0', 'requests_oauthlib==1.3.0']
 bearer_deps = ['bearer==3.1.0']
 
 extras_require = {
+    'exampleconnector2': bearer_deps,
     'adobe': ['adobe_analytics==1.2.3'],
     'aircall': bearer_deps,
     'azure_mssql': ['pyodbc==4.0.30'],
