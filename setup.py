@@ -31,7 +31,7 @@ extras_require = {
     'odbc': ['pyodbc==4.0.30'],
     'oracle_sql': ['cx-Oracle==8.1.0'],
     'postgres': ['psycopg2==2.8.6'],  #
-    'ROK': ['requests==2.23.0', 'pyjwt==2.0.1', 'simplejson==3.17.2'],
+    'ROK': ['requests', 'pyjwt==2.0.1', 'simplejson==3.17.2'],
     'sap_hana': ['pyhdb==0.3.4'],
     'soap': ['zeep==4.0.0', 'lxml==4.2.5'],
     'snowflake': ['snowflake-connector-python==2.4.1'],
@@ -46,7 +46,7 @@ install_requires = [
     'jinja2==2.11.3',
     'pydantic==1.8.1',
     'pyjq==2.5.2',
-    'requests==2.23.0',
+    'requests',
     'tenacity==7.0.0',
     'toucan-data-sdk==7.4.2',
     'typing-extensions; python_version < "3.8"',
