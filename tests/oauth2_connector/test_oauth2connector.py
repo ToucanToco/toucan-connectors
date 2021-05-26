@@ -8,6 +8,7 @@ from toucan_connectors.http_api.http_api_connector import HttpAPIConnector
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import (
     AuthFlowNotFound,
+    NoInstanceUrl,
     NoOAuth2RefreshToken,
     OAuth2Connector,
     OAuth2ConnectorConfig,
@@ -122,6 +123,58 @@ def test_get_access_token_expired_no_refresh_token(mocker, oauth2_connector, sec
     )
     with pytest.raises(NoOAuth2RefreshToken):
         oauth2_connector.get_access_token()
+    mock_refresh_token.assert_not_called()
+
+
+def test_get_access_data(mocker, oauth2_connector, secrets_keeper):
+    mocker.patch(
+        'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token',
+        return_value={
+            'access_token': 'new_access_token',
+            'refresh_token': 'new_refresh_token',
+            'instance_url': 'new_instance_url',
+        },
+    )
+
+    secrets_keeper.save(
+        'test',
+        {
+            'access_token': 'old_token',
+            'refresh_token': 'old_refresh_token',
+            'instance_url': 'old_instance_url',
+        },
+    )
+    access_data = oauth2_connector.get_access_data()
+    assert access_data['access_token'] == 'new_access_token'
+    assert access_data['refresh_token'] == 'new_refresh_token'
+    assert access_data['instance_url'] == 'new_instance_url'
+
+
+def test_get_access_data_without_refresh(mocker, oauth2_connector, secrets_keeper):
+    mock_refresh_token: Mock = mocker.patch(
+        'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token',
+        return_value={
+            'access_token': 'new_access_token',
+            'refresh_token': 'new_refresh_token',
+            'instance_url': 'new_instance_url',
+        },
+    )
+
+    secrets_keeper.save('test', {'access_token': 'old_token'})
+    with pytest.raises(NoOAuth2RefreshToken):
+        oauth2_connector.get_access_data()
+    mock_refresh_token.assert_not_called()
+
+
+def test_get_access_data_without_instance(mocker, oauth2_connector, secrets_keeper):
+    mock_refresh_token: Mock = mocker.patch(
+        'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token',
+        return_value={'access_token': 'new_access_token', 'refresh_token': 'new_refresh_token'},
+    )
+
+    secrets_keeper.save('test', {'access_token': 'old_token', 'refresh_token': 'old_refresh_token'})
+    with pytest.raises(NoInstanceUrl):
+        oauth2_connector.get_access_data()
     mock_refresh_token.assert_not_called()
 
 

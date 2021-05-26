@@ -1,11 +1,13 @@
+import logging
 from pathlib import Path
 
 import pytest
 import responses
+from authlib.integrations.base_client import OAuthError
 from requests import Session
 
 from toucan_connectors.common import HttpError
-from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
+from toucan_connectors.oauth2_connector.oauth2connector import NoOAuth2RefreshToken, OAuth2Connector
 from toucan_connectors.salesforce.salesforce_connector import (
     NoCredentialsError,
     SalesforceApiError,
@@ -52,7 +54,9 @@ def test_make_request(sc, ds):
         },
     )
 
-    resp = sc.make_request(Session(), ds, 'services/data/v39.0/query')
+    resp = sc.make_request(
+        Session(), ds, 'https://salesforce.is.awsome', 'services/data/v39.0/query'
+    )
     assert resp == {
         'attributes': ['a', 'b'],
         'records': [{'id': 1, 'name': 'a'}, {'id': 2, 'name': 'b'}],
@@ -63,6 +67,8 @@ def test_get_status_no_secrets(sc, remove_secrets):
     """
     Check that the connection status is false when no secret is defined
     """
+    status = sc.get_status().status
+    logging.getLogger(__name__).info(f'status {status}')
     assert sc.get_status().status is False
 
 
@@ -71,7 +77,16 @@ def test_get_status_secrets_error(mocker, sc):
     Check that the connector status is false if the
     secret manager is not able to retrieve the access token
     """
-    mocker.patch(f'{import_path}.OAuth2Connector.get_access_token', side_effect=Exception)
+    mocker.patch(f'{import_path}.OAuth2Connector.get_access_data', side_effect=Exception)
+    assert sc.get_status().status is False
+
+
+def test_get_status_secrets_auth_error(mocker, sc):
+    """
+    Check that the connector status is false if the
+    secret manager is not able to retrieve the access token
+    """
+    mocker.patch(f'{import_path}.OAuth2Connector.get_access_data', side_effect=OAuthError)
     assert sc.get_status().status is False
 
 
@@ -79,7 +94,7 @@ def test_get_status_api_down(mocker, sc):
     """
     Check that the connection status is false when the secret manager receives an httperror
     """
-    mocker.patch.object(SalesforceConnector, 'get_access_token', side_effect=HttpError)
+    mocker.patch.object(SalesforceConnector, 'get_access_data', side_effect=HttpError)
     assert sc.get_status().status is False
 
 
@@ -89,9 +104,14 @@ def test_get_status_ok(mocker, sc):
     the access token is correctly retrieved
     """
     mocker.patch.object(
-        SalesforceConnector, 'get_access_token', return_value={'access_token': 'access_token'}
+        SalesforceConnector, 'get_access_data', return_value={'access_token': 'access_token'}
     )
     assert sc.get_status().status is True
+
+
+def test_get_status_nok(mocker, sc):
+    mocker.patch.object(SalesforceConnector, 'get_access_data', return_value=None)
+    assert sc.get_status().status is False
 
 
 def test_generate_rows(mocker, sc, ds, toys_results_p1, toys_results_p2):
@@ -104,7 +124,7 @@ def test_generate_rows(mocker, sc, ds, toys_results_p1, toys_results_p2):
             toys_results_p2,
         ],
     )
-    res = sc.generate_rows(Session(), ds, 'bla')
+    res = sc.generate_rows(Session(), ds, 'https://salesforce.is.awsome', 'bla')
     assert mocked_make_request.call_count == 2
     assert res == [
         {'Id': 'A111FA', 'Name': 'Magic Poney'},
@@ -118,12 +138,28 @@ def test_generate_rows_error(mocker, sc, ds, error_result):
 
     mocker.patch.object(SalesforceConnector, 'make_request', return_value=error_result)
     with pytest.raises(SalesforceApiError):
-        sc.generate_rows(Session(), ds, 'bla')
+        sc.generate_rows(Session(), ds, 'https://salesforce.is.awsome', 'bla')
+
+
+def test__retrieve_data_no_credentials(mocker, sc, ds, clean_p1):
+    mocker.patch.object(SalesforceConnector, 'get_access_data', return_value=None)
+    with pytest.raises(NoCredentialsError):
+        sc._retrieve_data(sc)
 
 
 def test__retrieve_data(mocker, sc, ds, clean_p1):
     """Check that the connector is able to retrieve data from Salesforce API"""
-    mocker.patch.object(SalesforceConnector, 'get_access_token', return_value='shiny token')
+    secret_object = {
+        'access_token': 'shiny token',
+        'signature': 'shiny',
+        'scope': 'refresh_token api full',
+        'instance_url': 'https://salesforce.is.awsome',
+        'id': 'https://login.salesforce.com/id/00D09000007vcxHEAQ/00509000006bXeyAAE',
+        'token_type': 'Bearer',
+        'issued_at': '1621949493610',
+        'refresh_token': 'shiny token',
+    }
+    mocker.patch.object(SalesforceConnector, 'get_access_data', return_value=secret_object)
     mocked_generate_rows = mocker.patch.object(
         SalesforceConnector, 'generate_rows', return_value=clean_p1
     )
@@ -144,5 +180,5 @@ def test_get_secrets_form(mocker, sc):
 
 def test__retrieve_data_no_secret(sc, ds, remove_secrets):
     """Checks that we have an exception as we secret was removed"""
-    with pytest.raises(NoCredentialsError):
+    with pytest.raises(NoOAuth2RefreshToken):
         sc._retrieve_data(sc)
