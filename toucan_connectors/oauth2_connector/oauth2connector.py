@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from time import time
 from typing import Any
@@ -93,10 +94,12 @@ class OAuth2Connector:
         )
         self.secrets_keeper.save(self.auth_flow_id, token)
 
+    # Deprecated
     def get_access_token(self) -> str:
         """
-        Returns the access_token to use to access resources
-        If necessary, this token will be refreshed
+        Methods returns only access_token
+        instance_url parameters are return by service, better to use it
+        new method get_access_data return all information to connect (secret and instance_url)
         """
         token = self.secrets_keeper.load(self.auth_flow_id)
 
@@ -111,6 +114,37 @@ class OAuth2Connector:
             self.secrets_keeper.save(self.auth_flow_id, new_token)
         return self.secrets_keeper.load(self.auth_flow_id)['access_token']
 
+    def get_access_data(self):
+        """
+        Returns the access_token to use to access resources
+        If necessary, this token will be refreshed
+        """
+        access_data = self.secrets_keeper.load(self.auth_flow_id)
+
+        logging.getLogger(__name__).debug('Refresh and get access data')
+
+        if 'refresh_token' not in access_data:
+            raise NoOAuth2RefreshToken
+        if 'instance_url' not in access_data:
+            raise NoInstanceUrl
+
+        client = OAuth2Session(
+            client_id=self.config.client_id,
+            client_secret=self.config.client_secret.get_secret_value(),
+        )
+        connection_data = client.refresh_token(
+            self.token_url, refresh_token=access_data['refresh_token']
+        )
+        logging.getLogger(__name__).debug(
+            f'Refresh and get access data new token {str(connection_data)}'
+        )
+
+        self.secrets_keeper.save(self.auth_flow_id, connection_data)
+        secrets = self.secrets_keeper.load(self.auth_flow_id)
+
+        logging.getLogger(__name__).debug('Refresh and get data finished')
+        return secrets
+
     def get_refresh_token(self) -> str:
         """
         Return the refresh token, used to obtain an access token
@@ -121,6 +155,12 @@ class OAuth2Connector:
 class NoOAuth2RefreshToken(Exception):
     """
     Raised when no refresh token is available to get new access tokens
+    """
+
+
+class NoInstanceUrl(Exception):
+    """
+    Raised when no instance url is available to execute request
     """
 
 

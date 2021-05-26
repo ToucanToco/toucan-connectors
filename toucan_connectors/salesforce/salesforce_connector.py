@@ -1,13 +1,17 @@
+import datetime
+import logging
 import os
 from pathlib import Path
 from typing import Optional
 
 import pandas as pd
+from authlib.integrations.base_client import OAuthError
 from pydantic import Field
 from requests import Session
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.oauth2_connector.oauth2connector import (
+    NoOAuth2RefreshToken,
     OAuth2Connector,
     OAuth2ConnectorConfig,
 )
@@ -88,50 +92,83 @@ class SalesforceConnector(ToucanConnector):
         """
         return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
 
-    def get_access_token(self):
-        return self.__dict__['_oauth2_connector'].get_access_token()
+    def get_access_data(self):
+        return self.__dict__['_oauth2_connector'].get_access_data()
 
     def _retrieve_data(self, data_source: SalesforceDataSource) -> pd.DataFrame:
-        access_token = self.get_access_token()
+        logging.getLogger(__name__).info('_retrieve_data with Salesforce Connector')
+        ts_start = datetime.datetime.now().timestamp()
+        access_data = self.get_access_data()
+        logging.getLogger(__name__).debug(f'Retrieve connection information {access_data}')
 
-        if not access_token:
+        if not access_data:
             raise NoCredentialsError(NO_CREDENTIALS_ERROR)
         headers = {
-            'Authorization': f'Bearer {access_token}',
+            'Authorization': f'Bearer {access_data["access_token"]}',
             'Content-type': 'application/json',
             'Accept-Encoding': 'gzip',
         }
         session = Session()
         session.headers.update(headers)
-        return pd.DataFrame(
+        result = pd.DataFrame(
             self.generate_rows(
-                session, data_source, endpoint=DATA_ENDPOINT, params={'q': data_source.query}
+                session,
+                data_source,
+                instance_url=access_data['instance_url'],
+                endpoint=DATA_ENDPOINT,
+                params={'q': data_source.query},
             )
         )
+        ts_end = datetime.datetime.now().timestamp()
+        logging.getLogger(__name__).info(f'_retrieve_data finished in {ts_end - ts_start} ms')
+        return result
 
     def generate_rows(
-        self, session: Session, data_source: SalesforceDataSource, endpoint: str, params={}
+        self,
+        session: Session,
+        data_source: SalesforceDataSource,
+        instance_url: str,
+        endpoint: str,
+        params={},
     ):
-        results = self.make_request(session, data_source, data=params, endpoint=endpoint)
-        try:
-            results.get('records', None)
-            records = [
-                {k: v for k, v in d.items() if k != 'attributes'}
-                for d in results.get('records', None)
-            ]
-            next_page = results.get('nextRecordsUrl', None)
-            if records:
-                if next_page:
-                    records += self.generate_rows(session, data_source, endpoint=next_page)
-            return records
-        except AttributeError:
-            error = results[0]['errorCode']
+        results = self.make_request(
+            session, data_source, instance_url=instance_url, data=params, endpoint=endpoint
+        )
+
+        if isinstance(results, list) and 'errorCode' in results[0]:
+            logging.getLogger(__name__).error(
+                f'Impossible to retrieve data with error {results[0]["errorCode"]} '
+                f'and message {results[0]["message"]}'
+            )
+            error = f'[{results[0]["errorCode"]}] {results[0]["message"]}'
             raise SalesforceApiError(error)
 
+        results.get('records', None)
+        records = [
+            {k: v for k, v in d.items() if k != 'attributes'} for d in results.get('records', None)
+        ]
+        logging.getLogger(__name__).debug(f'records ({len(records)}) - {str(records)}')
+        next_page = results.get('nextRecordsUrl', None)
+        if records:
+            if next_page:
+                logging.getLogger(__name__).debug('next_page exists')
+                records += self.generate_rows(
+                    session, data_source, instance_url=instance_url, endpoint=next_page
+                )
+        return records
+
     def make_request(
-        self, session: Session, data_source: SalesforceDataSource, endpoint: str, data={}
+        self,
+        session: Session,
+        data_source: SalesforceDataSource,
+        instance_url: str,
+        endpoint: str,
+        data={},
     ):
-        r = session.request('GET', url=f'{self.instance_url}/{endpoint}', params=data).json()
+        logging.getLogger(__name__).info(
+            f'Generate Salesforce request ' f'{instance_url}/{endpoint} with params {str(data)}'
+        )
+        r = session.request('GET', url=f'{instance_url}/{endpoint}', params=data).json()
         return r
 
     def get_status(self) -> ConnectorStatus:
@@ -140,11 +177,18 @@ class SalesforceConnector(ToucanConnector):
         :return: a ConnectorStatus with the current status
         """
         try:
-            access_token = self.get_access_token()
-            if access_token:
-                c = ConnectorStatus(status=True)
-                return c
+            access_data = self.get_access_data()
+            if access_data:
+                return ConnectorStatus(status=True, message='Connection successful')
             else:
-                return ConnectorStatus(status=False)
-        except Exception:
-            return ConnectorStatus(status=False, error='Credentials are missing')
+                return ConnectorStatus(status=False, error='Impossible to retrieve access_token')
+        except OAuthError as ex:
+            return ConnectorStatus(status=False, error=f'Error to get status - {ex.error}')
+        except NoOAuth2RefreshToken:
+            return ConnectorStatus(
+                status=False, error='Error to get status - no refresh token found'
+            )
+        except Exception as ex:
+            return ConnectorStatus(
+                status=False, error=f'Error to get status - unknown exception - {ex}'
+            )
