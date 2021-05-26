@@ -82,8 +82,8 @@ class SnowflakeDataSource(ToucanDataSource):
 
 
 class AuthenticationMethod(str, Enum):
-    PLAIN: str = 'Snowflake (ID + Password)'
-    OAUTH: str = 'oAuth'
+    PLAIN: str = 'snowflake'
+    OAUTH: str = 'oauth'
 
 
 class SnowflakeConnector(ToucanConnector):

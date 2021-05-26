@@ -128,7 +128,7 @@ def test_snowflake(mocker):
         account='test_account',
         database='test_database',
         warehouse='test_warehouse',
-        authenticator='Snowflake (ID + Password)',
+        authenticator=AuthenticationMethod.PLAIN,
         application='ToucanToco',
         role=None,
     )
@@ -148,7 +148,7 @@ def test_snowflake_custom_role(mocker):
         account='test_account',
         database='test_database',
         warehouse='test_warehouse',
-        authenticator='Snowflake (ID + Password)',
+        authenticator=AuthenticationMethod.PLAIN,
         application='ToucanToco',
         role='TEST',
     )
@@ -255,7 +255,7 @@ def test_snowflake_data_source_default_warehouse(mocker):
         account='test_account',
         database='db',
         warehouse='default_wh',
-        authenticator='Snowflake (ID + Password)',
+        authenticator=AuthenticationMethod.PLAIN,
         application='ToucanToco',
         role=None,
     )
@@ -394,7 +394,7 @@ def test_snowflake_execute_other_query(mocker):
     connector = SnowflakeConnector(
         name='test',
         account='test',
-        authentication_method='Snowflake (ID + Password)',
+        authentication_method=AuthenticationMethod.PLAIN,
         user='test',
         password='test',
         default_warehouse='default_wh',
