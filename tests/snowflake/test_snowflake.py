@@ -15,6 +15,7 @@ from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.postgres.postgresql_connector import PostgresConnector
 from toucan_connectors.snowflake import (
     AuthenticationMethod,
+    AuthenticationMethodValue,
     SnowflakeConnector,
     SnowflakeDataSource,
 )
@@ -121,14 +122,13 @@ def test_snowflake(mocker):
     mock_execute.assert_has_calls(expected_calls)
 
     mock_execute.return_value.fetchall.assert_called_once()
-
     connect_mock.assert_called_once_with(
         user='test_user',
         password='test_password',
         account='test_account',
         database='test_database',
         warehouse='test_warehouse',
-        authenticator=AuthenticationMethod.PLAIN,
+        authenticator=AuthenticationMethodValue.PLAIN,
         application='ToucanToco',
         role=None,
     )
@@ -148,7 +148,7 @@ def test_snowflake_custom_role(mocker):
         account='test_account',
         database='test_database',
         warehouse='test_warehouse',
-        authenticator=AuthenticationMethod.PLAIN,
+        authenticator=AuthenticationMethodValue.PLAIN,
         application='ToucanToco',
         role='TEST',
     )
@@ -174,8 +174,7 @@ def test_snowflake_get_connection_params_no_auth_method(mocker):
         account='test_account',
         default_warehouse='test_wh',
     ).get_connection_params()
-
-    assert res['authenticator'] == AuthenticationMethod.PLAIN
+    assert res['authenticator'] == AuthenticationMethodValue.PLAIN
 
 
 def test_snowflake_data_source_get_form(mocker):
@@ -255,7 +254,7 @@ def test_snowflake_data_source_default_warehouse(mocker):
         account='test_account',
         database='db',
         warehouse='default_wh',
-        authenticator=AuthenticationMethod.PLAIN,
+        authenticator=AuthenticationMethodValue.PLAIN,
         application='ToucanToco',
         role=None,
     )
@@ -276,7 +275,7 @@ def test_snowflake_oauth_auth(mocker, sc_oauth):
     snow_mock.assert_called_once_with(
         user='test_user',
         account='test_account',
-        authenticator=AuthenticationMethod.OAUTH,
+        authenticator=AuthenticationMethodValue.OAUTH,
         database='test_database',
         warehouse='test_warehouse',
         token=sc_oauth.user_tokens_keeper.access_token.get_secret_value(),
@@ -293,7 +292,7 @@ def test_snowflake_plain_auth(mocker):
     snow_mock.assert_called_once_with(
         user='test_user',
         account='test_account',
-        authenticator=AuthenticationMethod.PLAIN,
+        authenticator=AuthenticationMethodValue.PLAIN,
         password='test_password',
         database='test_database',
         warehouse='test_warehouse',

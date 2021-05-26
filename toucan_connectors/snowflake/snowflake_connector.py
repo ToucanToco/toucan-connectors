@@ -82,6 +82,11 @@ class SnowflakeDataSource(ToucanDataSource):
 
 
 class AuthenticationMethod(str, Enum):
+    PLAIN: str = 'Snowflake (ID + Password)'
+    OAUTH: str = 'oAuth'
+
+
+class AuthenticationMethodValue(str, Enum):
     PLAIN: str = 'snowflake'
     OAUTH: str = 'oauth'
 
@@ -239,14 +244,16 @@ class SnowflakeConnector(ToucanConnector):
         if not self.authentication_method:
             # Default to User/Password authentication method if the parameter
             # was not set when the connector was created
-            res['authenticator'] = AuthenticationMethod.PLAIN
+            res['authenticator'] = AuthenticationMethodValue.PLAIN
 
         if res['authenticator'] == AuthenticationMethod.PLAIN and self.password:
+            res['authenticator'] = AuthenticationMethodValue.PLAIN
             res['password'] = self.password.get_secret_value()
 
         if self.authentication_method == AuthenticationMethod.OAUTH:
             if self.access_token is not None:
                 res['token'] = self.access_token
+            res['authenticator'] = AuthenticationMethodValue.OAUTH
 
         if self.role != '':
             res['role'] = self.role
