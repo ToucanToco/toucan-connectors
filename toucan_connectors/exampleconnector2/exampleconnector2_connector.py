@@ -121,8 +121,33 @@ class SubFieldComplex(BaseModel):
 class Exampleconnector2Connector(ToucanConnector):
     data_source_model: Exampleconnector2DataSource
 
-    data: Union[SubFieldComplex, SubFieldComplex2] = Field(
-        None, description='JSON object to send in the body of the HTTP request'
+    # data: Union[SubFieldComplex, SubFieldComplex2] = Field(
+    #     None, description='JSON object to send in the body of the HTTP request'
+    # )
+
+    tata: str = Field(
+        None,
+        description="description",
+        title="tata",
+        widget="sql"
+    )
+
+    table: constr(min_length=1) = Field(
+        None,
+        description='The name of the data table that you want to '
+        'get (equivalent to "SELECT * FROM '
+        'your_table")',
+    )
+
+    example: EnumExample = Field(
+        EnumExample.example_1.value,
+        title='Enum Example with default value without checkbox',
+        alias='Enum Example with default value without checkbox',
+        description='Enum Example with default value without checkbox description',
+        widget='radioButtons',
+        **{'ui': {
+            'checkbox': False
+        }}
     )
 
     class Config:

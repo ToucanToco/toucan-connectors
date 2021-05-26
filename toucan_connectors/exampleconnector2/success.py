@@ -49,10 +49,10 @@ dict_field: Dict = Field(
     description='dict field description'
 )
 
-list_field_4: List[SubFieldComplex] = Field(
+list_field: List[SubFieldComplex] = Field(
     ...,
-    title='list field 4',
-    alias='public list field name 4',
+    title='list field',
+    alias='public list field name',
     description='list field description'
 )
 
