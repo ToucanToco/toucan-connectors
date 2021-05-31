@@ -51,43 +51,43 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     category: Category = Field(Category.SNOWFLAKE, **{'hidden': True})
 
     info_step1: str = Field(
-        '''<div style="width: 100%; padding: 10px; background-color: #2a66a1;">Step 1<br />Please fill connector name</div>''',
+        '<div style="width: 100%; padding: 10px; background-color: #2a66a1;">Step 1<br />Please fill connector name</div>',
         title='step_1',
         widget='info',
     )
 
     info_step2: str = Field(
-        '''<div style="width: 100%; padding: 10px; background-color: #2a66a1;">Step 2<br />Play this request in Snowflake<br />
-        'create security integration toucan_oauth2_{{name}}<br />
-        '<span style="color: red;">
-        'type = oauth<br />
-        'enabled = true<br />
-        'oauth_client = custom<br />
-        'oauth_client_type = 'CONFIDENTIAL'<br />
-        'oauth_redirect_uri = 'https://localhost:5000/tttt/oauth/redirect?connector_name={{name}}'<br />
-        'oauth_issue_refresh_tokens = true<br />
-        'oauth_allow_non_tls_redirect_uri = true<br />
-        'oauth_refresh_token_validity = 86400<br />
-        'pre_authorized_roles_list = ('PUBLIC');<br />
-        '</span>
-        '<br />
-        'If you update your connector name, play this request<br />
-        '<span style="color: red;">
-        'alter security integration toucan_oauth2_{{name}} set oauth_redirect_uri = 'http://localhost:5000/fbb-snowflake/oauth/redirect?connector_name={{name}}';
-        '</span>
-        '</div>''',
+        '<div style="width: 100%; padding: 10px; background-color: #2a66a1;">Step 2<br />Play this request in Snowflake<br />'
+        'create security integration toucan_oauth2_{{name}}<br />'
+        '<span style="color: red;">'
+        'type = oauth<br />'
+        'enabled = true<br />'
+        'oauth_client = custom<br />'
+        'oauth_client_type = \'CONFIDENTIAL\'<br />'
+        'oauth_redirect_uri = \'https://localhost:5000/tttt/oauth/redirect?connector_name={{name}}\'<br />'
+        'oauth_issue_refresh_tokens = true<br />'
+        'oauth_allow_non_tls_redirect_uri = true<br />'
+        'oauth_refresh_token_validity = 86400<br />'
+        'pre_authorized_roles_list = (\'PUBLIC\');<br />'
+        '</span>'
+        '<br />'
+        'If you update your connector name, play this request<br />'
+        '<span style="color: red;">'
+        'alter security integration toucan_oauth2_{{name}} set oauth_redirect_uri = \'http://localhost:5000/fbb-snowflake/oauth/redirect?connector_name={{name}}\';'
+        '</span>'
+        '</div>',
         title='step_2',
         widget='info',
         **{'watch_field': ['name']},
     )
 
     info_step3: str = Field(
-        '''<div style="width: 100%; padding: 10px; background-color: #2a66a1;">Step 2<br />
-        Get your client_id and client_secret with request<br />
-        <span style="color: red;">
-        select system$show_oauth_client_secrets('toucan_oauth2_{{name}}');
-        </span>
-        </div>''',
+        '<div style="width: 100%; padding: 10px; background-color: #2a66a1;">Step 2<br />'
+        'Get your client_id and client_secret with request<br />'
+        '<span style="color: red;">'
+        'select system$show_oauth_client_secrets(\'toucan_oauth2_{{name}}\');'
+        '</span>'
+        '</div>',
         title='step_3',
         widget='info',
         **{'watch_field': ['name']},
