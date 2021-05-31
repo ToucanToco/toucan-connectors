@@ -13,10 +13,10 @@ def snowflake_oauth2_connector(secrets_keeper):
         account='acc',
         client_id='clientid',
         client_secret='clientsecret',
-        scope='all:your:data',
+        scope='refresh_token',
         token_url='https://acc.token',
         secrets_keeper=secrets_keeper,
-        role='testrole',
+        role='PUBLIC',
         default_warehouse='aqualy',
     )
 

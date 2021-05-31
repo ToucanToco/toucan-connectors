@@ -1,4 +1,3 @@
-import logging
 from enum import Enum
 from typing import Any, Dict, List, Type
 
@@ -54,7 +53,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     info_step1: str = Field(
         '''<div style="width: 100%; padding: 10px; background-color: #2a66a1;">Step 1<br />Please fill connector name</div>''',
         title='step_1',
-        widget='info'
+        widget='info',
     )
 
     info_step2: str = Field(
@@ -79,9 +78,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         '</div>''',
         title='step_2',
         widget='info',
-        **{
-            'watch_field': ['name']
-        }
+        **{'watch_field': ['name']},
     )
 
     info_step3: str = Field(
@@ -93,9 +90,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         </div>''',
         title='step_3',
         widget='info',
-        **{
-            'watch_field': ['name']
-        }
+        **{'watch_field': ['name']},
     )
 
     client_id: str = Field(
@@ -103,30 +98,29 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         title='Client ID',
         description='The client id of you Snowflake integration',
         **{'ui.required': True},
-        required_label=True
+        required_label=True,
     )
     client_secret: SecretStr = Field(
         ...,
         title='Client Secret',
         description='The client secret of your Snowflake integration',
         **{'ui.required': True},
-        required_label=True
+        required_label=True,
     )
     scope: SnowflakeScopeAvailable = Field(
-        None,
-        title='Scope',
-        description='The scope the integration',
-        placeholder='refresh_token'
+        None, title='Scope', description='The scope the integration', placeholder='refresh_token'
     )
     role: SnowflakeRoleAvailable = Field(
         SnowflakeRoleAvailable.PUBLIC,
         title='Snowflake Role',
         description='Role to use for queries',
-        **{'ui': {
-            'checkbox': False,
-            'required': True,
-        }},
-        required_label=True
+        **{
+            'ui': {
+                'checkbox': False,
+                'required': True,
+            }
+        },
+        required_label=True,
     )
     account: str = Field(
         ...,
@@ -135,23 +129,20 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
-        **{
-            'placeholder': 'your_account_name.region_id.cloud_platform',
-            'ui': {'required': True}
-        },
-        required_label=True
+        **{'placeholder': 'your_account_name.region_id.cloud_platform', 'ui': {'required': True}},
+        required_label=True,
     )
     default_warehouse: str = Field(
         ...,
         title="Default warehouse",
         description='The default warehouse that shall be used for any data source',
         **{'ui.required': True},
-        required_label=True
+        required_label=True,
     )
 
     class Config:
         @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['SnowflakeConnector']) -> None:
+        def schema_extra(schema: Dict[str, Any], model: Type['SnowflakeoAuth2Connector']) -> None:
             ordered_keys = [
                 'type',
                 'info_step1',
