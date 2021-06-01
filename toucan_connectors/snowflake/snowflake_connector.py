@@ -144,7 +144,10 @@ class SnowflakeConnector(ToucanConnector):
         title='Authentication Method',
         description='JSON object to send in the body of the HTTP request',
         **{
-            'ui': {'checkbox': False, 'case': 'oAuth'},
+            'ui': {
+                'checkbox': False,
+                'case': 'oAuth'
+            },
             'required': True,
         },
     )
