@@ -230,6 +230,9 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     the `_retry_on` class attribute in your concrete connector class.
     """
 
+    small_app_name: str = Field(None, **{
+        hidden: True
+    })
     name: str = Field(...)
     retry_policy: Optional[RetryPolicy] = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()

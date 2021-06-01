@@ -64,7 +64,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         'enabled = true<br />'
         'oauth_client = custom<br />'
         'oauth_client_type = "CONFIDENTIAL"<br />'
-        'oauth_redirect_uri = "https://localhost:5000/tttt/oauth/redirect?connector_name={{name}}"<br />'
+        'oauth_redirect_uri = "https://localhost:5000/{{small_app_name}}/oauth/redirect?connector_name={{name}}"<br />'
         'oauth_issue_refresh_tokens = true<br />'
         'oauth_allow_non_tls_redirect_uri = true<br />'
         'oauth_refresh_token_validity = 86400<br />'
@@ -73,19 +73,19 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         '<br />'
         'If you update your connector name, play this request<br />'
         '<span style="color: red;">'
-        'alter security integration toucan_oauth2_{{name}} set oauth_redirect_uri = "http://localhost:5000/fbb-snowflake/oauth/redirect?connector_name={{name}}";'
+        'alter security integration toucan_oauth2_{{name}} set oauth_redirect_uri = "http://localhost:5000/{{small_app_name}}/oauth/redirect?connector_name={{name}}";'
         '</span>'
         '</div>',
         title='step_2',
         widget='info',
-        **{'watch_field': ['name']},
+        **{'watch_field': ['name', 'small_app_name']},
     )
 
     info_step3: str = Field(
         '<div style="width: 100%; padding: 10px; background-color: #2a66a1;">Step 2<br />'
         'Get your client_id and client_secret with request<br />'
         '<span style="color: red;">'
-        'select system$show_oauth_client_secrets(\'toucan_oauth2_{{name}}\');'
+        'select system$show_oauth_client_secrets("toucan_oauth2_{{name}}");'
         '</span>'
         '</div>',
         title='step_3',
@@ -125,10 +125,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         **{
             'ui': {
                 'checkbox': False,
-                'required': True,
-                'sections': {
-                    
-                }
+                'required': True
             }
         },
         required_label=True,
@@ -140,7 +137,10 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
-        **{'placeholder': 'your_account_name.region_id.cloud_platform', 'ui': {'required': True}},
+        **{
+            'placeholder': 'your_account_name.region_id.cloud_platform',
+            'ui': {'required': True}
+        },
         required_label=True,
     )
     default_warehouse: str = Field(
