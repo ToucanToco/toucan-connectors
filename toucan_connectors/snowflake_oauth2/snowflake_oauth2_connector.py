@@ -108,7 +108,15 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         required_label=True,
     )
     scope: SnowflakeScopeAvailable = Field(
-        None, title='Scope', description='The scope the integration', placeholder='refresh_token'
+        None,
+        title='Scope',
+        description='The scope the integration',
+        placeholder='refresh_token',
+        **{
+            'ui': {
+                'checkbox': False
+            }
+        }
     )
     role: SnowflakeRoleAvailable = Field(
         SnowflakeRoleAvailable.PUBLIC,
@@ -118,6 +126,9 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             'ui': {
                 'checkbox': False,
                 'required': True,
+                'sections': {
+                    
+                }
             }
         },
         required_label=True,
@@ -144,7 +155,6 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         @staticmethod
         def schema_extra(schema: Dict[str, Any], model: Type['SnowflakeoAuth2Connector']) -> None:
             ordered_keys = [
-                'type',
                 'info_step1',
                 'name',
                 'info_step2',
