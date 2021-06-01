@@ -214,6 +214,11 @@ def get_connector_secrets_form(cls) -> Optional[ConnectorSecretsForm]:
         return getattr(cls, 'get_connector_secrets_form')()
 
 
+class AdvancedConfigurationConnector(BaseModel):
+    retry_policy: Optional[RetryPolicy] = RetryPolicy()
+    _retry_on: Iterable[Type[BaseException]] = ()
+
+
 class ToucanConnector(BaseModel, metaclass=ABCMeta):
     """Abstract base class for all toucan connectors.
 
@@ -234,16 +239,16 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     the `_retry_on` class attribute in your concrete connector class.
     """
 
-    small_app_name: str = Field(None, **{
-        'hidden': True
-    })
-    type: str = Field(None, **{
-        'hidden': True
-    })
+    small_app_name: str = Field(None, **{'hidden': True})
+    type: str = Field(None, **{'hidden': True})
     name: str = Field(...)
+    secrets_storage_version = Field('1', **{'ui.hidden': True})
+
+    advanced: AdvancedConfigurationConnector = Field(
+        None, title='Advanced configuration', description='test'
+    )
     retry_policy: Optional[RetryPolicy] = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
-    secrets_storage_version = Field('1', **{'ui.hidden': True})
 
     class Config:
         extra = 'forbid'

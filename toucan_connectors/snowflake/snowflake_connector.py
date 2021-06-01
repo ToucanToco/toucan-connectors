@@ -140,14 +140,11 @@ class SnowflakeConnector(ToucanConnector):
     authentication_method: Union[
         AuthenticationParamsUserPassword, AuthenticationParamsOAuth
     ] = Field(
-        AuthenticationMethod.PLAIN,
+        ...,
         title='Authentication Method',
         description='JSON object to send in the body of the HTTP request',
         **{
-            'ui': {
-                'checkbox': False,
-                'case': 'oAuth'
-            },
+            'ui': {'checkbox': False, 'case': 'oAuth'},
             'required': True,
         },
     )
@@ -175,6 +172,7 @@ class SnowflakeConnector(ToucanConnector):
                 'authentication_method',
                 'role',
                 'default_warehouse',
+                # 'advanced',
                 'retry_policy',
                 'secrets_storage_version',
                 'sso_credentials_keeper',
@@ -261,7 +259,7 @@ class SnowflakeConnector(ToucanConnector):
 
         if isinstance(self.authentication_method, AuthenticationParamsUserPassword):
             res['authenticator'] = AuthenticationMethodValue.PLAIN.value
-            res['user'] = (Template(self.authentication_method.user).render(),)
+            res['user'] = Template(self.authentication_method.user).render()
             res['password'] = self.authentication_method.password.get_secret_value()
 
         if isinstance(self.authentication_method, AuthenticationParamsOAuth):
