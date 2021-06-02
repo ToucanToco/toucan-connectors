@@ -19,6 +19,7 @@ from toucan_connectors.snowflake import (
     AuthenticationParamsUserPassword,
     SnowflakeConnector,
     SnowflakeDataSource,
+    AuthenticationMethod,
 )
 from toucan_connectors.toucan_connector import needs_sso_credentials
 
@@ -34,7 +35,7 @@ sc = SnowflakeConnector(
 
 OAUTH_TOKEN_ENDPOINT = 'http://example.com/endpoint'
 OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE = 'application/x-www-form-urlencoded'
-OAUTH_ACCESS_TOKEN = str(jwt.encode({'exp': 42, 'sub': 'snowflake_user'}, key='clef'))
+OAUTH_ACCESS_TOKEN = jwt.encode({'exp': 42, 'sub': 'snowflake_user'}, key='clef')
 OAUTH_REFRESH_TOKEN = 'baba au rhum'
 OAUTH_CLIENT_ID = 'client_id'
 OAUTH_CLIENT_SECRET = 'client_s3cr3t'
@@ -277,11 +278,12 @@ def test_snowflake_oauth_auth(mocker, sc_oauth):
 
     snow_mock.assert_called_once_with(
         account='test_account',
-        token=sc_oauth.user_tokens_keeper.access_token.get_secret_value(),
-        database='test_database',
-        warehouse='test_warehouse',
         application='ToucanToco',
+        authenticator='oauth',
+        token=sc_oauth.user_tokens_keeper.access_token.get_secret_value(),
         role=None,
+        database='test_database',
+        warehouse='test_warehouse'
     )
 
 
@@ -546,14 +548,14 @@ def test_oauth_args_endpoint_not_200(mocker, sc_oauth):
         assert False
 
 
-def test_oauth_args_wrong_type_of_auth(mocker, sc_oauth):
+def test_oauth_args_wrong_type_of_auth(mocker, sc_oauth, snowflake_connector):
     mocker.patch('snowflake.connector.connect')
 
-    assert isinstance(sc_oauth.authentication_method, AuthenticationParamsOAuth)
+    # assert isinstance(sc_oauth.authentication_method, AuthenticationParamsOAuth)
+    # snowflake_connector.authentication_method = AuthenticationParamsUserPassword()
     spy = mocker.spy(SnowflakeConnector, '_refresh_oauth_token')
 
-    sc_oauth._retrieve_data(sd)
-
+    snowflake_connector._retrieve_data(sd)
     assert spy.call_count == 0
 
 

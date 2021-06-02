@@ -273,10 +273,8 @@ class SnowflakeConnector(ToucanConnector):
 
     def _refresh_oauth_token(self):
         """Regenerates an oauth token if configuration was provided and if the given token has expired."""
-        if self.authentication_method.token_endpoint and self.refresh_token:
-            access_token = str(
-                jwt.decode(self.access_token, verify=False, options={'verify_signature': False})
-            )
+        if isinstance(self.authentication_method, AuthenticationParamsOAuth) and self.authentication_method.token_endpoint and self.refresh_token:
+            access_token = jwt.decode(self.access_token, verify=False, options={'verify_signature': False})
             if datetime.fromtimestamp(access_token['exp']) < datetime.now():
                 res = requests.post(
                     self.authentication_method.token_endpoint,
