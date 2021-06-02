@@ -172,7 +172,6 @@ class SnowflakeConnector(ToucanConnector):
                 'authentication_method',
                 'role',
                 'default_warehouse',
-                # 'advanced',
                 'retry_policy',
                 'secrets_storage_version',
                 'sso_credentials_keeper',

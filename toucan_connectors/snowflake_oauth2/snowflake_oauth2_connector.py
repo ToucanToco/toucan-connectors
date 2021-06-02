@@ -133,8 +133,8 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         required_label=True,
     )
     default_warehouse: str = Field(
-        ...,
-        title="Default warehouse",
+        None,
+        title='Default warehouse',
         description='The default warehouse that shall be used for any data source',
         **{'ui.required': True},
         required_label=True,
