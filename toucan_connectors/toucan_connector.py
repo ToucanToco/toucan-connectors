@@ -98,6 +98,10 @@ class RetryPolicy(BaseModel):
         self.__dict__['retry_on'] = retry_on
         self.__dict__['logger'] = logger
 
+    class Config:
+        arbitrary_types_allowed = True
+        title = 'Retry Policy'
+
     @property
     def tny_stop(self):
         """generate corresponding `stop` parameter for `tenacity.retry`"""
@@ -230,11 +234,13 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     the `_retry_on` class attribute in your concrete connector class.
     """
 
+    small_app_name: str = Field(None, **{'hidden': True})
+    type: str = Field(None, **{'hidden': True})
     name: str = Field(...)
+    secrets_storage_version = Field('1', **{'ui.hidden': True})
+
     retry_policy: Optional[RetryPolicy] = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
-    type: str = Field(None)
-    secrets_storage_version = Field('1', **{'ui.hidden': True})
 
     class Config:
         extra = 'forbid'

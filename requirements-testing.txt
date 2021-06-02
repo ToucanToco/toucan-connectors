@@ -23,3 +23,4 @@ clickhouse_driver == 0.2.0
 lxml == 4.2.5
 zeep == 4.0.0
 mock == 4.0.3
+pyjwt == 2.1.0

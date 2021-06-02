@@ -1,4 +1,6 @@
-from typing import List
+import logging
+from enum import Enum
+from typing import Any, Dict, List, Type
 
 import pandas as pd
 import snowflake as pysnowflake
@@ -20,34 +22,62 @@ class SnowflakeoAuth2DataSource(SnowflakeDataSource):
     """ """
 
 
+class SnowflakeRoleAvailable(str, Enum):
+    ACCOUNTADMIN: str = 'ACCOUNTADMIN'
+    SECURITYADMIN: str = 'SECURITYADMIN'
+    USERADMIN: str = 'USERADMIN'
+    SYSADMIN: str = 'SYSADMIN'
+    PUBLIC: str = 'PUBLIC'
+
+
+class SnowflakeScopeAvailable(str, Enum):
+    refresh_token: str = 'refresh_token'
+    ACCOUNTADMIN: str = 'session:role:ACCOUNTADMIN'
+    SECURITYADMIN: str = 'session:role:SECURITYADMIN'
+    USERADMIN: str = 'session:role:USERADMIN'
+    SYSADMIN: str = 'session:role:SYSADMIN'
+    PUBLIC: str = 'session:role:PUBLIC'
+
+
 class SnowflakeoAuth2Connector(ToucanConnector):
+    _auth_flow = 'oauth2'
+    _oauth_trigger = 'connector'
+    data_source_model: SnowflakeoAuth2DataSource
+
+    token_url: str = Field(None, **{'hidden': True})
+    auth_flow_id: str = Field(None, **{'hidden': True})
+    oauth2_version = Field('1', **{'hidden': True})
+    authorization_url: str = Field(None, **{'hidden': True})
+    redirect_uri: str = Field(None, **{'hidden': True})
+    category: Category = Field(Category.SNOWFLAKE, **{'hidden': True})
+
     client_id: str = Field(
-        '',
+        ...,
         title='Client ID',
         description='The client id of you Snowflake integration',
         **{'ui.required': True},
+        required_label=True,
     )
     client_secret: SecretStr = Field(
-        '',
+        ...,
         title='Client Secret',
         description='The client secret of your Snowflake integration',
         **{'ui.required': True},
+        required_label=True,
     )
-    authorization_url: str = Field(None, **{'ui.hidden': True})
-    scope: str = Field(
-        None, Title='Scope', description='The scope the integration', placeholder='refresh_token'
+    scope: SnowflakeScopeAvailable = Field(
+        None,
+        title='Scope',
+        description='The scope the integration',
+        placeholder='refresh_token',
+        **{'ui': {'checkbox': False}},
     )
-    token_url: str = Field(None, **{'ui.hidden': True})
-    auth_flow_id: str = Field(None, **{'ui.hidden': True})
-    _auth_flow = 'oauth2'
-    _oauth_trigger = 'connector'
-    oauth2_version = Field('1', **{'ui.hidden': True})
-    redirect_uri: str = Field(None, **{'ui.hidden': True})
-    role: str = Field(
-        ...,
-        title='Role',
+    role: SnowflakeRoleAvailable = Field(
+        SnowflakeRoleAvailable.PUBLIC,
+        title='Snowflake Role',
         description='Role to use for queries',
-        placeholder='PUBLIC',
+        **{'ui': {'checkbox': False, 'required': True}},
+        required_label=True,
     )
     account: str = Field(
         ...,
@@ -56,12 +86,38 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
+        **{'placeholder': 'your_account_name.region_id.cloud_platform', 'ui': {'required': True}},
+        required_label=True,
     )
-    data_source_model: SnowflakeoAuth2DataSource
     default_warehouse: str = Field(
-        ..., description='The default warehouse that shall be used for any data source'
+        None,
+        title='Default warehouse',
+        description='The default warehouse that shall be used for any data source',
+        **{'ui.required': True},
+        required_label=True,
     )
-    category: Category = Field(Category.SNOWFLAKE, title='category', **{'ui': {'checkbox': False}})
+
+    class Config:
+        @staticmethod
+        def schema_extra(schema: Dict[str, Any], model: Type['SnowflakeoAuth2Connector']) -> None:
+            ordered_keys = [
+                'name',
+                'account',
+                'client_id',
+                'client_secret',
+                'role',
+                'scope',
+                'default_warehouse',
+                'retry_policy',
+                'category',
+                'token_url',
+                'auth_flow_id',
+                'oauth2_version',
+                'authorization_url',
+                'redirect_uri',
+                'secrets_storage_version',
+            ]
+            schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
 
     def __init__(self, **kwargs):
         super().__init__(**{k: v for k, v in kwargs.items() if k != 'secrets_keeper'})
@@ -81,23 +137,36 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         )
 
     def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        logging.getLogger(__name__).info('Build authorization url')
+        authorization_url = self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        logging.getLogger(__name__).info(f'Build authorization url {authorization_url}')
+        return authorization_url
 
     def retrieve_tokens(self, authorization_response: str):
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        logging.getLogger(__name__).info('Retrieve token')
+        tokens = self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        logging.getLogger(__name__).info(f'Retrieve token {tokens}')
+        return tokens
 
     def _get_warehouses(self) -> List[str]:
+        logging.getLogger(__name__).info('Get warehouse')
         with self.connect() as connection:
-            return [
+            result = [
                 warehouse['name']
                 for warehouse in connection.cursor(DictCursor).execute('SHOW WAREHOUSES').fetchall()
                 if 'name' in warehouse
             ]
+            logging.getLogger(__name__).info(f'Get warehouse {result}')
+            return result
 
     def get_access_token(self):
-        return self.__dict__['_oauth2_connector'].get_access_token()
+        logging.getLogger(__name__).info('Get access token')
+        access_token = self.__dict__['_oauth2_connector'].get_access_token()
+        logging.getLogger(__name__).info(f'Get access token {access_token}')
+        return access_token
 
     def connect(self, database=None, warehouse=None) -> pysnowflake.connector.SnowflakeConnection:
+        logging.getLogger(__name__).info('Connect at Snowflake')
         connection_params = {
             'account': self.account,
             'authenticator': AuthenticationMethod.OAUTH,
@@ -110,6 +179,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         )
 
     def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> pd.DataFrame:
+        logging.getLogger(__name__).info('Retrieve Snowflake data')
         connection = self.connect(
             database=data_source.database,
             warehouse=data_source.warehouse,
@@ -118,5 +188,5 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         query_res = cursor.execute(data_source.query)
         df = pd.DataFrame(query_res.fetchall())
         connection.close()
-
+        logging.getLogger(__name__).info('Retrieve Snowflake data finish')
         return df
