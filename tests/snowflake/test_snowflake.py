@@ -19,7 +19,6 @@ from toucan_connectors.snowflake import (
     AuthenticationParamsUserPassword,
     SnowflakeConnector,
     SnowflakeDataSource,
-    AuthenticationMethod,
 )
 from toucan_connectors.toucan_connector import needs_sso_credentials
 
@@ -283,7 +282,7 @@ def test_snowflake_oauth_auth(mocker, sc_oauth):
         token=sc_oauth.user_tokens_keeper.access_token.get_secret_value(),
         role=None,
         database='test_database',
-        warehouse='test_warehouse'
+        warehouse='test_warehouse',
     )
 
 
@@ -551,8 +550,6 @@ def test_oauth_args_endpoint_not_200(mocker, sc_oauth):
 def test_oauth_args_wrong_type_of_auth(mocker, sc_oauth, snowflake_connector):
     mocker.patch('snowflake.connector.connect')
 
-    # assert isinstance(sc_oauth.authentication_method, AuthenticationParamsOAuth)
-    # snowflake_connector.authentication_method = AuthenticationParamsUserPassword()
     spy = mocker.spy(SnowflakeConnector, '_refresh_oauth_token')
 
     snowflake_connector._retrieve_data(sd)

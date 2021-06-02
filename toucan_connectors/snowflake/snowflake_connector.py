@@ -107,8 +107,6 @@ class AuthenticationParamsOAuth(BaseModel):
         'application/json',
         description='The content type to use when requesting the token endpoint',
     )
-    # user_tokens_keeper: SecretsKeeper = Field(None, **{'ui.hidden': True})
-    # sso_credentials_keeper: SecretsKeeper = Field(None, **{'ui.hidden': True})
 
     class Config:
         arbitrary_types_allowed = True
@@ -273,8 +271,16 @@ class SnowflakeConnector(ToucanConnector):
 
     def _refresh_oauth_token(self):
         """Regenerates an oauth token if configuration was provided and if the given token has expired."""
-        if isinstance(self.authentication_method, AuthenticationParamsOAuth) and self.authentication_method.token_endpoint and self.refresh_token:
-            access_token = jwt.decode(self.access_token, verify=False, options={'verify_signature': False})
+        if (
+            isinstance(self.authentication_method, AuthenticationParamsOAuth)
+            and self.authentication_method.token_endpoint
+            and self.refresh_token
+        ):
+            access_token = jwt.decode(
+                self.access_token,
+                verify=False,
+                options={'verify_signature': False},
+            )
             if datetime.fromtimestamp(access_token['exp']) < datetime.now():
                 res = requests.post(
                     self.authentication_method.token_endpoint,

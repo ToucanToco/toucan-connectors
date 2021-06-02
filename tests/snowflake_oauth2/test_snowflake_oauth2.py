@@ -1,3 +1,4 @@
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 from toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector import SnowflakeoAuth2Connector
 
@@ -76,3 +77,27 @@ def test_get__warehouses(mocker, snowflake_oauth2_connector):
     assert mocked_connect.call_args_list[0][1]['warehouse'] is None
     assert mocked_connect.call_args_list[0][1]['role'] == 'PUBLIC'
     assert mocked_connect.call_args_list[0][1]['token'] == 'shiny token'
+
+
+def test_schema_fields_order():
+    schema_props_keys = list(
+        JsonWrapper.loads(SnowflakeoAuth2Connector.schema_json())['properties'].keys()
+    )
+    ordered_keys = [
+        'name',
+        'account',
+        'client_id',
+        'client_secret',
+        'role',
+        'scope',
+        'default_warehouse',
+        'retry_policy',
+        'category',
+        'token_url',
+        'auth_flow_id',
+        'oauth2_version',
+        'authorization_url',
+        'redirect_uri',
+        'secrets_storage_version',
+    ]
+    assert schema_props_keys == ordered_keys
