@@ -84,6 +84,7 @@ def test_schema_fields_order():
         JsonWrapper.loads(SnowflakeoAuth2Connector.schema_json())['properties'].keys()
     )
     ordered_keys = [
+        'type',
         'name',
         'account',
         'client_id',
