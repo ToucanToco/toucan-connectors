@@ -149,6 +149,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Microsoft SQL Server',
         'logo': 'mssql/mssql.png',
     },
+    'MSSQL_TLSv1_0': {
+        'connector': 'mssql_TLSv1_0.mssql_connector.MSSQLConnector',
+        'label': 'Microsoft SQL Server (old security certificate management TLS v1.0)',
+        'logo': 'mssql/mssql.png',
+    },
     'MySQL': {
         'connector': 'mysql.mysql_connector.MySQLConnector',
         'logo': 'mysql/mysql.png',

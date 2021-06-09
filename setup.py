@@ -26,6 +26,7 @@ extras_require = {
     'lightspeed': bearer_deps,
     'mongo': ['pymongo>=3.6.1'],
     'mssql': ['pyodbc>=3'],
+    'mssql_TLSv1_0': ['pyodbc>=3'],
     'mysql': ['PyMySQL>=0.8.0'],
     'odata': auth_deps + ['tctc_odata'],
     'odbc': ['pyodbc>=3'],
