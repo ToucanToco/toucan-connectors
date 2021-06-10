@@ -1,3 +1,5 @@
+import logging
+from timeit import default_timer as timer
 from typing import List
 
 import pandas as pd
@@ -14,6 +16,8 @@ from toucan_connectors.snowflake.snowflake_connector import (
     SnowflakeDataSource,
 )
 from toucan_connectors.toucan_connector import Category, ToucanConnector
+
+logger = logging.getLogger(__name__)
 
 
 class SnowflakeoAuth2DataSource(SnowflakeDataSource):
@@ -98,6 +102,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
     def connect(self, database=None, warehouse=None) -> pysnowflake.connector.SnowflakeConnection:
+        token_start = timer()
         connection_params = {
             'account': self.account,
             'authenticator': AuthenticationMethod.OAUTH,
@@ -105,18 +110,49 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             'token': self.get_access_token(),
             'role': self.role if self.role else '',
         }
+        token_end = timer()
+        logger.info(
+            f'[Benchmark] - get_access_token {token_end - token_start} seconds',
+            extra={
+                'Benchmark': {
+                    'operation': 'get_access_token',
+                    'execution_time': f'{token_end - token_start} seconds',
+                }
+            },
+        )
         return pysnowflake.connector.connect(
             **connection_params, database=database, warehouse=warehouse
         )
 
     def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> pd.DataFrame:
+        connect_start = timer()
         connection = self.connect(
             database=data_source.database,
             warehouse=data_source.warehouse,
         )
+        connect_end = timer()
+        logger.info(
+            f'[Benchmark] - connect {connect_end - connect_start} seconds',
+            extra={
+                'Benchmark': {
+                    'operation': 'connect',
+                    'execution_time': f'{connect_end - connect_start} seconds',
+                }
+            },
+        )
+        execution_start = timer()
         cursor = connection.cursor(DictCursor)
         query_res = cursor.execute(data_source.query)
         df = pd.DataFrame(query_res.fetchall())
         connection.close()
-
+        execution_end = timer()
+        logger.info(
+            f'[Benchmark] - execute {execution_end - execution_start} seconds',
+            extra={
+                'Benchmark': {
+                    'operation': 'execute',
+                    'execution_time': f'{execution_end - execution_start} seconds',
+                }
+            },
+        )
         return df
