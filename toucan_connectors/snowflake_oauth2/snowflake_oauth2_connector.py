@@ -114,9 +114,9 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         logger.info(
             f'[Benchmark] - get_access_token {token_end - token_start} seconds',
             extra={
-                'Benchmark': {
+                'benchmark': {
                     'operation': 'get_access_token',
-                    'execution_time': f'{token_end - token_start} seconds',
+                    'execution_time': token_end - token_start,
                 }
             },
         )
@@ -134,9 +134,9 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         logger.info(
             f'[Benchmark] - connect {connect_end - connect_start} seconds',
             extra={
-                'Benchmark': {
+                'benchmark': {
                     'operation': 'connect',
-                    'execution_time': f'{connect_end - connect_start} seconds',
+                    'execution_time': connect_end - connect_start,
                 }
             },
         )
@@ -149,9 +149,9 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         logger.info(
             f'[Benchmark] - execute {execution_end - execution_start} seconds',
             extra={
-                'Benchmark': {
+                'benchmark': {
                     'operation': 'execute',
-                    'execution_time': f'{execution_end - execution_start} seconds',
+                    'execution_time': execution_end - execution_start,
                 }
             },
         )
