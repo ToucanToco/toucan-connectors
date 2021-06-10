@@ -57,7 +57,14 @@ class AzureMSSQLConnector(ToucanConnector):
     def _retrieve_data(self, datasource: AzureMSSQLDataSource) -> pd.DataFrame:
         connection = pyodbc.connect(**self.get_connection_params(database=datasource.database))
 
-        df = pandas_read_sql(datasource.query, con=connection)
+        query_params = datasource.parameters or {}
+        df = pandas_read_sql(
+            datasource.query,
+            con=connection,
+            params=query_params,
+            convert_to_qmark=True,
+            render_user=True,
+        )
 
         connection.close()
         return df
