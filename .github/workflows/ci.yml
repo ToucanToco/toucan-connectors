@@ -49,6 +49,9 @@ jobs:
     - name: Install mssql dependencies
       run: sudo bash toucan_connectors/install_scripts/mssql.sh
 
+    - name: Install mssql_TLSv1_0 dependencies
+      run: sudo bash toucan_connectors/install_scripts/mssql_TLSv1_0.sh
+
     - name: Install odbc dependencies
       run: sudo bash toucan_connectors/install_scripts/odbc.sh
 
