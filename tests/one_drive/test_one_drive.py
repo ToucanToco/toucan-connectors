@@ -76,7 +76,7 @@ FAKE_SHEET = {
 
 
 def test_sheet_success(mocker, con, ds, http_get_mock):
-    """It should return a datafrale"""
+    """It should return a dataframe"""
     mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
 
     df = con.get_df(ds)
@@ -141,3 +141,14 @@ def test_get_access_token(con, mocker):
 def test_get_connector_secrets_form(con, mocker):
     doc = con.get_connector_secrets_form()
     assert doc is not None
+
+
+def test_run_fetch(con, mocker):
+    mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
+    mock_oauth2_connector.client_id = 'client_id'
+    mock_oauth2_connector.client_secret = 'secret'
+    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
+
+    con._run_fetch('https://jsonplaceholder.typicode.com/posts')
+
+    mock_oauth2_connector.get_access_token.assert_called()
