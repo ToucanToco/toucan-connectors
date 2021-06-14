@@ -17,6 +17,7 @@ def con(secrets_keeper):
         client_secret='CLIENT_SECRET',
         redirect_uri='REDIRECT_URI',
         secrets_keeper=secrets_keeper,
+        scope='offline_access Files.Read',
     )
 
 
@@ -84,6 +85,14 @@ def test_sheet_success(mocker, con, ds, http_get_mock):
     assert http_get_mock.called_once()
     assert df.shape == (2, 2)
     assert df.columns.tolist() == ['col1', 'col2']
+
+
+def test_empty_sheet(mocker, con, ds, http_get_mock):
+    mocker.patch.object(OneDriveConnector, '_run_fetch', return_value={})
+
+    df = con.get_df(ds)
+
+    assert df.empty
 
 
 def test_url_with_range(mocker, con, ds):

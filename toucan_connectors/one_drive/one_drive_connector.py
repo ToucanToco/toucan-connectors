@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 from typing import Optional
@@ -19,7 +20,6 @@ from toucan_connectors.toucan_connector import (
 API_BASE_ROUTE: str = 'https://graph.microsoft.com/v1.0/me'
 AUTHORIZATION_URL: str = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
 TOKEN_URL: str = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
-SCOPE: str = 'offline_access Files.Read'
 
 
 class OneDriveDataSource(ToucanDataSource):
@@ -37,6 +37,13 @@ class OneDriveConnector(ToucanConnector):
     oauth2_version = Field('1', **{'ui.hidden': True})
     auth_flow_id: Optional[str]
 
+    scope: str = Field(
+        None,
+        Title='Scope',
+        description='The scope determines what type of access the app is granted when the user is signed in',
+        placeholder='offline_access Files.Read',
+    )
+
     def __init__(self, **kwargs):
         super().__init__(
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
@@ -45,7 +52,7 @@ class OneDriveConnector(ToucanConnector):
         self.__dict__['_oauth2_connector'] = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
-            scope=SCOPE,
+            scope=self.scope,
             token_url=TOKEN_URL,
             redirect_uri=kwargs['redirect_uri'],
             config=OAuth2ConnectorConfig(
@@ -97,6 +104,12 @@ class OneDriveConnector(ToucanConnector):
         response = self._run_fetch(url)
 
         data = response.get('values')
+
+        if not data:
+            logging.getLogger(__name__).info('No data retrieved from response')
+
+            return pd.DataFrame()
+
         cols = data[0]
         data.pop(0)
 
