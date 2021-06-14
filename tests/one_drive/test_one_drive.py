@@ -147,11 +147,6 @@ def test_get_access_token(con, mocker):
     mock_oauth2_connector.get_access_token.assert_called()
 
 
-def test_get_connector_secrets_form(con, mocker):
-    doc = con.get_connector_secrets_form()
-    assert doc is not None
-
-
 def test_run_fetch(con, mocker):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'client_id'
