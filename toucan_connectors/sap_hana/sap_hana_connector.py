@@ -1,4 +1,4 @@
-import pyhdb
+from hdbcli import dbapi
 from pydantic import Field, SecretStr, constr
 
 from toucan_connectors.common import pandas_read_sql
@@ -29,11 +29,11 @@ class SapHanaConnector(ToucanConnector):
     password: SecretStr = Field('', description='Your login password')
 
     def _retrieve_data(self, data_source):
-        connection = pyhdb.connect(
-            self.host,
-            self.port,
-            self.user,
-            self.password.get_secret_value() if self.password else SecretStr('').get_secret_value(),
+        connection = dbapi.connect(
+            address=self.host,
+            port=self.port,
+            user=self.user,
+            password=self.password.get_secret_value() if self.password else '',
         )
 
         df = pandas_read_sql(data_source.query, con=connection)

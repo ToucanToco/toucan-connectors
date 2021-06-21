@@ -33,7 +33,7 @@ extras_require = {
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
     'ROK': ['requests', 'pyjwt', 'simplejson'],
-    'sap_hana': ['pyhdb>=0.3.4'],
+    'sap_hana': ['hdbcli'],
     'soap': ['zeep', 'lxml==4.2.5'],
     'snowflake': ['snowflake-connector-python==2.4.1'],
     'toucan_toco': ['toucan_client'],
