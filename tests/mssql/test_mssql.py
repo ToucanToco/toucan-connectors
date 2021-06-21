@@ -118,6 +118,7 @@ def test_mssql_get_df(mocker):
     )
 
 
+@pytest.mark.skip(reason='TLS install script fails')
 def test_get_df(mssql_connector):
     """It should connect to the default database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
@@ -201,6 +202,7 @@ def test_query_variability_jinja(mocker):
     )
 
 
+@pytest.mark.skip(reason='TLS install script fails')
 def test_get_form_empty_query(mssql_connector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {}
@@ -215,6 +217,7 @@ def test_get_form_empty_query(mssql_connector):
     }
 
 
+@pytest.mark.skip(reason='TLS install script fails')
 def test_get_form_query_with_good_database(mssql_connector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {'database': 'master'}
