@@ -26,7 +26,7 @@ class SapHanaConnector(ToucanConnector):
 
     port: int = Field(..., description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(..., description='Your login password')
+    password: SecretStr = Field('', description='Your login password')
 
     def _retrieve_data(self, data_source):
         connection = pyhdb.connect(

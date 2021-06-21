@@ -28,7 +28,7 @@ class GoogleCloudMySQLConnector(ToucanConnector):
 
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(..., description='Your login password')
+    password: SecretStr = Field('', description='Your login password')
     charset: str = Field(
         'utf8mb4',
         title='Charset',
