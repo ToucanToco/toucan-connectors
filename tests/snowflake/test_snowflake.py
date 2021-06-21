@@ -14,9 +14,8 @@ from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.postgres.postgresql_connector import PostgresConnector
 from toucan_connectors.snowflake import (
+    AuthenticationMethod,
     AuthenticationMethodValue,
-    AuthenticationParamsOAuth,
-    AuthenticationParamsUserPassword,
     SnowflakeConnector,
     SnowflakeDataSource,
 )
@@ -24,9 +23,9 @@ from toucan_connectors.toucan_connector import needs_sso_credentials
 
 sc = SnowflakeConnector(
     name='test_name',
-    authentication_method=AuthenticationParamsUserPassword(
-        user='test_user', password='test_password'
-    ),
+    authentication_method=AuthenticationMethod.PLAIN,
+    user='test_user',
+    password='test_password',
     account='test_account',
     default_warehouse='default_wh',
 )
@@ -53,11 +52,12 @@ def sc_oauth(mocker):
     )
     return SnowflakeConnector(
         name='test_name',
+        authentication_method=AuthenticationMethod.OAUTH,
+        user='test_user',
+        password='test_password',
         account='test_account',
-        authentication_method=AuthenticationParamsOAuth(
-            token_endpoint=OAUTH_TOKEN_ENDPOINT,
-            token_endpoint_content_type=OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE,
-        ),
+        token_endpoint=OAUTH_TOKEN_ENDPOINT,
+        token_endpoint_content_type=OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE,
         user_tokens_keeper=user_tokens_keeper,
         sso_credentials_keeper=sso_credentials_keeper,
         default_warehouse='default_wh',
@@ -78,10 +78,10 @@ sd = SnowflakeDataSource(
 def snowflake_connector():
     return SnowflakeConnector(
         name='test_name',
+        authentication_method=AuthenticationMethod.PLAIN,
+        user='test_user',
+        password='test_password',
         account='test_account',
-        authentication_method=AuthenticationParamsUserPassword(
-            user='test_user', password='test_password'
-        ),
         default_warehouse='default_wh',
     )
 
@@ -123,14 +123,14 @@ def test_snowflake(mocker):
 
     mock_execute.return_value.fetchall.assert_called_once()
     connect_mock.assert_called_once_with(
-        account='test_account',
-        application='ToucanToco',
-        authenticator=AuthenticationMethodValue.PLAIN.value,
         user='test_user',
         password='test_password',
-        role=None,
+        account='test_account',
         database='test_database',
         warehouse='test_warehouse',
+        authenticator=AuthenticationMethodValue.PLAIN,
+        application='ToucanToco',
+        role=None,
     )
 
 
@@ -143,14 +143,14 @@ def test_snowflake_custom_role(mocker):
     connector.get_df(sd)
 
     snock.assert_called_once_with(
-        account='test_account',
-        application='ToucanToco',
-        authenticator=AuthenticationMethodValue.PLAIN.value,
         user='test_user',
         password='test_password',
-        role='TEST',
+        account='test_account',
         database='test_database',
         warehouse='test_warehouse',
+        authenticator=AuthenticationMethodValue.PLAIN,
+        application='ToucanToco',
+        role='TEST',
     )
 
 
@@ -167,17 +167,14 @@ def test_snowflake_custom_role_empty(mocker):
 
 
 def test_snowflake_get_connection_params_no_auth_method(mocker):
-
     res = SnowflakeConnector(
-        account='test_account',
-        authentication_method=AuthenticationParamsUserPassword(
-            user='test',
-            password='test_password',
-        ),
         name='test',
+        user='test',
+        password='test_password',
+        account='test_account',
         default_warehouse='test_wh',
     ).get_connection_params()
-    assert res['authenticator'] == AuthenticationMethodValue.PLAIN.value
+    assert res['authenticator'] == AuthenticationMethodValue.PLAIN
 
 
 def test_snowflake_data_source_get_form(mocker):
@@ -252,14 +249,14 @@ def test_snowflake_data_source_default_warehouse(mocker):
     )
 
     snow_mock.assert_called_once_with(
-        account='test_account',
-        application='ToucanToco',
-        authenticator=AuthenticationMethodValue.PLAIN.value,
         user='test_user',
         password='test_password',
-        role=None,
+        account='test_account',
         database='db',
         warehouse='default_wh',
+        authenticator=AuthenticationMethodValue.PLAIN,
+        application='ToucanToco',
+        role=None,
     )
 
 
@@ -276,13 +273,14 @@ def test_snowflake_oauth_auth(mocker, sc_oauth):
     sc_oauth.get_df(sd)
 
     snow_mock.assert_called_once_with(
+        user='test_user',
         account='test_account',
-        application='ToucanToco',
-        authenticator='oauth',
-        token=sc_oauth.user_tokens_keeper.access_token.get_secret_value(),
-        role=None,
+        authenticator=AuthenticationMethodValue.OAUTH,
         database='test_database',
         warehouse='test_warehouse',
+        token=sc_oauth.user_tokens_keeper.access_token.get_secret_value(),
+        application='ToucanToco',
+        role=None,
     )
 
 
@@ -292,14 +290,14 @@ def test_snowflake_plain_auth(mocker):
     sc.get_df(sd)
 
     snow_mock.assert_called_once_with(
-        account='test_account',
-        application='ToucanToco',
-        authenticator=AuthenticationMethodValue.PLAIN.value,
         user='test_user',
+        account='test_account',
+        authenticator=AuthenticationMethodValue.PLAIN,
         password='test_password',
-        role=None,
         database='test_database',
         warehouse='test_warehouse',
+        application='ToucanToco',
+        role=None,
     )
 
 
@@ -310,10 +308,7 @@ def test_snowflake_execute_select_query(mocker):
     )
 
     connector = SnowflakeConnector(
-        name='test',
-        account='test',
-        authentication_method=AuthenticationParamsUserPassword(user='test', password='test'),
-        default_warehouse='default_wh',
+        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
     )
 
     data_source = SnowflakeDataSource(
@@ -340,10 +335,7 @@ def test_snowflake_execute_select_query_with_params(mocker):
     snow_mock = mocker.patch('snowflake.connector.connect')
 
     connector = SnowflakeConnector(
-        name='test',
-        account='test',
-        authentication_method=AuthenticationParamsUserPassword(user='test', password='test'),
-        default_warehouse='default_wh',
+        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
     )
 
     data_source = SnowflakeDataSource(
@@ -369,12 +361,8 @@ def test_snowflake_execute_select_query_with_params(mocker):
 def test_snowflake_execute_select_query_with_params_jinja_syntax(mocker):
     """It should convert jinja templating to printf templating"""
     snow_mock = mocker.patch('snowflake.connector.connect')
-
     connector = SnowflakeConnector(
-        name='test',
-        account='test',
-        authentication_method=AuthenticationParamsUserPassword(user='test', password='test'),
-        default_warehouse='default_wh',
+        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
     )
     data_source = SnowflakeDataSource(
         name='test',
@@ -405,7 +393,9 @@ def test_snowflake_execute_other_query(mocker):
     connector = SnowflakeConnector(
         name='test',
         account='test',
-        authentication_method=AuthenticationParamsUserPassword(user='test', password='test'),
+        authentication_method=AuthenticationMethod.PLAIN,
+        user='test',
+        password='test',
         default_warehouse='default_wh',
     )
 
@@ -428,16 +418,15 @@ def test_snowflake_execute_other_query(mocker):
 def test_missing_cache_file():
     with pytest.raises(ValueError):
         SnowflakeConnector(
-            name='',
-            account='',
-            authentication_method=AuthenticationParamsUserPassword(user='', password=''),
-            ocsp_response_cache_filename='/blah',
+            user='', password='', account='', name='', ocsp_response_cache_filename='/blah'
         )
 
     SnowflakeConnector(
-        name='',
+        authentication_method=AuthenticationMethod.PLAIN,
+        user='',
+        password='',
         account='',
-        authentication_method=AuthenticationParamsUserPassword(user='', password=''),
+        name='',
         default_warehouse='bleh',
     )
 
@@ -477,7 +466,7 @@ def test_oauth_args_missing_endpoint(mocker, sc_oauth):
     mocker.patch('snowflake.connector.connect')
     req_mock = mocker.patch('requests.post')
 
-    sc_oauth.authentication_method.token_endpoint = None
+    sc_oauth.token_endpoint = None
 
     sc_oauth._retrieve_data(sd)
 
@@ -512,6 +501,10 @@ def test_schema_fields_order():
         'name',
         'account',
         'authentication_method',
+        'user',
+        'password',
+        'token_endpoint',
+        'token_endpoint_content_type',
         'role',
         'default_warehouse',
         'retry_policy',
@@ -547,12 +540,14 @@ def test_oauth_args_endpoint_not_200(mocker, sc_oauth):
         assert False
 
 
-def test_oauth_args_wrong_type_of_auth(mocker, sc_oauth, snowflake_connector):
+def test_oauth_args_wrong_type_of_auth(mocker, sc_oauth):
     mocker.patch('snowflake.connector.connect')
 
+    sc_oauth.authentication_method = AuthenticationMethod.PLAIN
     spy = mocker.spy(SnowflakeConnector, '_refresh_oauth_token')
 
-    snowflake_connector._retrieve_data(sd)
+    sc_oauth._retrieve_data(sd)
+
     assert spy.call_count == 0
 
 
