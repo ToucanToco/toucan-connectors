@@ -30,7 +30,10 @@ class SapHanaConnector(ToucanConnector):
 
     def _retrieve_data(self, data_source):
         connection = pyhdb.connect(
-            self.host, self.port, self.user, self.password.get_secret_value()
+            self.host,
+            self.port,
+            self.user,
+            self.password.get_secret_value() if self.password else SecretStr('').get_secret_value(),
         )
 
         df = pandas_read_sql(data_source.query, con=connection)

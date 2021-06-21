@@ -43,6 +43,9 @@ class AzureMSSQLConnector(ToucanConnector):
         base_host = re.sub(f'.{CLOUD_HOST}$', '', self.host)
         user = f'{self.user}@{base_host}' if '@' not in self.user else self.user
 
+        if not self.password:
+            self.password = SecretStr('')
+
         con_params = {
             'driver': '{ODBC Driver 17 for SQL Server}',
             'server': f'{base_host}.{CLOUD_HOST}',

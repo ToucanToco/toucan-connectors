@@ -47,7 +47,9 @@ class GoogleCloudMySQLConnector(ToucanConnector):
         con_params = {
             'host': self.host,
             'user': self.user,
-            'password': self.password.get_secret_value() if self.password else None,
+            'password': self.password.get_secret_value()
+            if self.password
+            else SecretStr('').get_secret_value(),
             'port': self.port,
             'database': database,
             'charset': self.charset,
