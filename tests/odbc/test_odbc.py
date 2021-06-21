@@ -78,6 +78,7 @@ def test_odbc_get_df(mocker):
     )
 
 
+@pytest.mark.skip()
 def test_retrieve_response(odbc_connector):
     """It should connect to the database and retrieve the response to the query"""
     ds = OdbcDataSource(query='select * from City;', domain='test', name='test')

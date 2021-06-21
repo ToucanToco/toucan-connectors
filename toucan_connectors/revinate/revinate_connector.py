@@ -101,6 +101,8 @@ class RevinateConnector(ToucanConnector):
         """
         full_url = f'{self.baseroute}/{endpoint}'
         api_key = self.authentication.api_key
+        if not self.authentication.api_secret:
+            self.authentication.api_secret = SecretStr('')
         api_secret: str = self.authentication.api_secret.get_secret_value()
         username = self.authentication.username
         timestamp = int(datetime.datetime.now().timestamp())
