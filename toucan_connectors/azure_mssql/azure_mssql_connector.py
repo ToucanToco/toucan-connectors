@@ -31,7 +31,7 @@ class AzureMSSQLConnector(ToucanConnector):
     )
 
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(..., description='Your login password')
+    password: SecretStr = Field('', description='Your login password')
     connect_timeout: int = Field(
         None,
         title='Connection timeout',

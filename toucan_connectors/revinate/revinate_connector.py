@@ -47,7 +47,7 @@ class RevinateAuthentication(BaseModel):
 
     api_key: str = Field(..., title='API Key', description='Your API key as provided by Revinate')
     api_secret: SecretStr = Field(
-        ..., title='API Secret', description='Your API secret as provided by Revinate'
+        '', title='API Secret', description='Your API secret as provided by Revinate'
     )
     username: str = Field(..., description='Your Revinate username')
 
