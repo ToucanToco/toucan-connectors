@@ -33,7 +33,7 @@ class SapHanaConnector(ToucanConnector):
             address=self.host,
             port=self.port,
             user=self.user,
-            password=self.password.get_secret_value() if self.password else SecretStr('').get_secret_value(),
+            password=self.password.get_secret_value() if self.password else '',
         )
 
         df = pandas_read_sql(data_source.query, con=connection)
