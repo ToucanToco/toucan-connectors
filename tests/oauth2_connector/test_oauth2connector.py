@@ -109,28 +109,6 @@ def test_get_access_token_expired(mocker, oauth2_connector, secrets_keeper):
     assert access_token == 'new_token'
 
 
-def test_get_access_token_expired_int_type(mocker, oauth2_connector, secrets_keeper):
-    """
-    It should refresh the token if it expired
-    """
-    secrets_keeper.save(
-        'test',
-        {
-            'access_token': 'dummy_token',
-            'expires_at': 123,
-            'refresh_token': 'dummy_refresh_token',
-        },
-    )
-
-    mock_refresh_token: Mock = mocker.patch(
-        'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token',
-        return_value={'access_token': 'new_token'},
-    )
-    access_token = oauth2_connector.get_access_token()
-    mock_refresh_token.assert_called_once_with(FAKE_TOKEN_URL, refresh_token='dummy_refresh_token')
-    assert access_token == 'new_token'
-
-
 def test_get_access_token_expired_no_refresh_token(mocker, oauth2_connector, secrets_keeper):
     """
     It should fail to refresh the token if no refresh token is provided
