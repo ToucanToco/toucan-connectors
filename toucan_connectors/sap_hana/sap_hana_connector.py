@@ -36,7 +36,8 @@ class SapHanaConnector(ToucanConnector):
             password=self.password.get_secret_value() if self.password else '',
         )
 
-        df = pandas_read_sql(data_source.query, con=connection)
+        params = data_source.parameters or {}
+        df = pandas_read_sql(data_source.query, con=connection, params=params)
 
         connection.close()
 
