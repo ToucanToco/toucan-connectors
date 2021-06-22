@@ -166,6 +166,10 @@ CONNECTORS_REGISTRY = {
         'connector': 'odbc.odbc_connector.OdbcConnector',
         'logo': 'odbc/odbc.png',
     },
+    'OneDrive': {
+        'connector': 'one_drive.one_drive_connector.OneDriveConnector',
+        'logo': 'one_drive/one_drive.png',
+    },
     'OracleSQL': {
         'connector': 'oracle_sql.oracle_sql_connector.OracleSQLConnector',
         'label': 'Oracle SQL',

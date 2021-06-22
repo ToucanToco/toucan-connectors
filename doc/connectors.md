@@ -32,6 +32,8 @@
 
 * [ODataConnector](connectors/odata.md)
 
+* [OneDriveConnector](connectors/one_drive.md)
+
 * [OracleSQLConnector](connectors/oracle_sql.md)
 
 * [PostgresConnector](connectors/postgres.md)
