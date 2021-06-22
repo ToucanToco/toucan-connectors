@@ -57,10 +57,10 @@ class OneDriveConnector(ToucanConnector):
     )
 
     def __init__(self, **kwargs):
-        logging.getLogger(__name__).info(f'Connection params: {kwargs}')
+        logging.getLogger(__name__).debug(f'Connection params: {kwargs}')
         super().__init__(**{k: v for k, v in kwargs.items() if k != 'secrets_keeper'})
 
-        logging.getLogger(__name__).info(f'Init: {self.client_id} - {self.client_secret}')
+        logging.getLogger(__name__).debug(f'Init: {self.client_id} - {self.client_secret}')
 
         self.authorization_url = (
             f'https://login.microsoftonline.com/{self.tenant}/oauth2/v2.0/authorize'
@@ -71,30 +71,30 @@ class OneDriveConnector(ToucanConnector):
         self.__dict__['_oauth2_connector'] = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=self.authorization_url,
-            scope=self.scope,  # kwargs['scope'],  #
+            scope=self.scope,
             token_url=self.token_url,
-            redirect_uri=self.redirect_uri,  # kwargs['redirect_uri'],
+            redirect_uri=self.redirect_uri,
             config=OAuth2ConnectorConfig(
-                client_id=self.client_id,  # kwargs['client_id'],  #
-                client_secret=self.client_secret,  # kwargs['client_secret'],  #
+                client_id=self.client_id,
+                client_secret=self.client_secret,
             ),
             secrets_keeper=kwargs['secrets_keeper'],
         )
 
     def build_authorization_url(self, **kwargs):
-        logging.getLogger(__name__).info('build_authorization_url')
+        logging.getLogger(__name__).debug('build_authorization_url')
         return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
 
     def retrieve_tokens(self, authorization_response: str):
-        logging.getLogger(__name__).info('retrieve_tokens')
+        logging.getLogger(__name__).debug('retrieve_tokens')
         return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
 
     def _get_access_token(self):
-        logging.getLogger(__name__).info('_get_access_token')
+        logging.getLogger(__name__).debug('_get_access_token')
         return self.__dict__['_oauth2_connector'].get_access_token()
 
     def _format_url(self, data_source):
-        logging.getLogger(__name__).info('_format_url')
+        logging.getLogger(__name__).debug('_format_url')
         url = f'https://graph.microsoft.com/v1.0/me/drive/root:/{data_source.file}:/workbook/worksheets/{data_source.sheet}/'
 
         if data_source.range is None:
@@ -105,7 +105,7 @@ class OneDriveConnector(ToucanConnector):
         return url
 
     def _run_fetch(self, url):
-        logging.getLogger(__name__).info('_run_fetch')
+        logging.getLogger(__name__).debug('_run_fetch')
         access_token = self._get_access_token()
         headers = {'Authorization': f'Bearer {access_token}'}
 
@@ -115,7 +115,7 @@ class OneDriveConnector(ToucanConnector):
         return response.json()
 
     def _retrieve_data(self, data_source: OneDriveDataSource) -> pd.DataFrame:
-        logging.getLogger(__name__).info('_retrieve_data')
+        logging.getLogger(__name__).debug('_retrieve_data')
         url = self._format_url(data_source)
 
         response = self._run_fetch(url)
@@ -123,7 +123,7 @@ class OneDriveConnector(ToucanConnector):
         data = response.get('values')
 
         if not data:
-            logging.getLogger(__name__).info('No data retrieved from response')
+            logging.getLogger(__name__).debug('No data retrieved from response')
             return pd.DataFrame()
 
         cols = data[0]
