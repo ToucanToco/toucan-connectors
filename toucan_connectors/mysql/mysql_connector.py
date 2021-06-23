@@ -3,12 +3,20 @@ from contextlib import suppress
 from typing import Optional
 
 import numpy as np
+import pandas as pd
 import pymysql
 from pydantic import Field, SecretStr, constr, create_model
 from pymysql.constants import CR, ER
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+
+
+def handle_date_0(df: pd.DataFrame) -> pd.DataFrame:
+    # Mysql driver doesnt translate date '0000-00-00 00:00:00'
+    # to a datetime, so the Series has a 'object' dtype instead of 'datetime'.
+    # This util fixes this behaviour, by replacing it with NaT.
+    return df.replace({'0000-00-00 00:00:00': pd.NaT}).infer_objects()
 
 
 class MySQLDataSource(ToucanDataSource):
@@ -381,6 +389,7 @@ class MySQLConnector(ToucanConnector):
         if not datasource.follow_relations:
             df = pandas_read_sql(query, con=connection, params=query_params)
             df = self.decode_df(df)
+            df = handle_date_0(df)
             connection.close()
             return df
 

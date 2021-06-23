@@ -7,7 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.mysql.mysql_connector import MySQLConnector, MySQLDataSource
+from toucan_connectors.mysql.mysql_connector import MySQLConnector, MySQLDataSource, handle_date_0
 
 
 @pytest.fixture(scope='module')
@@ -339,3 +339,15 @@ def test_get_form_query_with_good_database(mysql_connector):
         'type': 'string',
         'enum': ['City', 'Country', 'CountryLanguage'],
     }
+
+
+def test_handle_date_0():
+    date_mixed_series = [pd.Timestamp('2021-06-23 12:34:56'), '0000-00-00 00:00:00']
+    df = pd.DataFrame({'DATE': date_mixed_series})
+
+    # Initially, we have mixed dtype:
+    assert df.dtypes.astype(str)['DATE'] == 'object'
+
+    df = handle_date_0(df)
+    assert df.dtypes.astype(str)['DATE'] == 'datetime64[ns]'
+    assert list(df['DATE']) == [pd.Timestamp('2021-06-23 12:34:56'), pd.NaT]
