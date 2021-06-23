@@ -32,6 +32,17 @@ def base_connector(authentication):
     return RevinateConnector(authentication=authentication, name='Test Connector')
 
 
+@pytest.fixture
+def base_connector_default_secret():
+    return RevinateConnector(
+        authentication=RevinateAuthentication(
+            api_key='abc123efg',
+            username='mr.smith@matrix.net',
+        ),
+        name='Test Connector',
+    )
+
+
 FAKE_DATA = {
     'links': [{'rel': '', 'href': '', 'templated': False}],
     'content': [
@@ -242,3 +253,8 @@ async def test_fetch_bad_response(aiohttp_client, loop):
     assert (
         str(err.value) == 'Aborting Revinate request due to error from their API: 401 Unauthorized'
     )
+
+
+def test_connector_default_api_secret(base_connector_default_secret, ds, mocker):
+    """It should set the api_secret with default value"""
+    assert base_connector_default_secret.authentication.api_secret == ''

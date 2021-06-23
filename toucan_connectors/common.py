@@ -1,6 +1,7 @@
 import ast
 import asyncio
 import dataclasses
+import logging
 import re
 from copy import deepcopy
 from typing import List, Optional, Tuple
@@ -199,6 +200,7 @@ def apply_query_parameters(query: str, parameters: dict) -> str:
         return query
 
     # Flag params to keep type if not complex (no quotes or condition)
+
     for pattern in RE_JINJA_ALONE_IN_STRING:
         query = re.sub(pattern, RE_SET_KEEP_TYPE, query)
     p_keep_type = re.findall(RE_GET_KEEP_TYPE, query)
@@ -209,6 +211,7 @@ def apply_query_parameters(query: str, parameters: dict) -> str:
         p_keep_type = _flatten_dict(parameters, parent_key='__keep_type_')
         parameters.update(p_keep_type)
 
+    logging.getLogger(__name__).debug(f'Render query: {query} with parameters {parameters}')
     return Template(query).render(parameters)
 
 

@@ -31,7 +31,7 @@ class AzureMSSQLConnector(ToucanConnector):
     )
 
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(..., description='Your login password')
+    password: SecretStr = Field('', description='Your login password')
     connect_timeout: int = Field(
         None,
         title='Connection timeout',
@@ -42,6 +42,9 @@ class AzureMSSQLConnector(ToucanConnector):
     def get_connection_params(self, *, database=None):
         base_host = re.sub(f'.{CLOUD_HOST}$', '', self.host)
         user = f'{self.user}@{base_host}' if '@' not in self.user else self.user
+
+        if not self.password:
+            self.password = SecretStr('')
 
         con_params = {
             'driver': '{ODBC Driver 17 for SQL Server}',
