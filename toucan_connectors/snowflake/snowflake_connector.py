@@ -1,7 +1,9 @@
+import logging
 from contextlib import suppress
 from datetime import datetime
 from enum import Enum
 from os import path
+from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional, Type
 
 import jwt
@@ -9,21 +11,28 @@ import pandas as pd
 import requests
 import snowflake.connector
 from jinja2 import Template
-from pydantic import Field, SecretStr, constr, create_model
-from snowflake.connector import DictCursor
+from pydantic import Field, SecretStr, create_model
 
-from toucan_connectors.common import (
-    ConnectorStatus,
-    convert_to_printf_templating_style,
-    convert_to_qmark_paramstyle,
+from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.connection_manager import ConnectionManager
+from toucan_connectors.snowflake_common import (
+    SfDataSource,
+    SnowflakeCommon,
+    SnowflakeConnectorWarehouseDoesNotExists,
 )
-from toucan_connectors.toucan_connector import (
-    Category,
-    DataSlice,
-    ToucanConnector,
-    ToucanDataSource,
-    strlist_to_enum,
-)
+from toucan_connectors.toucan_connector import Category, DataSlice, ToucanConnector, strlist_to_enum
+
+logger = logging.getLogger(__name__)
+
+connection_manager = None
+if not connection_manager:
+    connection_manager = ConnectionManager(
+        name='snowflake',
+        timeout=20,
+        wait=0.2,
+        time_between_clean=10,
+        time_keep_alive=600
+    )
 
 
 class Path(str):
@@ -38,39 +47,17 @@ class Path(str):
         return v
 
 
-class SnowflakeConnectorException(Exception):
-    """Raised when something wrong happened in a snowflake context"""
-
-
-class SnowflakeConnectorWarehouseDoesNotExists(Exception):
-    """Raised when the specified default warehouse does not exists"""
-
-
-class SnowflakeDataSource(ToucanDataSource):
-    database: str = Field(..., description='The name of the database you want to query')
-    warehouse: str = Field(None, description='The name of the warehouse you want to query')
-
-    query: constr(min_length=1) = Field(
-        ..., description='You can write your SQL query here', widget='sql'
-    )
-
+class SnowflakeDataSource(SfDataSource):
     @classmethod
     def _get_databases(cls, connector: 'SnowflakeConnector'):
-        # FIXME: Maybe use a generator instead of a list here?
-        with connector.connect() as connection:
-            return [
-                db['name']
-                # Fetch rows as dicts with column names as keys
-                for db in connection.cursor(DictCursor).execute('SHOW DATABASES').fetchall()
-                if 'name' in db
-            ]
+        return connector._get_databases()
 
     @classmethod
     def get_form(cls, connector: 'SnowflakeConnector', current_config):
         constraints = {}
 
         with suppress(Exception):
-            databases = cls._get_databases(connector)
+            databases = connector._get_databases()
             warehouses = connector._get_warehouses()
             # Restrict some fields to lists of existing counterparts
             constraints['database'] = strlist_to_enum('database', databases)
@@ -186,53 +173,6 @@ class SnowflakeConnector(ToucanConnector):
             and self.sso_credentials_keeper.client_secret.get_secret_value()
         )
 
-    def get_status(self) -> ConnectorStatus:
-        try:
-            with self.connect(login_timeout=5) as connection:
-                cursor = connection.cursor()
-                self._execute_query(cursor, 'SHOW WAREHOUSES', {})
-
-                # Check if the default specified warehouse exists
-                res = self._execute_query(
-                    cursor, f"SHOW WAREHOUSES LIKE '{self.default_warehouse}'", {}
-                )
-                if res.empty:
-                    raise SnowflakeConnectorWarehouseDoesNotExists(
-                        f"The warehouse '{self.default_warehouse}' does not exist."
-                    )
-
-        except SnowflakeConnectorWarehouseDoesNotExists as e:
-            return ConnectorStatus(
-                status=False, details=self._get_status_details(1, False), error=str(e)
-            )
-        except snowflake.connector.errors.OperationalError:
-            # Raised when the provided account does not exists or when the
-            # provided User does not have access to the provided account
-            return ConnectorStatus(
-                status=False,
-                details=self._get_status_details(0, False),
-                error=f"Connection failed for the account '{self.account}', please check the Account field",
-            )
-        except snowflake.connector.errors.ForbiddenError:
-            return ConnectorStatus(
-                status=False,
-                details=self._get_status_details(0, False),
-                error=f"Access forbidden, please check that you have access to the '{self.account}' account or try again later.",
-            )
-        except snowflake.connector.errors.ProgrammingError as e:
-            return ConnectorStatus(
-                status=False, details=self._get_status_details(0, False), error=str(e)
-            )
-        except snowflake.connector.errors.DatabaseError:
-            # Raised when the provided User/Password aren't correct
-            return ConnectorStatus(
-                status=False,
-                details=self._get_status_details(0, False),
-                error=f"Connection failed for the user '{self.user}', please check your credentials",
-            )
-
-        return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
-
     def get_connection_params(self):
         res = {
             'user': Template(self.user).render(),
@@ -286,87 +226,138 @@ class SnowflakeConnector(ToucanConnector):
                     refresh_token=res.json().get('refresh_token'),
                 )
 
-    def connect(self, **kwargs) -> snowflake.connector.SnowflakeConnection:
-        # This needs to be set before we connect
-        snowflake.connector.paramstyle = 'qmark'
-        if self.authentication_method == AuthenticationMethod.OAUTH:
-            self._refresh_oauth_token()
-        connection_params = self.get_connection_params()
+    def _get_connection(self, database: str = None, warehouse: str = None) -> snowflake.connector.SnowflakeConnection:
+        def connect_function(d: Optional[str] = None, w: Optional[str] = None) -> snowflake.connector.SnowflakeConnection:
+            logger.info('Connect at Snowflake')
+            snowflake.connector.paramstyle = 'qmark'
+            if self.authentication_method == AuthenticationMethod.OAUTH:
+                token_start = timer()
+                self._refresh_oauth_token()
+                token_end = timer()
+                logger.info(
+                    f'[benchmark] - _refresh_oauth_token {token_end - token_start} seconds',
+                    extra={
+                        'benchmark': {
+                            'operation': '_refresh_oauth_token',
+                            'execution_time': token_end - token_start,
+                        }
+                    },
+                )
 
-        return snowflake.connector.connect(**connection_params, **kwargs)
+            connection_params = self.get_connection_params()
+            logger.info(
+                f'Connect at Snowflake with {connection_params}, database {d} and warehouse {w}'
+            )
+            connect_start = timer()
+            c = snowflake.connector.connect(
+                **connection_params, database=d, warehouse=w
+            )
+            connect_end = timer()
+            logger.info(
+                f'[benchmark] - connect {connect_end - connect_start} seconds',
+                extra={
+                    'benchmark': {
+                        'operation': 'connect',
+                        'execution_time': connect_end - connect_start,
+                    }
+                },
+            )
+            return c
 
-    def _get_warehouses(self) -> List[str]:
-        with self.connect() as connection:
-            return [
-                warehouse['name']
-                for warehouse in connection.cursor(DictCursor).execute('SHOW WAREHOUSES').fetchall()
-                if 'name' in warehouse
-            ]
+        def alive_function():
+            logger.info('Check Snowflake connection')
+            return connection.is_closed()
 
-    def _execute_query(
-        self, cursor, query: str, query_parameters: Dict, max_rows: Optional[int] = None
-    ):
-        """Executes `query` against Snowflake's client and retrieves the
-        results.
+        def close_function():
+            logger.info('Close Snowflake connection')
+            return connection.close()
 
-        Args:
-            cursor (SnowflakeCursor): A snowflake database cursor
-            query (str): The query that will be executed against a database
-            query_parameters (Dict): The eventual parameters that will be applied to `query`
+        connection = connection_manager.get(
+            self.identifier,
+            connect_method=lambda: connect_function(database, warehouse),
+            alive_method=lambda: alive_function(),
+            close_method=lambda: close_function(),
+        )
 
-        Returns: A pandas DataFrame
-        """
-        # Prevent error with dict and array values in the parameter object
-        query = convert_to_printf_templating_style(query)
-        converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
+        return connection
 
-        query_res = cursor.execute(converted_query, ordered_values)
-        # https://docs.snowflake.com/en/user-guide/python-connector-api.html#fetch_pandas_all
-        # `fetch_pandas_all` will only work with `SELECT` queries, if the
-        # query does not contains 'SELECT' then we're defaulting to the usual
-        # `fetchall`.
-        if 'SELECT' in query.upper():
-            if max_rows is None:
-                values = query_res.fetch_pandas_all()
-            else:
-                values = pd.DataFrame.from_dict(query_res.fetchmany(max_rows))
-        else:
-            if max_rows is None:
-                values = pd.DataFrame.from_dict(query_res.fetchall())
-            else:
-                values = pd.DataFrame.from_dict(query_res.fetchmany(max_rows))
-
-        return values
-
-    def _fetch_data(
-        self, data_source: SnowflakeDataSource, max_rows: Optional[int]
-    ) -> pd.DataFrame:
+    def _set_warehouse(self, data_source: SnowflakeDataSource):
         warehouse = data_source.warehouse
-        # Default to default warehouse if not specified in `data_source`
         if self.default_warehouse and not warehouse:
-            warehouse = self.default_warehouse
+            data_source.warehouse = self.default_warehouse
+        return data_source
 
-        with self.connect(
-            database=Template(data_source.database).render(),
-            warehouse=Template(warehouse).render(),
-        ) as connection:
-            cursor = connection.cursor(DictCursor)
-            df = self._execute_query(cursor, data_source.query, data_source.parameters, max_rows)
+    @staticmethod
+    def _get_status_details(index: int, status: Optional[bool]):
+        checks = ['Connection to Snowflake', 'Default warehouse exists']
+        ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
+        new_check = (checks[index], status)
+        not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
+        return ok_checks + [new_check] + not_validated_checks
 
-        return df
+    def get_status(self) -> ConnectorStatus:
+        try:
+            result: List[str] = self._get_warehouses(self.default_warehouse)
+            if result.__len__() != 1:
+                raise SnowflakeConnectorWarehouseDoesNotExists(
+                    f"The warehouse '{self.default_warehouse}' does not exist."
+                )
+
+        except SnowflakeConnectorWarehouseDoesNotExists as e:
+            return ConnectorStatus(
+                status=False, details=self._get_status_details(1, False), error=str(e)
+            )
+        except snowflake.connector.errors.OperationalError:
+            # Raised when the provided account does not exists or when the
+            # provided User does not have access to the provided account
+            return ConnectorStatus(
+                status=False,
+                details=self._get_status_details(0, False),
+                error=f"Connection failed for the account '{self.account}', please check the Account field",
+            )
+        except snowflake.connector.errors.ForbiddenError:
+            return ConnectorStatus(
+                status=False,
+                details=self._get_status_details(0, False),
+                error=f"Access forbidden, please check that you have access to the '{self.account}' account or try again later.",
+            )
+        except snowflake.connector.errors.ProgrammingError as e:
+            return ConnectorStatus(
+                status=False, details=self._get_status_details(0, False), error=str(e)
+            )
+        except snowflake.connector.errors.DatabaseError:
+            # Raised when the provided User/Password aren't correct
+            return ConnectorStatus(
+                status=False,
+                details=self._get_status_details(0, False),
+                error=f"Connection failed for the user '{self.user}', please check your credentials",
+            )
+
+        return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
+
+    def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
+        return SnowflakeCommon().get_warehouses(self._get_connection(), warehouse_name)
+
+    def _get_databases(self, database_name: Optional[str] = None) -> List[str]:
+        return SnowflakeCommon().get_databases(self._get_connection(), database_name)
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
-        return self._fetch_data(data_source, None)
+        data_source = self._set_warehouse(data_source)
+        return SnowflakeCommon().retrieve_data(
+            self._get_connection(data_source.database, data_source.warehouse), data_source
+        )
 
-    def get_slice(
+    def _get_slice(
         self,
         data_source: SnowflakeDataSource,
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
-    ) -> DataSlice:
-
-        rows_to_fetch = offset + limit
-        df = self._fetch_data(data_source, rows_to_fetch)
-
-        return DataSlice(df[offset:], len(df[offset:]))
+    ) -> pd.DataFrame:
+        data_source = self._set_warehouse(data_source)
+        return SnowflakeCommon().get_slice(
+            self._get_connection(data_source.database, data_source.warehouse),
+            data_source,
+            offset,
+            limit,
+        )
