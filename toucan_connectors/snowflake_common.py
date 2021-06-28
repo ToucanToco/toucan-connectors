@@ -105,9 +105,7 @@ class SnowflakeCommon:
         limit: Optional[int] = None,
     ) -> DataSlice:
         df: pd.DataFrame = self._fetch_data(c, data_source, offset, limit)
-        if not offset and limit and len(df) > limit:
-            result = df[0 : limit + 0]
-        elif offset and limit:
+        if offset and limit:
             result = df[offset : limit + offset]
         else:
             result = df

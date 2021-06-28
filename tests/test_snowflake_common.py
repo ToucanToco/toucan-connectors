@@ -467,3 +467,16 @@ def test_get_slice_with_limit_with_offset_not_enough_data(
     assert spy.call_count == 1
     assert len(df.df) == 0
     assert df.total_count == 0
+
+
+@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
+@patch('snowflake.connector.cursor.SnowflakeCursor.execute')
+@patch('pandas.DataFrame.from_dict', return_value=data_result_all)
+def test_get_slice_without_limit_with_offset(
+    result, execute_query, connect, snowflake_datasource, mocker
+):
+    spy = mocker.spy(pd.DataFrame, 'from_dict')
+    df: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5)
+    assert spy.call_count == 1
+    assert len(df.df) == 14
+    assert df.total_count == 14
