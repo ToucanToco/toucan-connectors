@@ -1,19 +1,16 @@
+import time
 from threading import Thread
 from typing import Optional
 
 import pytest
-import time
+
 from toucan_connectors.connection_manager import ConnectionManager
 
 
 @pytest.fixture
 def connection_manager():
     return ConnectionManager(
-        name='connection_manager_name',
-        timeout=3,
-        wait=0.2,
-        time_between_clean=3,
-        time_keep_alive=5
+        name='connection_manager_name', timeout=3, wait=0.2, time_between_clean=3, time_keep_alive=5
     )
 
 
@@ -85,8 +82,7 @@ def test_waiting_connection(connection_manager, mocker):
 
 
 def test_clean(connection_manager):
-    conn: ConnectionObject = _get_connection(connection_manager, 'conn_1')
+    _get_connection(connection_manager, 'conn_1')
     assert len(connection_manager.cm) == 1
     time.sleep(5)
     assert len(connection_manager.cm) == 0
-

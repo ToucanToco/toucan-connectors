@@ -20,7 +20,7 @@ from toucan_connectors.snowflake_common import (
     SnowflakeCommon,
     SnowflakeConnectorWarehouseDoesNotExists,
 )
-from toucan_connectors.toucan_connector import Category, DataSlice, ToucanConnector, strlist_to_enum
+from toucan_connectors.toucan_connector import Category, ToucanConnector, strlist_to_enum
 
 logger = logging.getLogger(__name__)
 
@@ -141,14 +141,6 @@ class SnowflakeConnector(ToucanConnector):
                 'user_tokens_keeper',
             ]
             schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
-
-    @staticmethod
-    def _get_status_details(index: int, status: Optional[bool]):
-        checks = ['Connection to Snowflake', 'Default warehouse exists']
-        ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
-        new_check = (checks[index], status)
-        not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
-        return ok_checks + [new_check] + not_validated_checks
 
     @property
     def access_token(self) -> Optional[str]:

@@ -3,8 +3,8 @@ from contextlib import suppress
 from timeit import default_timer as timer
 from typing import Any, List, Optional
 
-import snowflake
 import pandas as pd
+import snowflake
 from pandas import DataFrame
 from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
@@ -84,9 +84,9 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         ...,
         title='Account',
         description='The full name of your Snowflake account. '
-                    'It might require the region and cloud platform where your account is located, '
-                    'in the form of: "your_account_name.region_id.cloud_platform". See more details '
-                    '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
+        'It might require the region and cloud platform where your account is located, '
+        'in the form of: "your_account_name.region_id.cloud_platform". See more details '
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
     )
     data_source_model: SnowflakeoAuth2DataSource
     default_warehouse: str = Field(
@@ -194,11 +194,11 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         )
 
     def _get_slice(
-            self,
-            data_source: SnowflakeDataSource,
-            permissions: Optional[dict] = None,
-            offset: int = 0,
-            limit: Optional[int] = None,
+        self,
+        data_source: SnowflakeDataSource,
+        permissions: Optional[dict] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
     ) -> DataFrame:
         return SnowflakeCommon().get_slice(
             self._get_connection(data_source.database, data_source.warehouse),

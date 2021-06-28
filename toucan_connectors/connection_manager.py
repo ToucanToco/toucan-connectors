@@ -90,7 +90,6 @@ class ConnectionManager:
 
     def force_clean(self):
         for key, value in list(self.cm.items()):
-            tt = time.time()
             if 'ready' == self.cm[key]['status']:
                 c = self.cm[key]
                 del self.cm[key]

@@ -3,11 +3,12 @@ from timeit import default_timer as timer
 from typing import Dict, List, Optional
 
 import pandas as pd
+from pandas import DataFrame
 from pydantic import Field, constr
 from snowflake.connector import DictCursor
 
 from toucan_connectors.common import convert_to_printf_templating_style, convert_to_qmark_paramstyle
-from toucan_connectors.toucan_connector import ToucanDataSource
+from toucan_connectors.toucan_connector import DataSlice, ToucanDataSource
 
 
 class SnowflakeConnectorException(Exception):
@@ -99,8 +100,15 @@ class SnowflakeCommon:
     def retrieve_data(self, c, data_source: SfDataSource) -> pd.DataFrame:
         return self._fetch_data(c, data_source)
 
-    def get_slice(self, c, data_source: SfDataSource, offset: int = 0, limit: Optional[int] = None):
-        return self._fetch_data(c, data_source, offset, limit)
+    def get_slice(
+        self, c, data_source: SfDataSource, offset: int = 0, limit: Optional[int] = None
+    ) -> DataSlice:
+        df: DataFrame = self._fetch_data(c, data_source, offset, limit)
+        if offset and limit:
+            result = df.iloc[offset : limit + offset]
+        else:
+            result = df
+        return DataSlice(result, len(result))
 
     def get_warehouses(self, c, warehouse_name: Optional[str] = None) -> List[str]:
         query = 'SHOW WAREHOUSES'
