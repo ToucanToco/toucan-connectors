@@ -35,7 +35,7 @@ class SnowflakeCommon:
         self,
         c,
         query: str,
-        query_parameters: Dict,
+        query_parameters: Optional[Dict] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
     ):
@@ -52,8 +52,8 @@ class SnowflakeCommon:
 
         if offset and limit:
             self.logger.debug('limit & offset')
-            values = pd.DataFrame.from_dict(query_res.fetchbatch())
-            values = pd.DataFrame.from_dict(query_res.fetchall())
+            rows = limit + offset
+            values = pd.DataFrame.from_dict(query_res.fetchmany(rows))
         elif limit and not offset:
             self.logger.debug('limit & not offset')
             values = pd.DataFrame.from_dict(query_res.fetchmany(limit))
@@ -75,16 +75,15 @@ class SnowflakeCommon:
         )
         return values
 
-    def __fetch_data(
+    def _fetch_data(
         self,
         c,
         data_source: SfDataSource,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> pd.DataFrame:
-        self._execute_query(c, data_source.query, data_source.parameters, offset, limit)
+        df = self._execute_query(c, data_source.query, data_source.parameters, offset, limit)
         convert_start = timer()
-        df = pd.DataFrame()
         convert_end = timer()
         self.logger.info(
             f'[benchmark] - dataframe {convert_end - convert_start} seconds',
@@ -98,10 +97,10 @@ class SnowflakeCommon:
         return df
 
     def retrieve_data(self, c, data_source: SfDataSource) -> pd.DataFrame:
-        return self.__fetch_data(c, data_source)
+        return self._fetch_data(c, data_source)
 
     def get_slice(self, c, data_source: SfDataSource, offset: int = 0, limit: Optional[int] = None):
-        return self.__fetch_data(c, data_source, offset, limit)
+        return self._fetch_data(c, data_source, offset, limit)
 
     def get_warehouses(self, c, warehouse_name: Optional[str] = None) -> List[str]:
         query = 'SHOW WAREHOUSES'

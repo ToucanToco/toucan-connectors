@@ -3,8 +3,8 @@ from contextlib import suppress
 from timeit import default_timer as timer
 from typing import Any, List, Optional
 
+import snowflake
 import pandas as pd
-import snowflake as pysnowflake
 from pandas import DataFrame
 from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 connection_manager = None
 if not connection_manager:
     connection_manager = ConnectionManager(
-        name='snowflake_oauth2', timeout=20, wait=0.2, time_between_clean=10, time_keep_alive=600
+        name='snowflake_oauth2', timeout=5, wait=0.2, time_between_clean=3, time_keep_alive=600
     )
 
 
@@ -84,9 +84,9 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         ...,
         title='Account',
         description='The full name of your Snowflake account. '
-        'It might require the region and cloud platform where your account is located, '
-        'in the form of: "your_account_name.region_id.cloud_platform". See more details '
-        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
+                    'It might require the region and cloud platform where your account is located, '
+                    'in the form of: "your_account_name.region_id.cloud_platform". See more details '
+                    '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
     )
     data_source_model: SnowflakeoAuth2DataSource
     default_warehouse: str = Field(
@@ -148,7 +148,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
                 f'Connect at Snowflake with {connection_params}, database {database} and warehouse {warehouse}'
             )
             connect_start = timer()
-            c = pysnowflake.connector.connect(
+            c = snowflake.connector.connect(
                 **connection_params, database=database, warehouse=warehouse
             )
             connect_end = timer()
@@ -165,11 +165,13 @@ class SnowflakeoAuth2Connector(ToucanConnector):
 
         def alive_function() -> Any:
             logger.info('Check Snowflake connection')
-            return connection.is_closed()
+            if hasattr(connection, 'is_closed') and callable(connection.is_closed):
+                return connection.is_closed()
 
         def close_function() -> None:
             logger.info('Close Snowflake connection')
-            return connection.close()
+            if hasattr(connection, 'close') and callable(connection.close):
+                return connection.close()
 
         connection: SnowflakeConnection = connection_manager.get(
             self.identifier,
@@ -192,11 +194,11 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         )
 
     def _get_slice(
-        self,
-        data_source: SnowflakeDataSource,
-        permissions: Optional[dict] = None,
-        offset: int = 0,
-        limit: Optional[int] = None,
+            self,
+            data_source: SnowflakeDataSource,
+            permissions: Optional[dict] = None,
+            offset: int = 0,
+            limit: Optional[int] = None,
     ) -> DataFrame:
         return SnowflakeCommon().get_slice(
             self._get_connection(data_source.database, data_source.warehouse),
@@ -204,3 +206,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             offset,
             limit,
         )
+
+    @staticmethod
+    def get_connection_manager():
+        return connection_manager

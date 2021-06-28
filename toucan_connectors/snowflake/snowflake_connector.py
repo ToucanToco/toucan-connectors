@@ -27,11 +27,7 @@ logger = logging.getLogger(__name__)
 connection_manager = None
 if not connection_manager:
     connection_manager = ConnectionManager(
-        name='snowflake',
-        timeout=20,
-        wait=0.2,
-        time_between_clean=10,
-        time_keep_alive=600
+        name='snowflake', timeout=5, wait=0.2, time_between_clean=3, time_keep_alive=600
     )
 
 
@@ -226,8 +222,12 @@ class SnowflakeConnector(ToucanConnector):
                     refresh_token=res.json().get('refresh_token'),
                 )
 
-    def _get_connection(self, database: str = None, warehouse: str = None) -> snowflake.connector.SnowflakeConnection:
-        def connect_function(d: Optional[str] = None, w: Optional[str] = None) -> snowflake.connector.SnowflakeConnection:
+    def _get_connection(
+        self, database: str = None, warehouse: str = None
+    ) -> snowflake.connector.SnowflakeConnection:
+        def connect_function(
+            d: Optional[str] = None, w: Optional[str] = None
+        ) -> snowflake.connector.SnowflakeConnection:
             logger.info('Connect at Snowflake')
             snowflake.connector.paramstyle = 'qmark'
             if self.authentication_method == AuthenticationMethod.OAUTH:
@@ -249,9 +249,7 @@ class SnowflakeConnector(ToucanConnector):
                 f'Connect at Snowflake with {connection_params}, database {d} and warehouse {w}'
             )
             connect_start = timer()
-            c = snowflake.connector.connect(
-                **connection_params, database=d, warehouse=w
-            )
+            c = snowflake.connector.connect(**connection_params, database=d, warehouse=w)
             connect_end = timer()
             logger.info(
                 f'[benchmark] - connect {connect_end - connect_start} seconds',
@@ -266,11 +264,14 @@ class SnowflakeConnector(ToucanConnector):
 
         def alive_function():
             logger.info('Check Snowflake connection')
-            return connection.is_closed()
+            if hasattr(connection, 'is_closed') and callable(connection.is_closed):
+                return connection.is_closed()
+            return True
 
         def close_function():
             logger.info('Close Snowflake connection')
-            return connection.close()
+            if hasattr(connection, 'close') and callable(connection.close):
+                return connection.close()
 
         connection = connection_manager.get(
             self.identifier,
@@ -361,3 +362,7 @@ class SnowflakeConnector(ToucanConnector):
             offset,
             limit,
         )
+
+    @staticmethod
+    def get_connection_manager():
+        return connection_manager
