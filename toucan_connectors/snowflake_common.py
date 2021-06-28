@@ -3,7 +3,6 @@ from timeit import default_timer as timer
 from typing import Dict, List, Optional
 
 import pandas as pd
-from pandas import DataFrame
 from pydantic import Field, constr
 from snowflake.connector import DictCursor
 
@@ -39,11 +38,7 @@ class SnowflakeCommon:
         query_parameters: Optional[Dict] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
-    ):
-        start = timer()
-        end = timer()
-        self.logger.info(f'Bench validation - get connection if already created {end - start}')
-
+    ) -> pd.DataFrame:
         execution_start = timer()
         query = convert_to_printf_templating_style(query)
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
@@ -51,6 +46,18 @@ class SnowflakeCommon:
         cursor = c.cursor(DictCursor)
         query_res = cursor.execute(converted_query, ordered_values)
 
+        execution_end = timer()
+        self.logger.info(
+            f'[benchmark] - execute {execution_end - execution_start} seconds',
+            extra={
+                'benchmark': {
+                    'operation': 'execute',
+                    'execution_time': execution_end - execution_start,
+                }
+            },
+        )
+
+        convert_start = timer()
         if offset and limit:
             self.logger.debug('limit & offset')
             rows = limit + offset
@@ -64,13 +71,13 @@ class SnowflakeCommon:
         else:
             values = pd.DataFrame.from_dict(query_res.fetchall())
 
-        execution_end = timer()
+        convert_end = timer()
         self.logger.info(
-            f'[benchmark] - execute {execution_end - execution_start} seconds',
+            f'[benchmark] - dataframe {convert_end - convert_start} seconds',
             extra={
                 'benchmark': {
-                    'operation': 'execute',
-                    'execution_time': execution_end - execution_start,
+                    'operation': 'dataframe',
+                    'execution_time': convert_end - convert_start,
                 }
             },
         )
@@ -84,28 +91,24 @@ class SnowflakeCommon:
         limit: Optional[int] = None,
     ) -> pd.DataFrame:
         df = self._execute_query(c, data_source.query, data_source.parameters, offset, limit)
-        convert_start = timer()
-        convert_end = timer()
-        self.logger.info(
-            f'[benchmark] - dataframe {convert_end - convert_start} seconds',
-            extra={
-                'benchmark': {
-                    'operation': 'dataframe',
-                    'execution_time': convert_end - convert_start,
-                }
-            },
-        )
         return df
 
     def retrieve_data(self, c, data_source: SfDataSource) -> pd.DataFrame:
         return self._fetch_data(c, data_source)
 
     def get_slice(
-        self, c, data_source: SfDataSource, offset: int = 0, limit: Optional[int] = None
+        self,
+        c,
+        data_source: SfDataSource,
+        *,
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
     ) -> DataSlice:
-        df: DataFrame = self._fetch_data(c, data_source, offset, limit)
-        if offset and limit:
-            result = df.iloc[offset : limit + offset]
+        df: pd.DataFrame = self._fetch_data(c, data_source, offset, limit)
+        if not offset and limit and len(df) > limit:
+            result = df[0 : limit + 0]
+        elif offset and limit:
+            result = df[offset : limit + offset]
         else:
             result = df
         return DataSlice(result, len(result))
@@ -119,7 +122,7 @@ class SnowflakeCommon:
         ]
 
     def get_databases(self, c, database_name: Optional[str] = None) -> List[str]:
-        query = 'SHOW WAREHOUSES'
+        query = 'SHOW DATABASES'
         if database_name:
             query = query + ' LIKE ' + database_name
         return [
