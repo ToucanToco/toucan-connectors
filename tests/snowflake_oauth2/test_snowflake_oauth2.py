@@ -202,13 +202,6 @@ df = pd.DataFrame(
 )
 
 
-def fake_test_set_params_connection_manager(snowflake_oauth2_connector):
-    snowflake_oauth2_connector._get_connection()
-    cm = SnowflakeoAuth2Connector.get_connection_manager()
-    cm.time_between_clean = 1
-    cm.time_keep_alive = 1
-
-
 @patch(
     'toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector.SnowflakeoAuth2Connector._get_connection',
     return_value={'success': True},
@@ -222,6 +215,7 @@ def test_get_database_without_filter(gd, gc, snowflake_oauth2_connector):
     assert result[0] == 'database_1'
     assert result[1] == 'database_2'
     assert len(result) == 2
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -235,6 +229,7 @@ def test_get_database_with_filter_found(gd, gc, snowflake_oauth2_connector):
     result = snowflake_oauth2_connector._get_databases('database_1')
     assert result[0] == 'database_1'
     assert len(result) == 1
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -245,6 +240,7 @@ def test_get_database_with_filter_found(gd, gc, snowflake_oauth2_connector):
 def test_get_database_with_filter_not_found(gd, gc, snowflake_oauth2_connector):
     result = snowflake_oauth2_connector._get_databases('database_3')
     assert len(result) == 0
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -259,6 +255,7 @@ def test_get_warehouse_without_filter(gw, gc, snowflake_oauth2_connector):
     result = snowflake_oauth2_connector._get_warehouses()
     assert result[0] == 'warehouse_1'
     assert result[1] == 'warehouse_2'
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -273,6 +270,7 @@ def test_get_warehouse_with_filter_found(gw, gc, snowflake_oauth2_connector):
     result = snowflake_oauth2_connector._get_warehouses('warehouse_1')
     assert result[0] == 'warehouse_1'
     assert len(result) == 1
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -283,6 +281,7 @@ def test_get_warehouse_with_filter_found(gw, gc, snowflake_oauth2_connector):
 def test_get_warehouse_with_filter_not_found(gw, gc, snowflake_oauth2_connector):
     result = snowflake_oauth2_connector._get_warehouses('warehouse_3')
     assert len(result) == 0
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -292,11 +291,10 @@ def test_get_warehouse_with_filter_not_found(gw, gc, snowflake_oauth2_connector)
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
 def test_retrieve_data(eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker):
     spy = mocker.spy(SnowflakeCommon, '_execute_query')
-
     df_result: DataFrame = snowflake_oauth2_connector._retrieve_data(snowflake_oauth2_datasource)
-
     assert spy.call_count == 1
     assert 11 == len(df_result)
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -308,11 +306,13 @@ def test_retrieve_data_slice(
     eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
 ):
     spy = mocker.spy(SnowflakeCommon, '_execute_query')
-    df_result: DataSlice = snowflake_oauth2_connector._get_slice(
+    df_result: DataSlice = snowflake_oauth2_connector.get_slice(
         snowflake_oauth2_datasource, offset=0, limit=10
     )
     assert spy.call_count == 1
-    assert 11 == len(df_result)
+    assert 11 == len(df_result.df)
+    assert 11 == df_result.total_count
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -324,12 +324,13 @@ def test_retrieve_data_slice_with_limit(
     eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
 ):
     spy = mocker.spy(SnowflakeCommon, '_execute_query')
-    df_result: DataSlice = snowflake_oauth2_connector._get_slice(
+    df_result: DataSlice = snowflake_oauth2_connector.get_slice(
         snowflake_oauth2_datasource, offset=5, limit=3
     )
     assert spy.call_count == 1
     assert 3 == len(df_result.df)
     assert 3 == df_result.total_count
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -341,11 +342,13 @@ def test_retrieve_data_slice_too_much(
     eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
 ):
     spy = mocker.spy(SnowflakeCommon, '_execute_query')
-    df_result: DataSlice = snowflake_oauth2_connector._get_slice(
+    df_result: DataSlice = snowflake_oauth2_connector.get_slice(
         snowflake_oauth2_datasource, offset=10, limit=20
     )
     assert spy.call_count == 1
-    assert 1 == len(df_result)
+    assert 1 == len(df_result.df)
+    assert 1 == df_result.total_count
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -363,6 +366,7 @@ def test_retrieve_data_slice_too_much(
 def test_datasource_get_form(gd, gw, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource):
     result = SnowflakeoAuth2DataSource.get_form(snowflake_oauth2_connector, {})
     assert 'warehouse_1' == result['properties']['warehouse']['default']
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
@@ -379,6 +383,7 @@ def test_datasource_get_databases(
     result = SnowflakeoAuth2DataSource._get_databases(snowflake_oauth2_connector)
     assert len(result) == 2
     assert result[1] == 'database_2'
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
@@ -396,6 +401,7 @@ def test_snowflake_connect(gat, is_closed, close, connect, snowflake_oauth2_conn
     assert connect.call_args_list[0][1]['token'] == 'shiny token'
     assert connect.call_args_list[0][1]['database'] == 'test_database'
     assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
@@ -415,6 +421,7 @@ def test_snowflake_connection_alive(
     spy = mocker.spy(SnowflakeConnection, 'is_closed')
     time.sleep(1.1)
     assert spy.call_count == 1
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
@@ -429,8 +436,9 @@ def test_snowflake_connection_close(
 ):
     snowflake_oauth2_connector._get_connection('test_database', 'test_warehouse')
     spy = mocker.spy(SnowflakeConnection, 'close')
-    time.sleep(1.1)
-    assert spy.call_count == 1
+    time.sleep(2)
+    assert spy.call_count > 1
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 def test_build_authorization_url(mocker, snowflake_oauth2_connector):

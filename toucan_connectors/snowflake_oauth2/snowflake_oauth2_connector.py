@@ -5,7 +5,6 @@ from typing import Any, List, Optional
 
 import pandas as pd
 import snowflake
-from pandas import DataFrame
 from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
@@ -19,7 +18,7 @@ from toucan_connectors.snowflake.snowflake_connector import (
     SnowflakeDataSource,
 )
 from toucan_connectors.snowflake_common import SnowflakeCommon
-from toucan_connectors.toucan_connector import Category, ToucanConnector, strlist_to_enum
+from toucan_connectors.toucan_connector import Category, DataSlice, ToucanConnector, strlist_to_enum
 
 logger = logging.getLogger(__name__)
 
@@ -193,18 +192,18 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             self._get_connection(data_source.database, data_source.warehouse), data_source
         )
 
-    def _get_slice(
+    def get_slice(
         self,
         data_source: SnowflakeDataSource,
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
-    ) -> DataFrame:
+    ) -> DataSlice:
         return SnowflakeCommon().get_slice(
             self._get_connection(data_source.database, data_source.warehouse),
             data_source,
-            offset,
-            limit,
+            offset=offset,
+            limit=limit,
         )
 
     @staticmethod

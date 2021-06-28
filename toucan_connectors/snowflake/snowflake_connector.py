@@ -13,6 +13,7 @@ import snowflake.connector
 from jinja2 import Template
 from pydantic import Field, SecretStr, create_model
 
+from toucan_connectors import DataSlice
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.snowflake_common import (
@@ -340,19 +341,19 @@ class SnowflakeConnector(ToucanConnector):
             self._get_connection(data_source.database, data_source.warehouse), data_source
         )
 
-    def _get_slice(
+    def get_slice(
         self,
         data_source: SnowflakeDataSource,
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
-    ) -> pd.DataFrame:
+    ) -> DataSlice:
         data_source = self._set_warehouse(data_source)
         return SnowflakeCommon().get_slice(
             self._get_connection(data_source.database, data_source.warehouse),
             data_source,
-            offset,
-            limit,
+            offset=offset,
+            limit=limit,
         )
 
     @staticmethod

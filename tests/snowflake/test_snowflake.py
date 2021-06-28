@@ -387,7 +387,7 @@ def test_retrieve_data(eq, gc, snowflake_connector, snowflake_datasource, mocker
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
 def test_retrieve_data_slice(eq, gc, snowflake_connector, snowflake_datasource, mocker):
     spy = mocker.spy(SnowflakeCommon, '_execute_query')
-    df_result: DataSlice = snowflake_connector._get_slice(snowflake_datasource)
+    df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource)
     assert spy.call_count == 1
     assert 11 == len(df_result.df)
     SnowflakeConnector.get_connection_manager().force_clean()
@@ -402,7 +402,7 @@ def test_retrieve_data_slice_offset_limit(
     eq, gc, snowflake_connector, snowflake_datasource, mocker
 ):
     spy = mocker.spy(SnowflakeCommon, '_execute_query')
-    df_result: DataSlice = snowflake_connector._get_slice(snowflake_datasource, offset=5, limit=3)
+    df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=5, limit=3)
     assert spy.call_count == 1
     assert 3 == len(df_result.df)
     assert 3 == df_result.total_count
@@ -416,7 +416,7 @@ def test_retrieve_data_slice_offset_limit(
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
 def test_retrieve_data_slice_too_much(eq, gc, snowflake_connector, snowflake_datasource, mocker):
     spy = mocker.spy(SnowflakeCommon, '_execute_query')
-    df_result: DataSlice = snowflake_connector._get_slice(snowflake_datasource, offset=10, limit=20)
+    df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=10, limit=20)
     assert spy.call_count == 1
     assert 1 == len(df_result.df)
     SnowflakeConnector.get_connection_manager().force_clean()
