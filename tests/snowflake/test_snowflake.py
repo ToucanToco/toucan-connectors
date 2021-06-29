@@ -1,54 +1,43 @@
-import copy
+import time
 from datetime import datetime, timedelta
-from unittest.mock import call
+from urllib.error import HTTPError
 
 import jwt
 import pandas as pd
 import pytest
-import responses
-import snowflake.connector
+import snowflake
+from mock import patch
+from pandas import DataFrame
 from pydantic import SecretStr
-from requests.models import HTTPError
+from snowflake.connector import SnowflakeConnection
 
+from toucan_connectors import DataSlice
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.json_wrapper import JsonWrapper
-from toucan_connectors.postgres.postgresql_connector import PostgresConnector
 from toucan_connectors.snowflake import (
     AuthenticationMethod,
-    AuthenticationMethodValue,
     SnowflakeConnector,
     SnowflakeDataSource,
 )
-from toucan_connectors.toucan_connector import needs_sso_credentials
-
-sc = SnowflakeConnector(
-    name='test_name',
-    authentication_method=AuthenticationMethod.PLAIN,
-    user='test_user',
-    password='test_password',
-    account='test_account',
-    default_warehouse='default_wh',
-)
-
+from toucan_connectors.snowflake_common import SnowflakeCommon
 
 OAUTH_TOKEN_ENDPOINT = 'http://example.com/endpoint'
 OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE = 'application/x-www-form-urlencoded'
-OAUTH_ACCESS_TOKEN = jwt.encode({'exp': 42, 'sub': 'snowflake_user'}, key='clef')
+OAUTH_ACCESS_TOKEN = str(jwt.encode({'exp': 42, 'sub': 'snowflake_user'}, key='clef'))
 OAUTH_REFRESH_TOKEN = 'baba au rhum'
 OAUTH_CLIENT_ID = 'client_id'
 OAUTH_CLIENT_SECRET = 'client_s3cr3t'
 
 
 @pytest.fixture
-def sc_oauth(mocker):
+def snowflake_connector_oauth(mocker):
     user_tokens_keeper = mocker.Mock(
         access_token=SecretStr(OAUTH_ACCESS_TOKEN),
         refresh_token=SecretStr(OAUTH_REFRESH_TOKEN),
         update_tokens=mocker.Mock(),
     )
     sso_credentials_keeper = mocker.Mock(
-        client_id=OAUTH_CLIENT_ID,
-        client_secret=SecretStr(OAUTH_CLIENT_SECRET),
+        client_id=OAUTH_CLIENT_ID, client_secret=SecretStr(OAUTH_CLIENT_SECRET)
     )
     return SnowflakeConnector(
         name='test_name',
@@ -64,25 +53,16 @@ def sc_oauth(mocker):
     )
 
 
-sd = SnowflakeDataSource(
-    name='test_name',
-    domain='test_domain',
-    database='test_database',
-    warehouse='test_warehouse',
-    query='test_query with %(foo)s and %(pokemon)s',
-    parameters={'foo': 'bar', 'pokemon': 'pikachu'},
-)
-
-
 @pytest.fixture
 def snowflake_connector():
     return SnowflakeConnector(
+        identifier='snowflake_test',
         name='test_name',
         authentication_method=AuthenticationMethod.PLAIN,
         user='test_user',
         password='test_password',
         account='test_account',
-        default_warehouse='default_wh',
+        default_warehouse='warehouse_1',
     )
 
 
@@ -91,405 +71,355 @@ def snowflake_datasource():
     return SnowflakeDataSource(
         name='test_name',
         domain='test_domain',
-        database='test_database',
-        warehouse='test_warehouse',
+        database='database_1',
+        warehouse='warehouse_1',
         query='test_query with %(foo)s and %(pokemon)s',
         parameters={'foo': 'bar', 'pokemon': 'pikachu'},
     )
 
 
-@pytest.fixture
-def snowflake_connection_mock(mocker):
-    return mocker.patch('snowflake.connector.connect')
+data = {
+    '1 Column Name': [
+        '1 value',
+        '2 value',
+        '3 value',
+        '4 value',
+        '5 value',
+        '6 value',
+        '7 value',
+        '8 value',
+        '9 value',
+        '10 value',
+        ...,
+    ],
+    '2 Column Name': [
+        '1 value',
+        '2 value',
+        '3 value',
+        '4 value',
+        '5 value',
+        '6 value',
+        '7 value',
+        '8 value',
+        '9 value',
+        '10 value',
+        ...,
+    ],
+    '3 Column Name': [
+        '1 value',
+        '2 value',
+        '3 value',
+        '4 value',
+        '5 value',
+        '6 value',
+        '7 value',
+        '8 value',
+        '9 value',
+        '10 value',
+        ...,
+    ],
+    '4 Column Name': [
+        '1 value',
+        '2 value',
+        '3 value',
+        '4 value',
+        '5 value',
+        '6 value',
+        '7 value',
+        '8 value',
+        '9 value',
+        '10 value',
+        ...,
+    ],
+    '5 Column Name': [
+        '1 value',
+        '2 value',
+        '3 value',
+        '4 value',
+        '5 value',
+        '6 value',
+        '7 value',
+        '8 value',
+        '9 value',
+        '10 value',
+        ...,
+    ],
+    '6 Column Name': [
+        '1 value',
+        '2 value',
+        '3 value',
+        '4 value',
+        '5 value',
+        '6 value',
+        '7 value',
+        '8 value',
+        '9 value',
+        '10 value',
+        ...,
+    ],
+    '7 Column Name': [
+        '1 value',
+        '2 value',
+        '3 value',
+        '4 value',
+        '5 value',
+        '6 value',
+        '7 value',
+        '8 value',
+        '9 value',
+        '10 value',
+        ...,
+    ],
+    '8 Column Name': [
+        '1 value',
+        '2 value',
+        '3 value',
+        '4 value',
+        '5 value',
+        '6 value',
+        '7 value',
+        '8 value',
+        '9 value',
+        '10 value',
+        ...,
+    ],
+    '9 Column Name': [
+        '1 value',
+        '2 value',
+        '3 value',
+        '4 value',
+        '5 value',
+        '6 value',
+        '7 value',
+        '8 value',
+        '9 value',
+        '10 value',
+        ...,
+    ],
+    '10 Column Name': [
+        '1 value',
+        '2 value',
+        '3 value',
+        '4 value',
+        '5 value',
+        '6 value',
+        '7 value',
+        '8 value',
+        '9 value',
+        '10 value',
+        ...,
+    ],
+}
+df = pd.DataFrame(
+    data,
+    columns=[
+        '1 Column Name',
+        '2 Column Name',
+        '3 Column Name',
+        '4 Column Name',
+        '5 Column Name',
+        '6 Column Name',
+        '7 Column Name',
+        '8 Column Name',
+        '9 Column Name',
+        '10 Column Name',
+        ...,
+    ],
+)
 
 
-@pytest.fixture
-def execute_query_mock(mocker):
-    return mocker.patch.object(SnowflakeConnector, '_execute_query')
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_databases',
+    return_value=['database_1', 'database_2'],
+)
+def test_datasource_get_databases(gd, gc, snowflake_connector, snowflake_datasource):
+    result = snowflake_datasource._get_databases(snowflake_connector)
+    assert len(result) == 2
+    assert result[1] == 'database_2'
 
 
-def test_snowflake(mocker):
-    connect_mock = mocker.patch('snowflake.connector.connect')
-
-    sc.get_df(sd)
-
-    expected_calls = [
-        call('test_query with ? and ?', ['bar', 'pikachu']),
-    ]
-
-    mock_execute = connect_mock.return_value.__enter__.return_value.cursor.return_value.execute
-
-    mock_execute.assert_has_calls(expected_calls)
-
-    mock_execute.return_value.fetchall.assert_called_once()
-    connect_mock.assert_called_once_with(
-        user='test_user',
-        password='test_password',
-        account='test_account',
-        database='test_database',
-        warehouse='test_warehouse',
-        authenticator=AuthenticationMethodValue.PLAIN,
-        application='ToucanToco',
-        role=None,
-    )
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
+    return_value=['warehouse_1', 'warehouse_2'],
+)
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_databases',
+    return_value=['database_1', 'database_2'],
+)
+def test_datasource_get_form(gd, gw, gc, snowflake_connector, snowflake_datasource):
+    result = snowflake_datasource.get_form(snowflake_connector, {})
+    assert 'warehouse_1' == result['properties']['warehouse']['default']
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
-def test_snowflake_custom_role(mocker):
-    snock = mocker.patch('snowflake.connector.connect')
-
-    connector = copy.deepcopy(sc)
-    connector.role = 'TEST'
-
-    connector.get_df(sd)
-
-    snock.assert_called_once_with(
-        user='test_user',
-        password='test_password',
-        account='test_account',
-        database='test_database',
-        warehouse='test_warehouse',
-        authenticator=AuthenticationMethodValue.PLAIN,
-        application='ToucanToco',
-        role='TEST',
-    )
+def test_set_warehouse(snowflake_connector, snowflake_datasource):
+    snowflake_datasource.warehouse = None
+    new_data_source = snowflake_connector._set_warehouse(snowflake_datasource)
+    assert new_data_source.warehouse == 'warehouse_1'
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
-def test_snowflake_custom_role_empty(mocker):
-    snock = mocker.patch('snowflake.connector.connect')
-
-    connector = copy.deepcopy(sc)
-    connector.role = ''
-
-    connector.get_df(sd)
-
-    _, kwargs = snock.call_args_list[0]
-    assert 'role' not in kwargs
-
-
-def test_snowflake_get_connection_params_no_auth_method(mocker):
-    res = SnowflakeConnector(
-        name='test',
-        user='test',
-        password='test_password',
-        account='test_account',
-        default_warehouse='test_wh',
-    ).get_connection_params()
-    assert res['authenticator'] == AuthenticationMethodValue.PLAIN
-
-
-def test_snowflake_data_source_get_form(mocker):
-    ds = SnowflakeDataSource(
-        name='test',
-        domain='blah',
-        database='bleh',
-        query='foo',
-        warehouse='',
-    )
-
-    mocker.patch('snowflake.connector.connect')
-
-    sf_form = ds.get_form(sc, {})
-
-    assert 'default_wh' == sf_form['properties']['warehouse']['default']
-
-
-def test_snowflake_get_form_with_databases(mocker):
-    mocker.patch('snowflake.connector.connect')
-
-    data_source = SnowflakeDataSource(
+# TODO - Que fait on lorsqu'il n'y a pas de default warehouse ? Les requêtes sont quand même exécutées ?
+def test_set_warehouse_without_default_warehouse(snowflake_datasource):
+    sc_without_default_warehouse = SnowflakeConnector(
+        identifier='snowflake_test',
         name='test_name',
-        domain='test_domain',
-        warehouse='test_warehouse',
-        database='foo',
-        query='foo',
-    )
-
-    get_db_mock = mocker.patch('toucan_connectors.snowflake.SnowflakeDataSource._get_databases')
-    get_db_mock.return_value = ['foo', 'bar']
-    sf_form = data_source.get_form(sc, {})
-
-    get_db_mock.assert_called_once()
-    assert sf_form['definitions']['database']['enum'] == ['foo', 'bar']
-
-
-def test_snowflake_get_form_with_warehouses(mocker):
-    mocker.patch('snowflake.connector.connect')
-
-    data_source = SnowflakeDataSource(
-        name='test_name',
-        domain='test_domain',
-        warehouse='test_warehouse',
-        database='foo',
-        query='bar',
-    )
-
-    get_warehouses_mock = mocker.patch(
-        'toucan_connectors.snowflake.SnowflakeConnector._get_warehouses'
-    )
-    get_warehouses_mock.return_value = ['foo', 'bar']
-    sf_form = data_source.get_form(sc, {})
-
-    get_warehouses_mock.assert_called_once()
-    assert sf_form['definitions']['warehouse']['enum'] == ['foo', 'bar']
-
-
-def test_snowflake_data_source_default_warehouse(mocker):
-    snow_mock = mocker.patch('snowflake.connector.connect')
-    # Avoid to call read_sql for nothing but no tests required here
-    mocker.patch('pandas.read_sql')
-
-    ds = SnowflakeDataSource(name='test', domain='test', database='db', query='foo', warehouse='')
-
-    sc.get_df(ds)
-
-    expected_calls = [call('foo', [])]
-
-    snow_mock.return_value.__enter__.return_value.cursor.return_value.execute.assert_has_calls(
-        expected_calls
-    )
-
-    snow_mock.assert_called_once_with(
+        authentication_method=AuthenticationMethod.PLAIN,
         user='test_user',
         password='test_password',
         account='test_account',
-        database='db',
-        warehouse='default_wh',
-        authenticator=AuthenticationMethodValue.PLAIN,
-        application='ToucanToco',
-        role=None,
     )
+    snowflake_datasource.warehouse = None
+    new_data_source = sc_without_default_warehouse._set_warehouse(snowflake_datasource)
+    assert new_data_source.warehouse is None
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
-@responses.activate
-def test_snowflake_oauth_auth(mocker, sc_oauth):
-    responses.add(
-        responses.POST,
-        OAUTH_TOKEN_ENDPOINT,
-        json={'access_token': 'aaa', 'refresh_token': 'bbb'},
-    )
-
-    snow_mock = mocker.patch('snowflake.connector.connect')
-
-    sc_oauth.get_df(sd)
-
-    snow_mock.assert_called_once_with(
-        user='test_user',
-        account='test_account',
-        authenticator=AuthenticationMethodValue.OAUTH,
-        database='test_database',
-        warehouse='test_warehouse',
-        token=sc_oauth.user_tokens_keeper.access_token.get_secret_value(),
-        application='ToucanToco',
-        role=None,
-    )
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_databases',
+    return_value=['database_1', 'database_2'],
+)
+def test_get_database_without_filter(gd, gc, snowflake_connector):
+    result = snowflake_connector._get_databases()
+    assert result[0] == 'database_1'
+    assert result[1] == 'database_2'
+    assert len(result) == 2
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
-def test_snowflake_plain_auth(mocker):
-    snow_mock = mocker.patch('snowflake.connector.connect')
-
-    sc.get_df(sd)
-
-    snow_mock.assert_called_once_with(
-        user='test_user',
-        account='test_account',
-        authenticator=AuthenticationMethodValue.PLAIN,
-        password='test_password',
-        database='test_database',
-        warehouse='test_warehouse',
-        application='ToucanToco',
-        role=None,
-    )
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_databases', return_value=['database_1']
+)
+def test_get_database_with_filter_found(gd, gc, snowflake_connector):
+    result = snowflake_connector._get_databases('database_1')
+    assert result[0] == 'database_1'
+    assert len(result) == 1
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
-def test_snowflake_execute_select_query(mocker):
-    snow_mock = mocker.patch('snowflake.connector.connect')
-    cursor_mock = (
-        snow_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
-    )
-
-    connector = SnowflakeConnector(
-        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
-    )
-
-    data_source = SnowflakeDataSource(
-        name='test',
-        domain='test',
-        database='test',
-        warehouse='test',
-        query='foo',
-    )
-
-    data_source.query = 'SELECT * FROM foo;'
-
-    connector.get_df(data_source)
-
-    data_source.query = 'select * from foo;'
-
-    connector.get_df(data_source)
-
-    assert cursor_mock.fetch_pandas_all.call_count == 2
-    cursor_mock.fetchall.assert_not_called()
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon.get_databases', return_value=[])
+def test_get_database_with_filter_not_found(gd, gc, snowflake_connector):
+    result = snowflake_connector._get_databases('database_3')
+    assert len(result) == 0
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
-def test_snowflake_execute_select_query_with_params(mocker):
-    snow_mock = mocker.patch('snowflake.connector.connect')
-
-    connector = SnowflakeConnector(
-        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
-    )
-
-    data_source = SnowflakeDataSource(
-        name='test',
-        domain='test',
-        database='test',
-        warehouse='test',
-        query='SELECT * FROM %(formatme)s;',
-        parameters={
-            'nested': {'dictionary': 'ohno'},
-            'formatme': 'ohyeah',
-            'no_array': [{'no': 'nope'}],
-        },
-    )
-
-    connector.get_df(data_source)
-
-    snow_mock.return_value.__enter__.return_value.cursor.return_value.execute.assert_called_with(
-        'SELECT * FROM ?;', ['ohyeah']
-    )
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
+    return_value=['warehouse_1', 'warehouse_2'],
+)
+def test_get_warehouse_without_filter(gw, gc, snowflake_connector):
+    result = snowflake_connector._get_warehouses()
+    assert result[0] == 'warehouse_1'
+    assert result[1] == 'warehouse_2'
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
-def test_snowflake_execute_select_query_with_params_jinja_syntax(mocker):
-    """It should convert jinja templating to printf templating"""
-    snow_mock = mocker.patch('snowflake.connector.connect')
-    connector = SnowflakeConnector(
-        name='test', user='test', password='test', account='test', default_warehouse='default_wh'
-    )
-    data_source = SnowflakeDataSource(
-        name='test',
-        domain='test',
-        database='test',
-        warehouse='test',
-        query='SELECT * FROM {{ formatme }};',
-        parameters={
-            'nested': {'dictionary': 'ohno'},
-            'formatme': 'ohyeah',
-            'no_array': [{'no': 'nope'}],
-        },
-    )
-
-    connector.get_df(data_source)
-
-    snow_mock.return_value.__enter__.return_value.cursor.return_value.execute.assert_called_with(
-        'SELECT * FROM ?;', ['ohyeah']
-    )
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
+    return_value=['warehouse_1'],
+)
+def test_get_warehouse_with_filter_found(gw, gc, snowflake_connector):
+    result = snowflake_connector._get_warehouses('warehouse_1')
+    assert result[0] == 'warehouse_1'
+    assert len(result) == 1
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
-def test_snowflake_execute_other_query(mocker):
-    snow_mock = mocker.patch('snowflake.connector.connect')
-    cursor_mock = (
-        snow_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
-    )
-
-    connector = SnowflakeConnector(
-        name='test',
-        account='test',
-        authentication_method=AuthenticationMethod.PLAIN,
-        user='test',
-        password='test',
-        default_warehouse='default_wh',
-    )
-
-    data_source = SnowflakeDataSource(
-        name='test',
-        domain='test',
-        database='test',
-        warehouse='test',
-        query='foo',
-    )
-
-    data_source.query = 'SHOW TABLES;'
-
-    connector.get_df(data_source)
-
-    cursor_mock.fetch_pandas_all.assert_not_called()
-    cursor_mock.fetchall.assert_called_once()
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses', return_value=[])
+def test_get_warehouse_with_filter_not_found(gw, gc, snowflake_connector):
+    result = snowflake_connector._get_warehouses('warehouse_3')
+    assert len(result) == 0
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
-def test_missing_cache_file():
-    with pytest.raises(ValueError):
-        SnowflakeConnector(
-            user='', password='', account='', name='', ocsp_response_cache_filename='/blah'
-        )
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
+def test_retrieve_data(eq, gc, snowflake_connector, snowflake_datasource, mocker):
+    spy = mocker.spy(SnowflakeCommon, '_execute_query')
 
-    SnowflakeConnector(
-        authentication_method=AuthenticationMethod.PLAIN,
-        user='',
-        password='',
-        account='',
-        name='',
-        default_warehouse='bleh',
-    )
+    df_result: DataFrame = snowflake_connector._retrieve_data(snowflake_datasource)
 
-
-def test_specified_oauth_args(mocker, sc_oauth):
-    mocker.patch('snowflake.connector.connect')
-
-    sc_oauth.user_tokens_keeper.access_token = SecretStr(
-        jwt.encode({'exp': datetime.now() - timedelta(hours=24), 'sub': 'user'}, key='supersecret')
-    )
-
-    data_source = SnowflakeDataSource(
-        name='test',
-        domain='test',
-        database='test',
-        warehouse='test',
-        query='bar',
-    )
-
-    req_mock = mocker.patch('requests.post')
-    req_mock.return_value.status_code = 200
-    req_mock.return_value.json = lambda: {
-        'access_token': jwt.encode({'exp': datetime.now(), 'sub': 'user'}, key='supersecret')
-    }
-
-    sc_oauth._retrieve_data(data_source)
-
-    url, kwargs = req_mock.call_args_list[0]
-    assert req_mock.call_count == 1
-    assert OAUTH_TOKEN_ENDPOINT == url[0]
-    assert OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE == kwargs['headers']['Content-Type']
-    assert OAUTH_CLIENT_ID == kwargs['data']['client_id']
-    assert OAUTH_CLIENT_SECRET == kwargs['data']['client_secret']
+    assert spy.call_count == 1
+    assert 11 == len(df_result)
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
-def test_oauth_args_missing_endpoint(mocker, sc_oauth):
-    mocker.patch('snowflake.connector.connect')
-    req_mock = mocker.patch('requests.post')
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
+def test_retrieve_data_slice(eq, gc, snowflake_connector, snowflake_datasource, mocker):
+    spy = mocker.spy(SnowflakeCommon, '_execute_query')
+    df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource)
+    assert spy.call_count == 1
+    assert 11 == len(df_result.df)
+    SnowflakeConnector.get_connection_manager().force_clean()
 
-    sc_oauth.token_endpoint = None
 
-    sc_oauth._retrieve_data(sd)
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
+def test_retrieve_data_slice_offset_limit(
+    eq, gc, snowflake_connector, snowflake_datasource, mocker
+):
+    spy = mocker.spy(SnowflakeCommon, '_execute_query')
+    df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=5, limit=3)
+    assert spy.call_count == 1
+    assert 3 == len(df_result.df)
+    assert 3 == df_result.total_count
+    SnowflakeConnector.get_connection_manager().force_clean()
 
-    assert req_mock.call_count == 0
 
-
-@responses.activate
-def test_oauth_refresh_token(mocker, sc_oauth):
-    mocker.patch('snowflake.connector.connect')
-
-    new_token = jwt.encode(
-        {'access_token': 'baba_au_rhum', 'sub': 'mon_super_user'}, key='supersecret'
-    )
-
-    responses.add(
-        responses.POST,
-        OAUTH_TOKEN_ENDPOINT,
-        json={'access_token': new_token, 'refresh_token': 'bbb'},
-    )
-
-    sc_oauth._retrieve_data(sd)
-    assert sc_oauth.user_tokens_keeper.update_tokens.call_count == 1
-    assert sc_oauth.user_tokens_keeper.update_tokens.call_args[1]['access_token'] == new_token
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
+def test_retrieve_data_slice_too_much(eq, gc, snowflake_connector, snowflake_datasource, mocker):
+    spy = mocker.spy(SnowflakeCommon, '_execute_query')
+    df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=10, limit=20)
+    assert spy.call_count == 1
+    assert 1 == len(df_result.df)
+    SnowflakeConnector.get_connection_manager().force_clean()
 
 
 def test_schema_fields_order():
@@ -515,145 +445,250 @@ def test_schema_fields_order():
     assert schema_props_keys == ordered_keys
 
 
-def test_oauth_args_endpoint_not_200(mocker, sc_oauth):
-    mocker.patch('snowflake.connector.connect')
-    req_mock = mocker.patch('requests.post')
-
-    sc_oauth.user_tokens_keeper.access_token = SecretStr(
-        jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
+    return_value=['warehouse_1'],
+)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+def test_get_status_all_good(connect, gw, snowflake_connector):
+    result = snowflake_connector.get_status()
+    assert result == ConnectorStatus(
+        status=True, details=[('Connection to Snowflake', True), ('Default warehouse exists', True)]
     )
 
+
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
+    return_value=['warehouse_1'],
+)
+def test_get_status(gc, gw, snowflake_connector):
+    connector_status = snowflake_connector.get_status()
+    assert connector_status.status
+
+
+@patch(
+    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
+    return_value={'success': True},
+)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses', return_value=[])
+def test_get_status_without_warehouses(gw, gc, snowflake_connector):
+    connector_status = snowflake_connector.get_status()
+    assert not connector_status.status
+
+
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
+    return_value=['warehouse_1'],
+)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+def test_get_status_account_nok(is_closed, close, connect, gw, snowflake_connector):
+    gw.side_effect = snowflake.connector.errors.ProgrammingError('Account nok')
+    result = snowflake_connector.get_status()
+    assert result == ConnectorStatus(
+        status=False,
+        error='Account nok',
+        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
+    )
+    SnowflakeConnector.get_connection_manager().force_clean()
+
+
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
+    return_value=['warehouse_1'],
+)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+def test_account_does_not_exists(is_closed, close, connect, gw, snowflake_connector):
+    gw.side_effect = snowflake.connector.errors.OperationalError()
+    result = snowflake_connector.get_status()
+    assert result == ConnectorStatus(
+        status=False,
+        error=f"Connection failed for the account '{snowflake_connector.account}', please check the Account field",
+        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
+    )
+    SnowflakeConnector.get_connection_manager().force_clean()
+
+
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
+    return_value=['warehouse_1'],
+)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+def test_account_forbidden(is_closed, close, connect, gw, snowflake_connector):
+    gw.side_effect = snowflake.connector.errors.ForbiddenError()
+    result = snowflake_connector.get_status()
+    assert result == ConnectorStatus(
+        status=False,
+        error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",
+        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
+    )
+    SnowflakeConnector.get_connection_manager().force_clean()
+
+
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
+    return_value=['warehouse_1'],
+)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+def test_account_failed_for_user(is_closed, close, connect, gw, snowflake_connector):
+    gw.side_effect = snowflake.connector.errors.DatabaseError()
+    result = snowflake_connector.get_status()
+    assert result == ConnectorStatus(
+        status=False,
+        error=f"Connection failed for the user '{snowflake_connector.user}', please check your credentials",
+        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
+    )
+    SnowflakeConnector.get_connection_manager().force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
+def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_connector_oauth):
+    snowflake_connector_oauth._get_connection('test_database', 'test_warehouse')
+    assert rt.call_count == 1
+    assert connect.call_args_list[0][1]['account'] == 'test_account'
+    assert (
+        connect.call_args_list[0][1]['token']
+        == 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjQyLCJzdWIiOiJzbm93Zmxha2VfdXNlciJ9.NJDbR-tAepC_ANrg9m5PozycbcuWDgGi4o9sN9Pl27k'
+    )
+    assert connect.call_args_list[0][1]['database'] == 'test_database'
+    assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
+    SnowflakeConnector.get_connection_manager().force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
+def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connector):
+    snowflake_connector._get_connection('test_database', 'test_warehouse')
+    assert rt.call_count == 0
+    assert connect.call_args_list[0][1]['account'] == 'test_account'
+    assert connect.call_args_list[0][1]['user'] == 'test_user'
+    assert connect.call_args_list[0][1]['password'] == 'test_password'
+    assert connect.call_args_list[0][1]['database'] == 'test_database'
+    assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
+    SnowflakeConnector.get_connection_manager().force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch(
+    'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
+    return_value='shiny token',
+)
+def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_connector, mocker):
+    snowflake_connector._get_connection('test_database', 'test_warehouse')
+    cm = SnowflakeConnector.get_connection_manager()
+    cm.time_between_clean = 1
+    cm.time_keep_alive = 5
+    time.sleep(4)
+    assert is_closed.call_count >= 1
+    SnowflakeConnector.get_connection_manager().force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch(
+    'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
+    return_value='shiny token',
+)
+def test_snowflake_connection_close(gat, is_closed, close, connect, snowflake_connector, mocker):
+    snowflake_connector._get_connection('test_database', 'test_warehouse')
+    cm = SnowflakeConnector.get_connection_manager()
+    cm.time_between_clean = 1
+    cm.time_keep_alive = 1
+    time.sleep(4)
+    assert close.call_count >= 1
+    SnowflakeConnector.get_connection_manager().force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('requests.post')
+def test_oauth_args_endpoint_not_200(
+    req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
+):
+    snowflake_connector_oauth.user_tokens_keeper.access_token = SecretStr(
+        jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
+    )
     req_mock.return_value.status_code = 401
 
     def fake_raise_for_status():
-        raise HTTPError('Unauthorized')
+        raise HTTPError('url', 401, 'Unauthorized', {}, None)
 
     req_mock.return_value.ok = False
     req_mock.return_value.raise_for_status = lambda: fake_raise_for_status()
 
     try:
-        sc_oauth._retrieve_data(sd)
+        snowflake_connector_oauth._retrieve_data(snowflake_datasource)
     except Exception as e:
-        assert str(e) == 'Unauthorized'
+        SnowflakeConnector.get_connection_manager().force_clean()
+        assert str(e) == 'HTTP Error 401: Unauthorized'
         assert req_mock.call_count == 1
     else:
+        SnowflakeConnector.get_connection_manager().force_clean()
         assert False
 
 
-def test_oauth_args_wrong_type_of_auth(mocker, sc_oauth):
-    mocker.patch('snowflake.connector.connect')
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('requests.post')
+def test_refresh_oauth_token(
+    req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
+):
+    snowflake_connector_oauth.user_tokens_keeper.access_token = SecretStr(
+        jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
+    )
+    req_mock.return_value.status_code = 201
+    req_mock.return_value.ok = False
+    req_mock.return_value.return_value = {'access_token': 'token', 'refresh_token': 'token'}
 
-    sc_oauth.authentication_method = AuthenticationMethod.PLAIN
+    try:
+        snowflake_connector_oauth._retrieve_data(snowflake_datasource)
+        SnowflakeConnector.get_connection_manager().force_clean()
+        assert req_mock.call_count == 1
+    except Exception as e:
+        SnowflakeConnector.get_connection_manager().force_clean()
+        assert str(e) == 'HTTP Error 401: Unauthorized'
+        assert False
+    else:
+        assert True
+
+
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+def test_oauth_args_wrong_type_of_auth(
+    is_closed,
+    close,
+    connect,
+    retrieve_data,
+    snowflake_connector_oauth,
+    snowflake_datasource,
+    mocker,
+):
     spy = mocker.spy(SnowflakeConnector, '_refresh_oauth_token')
 
-    sc_oauth._retrieve_data(sd)
-
+    snowflake_connector_oauth.authentication_method = AuthenticationMethod.PLAIN
+    snowflake_connector_oauth._retrieve_data(snowflake_datasource)
+    SnowflakeConnector.get_connection_manager().force_clean()
     assert spy.call_count == 0
-
-
-def test_get_status_all_good(
-    snowflake_connector: SnowflakeConnector, snowflake_connection_mock, execute_query_mock
-):
-    execute_query_mock.return_value = pd.DataFrame({'warehouse_name': 'default_wh'}, index=[0])
-    assert snowflake_connector.get_status() == ConnectorStatus(
-        status=True, details=[('Connection to Snowflake', True), ('Default warehouse exists', True)]
-    )
-
-
-def test_get_status_warehouse_does_not_exists(
-    snowflake_connector: SnowflakeConnector, snowflake_connection_mock, execute_query_mock
-):
-    execute_query_mock.return_value = pd.DataFrame()
-    assert snowflake_connector.get_status() == ConnectorStatus(
-        status=False,
-        error="The warehouse 'default_wh' does not exist.",
-        details=[('Connection to Snowflake', True), ('Default warehouse exists', False)],
-    )
-
-
-def test_account_does_not_exists(
-    snowflake_connector: SnowflakeConnector,
-    snowflake_connection_mock,
-):
-    snowflake_connection_mock.side_effect = snowflake.connector.errors.OperationalError()
-
-    assert snowflake_connector.get_status() == ConnectorStatus(
-        status=False,
-        error=f"Connection failed for the account '{snowflake_connector.account}', please check the Account field",
-        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
-    )
-
-
-def test_account_forbidden(snowflake_connector: SnowflakeConnector, snowflake_connection_mock):
-    snowflake_connection_mock.side_effect = snowflake.connector.errors.ForbiddenError()
-
-    assert snowflake_connector.get_status() == ConnectorStatus(
-        status=False,
-        error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",
-        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
-    )
-
-
-def test_get_status_credentials_nok(
-    snowflake_connector: SnowflakeConnector, snowflake_connection_mock
-):
-    snowflake_connection_mock.side_effect = snowflake.connector.errors.DatabaseError()
-
-    assert snowflake_connector.get_status() == ConnectorStatus(
-        status=False,
-        error="Connection failed for the user 'test_user', please check your credentials",
-        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
-    )
-
-
-def test_get_status_account_nok(
-    snowflake_connector: SnowflakeConnector, snowflake_connection_mock, execute_query_mock
-):
-    execute_query_mock.side_effect = snowflake.connector.errors.ProgrammingError('Account nok')
-
-    assert snowflake_connector.get_status() == ConnectorStatus(
-        status=False,
-        error='Account nok',
-        details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
-    )
-
-
-def test_needs_sso_credentials():
-    assert needs_sso_credentials(SnowflakeConnector)
-    assert not needs_sso_credentials(PostgresConnector)
-
-
-def test_get_slice(mocker, snowflake_connector):
-    connect_mock = mocker.patch('snowflake.connector.connect')
-    cursor_mock = (
-        connect_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
-    )
-    ds = SnowflakeDataSource(
-        name='test_name',
-        domain='test_domain',
-        database='test_database',
-        warehouse='test_warehouse',
-        query='select * from buz',
-        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
-    )
-    snowflake_connector.get_slice(ds, None, offset=0, limit=1)
-
-    cursor_mock.fetchmany.assert_called_once_with(1)
-
-
-def test_get_slice_with_offset(mocker, snowflake_connector):
-    connect_mock = mocker.patch('snowflake.connector.connect')
-    cursor_mock = (
-        connect_mock.return_value.__enter__.return_value.cursor.return_value.execute.return_value
-    )
-    ds = SnowflakeDataSource(
-        name='test_name',
-        domain='test_domain',
-        database='test_database',
-        warehouse='test_warehouse',
-        query='select * from buz',
-        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
-    )
-    snowflake_connector.get_slice(ds, None, offset=100, limit=10)
-
-    cursor_mock.fetchmany.assert_called_once_with(110)

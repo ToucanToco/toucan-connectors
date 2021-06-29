@@ -1,12 +1,14 @@
 import logging
+from contextlib import suppress
 from timeit import default_timer as timer
-from typing import List
+from typing import Any, List, Optional
 
 import pandas as pd
-import snowflake as pysnowflake
-from pydantic import Field, SecretStr
-from snowflake.connector import DictCursor
+import snowflake
+from pydantic import Field, SecretStr, create_model
+from snowflake.connector import SnowflakeConnection
 
+from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
@@ -15,13 +17,37 @@ from toucan_connectors.snowflake.snowflake_connector import (
     AuthenticationMethod,
     SnowflakeDataSource,
 )
-from toucan_connectors.toucan_connector import Category, ToucanConnector
+from toucan_connectors.snowflake_common import SnowflakeCommon
+from toucan_connectors.toucan_connector import Category, DataSlice, ToucanConnector, strlist_to_enum
 
 logger = logging.getLogger(__name__)
 
+connection_manager = None
+if not connection_manager:
+    connection_manager = ConnectionManager(
+        name='snowflake_oauth2', timeout=5, wait=0.2, time_between_clean=3, time_keep_alive=600
+    )
+
 
 class SnowflakeoAuth2DataSource(SnowflakeDataSource):
-    """ """
+    @classmethod
+    def _get_databases(cls, connector: 'SnowflakeoAuth2Connector'):
+        return connector._get_databases()
+
+    @classmethod
+    def get_form(cls, connector: 'SnowflakeoAuth2Connector', current_config):
+        constraints = {}
+
+        with suppress(Exception):
+            databases = connector._get_databases()
+            warehouses = connector._get_warehouses()
+            # Restrict some fields to lists of existing counterparts
+            constraints['database'] = strlist_to_enum('database', databases)
+            constraints['warehouse'] = strlist_to_enum('warehouse', warehouses)
+
+        res = create_model('FormSchema', **constraints, __base__=cls).schema()
+        res['properties']['warehouse']['default'] = connector.default_warehouse
+        return res
 
 
 class SnowflakeoAuth2Connector(ToucanConnector):
@@ -90,69 +116,96 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     def retrieve_tokens(self, authorization_response: str):
         return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
 
-    def _get_warehouses(self) -> List[str]:
-        with self.connect() as connection:
-            return [
-                warehouse['name']
-                for warehouse in connection.cursor(DictCursor).execute('SHOW WAREHOUSES').fetchall()
-                if 'name' in warehouse
-            ]
-
     def get_access_token(self):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
-    def connect(self, database=None, warehouse=None) -> pysnowflake.connector.SnowflakeConnection:
-        token_start = timer()
-        connection_params = {
-            'account': self.account,
-            'authenticator': AuthenticationMethod.OAUTH,
-            'application': 'ToucanToco',
-            'token': self.get_access_token(),
-            'role': self.role if self.role else '',
-        }
-        token_end = timer()
-        logger.info(
-            f'[benchmark] - get_access_token {token_end - token_start} seconds',
-            extra={
-                'benchmark': {
-                    'operation': 'get_access_token',
-                    'execution_time': token_end - token_start,
-                }
-            },
-        )
-        return pysnowflake.connector.connect(
-            **connection_params, database=database, warehouse=warehouse
+    def _get_connection(self, database: str = None, warehouse: str = None) -> SnowflakeConnection:
+        def connect_function() -> SnowflakeConnection:
+            logger.info('Connect at Snowflake')
+            token_start = timer()
+            tokens = self.get_access_token()
+            token_end = timer()
+
+            connection_params = {
+                'account': self.account,
+                'authenticator': AuthenticationMethod.OAUTH,
+                'application': 'ToucanToco',
+                'token': tokens,
+                'role': self.role if self.role else '',
+            }
+            logger.info(
+                f'[benchmark] - get_access_token {token_end - token_start} seconds',
+                extra={
+                    'benchmark': {
+                        'operation': 'get_access_token',
+                        'execution_time': token_end - token_start,
+                    }
+                },
+            )
+
+            logger.info(
+                f'Connect at Snowflake with {connection_params}, database {database} and warehouse {warehouse}'
+            )
+            connect_start = timer()
+            c = snowflake.connector.connect(
+                **connection_params, database=database, warehouse=warehouse
+            )
+            connect_end = timer()
+            logger.info(
+                f'[benchmark] - connect {connect_end - connect_start} seconds',
+                extra={
+                    'benchmark': {
+                        'operation': 'connect',
+                        'execution_time': connect_end - connect_start,
+                    }
+                },
+            )
+            return c
+
+        def alive_function() -> Any:
+            logger.info('Check Snowflake connection')
+            if hasattr(connection, 'is_closed') and callable(connection.is_closed):
+                return connection.is_closed()
+
+        def close_function() -> None:
+            logger.info('Close Snowflake connection')
+            if hasattr(connection, 'close') and callable(connection.close):
+                return connection.close()
+
+        connection: SnowflakeConnection = connection_manager.get(
+            self.identifier,
+            connect_method=lambda: connect_function(),
+            alive_method=lambda: alive_function(),
+            close_method=lambda: close_function(),
         )
 
+        return connection
+
+    def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
+        return SnowflakeCommon().get_warehouses(self._get_connection(), warehouse_name)
+
+    def _get_databases(self, database_name: Optional[str] = None) -> List[str]:
+        return SnowflakeCommon().get_databases(self._get_connection(), database_name)
+
     def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> pd.DataFrame:
-        connect_start = timer()
-        connection = self.connect(
-            database=data_source.database,
-            warehouse=data_source.warehouse,
+        return SnowflakeCommon().retrieve_data(
+            self._get_connection(data_source.database, data_source.warehouse), data_source
         )
-        connect_end = timer()
-        logger.info(
-            f'[benchmark] - connect {connect_end - connect_start} seconds',
-            extra={
-                'benchmark': {
-                    'operation': 'connect',
-                    'execution_time': connect_end - connect_start,
-                }
-            },
+
+    def get_slice(
+        self,
+        data_source: SnowflakeDataSource,
+        permissions: Optional[dict] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
+    ) -> DataSlice:
+        return SnowflakeCommon().get_slice(
+            self._get_connection(data_source.database, data_source.warehouse),
+            data_source,
+            offset=offset,
+            limit=limit,
         )
-        execution_start = timer()
-        cursor = connection.cursor(DictCursor)
-        query_res = cursor.execute(data_source.query)
-        df = pd.DataFrame(query_res.fetchall())
-        connection.close()
-        execution_end = timer()
-        logger.info(
-            f'[benchmark] - execute {execution_end - execution_start} seconds',
-            extra={
-                'benchmark': {
-                    'operation': 'execute',
-                    'execution_time': execution_end - execution_start,
-                }
-            },
-        )
-        return df
+
+    @staticmethod
+    def get_connection_manager():
+        return connection_manager
