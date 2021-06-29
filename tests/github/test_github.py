@@ -487,10 +487,10 @@ def test_get_slice(gc, mocker, extracted_repositories_names_2, extracted_prs_1, 
         side_effect=[extracted_prs_1, extracted_prs_2, extracted_prs_2, extracted_prs_2],
     )
     ds = build_ds('pull requests')
-    df, rows = gc.get_slice(ds)
+    dataslice = gc.get_slice(ds)
     assert mocked_api_call.call_count == 1
     assert mocked_api_call_async.call_count == 3
-    assert len(df) == 5
+    assert len(dataslice.df) == 5
 
 
 def test_get_slice_limit(
@@ -505,10 +505,10 @@ def test_get_slice_limit(
         side_effect=[extracted_prs_1, extracted_prs_2, extracted_prs_2, extracted_prs_2],
     )
     ds = build_ds('pull requests')
-    df, rows = gc.get_slice(ds, limit=2)
+    dataslice = gc.get_slice(ds, limit=2)
     assert mocked_api_call.call_count == 1
     assert mocked_api_call_async.call_count == 3
-    assert len(df) == 2
+    assert len(dataslice.df) == 2
 
 
 @responses.activate

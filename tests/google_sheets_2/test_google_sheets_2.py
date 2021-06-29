@@ -261,18 +261,18 @@ def test_get_slice(mocker, con, ds):
         GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET
     )
 
-    df, rows = con.get_slice(ds, limit=2)
+    ds = con.get_slice(ds, limit=2)
     assert '!1:3' in run_fetch_mock.call_args_list[0][0][0]
-    assert df.shape == (2, 2)
+    assert ds.df.shape == (2, 2)
 
 
 def test_get_slice_no_limit(mocker, con, ds):
     """It should return a slice of spreadsheet"""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
 
-    df, rows = con.get_slice(ds, limit=None)
+    ds = con.get_slice(ds, limit=None)
 
-    assert df.shape == (2, 2)
+    assert ds.df.shape == (2, 2)
 
 
 def test_schema_fields_order(con, ds):
@@ -301,5 +301,5 @@ def test_parse_datetime(mocker, con):
         ],
     }
     mocker.patch(f'{import_path}.fetch', return_value=fake_result)
-    df, rows = con.get_slice(ds, limit=2)
-    assert df['a_date'].iloc[0] == datetime.datetime(year=2001, month=2, day=2)
+    ds = con.get_slice(ds, limit=2)
+    assert ds.df['a_date'].iloc[0] == datetime.datetime(year=2001, month=2, day=2)
