@@ -31,7 +31,6 @@ It contains all parameters we were able to extract from input. In the context of
 This object will collect various stats such as execution times, sizes, row numbers etc..
 
 * `total_rows`
-
 Check if the input “data” query is a select query
 
 Build a “count” query from the datasource’s “data” query. The method wraps the initial query as such → `select count(*) from (<original-query>);`
