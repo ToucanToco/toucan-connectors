@@ -419,8 +419,8 @@ def test_snowflake_connection_alive(
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
     spy = mocker.spy(SnowflakeConnection, 'is_closed')
-    time.sleep(1.1)
-    assert spy.call_count == 1
+    time.sleep(2)
+    assert spy.call_count >= 1
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 

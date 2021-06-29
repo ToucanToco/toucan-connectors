@@ -106,3 +106,5 @@ class ConnectionManager:
                     c['close']()
                 else:
                     logger.warning('Close connexion needed but no close method defined')
+            else:
+                del self.cm[key]

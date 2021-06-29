@@ -594,8 +594,8 @@ def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connect
 def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_connector, mocker):
     snowflake_connector._get_connection('test_database', 'test_warehouse')
     spy = mocker.spy(SnowflakeConnection, 'is_closed')
-    time.sleep(1.1)
-    assert spy.call_count == 1
+    time.sleep(2)
+    assert spy.call_count >= 1
     SnowflakeConnector.get_connection_manager().force_clean()
 
 
@@ -632,7 +632,7 @@ def test_oauth_args_endpoint_not_200(
     req_mock.return_value.status_code = 401
 
     def fake_raise_for_status():
-        raise HTTPError('url', 401, 'Unauthorized', {})
+        raise HTTPError('url', 401, 'Unauthorized', {}, None)
 
     req_mock.return_value.ok = False
     req_mock.return_value.raise_for_status = lambda: fake_raise_for_status()
@@ -640,12 +640,12 @@ def test_oauth_args_endpoint_not_200(
     try:
         snowflake_connector_oauth._retrieve_data(snowflake_datasource)
     except Exception as e:
-        assert str(e) == 'Unauthorized'
+        SnowflakeConnector.get_connection_manager().force_clean()
+        assert str(e) == 'HTTP Error 401: Unauthorized'
         assert req_mock.call_count == 1
     else:
-        assert False
-    finally:
         SnowflakeConnector.get_connection_manager().force_clean()
+        assert False
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
@@ -674,15 +674,22 @@ def test_refresh_oauth_token(
         SnowflakeConnector.get_connection_manager().force_clean()
 
 
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
 @patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
 def test_oauth_args_wrong_type_of_auth(
-    is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource, mocker
+    is_closed,
+    close,
+    connect,
+    retrieve_data,
+    snowflake_connector_oauth,
+    snowflake_datasource,
+    mocker,
 ):
     spy = mocker.spy(SnowflakeConnector, '_refresh_oauth_token')
 
     snowflake_connector_oauth.authentication_method = AuthenticationMethod.PLAIN
     snowflake_connector_oauth._retrieve_data(snowflake_datasource)
-
+    SnowflakeConnector.get_connection_manager().force_clean()
     assert spy.call_count == 0
