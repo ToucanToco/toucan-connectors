@@ -100,7 +100,6 @@ class SnowflakeCommon:
         self,
         c,
         data_source: SfDataSource,
-        *,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> DataSlice:

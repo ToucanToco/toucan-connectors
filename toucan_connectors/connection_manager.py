@@ -51,21 +51,11 @@ class ConnectionManager:
         for identifier, cm in list(self.cm.items()):
             tt = time.time()
             if 'ready' == cm['status']:
-                print('test 0', tt - cm['t_get'], self.time_keep_alive)
-                print('test 1', cm['alive'], isinstance(cm['alive'], types.FunctionType))
-                if cm['alive']:
-                    print('toto')
-                if isinstance(cm['alive'], types.FunctionType):
-                    print('toto2')
-                if not cm['alive']():
-                    print('toto3')
                 if tt - cm['t_get'] > self.time_keep_alive:
                     logger.debug(f'Close connexion {tt - cm["t_get"]} > {self.time_keep_alive}')
                     cm_to_remove.append(identifier)
                 elif cm['alive'] and isinstance(cm['alive'], types.FunctionType):
-                    print('prout 0')
                     if not cm['alive']():
-                        print('prout 1')
                         cm_to_remove.append(identifier)
             elif 'in_progress' == cm['status'] and tt - cm['t_start'] > self.connection_timeout:
                 cm_to_remove.append(identifier)
