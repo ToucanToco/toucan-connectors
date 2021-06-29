@@ -12,6 +12,7 @@ from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
+    DataStats,
     ToucanConnector,
     ToucanDataSource,
     decorate_func_with_retry,
@@ -236,7 +237,7 @@ class MongoConnector(ToucanConnector):
         else:
             df = self.get_df(data_source, permissions)
             total_count = len(df)
-        return DataSlice(df, total_count)
+        return DataSlice(df, stats=DataStats(total_returned_rows=total_count))
 
     def get_df_with_regex(
         self,

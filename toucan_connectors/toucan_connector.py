@@ -20,13 +20,27 @@ except ImportError:
     pass
 
 
+class DataStats(NamedTuple):
+    total_rows: Optional[int] = None  # total number of rows in original dataset
+    total_returned_rows: Optional[int] = None  # the number of rows returned by the query
+    execution_time: Optional[float] = None  # query's execution time in ms
+    conversion_time: Optional[float] = None  # Result conversion to DataFrame time
+    df_memory_size: Optional[int] = None  # Dataframe's memory usage in bytes
+
+
 class Category(str, Enum):
     SNOWFLAKE: str = 'Snowflake'
 
 
 class DataSlice(NamedTuple):
+    """
+    A detailed doc is available here: https://toucantoco.atlassian.net/wiki/spaces/TTA/pages/3018784933/Snowflake+-+Query+execution+metadata
+    for explanations about metadata available in the DataSlice object.
+    """
+
     df: pd.DataFrame  # the dataframe of the slice
-    total_count: int  # the length of the raw dataframe (without slicing)
+    input_parameters: Optional[dict] = None
+    stats: Optional[DataStats] = None
 
 
 class StrEnum(str, Enum):
@@ -308,9 +322,11 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         df = self.get_df(data_source, permissions)
         if limit is not None:
-            return DataSlice(df[offset : offset + limit], len(df))
+            return DataSlice(
+                df[offset : offset + limit], stats=DataStats(total_returned_rows=len(df))
+            )
         else:
-            return DataSlice(df[offset:], len(df))
+            return DataSlice(df[offset:], stats=DataStats(total_returned_rows=len(df)))
 
     def explain(self, data_source: ToucanDataSource, permissions: Optional[dict] = None):
         """Method to give metrics about the query"""
