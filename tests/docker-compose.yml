@@ -15,7 +15,7 @@ mongo:
     - 27017:27017
 
 mssql:
-  image: microsoft/mssql-server-linux
+  image: mcr.microsoft.com/mssql/server:2019-latest
   environment:
     - ACCEPT_EULA=Y
     - SA_PASSWORD=Il0veT0uc@n!
