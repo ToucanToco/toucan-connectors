@@ -594,7 +594,10 @@ def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connect
 def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_connector, mocker):
     snowflake_connector._get_connection('test_database', 'test_warehouse')
     spy = mocker.spy(SnowflakeConnection, 'is_closed')
-    time.sleep(2)
+    cm = SnowflakeConnector.get_connection_manager()
+    cm.time_between_clean = 1
+    cm.time_keep_alive = 1
+    time.sleep(1.1)
     assert spy.call_count >= 1
     SnowflakeConnector.get_connection_manager().force_clean()
 
@@ -614,7 +617,6 @@ def test_snowflake_connection_close(gat, is_closed, close, connect, snowflake_co
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
     time.sleep(4)
-
     assert spy.call_count == 2
     SnowflakeConnector.get_connection_manager().force_clean()
 
@@ -664,14 +666,14 @@ def test_refresh_oauth_token(
 
     try:
         snowflake_connector_oauth._retrieve_data(snowflake_datasource)
+        SnowflakeConnector.get_connection_manager().force_clean()
         assert req_mock.call_count == 1
     except Exception as e:
-        assert str(e) == 'Unauthorized'
+        SnowflakeConnector.get_connection_manager().force_clean()
+        assert str(e) == 'HTTP Error 401: Unauthorized'
         assert False
     else:
-        assert False
-    finally:
-        SnowflakeConnector.get_connection_manager().force_clean()
+        assert True
 
 
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)

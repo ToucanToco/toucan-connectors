@@ -14,14 +14,23 @@ def connection_manager():
     )
 
 
-def _get_connection(cm: ConnectionManager, identifier: str, sleep: Optional[int] = 0):
+def _get_connection(
+    cm: ConnectionManager,
+    identifier: str,
+    sleep: Optional[int] = 0,
+    enabled_alive: Optional[bool] = True,
+):
     def __connect():
         if 0 < sleep:
             time.sleep(sleep)
         return ConnectionObject()
 
     def __alive():
-        return True
+        if enabled_alive:
+            return True
+        else:
+            print('__alive False')
+            return False
 
     def __close():
         return True
@@ -83,8 +92,7 @@ def test_waiting_connection_timeout(connection_manager, mocker):
     spy = mocker.spy(connection_manager, '_get_wait')
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         with pytest.raises(TimeoutError):
-            futures = []
-            futures.append(executor.submit(_get_connection, connection_manager, 'conn_1', 4))
+            futures = [executor.submit(_get_connection, connection_manager, 'conn_1', 4)]
             time.sleep(0.3)
             futures.append(executor.submit(_get_connection, connection_manager, 'conn_1', 0))
             for future in concurrent.futures.as_completed(futures):
@@ -108,6 +116,7 @@ def test_auto_clean_multiple(connection_manager):
     time.sleep(3)
     assert len(connection_manager.cm) == 2
     _get_connection(connection_manager, 'conn_3')
+    assert len(connection_manager.cm) == 3
     time.sleep(3)
     assert len(connection_manager.cm) == 1
     time.sleep(3)
@@ -116,6 +125,14 @@ def test_auto_clean_multiple(connection_manager):
 
 def test_force_clean(connection_manager):
     _get_connection(connection_manager, 'conn_1')
-    assert len(connection_manager.cm) == 1
+    _get_connection(connection_manager, 'conn_2')
+    assert len(connection_manager.cm) == 2
     connection_manager.force_clean()
+    assert len(connection_manager.cm) == 0
+
+
+def test_clean_connection_not_alive(connection_manager):
+    _get_connection(connection_manager, 'conn_1', enabled_alive=False)
+    assert len(connection_manager.cm) == 1
+    time.sleep(1)
     assert len(connection_manager.cm) == 0

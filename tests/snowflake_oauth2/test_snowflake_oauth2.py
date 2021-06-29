@@ -415,10 +415,10 @@ def test_snowflake_connection_alive(
     gat, is_closed, close, connect, snowflake_oauth2_connector, mocker
 ):
     snowflake_oauth2_connector._get_connection('test_database', 'test_warehouse')
+    spy = mocker.spy(SnowflakeConnection, 'is_closed')
     cm = SnowflakeoAuth2Connector.get_connection_manager()
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
-    spy = mocker.spy(SnowflakeConnection, 'is_closed')
     time.sleep(2)
     assert spy.call_count >= 1
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()

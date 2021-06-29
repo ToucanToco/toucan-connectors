@@ -259,7 +259,6 @@ class SnowflakeConnector(ToucanConnector):
             logger.info('Check Snowflake connection')
             if hasattr(connection, 'is_closed') and callable(connection.is_closed):
                 return connection.is_closed()
-            return True
 
         def close_function():
             logger.info('Close Snowflake connection')
