@@ -593,12 +593,11 @@ def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connect
 )
 def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_connector, mocker):
     snowflake_connector._get_connection('test_database', 'test_warehouse')
-    spy = mocker.spy(SnowflakeConnection, 'is_closed')
     cm = SnowflakeConnector.get_connection_manager()
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
-    time.sleep(1.1)
-    assert spy.call_count >= 1
+    time.sleep(4)
+    assert is_closed.call_count >= 1
     SnowflakeConnector.get_connection_manager().force_clean()
 
 
@@ -610,14 +609,12 @@ def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_co
     return_value='shiny token',
 )
 def test_snowflake_connection_close(gat, is_closed, close, connect, snowflake_connector, mocker):
-    spy = mocker.spy(SnowflakeConnection, 'close')
-
     snowflake_connector._get_connection('test_database', 'test_warehouse')
     cm = SnowflakeConnector.get_connection_manager()
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
     time.sleep(4)
-    assert spy.call_count == 2
+    assert close.call_count >= 1
     SnowflakeConnector.get_connection_manager().force_clean()
 
 
