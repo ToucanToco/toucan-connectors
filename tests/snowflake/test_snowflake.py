@@ -562,7 +562,7 @@ def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_c
     assert connect.call_args_list[0][1]['account'] == 'test_account'
     assert (
         connect.call_args_list[0][1]['token']
-        == "b'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjQyLCJzdWIiOiJzbm93Zmxha2VfdXNlciJ9.NJDbR-tAepC_ANrg9m5PozycbcuWDgGi4o9sN9Pl27k'"
+        == 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjQyLCJzdWIiOiJzbm93Zmxha2VfdXNlciJ9.NJDbR-tAepC_ANrg9m5PozycbcuWDgGi4o9sN9Pl27k'
     )
     assert connect.call_args_list[0][1]['database'] == 'test_database'
     assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
@@ -632,7 +632,7 @@ def test_oauth_args_endpoint_not_200(
     req_mock.return_value.status_code = 401
 
     def fake_raise_for_status():
-        raise HTTPError('Unauthorized')
+        raise HTTPError('url', 401, 'Unauthorized', {})
 
     req_mock.return_value.ok = False
     req_mock.return_value.raise_for_status = lambda: fake_raise_for_status()
@@ -644,6 +644,8 @@ def test_oauth_args_endpoint_not_200(
         assert req_mock.call_count == 1
     else:
         assert False
+    finally:
+        SnowflakeConnector.get_connection_manager().force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
@@ -668,6 +670,8 @@ def test_refresh_oauth_token(
         assert False
     else:
         assert False
+    finally:
+        SnowflakeConnector.get_connection_manager().force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
