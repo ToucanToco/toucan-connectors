@@ -96,7 +96,7 @@ def test_waiting_connection_timeout(connection_manager, mocker):
 def test_auto_clean_simple(connection_manager):
     _get_connection(connection_manager, 'conn_1')
     assert len(connection_manager.cm) == 1
-    time.sleep(5)
+    time.sleep(6)
     assert len(connection_manager.cm) == 0
 
 
