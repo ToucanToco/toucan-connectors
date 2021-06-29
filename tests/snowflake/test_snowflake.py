@@ -595,7 +595,7 @@ def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_co
     snowflake_connector._get_connection('test_database', 'test_warehouse')
     cm = SnowflakeConnector.get_connection_manager()
     cm.time_between_clean = 1
-    cm.time_keep_alive = 1
+    cm.time_keep_alive = 5
     time.sleep(4)
     assert is_closed.call_count >= 1
     SnowflakeConnector.get_connection_manager().force_clean()
