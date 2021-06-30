@@ -25,6 +25,15 @@ class ConnectionManager:
         self.cm = {}
         self.__activate_clean()
 
+    def __close(self, key):
+        c = self.cm[key]
+        del self.cm[key]
+        if c['close']:
+            logger.debug('Close connexion call')
+            c['close']()
+        else:
+            logger.warning('Close connexion needed but no close method defined')
+
     def __activate_clean(self, active: Optional[bool] = False):
         if len(self.cm) > 0 and (not self.clean_active or active):
             self.clean_active = True
@@ -33,14 +42,8 @@ class ConnectionManager:
             self.clean_active = False
 
     def __remove(self, cm_to_remove):
-        for k in cm_to_remove:
-            cm = self.cm[k]
-            del self.cm[k]
-            if cm['close'] and isinstance(cm['close'], types.FunctionType):
-                logger.debug('Close connexion call')
-                cm['close']()
-            else:
-                logger.warning('Close connexion needed but no close method defined or callable')
+        for key in cm_to_remove:
+            self.__close(key)
 
     def _clean(self):
         logger.debug(f'Check if connexion is alive ({len(self.cm)} open connexions)')
@@ -73,6 +76,11 @@ class ConnectionManager:
             'status': 'in_progress',
             't_start': time.time(),
         }
+        if not isinstance(connect_method, types.FunctionType):
+            raise Exception('connect_method is not a function')
+
+        self.__activate_clean()
+
         c = connect_method()
         self.cm[identifier] = {
             'status': 'ready',
@@ -82,7 +90,6 @@ class ConnectionManager:
             'close': close_method,
             'connection': c,
         }
-        self.__activate_clean()
         return self.cm[identifier]['connection']
 
     def _get_wait(self, identifier: str, retry_time: float):
@@ -119,13 +126,7 @@ class ConnectionManager:
         self.lock = True
         for key, value in list(self.cm.items()):
             if 'ready' == self.cm[key]['status']:
-                c = self.cm[key]
-                del self.cm[key]
-                if c['close']:
-                    logger.debug('Close connexion call')
-                    c['close']()
-                else:
-                    logger.warning('Close connexion needed but no close method defined')
+                self.__close(key)
             else:
                 del self.cm[key]
         self.lock = False
