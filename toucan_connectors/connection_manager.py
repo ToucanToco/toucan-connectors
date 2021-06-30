@@ -54,9 +54,12 @@ class ConnectionManager:
                 if tt - cm['t_get'] > self.time_keep_alive:
                     logger.debug(f'Close connexion {tt - cm["t_get"]} > {self.time_keep_alive}')
                     cm_to_remove.append(identifier)
-                elif cm['alive'] and isinstance(cm['alive'], types.FunctionType):
-                    if not cm['alive']():
-                        cm_to_remove.append(identifier)
+                elif (
+                    cm['alive']
+                    and isinstance(cm['alive'], types.FunctionType)
+                    and not cm['alive']()
+                ):
+                    cm_to_remove.append(identifier)
             elif 'in_progress' == cm['status'] and tt - cm['t_start'] > self.connection_timeout:
                 cm_to_remove.append(identifier)
 
@@ -113,6 +116,7 @@ class ConnectionManager:
             return self._create(identifier, connect_method, alive_method, close_method)
 
     def force_clean(self):
+        self.lock = True
         for key, value in list(self.cm.items()):
             if 'ready' == self.cm[key]['status']:
                 c = self.cm[key]
@@ -124,3 +128,4 @@ class ConnectionManager:
                     logger.warning('Close connexion needed but no close method defined')
             else:
                 del self.cm[key]
+        self.lock = False
