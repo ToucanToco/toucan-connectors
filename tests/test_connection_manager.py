@@ -26,9 +26,7 @@ def _get_connection(
     enabled_alive: Optional[bool] = True,
 ):
     def __connect():
-        print('__connect')
         if 0 < sleep:
-            print(f'sleep {sleep}')
             time.sleep(sleep)
         return ConnectionObject()
 
@@ -63,7 +61,7 @@ def _get_connection_without_connect_method(
     return connection
 
 
-def _get_connection_without_method(
+def _get_connection_without_alive_close_method(
     cm: ConnectionManager,
     identifier: str,
 ):
@@ -79,10 +77,7 @@ def _get_connection_without_method(
     return connection
 
 
-def _get_connection_long_closing(
-    cm: ConnectionManager,
-    identifier: str,
-):
+def _get_connection_long_closing(cm: ConnectionManager, identifier: str, time_sleep: int):
     def __connect():
         return ConnectionObject()
 
@@ -90,7 +85,7 @@ def _get_connection_long_closing(
         return True
 
     def __close():
-        time.sleep(5)
+        time.sleep(time_sleep)
         return True
 
     connection = cm.get(
@@ -215,40 +210,35 @@ def test_remove_connection_in_progress_too_long(connection_manager):
     assert len(connection_manager.cm) == 2
     assert 'conn_1' in connection_manager.cm
     assert 'conn_2' in connection_manager.cm
+    connection_manager.connection_timeout = 60
     connection_manager.force_clean()
 
 
-# to cover the warning log message if close method is not define
-def test_connection_manager_without_close_method_define_force_clean(connection_manager):
-    _get_connection_without_method(connection_manager, 'conn_1')
-    assert len(connection_manager.cm) == 1
-    time.sleep(5)
-    assert len(connection_manager.cm) == 0
-    connection_manager.force_clean()
-
-
-# to cover the warning log message
 def test_connection_manager_without_close_method_define(connection_manager):
-    _get_connection_without_method(connection_manager, 'conn_1')
+    _get_connection_without_alive_close_method(connection_manager, 'conn_1')
     assert len(connection_manager.cm) == 1
-    time.sleep(5)
+    time.sleep(6)
     assert len(connection_manager.cm) == 0
-    connection_manager.force_clean()
-
-
-def test_connection_manager_lock(connection_manager):
-    _get_connection_long_closing(connection_manager, 'conn_1')
-    assert len(connection_manager.cm) == 1
-    connection_manager.force_clean()
-    _get_connection(connection_manager, 'conn_2')
-    assert len(connection_manager.cm) == 1
-    time.sleep(3)
-    assert len(connection_manager.cm) == 1
-    assert 'conn_1' not in connection_manager.cm
-    assert 'conn_2' in connection_manager.cm
     connection_manager.force_clean()
 
 
 def test_connect_method_is_not_callable(connection_manager):
     _get_connection_without_connect_method(connection_manager, 'conn_1')
     assert len(connection_manager.cm) == 0
+    connection_manager.force_clean()
+
+
+def test_get_wait_lock(connection_manager, mocker):
+    spy = mocker.spy(connection_manager, '_get_wait')
+    connection_manager.time_keep_alive = 1
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(_get_connection_long_closing, connection_manager, 'conn_1', 2)]
+        time.sleep(0.3)
+        assert not connection_manager.lock
+        time.sleep(1)
+        assert connection_manager.lock
+        futures.append(executor.submit(_get_connection, connection_manager, 'conn_1'))
+        for future in concurrent.futures.as_completed(futures):
+            if future.exception() is not None:
+                raise future.exception()
+        assert spy.call_count > 1

@@ -26,15 +26,15 @@ class ConnectionManager:
         self.__activate_clean()
 
     def __close(self, key):
-        c = self.cm[key]
-        del self.cm[key]
-        if c['close'] and isinstance(c['close'], types.FunctionType):
+        self.cm[key]['status'] = 'is_closing'
+        if self.cm[key]['close'] and isinstance(self.cm[key]['close'], types.FunctionType):
             logger.debug('Close connexion call')
-            c['close']()
+            self.cm[key]['close']()
         else:
             logger.warning(
                 'Close connexion needed but no close method defined or close method is not callable'
             )
+        del self.cm[key]
 
     def __activate_clean(self, active: Optional[bool] = False):
         if len(self.cm) > 0 and (not self.clean_active or active):
@@ -81,7 +81,6 @@ class ConnectionManager:
             }
 
             self.__activate_clean()
-
             c = connect_method()
             self.cm[identifier] = {
                 'status': 'ready',
@@ -95,32 +94,37 @@ class ConnectionManager:
         else:
             return None
 
-    def _get_wait(self, identifier: str, retry_time: float):
-        if self.lock:
-            return self._get_wait(identifier, self.wait + retry_time)
-        else:
-            if 'in_progress' == self.cm[identifier]['status']:
-                logger.debug('Connection is in progress')
-                time.sleep(self.wait)
-                if self.wait + retry_time < self.timeout:
-                    return self._get_wait(identifier, self.wait + retry_time)
-                else:
-                    logger.error(
-                        f'Timeout - Impossible to retrieve connexion (Timeout: {self.timeout})'
-                    )
-                    raise TimeoutError(
-                        f'Impossible to retrieve connexion (Timeout: {self.timeout})'
-                    )
-            elif 'ready' == self.cm[identifier]['status']:
-                logger.debug('Connection is ready')
-                self.cm[identifier]['t_get'] = time.time()
-                return self.cm[identifier]['connection']
+    def _get_wait(
+        self, identifier: str, connect_method, alive_method, close_method, retry_time: float
+    ):
+        if identifier not in self.cm:
+            return self._create(identifier, connect_method, alive_method, close_method)
+        elif (
+            self.lock
+            or 'in_progress' == self.cm[identifier]['status']
+            or 'is_closing' == self.cm[identifier]['status']
+        ):
+            logger.debug('Connection is in progress')
+            time.sleep(self.wait)
+            if self.wait + retry_time < self.timeout:
+                return self._get_wait(
+                    identifier, connect_method, alive_method, close_method, self.wait + retry_time
+                )
+            else:
+                logger.error(
+                    f'Timeout - Impossible to retrieve connexion (Timeout: {self.timeout})'
+                )
+                raise TimeoutError(f'Impossible to retrieve connexion (Timeout: {self.timeout})')
+        elif 'ready' == self.cm[identifier]['status']:
+            logger.debug('Connection is ready')
+            self.cm[identifier]['t_get'] = time.time()
+            return self.cm[identifier]['connection']
 
     def get(self, identifier: str, connect_method, alive_method, close_method):
         logger.debug(f'Get element in Dict {identifier}')
         if identifier in self.cm:
             logging.getLogger(__name__).debug('Connection exist')
-            return self._get_wait(identifier, 0)
+            return self._get_wait(identifier, connect_method, alive_method, close_method, 0)
         else:
             logger.debug('Connection not exist, create and save it')
             return self._create(identifier, connect_method, alive_method, close_method)
