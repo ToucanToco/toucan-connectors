@@ -29,10 +29,48 @@ def _get_connection(
         if enabled_alive:
             return True
         else:
-            print('__alive False')
             return False
 
     def __close():
+        return True
+
+    connection = cm.get(
+        identifier,
+        connect_method=lambda: __connect(),
+        alive_method=lambda: __alive(),
+        close_method=lambda: __close(),
+    )
+    return connection
+
+
+def _get_connection_without_method(
+    cm: ConnectionManager,
+    identifier: str,
+):
+    def __connect():
+        return ConnectionObject()
+
+    connection = cm.get(
+        identifier,
+        connect_method=lambda: __connect(),
+        alive_method='alive',
+        close_method='close',
+    )
+    return connection
+
+
+def _get_connection_long_closing(
+    cm: ConnectionManager,
+    identifier: str,
+):
+    def __connect():
+        return ConnectionObject()
+
+    def __alive():
+        return True
+
+    def __close():
+        time.sleep(5)
         return True
 
     connection = cm.get(
@@ -136,3 +174,23 @@ def test_clean_connection_not_alive(connection_manager):
     assert len(connection_manager.cm) == 1
     time.sleep(1)
     assert len(connection_manager.cm) == 0
+
+
+# to cover the warning log message
+def test_connection_manager_without_close_method_define(connection_manager):
+    _get_connection_without_method(connection_manager, 'conn_1')
+    assert len(connection_manager.cm) == 1
+    time.sleep(5)
+    assert len(connection_manager.cm) == 0
+
+
+def test_connection_manager_lock(connection_manager):
+    _get_connection_long_closing(connection_manager, 'conn_1')
+    assert len(connection_manager.cm) == 1
+    connection_manager.force_clean()
+    _get_connection(connection_manager, 'conn_2')
+    assert len(connection_manager.cm) == 1
+    time.sleep(3)
+    assert len(connection_manager.cm) == 1
+    assert 'conn_1' not in connection_manager.cm
+    assert 'conn_2' in connection_manager.cm
