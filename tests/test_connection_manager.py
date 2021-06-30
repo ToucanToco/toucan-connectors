@@ -250,6 +250,5 @@ def test_connection_manager_lock(connection_manager):
 
 
 def test_connect_method_is_not_callable(connection_manager):
-    with pytest.raises(Exception):
-        _get_connection_without_connect_method(connection_manager, 'conn_1')
-    connection_manager.force_clean()
+    _get_connection_without_connect_method(connection_manager, 'conn_1')
+    assert len(connection_manager.cm) == 0
