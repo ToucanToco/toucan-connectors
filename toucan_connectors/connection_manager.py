@@ -28,11 +28,13 @@ class ConnectionManager:
     def __close(self, key):
         c = self.cm[key]
         del self.cm[key]
-        if c['close']:
+        if c['close'] and isinstance(c['close'], types.FunctionType):
             logger.debug('Close connexion call')
             c['close']()
         else:
-            logger.warning('Close connexion needed but no close method defined')
+            logger.warning(
+                'Close connexion needed but no close method defined or close method is not callable'
+            )
 
     def __activate_clean(self, active: Optional[bool] = False):
         if len(self.cm) > 0 and (not self.clean_active or active):
@@ -72,25 +74,26 @@ class ConnectionManager:
         self.__activate_clean(True)
 
     def _create(self, identifier: str, connect_method, alive_method, close_method):
-        self.cm[identifier] = {
-            'status': 'in_progress',
-            't_start': time.time(),
-        }
-        if not isinstance(connect_method, types.FunctionType):
-            raise Exception('connect_method is not a function')
+        if isinstance(connect_method, types.FunctionType):
+            self.cm[identifier] = {
+                'status': 'in_progress',
+                't_start': time.time(),
+            }
 
-        self.__activate_clean()
+            self.__activate_clean()
 
-        c = connect_method()
-        self.cm[identifier] = {
-            'status': 'ready',
-            't_ready': time.time(),
-            't_get': time.time(),
-            'alive': alive_method,
-            'close': close_method,
-            'connection': c,
-        }
-        return self.cm[identifier]['connection']
+            c = connect_method()
+            self.cm[identifier] = {
+                'status': 'ready',
+                't_ready': time.time(),
+                't_get': time.time(),
+                'alive': alive_method,
+                'close': close_method,
+                'connection': c,
+            }
+            return self.cm[identifier]['connection']
+        else:
+            return None
 
     def _get_wait(self, identifier: str, retry_time: float):
         if self.lock:
