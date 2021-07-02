@@ -203,14 +203,14 @@ def test_clean_connection_not_alive(connection_manager):
 
 
 def test_remove_connection_in_progress_too_long(connection_manager):
-    connection_manager.connection_timeout = 2
-    _get_connection(connection_manager, 'conn_2')
-    assert len(connection_manager.cm) == 1
+    t1 = connection_manager.connection_timeout
+    connection_manager.connection_timeout = 1
+
+    assert len(connection_manager.cm) == 0
     _get_connection(connection_manager, 'conn_1', sleep=3)
-    assert len(connection_manager.cm) == 2
-    assert 'conn_1' in connection_manager.cm
-    assert 'conn_2' in connection_manager.cm
-    connection_manager.connection_timeout = 60
+    assert len(connection_manager.cm) == 0
+
+    connection_manager.connection_timeout = t1
     connection_manager.force_clean()
 
 
