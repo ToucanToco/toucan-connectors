@@ -167,7 +167,6 @@ class SnowflakeConnector(ToucanConnector):
             'user': Template(self.user).render(),
             'account': self.account,
             'authenticator': self.authentication_method,
-
             # hard Snowflake params
             'application': 'ToucanToco',
             'client_session_keep_alive_heartbeat_frequency': 59,
