@@ -257,14 +257,14 @@ def test_datasource_get_databases(gd, gc, snowflake_connector, snowflake_datasou
 def test_datasource_get_form(gd, gw, gc, snowflake_connector, snowflake_datasource):
     result = snowflake_datasource.get_form(snowflake_connector, {})
     assert 'warehouse_1' == result['properties']['warehouse']['default']
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 def test_set_warehouse(snowflake_connector, snowflake_datasource):
     snowflake_datasource.warehouse = None
     new_data_source = snowflake_connector._set_warehouse(snowflake_datasource)
     assert new_data_source.warehouse == 'warehouse_1'
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 # TODO - Que fait on lorsqu'il n'y a pas de default warehouse ? Les requêtes sont quand même exécutées ?
@@ -280,7 +280,7 @@ def test_set_warehouse_without_default_warehouse(snowflake_datasource):
     snowflake_datasource.warehouse = None
     new_data_source = sc_without_default_warehouse._set_warehouse(snowflake_datasource)
     assert new_data_source.warehouse is None
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -296,7 +296,7 @@ def test_get_database_without_filter(gd, gc, snowflake_connector):
     assert result[0] == 'database_1'
     assert result[1] == 'database_2'
     assert len(result) == 2
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -310,7 +310,7 @@ def test_get_database_with_filter_found(gd, gc, snowflake_connector):
     result = snowflake_connector._get_databases('database_1')
     assert result[0] == 'database_1'
     assert len(result) == 1
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -321,7 +321,7 @@ def test_get_database_with_filter_found(gd, gc, snowflake_connector):
 def test_get_database_with_filter_not_found(gd, gc, snowflake_connector):
     result = snowflake_connector._get_databases('database_3')
     assert len(result) == 0
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -336,7 +336,7 @@ def test_get_warehouse_without_filter(gw, gc, snowflake_connector):
     result = snowflake_connector._get_warehouses()
     assert result[0] == 'warehouse_1'
     assert result[1] == 'warehouse_2'
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -351,7 +351,7 @@ def test_get_warehouse_with_filter_found(gw, gc, snowflake_connector):
     result = snowflake_connector._get_warehouses('warehouse_1')
     assert result[0] == 'warehouse_1'
     assert len(result) == 1
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -362,7 +362,7 @@ def test_get_warehouse_with_filter_found(gw, gc, snowflake_connector):
 def test_get_warehouse_with_filter_not_found(gw, gc, snowflake_connector):
     result = snowflake_connector._get_warehouses('warehouse_3')
     assert len(result) == 0
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -377,7 +377,7 @@ def test_retrieve_data(eq, gc, snowflake_connector, snowflake_datasource, mocker
 
     assert spy.call_count == 1
     assert 11 == len(df_result)
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -390,7 +390,7 @@ def test_retrieve_data_slice(eq, gc, snowflake_connector, snowflake_datasource, 
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource)
     assert spy.call_count == 1
     assert 11 == len(df_result.df)
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -406,7 +406,7 @@ def test_retrieve_data_slice_offset_limit(
     assert spy.call_count == 1
     assert 3 == len(df_result.df)
     assert 3 == df_result.total_count
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -419,7 +419,7 @@ def test_retrieve_data_slice_too_much(eq, gc, snowflake_connector, snowflake_dat
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=10, limit=20)
     assert spy.call_count == 1
     assert 1 == len(df_result.df)
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 def test_schema_fields_order():
@@ -495,7 +495,7 @@ def test_get_status_account_nok(is_closed, close, connect, gw, snowflake_connect
         error='Account nok',
         details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -513,7 +513,7 @@ def test_account_does_not_exists(is_closed, close, connect, gw, snowflake_connec
         error=f"Connection failed for the account '{snowflake_connector.account}', please check the Account field",
         details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -531,7 +531,7 @@ def test_account_forbidden(is_closed, close, connect, gw, snowflake_connector):
         error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",
         details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -549,7 +549,7 @@ def test_account_failed_for_user(is_closed, close, connect, gw, snowflake_connec
         error=f"Connection failed for the user '{snowflake_connector.user}', please check your credentials",
         details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
@@ -566,7 +566,7 @@ def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_c
     )
     assert connect.call_args_list[0][1]['database'] == 'test_database'
     assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
@@ -581,7 +581,7 @@ def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connect
     assert connect.call_args_list[0][1]['password'] == 'test_password'
     assert connect.call_args_list[0][1]['database'] == 'test_database'
     assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
@@ -592,13 +592,17 @@ def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connect
     return_value='shiny token',
 )
 def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_connector, mocker):
-    snowflake_connector._get_connection('test_database', 'test_warehouse')
-    cm = SnowflakeConnector.get_connection_manager()
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
+    t1 = cm.time_between_clean
+    t2 = cm.time_keep_alive
     cm.time_between_clean = 1
-    cm.time_keep_alive = 5
+    cm.time_keep_alive = 1
+    snowflake_connector._get_connection('test_database', 'test_warehouse')
     time.sleep(4)
     assert is_closed.call_count >= 1
-    SnowflakeConnector.get_connection_manager().force_clean()
+    cm.time_between_clean = t1
+    cm.time_keep_alive = t2
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
@@ -609,13 +613,17 @@ def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_co
     return_value='shiny token',
 )
 def test_snowflake_connection_close(gat, is_closed, close, connect, snowflake_connector, mocker):
-    snowflake_connector._get_connection('test_database', 'test_warehouse')
-    cm = SnowflakeConnector.get_connection_manager()
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
+    t1 = cm.time_between_clean
+    t2 = cm.time_keep_alive
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
+    snowflake_connector._get_connection('test_database', 'test_warehouse')
     time.sleep(4)
+    cm.time_between_clean = t1
+    cm.time_keep_alive = t2
     assert close.call_count >= 1
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
@@ -639,11 +647,11 @@ def test_oauth_args_endpoint_not_200(
     try:
         snowflake_connector_oauth._retrieve_data(snowflake_datasource)
     except Exception as e:
-        SnowflakeConnector.get_connection_manager().force_clean()
+        SnowflakeConnector.get_snowflake_connection_manager().force_clean()
         assert str(e) == 'HTTP Error 401: Unauthorized'
         assert req_mock.call_count == 1
     else:
-        SnowflakeConnector.get_connection_manager().force_clean()
+        SnowflakeConnector.get_snowflake_connection_manager().force_clean()
         assert False
 
 
@@ -663,10 +671,10 @@ def test_refresh_oauth_token(
 
     try:
         snowflake_connector_oauth._retrieve_data(snowflake_datasource)
-        SnowflakeConnector.get_connection_manager().force_clean()
+        SnowflakeConnector.get_snowflake_connection_manager().force_clean()
         assert req_mock.call_count == 1
     except Exception as e:
-        SnowflakeConnector.get_connection_manager().force_clean()
+        SnowflakeConnector.get_snowflake_connection_manager().force_clean()
         assert str(e) == 'HTTP Error 401: Unauthorized'
         assert False
     else:
@@ -690,5 +698,5 @@ def test_oauth_args_wrong_type_of_auth(
 
     snowflake_connector_oauth.authentication_method = AuthenticationMethod.PLAIN
     snowflake_connector_oauth._retrieve_data(snowflake_datasource)
-    SnowflakeConnector.get_connection_manager().force_clean()
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
     assert spy.call_count == 0
