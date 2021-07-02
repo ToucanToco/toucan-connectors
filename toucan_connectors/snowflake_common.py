@@ -114,14 +114,12 @@ class SnowflakeCommon:
         query = 'SHOW WAREHOUSES'
         if warehouse_name:
             query = query + ' LIKE ' + warehouse_name
-        return [
-            warehouse['name'] for warehouse in self._execute_query(c, query) if 'name' in warehouse
-        ]
+        res = self._execute_query(c, query).to_dict().get('name')
+        return [warehouse for warehouse in res.values()] if res else []
 
     def get_databases(self, c, database_name: Optional[str] = None) -> List[str]:
         query = 'SHOW DATABASES'
         if database_name:
             query = query + ' LIKE ' + database_name
-        return [
-            database['name'] for database in self._execute_query(c, query) if 'name' in database
-        ]
+        res = self._execute_query(c, query).to_dict().get('name')
+        return [database for database in res.values()] if res else []
