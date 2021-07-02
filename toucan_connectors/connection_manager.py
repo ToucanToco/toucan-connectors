@@ -2,8 +2,8 @@ import logging
 import threading
 import time
 import types
-from typing import Optional, Dict
 from enum import Enum
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class ConnectionObject:
     def is_ready(self):
         return self.status == Status.READY
 
-    def update(self,  **kwargs):
+    def update(self, **kwargs):
         self.__dict__.update(kwargs)
         self.t_ready = time.time()
         self.t_get = time.time()
@@ -107,13 +107,17 @@ class ConnectionManager:
             tt = time.time()
             if cm.is_ready():
                 if not cm.exec_alive():
-                    logger.debug(f'Close connection - connection not alive')
+                    logger.debug('Close connection - connection not alive')
                     cm_to_remove.append(identifier)
                 elif tt - cm.t_get > self.time_keep_alive:
-                    logger.debug(f'Close connection - alive too long ({tt - cm.t_get} > {self.time_keep_alive})')
+                    logger.debug(
+                        f'Close connection - alive too long ({tt - cm.t_get} > {self.time_keep_alive})'
+                    )
                     cm_to_remove.append(identifier)
             elif not cm.is_ready() and tt - cm.t_start > self.connection_timeout:
-                logger.debug(f'Close connection - connection too long ({tt - cm.t_start} > {self.connection_timeout})')
+                logger.debug(
+                    f'Close connection - connection too long ({tt - cm.t_start} > {self.connection_timeout})'
+                )
                 cm_to_remove.append(identifier)
 
         if len(cm_to_remove) > 0:
@@ -132,10 +136,7 @@ class ConnectionManager:
             self.__activate_clean()
             c = connect_method()
             if identifier in self.cm:
-                self.cm[identifier].update(
-                    status=Status.READY,
-                    connection=c
-                )
+                self.cm[identifier].update(status=Status.READY, connection=c)
                 return self.cm[identifier].get_connection()
             else:
                 return None
@@ -147,10 +148,7 @@ class ConnectionManager:
     ):
         if identifier not in self.cm:
             return self._create(identifier, connect_method, alive_method, close_method)
-        elif (
-            self.lock
-            or not self.cm[identifier].is_ready()
-        ):
+        elif self.lock or not self.cm[identifier].is_ready():
             logger.debug('Connection is in progress')
             time.sleep(self.wait)
             if self.wait + retry_time < self.timeout:
