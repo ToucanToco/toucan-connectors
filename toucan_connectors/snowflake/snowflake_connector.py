@@ -25,10 +25,10 @@ from toucan_connectors.toucan_connector import Category, ToucanConnector, strlis
 
 logger = logging.getLogger(__name__)
 
-connection_manager = None
-if not connection_manager:
-    connection_manager = ConnectionManager(
-        name='snowflake', timeout=5, wait=0.2, time_between_clean=3, time_keep_alive=600
+snowflake_connection_manager = None
+if not snowflake_connection_manager:
+    snowflake_connection_manager = ConnectionManager(
+        name='snowflake', timeout=10, wait=0.2, time_between_clean=10, time_keep_alive=600
     )
 
 
@@ -163,31 +163,36 @@ class SnowflakeConnector(ToucanConnector):
         )
 
     def get_connection_params(self):
-        res = {
+        params = {
             'user': Template(self.user).render(),
             'account': self.account,
             'authenticator': self.authentication_method,
+
+            # hard Snowflake params
             'application': 'ToucanToco',
+            'client_session_keep_alive_heartbeat_frequency': 59,
+            'client_prefetch_threads': 5,
+            'session_id': self.identifier,
         }
 
         if not self.authentication_method:
             # Default to User/Password authentication method if the parameter
             # was not set when the connector was created
-            res['authenticator'] = AuthenticationMethodValue.PLAIN
+            params['authenticator'] = AuthenticationMethodValue.PLAIN
 
-        if res['authenticator'] == AuthenticationMethod.PLAIN and self.password:
-            res['authenticator'] = AuthenticationMethodValue.PLAIN
-            res['password'] = self.password.get_secret_value()
+        if params['authenticator'] == AuthenticationMethod.PLAIN and self.password:
+            params['authenticator'] = AuthenticationMethodValue.PLAIN
+            params['password'] = self.password.get_secret_value()
 
         if self.authentication_method == AuthenticationMethod.OAUTH:
             if self.access_token is not None:
-                res['token'] = self.access_token
-            res['authenticator'] = AuthenticationMethodValue.OAUTH
+                params['token'] = self.access_token
+            params['authenticator'] = AuthenticationMethodValue.OAUTH
 
         if self.role != '':
-            res['role'] = self.role
+            params['role'] = self.role
 
-        return res
+        return params
 
     def _refresh_oauth_token(self):
         """Regenerates an oauth token if configuration was provided and if the given token has expired."""
@@ -256,16 +261,20 @@ class SnowflakeConnector(ToucanConnector):
             return c
 
         def alive_function():
-            logger.info('Check Snowflake connection')
+            logger.debug('Check Snowflake connection alive')
             if hasattr(connection, 'is_closed') and callable(connection.is_closed):
-                return connection.is_closed()
+                res = not connection.is_closed()
+                logger.debug(f'Snowflake connection is alive ${res}')
+                return res
 
         def close_function():
-            logger.info('Close Snowflake connection')
+            logger.debug('Close Snowflake connection')
             if hasattr(connection, 'close') and callable(connection.close):
-                return connection.close()
+                res = connection.close()
+                logger.info(f'Snowflake connection close ${res}')
+                return res
 
-        connection = connection_manager.get(
+        connection = snowflake_connection_manager.get(
             self.identifier,
             connect_method=lambda: connect_function(database, warehouse),
             alive_method=lambda: alive_function(),
@@ -356,5 +365,5 @@ class SnowflakeConnector(ToucanConnector):
         )
 
     @staticmethod
-    def get_connection_manager():
-        return connection_manager
+    def get_snowflake_connection_manager():
+        return snowflake_connection_manager
