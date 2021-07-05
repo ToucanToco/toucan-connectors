@@ -14,6 +14,7 @@ from toucan_connectors.common import (
     extract_offset,
 )
 from toucan_connectors.toucan_connector import DataSlice, DataStats, ToucanDataSource
+from toucan_connectors.sql_query_manager import SqlQueryManager
 
 
 class SnowflakeConnectorException(Exception):
@@ -62,8 +63,6 @@ class SnowflakeCommon:
         connection,
         query: str,
         query_parameters: Optional[dict] = None,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
         get_row_count=False,
     ) -> pd.DataFrame:
         execution_start = timer()
@@ -83,20 +82,8 @@ class SnowflakeCommon:
         )
         self.set_execution_time(execution_time)
         convert_start = timer()
-        if offset and limit:
-            self.logger.debug('limit & offset')
-            rows = limit + offset
-            values = pd.DataFrame.from_dict(query_res.fetchmany(rows))
-        elif limit and not offset:
-            self.logger.debug('limit & not offset')
-            values = pd.DataFrame.from_dict(query_res.fetchmany(limit))
-        elif not limit and not offset:
-            self.logger.debug('not limit & not offset')
-            values = pd.DataFrame.from_dict(query_res.fetchall())
-        else:
-            values = pd.DataFrame.from_dict(query_res.fetchall())
-        if get_row_count:
-            self.set_total_returned_rows_count(len(values))
+        # Here call our customized fetch
+        values = pd.DataFrame.from_dict(SqlQueryManager.fetchmany(query_res))
         convert_end = timer()
         conversion_time = convert_end - convert_start
         self.logger.info(
@@ -124,37 +111,31 @@ class SnowflakeCommon:
     ) -> DataSlice:
         """Call parallelized execute query to extract data & row count from query"""
 
-        is_count_request_needed = self.count_request_needed(query, get_row_count)
+        is_count_request_needed = SqlQueryManager.count_request_needed(query, get_row_count)
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=2 if is_count_request_needed else 1
         ) as executor:
-            prepared_query, prepared_query_parameters = self._prepare_query(query, query_parameters)
-            print('test', prepared_query, prepared_query_parameters)
+            prepared_query, prepared_query_parameters = SqlQueryManager.prepare_query(query, query_parameters, offset, limit)
             future_1 = executor.submit(
                 self._execute_query,
                 connection,
                 prepared_query,
                 prepared_query_parameters,
-                offset,
-                limit,
                 get_row_count,
             )
             future_1.add_done_callback(self.set_data)
             futures = [future_1]
 
             if is_count_request_needed:
-                prepared_query_count, prepared_query_parameters_count = self._prepare_count_query(
-                    query, query_parameters
+                prepared_query_count, prepared_query_parameters_count = SqlQueryManager.prepare_count_query(
+                    query, query_parameters, offset, limit
                 )
-                print('test', prepared_query_count, prepared_query_parameters_count)
                 future_2 = executor.submit(
                     self._execute_query,
                     connection,
                     prepared_query_count,
                     prepared_query_parameters_count,
-                    offset,
-                    limit,
-                    False,
+                    get_row_count,
                 )
                 future_2.add_done_callback(self.set_total_rows_count)
                 futures.append(future_2)
@@ -199,7 +180,6 @@ class SnowflakeCommon:
             total_returned_rows=len(result),
             df_memory_size=result.memory_usage().sum(),
         )
-
         return DataSlice(
             df=result,
             input_parameters={

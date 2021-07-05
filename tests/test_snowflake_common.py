@@ -60,6 +60,7 @@ warehouses_result_one = [{'name': 'warehouse_1'}]
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute', return_value=None)
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(databases_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
 def test_get_database_without_filter(database_result, execute_query, connect, mocker):
     result = SnowflakeCommon().get_databases(connect)
     assert database_result.call_count == 1
@@ -71,6 +72,7 @@ def test_get_database_without_filter(database_result, execute_query, connect, mo
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(databases_result_none))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
 def test_get_database_with_filter_no_result(database_result, execute_query, connect, mocker):
     result = SnowflakeCommon().get_databases(connect, 'database_3')
     assert database_result.call_count == 1
@@ -80,6 +82,7 @@ def test_get_database_with_filter_no_result(database_result, execute_query, conn
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(databases_result_one))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
 def test_get_database_with_filter_one_result(database_result, execute_query, connect, mocker):
     result = SnowflakeCommon().get_databases(connect, 'database_1')
     assert database_result.call_count == 1
@@ -90,6 +93,7 @@ def test_get_database_with_filter_one_result(database_result, execute_query, con
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(warehouses_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
 def test_get_warehouse_without_filter(warehouse_result, execute_query, connect, mocker):
     result = SnowflakeCommon().get_warehouses(connect)
     assert warehouse_result.call_count == 1
@@ -101,6 +105,7 @@ def test_get_warehouse_without_filter(warehouse_result, execute_query, connect, 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(warehouses_result_none))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
 def test_get_warehouse_with_filter_no_result(warehouse_result, execute_query, connect, mocker):
     result = SnowflakeCommon().get_warehouses(connect, 'warehouse_3')
     assert warehouse_result.call_count == 1
@@ -110,6 +115,7 @@ def test_get_warehouse_with_filter_no_result(warehouse_result, execute_query, co
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(warehouses_result_one))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
 def test_get_warehouse_with_filter_one_result(warehouse_result, execute_query, connect, mocker):
     result = SnowflakeCommon().get_warehouses(connect, 'warehouse_1')
     assert warehouse_result.call_count == 1
@@ -120,6 +126,8 @@ def test_get_warehouse_with_filter_one_result(warehouse_result, execute_query, c
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
 def test_retrieve_data(result, execute_query, connect, snowflake_datasource, mocker):
     df: pd.DataFrame = SnowflakeCommon().retrieve_data(connect, snowflake_datasource)
     assert result.call_count == 1
@@ -129,8 +137,12 @@ def test_retrieve_data(result, execute_query, connect, snowflake_datasource, moc
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
 def test_get_slice_without_limit_without_offset(
-    result, execute_query, connect, snowflake_datasource, mocker
+    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
 ):
     slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
     assert result.call_count == 1
@@ -141,8 +153,12 @@ def test_get_slice_without_limit_without_offset(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_5))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
 def test_get_slice_with_limit_without_offset(
-    result, execute_query, connect, snowflake_datasource, mocker
+    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
 ):
     slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
     assert result.call_count == 1
@@ -153,11 +169,15 @@ def test_get_slice_with_limit_without_offset(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_none))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
 def test_get_slice_with_limit_without_offset_no_data(
-    resut, execute_query, connect, snowflake_datasource, mocker
+    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
 ):
     slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
-    assert resut.call_count == 1
+    assert result.call_count == 1
     assert len(slice.df) == 0
     assert slice.stats.total_returned_rows == 0
 
@@ -165,8 +185,12 @@ def test_get_slice_with_limit_without_offset_no_data(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_one))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
 def test_get_slice_with_limit_without_offset_not_enough_data(
-    result, execute_query, connect, snowflake_datasource, mocker
+    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
 ):
     slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
     assert result.call_count == 1
@@ -177,8 +201,12 @@ def test_get_slice_with_limit_without_offset_not_enough_data(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
 def test_get_slice_with_limit_with_offset(
-    result, execute_query, connect, snowflake_datasource, mocker
+    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
 ):
     slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 1
@@ -189,8 +217,12 @@ def test_get_slice_with_limit_with_offset(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_none))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
 def test_get_slice_with_limit_with_offset_no_data(
-    result, execute_query, connect, snowflake_datasource, mocker
+    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
 ):
     slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 1
@@ -201,8 +233,12 @@ def test_get_slice_with_limit_with_offset_no_data(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_one))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
 def test_get_slice_with_limit_with_offset_not_enough_data(
-    result, execute_query, connect, snowflake_datasource, mocker
+    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
 ):
     slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 1
@@ -213,8 +249,12 @@ def test_get_slice_with_limit_with_offset_not_enough_data(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
 def test_get_slice_without_limit_with_offset(
-    result, execute_query, connect, snowflake_datasource, mocker
+    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
 ):
     slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5)
     assert result.call_count == 1
@@ -225,8 +265,12 @@ def test_get_slice_without_limit_with_offset(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit', return_value=12)
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
 def test_get_slice_with_limit_extracted_from_query(
-    result, execute_query, connect, snowflake_datasource, mocker
+    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
 ):
     snowflake_datasource.query = 'select name from favourite_drinks limit 12;'
     slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
@@ -239,8 +283,12 @@ def test_get_slice_with_limit_extracted_from_query(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
 def test_get_slice_with_offset_extracted_from_query(
-    result, execute_query, connect, snowflake_datasource, mocker
+    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
 ):
     snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
     slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
@@ -251,8 +299,10 @@ def test_get_slice_with_offset_extracted_from_query(
 
 
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
 def test_get_slice_metadata(snowflake_datasource, mocker):
-    snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
+    snowflake_datasource.query ='select name from favourite_drinks limit 12 offset 23;'
     connect = mocker.MagicMock()
     connect.cursor().execute().fetchone.return_value = [{'total_rows': 200}]
     connect.cursor().execute().fetchall.return_value = [{'c1': 2}]
@@ -262,10 +312,11 @@ def test_get_slice_metadata(snowflake_datasource, mocker):
 
 
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
 def test_get_slice_metadata_no_select_in_query(result, snowflake_datasource, mocker):
-    snowflake_datasource.query = (
-        'create table users as  (id integer default id_seq.nextval,  name varchar (100), '
-        'preferences string, created_at timestamp); '
+    snowflake_datasource.query =  ('create table users as  (id integer default id_seq.nextval,  name varchar (100), preferences string, '
+        'created_at timestamp); ',
     )
     connect = mocker.MagicMock()
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
@@ -274,6 +325,8 @@ def test_get_slice_metadata_no_select_in_query(result, snowflake_datasource, moc
 
 
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
 def test_get_slice_metadata_wrong_response_from_count_query(snowflake_datasource, mocker):
     snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
     connect = mocker.MagicMock()
@@ -298,7 +351,9 @@ def test_get_slice_metadata_wrong_response_from_count_query(snowflake_datasource
     'toucan_connectors.snowflake_common.SnowflakeCommon._execute_query',
     side_effect=ProgrammingError,
 )
-def test_execute_broken_query(execute_query, snowflake_datasource, mocker):
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+def test_execute_broken_query(result, execute_query, snowflake_datasource, mocker):
     snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
     connect = mocker.MagicMock()
     with pytest.raises(ProgrammingError):
@@ -307,8 +362,15 @@ def test_execute_broken_query(execute_query, snowflake_datasource, mocker):
         )
 
 
-def test_count_request_needed(snowflake_datasource):
-    res: bool = SnowflakeCommon().count_request_needed(snowflake_datasource.query, True)
+@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon._execute_query',
+    side_effect=ProgrammingError,
+)
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+def test_count_request_needed(result, execute_query, snowflake_datasource, mocker):
+    res: bool = SnowflakeCommon().count_request_needed(snowflake_datasource.query, True, 2)
     assert res
     res: bool = SnowflakeCommon().count_request_needed(snowflake_datasource.query, False)
     assert not res
@@ -318,7 +380,29 @@ def test_count_request_needed(snowflake_datasource):
     'pandas.DataFrame.from_dict',
     side_effect=[pd.DataFrame(data_result_all), pd.DataFrame({'TOTAL_ROWS': 20}, index=[0])],
 )
-def test_retrieve_data_with_row_count_limit_in_query(result, snowflake_datasource, mocker):
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+def test_retrieve_data_with_row_count_limit_in_query(
+    result, execute_query, snowflake_datasource, mocker
+):
+    snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
+    connect = mocker.MagicMock()
+    connect.cursor().execute().rowcount.return_value = 12
+    s = SnowflakeCommon()
+    s.retrieve_data(connect, snowflake_datasource, get_row_count=True)
+    assert result.call_count == 2
+    assert s.count == 12
+
+
+@patch(
+    'pandas.DataFrame.from_dict',
+    side_effect=[pd.DataFrame(data_result_all), pd.DataFrame({'TOTAL_ROWS': 12}, index=[0])],
+)
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
+@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
+def test_retrieve_data_with_row_count_no_limit_in_query(
+    result, execute_query, snowflake_datasource, mocker
+):
     snowflake_datasource.query = 'select name from favourite_drinks;'
     connect = mocker.MagicMock()
     s = SnowflakeCommon()
