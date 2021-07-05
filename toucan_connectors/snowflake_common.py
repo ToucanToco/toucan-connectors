@@ -9,12 +9,11 @@ from snowflake.connector import DictCursor
 
 from toucan_connectors.common import (
     convert_to_printf_templating_style,
-    convert_to_qmark_paramstyle,
-    extract_limit,
-    extract_offset,
+    convert_to_qmark_paramstyle, extract_limit, extract_offset,
 )
 from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.toucan_connector import DataSlice, DataStats, ToucanDataSource
+from toucan_connectors.sql_query_manager import SqlQueryManager
 
 
 class SnowflakeConnectorException(Exception):
@@ -83,7 +82,11 @@ class SnowflakeCommon:
         self.set_execution_time(execution_time)
         convert_start = timer()
         # Here call our customized fetch
+<<<<<<< HEAD
         values = pd.DataFrame.from_dict(QueryManager.fetchmany(query_res))
+=======
+        values = pd.DataFrame.from_dict(SqlQueryManager.fetchmany(query_res))
+>>>>>>> chore: move methods to sql_query_manager and implement fetchmany
         convert_end = timer()
         conversion_time = convert_end - convert_start
         self.logger.info(
@@ -111,6 +114,7 @@ class SnowflakeCommon:
     ) -> DataSlice:
         """Call parallelized execute query to extract data & row count from query"""
 
+<<<<<<< HEAD
         is_count_request_needed = QueryManager.count_request_needed(query, get_row_count)
         print('prout')
         print('prout')
@@ -125,6 +129,13 @@ class SnowflakeCommon:
             prepared_query, prepared_query_parameters = QueryManager.prepare_query(
                 query, query_parameters, offset, limit
             )
+=======
+        is_count_request_needed = SqlQueryManager.count_request_needed(query, get_row_count)
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=2 if is_count_request_needed else 1
+        ) as executor:
+            prepared_query, prepared_query_parameters = SqlQueryManager.prepare_query(query, query_parameters, offset, limit)
+>>>>>>> chore: move methods to sql_query_manager and implement fetchmany
             future_1 = executor.submit(
                 self._execute_query,
                 connection,
@@ -136,10 +147,16 @@ class SnowflakeCommon:
             futures = [future_1]
 
             if is_count_request_needed:
+<<<<<<< HEAD
                 (
                     prepared_query_count,
                     prepared_query_parameters_count,
                 ) = QueryManager.prepare_count_query(query, query_parameters, offset, limit)
+=======
+                prepared_query_count, prepared_query_parameters_count = SqlQueryManager.prepare_count_query(
+                    query, query_parameters, offset, limit
+                )
+>>>>>>> chore: move methods to sql_query_manager and implement fetchmany
                 future_2 = executor.submit(
                     self._execute_query,
                     connection,
