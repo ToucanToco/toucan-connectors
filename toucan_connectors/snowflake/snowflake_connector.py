@@ -41,13 +41,13 @@ if not snowflake_connection_manager:
 class Path(str):
     @classmethod
     def __get_validators__(cls):
-        yield cls.validate
+        yield cls.validate  # pragma: no cover
 
     @classmethod
     def validate(cls, v):
-        if not path.exists(v):
-            raise ValueError(f'path does not exists: {v}')
-        return v
+        if not path.exists(v):  # pragma: no cover
+            raise ValueError(f'path does not exists: {v}')  # pragma: no cover
+        return v  # pragma: no cover
 
 
 class SnowflakeDataSource(SfDataSource):
