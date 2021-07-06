@@ -33,7 +33,7 @@ class SnowflakeCommon:
 
     def _execute_query(
         self,
-        c,
+        connection,
         query: str,
         query_parameters: Optional[Dict] = None,
         offset: Optional[int] = None,
@@ -43,7 +43,7 @@ class SnowflakeCommon:
         query = convert_to_printf_templating_style(query)
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
 
-        cursor = c.cursor(DictCursor)
+        cursor = connection.cursor(DictCursor)
         query_res = cursor.execute(converted_query, ordered_values)
 
         execution_end = timer()
@@ -85,43 +85,49 @@ class SnowflakeCommon:
 
     def _fetch_data(
         self,
-        c,
+        connection,
         data_source: SfDataSource,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> pd.DataFrame:
-        df = self._execute_query(c, data_source.query, data_source.parameters, offset, limit)
+        df = self._execute_query(
+            connection, data_source.query, data_source.parameters, offset, limit
+        )
         return df
 
-    def retrieve_data(self, c, data_source: SfDataSource) -> pd.DataFrame:
-        return self._fetch_data(c, data_source)
+    def _retrieve_data(self, connection, data_source: SfDataSource) -> pd.DataFrame:
+        return self._fetch_data(connection, data_source)
 
     def get_slice(
         self,
-        c,
+        connection,
         data_source: SfDataSource,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> DataSlice:
-        df: pd.DataFrame = self._fetch_data(c, data_source, offset, limit)
+        df: pd.DataFrame = self._fetch_data(connection, data_source, offset, limit)
         if offset and limit:
             result = df[offset : limit + offset]
         else:
             result = df
         return DataSlice(result, len(result))
 
-    def get_warehouses(self, c, warehouse_name: Optional[str] = None) -> List[str]:
+    def get_warehouses(self, connection, warehouse_name: Optional[str] = None) -> List[str]:
         query = 'SHOW WAREHOUSES'
         if warehouse_name:
             query = query + ' LIKE ' + warehouse_name
         return [
-            warehouse['name'] for warehouse in self._execute_query(c, query) if 'name' in warehouse
+            warehouse['name']
+            for warehouse in self._execute_query(connection, query)
+            if 'name' in warehouse
         ]
 
-    def get_databases(self, c, database_name: Optional[str] = None) -> List[str]:
+    def get_databases(self, connection, database_name: Optional[str] = None) -> List[str]:
         query = 'SHOW DATABASES'
         if database_name:
             query = query + ' LIKE ' + database_name
         return [
-            database['name'] for database in self._execute_query(c, query) if 'name' in database
+            database['name']
+            for database in self._execute_query(connection, query)
+            if 'name' in database
         ]
