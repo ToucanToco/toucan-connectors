@@ -109,31 +109,33 @@ class ConnectionObject:
         return True
 
 
-def test_get(connection_manager):
-    conn: ConnectionObject = _get_connection(connection_manager, 'conn_1')
-    assert len(connection_manager.cm) == 1
-    assert conn.name == 'ConnectionObject'
-    connection_manager.force_clean()
+def test_get_basic(connection_manager):
+    with _get_connection(connection_manager, 'conn_1') as conn:
+        assert len(connection_manager.connection_list) == 1
+        assert conn.name == 'ConnectionObject'
+        connection_manager.force_clean()
 
 
 def test_multiple_same_get(connection_manager):
-    conn: ConnectionObject = _get_connection(connection_manager, 'conn_1')
-    conn2: ConnectionObject = _get_connection(connection_manager, 'conn_1')
-    assert len(connection_manager.cm) == 1
-    assert conn == conn2
-    connection_manager.force_clean()
+    with _get_connection(connection_manager, 'conn_1') as conn, _get_connection(
+        connection_manager, 'conn_1'
+    ) as conn2:
+        assert len(connection_manager.connection_list) == 1
+        assert conn == conn2
+        connection_manager.force_clean()
 
 
 def test_multiple_different_get(connection_manager):
-    conn: ConnectionObject = _get_connection(connection_manager, 'conn_1')
-    conn2: ConnectionObject = _get_connection(connection_manager, 'conn_2')
-    assert len(connection_manager.cm) == 2
-    assert conn != conn2
-    connection_manager.force_clean()
+    with _get_connection(connection_manager, 'conn_1') as conn, _get_connection(
+        connection_manager, 'conn_2'
+    ) as conn2:
+        assert len(connection_manager.connection_list) == 2
+        assert conn != conn2
+        connection_manager.force_clean()
 
 
 def test_waiting_connection_success(connection_manager, mocker):
-    spy = mocker.spy(connection_manager, '_get_wait')
+    spy = mocker.spy(connection_manager, '_ConnectionManager__get_wait')
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         futures = [
             executor.submit(_get_connection, connection_manager, 'conn_1', 0.1),
@@ -142,12 +144,12 @@ def test_waiting_connection_success(connection_manager, mocker):
         for future in concurrent.futures.as_completed(futures):
             if future.exception() is not None:
                 raise future.exception()
-        assert spy.call_count > 1
+        assert spy.call_count >= 1
     connection_manager.force_clean()
 
 
 def test_waiting_connection_timeout(connection_manager, mocker):
-    spy = mocker.spy(connection_manager, '_get_wait')
+    spy = mocker.spy(connection_manager, '_ConnectionManager__get_wait')
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         with pytest.raises(TimeoutError):
             futures = [executor.submit(_get_connection, connection_manager, 'conn_1', 4)]
@@ -156,49 +158,56 @@ def test_waiting_connection_timeout(connection_manager, mocker):
             for future in concurrent.futures.as_completed(futures):
                 if future.exception() is not None:
                     raise future.exception()
-            assert spy.call_count > 1
+            assert spy.call_count >= 1
     connection_manager.force_clean()
 
 
 def test_auto_clean_simple(connection_manager):
-    _get_connection(connection_manager, 'conn_1')
-    assert len(connection_manager.cm) == 1
-    time.sleep(6)
-    assert len(connection_manager.cm) == 0
+    t1 = connection_manager.time_keep_alive
+    connection_manager.time_keep_alive = 1
+
+    with _get_connection(connection_manager, 'conn_1'):
+        assert len(connection_manager.connection_list) == 1
+    time.sleep(3)
+    assert len(connection_manager.connection_list) == 0
+    connection_manager.time_keep_alive = t1
     connection_manager.force_clean()
 
 
 def test_auto_clean_multiple(connection_manager):
-    _get_connection(connection_manager, 'conn_1')
-    assert len(connection_manager.cm) == 1
-    _get_connection(connection_manager, 'conn_2')
-    assert len(connection_manager.cm) == 2
-    time.sleep(3)
-    assert len(connection_manager.cm) == 2
-    _get_connection(connection_manager, 'conn_3')
-    assert len(connection_manager.cm) == 3
-    time.sleep(3)
-    assert len(connection_manager.cm) == 1
-    time.sleep(3)
-    assert len(connection_manager.cm) == 0
+    t1 = connection_manager.time_keep_alive
+    t2 = connection_manager.time_between_clean
+    connection_manager.time_keep_alive = 2
+    connection_manager.time_between_clean = 1
+    with _get_connection(connection_manager, 'conn_1'), _get_connection(
+        connection_manager, 'conn_2'
+    ):
+        assert len(connection_manager.connection_list) == 2
+        time.sleep(1)
+        with _get_connection(connection_manager, 'conn_3'):
+            assert len(connection_manager.connection_list) == 3
+    time.sleep(1)
+    assert len(connection_manager.connection_list) == 1
+    connection_manager.time_keep_alive = t1
+    connection_manager.time_between_clean = t2
     connection_manager.force_clean()
 
 
 def test_force_clean(connection_manager):
-    _get_connection(connection_manager, 'conn_1')
-    _get_connection(connection_manager, 'conn_2')
-    assert len(connection_manager.cm) == 2
+    with _get_connection(connection_manager, 'conn_1'), _get_connection(
+        connection_manager, 'conn_2'
+    ):
+        assert len(connection_manager.connection_list) == 2
     connection_manager.force_clean()
-    assert len(connection_manager.cm) == 0
+    assert len(connection_manager.connection_list) == 0
     connection_manager.force_clean()
 
 
 def test_clean_connection_not_alive(connection_manager):
-    _get_connection(connection_manager, 'conn_1', enabled_alive=False)
-    assert len(connection_manager.cm) == 1
+    with _get_connection(connection_manager, 'conn_1', enabled_alive=False):
+        assert len(connection_manager.connection_list) == 1
     time.sleep(1)
-    assert len(connection_manager.cm) == 0
-    connection_manager.force_clean()
+    assert len(connection_manager.connection_list) == 0
     connection_manager.force_clean()
 
 
@@ -206,31 +215,40 @@ def test_remove_connection_in_progress_too_long(connection_manager):
     t1 = connection_manager.connection_timeout
     connection_manager.connection_timeout = 1
 
-    assert len(connection_manager.cm) == 0
-    _get_connection(connection_manager, 'conn_1', sleep=3)
-    assert len(connection_manager.cm) == 0
+    with pytest.raises(Exception):
+        with _get_connection(connection_manager, 'conn_1', sleep=3):
+            assert len(connection_manager.connection_list) == 0
 
     connection_manager.connection_timeout = t1
     connection_manager.force_clean()
 
 
 def test_connection_manager_without_close_method_define(connection_manager):
-    _get_connection_without_alive_close_method(connection_manager, 'conn_1')
-    assert len(connection_manager.cm) == 1
-    time.sleep(6)
-    assert len(connection_manager.cm) == 0
+    t1 = connection_manager.time_keep_alive
+    t2 = connection_manager.time_between_clean
+    connection_manager.time_keep_alive = 1
+    with _get_connection_without_alive_close_method(connection_manager, 'conn_1'):
+        assert len(connection_manager.connection_list) == 1
+    time.sleep(3)
+    assert len(connection_manager.connection_list) == 0
+    connection_manager.time_keep_alive = t1
+    connection_manager.time_between_clean = t2
     connection_manager.force_clean()
 
 
 def test_connect_method_is_not_callable(connection_manager):
-    _get_connection_without_connect_method(connection_manager, 'conn_1')
-    assert len(connection_manager.cm) == 0
+    with pytest.raises(Exception):
+        with _get_connection_without_connect_method(connection_manager, 'conn_1'):
+            assert len(connection_manager.connection_list) == 0
     connection_manager.force_clean()
 
 
 def test_get_wait_lock(connection_manager, mocker):
-    spy = mocker.spy(connection_manager, '_get_wait')
+    t1 = connection_manager.time_keep_alive
+    t2 = connection_manager.time_between_clean
     connection_manager.time_keep_alive = 1
+    connection_manager.time_between_clean = 1
+    spy = mocker.spy(connection_manager, '_ConnectionManager__get_wait')
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         futures = [executor.submit(_get_connection_long_closing, connection_manager, 'conn_1', 2)]
         time.sleep(0.3)
@@ -242,3 +260,6 @@ def test_get_wait_lock(connection_manager, mocker):
             if future.exception() is not None:
                 raise future.exception()
         assert spy.call_count > 1
+    connection_manager.time_keep_alive = t1
+    connection_manager.time_between_clean = t2
+    connection_manager.force_clean()

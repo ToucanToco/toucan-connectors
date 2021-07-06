@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import threading
 import time
@@ -9,35 +10,61 @@ logger = logging.getLogger(__name__)
 
 
 class Status(Enum):
-    READY = 'ready'
-    IN_PROGRESS = 'in progress'
-    CLOSE_IN_PROGRESS = 'is_closing'
+    # READY = 'ready'
+    AVAILABLE = 'connection available'
+    QUERY_IN_PROGRESS = 'query in progress'
+    CONNECTION_IN_PROGRESS = 'connection in progress'
+    CLOSE_IN_PROGRESS = 'connection closing in progress'
+    CLOSED = 'connection closed'
 
 
-class ConnectionObject:
+class ConnectionBO:
     status: Status
+    # Connection begin
     t_start: float
+
+    # Connection is created and available to execute request
     t_ready: float
+
+    # Connection used to execute request
     t_get: float
+
+    # method to check if connection is open or closed
     alive: Optional[types.FunctionType] = None
+
+    # method to close the connection
     close: Optional[types.FunctionType] = None
+
+    # method to open the connection
+    connect: Optional[types.FunctionType] = None
+
+    # The connection
     connection: Optional = None
+
+    __remove_try = 0
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
         self.t_start = time.time()
+        self.t_get = time.time()
 
     def is_ready(self):
-        return self.status == Status.READY
+        return self.status == Status.AVAILABLE or self.status == Status.QUERY_IN_PROGRESS
 
     def update(self, **kwargs):
         self.__dict__.update(kwargs)
         self.t_ready = time.time()
         self.t_get = time.time()
 
+    def get(self):
+        return self
+
+    @contextlib.contextmanager
     def get_connection(self):
         self.t_get = time.time()
-        return self.connection
+        self.status = Status.QUERY_IN_PROGRESS
+        yield self.connection
+        self.status = Status.AVAILABLE
 
     def exec_alive(self):
         if self.alive and isinstance(self.alive, types.FunctionType):
@@ -58,12 +85,21 @@ class ConnectionObject:
             logger.warning(
                 'Close connection needed but no close method defined or close method is not callable'
             )
+        self.status = Status.CLOSED
+
+    # Increment try
+    def increment_retry_try(self):
+        self.__remove_try += 1
+
+    # Return True when closing or check alive raise Exception 3 times
+    def retry_status(self):
+        return self.__remove_try >= 3
 
 
 class ConnectionManager:
     name = 'connection_manager'
 
-    cm = {}
+    connection_list = {}
 
     timeout = 5
     wait = 0.2
@@ -75,84 +111,104 @@ class ConnectionManager:
 
     lock: bool = False
 
+    __clean_status_exception: Dict[str, Exception] = {}
+    retry_force_clean_limit = 3
+    retry_force_clean = 0
+
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
-        self.cm: Dict[str, ConnectionObject] = {}
+        self.connection_list: Dict[str, ConnectionBO] = {}
         self.__activate_clean()
 
-    def __close(self, key):
-        self.cm[key].exec_close()
-        del self.cm[key]
-
-    def __activate_clean(self, active: Optional[bool] = False):
-        if len(self.cm) > 0 and (not self.clean_active or active):
-            self.clean_active = True
-            threading.Timer(self.time_between_clean, self._clean).start()
+    def __close(self, identifier: str):
+        if self.connection_list[identifier].retry_status():
+            del self.connection_list[identifier]
         else:
-            self.clean_active = False
+            self.connection_list[identifier].exec_close()
+            del self.connection_list[identifier]
 
-    def __remove(self, cm_to_remove):
-        for key in cm_to_remove:
-            self.__close(key)
+    def __remove(self, list_connection_to_remove):
+        for identifier in list_connection_to_remove:
+            self.__close(identifier)
 
-    def _clean(self):
-        logger.debug(f'Check if connection is alive ({len(self.cm)} open connections)')
+    def __clean(self):
+        logger.debug(f'Check if connection is alive ({len(self.connection_list)} open connections)')
 
         self.lock = True
 
-        cm_to_remove = []
+        list_connection_to_remove = []
         identifier: str
-        cm: ConnectionObject
-        for identifier, cm in list(self.cm.items()):
-            tt = time.time()
-            if cm.is_ready():
-                if not cm.exec_alive():
-                    logger.debug('Close connection - connection not alive')
-                    cm_to_remove.append(identifier)
-                elif tt - cm.t_get > self.time_keep_alive:
+        co: ConnectionBO
+        for identifier, co in list(self.connection_list.items()):
+            try:
+                tt = time.time()
+                if co.is_ready():
+                    if not co.exec_alive():
+                        logger.debug('Close connection - connection not alive')
+                        list_connection_to_remove.append(identifier)
+                    elif co.t_get and tt - co.t_get > self.time_keep_alive:
+                        logger.debug(
+                            f'Close connection - alive too long ({tt - co.t_get} > {self.time_keep_alive})'
+                        )
+                        list_connection_to_remove.append(identifier)
+                elif not co.is_ready() and co.t_start and tt - co.t_start > self.connection_timeout:
                     logger.debug(
-                        f'Close connection - alive too long ({tt - cm.t_get} > {self.time_keep_alive})'
+                        f'Close connection - connection too long ({tt - co.t_start} > {self.connection_timeout})'
                     )
-                    cm_to_remove.append(identifier)
-            elif not cm.is_ready() and tt - cm.t_start > self.connection_timeout:
-                logger.debug(
-                    f'Close connection - connection too long ({tt - cm.t_start} > {self.connection_timeout})'
-                )
-                cm_to_remove.append(identifier)
+                    list_connection_to_remove.append(identifier)
+            except Exception as e:
+                logger.error(f'Try to close connection have an exception - {e}')
+                co.increment_retry_try()
+                self.__clean_status_exception[identifier] = e
+                continue
 
-        if len(cm_to_remove) > 0:
-            self.__remove(cm_to_remove)
+        if len(list_connection_to_remove) > 0:
+            self.__remove(list_connection_to_remove)
         self.lock = False
-        self.__activate_clean(True)
 
-    def _create(self, identifier: str, connect_method, alive_method, close_method):
+    def __activate_clean(self, active: Optional[bool] = False):
+        if len(self.connection_list) > 0 and (not self.clean_active or active):
+            self.clean_active = True
+            t_clean = threading.Timer(self.time_between_clean, self.__clean)
+            t_clean.start()
+            if len(self.__clean_status_exception):
+                self.retry_force_clean += 1
+            else:
+                self.retry_force_clean = 0
+            self.__clean_status_exception = {}
+        else:
+            self.clean_active = False
+
+    def __create(self, identifier: str, connect_method, alive_method, close_method):
         if isinstance(connect_method, types.FunctionType):
-            self.cm[identifier] = ConnectionObject(
-                status=Status.IN_PROGRESS,
+            self.connection_list[identifier] = ConnectionBO(
+                status=Status.CONNECTION_IN_PROGRESS,
+                connect=connect_method,
                 alive=alive_method,
                 close=close_method,
             )
 
             self.__activate_clean()
             c = connect_method()
-            if identifier in self.cm:
-                self.cm[identifier].update(status=Status.READY, connection=c)
-                return self.cm[identifier].get_connection()
+            if identifier in self.connection_list:
+                self.connection_list[identifier].update(status=Status.AVAILABLE, connection=c)
+                return self.connection_list[identifier].get_connection()
             else:
-                return None
+                raise Exception('Connection too long')
         else:
-            return None
+            raise Exception('Connection is not a method')
 
-    def _get_wait(
+    # Retrieve connection when the connection as Status.AVAILABLE or Status.QUERY_IN_PROGRESS
+    def __get_wait(
         self, identifier: str, connect_method, alive_method, close_method, retry_time: float
     ):
-        if identifier not in self.cm:
-            return self._create(identifier, connect_method, alive_method, close_method)
-        elif self.lock or not self.cm[identifier].is_ready():
+        if identifier not in self.connection_list:
+            return self.__create(identifier, connect_method, alive_method, close_method)
+        elif self.lock or not self.connection_list[identifier].is_ready():
             logger.debug('Connection is in progress')
             time.sleep(self.wait)
             if self.wait + retry_time < self.timeout:
-                return self._get_wait(
+                return self.__get_wait(
                     identifier, connect_method, alive_method, close_method, self.wait + retry_time
                 )
             else:
@@ -160,25 +216,28 @@ class ConnectionManager:
                     f'Timeout - Impossible to retrieve connection (Timeout: {self.timeout})'
                 )
                 raise TimeoutError(f'Impossible to retrieve connection (Timeout: {self.timeout})')
-        elif self.cm[identifier].is_ready():
+        elif self.connection_list[identifier].is_ready():
             logger.debug('Connection is ready')
-            return self.cm[identifier].get_connection()
+            return self.connection_list[identifier].get_connection()
 
+    # Retrieve or create connection if not exist in connection_list
     def get(self, identifier: str, connect_method, alive_method, close_method):
         logger.debug(f'Get element in Dict {identifier}')
-        if identifier in self.cm:
+        if identifier in self.connection_list:
             logging.getLogger(__name__).debug('Connection exist')
-            return self._get_wait(identifier, connect_method, alive_method, close_method, 0)
+            return self.__get_wait(identifier, connect_method, alive_method, close_method, 0)
         else:
             logger.debug('Connection does not exist, create and save it')
-            return self._create(identifier, connect_method, alive_method, close_method)
+            return self.__create(identifier, connect_method, alive_method, close_method)
 
+    # Force to remove all connection
+    # Not use automatically by connection_manager
     def force_clean(self):
         self.lock = True
-        co: ConnectionObject
+        co: ConnectionBO
         identifier: str
-        for identifier, co in list(self.cm.items()):
+        for identifier, co in list(self.connection_list.items()):
             if co.is_ready():
                 co.exec_close()
-            del self.cm[identifier]
+            del self.connection_list[identifier]
         self.lock = False
