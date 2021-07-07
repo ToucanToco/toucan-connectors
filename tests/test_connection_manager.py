@@ -3,8 +3,9 @@ import time
 from typing import Optional
 
 import pytest
+from mock import patch
 
-from toucan_connectors.connection_manager import ConnectionManager
+from toucan_connectors.connection_manager import ConnectionBO, ConnectionManager
 
 
 @pytest.fixture
@@ -19,6 +20,19 @@ def connection_manager():
     )
 
 
+@pytest.fixture
+def connection_manager_with_error():
+    return ConnectionManager(
+        name='connection_manager_name',
+        timeout=3,
+        wait=0.2,
+        time_between_clean=1,
+        time_keep_alive=5,
+        connection_timeout=60,
+        tortank='test',
+    )
+
+
 def _get_connection(
     cm: ConnectionManager,
     identifier: str,
@@ -30,20 +44,39 @@ def _get_connection(
             time.sleep(sleep)
         return ConnectionObject()
 
-    def __alive():
+    def __alive(conn):
         if enabled_alive:
             return True
         else:
             return False
 
-    def __close():
+    def __close(conn):
         return True
 
     connection = cm.get(
         identifier,
-        connect_method=lambda: __connect(),
-        alive_method=lambda: __alive(),
-        close_method=lambda: __close(),
+        connect_method=__connect,
+        alive_method=__alive,
+        close_method=__close,
+    )
+    return connection
+
+
+def _get_connection_exception(cm: ConnectionManager, identifier: str):
+    def __connect():
+        return ConnectionObject()
+
+    def __alive(conn):
+        return True
+
+    def __close(conn):
+        raise TimeoutError
+
+    connection = cm.get(
+        identifier,
+        connect_method=__connect,
+        alive_method=__alive,
+        close_method=__close,
     )
     return connection
 
@@ -52,11 +85,17 @@ def _get_connection_without_connect_method(
     cm: ConnectionManager,
     identifier: str,
 ):
+    def __alive(conn):
+        return True
+
+    def __close(conn):
+        return True
+
     connection = cm.get(
         identifier,
         connect_method='connect',
-        alive_method='alive',
-        close_method='close',
+        alive_method=__alive,
+        close_method=__close,
     )
     return connection
 
@@ -70,7 +109,7 @@ def _get_connection_without_alive_close_method(
 
     connection = cm.get(
         identifier,
-        connect_method=lambda: __connect(),
+        connect_method=__connect,
         alive_method='alive',
         close_method='close',
     )
@@ -81,18 +120,18 @@ def _get_connection_long_closing(cm: ConnectionManager, identifier: str, time_sl
     def __connect():
         return ConnectionObject()
 
-    def __alive():
+    def __alive(conn):
         return True
 
-    def __close():
+    def __close(conn):
         time.sleep(time_sleep)
         return True
 
     connection = cm.get(
         identifier,
-        connect_method=lambda: __connect(),
-        alive_method=lambda: __alive(),
-        close_method=lambda: __close(),
+        connect_method=__connect,
+        alive_method=__alive,
+        close_method=__close,
     )
     return connection
 
@@ -107,6 +146,24 @@ class ConnectionObject:
     @staticmethod
     def close():
         return True
+
+
+def test_init_exception_connectionbo():
+    with pytest.raises(KeyError):
+        ConnectionBO(tortank='test')
+
+
+def test_init_exception_connectionmanager():
+    with pytest.raises(KeyError):
+        ConnectionManager(
+            name='connection_manager_name',
+            timeout=3,
+            wait=0.2,
+            time_between_clean=1,
+            time_keep_alive=5,
+            connection_timeout=60,
+            tortank='test',
+        )
 
 
 def test_get_basic(connection_manager):
@@ -159,6 +216,37 @@ def test_waiting_connection_timeout(connection_manager, mocker):
                 if future.exception() is not None:
                     raise future.exception()
             assert spy.call_count >= 1
+    connection_manager.force_clean()
+
+
+def test_auto_clean_exception(connection_manager):
+    t1 = connection_manager.time_keep_alive
+    t2 = connection_manager.time_between_clean
+    connection_manager.time_keep_alive = 1
+    connection_manager.time_between_clean = 1
+
+    with _get_connection_exception(connection_manager, 'conn_1'):
+        assert len(connection_manager.connection_list) == 1
+    time.sleep(6)
+    assert len(connection_manager.connection_list) == 0
+    connection_manager.time_keep_alive = t1
+    connection_manager.time_between_clean = t2
+    connection_manager.force_clean()
+
+
+@patch('toucan_connectors.connection_manager.ConnectionBO.force_to_remove', return_value=True)
+def test_auto_clean_force_remove(rs, connection_manager):
+    t1 = connection_manager.time_keep_alive
+    t2 = connection_manager.time_between_clean
+    connection_manager.time_keep_alive = 1
+    connection_manager.time_between_clean = 1
+
+    _get_connection(connection_manager, 'conn_1')
+    assert len(connection_manager.connection_list) == 1
+    time.sleep(3)
+    assert len(connection_manager.connection_list) == 0
+    connection_manager.time_keep_alive = t1
+    connection_manager.time_between_clean = t2
     connection_manager.force_clean()
 
 
@@ -229,7 +317,7 @@ def test_connection_manager_without_close_method_define(connection_manager):
     connection_manager.time_keep_alive = 1
     with _get_connection_without_alive_close_method(connection_manager, 'conn_1'):
         assert len(connection_manager.connection_list) == 1
-    time.sleep(3)
+    time.sleep(5)
     assert len(connection_manager.connection_list) == 0
     connection_manager.time_keep_alive = t1
     connection_manager.time_between_clean = t2
