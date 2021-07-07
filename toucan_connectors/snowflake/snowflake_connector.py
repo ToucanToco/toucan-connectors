@@ -9,9 +9,10 @@ from typing import Any, Dict, List, Optional, Type
 import jwt
 import pandas as pd
 import requests
-import snowflake.connector
+import snowflake
 from jinja2 import Template
 from pydantic import Field, SecretStr, create_model
+from snowflake.connector import SnowflakeConnection
 
 from toucan_connectors import DataSlice
 from toucan_connectors.common import ConnectorStatus
@@ -219,12 +220,10 @@ class SnowflakeConnector(ToucanConnector):
                     refresh_token=res.json().get('refresh_token'),
                 )
 
-    def _get_connection(
-        self, database: str = None, warehouse: str = None
-    ) -> snowflake.connector.SnowflakeConnection:
+    def _get_connection(self, database: str = None, warehouse: str = None) -> SnowflakeConnection:
         def connect_function(
             d: Optional[str] = None, w: Optional[str] = None
-        ) -> snowflake.connector.SnowflakeConnection:
+        ) -> SnowflakeConnection:
             logger.info('Connect at Snowflake')
             snowflake.connector.paramstyle = 'qmark'
             if self.authentication_method == AuthenticationMethod.OAUTH:
@@ -259,25 +258,27 @@ class SnowflakeConnector(ToucanConnector):
             )
             return connection
 
-        def alive_function():
+        def alive_function(conn):
             logger.debug('Check Snowflake connection alive')
-            if hasattr(connection, 'is_closed') and callable(connection.is_closed):
-                res = not connection.is_closed()
-                logger.debug(f'Snowflake connection is alive ${res}')
-                return res
+            if hasattr(conn, 'is_closed'):
+                try:
+                    return conn.is_closed()
+                except Exception:
+                    raise TypeError('is_closed is not a function')
 
-        def close_function():
-            logger.debug('Close Snowflake connection')
-            if hasattr(connection, 'close') and callable(connection.close):
-                res = connection.close()
-                logger.info(f'Snowflake connection close ${res}')
-                return res
+        def close_function(conn):
+            logger.info('Close Snowflake connection')
+            if hasattr(conn, 'close'):
+                try:
+                    return conn.close()
+                except Exception:
+                    raise TypeError('close is not a function')
 
         connection = snowflake_connection_manager.get(
             identifier=self.identifier,
             connect_method=lambda: connect_function(database, warehouse),
-            alive_method=lambda: alive_function(),
-            close_method=lambda: close_function(),
+            alive_method=alive_function,
+            close_method=close_function,
         )
 
         return connection
