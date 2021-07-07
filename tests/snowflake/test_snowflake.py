@@ -460,7 +460,7 @@ def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_c
 
 def test_get_connection_without_authentication_method(snowflake_connector_malformed):
     result = snowflake_connector_malformed.get_connection_params()
-    assert snowflake_connector_malformed.authentication_method.PLAIN == result['authenticator']
+    assert 'snowflake' == result['authenticator']
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
