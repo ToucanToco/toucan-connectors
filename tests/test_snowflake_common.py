@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 import snowflake.connector
 from mock import patch
+from toucan_connectors.json_wrapper import JsonWrapper
 
 from toucan_connectors import DataSlice
 from toucan_connectors.snowflake import SnowflakeDataSource
@@ -36,257 +37,8 @@ data_result_one = [
         '11 Column Name': 'value',
     }
 ]
-data_result_5 = [
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-]
-data_result_all = [
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-    {
-        '1 Column Name': 'value',
-        '2 Column Name': 'value',
-        '3 Column Name': 'value',
-        '4 Column Name': 'value',
-        '5 Column Name': 'value',
-        '6 Column Name': 'value',
-        '7 Column Name': 'value',
-        '8 Column Name': 'value',
-        '9 Column Name': 'value',
-        '10 Column Name': 'value',
-        '11 Column Name': 'value',
-    },
-]
+data_result_5 = JsonWrapper.load(open('tests/fixtures/fixture_snowflake_common/data_5.json',))
+data_result_all = JsonWrapper.load(open('tests/fixtures/fixture_snowflake_common/data_10.json',))
 databases_result_all = [{'name': 'database_1'}, {'name': 'database_2'}]
 databases_result_none = []
 databases_result_one = [{'name': 'database_1'}]
@@ -298,7 +50,7 @@ warehouses_result_one = [{'name': 'warehouse_1'}]
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute', return_value=None)
 @patch('pandas.DataFrame.from_dict', return_value=databases_result_all)
-def test_get_database_without_filter(database_result, execute_query, connect, mocker):
+def test_get_database_without_filter(database_result, execute_query, connect):
     result = SnowflakeCommon().get_databases(connect)
     assert database_result.call_count == 1
     assert result[0] == 'database_1'
@@ -359,7 +111,7 @@ def test_get_warehouse_with_filter_one_result(warehouse_result, execute_query, c
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
 def test_retrieve_data(result, execute_query, connect, snowflake_datasource, mocker):
-    df: pd.DataFrame = SnowflakeCommon().retrieve_data(connect, snowflake_datasource)
+    df: pd.DataFrame = SnowflakeCommon()._retrieve_data(connect, snowflake_datasource)
     assert result.call_count == 1
     assert len(df) == 14
 

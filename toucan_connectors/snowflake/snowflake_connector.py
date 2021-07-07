@@ -307,7 +307,7 @@ class SnowflakeConnector(ToucanConnector):
                 f'Connect at Snowflake with {connection_params}, database {d} and warehouse {w}'
             )
             connect_start = timer()
-            c = snowflake.connector.connect(**connection_params, database=d, warehouse=w)
+            connection = snowflake.connector.connect(**connection_params, database=d, warehouse=w)
             connect_end = timer()
             logger.info(
                 f'[benchmark] - connect {connect_end - connect_start} seconds',
@@ -318,7 +318,7 @@ class SnowflakeConnector(ToucanConnector):
                     }
                 },
             )
-            return c
+            return connection
 
         def alive_function():
             logger.debug('Check Snowflake connection alive')
@@ -335,7 +335,7 @@ class SnowflakeConnector(ToucanConnector):
                 return res
 
         connection = snowflake_connection_manager.get(
-            self.identifier,
+            identifier=self.identifier,
             connect_method=lambda: connect_function(database, warehouse),
             alive_method=lambda: alive_function(),
             close_method=lambda: close_function(),
@@ -406,7 +406,7 @@ class SnowflakeConnector(ToucanConnector):
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         data_source = self._set_warehouse(data_source)
-        return SnowflakeCommon().retrieve_data(
+        return SnowflakeCommon()._retrieve_data(
             self._get_connection(data_source.database, data_source.warehouse), data_source
         )
 
