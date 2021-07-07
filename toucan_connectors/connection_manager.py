@@ -97,27 +97,31 @@ class ConnectionBO:
 
 
 class ConnectionManager:
-    name = 'connection_manager'
-
-    connection_list = {}
-
-    timeout = 5
-    wait = 0.2
-    time_between_clean = 10
-    time_keep_alive = 600
-    connection_timeout = 60
-
-    clean_active: bool = False
-
-    lock: bool = False
-
-    __clean_status_exception: Dict[str, Exception] = {}
-    retry_force_clean_limit = 3
-    retry_force_clean = 0
 
     def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
+        self.name: str = 'connection_manager'
         self.connection_list: Dict[str, ConnectionBO] = {}
+
+        self.timeout = 5
+        self.wait = 0.2
+        self.time_between_clean = 10
+        self.time_keep_alive = 600
+        self.connection_timeout = 60
+
+        self.clean_active: bool = False
+
+        self.lock: bool = False
+
+        self.__clean_status_exception: Dict[str, Exception] = {}
+        self.retry_force_clean_limit = 3
+        self.retry_force_clean = 0
+
+        for k, v in kwargs.items():
+            if k in self.__dict__:
+                setattr(self, k, v)
+            else:
+                raise KeyError(k)
+
         self.__activate_clean()
 
     def __close(self, identifier: str):

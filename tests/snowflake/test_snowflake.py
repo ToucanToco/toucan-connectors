@@ -78,138 +78,7 @@ def snowflake_datasource():
     )
 
 
-data = {
-    '1 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '2 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '3 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '4 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '5 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '6 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '7 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '8 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '9 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '10 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-}
+data = JsonWrapper.load(open('tests/snowflake/fixture/data.json',))
 df = pd.DataFrame(
     data,
     columns=[
@@ -222,8 +91,7 @@ df = pd.DataFrame(
         '7 Column Name',
         '8 Column Name',
         '9 Column Name',
-        '10 Column Name',
-        ...,
+        '10 Column Name'
     ],
 )
 
@@ -485,9 +353,10 @@ def test_get_status_without_warehouses(gw, gc, snowflake_connector):
     return_value=['warehouse_1'],
 )
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 def test_get_status_account_nok(is_closed, close, connect, gw, snowflake_connector):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
     gw.side_effect = snowflake.connector.errors.ProgrammingError('Account nok')
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
@@ -495,7 +364,7 @@ def test_get_status_account_nok(is_closed, close, connect, gw, snowflake_connect
         error='Account nok',
         details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
-    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+    cm.force_clean()
 
 
 @patch(
@@ -503,9 +372,10 @@ def test_get_status_account_nok(is_closed, close, connect, gw, snowflake_connect
     return_value=['warehouse_1'],
 )
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 def test_account_does_not_exists(is_closed, close, connect, gw, snowflake_connector):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
     gw.side_effect = snowflake.connector.errors.OperationalError()
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
@@ -513,7 +383,7 @@ def test_account_does_not_exists(is_closed, close, connect, gw, snowflake_connec
         error=f"Connection failed for the account '{snowflake_connector.account}', please check the Account field",
         details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
-    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+    cm.force_clean()
 
 
 @patch(
@@ -521,9 +391,10 @@ def test_account_does_not_exists(is_closed, close, connect, gw, snowflake_connec
     return_value=['warehouse_1'],
 )
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 def test_account_forbidden(is_closed, close, connect, gw, snowflake_connector):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
     gw.side_effect = snowflake.connector.errors.ForbiddenError()
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
@@ -531,7 +402,7 @@ def test_account_forbidden(is_closed, close, connect, gw, snowflake_connector):
         error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",
         details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
-    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+    cm.force_clean()
 
 
 @patch(
@@ -539,9 +410,10 @@ def test_account_forbidden(is_closed, close, connect, gw, snowflake_connector):
     return_value=['warehouse_1'],
 )
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 def test_account_failed_for_user(is_closed, close, connect, gw, snowflake_connector):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
     gw.side_effect = snowflake.connector.errors.DatabaseError()
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
@@ -549,14 +421,15 @@ def test_account_failed_for_user(is_closed, close, connect, gw, snowflake_connec
         error=f"Connection failed for the user '{snowflake_connector.user}', please check your credentials",
         details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
-    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+    cm.force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
 def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_connector_oauth):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
     snowflake_connector_oauth._get_connection('test_database', 'test_warehouse')
     assert rt.call_count == 1
     assert connect.call_args_list[0][1]['account'] == 'test_account'
@@ -566,14 +439,15 @@ def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_c
     )
     assert connect.call_args_list[0][1]['database'] == 'test_database'
     assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
-    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+    cm.force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
 def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connector):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
     snowflake_connector._get_connection('test_database', 'test_warehouse')
     assert rt.call_count == 0
     assert connect.call_args_list[0][1]['account'] == 'test_account'
@@ -581,58 +455,59 @@ def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connect
     assert connect.call_args_list[0][1]['password'] == 'test_password'
     assert connect.call_args_list[0][1]['database'] == 'test_database'
     assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
-    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+    cm.force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
     return_value='shiny token',
 )
-def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_connector, mocker):
+def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_connector):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
     t1 = cm.time_between_clean
     t2 = cm.time_keep_alive
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
     snowflake_connector._get_connection('test_database', 'test_warehouse')
-    time.sleep(4)
+    time.sleep(2)
     assert is_closed.call_count >= 1
     cm.time_between_clean = t1
     cm.time_keep_alive = t2
-    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+    cm.force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=False)
 @patch(
     'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
     return_value='shiny token',
 )
-def test_snowflake_connection_close(gat, is_closed, close, connect, snowflake_connector, mocker):
+def test_snowflake_connection_close(gat, is_closed, close, connect, snowflake_connector):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
     t1 = cm.time_between_clean
     t2 = cm.time_keep_alive
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
     snowflake_connector._get_connection('test_database', 'test_warehouse')
-    time.sleep(4)
+    time.sleep(5)
+    assert close.call_count >= 1
     cm.time_between_clean = t1
     cm.time_keep_alive = t2
-    assert close.call_count >= 1
-    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+    cm.force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('requests.post')
 def test_oauth_args_endpoint_not_200(
     req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
 ):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
     snowflake_connector_oauth.user_tokens_keeper.access_token = SecretStr(
         jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
     )
@@ -647,17 +522,17 @@ def test_oauth_args_endpoint_not_200(
     try:
         snowflake_connector_oauth._retrieve_data(snowflake_datasource)
     except Exception as e:
-        SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+        cm.force_clean()
         assert str(e) == 'HTTP Error 401: Unauthorized'
         assert req_mock.call_count == 1
     else:
-        SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+        cm.force_clean()
         assert False
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('requests.post')
 def test_refresh_oauth_token(
     req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
@@ -681,10 +556,10 @@ def test_refresh_oauth_token(
         assert True
 
 
-@patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon._retrieve_data', return_value=df)
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 def test_oauth_args_wrong_type_of_auth(
     is_closed,
     close,
