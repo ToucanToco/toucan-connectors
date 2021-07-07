@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class Status(Enum):
-    # READY = 'ready'
+    NOT_START = 'connection not start'
     AVAILABLE = 'connection available'
     QUERY_IN_PROGRESS = 'query in progress'
     CONNECTION_IN_PROGRESS = 'connection in progress'
@@ -19,45 +19,46 @@ class Status(Enum):
 
 
 class ConnectionBO:
-    status: Status
-    # Connection begin
-    t_start: float
-
-    # Connection is created and available to execute request
-    t_ready: float
-
-    # Connection used to execute request
-    t_get: float
-
-    # method to check if connection is open or closed
-    alive: Optional[types.FunctionType] = None
-
-    # method to close the connection
-    close: Optional[types.FunctionType] = None
-
-    # method to open the connection
-    connect: Optional[types.FunctionType] = None
-
-    # The connection
-    connection: Optional = None
-
-    __remove_try = 0
-
     def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-        self.t_start = time.time()
-        self.t_get = time.time()
+        self.status: Status = Status.NOT_START
+        # Connection begin
+        self.t_start: float = time.time()
+
+        # Connection is created and available to execute request
+        self.t_ready: float = 0
+
+        # Connection used to execute request
+        self.t_get: float = time.time()
+
+        # method to check if connection is open or closed
+        self.alive: Optional[types.FunctionType] = None
+
+        # method to close the connection
+        self.close: Optional[types.FunctionType] = None
+
+        # method to open the connection
+        self.connect: Optional[types.FunctionType] = None
+
+        # The connection
+        self.connection: Optional = None
+
+        # Number of retry to close the connection
+        self.remove_try = 0
+
+        for k, v in kwargs.items():
+            if k in self.__dict__:
+                setattr(self, k, v)
+            else:
+                raise KeyError(k)
 
     def is_ready(self):
         return self.status == Status.AVAILABLE or self.status == Status.QUERY_IN_PROGRESS
 
-    def update(self, **kwargs):
-        self.__dict__.update(kwargs)
+    def update(self, status: Status, connection):
+        self.status = status
+        self.connection = connection
         self.t_ready = time.time()
         self.t_get = time.time()
-
-    def get(self):
-        return self
 
     @contextlib.contextmanager
     def get_connection(self):
@@ -67,37 +68,38 @@ class ConnectionBO:
         self.status = Status.AVAILABLE
 
     def exec_alive(self):
-        if self.alive and isinstance(self.alive, types.FunctionType):
-            result = self.alive()
+        try:
+            print('exec_alive')
+            result = self.alive(self.connection)
             logger.debug(f'Connection alive result {result}')
             return result
-        else:
+        except Exception as e:
             logger.warning(
                 'Alive connection needed but no alive method defined or alive method is not callable'
             )
-            return True
+            raise e
 
-    def exec_close(self):
+    def exec_close(self) -> bool:
         self.status = Status.CLOSE_IN_PROGRESS
-        if self.close and isinstance(self.close, types.FunctionType):
-            return self.close()
+        if self.force_to_remove():
+            self.status = Status.CLOSED
+            return True
         else:
-            logger.warning(
-                'Close connection needed but no close method defined or close method is not callable'
-            )
-        self.status = Status.CLOSED
-
-    # Increment try
-    def increment_retry_try(self):
-        self.__remove_try += 1
+            try:
+                self.close(self.connection)
+                self.status = Status.CLOSED
+                return True
+            except Exception as e:
+                self.status = Status.AVAILABLE
+                self.remove_try += 1
+                raise e
 
     # Return True when closing or check alive raise Exception 3 times
-    def retry_status(self):
-        return self.__remove_try >= 3
+    def force_to_remove(self):
+        return self.remove_try >= 3
 
 
 class ConnectionManager:
-
     def __init__(self, **kwargs):
         self.name: str = 'connection_manager'
         self.connection_list: Dict[str, ConnectionBO] = {}
@@ -112,30 +114,23 @@ class ConnectionManager:
 
         self.lock: bool = False
 
-        self.__clean_status_exception: Dict[str, Exception] = {}
-        self.retry_force_clean_limit = 3
-        self.retry_force_clean = 0
-
         for k, v in kwargs.items():
             if k in self.__dict__:
                 setattr(self, k, v)
             else:
                 raise KeyError(k)
 
-        self.__activate_clean()
-
-    def __close(self, identifier: str):
-        if self.connection_list[identifier].retry_status():
-            del self.connection_list[identifier]
-        else:
-            self.connection_list[identifier].exec_close()
-            del self.connection_list[identifier]
-
     def __remove(self, list_connection_to_remove):
         for identifier in list_connection_to_remove:
-            self.__close(identifier)
+            try:
+                is_closed = self.connection_list[identifier].exec_close()
+                if is_closed:
+                    del self.connection_list[identifier]
+            except Exception:
+                continue
 
     def __clean(self):
+        print('__clean')
         logger.debug(f'Check if connection is alive ({len(self.connection_list)} open connections)')
 
         self.lock = True
@@ -144,8 +139,8 @@ class ConnectionManager:
         identifier: str
         co: ConnectionBO
         for identifier, co in list(self.connection_list.items()):
+            tt = time.time()
             try:
-                tt = time.time()
                 if co.is_ready():
                     if not co.exec_alive():
                         logger.debug('Close connection - connection not alive')
@@ -160,26 +155,27 @@ class ConnectionManager:
                         f'Close connection - connection too long ({tt - co.t_start} > {self.connection_timeout})'
                     )
                     list_connection_to_remove.append(identifier)
-            except Exception as e:
-                logger.error(f'Try to close connection have an exception - {e}')
-                co.increment_retry_try()
-                self.__clean_status_exception[identifier] = e
+            except Exception:
+                if co.t_get and tt - co.t_get > self.time_keep_alive:
+                    logger.debug(
+                        f'Close connection - alive too long ({tt - co.t_get} > {self.time_keep_alive})'
+                    )
+                    list_connection_to_remove.append(identifier)
                 continue
 
         if len(list_connection_to_remove) > 0:
             self.__remove(list_connection_to_remove)
+
         self.lock = False
+
+        self.clean_active = False
+        self.__activate_clean()
 
     def __activate_clean(self, active: Optional[bool] = False):
         if len(self.connection_list) > 0 and (not self.clean_active or active):
             self.clean_active = True
             t_clean = threading.Timer(self.time_between_clean, self.__clean)
             t_clean.start()
-            if len(self.__clean_status_exception):
-                self.retry_force_clean += 1
-            else:
-                self.retry_force_clean = 0
-            self.__clean_status_exception = {}
         else:
             self.clean_active = False
 

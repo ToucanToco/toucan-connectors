@@ -2,9 +2,9 @@ import pandas as pd
 import pytest
 import snowflake.connector
 from mock import patch
-from toucan_connectors.json_wrapper import JsonWrapper
 
 from toucan_connectors import DataSlice
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.snowflake import SnowflakeDataSource
 from toucan_connectors.snowflake_common import SnowflakeCommon
 
@@ -37,8 +37,16 @@ data_result_one = [
         '11 Column Name': 'value',
     }
 ]
-data_result_5 = JsonWrapper.load(open('tests/fixtures/fixture_snowflake_common/data_5.json',))
-data_result_all = JsonWrapper.load(open('tests/fixtures/fixture_snowflake_common/data_10.json',))
+data_result_5 = JsonWrapper.load(
+    open(
+        'tests/fixtures/fixture_snowflake_common/data_5.json',
+    )
+)
+data_result_all = JsonWrapper.load(
+    open(
+        'tests/fixtures/fixture_snowflake_common/data_10.json',
+    )
+)
 databases_result_all = [{'name': 'database_1'}, {'name': 'database_2'}]
 databases_result_none = []
 databases_result_one = [{'name': 'database_1'}]

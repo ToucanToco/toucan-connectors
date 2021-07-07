@@ -147,7 +147,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
                 f'Connect at Snowflake with {connection_params}, database {database} and warehouse {warehouse}'
             )
             connect_start = timer()
-            c = snowflake.connector.connect(
+            connection = snowflake.connector.connect(
                 **connection_params, database=database, warehouse=warehouse
             )
             connect_end = timer()
@@ -160,23 +160,30 @@ class SnowflakeoAuth2Connector(ToucanConnector):
                     }
                 },
             )
-            return c
+            return connection
 
-        def alive_function() -> Any:
+        def alive_function(conn: SnowflakeConnection) -> Any:
             logger.info('Check Snowflake connection')
-            if hasattr(connection, 'is_closed') and callable(connection.is_closed):
-                return connection.is_closed()
+            if hasattr(conn, 'is_closed'):
+                try:
+                    return conn.is_closed()
+                except Exception:
+                    raise TypeError('is_closed is not a function')
 
-        def close_function() -> None:
+        def close_function(conn: SnowflakeConnection) -> None:
             logger.info('Close Snowflake connection')
-            if hasattr(connection, 'close') and callable(connection.close):
-                return connection.close()
+            if hasattr(conn, 'close'):
+                try:
+                    r = conn.close()
+                    return r
+                except Exception:
+                    raise TypeError('close is not a function')
 
         connection: SnowflakeConnection = connection_manager.get(
             self.identifier,
-            connect_method=lambda: connect_function(),
-            alive_method=lambda: alive_function(),
-            close_method=lambda: close_function(),
+            connect_method=connect_function,
+            alive_method=alive_function,
+            close_method=close_function,
         )
 
         return connection

@@ -78,7 +78,11 @@ def snowflake_datasource():
     )
 
 
-data = JsonWrapper.load(open('tests/snowflake/fixture/data.json',))
+data = JsonWrapper.load(
+    open(
+        'tests/snowflake/fixture/data.json',
+    )
+)
 df = pd.DataFrame(
     data,
     columns=[
@@ -91,7 +95,7 @@ df = pd.DataFrame(
         '7 Column Name',
         '8 Column Name',
         '9 Column Name',
-        '10 Column Name'
+        '10 Column Name',
     ],
 )
 
@@ -459,8 +463,8 @@ def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connect
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
 @patch(
     'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
     return_value='shiny token',
@@ -480,8 +484,8 @@ def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_co
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=False)
+@patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
 @patch(
     'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
     return_value='shiny token',
@@ -501,8 +505,8 @@ def test_snowflake_connection_close(gat, is_closed, close, connect, snowflake_co
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
 @patch('requests.post')
 def test_oauth_args_endpoint_not_200(
     req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
@@ -531,8 +535,8 @@ def test_oauth_args_endpoint_not_200(
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
 @patch('requests.post')
 def test_refresh_oauth_token(
     req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
@@ -558,8 +562,8 @@ def test_refresh_oauth_token(
 
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._retrieve_data', return_value=df)
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
 def test_oauth_args_wrong_type_of_auth(
     is_closed,
     close,
