@@ -5,6 +5,7 @@ import pytest
 from mock import patch
 from pandas import DataFrame
 from snowflake.connector import SnowflakeConnection
+from toucan_connectors.json_wrapper import JsonWrapper
 
 from toucan_connectors import DataSlice
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector, SecretsKeeper
@@ -52,138 +53,7 @@ def snowflake_oauth2_datasource():
     )
 
 
-data = {
-    '1 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '2 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '3 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '4 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '5 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '6 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '7 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '8 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '9 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-    '10 Column Name': [
-        '1 value',
-        '2 value',
-        '3 value',
-        '4 value',
-        '5 value',
-        '6 value',
-        '7 value',
-        '8 value',
-        '9 value',
-        '10 value',
-        ...,
-    ],
-}
+data = JsonWrapper.load(open('tests/snowflake_oauth2/fixture/data.json', ))
 df = pd.DataFrame(
     data,
     columns=[
@@ -196,8 +66,7 @@ df = pd.DataFrame(
         '7 Column Name',
         '8 Column Name',
         '9 Column Name',
-        '10 Column Name',
-        ...,
+        '10 Column Name'
     ],
 )
 
@@ -303,7 +172,7 @@ def test_retrieve_data(eq, gc, snowflake_oauth2_connector, snowflake_oauth2_data
 )
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
 def test_retrieve_data_slice(
-    eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
+        eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
 ):
     spy = mocker.spy(SnowflakeCommon, '_execute_query')
     df_result: DataSlice = snowflake_oauth2_connector.get_slice(
@@ -321,7 +190,7 @@ def test_retrieve_data_slice(
 )
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
 def test_retrieve_data_slice_with_limit(
-    eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
+        eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
 ):
     spy = mocker.spy(SnowflakeCommon, '_execute_query')
     df_result: DataSlice = snowflake_oauth2_connector.get_slice(
@@ -339,7 +208,7 @@ def test_retrieve_data_slice_with_limit(
 )
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
 def test_retrieve_data_slice_too_much(
-    eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
+        eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
 ):
     spy = mocker.spy(SnowflakeCommon, '_execute_query')
     df_result: DataSlice = snowflake_oauth2_connector.get_slice(
@@ -378,7 +247,7 @@ def test_datasource_get_form(gd, gw, gc, snowflake_oauth2_connector, snowflake_o
     return_value=['database_1', 'database_2'],
 )
 def test_datasource_get_databases(
-    gd, connect, snowflake_oauth2_connector, snowflake_oauth2_datasource
+        gd, connect, snowflake_oauth2_connector, snowflake_oauth2_datasource
 ):
     result = SnowflakeoAuth2DataSource._get_databases(snowflake_oauth2_connector)
     assert len(result) == 2
@@ -387,8 +256,8 @@ def test_datasource_get_databases(
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
     return_value='shiny token',
@@ -405,41 +274,49 @@ def test_snowflake_connect(gat, is_closed, close, connect, snowflake_oauth2_conn
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
     return_value='shiny token',
 )
 def test_snowflake_connection_alive(
-    gat, is_closed, close, connect, snowflake_oauth2_connector, mocker
+        gat, is_closed, close, connect, snowflake_oauth2_connector, mocker
 ):
     snowflake_oauth2_connector._get_connection('test_database', 'test_warehouse')
     cm = SnowflakeoAuth2Connector.get_connection_manager()
+    t1 = cm.time_between_clean
+    t2 = cm.time_keep_alive
     cm.time_between_clean = 1
     cm.time_keep_alive = 5
     time.sleep(4)
     assert is_closed.call_count >= 1
-    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
+    cm.time_between_clean = t1
+    cm.time_keep_alive = t2
+    cm.force_clean()
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.SnowflakeConnection.is_closed', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
     return_value='shiny token',
 )
 def test_snowflake_connection_close(
-    gat, is_closed, close, connect, snowflake_oauth2_connector, mocker
+        gat, is_closed, close, connect, snowflake_oauth2_connector, mocker
 ):
     snowflake_oauth2_connector._get_connection('test_database', 'test_warehouse')
     cm = SnowflakeoAuth2Connector.get_connection_manager()
+    t1 = cm.time_between_clean
+    t2 = cm.time_keep_alive
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
     time.sleep(4)
     assert close.call_count >= 1
-    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
+    cm.time_between_clean = t1
+    cm.time_keep_alive = t2
+    cm.force_clean()
 
 
 def test_build_authorization_url(mocker, snowflake_oauth2_connector):
