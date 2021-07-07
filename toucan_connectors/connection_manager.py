@@ -69,7 +69,6 @@ class ConnectionBO:
 
     def exec_alive(self):
         try:
-            print('exec_alive')
             result = self.alive(self.connection)
             logger.debug(f'Connection alive result {result}')
             return result
@@ -130,7 +129,6 @@ class ConnectionManager:
                 continue
 
     def __clean(self):
-        print('__clean')
         logger.debug(f'Check if connection is alive ({len(self.connection_list)} open connections)')
 
         self.lock = True

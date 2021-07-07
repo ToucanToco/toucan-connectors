@@ -67,6 +67,18 @@ def snowflake_connector():
 
 
 @pytest.fixture
+def snowflake_connector_malformed():
+    return SnowflakeConnector(
+        identifier='snowflake_test',
+        name='test_name',
+        user='test_user',
+        password='test_password',
+        account='test_account',
+        default_warehouse='warehouse_1',
+    )
+
+
+@pytest.fixture
 def snowflake_datasource():
     return SnowflakeDataSource(
         name='test_name',
@@ -446,6 +458,11 @@ def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_c
     cm.force_clean()
 
 
+def test_get_connection_without_authentication_method(snowflake_connector_malformed):
+    result = snowflake_connector_malformed.get_connection_params()
+    assert snowflake_connector_malformed.authentication_method.PLAIN == result['authenticator']
+
+
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
@@ -465,10 +482,7 @@ def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connect
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
 @patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
-@patch(
-    'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
-    return_value='shiny token',
-)
+@patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
 def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_connector):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
     t1 = cm.time_between_clean
@@ -485,11 +499,29 @@ def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_co
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
 @patch(
-    'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
-    return_value='shiny token',
+    'snowflake.connector.connection.SnowflakeConnection.is_closed',
+    side_effect=TypeError('is_closed is not a function'),
 )
+@patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
+def test_snowflake_connection_alive_exception(gat, is_closed, close, connect, snowflake_connector):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
+    t1 = cm.time_between_clean
+    t2 = cm.time_keep_alive
+    cm.time_between_clean = 1
+    cm.time_keep_alive = 1
+    snowflake_connector._get_connection('test_database', 'test_warehouse')
+    time.sleep(4)
+    assert is_closed.call_count == 1
+    cm.time_between_clean = t1
+    cm.time_keep_alive = t2
+    cm.force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
+@patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
 def test_snowflake_connection_close(gat, is_closed, close, connect, snowflake_connector):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
     t1 = cm.time_between_clean
@@ -499,6 +531,31 @@ def test_snowflake_connection_close(gat, is_closed, close, connect, snowflake_co
     snowflake_connector._get_connection('test_database', 'test_warehouse')
     time.sleep(5)
     assert close.call_count >= 1
+    cm.time_between_clean = t1
+    cm.time_keep_alive = t2
+    cm.force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch(
+    'snowflake.connector.connection.SnowflakeConnection.close',
+    side_effect=TypeError('close is not a function'),
+)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
+@patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
+def test_snowflake_connection_close_exception(gat, is_closed, close, connect, snowflake_connector):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
+    t1 = cm.time_between_clean
+    t2 = cm.time_keep_alive
+    cm.time_between_clean = 1
+    cm.time_keep_alive = 1
+    snowflake_connector._get_connection('test_database', 'test_warehouse')
+    time.sleep(1)
+    assert close.call_count == 1
+    assert len(cm.connection_list) == 1
+    time.sleep(5)
+    assert len(cm.connection_list) == 0
+    assert close.call_count == 3
     cm.time_between_clean = t1
     cm.time_keep_alive = t2
     cm.force_clean()
