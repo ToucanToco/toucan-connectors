@@ -12,11 +12,13 @@ from toucan_connectors.common import (
     apply_query_parameters,
     convert_to_printf_templating_style,
     convert_to_qmark_paramstyle,
+    extract_limit,
+    extract_offset,
     extract_table_name,
     fetch,
     is_interpolating_table_name,
     nosql_apply_parameters_to_query,
-    pandas_read_sql, extract_limit, extract_offset,
+    pandas_read_sql,
 )
 
 

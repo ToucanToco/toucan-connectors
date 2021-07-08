@@ -9,7 +9,6 @@ from snowflake.connector import SnowflakeConnection
 from toucan_connectors import DataSlice
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector, SecretsKeeper
-from toucan_connectors.snowflake_common import SnowflakeCommon
 from toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector import (
     SnowflakeoAuth2Connector,
     SnowflakeoAuth2DataSource,
@@ -174,9 +173,7 @@ def test_retrieve_data(eq, gc, snowflake_oauth2_connector, snowflake_oauth2_data
     return_value={'success': True},
 )
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
-def test_retrieve_data_slice(
-    eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource
-):
+def test_retrieve_data_slice(eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource):
     df_result: DataSlice = snowflake_oauth2_connector.get_slice(
         snowflake_oauth2_datasource, offset=0, limit=10
     )
