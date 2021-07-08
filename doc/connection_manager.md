@@ -1,16 +1,16 @@
 # Connection Manager
 
-ConnectionManager is a Class to store and maintain the connection at a provider between 2 requests on the same worker
+ConnectionManager is a Class to store and maintain connections to a data provider, outliving the request response cycle at a single worker level.
 
 ## Why
-In the **gunicorn** workflow, when we received a request, we create the connection, use it and destroy it
-With this workflow, when we received a request, we ask a connection, create it if not exist, use it
+In the previous workflow, when we received a live data request, we created a connection, used it once and immediately closed it.
+With this workflow, when we received a request, we ask a connection, create it if not exist, use it but then it is kept live for further requests.
 
-The clean of connection runs in parallel and close after check if the connection is : 
-- alive
-- has been used since X times
+There is a thread that cleans ConnectionManager and closes connections after checking  first : 
+- whether it is alive
+- if has been used since X times
 
-Method __connect, __alive and __cancel are 
+Method __connect, __alive and __cancel are mandatory to ensure proper functioning
 
 ## How to use
 ````python
@@ -41,4 +41,4 @@ def _get_connection(cm: ConnectionManager, identifier: str):
 ````
 
 # More information
-To have more information about the process, you can refer at this [Confluence Documentation](https://toucantoco.atlassian.net/wiki/spaces/TTA/pages/3018653948/Connection+Manager+-+Query+pool?focusedCommentId=3021308042#comment-3021308042)
+For have more information about the process, you can refer at this [Confluence Documentation](https://toucantoco.atlassian.net/wiki/spaces/TTA/pages/3018653948/Connection+Manager+-+Query+pool?focusedCommentId=3021308042#comment-3021308042)

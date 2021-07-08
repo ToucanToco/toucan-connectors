@@ -93,8 +93,8 @@ class ConnectionBO:
                 self.remove_try += 1
                 raise e
 
-    # Return True when closing or check alive raise Exception 3 times
     def force_to_remove(self):
+        """Return True when closing or if check alive raises Exception 3 times."""
         return self.remove_try >= 3
 
 
@@ -119,7 +119,7 @@ class ConnectionManager:
             else:
                 raise KeyError(k)
 
-    def __remove(self, list_connection_to_remove):
+    def _remove(self, list_connection_to_remove):
         for identifier in list_connection_to_remove:
             try:
                 is_closed = self.connection_list[identifier].exec_close()
@@ -128,7 +128,7 @@ class ConnectionManager:
             except Exception:
                 continue
 
-    def __clean(self):
+    def _clean(self):
         logger.debug(f'Check if connection is alive ({len(self.connection_list)} open connections)')
 
         self.lock = True
@@ -162,22 +162,22 @@ class ConnectionManager:
                 continue
 
         if len(list_connection_to_remove) > 0:
-            self.__remove(list_connection_to_remove)
+            self._remove(list_connection_to_remove)
 
         self.lock = False
 
         self.clean_active = False
-        self.__activate_clean()
+        self._activate_clean()
 
-    def __activate_clean(self, active: Optional[bool] = False):
+    def _activate_clean(self, active: Optional[bool] = False):
         if len(self.connection_list) > 0 and (not self.clean_active or active):
             self.clean_active = True
-            t_clean = threading.Timer(self.time_between_clean, self.__clean)
+            t_clean = threading.Timer(self.time_between_clean, self._clean)
             t_clean.start()
         else:
             self.clean_active = False
 
-    def __create(self, identifier: str, connect_method, alive_method, close_method):
+    def _create(self, identifier: str, connect_method, alive_method, close_method):
         if isinstance(connect_method, types.FunctionType):
             self.connection_list[identifier] = ConnectionBO(
                 status=Status.CONNECTION_IN_PROGRESS,
@@ -186,7 +186,7 @@ class ConnectionManager:
                 close=close_method,
             )
 
-            self.__activate_clean()
+            self._activate_clean()
             c = connect_method()
             if identifier in self.connection_list:
                 self.connection_list[identifier].update(status=Status.AVAILABLE, connection=c)
@@ -196,12 +196,12 @@ class ConnectionManager:
         else:
             raise Exception('Connection is not a method')
 
-    # Retrieve connection when the connection as Status.AVAILABLE or Status.QUERY_IN_PROGRESS
     def __get_wait(
         self, identifier: str, connect_method, alive_method, close_method, retry_time: float
     ):
+        """Retrieve connection when the connection as Status.AVAILABLE or Status.QUERY_IN_PROGRESS"""
         if identifier not in self.connection_list:
-            return self.__create(identifier, connect_method, alive_method, close_method)
+            return self._create(identifier, connect_method, alive_method, close_method)
         elif self.lock or not self.connection_list[identifier].is_ready():
             logger.debug('Connection is in progress')
             time.sleep(self.wait)
@@ -218,19 +218,21 @@ class ConnectionManager:
             logger.debug('Connection is ready')
             return self.connection_list[identifier].get_connection()
 
-    # Retrieve or create connection if not exist in connection_list
     def get(self, identifier: str, connect_method, alive_method, close_method):
+        """Retrieve or create connection if not exist in connection_list"""
         logger.debug(f'Get element in Dict {identifier}')
         if identifier in self.connection_list:
             logging.getLogger(__name__).debug('Connection exist')
             return self.__get_wait(identifier, connect_method, alive_method, close_method, 0)
         else:
             logger.debug('Connection does not exist, create and save it')
-            return self.__create(identifier, connect_method, alive_method, close_method)
+            return self._create(identifier, connect_method, alive_method, close_method)
 
-    # Force to remove all connection
-    # Not use automatically by connection_manager
     def force_clean(self):
+        """
+        Force to remove all connection
+        Not use automatically by connection_manager
+        """
         self.lock = True
         co: ConnectionBO
         identifier: str
