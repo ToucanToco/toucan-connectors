@@ -236,11 +236,6 @@ class SnowflakeConnector(ToucanConnector):
             'session_id': self.identifier,
         }
 
-        if not self.authentication_method:
-            # Default to User/Password authentication method if the parameter
-            # was not set when the connector was created
-            params['authenticator'] = AuthenticationMethodValue.PLAIN
-
         if params['authenticator'] == AuthenticationMethod.PLAIN and self.password:
             params['authenticator'] = AuthenticationMethodValue.PLAIN
             params['password'] = self.password.get_secret_value()
