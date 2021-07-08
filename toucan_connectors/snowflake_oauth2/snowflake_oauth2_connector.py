@@ -195,7 +195,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         return SnowflakeCommon().get_databases(self._get_connection(), database_name)
 
     def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> pd.DataFrame:
-        return SnowflakeCommon()._retrieve_data(
+        return SnowflakeCommon().retrieve_data(
             self._get_connection(data_source.database, data_source.warehouse), data_source
         )
 
