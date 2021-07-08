@@ -1,20 +1,19 @@
-from typing import Optional, Dict, Tuple, List
 import re
+from typing import Dict, Optional, Tuple
 
 from toucan_connectors.common import convert_to_printf_templating_style, convert_to_qmark_paramstyle
 
 
-class SqlQueryManager:
-
+class QueryManager:
     @staticmethod
     def prepare_count_query(
-            query_string: str,
-            query_parameters: Optional[Dict] = None,
-            offset: Optional[int] = None,
-            limit: Optional[int] = None
+        query_string: str,
+        query_parameters: Optional[Dict] = None,
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
     ) -> Tuple[str, list]:
         """ Build the count(*) query from input query """
-        prepared_query, prepared_values = SqlQueryManager.prepare_query(
+        prepared_query, prepared_values = QueryManager.prepare_query(
             query_string, query_parameters, offset, limit
         )
         prepared_query = prepared_query.lower()
@@ -26,9 +25,9 @@ class SqlQueryManager:
 
     @staticmethod
     def count_request_needed(
-            query: str,
-            get_row_count: bool,
-            limit: Optional[int] = None,
+        query: str,
+        get_row_count: bool,
+        limit: Optional[int] = None,
     ) -> bool:
         if get_row_count and 'select' in query.lower():
             if 'limit' in query.lower() or limit:
@@ -37,16 +36,16 @@ class SqlQueryManager:
 
     @staticmethod
     def prepare_query(
-            query: str,
-            query_parameters: Optional[Dict] = None,
-            offset: Optional[int] = None,
-            limit: Optional[int] = None,
+        query: str,
+        query_parameters: Optional[Dict] = None,
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
     ) -> Tuple[str, list]:
         """Prepare actual query by applying parameters and limit / offset retrictions"""
         query = convert_to_printf_templating_style(query)
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
-        extracted_limit = SqlQueryManager.extract_limit(query)
-        extracted_offset = SqlQueryManager.extract_offset(query)
+        extracted_limit = QueryManager.extract_limit(query)
+        extracted_offset = QueryManager.extract_offset(query)
         if limit and offset:
             if extracted_limit and limit < extracted_limit:
                 converted_query = re.sub(r'(?<=limit)\s*\d*', str(limit), converted_query)
