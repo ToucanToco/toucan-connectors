@@ -189,20 +189,21 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         return connection
 
     def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
-        return SnowflakeCommon().get_warehouses(
-            self._get_connection(warehouse=warehouse_name), warehouse_name
-        )
+        with self._get_connection(warehouse=warehouse_name) as connection:
+            result = SnowflakeCommon().get_warehouses(connection, warehouse_name)
+        return result
 
     def _get_databases(self, database_name: Optional[str] = None) -> List[str]:
-        return SnowflakeCommon().get_databases(
-            self._get_connection(database=database_name), database_name
-        )
+        with self._get_connection(database=database_name) as connection:
+            result = SnowflakeCommon().get_databases(connection, database_name)
+        return result
 
     def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> pd.DataFrame:
-        return SnowflakeCommon().retrieve_data(
-            self._get_connection(database=data_source.database, warehouse=data_source.warehouse),
-            data_source,
-        )
+        with self._get_connection(
+            database=data_source.database, warehouse=data_source.warehouse
+        ) as connection:
+            result = SnowflakeCommon().retrieve_data(connection, data_source)
+        return result
 
     def get_slice(
         self,
@@ -211,12 +212,16 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         offset: int = 0,
         limit: Optional[int] = None,
     ) -> DataSlice:
-        return SnowflakeCommon().get_slice(
-            self._get_connection(database=data_source.database, warehouse=data_source.warehouse),
-            data_source,
-            offset=offset,
-            limit=limit,
-        )
+        with self._get_connection(
+            database=data_source.database, warehouse=data_source.warehouse
+        ) as connection:
+            result = SnowflakeCommon().get_slice(
+                connection,
+                data_source,
+                offset=offset,
+                limit=limit,
+            )
+        return result
 
     @staticmethod
     def get_connection_manager():

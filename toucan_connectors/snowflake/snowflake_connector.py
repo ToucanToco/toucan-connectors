@@ -39,6 +39,7 @@ if not snowflake_connection_manager:
         name='snowflake', timeout=10, wait=0.2, time_between_clean=10, time_keep_alive=600
     )
 
+
 class Path(str):
     @classmethod
     def __get_validators__(cls):
@@ -394,19 +395,19 @@ class SnowflakeConnector(ToucanConnector):
         return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
 
     def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
-        return SnowflakeCommon().get_warehouses(
-            self._get_connection(warehouse=warehouse_name), warehouse_name
-        )
+        with self._get_connection(warehouse=warehouse_name) as connection:
+            result = SnowflakeCommon().get_warehouses(connection, warehouse_name)
+        return result
 
     def _get_databases(self, database_name: Optional[str] = None) -> List[str]:
-        return SnowflakeCommon().get_databases(
-            self._get_connection(database=database_name), database_name
-        )
+        with self._get_connection(database=database_name) as connection:
+            result = SnowflakeCommon().get_databases(connection, database_name)
+        return result
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
-        return SnowflakeCommon().retrieve_data(
-            self._get_connection(data_source.database, data_source.warehouse), data_source
-        )
+        with self._get_connection(data_source.database, data_source.warehouse) as connection:
+            result = SnowflakeCommon().retrieve_data(connection, data_source)
+        return result
 
     def get_slice(
         self,

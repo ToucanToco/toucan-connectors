@@ -19,7 +19,6 @@ from toucan_connectors.snowflake import (
     SnowflakeConnector,
     SnowflakeDataSource,
 )
-from toucan_connectors.snowflake_common import SnowflakeCommon
 
 OAUTH_TOKEN_ENDPOINT = 'http://example.com/endpoint'
 OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE = 'application/x-www-form-urlencoded'
@@ -112,24 +111,25 @@ df = pd.DataFrame(
 )
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.snowflake_common.SnowflakeCommon.get_databases',
     return_value=['database_1', 'database_2'],
 )
-def test_datasource_get_databases(gd, gc, snowflake_connector, snowflake_datasource):
+def test_datasource_get_databases(
+    gd, is_closed, close, connect, snowflake_connector, snowflake_datasource
+):
     result = snowflake_datasource._get_databases(snowflake_connector)
     assert len(result) == 2
     assert result[1] == 'database_2'
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
     return_value=['warehouse_1', 'warehouse_2'],
@@ -138,7 +138,9 @@ def test_datasource_get_databases(gd, gc, snowflake_connector, snowflake_datasou
     'toucan_connectors.snowflake_common.SnowflakeCommon.get_databases',
     return_value=['database_1', 'database_2'],
 )
-def test_datasource_get_form(gd, gw, gc, snowflake_connector, snowflake_datasource):
+def test_datasource_get_form(
+    gd, gw, is_closed, close, connect, snowflake_connector, snowflake_datasource
+):
     result = snowflake_datasource.get_form(snowflake_connector, {})
     assert 'warehouse_1' == result['properties']['warehouse']['default']
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
@@ -167,15 +169,14 @@ def test_set_warehouse_without_default_warehouse(snowflake_datasource):
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.snowflake_common.SnowflakeCommon.get_databases',
     return_value=['database_1', 'database_2'],
 )
-def test_get_database_without_filter(gd, gc, snowflake_connector):
+def test_get_database_without_filter(gd, is_closed, close, connect, snowflake_connector):
     result = snowflake_connector._get_databases()
     assert result[0] == 'database_1'
     assert result[1] == 'database_2'
@@ -183,125 +184,117 @@ def test_get_database_without_filter(gd, gc, snowflake_connector):
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.snowflake_common.SnowflakeCommon.get_databases', return_value=['database_1']
 )
-def test_get_database_with_filter_found(gd, gc, snowflake_connector):
+def test_get_database_with_filter_found(gd, is_closed, close, connect, snowflake_connector):
     result = snowflake_connector._get_databases('database_1')
     assert result[0] == 'database_1'
     assert len(result) == 1
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon.get_databases', return_value=[])
-def test_get_database_with_filter_not_found(gd, gc, snowflake_connector):
+def test_get_database_with_filter_not_found(gd, is_closed, close, connect, snowflake_connector):
     result = snowflake_connector._get_databases('database_3')
     assert len(result) == 0
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
     return_value=['warehouse_1', 'warehouse_2'],
 )
-def test_get_warehouse_without_filter(gw, gc, snowflake_connector):
+def test_get_warehouse_without_filter(gw, is_closed, close, connect, snowflake_connector):
     result = snowflake_connector._get_warehouses()
     assert result[0] == 'warehouse_1'
     assert result[1] == 'warehouse_2'
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
     return_value=['warehouse_1'],
 )
-def test_get_warehouse_with_filter_found(gw, gc, snowflake_connector):
+def test_get_warehouse_with_filter_found(gw, is_closed, close, connect, snowflake_connector):
     result = snowflake_connector._get_warehouses('warehouse_1')
     assert result[0] == 'warehouse_1'
     assert len(result) == 1
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses', return_value=[])
-def test_get_warehouse_with_filter_not_found(gw, gc, snowflake_connector):
+def test_get_warehouse_with_filter_not_found(gw, is_closed, close, connect, snowflake_connector):
     result = snowflake_connector._get_warehouses('warehouse_3')
     assert len(result) == 0
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
-def test_retrieve_data(eq, gc, snowflake_connector, snowflake_datasource, mocker):
-    spy = mocker.spy(SnowflakeCommon, '_execute_query')
-
+def test_retrieve_data(
+    eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
+):
     df_result: DataFrame = snowflake_connector._retrieve_data(snowflake_datasource)
 
-    assert spy.call_count == 1
+    assert eq.call_count == 1
     assert 11 == len(df_result)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
-def test_retrieve_data_slice(eq, gc, snowflake_connector, snowflake_datasource, mocker):
-    spy = mocker.spy(SnowflakeCommon, '_execute_query')
+def test_retrieve_data_slice(
+    eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
+):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource)
-    assert spy.call_count == 1
+    assert eq.call_count == 1
     assert 11 == len(df_result.df)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
 def test_retrieve_data_slice_offset_limit(
-    eq, gc, snowflake_connector, snowflake_datasource, mocker
+    eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
-    spy = mocker.spy(SnowflakeCommon, '_execute_query')
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=5, limit=3)
-    assert spy.call_count == 1
+    assert eq.call_count == 1
     assert 3 == len(df_result.df)
     assert 3 == df_result.stats.total_returned_rows
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
-def test_retrieve_data_slice_too_much(eq, gc, snowflake_connector, snowflake_datasource, mocker):
-    spy = mocker.spy(SnowflakeCommon, '_execute_query')
+def test_retrieve_data_slice_too_much(
+    eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
+):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=10, limit=20)
-    assert spy.call_count == 1
+    assert eq.call_count == 1
     assert 1 == len(df_result.df)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -329,39 +322,42 @@ def test_schema_fields_order():
     assert schema_props_keys == ordered_keys
 
 
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
     return_value=['warehouse_1'],
 )
-@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-def test_get_status_all_good(connect, gw, snowflake_connector):
+def test_get_status_all_good(gw, is_closed, close, connect, snowflake_connector):
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
         status=True, details=[('Connection to Snowflake', True), ('Default warehouse exists', True)]
     )
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch(
     'toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses',
     return_value=['warehouse_1'],
 )
-def test_get_status(gc, gw, snowflake_connector):
+def test_get_status(gw, is_closed, close, connect, snowflake_connector):
     connector_status = snowflake_connector.get_status()
     assert connector_status.status
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
-@patch(
-    'toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._get_connection',
-    return_value={'success': True},
-)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses', return_value=[])
-def test_get_status_without_warehouses(gw, gc, snowflake_connector):
+def test_get_status_without_warehouses(gw, is_closed, close, connect, snowflake_connector):
     connector_status = snowflake_connector.get_status()
     assert not connector_status.status
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
 @patch(
@@ -456,11 +452,6 @@ def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_c
     assert connect.call_args_list[0][1]['database'] == 'test_database'
     assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
     cm.force_clean()
-
-
-def test_get_connection_without_authentication_method(snowflake_connector_malformed):
-    result = snowflake_connector_malformed.get_connection_params()
-    assert 'snowflake' == result['authenticator']
 
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
