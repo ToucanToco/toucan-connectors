@@ -9,6 +9,7 @@ from snowflake.connector import DictCursor
 
 from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
+
 from toucan_connectors.toucan_connector import DataSlice, DataStats, ToucanDataSource
 
 
