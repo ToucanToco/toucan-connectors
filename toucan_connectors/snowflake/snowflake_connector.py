@@ -277,9 +277,7 @@ class SnowflakeConnector(ToucanConnector):
                 )
 
     def _get_connection(self, database: str = None, warehouse: str = None) -> SnowflakeConnection:
-        def connect_function(
-            d: Optional[str] = None, w: Optional[str] = None
-        ) -> SnowflakeConnection:
+        def connect_function() -> SnowflakeConnection:
             logger.info('Connect at Snowflake')
             snowflake.connector.paramstyle = 'qmark'
             if self.authentication_method == AuthenticationMethod.OAUTH:
@@ -298,10 +296,12 @@ class SnowflakeConnector(ToucanConnector):
 
             connection_params = self.get_connection_params()
             logger.info(
-                f'Connect at Snowflake with {connection_params}, database {d} and warehouse {w}'
+                f'Connect at Snowflake with {connection_params}, database {database} and warehouse {warehouse}'
             )
             connect_start = timer()
-            connection = snowflake.connector.connect(**connection_params, database=d, warehouse=w)
+            connection = snowflake.connector.connect(
+                **connection_params, database=database, warehouse=warehouse
+            )
             connect_end = timer()
             logger.info(
                 f'[benchmark] - connect {connect_end - connect_start} seconds',
@@ -318,7 +318,7 @@ class SnowflakeConnector(ToucanConnector):
             logger.debug('Check Snowflake connection alive')
             if hasattr(conn, 'is_closed'):
                 try:
-                    return conn.is_closed()
+                    return not conn.is_closed()
                 except Exception:
                     raise TypeError('is_closed is not a function')
 
@@ -332,7 +332,7 @@ class SnowflakeConnector(ToucanConnector):
 
         connection = snowflake_connection_manager.get(
             identifier=self.identifier,
-            connect_method=lambda: connect_function(database, warehouse),
+            connect_method=connect_function,
             alive_method=alive_function,
             close_method=close_function,
         )
@@ -394,13 +394,16 @@ class SnowflakeConnector(ToucanConnector):
         return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
 
     def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
-        return SnowflakeCommon().get_warehouses(self._get_connection(), warehouse_name)
+        return SnowflakeCommon().get_warehouses(
+            self._get_connection(warehouse=warehouse_name), warehouse_name
+        )
 
     def _get_databases(self, database_name: Optional[str] = None) -> List[str]:
-        return SnowflakeCommon().get_databases(self._get_connection(), database_name)
+        return SnowflakeCommon().get_databases(
+            self._get_connection(database=database_name), database_name
+        )
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
-        data_source = self._set_warehouse(data_source)
         return SnowflakeCommon().retrieve_data(
             self._get_connection(data_source.database, data_source.warehouse), data_source
         )
