@@ -66,7 +66,6 @@ class SnowflakeCommon:
         limit: Optional[int] = None,
         get_row_count=False,
     ) -> pd.DataFrame:
-
         execution_start = timer()
         cursor = connection.cursor(DictCursor)
         query_res = cursor.execute(query, query_parameters)
@@ -114,7 +113,7 @@ class SnowflakeCommon:
 
     def _execute_parallelized_queries(
         self,
-        c,
+        connection,
         query: str,
         query_parameters: Optional[Dict] = None,
         offset: Optional[int] = None,
@@ -128,9 +127,10 @@ class SnowflakeCommon:
             max_workers=2 if is_count_request_needed else 1
         ) as executor:
             prepared_query, prepared_query_parameters = self._prepare_query(query, query_parameters)
+            print('test', prepared_query, prepared_query_parameters)
             future_1 = executor.submit(
                 self._execute_query,
-                c,
+                connection,
                 prepared_query,
                 prepared_query_parameters,
                 offset,
@@ -144,9 +144,10 @@ class SnowflakeCommon:
                 prepared_query_count, prepared_query_parameters_count = self._prepare_count_query(
                     query, query_parameters
                 )
+                print('test', prepared_query_count, prepared_query_parameters_count)
                 future_2 = executor.submit(
                     self._execute_query,
-                    c,
+                    connection,
                     prepared_query_count,
                     prepared_query_parameters_count,
                     offset,

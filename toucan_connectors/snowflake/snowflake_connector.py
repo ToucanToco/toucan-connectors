@@ -395,19 +395,19 @@ class SnowflakeConnector(ToucanConnector):
         return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
 
     def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
-        return SnowflakeCommon().get_warehouses(
-            self._get_connection(warehouse=warehouse_name), warehouse_name
-        )
+        with self._get_connection(warehouse=warehouse_name) as connection:
+            result = SnowflakeCommon().get_warehouses(connection, warehouse_name)
+        return result
 
     def _get_databases(self, database_name: Optional[str] = None) -> List[str]:
-        return SnowflakeCommon().get_databases(
-            self._get_connection(database=database_name), database_name
-        )
+        with self._get_connection(database=database_name) as connection:
+            result = SnowflakeCommon().get_databases(connection, database_name)
+        return result
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
-        return SnowflakeCommon().retrieve_data(
-            self._get_connection(data_source.database, data_source.warehouse), data_source
-        )
+        with self._get_connection(data_source.database, data_source.warehouse) as connection:
+            result = SnowflakeCommon().retrieve_data(connection, data_source)
+        return result
 
     def get_slice(
         self,
@@ -417,12 +417,14 @@ class SnowflakeConnector(ToucanConnector):
         limit: Optional[int] = None,
     ) -> DataSlice:
         data_source = self._set_warehouse(data_source)
-        return SnowflakeCommon().get_slice(
-            self._get_connection(data_source.database, data_source.warehouse),
-            data_source,
-            offset=offset,
-            limit=limit,
-        )
+        with self._get_connection(data_source.database, data_source.warehouse) as connection:
+            result = SnowflakeCommon().get_slice(
+                connection,
+                data_source,
+                offset=offset,
+                limit=limit,
+            )
+        return result
 
     @staticmethod
     def get_snowflake_connection_manager():
