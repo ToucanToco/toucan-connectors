@@ -129,7 +129,9 @@ class ConnectionManager:
                 continue
 
     def _clean(self):
-        logger.debug(f'Check if connection is alive ({len(self.connection_list)} open connections)')
+        logger.debug(
+            f'{self} - Check if connection exists ({len(self.connection_list)} open connections)'
+        )
 
         self.lock = True
 

@@ -541,7 +541,7 @@ def test_snowflake_connection_close(gat, is_closed, close, connect, snowflake_co
     'snowflake.connector.connection.SnowflakeConnection.close',
     side_effect=TypeError('close is not a function'),
 )
-@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=True)
 @patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
 def test_snowflake_connection_close_exception(gat, is_closed, close, connect, snowflake_connector):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
@@ -552,7 +552,6 @@ def test_snowflake_connection_close_exception(gat, is_closed, close, connect, sn
     snowflake_connector._get_connection('test_database', 'test_warehouse')
     time.sleep(1)
     assert close.call_count == 1
-    assert len(cm.connection_list) == 1
     time.sleep(5)
     assert len(cm.connection_list) == 0
     assert close.call_count == 3

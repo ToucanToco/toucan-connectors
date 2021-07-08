@@ -166,7 +166,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             logger.info('Check Snowflake connection')
             if hasattr(conn, 'is_closed'):
                 try:
-                    return conn.is_closed()
+                    return not conn.is_closed()
                 except Exception:
                     raise TypeError('is_closed is not a function')
 
@@ -189,14 +189,19 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         return connection
 
     def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
-        return SnowflakeCommon().get_warehouses(self._get_connection(), warehouse_name)
+        return SnowflakeCommon().get_warehouses(
+            self._get_connection(warehouse=warehouse_name), warehouse_name
+        )
 
     def _get_databases(self, database_name: Optional[str] = None) -> List[str]:
-        return SnowflakeCommon().get_databases(self._get_connection(), database_name)
+        return SnowflakeCommon().get_databases(
+            self._get_connection(database=database_name), database_name
+        )
 
     def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> pd.DataFrame:
         return SnowflakeCommon().retrieve_data(
-            self._get_connection(data_source.database, data_source.warehouse), data_source
+            self._get_connection(database=data_source.database, warehouse=data_source.warehouse),
+            data_source,
         )
 
     def get_slice(
@@ -207,7 +212,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         limit: Optional[int] = None,
     ) -> DataSlice:
         return SnowflakeCommon().get_slice(
-            self._get_connection(data_source.database, data_source.warehouse),
+            self._get_connection(database=data_source.database, warehouse=data_source.warehouse),
             data_source,
             offset=offset,
             limit=limit,

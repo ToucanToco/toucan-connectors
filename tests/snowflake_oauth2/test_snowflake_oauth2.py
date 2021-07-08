@@ -311,7 +311,7 @@ def test_snowflake_connection_alive_exception(
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
     time.sleep(4)
-    assert is_closed.call_count == 1
+    assert is_closed.call_count >= 1
     cm.time_between_clean = t1
     cm.time_keep_alive = t2
     cm.force_clean()
