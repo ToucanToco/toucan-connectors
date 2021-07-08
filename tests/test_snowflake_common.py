@@ -121,7 +121,7 @@ def test_get_warehouse_with_filter_one_result(warehouse_result, execute_query, c
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
 def test_retrieve_data(result, execute_query, connect, snowflake_datasource, mocker):
-    df: pd.DataFrame = SnowflakeCommon()._retrieve_data(connect, snowflake_datasource)
+    df: pd.DataFrame = SnowflakeCommon().retrieve_data(connect, snowflake_datasource)
     assert result.call_count == 1
     assert len(df) == 14
 

@@ -162,10 +162,9 @@ def test_get_warehouse_with_filter_not_found(gw, gc, snowflake_oauth2_connector)
     return_value={'success': True},
 )
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
-def test_retrieve_data(eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker):
-    spy = mocker.spy(SnowflakeCommon, '_execute_query')
+def test_retrieve_data(eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource):
     df_result: DataFrame = snowflake_oauth2_connector._retrieve_data(snowflake_oauth2_datasource)
-    assert spy.call_count == 1
+    assert eq.call_count == 1
     assert 11 == len(df_result)
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
@@ -176,15 +175,14 @@ def test_retrieve_data(eq, gc, snowflake_oauth2_connector, snowflake_oauth2_data
 )
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
 def test_retrieve_data_slice(
-    eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
+    eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource
 ):
-    spy = mocker.spy(SnowflakeCommon, '_execute_query')
     df_result: DataSlice = snowflake_oauth2_connector.get_slice(
         snowflake_oauth2_datasource, offset=0, limit=10
     )
-    assert spy.call_count == 1
+    assert eq.call_count == 1
     assert 11 == len(df_result.df)
-    assert 11 == df_result.total_count
+    assert 11 == df_result.stats.total_returned_rows
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
@@ -194,15 +192,14 @@ def test_retrieve_data_slice(
 )
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
 def test_retrieve_data_slice_with_limit(
-    eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
+    eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource
 ):
-    spy = mocker.spy(SnowflakeCommon, '_execute_query')
     df_result: DataSlice = snowflake_oauth2_connector.get_slice(
         snowflake_oauth2_datasource, offset=5, limit=3
     )
-    assert spy.call_count == 1
+    assert eq.call_count == 1
     assert 3 == len(df_result.df)
-    assert 3 == df_result.total_count
+    assert 3 == df_result.stats.total_returned_rows
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
@@ -212,15 +209,14 @@ def test_retrieve_data_slice_with_limit(
 )
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
 def test_retrieve_data_slice_too_much(
-    eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource, mocker
+    eq, gc, snowflake_oauth2_connector, snowflake_oauth2_datasource
 ):
-    spy = mocker.spy(SnowflakeCommon, '_execute_query')
     df_result: DataSlice = snowflake_oauth2_connector.get_slice(
         snowflake_oauth2_datasource, offset=10, limit=20
     )
-    assert spy.call_count == 1
+    assert eq.call_count == 1
     assert 1 == len(df_result.df)
-    assert 1 == df_result.total_count
+    assert 1 == df_result.stats.total_returned_rows
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 

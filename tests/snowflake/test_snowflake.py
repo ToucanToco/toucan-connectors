@@ -289,7 +289,7 @@ def test_retrieve_data_slice_offset_limit(
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=5, limit=3)
     assert spy.call_count == 1
     assert 3 == len(df_result.df)
-    assert 3 == df_result.total_count
+    assert 3 == df_result.stats.total_returned_rows
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
@@ -617,7 +617,7 @@ def test_refresh_oauth_token(
         assert True
 
 
-@patch('toucan_connectors.snowflake_common.SnowflakeCommon._retrieve_data', return_value=df)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
 @patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)

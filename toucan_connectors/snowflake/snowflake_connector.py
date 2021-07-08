@@ -407,7 +407,7 @@ class SnowflakeConnector(ToucanConnector):
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         data_source = self._set_warehouse(data_source)
-        return SnowflakeCommon()._retrieve_data(
+        return SnowflakeCommon().retrieve_data(
             self._get_connection(data_source.database, data_source.warehouse), data_source
         )
 
