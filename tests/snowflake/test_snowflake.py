@@ -440,24 +440,6 @@ def test_account_failed_for_user(is_closed, close, connect, gw, snowflake_connec
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
-def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_connector_oauth):
-    cm = SnowflakeConnector.get_snowflake_connection_manager()
-    snowflake_connector_oauth._get_connection('test_database', 'test_warehouse')
-    assert rt.call_count == 1
-    assert connect.call_args_list[0][1]['account'] == 'test_account'
-    assert (
-        connect.call_args_list[0][1]['token']
-        == 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjQyLCJzdWIiOiJzbm93Zmxha2VfdXNlciJ9.NJDbR-tAepC_ANrg9m5PozycbcuWDgGi4o9sN9Pl27k'
-    )
-    assert connect.call_args_list[0][1]['database'] == 'test_database'
-    assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
-    cm.force_clean()
-
-
-@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
-@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
-@patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
 def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connector):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
     snowflake_connector._get_connection('test_database', 'test_warehouse')
@@ -551,9 +533,30 @@ def test_snowflake_connection_close_exception(gat, is_closed, close, connect, sn
     cm.force_clean()
 
 
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
 @patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
+def test_oauth_args_wrong_type_of_auth(
+    is_closed,
+    close,
+    connect,
+    retrieve_data,
+    snowflake_connector_oauth,
+    snowflake_datasource,
+    mocker,
+):
+    spy = mocker.spy(SnowflakeConnector, '_refresh_oauth_token')
+
+    snowflake_connector_oauth.authentication_method = AuthenticationMethod.PLAIN
+    snowflake_connector_oauth._retrieve_data(snowflake_datasource)
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+    assert spy.call_count == 0
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('requests.post')
 def test_oauth_args_endpoint_not_200(
     req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
@@ -583,8 +586,8 @@ def test_oauth_args_endpoint_not_200(
 
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('requests.post')
 def test_refresh_oauth_token(
     req_mock,
@@ -595,6 +598,7 @@ def test_refresh_oauth_token(
     snowflake_connector_oauth,
     snowflake_datasource,
 ):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
     snowflake_connector_oauth.user_tokens_keeper.access_token = SecretStr(
         jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
     )
@@ -604,32 +608,29 @@ def test_refresh_oauth_token(
 
     try:
         snowflake_connector_oauth._retrieve_data(snowflake_datasource)
-        SnowflakeConnector.get_snowflake_connection_manager().force_clean()
         assert req_mock.call_count == 1
     except Exception as e:
-        SnowflakeConnector.get_snowflake_connection_manager().force_clean()
         assert str(e) == 'HTTP Error 401: Unauthorized'
         assert False
     else:
         assert True
+    finally:
+        cm.force_clean()
 
 
-@patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
-@patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
-def test_oauth_args_wrong_type_of_auth(
-    is_closed,
-    close,
-    connect,
-    retrieve_data,
-    snowflake_connector_oauth,
-    snowflake_datasource,
-    mocker,
-):
-    spy = mocker.spy(SnowflakeConnector, '_refresh_oauth_token')
-
-    snowflake_connector_oauth.authentication_method = AuthenticationMethod.PLAIN
-    snowflake_connector_oauth._retrieve_data(snowflake_datasource)
-    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
-    assert spy.call_count == 0
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
+def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_connector_oauth):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
+    snowflake_connector_oauth._get_connection('test_database', 'test_warehouse')
+    assert rt.call_count == 1
+    assert connect.call_args_list[0][1]['account'] == 'test_account'
+    assert (
+        connect.call_args_list[0][1]['token']
+        == 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjQyLCJzdWIiOiJzbm93Zmxha2VfdXNlciJ9.NJDbR-tAepC_ANrg9m5PozycbcuWDgGi4o9sN9Pl27k'
+    )
+    assert connect.call_args_list[0][1]['database'] == 'test_database'
+    assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
+    cm.force_clean()
