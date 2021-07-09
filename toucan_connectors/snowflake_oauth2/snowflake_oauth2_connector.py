@@ -134,11 +134,12 @@ class SnowflakeoAuth2Connector(ToucanConnector):
                 'role': self.role if self.role else '',
             }
             logger.info(
-                f'[benchmark] - get_access_token {token_end - token_start} seconds',
+                f'[benchmark][snowflake] - get_access_token {token_end - token_start} seconds',
                 extra={
                     'benchmark': {
                         'operation': 'get_access_token',
                         'execution_time': token_end - token_start,
+                        'connector': 'snowflake',
                     }
                 },
             )
@@ -152,11 +153,12 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             )
             connect_end = timer()
             logger.info(
-                f'[benchmark] - connect {connect_end - connect_start} seconds',
+                f'[benchmark][snowflake] - connect {connect_end - connect_start} seconds',
                 extra={
                     'benchmark': {
                         'operation': 'connect',
                         'execution_time': connect_end - connect_start,
+                        'connector': 'snowflake',
                     }
                 },
             )
@@ -174,7 +176,19 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             logger.debug('Close Snowflake connection')
             if hasattr(conn, 'close'):
                 try:
+                    close_start = timer()
                     r = conn.close()
+                    close_end = timer()
+                    logger.info(
+                        f'[benchmark][snowflake] - close {close_end - close_start} seconds',
+                        extra={
+                            'benchmark': {
+                                'operation': 'close',
+                                'execution_time': close_end - close_start,
+                                'connector': 'snowflake',
+                            }
+                        },
+                    )
                     return r
                 except Exception:
                     raise TypeError('close is not a function')
