@@ -318,8 +318,10 @@ class SnowflakeConnector(ToucanConnector):
             logger.debug('Check Snowflake connection alive')
             if hasattr(conn, 'is_closed'):
                 try:
+                    print('test alive_function')
                     return not conn.is_closed()
                 except Exception:
+                    print('test alive_function exception')
                     raise TypeError('is_closed is not a function')
 
         def close_function(conn):
