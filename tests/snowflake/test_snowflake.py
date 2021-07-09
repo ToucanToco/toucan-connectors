@@ -472,7 +472,7 @@ def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connect
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=True)
 @patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
 def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_connector):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
@@ -481,7 +481,7 @@ def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_co
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
     snowflake_connector._get_connection('test_database', 'test_warehouse')
-    time.sleep(2)
+    time.sleep(3)
     assert is_closed.call_count >= 1
     cm.time_between_clean = t1
     cm.time_keep_alive = t2
@@ -581,12 +581,19 @@ def test_oauth_args_endpoint_not_200(
         assert False
 
 
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
 @patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
 @patch('requests.post')
 def test_refresh_oauth_token(
-    req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
+    req_mock,
+    is_closed,
+    close,
+    connect,
+    retrieve_data,
+    snowflake_connector_oauth,
+    snowflake_datasource,
 ):
     snowflake_connector_oauth.user_tokens_keeper.access_token = SecretStr(
         jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')

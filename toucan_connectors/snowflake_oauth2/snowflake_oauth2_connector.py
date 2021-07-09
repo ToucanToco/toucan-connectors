@@ -163,7 +163,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             return connection
 
         def alive_function(conn: SnowflakeConnection) -> Any:
-            logger.info('Check Snowflake connection')
+            logger.debug('Check Snowflake connection')
             if hasattr(conn, 'is_closed'):
                 try:
                     return not conn.is_closed()
@@ -171,7 +171,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
                     raise TypeError('is_closed is not a function')
 
         def close_function(conn: SnowflakeConnection) -> None:
-            logger.info('Close Snowflake connection')
+            logger.debug('Close Snowflake connection')
             if hasattr(conn, 'close'):
                 try:
                     r = conn.close()
