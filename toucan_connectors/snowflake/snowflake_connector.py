@@ -291,6 +291,7 @@ class SnowflakeConnector(ToucanConnector):
                         'benchmark': {
                             'operation': '_refresh_oauth_token',
                             'execution_time': token_end - token_start,
+                            'connector': 'snowflake',
                         }
                     },
                 )
@@ -305,11 +306,12 @@ class SnowflakeConnector(ToucanConnector):
             )
             connect_end = timer()
             logger.info(
-                f'[benchmark] - connect {connect_end - connect_start} seconds',
+                f'[benchmark][snowflake] - connect {connect_end - connect_start} seconds',
                 extra={
                     'benchmark': {
                         'operation': 'connect',
                         'execution_time': connect_end - connect_start,
+                        'connector': 'snowflake',
                     }
                 },
             )
@@ -327,7 +329,20 @@ class SnowflakeConnector(ToucanConnector):
             logger.info('Close Snowflake connection')
             if hasattr(conn, 'close'):
                 try:
-                    return conn.close()
+                    close_start = timer()
+                    r = conn.close()
+                    close_end = timer()
+                    logger.info(
+                        f'[benchmark][snowflake] - close {close_end - close_start} seconds',
+                        extra={
+                            'benchmark': {
+                                'operation': 'close',
+                                'execution_time': close_end - close_start,
+                                'connector': 'snowflake',
+                            }
+                        },
+                    )
+                    return r
                 except Exception:
                     raise TypeError('close is not a function')
 

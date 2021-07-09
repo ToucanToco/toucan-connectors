@@ -74,11 +74,12 @@ class GoogleBigQueryConnector(ToucanConnector):
         )
         end = timer()
         logging.getLogger(__name__).info(
-            f'[benchmark] - execute {end - start} seconds',
+            f'[benchmark][google_big_query] - execute {end - start} seconds',
             extra={
                 'benchmark': {
                     'operation': 'execute',
                     'execution_time': end - start,
+                    'connector': 'google_big_query',
                 }
             },
         )

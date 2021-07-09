@@ -72,11 +72,12 @@ class SnowflakeCommon:
         execution_end = timer()
         execution_time = execution_end - execution_start
         self.logger.info(
-            f'[benchmark] - execute {execution_time} seconds',
+            f'[benchmark][snowflake] - execute {execution_time} seconds',
             extra={
                 'benchmark': {
                     'operation': 'execute',
                     'execution_time': execution_time,
+                    'connector': 'snowflake',
                 }
             },
         )
@@ -99,11 +100,12 @@ class SnowflakeCommon:
         convert_end = timer()
         conversion_time = convert_end - convert_start
         self.logger.info(
-            f'[benchmark] - dataframe {conversion_time} seconds',
+            f'[benchmark][snowflake] - dataframe {conversion_time} seconds',
             extra={
                 'benchmark': {
                     'operation': 'dataframe',
                     'execution_time': conversion_time,
+                    'connector': 'snowflake',
                 }
             },
         )
