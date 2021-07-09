@@ -454,14 +454,14 @@ def test_get_connection_connect(rt, is_closed, close, connect, snowflake_connect
 
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
-@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=True)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
 @patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
 def test_snowflake_connection_alive(gat, is_closed, close, connect, snowflake_connector):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
     t1 = cm.time_between_clean
     t2 = cm.time_keep_alive
     cm.time_between_clean = 1
-    cm.time_keep_alive = 1
+    cm.time_keep_alive = 5
     snowflake_connector._get_connection('test_database', 'test_warehouse')
     time.sleep(3)
     assert is_closed.call_count >= 1
