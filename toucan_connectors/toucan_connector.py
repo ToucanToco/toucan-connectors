@@ -39,6 +39,8 @@ class DataSlice(NamedTuple):
     """
 
     df: pd.DataFrame  # the dataframe of the slice
+    # TODO total_count field should be removed
+    total_count: int  # the length of the raw dataframe (without slicing)
     input_parameters: Optional[dict] = None
     stats: Optional[DataStats] = None
 

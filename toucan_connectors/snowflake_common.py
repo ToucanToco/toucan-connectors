@@ -129,7 +129,6 @@ class SnowflakeCommon:
             max_workers=2 if is_count_request_needed else 1
         ) as executor:
             prepared_query, prepared_query_parameters = self._prepare_query(query, query_parameters)
-            print('test', prepared_query, prepared_query_parameters)
             future_1 = executor.submit(
                 self._execute_query,
                 connection,
@@ -146,7 +145,6 @@ class SnowflakeCommon:
                 prepared_query_count, prepared_query_parameters_count = self._prepare_count_query(
                     query, query_parameters
                 )
-                print('test', prepared_query_count, prepared_query_parameters_count)
                 future_2 = executor.submit(
                     self._execute_query,
                     connection,
