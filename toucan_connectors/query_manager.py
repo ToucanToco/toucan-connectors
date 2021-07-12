@@ -5,6 +5,8 @@ from toucan_connectors.common import convert_to_printf_templating_style, convert
 
 
 class QueryManager:
+    check_regex = []
+
     @staticmethod
     def prepare_count_query(
         query_string: str,
@@ -43,9 +45,11 @@ class QueryManager:
     ) -> Tuple[str, list]:
         """Prepare actual query by applying parameters and limit / offset retrictions"""
         query = convert_to_printf_templating_style(query)
+
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
         extracted_limit = QueryManager.extract_limit(query)
         extracted_offset = QueryManager.extract_offset(query)
+
         if limit and offset:
             if extracted_limit and limit < extracted_limit:
                 converted_query = re.sub(r'(?<=limit)\s*\d*', str(limit), converted_query)
@@ -56,7 +60,18 @@ class QueryManager:
                 converted_query = f'{converted_query.replace(";", "")} LIMIT {limit};'
                 if offset:
                     converted_query = f'{converted_query.replace(";", "")} OFFSET {offset};'
+
         return converted_query, ordered_values
+
+    @staticmethod
+    def filter_request(query: str, limit: Optional[int]):
+        with_sub_query = len(re.findall(r'(?i)^select.*select.*', query)) >= 1
+        if with_sub_query:
+            print('sub_query')
+            return len(re.findall(r'(?i).*(limit|count|max|min|sum|avg).*select.*', query)) >= 1
+        else:
+            print('query')
+            return len(re.findall(r'(?i).*(limit|count|max|min|sum|avg).*', query)) >= 1
 
     @staticmethod
     def extract_limit(query: str) -> Optional[int]:
