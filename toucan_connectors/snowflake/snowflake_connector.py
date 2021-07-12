@@ -20,6 +20,7 @@ from toucan_connectors.common import (
 from toucan_connectors.toucan_connector import (
     Category,
     DataSlice,
+    DataStats,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
@@ -369,4 +370,4 @@ class SnowflakeConnector(ToucanConnector):
         rows_to_fetch = offset + limit
         df = self._fetch_data(data_source, rows_to_fetch)
 
-        return DataSlice(df[offset:], len(df[offset:]))
+        return DataSlice(df[offset:], stats=DataStats(total_returned_rows=len(df)))
