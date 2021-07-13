@@ -7,6 +7,7 @@ import pandas as pd
 from pydantic import Field, constr
 from snowflake.connector import DictCursor
 
+from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import DataSlice, DataStats, ToucanDataSource
 
@@ -122,7 +123,7 @@ class SnowflakeCommon:
                 query, query_parameters, offset, limit
             )
             future_1 = executor.submit(
-                self._execute_query,
+                self._execute_query_internal,
                 connection,
                 prepared_query,
                 prepared_query_parameters,
@@ -137,7 +138,7 @@ class SnowflakeCommon:
                     prepared_query_parameters_count,
                 ) = SqlQueryHelper.prepare_count_query(query, query_parameters)
                 future_2 = executor.submit(
-                    self._execute_query,
+                    self._execute_query_internal,
                     connection,
                     prepared_query_count,
                     prepared_query_parameters_count,
