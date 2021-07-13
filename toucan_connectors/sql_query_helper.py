@@ -26,7 +26,7 @@ class SqlQueryHelper:
         offset: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> Tuple[str, list]:
-        """Build a new query by adding a select query with a limit above from input query"""
+        """ Build a new query by adding a select query with a limit above from input query """
         prepared_query, prepared_values = SqlQueryHelper.prepare_query(
             query_string, query_parameters
         )
@@ -76,3 +76,17 @@ class SqlQueryHelper:
                 return None
         else:
             return None
+
+    @staticmethod
+    def fetchmany(executed_cursor):
+
+        size = executed_cursor.arraysize
+        ret = []
+        while size > 0:
+            row = executed_cursor.fetchone()
+            if not row:
+                break
+            ret.append(row)
+            size -= 1 if size else None
+
+        return ret

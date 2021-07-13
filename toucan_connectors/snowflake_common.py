@@ -7,9 +7,7 @@ import pandas as pd
 from pydantic import Field, constr
 from snowflake.connector import DictCursor
 
-from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
-
 from toucan_connectors.toucan_connector import DataSlice, DataStats, ToucanDataSource
 
 
@@ -86,7 +84,7 @@ class SnowflakeCommon:
         self.set_execution_time(execution_time)
         convert_start = timer()
         # Here call our customized fetch
-        values = pd.DataFrame.from_dict(QueryManager.fetchmany(query_res))
+        values = pd.DataFrame.from_dict(SqlQueryHelper.fetchmany(query_res))
         convert_end = timer()
         conversion_time = convert_end - convert_start
         self.logger.info(
@@ -114,6 +112,7 @@ class SnowflakeCommon:
     ) -> DataSlice:
         """Call parallelized execute query to extract data & row count from query"""
 
+        is_count_request_needed = SqlQueryHelper.count_request_needed(query, get_row_count)
         is_count_request_needed = SqlQueryHelper.count_request_needed(query, get_row_count)
         self.logger.info(f'Execute count request: {is_count_request_needed}')
         with concurrent.futures.ThreadPoolExecutor(
