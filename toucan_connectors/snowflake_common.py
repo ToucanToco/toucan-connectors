@@ -78,6 +78,7 @@ class SnowflakeCommon:
                     'operation': 'execute',
                     'execution_time': execution_time,
                     'connector': 'snowflake',
+                    'query': query,
                 }
             },
         )

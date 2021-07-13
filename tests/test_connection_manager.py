@@ -54,10 +54,7 @@ def _get_connection(
         return True
 
     connection = cm.get(
-        identifier,
-        connect_method=__connect,
-        alive_method=__alive,
-        close_method=__close,
+        identifier, connect_method=__connect, alive_method=__alive, close_method=__close, save=True
     )
     return connection
 
