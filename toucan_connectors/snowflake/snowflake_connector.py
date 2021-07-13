@@ -12,7 +12,7 @@ import requests
 import snowflake
 from jinja2 import Template
 from pydantic import Field, SecretStr, create_model
-from snowflake.connector import SnowflakeConnection
+from snowflake.connector import DictCursor, SnowflakeConnection
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
@@ -21,12 +21,7 @@ from toucan_connectors.snowflake_common import (
     SnowflakeCommon,
     SnowflakeConnectorWarehouseDoesNotExists,
 )
-from toucan_connectors.toucan_connector import (
-    Category,
-    DataSlice,
-    ToucanConnector,
-    strlist_to_enum,
-)
+from toucan_connectors.toucan_connector import Category, DataSlice, ToucanConnector, strlist_to_enum
 
 logger = logging.getLogger(__name__)
 
@@ -177,18 +172,11 @@ class SnowflakeConnector(ToucanConnector):
 
     def get_status(self) -> ConnectorStatus:
         try:
-            with self.connect(login_timeout=5) as connection:
-                cursor = connection.cursor()
-                self._execute_query(cursor, 'SHOW WAREHOUSES', {})
-
-                # Check if the default specified warehouse exists
-                res = self._execute_query(
-                    cursor, f"SHOW WAREHOUSES LIKE '{self.default_warehouse}'", {}
+            res = self._get_warehouses(self.default_warehouse)
+            if res.empty:
+                raise SnowflakeConnectorWarehouseDoesNotExists(
+                    f"The warehouse '{self.default_warehouse}' does not exist."
                 )
-                if res.empty:
-                    raise SnowflakeConnectorWarehouseDoesNotExists(
-                        f"The warehouse '{self.default_warehouse}' does not exist."
-                    )
 
         except SnowflakeConnectorWarehouseDoesNotExists as e:
             return ConnectorStatus(
@@ -359,54 +347,6 @@ class SnowflakeConnector(ToucanConnector):
             data_source.warehouse = self.default_warehouse
         return data_source
 
-    @staticmethod
-    def _get_status_details(index: int, status: Optional[bool]):
-        checks = ['Connection to Snowflake', 'Default warehouse exists']
-        ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
-        new_check = (checks[index], status)
-        not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
-        return ok_checks + [new_check] + not_validated_checks
-
-    def get_status(self) -> ConnectorStatus:
-        try:
-            result: List[str] = self._get_warehouses(self.default_warehouse)
-            if len(result) != 1:
-                raise SnowflakeConnectorWarehouseDoesNotExists(
-                    f"The warehouse '{self.default_warehouse}' does not exist."
-                )
-
-        except SnowflakeConnectorWarehouseDoesNotExists as e:
-            return ConnectorStatus(
-                status=False, details=self._get_status_details(1, False), error=str(e)
-            )
-        except snowflake.connector.errors.OperationalError:
-            # Raised when the provided account does not exists or when the
-            # provided User does not have access to the provided account
-            return ConnectorStatus(
-                status=False,
-                details=self._get_status_details(0, False),
-                error=f"Connection failed for the account '{self.account}', please check the Account field",
-            )
-        except snowflake.connector.errors.ForbiddenError:
-            return ConnectorStatus(
-                status=False,
-                details=self._get_status_details(0, False),
-                error=f"Access forbidden, please check that you have access to the '{self.account}' account or try again later.",
-            )
-        except snowflake.connector.errors.ProgrammingError as e:
-            return ConnectorStatus(
-                status=False, details=self._get_status_details(0, False), error=str(e)
-            )
-        except snowflake.connector.errors.DatabaseError:
-            # Raised when the provided User/Password aren't correct
-            return ConnectorStatus(
-                status=False,
-                details=self._get_status_details(0, False),
-                error=f"Connection failed for the user '{self.user}', please check your credentials",
-            )
-
-        return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
-
     def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
         with self._get_connection(warehouse=warehouse_name) as connection:
             result = SnowflakeCommon().get_warehouses(connection, warehouse_name)
@@ -422,6 +362,23 @@ class SnowflakeConnector(ToucanConnector):
             result = SnowflakeCommon().retrieve_data(connection, data_source)
         return result
 
+    def _fetch_data(
+        self, data_source: SnowflakeDataSource, max_rows: Optional[int]
+    ) -> pd.DataFrame:
+        warehouse = data_source.warehouse
+        # Default to default warehouse if not specified in `data_source`
+        if self.default_warehouse and not warehouse:
+            warehouse = self.default_warehouse
+
+        with self.connect(
+            database=Template(data_source.database).render(),
+            warehouse=Template(warehouse).render(),
+        ) as connection:
+            cursor = connection.cursor(DictCursor)
+            df = self._execute_query(cursor, data_source.query, data_source.parameters, max_rows)
+
+        return df
+
     def get_slice(
         self,
         data_source: SnowflakeDataSource,
@@ -429,11 +386,9 @@ class SnowflakeConnector(ToucanConnector):
         offset: int = 0,
         limit: Optional[int] = None,
     ) -> DataSlice:
-
-        rows_to_fetch = offset + limit
-        df = self._fetch_data(data_source, rows_to_fetch)
-
-        return DataSlice(df[offset:], len(df[offset:]))
+        with self._get_connection(data_source.database, data_source.warehouse) as connection:
+            result = SnowflakeCommon().get_slice(connection, data_source, offset, limit)
+        return result
 
     @staticmethod
     def get_snowflake_connection_manager():
