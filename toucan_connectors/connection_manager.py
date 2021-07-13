@@ -238,7 +238,7 @@ class ConnectionManager:
     def get(self, identifier: str, connect_method, alive_method, close_method, save: bool = True):
         """Retrieve or create connection if not exist in connection_list"""
         logger.debug(f'Get element in Dict {identifier}')
-        if identifier in self.connection_list:
+        if identifier is not None and identifier in self.connection_list:
             logging.getLogger(__name__).debug('Connection exist')
             return self.__get_wait(identifier, connect_method, alive_method, close_method, 0, save)
         else:

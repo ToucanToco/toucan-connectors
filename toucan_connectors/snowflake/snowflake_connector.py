@@ -336,7 +336,7 @@ class SnowflakeConnector(ToucanConnector):
             connect_method=connect_function,
             alive_method=alive_function,
             close_method=close_function,
-            save=True if database and warehouse else False,
+            save=True if self.identifier is not None and database and warehouse else False,
         )
 
         return connection

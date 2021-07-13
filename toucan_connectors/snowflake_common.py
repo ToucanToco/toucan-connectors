@@ -160,7 +160,7 @@ class SnowflakeCommon:
             for future in concurrent.futures.as_completed(futures):
                 if future.exception() is not None:
                     raise future.exception()
-            return DataSlice(self.data)
+        return DataSlice(self.data)
 
     def fetch_data(
         self,

@@ -253,7 +253,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     secrets_storage_version = Field('1', **{'ui.hidden': True})
 
     # Used to defined the connection
-    identifier = Field('XXXXX', **{'ui.hidden': True})
+    identifier: str = Field(None, **{'ui.hidden': True})
 
     class Config:
         extra = 'forbid'
