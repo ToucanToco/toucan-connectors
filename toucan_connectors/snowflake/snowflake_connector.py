@@ -14,7 +14,6 @@ from jinja2 import Template
 from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
-from toucan_connectors import DataSlice
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.snowflake_common import (
@@ -25,9 +24,7 @@ from toucan_connectors.snowflake_common import (
 from toucan_connectors.toucan_connector import (
     Category,
     DataSlice,
-    DataStats,
     ToucanConnector,
-    ToucanDataSource,
     strlist_to_enum,
 )
 
