@@ -12,7 +12,7 @@ import requests
 import snowflake
 from jinja2 import Template
 from pydantic import Field, SecretStr, create_model
-from snowflake.connector import DictCursor, SnowflakeConnection
+from snowflake.connector import SnowflakeConnection
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
@@ -173,7 +173,7 @@ class SnowflakeConnector(ToucanConnector):
     def get_status(self) -> ConnectorStatus:
         try:
             res = self._get_warehouses(self.default_warehouse)
-            if res.empty:
+            if len(res) == 0:
                 raise SnowflakeConnectorWarehouseDoesNotExists(
                     f"The warehouse '{self.default_warehouse}' does not exist."
                 )
@@ -363,21 +363,21 @@ class SnowflakeConnector(ToucanConnector):
         return result
 
     def _fetch_data(
-        self, data_source: SnowflakeDataSource, max_rows: Optional[int]
+        self,
+        data_source: SnowflakeDataSource,
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
+        get_row_count: bool = False,
     ) -> pd.DataFrame:
         warehouse = data_source.warehouse
         # Default to default warehouse if not specified in `data_source`
         if self.default_warehouse and not warehouse:
-            warehouse = self.default_warehouse
-
-        with self.connect(
-            database=Template(data_source.database).render(),
-            warehouse=Template(warehouse).render(),
-        ) as connection:
-            cursor = connection.cursor(DictCursor)
-            df = self._execute_query(cursor, data_source.query, data_source.parameters, max_rows)
-
-        return df
+            data_source.warehouse = self.default_warehouse
+        with self._get_connection(data_source.database, data_source.warehouse) as connection:
+            result = SnowflakeCommon().fetch_data(
+                connection, data_source, offset, limit, get_row_count
+            )
+        return result
 
     def get_slice(
         self,

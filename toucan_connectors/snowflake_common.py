@@ -162,7 +162,7 @@ class SnowflakeCommon:
                     raise future.exception()
             return DataSlice(self.data)
 
-    def _fetch_data(
+    def fetch_data(
         self,
         connection,
         data_source: SfDataSource,
@@ -178,7 +178,7 @@ class SnowflakeCommon:
     def retrieve_data(
         self, c, data_source: SfDataSource, get_row_count: bool = None
     ) -> pd.DataFrame:
-        return self._fetch_data(c, data_source, get_row_count=get_row_count)
+        return self.fetch_data(c, data_source, get_row_count=get_row_count)
 
     def get_slice(
         self,
@@ -188,7 +188,7 @@ class SnowflakeCommon:
         limit: Optional[int] = None,
         get_row_count: bool = False,
     ) -> DataSlice:
-        result = self._fetch_data(connection, data_source, offset, limit, get_row_count)
+        result = self.fetch_data(connection, data_source, offset, limit, get_row_count)
 
         if offset and limit:
             result = result[offset : limit + offset]
