@@ -172,8 +172,8 @@ class SnowflakeConnector(ToucanConnector):
 
     def get_status(self) -> ConnectorStatus:
         try:
-            result: List[str] = self._get_warehouses(self.default_warehouse)
-            if len(result) != 1:
+            res = self._get_warehouses(self.default_warehouse)
+            if len(res) == 0:
                 raise SnowflakeConnectorWarehouseDoesNotExists(
                     f"The warehouse '{self.default_warehouse}' does not exist."
                 )
@@ -336,6 +336,7 @@ class SnowflakeConnector(ToucanConnector):
             connect_method=connect_function,
             alive_method=alive_function,
             close_method=close_function,
+            save=True if self.identifier is not None and database and warehouse else False,
         )
 
         return connection
