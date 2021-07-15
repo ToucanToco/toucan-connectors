@@ -445,7 +445,7 @@ def test_snowflake_connection_close(
     'snowflake.connector.connection.SnowflakeConnection.close',
     side_effect=TypeError('close is not a function'),
 )
-@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
+@patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=True)
 def test_snowflake_connection_close_exception(
     is_closed, close, connect, get_token, snowflake_oauth2_connector
 ):
