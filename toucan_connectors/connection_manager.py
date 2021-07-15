@@ -179,11 +179,13 @@ class ConnectionManager:
         else:
             self.clean_active = False
 
-    def _create(self, identifier: str, connect_method, alive_method, close_method):
+    def _create(
+        self, identifier: str, connect_method, alive_method, close_method, save: bool = True
+    ):
         if isinstance(connect_method, types.FunctionType) or isinstance(
             connect_method, types.MethodType
         ):
-            self.connection_list[identifier] = ConnectionBO(
+            cbo = ConnectionBO(
                 status=Status.CONNECTION_IN_PROGRESS,
                 connect=connect_method,
                 alive=alive_method,

@@ -1,7 +1,7 @@
 import concurrent
 import logging
 from timeit import default_timer as timer
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import pandas as pd
 from pydantic import Field, constr
@@ -169,7 +169,7 @@ class SnowflakeCommon:
     def retrieve_data(
         self, c, data_source: SfDataSource, get_row_count: bool = None
     ) -> pd.DataFrame:
-        return self._fetch_data(c, data_source, get_row_count=get_row_count)
+        return self.fetch_data(c, data_source, get_row_count=get_row_count)
 
     def get_slice(
         self,
