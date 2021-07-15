@@ -14,7 +14,6 @@ from jinja2 import Template
 from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
-from toucan_connectors import DataSlice
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.snowflake_common import (
@@ -22,14 +21,7 @@ from toucan_connectors.snowflake_common import (
     SnowflakeCommon,
     SnowflakeConnectorWarehouseDoesNotExists,
 )
-from toucan_connectors.toucan_connector import (
-    Category,
-    DataSlice,
-    DataStats,
-    ToucanConnector,
-    ToucanDataSource,
-    strlist_to_enum,
-)
+from toucan_connectors.toucan_connector import Category, DataSlice, ToucanConnector, strlist_to_enum
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +30,7 @@ if not snowflake_connection_manager:
     snowflake_connection_manager = ConnectionManager(
         name='snowflake', timeout=10, wait=0.2, time_between_clean=10, time_keep_alive=600
     )
+
 
 class Path(str):
     @classmethod
@@ -150,14 +143,6 @@ class SnowflakeConnector(ToucanConnector):
             ]
             schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
 
-    @staticmethod
-    def _get_status_details(index: int, status: Optional[bool]):
-        checks = ['Connection to Snowflake', 'Default warehouse exists']
-        ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
-        new_check = (checks[index], status)
-        not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
-        return ok_checks + [new_check] + not_validated_checks
-
     @property
     def access_token(self) -> Optional[str]:
         return self.user_tokens_keeper and self.user_tokens_keeper.access_token.get_secret_value()
@@ -177,20 +162,21 @@ class SnowflakeConnector(ToucanConnector):
             and self.sso_credentials_keeper.client_secret.get_secret_value()
         )
 
+    @staticmethod
+    def _get_status_details(index: int, status: Optional[bool]):
+        checks = ['Connection to Snowflake', 'Default warehouse exists']
+        ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
+        new_check = (checks[index], status)
+        not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
+        return ok_checks + [new_check] + not_validated_checks
+
     def get_status(self) -> ConnectorStatus:
         try:
-            with self.connect(login_timeout=5) as connection:
-                cursor = connection.cursor()
-                self._execute_query(cursor, 'SHOW WAREHOUSES', {})
-
-                # Check if the default specified warehouse exists
-                res = self._execute_query(
-                    cursor, f"SHOW WAREHOUSES LIKE '{self.default_warehouse}'", {}
+            result: List[str] = self._get_warehouses(self.default_warehouse)
+            if len(result) != 1:
+                raise SnowflakeConnectorWarehouseDoesNotExists(
+                    f"The warehouse '{self.default_warehouse}' does not exist."
                 )
-                if res.empty:
-                    raise SnowflakeConnectorWarehouseDoesNotExists(
-                        f"The warehouse '{self.default_warehouse}' does not exist."
-                    )
 
         except SnowflakeConnectorWarehouseDoesNotExists as e:
             return ConnectorStatus(
@@ -356,58 +342,9 @@ class SnowflakeConnector(ToucanConnector):
 
     def _set_warehouse(self, data_source: SnowflakeDataSource):
         warehouse = data_source.warehouse
-        # Default to default warehouse if not specified in `data_source`
         if self.default_warehouse and not warehouse:
             data_source.warehouse = self.default_warehouse
         return data_source
-
-    @staticmethod
-    def _get_status_details(index: int, status: Optional[bool]):
-        checks = ['Connection to Snowflake', 'Default warehouse exists']
-        ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
-        new_check = (checks[index], status)
-        not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
-        return ok_checks + [new_check] + not_validated_checks
-
-    def get_status(self) -> ConnectorStatus:
-        try:
-            result: List[str] = self._get_warehouses(self.default_warehouse)
-            if len(result) != 1:
-                raise SnowflakeConnectorWarehouseDoesNotExists(
-                    f"The warehouse '{self.default_warehouse}' does not exist."
-                )
-
-        except SnowflakeConnectorWarehouseDoesNotExists as e:
-            return ConnectorStatus(
-                status=False, details=self._get_status_details(1, False), error=str(e)
-            )
-        except snowflake.connector.errors.OperationalError:
-            # Raised when the provided account does not exists or when the
-            # provided User does not have access to the provided account
-            return ConnectorStatus(
-                status=False,
-                details=self._get_status_details(0, False),
-                error=f"Connection failed for the account '{self.account}', please check the Account field",
-            )
-        except snowflake.connector.errors.ForbiddenError:
-            return ConnectorStatus(
-                status=False,
-                details=self._get_status_details(0, False),
-                error=f"Access forbidden, please check that you have access to the '{self.account}' account or try again later.",
-            )
-        except snowflake.connector.errors.ProgrammingError as e:
-            return ConnectorStatus(
-                status=False, details=self._get_status_details(0, False), error=str(e)
-            )
-        except snowflake.connector.errors.DatabaseError:
-            # Raised when the provided User/Password aren't correct
-            return ConnectorStatus(
-                status=False,
-                details=self._get_status_details(0, False),
-                error=f"Connection failed for the user '{self.user}', please check your credentials",
-            )
-
-        return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
 
     def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
         with self._get_connection(warehouse=warehouse_name) as connection:

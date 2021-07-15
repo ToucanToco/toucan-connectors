@@ -59,17 +59,11 @@ warehouses_result_one = [{'name': 'warehouse_1'}]
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute', return_value=None)
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(databases_result_all),
 )
 def test_get_database_without_filter(database_result, execute_query, connect):
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(databases_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-def test_get_database_without_filter(database_result, execute_query, connect, mocker):
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
     result = SnowflakeCommon().get_databases(connect)
     assert database_result.call_count == 1
     assert result[0] == 'database_1'
@@ -79,17 +73,11 @@ def test_get_database_without_filter(database_result, execute_query, connect, mo
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(databases_result_none),
 )
 def test_get_database_with_filter_no_result(database_result, execute_query, connect):
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(databases_result_none))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-def test_get_database_with_filter_no_result(database_result, execute_query, connect, mocker):
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
     result = SnowflakeCommon().get_databases(connect, 'database_3')
     assert database_result.call_count == 1
     assert result is None
@@ -97,17 +85,11 @@ def test_get_database_with_filter_no_result(database_result, execute_query, conn
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(databases_result_one),
 )
 def test_get_database_with_filter_one_result(database_result, execute_query, connect):
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(databases_result_one))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-def test_get_database_with_filter_one_result(database_result, execute_query, connect, mocker):
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
     result = SnowflakeCommon().get_databases(connect, 'database_1')
     assert database_result.call_count == 1
     assert result[0] == 'database_1'
@@ -116,15 +98,10 @@ def test_get_database_with_filter_one_result(database_result, execute_query, con
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(warehouses_result_all),
 )
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(warehouses_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
 def test_get_warehouse_without_filter(warehouse_result, execute_query, connect, mocker):
     result = SnowflakeCommon().get_warehouses(connect)
     assert warehouse_result.call_count == 1
@@ -135,17 +112,11 @@ def test_get_warehouse_without_filter(warehouse_result, execute_query, connect, 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(warehouses_result_none),
 )
 def test_get_warehouse_with_filter_no_result(warehouse_result, execute_query, connect):
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(warehouses_result_none))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-def test_get_warehouse_with_filter_no_result(warehouse_result, execute_query, connect, mocker):
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
     result = SnowflakeCommon().get_warehouses(connect, 'warehouse_3')
     assert warehouse_result.call_count == 1
     assert result is None
@@ -153,17 +124,11 @@ def test_get_warehouse_with_filter_no_result(warehouse_result, execute_query, co
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(warehouses_result_one),
 )
 def test_get_warehouse_with_filter_one_result(warehouse_result, execute_query, connect):
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(warehouses_result_one))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-def test_get_warehouse_with_filter_one_result(warehouse_result, execute_query, connect, mocker):
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
     result = SnowflakeCommon().get_warehouses(connect, 'warehouse_1')
     assert warehouse_result.call_count == 1
     assert result[0] == 'warehouse_1'
@@ -172,18 +137,11 @@ def test_get_warehouse_with_filter_one_result(warehouse_result, execute_query, c
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_retrieve_data(result, execute_query, connect, snowflake_datasource):
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-def test_retrieve_data(result, execute_query, connect, snowflake_datasource, mocker):
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
     df: pd.DataFrame = SnowflakeCommon().retrieve_data(connect, snowflake_datasource)
     assert result.call_count == 1
     assert len(df) == 14
@@ -191,288 +149,174 @@ def test_retrieve_data(result, execute_query, connect, snowflake_datasource, moc
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_without_limit_without_offset(
     result, execute_query, connect, snowflake_datasource
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
-def test_get_slice_without_limit_without_offset(
-    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
 ):
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
     assert result.call_count == 1
-    assert len(slice.df) == 14
-    assert slice.stats.total_returned_rows == 14
+    assert len(ds.df) == 14
+    assert ds.stats.total_returned_rows == 14
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_5),
 )
 def test_get_slice_with_limit_without_offset(result, execute_query, connect, snowflake_datasource):
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_5))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
-def test_get_slice_with_limit_without_offset(
-    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
-):
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
     assert result.call_count == 1
-    assert len(slice.df) == 5
-    assert slice.stats.total_returned_rows == 5
+    assert len(ds.df) == 5
+    assert ds.stats.total_returned_rows == 5
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_none),
 )
 def test_get_slice_with_limit_without_offset_no_data(
-    resut, execute_query, connect, snowflake_datasource
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_none))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
-def test_get_slice_with_limit_without_offset_no_data(
-    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
+    result, execute_query, connect, snowflake_datasource
 ):
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
     assert result.call_count == 1
-    assert len(slice.df) == 0
-    assert slice.stats.total_returned_rows == 0
+    assert len(ds.df) == 0
+    assert ds.stats.total_returned_rows == 0
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_one),
 )
 def test_get_slice_with_limit_without_offset_not_enough_data(
     result, execute_query, connect, snowflake_datasource
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_one))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
-def test_get_slice_with_limit_without_offset_not_enough_data(
-    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
 ):
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
     assert result.call_count == 1
-    assert len(slice.df) == 1
-    assert slice.stats.total_returned_rows == 1
+    assert len(ds.df) == 1
+    assert ds.stats.total_returned_rows == 1
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_with_limit_with_offset(result, execute_query, connect, snowflake_datasource):
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
-def test_get_slice_with_limit_with_offset(
-    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
-):
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 1
-    assert len(slice.df) == 5
-    assert slice.stats.total_returned_rows == 5
+    assert len(ds.df) == 5
+    assert ds.stats.total_returned_rows == 5
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_none),
 )
 def test_get_slice_with_limit_with_offset_no_data(
     result, execute_query, connect, snowflake_datasource
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_none))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
-def test_get_slice_with_limit_with_offset_no_data(
-    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
 ):
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 1
-    assert len(slice.df) == 0
-    assert slice.stats.total_returned_rows == 0
+    assert len(ds.df) == 0
+    assert ds.stats.total_returned_rows == 0
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_one),
 )
 def test_get_slice_with_limit_with_offset_not_enough_data(
     result, execute_query, connect, snowflake_datasource
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_one))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
-def test_get_slice_with_limit_with_offset_not_enough_data(
-    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
 ):
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 1
-    assert len(slice.df) == 0
-    assert slice.stats.total_returned_rows == 0
+    assert len(ds.df) == 0
+    assert ds.stats.total_returned_rows == 0
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_without_limit_with_offset(result, execute_query, connect, snowflake_datasource):
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
-def test_get_slice_without_limit_with_offset(
-    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
-):
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5)
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5)
     assert result.call_count == 1
-    assert len(slice.df) == 14
-    assert slice.stats.total_returned_rows == 14
+    assert len(ds.df) == 14
+    assert ds.stats.total_returned_rows == 14
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_with_limit_extracted_from_query(
     result, execute_query, connect, snowflake_datasource
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit', return_value=12)
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
-def test_get_slice_with_limit_extracted_from_query(
-    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
 ):
     snowflake_datasource.query = 'select name from favourite_drinks limit 12;'
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert slice.input_parameters.get('limit') == 12
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
+    assert ds.input_parameters.get('limit') == 12
     snowflake_datasource.query = 'select name from favourite_drinks;'
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert not slice.input_parameters.get('limit')
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
+    assert not ds.input_parameters.get('limit')
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_with_offset_extracted_from_query(
     result, execute_query, connect, snowflake_datasource
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_limit')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.extract_offset')
-def test_get_slice_with_offset_extracted_from_query(
-    offset, limit, prepare_query, fetchmany, result, execute_query, connect, snowflake_datasource,
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
 ):
     snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert slice.input_parameters.get('offset') == 23
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
+    assert ds.input_parameters.get('offset') == 23
     snowflake_datasource.query = 'select name from favourite_drinks limit 12;'
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert slice.input_parameters.get('offset') is None
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
+    assert ds.input_parameters.get('offset') is None
 
 
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_all),
 )
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
 def test_get_slice_metadata(snowflake_datasource, mocker):
-    snowflake_datasource.query ='select name from favourite_drinks limit 12 offset 23;'
+    snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
     connect = mocker.MagicMock()
     connect.cursor().execute().fetchone.return_value = [{'total_rows': 200}]
     connect.cursor().execute().fetchall.return_value = [{'c1': 2}]
-    slice: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert slice.stats.df_memory_size == 1360
-    assert slice.stats.total_returned_rows == 14
+    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
+    assert ds.stats.df_memory_size == 1360
+    assert ds.stats.total_returned_rows == 14
 
 
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_all),
 )
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
 def test_get_slice_metadata_no_select_in_query(result, snowflake_datasource, mocker):
-    snowflake_datasource.query =  ('create table users as  (id integer default id_seq.nextval,  name varchar (100), preferences string, '
-        'created_at timestamp); ',
+    snowflake_datasource.query = (
+        'create table users as  (id integer default id_seq.nextval,  name varchar (100), '
+        'preferences string, created_at timestamp); '
     )
     connect = mocker.MagicMock()
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
@@ -480,16 +324,10 @@ def test_get_slice_metadata_no_select_in_query(result, snowflake_datasource, moc
     assert ds
 
 
-<<<<<<< HEAD
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     return_value=pd.DataFrame(data_result_all),
 )
-=======
-@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(data_result_all))
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
 def test_get_slice_metadata_wrong_response_from_count_query(snowflake_datasource, mocker):
     snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
     connect = mocker.MagicMock()
@@ -514,9 +352,7 @@ def test_get_slice_metadata_wrong_response_from_count_query(snowflake_datasource
     'toucan_connectors.snowflake_common.SnowflakeCommon._execute_query',
     side_effect=ProgrammingError,
 )
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-def test_execute_broken_query(result, execute_query, snowflake_datasource, mocker):
+def test_execute_broken_query(execute_query, snowflake_datasource, mocker):
     snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
     connect = mocker.MagicMock()
     with pytest.raises(ProgrammingError):
@@ -525,53 +361,12 @@ def test_execute_broken_query(result, execute_query, snowflake_datasource, mocke
         )
 
 
-@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
-@patch(
-    'toucan_connectors.snowflake_common.SnowflakeCommon._execute_query',
-    side_effect=ProgrammingError,
-)
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-def test_count_request_needed(result, execute_query, snowflake_datasource, mocker):
-    res: bool = SnowflakeCommon().count_request_needed(snowflake_datasource.query, True, 2)
-    assert res
-    res: bool = SnowflakeCommon().count_request_needed(snowflake_datasource.query, False)
-    assert not res
-
-
 @patch(
     'toucan_connectors.query_manager.QueryManager.fetchmany',
     side_effect=[pd.DataFrame(data_result_all), pd.DataFrame({'TOTAL_ROWS': 20}, index=[0])],
 )
-<<<<<<< HEAD
 def test_retrieve_data_with_row_count_limit_in_query(fetchmany, snowflake_datasource, mocker):
     snowflake_datasource.query = 'select name from favourite_drinks limit 10;'
-=======
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-def test_retrieve_data_with_row_count_limit_in_query(
-    result, execute_query, snowflake_datasource, mocker
-):
-    snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
-    connect = mocker.MagicMock()
-    connect.cursor().execute().rowcount.return_value = 12
-    s = SnowflakeCommon()
-    s.retrieve_data(connect, snowflake_datasource, get_row_count=True)
-    assert result.call_count == 2
-    assert s.count == 12
-
-
-@patch(
-    'pandas.DataFrame.from_dict',
-    side_effect=[pd.DataFrame(data_result_all), pd.DataFrame({'TOTAL_ROWS': 12}, index=[0])],
-)
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.fetchmany')
-@patch('toucan_connectors.sql_query_manager.SqlQueryManager.prepare_query', return_value=('foo', 'bar'))
-def test_retrieve_data_with_row_count_no_limit_in_query(
-    result, execute_query, snowflake_datasource, mocker
-):
-    snowflake_datasource.query = 'select name from favourite_drinks;'
->>>>>>> chore: move methods to sql_query_manager and implement fetchmany
     connect = mocker.MagicMock()
     SnowflakeCommon().retrieve_data(connect, snowflake_datasource, get_row_count=True)
     assert fetchmany.call_count == 2
