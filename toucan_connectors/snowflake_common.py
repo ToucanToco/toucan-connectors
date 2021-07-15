@@ -85,7 +85,7 @@ class SnowflakeCommon:
         self.set_execution_time(execution_time)
         convert_start = timer()
         # Here call our customized fetch
-        values = pd.DataFrame.from_dict(SqlQueryHelper.fetchmany(query_res))
+        values = pd.DataFrame.from_dict(QueryManager.fetchmany(query_res))
         convert_end = timer()
         conversion_time = convert_end - convert_start
         self.logger.info(
@@ -123,7 +123,7 @@ class SnowflakeCommon:
                 query, query_parameters, offset, limit
             )
             future_1 = executor.submit(
-                self._execute_query_internal,
+                self._execute_query,
                 connection,
                 prepared_query,
                 prepared_query_parameters,
@@ -138,7 +138,7 @@ class SnowflakeCommon:
                     prepared_query_parameters_count,
                 ) = SqlQueryHelper.prepare_count_query(query, query_parameters)
                 future_2 = executor.submit(
-                    self._execute_query_internal,
+                    self._execute_query,
                     connection,
                     prepared_query_count,
                     prepared_query_parameters_count,
