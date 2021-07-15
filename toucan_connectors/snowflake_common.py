@@ -115,7 +115,6 @@ class SnowflakeCommon:
         """Call parallelized execute query to extract data & row count from query"""
 
         is_count_request_needed = SqlQueryHelper.count_request_needed(query, get_row_count)
-        is_count_request_needed = SqlQueryHelper.count_request_needed(query, get_row_count)
         self.logger.info(f'Execute count request: {is_count_request_needed}')
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=2 if is_count_request_needed else 1
