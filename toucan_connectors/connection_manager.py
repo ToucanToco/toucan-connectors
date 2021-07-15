@@ -4,7 +4,7 @@ import threading
 import time
 import types
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +31,13 @@ class ConnectionBO:
         self.t_get: float = time.time()
 
         # method to check if connection is open or closed
-        self.alive: Optional[types.FunctionType] = None
+        self.alive: Optional[Union[types.FunctionType, types.MethodType]] = None
 
         # method to close the connection
-        self.close: Optional[types.FunctionType] = None
+        self.close: Optional[Union[types.FunctionType, types.MethodType]] = None
 
         # method to open the connection
-        self.connect: Optional[types.FunctionType] = None
+        self.connect: Optional[Union[types.FunctionType, types.MethodType]] = None
 
         # The connection
         self.connection: Optional = None
@@ -180,7 +180,9 @@ class ConnectionManager:
             self.clean_active = False
 
     def _create(self, identifier: str, connect_method, alive_method, close_method):
-        if isinstance(connect_method, types.FunctionType):
+        if isinstance(connect_method, types.FunctionType) or isinstance(
+            connect_method, types.MethodType
+        ):
             self.connection_list[identifier] = ConnectionBO(
                 status=Status.CONNECTION_IN_PROGRESS,
                 connect=connect_method,

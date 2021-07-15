@@ -14,7 +14,9 @@ class QueryManager:
     @staticmethod
     def _execute(execute_method, connection, query: str, parameters: Optional[Dict] = None):
         logger.debug('call execute method')
-        if isinstance(execute_method, types.MethodType):
+        if isinstance(execute_method, types.MethodType) or isinstance(
+            execute_method, types.FunctionType
+        ):
             result = execute_method(connection, query, parameters)
             return result
         else:
