@@ -80,7 +80,7 @@ def test_get_database_without_filter(database_result, execute_query, connect):
 def test_get_database_with_filter_no_result(database_result, execute_query, connect):
     result = SnowflakeCommon().get_databases(connect, 'database_3')
     assert database_result.call_count == 1
-    assert result is None
+    assert len(result) == 0
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
@@ -119,7 +119,7 @@ def test_get_warehouse_without_filter(warehouse_result, execute_query, connect, 
 def test_get_warehouse_with_filter_no_result(warehouse_result, execute_query, connect):
     result = SnowflakeCommon().get_warehouses(connect, 'warehouse_3')
     assert warehouse_result.call_count == 1
-    assert result is None
+    assert len(result) == 0
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
