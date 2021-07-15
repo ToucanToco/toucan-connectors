@@ -283,7 +283,9 @@ class SnowflakeConnector(ToucanConnector):
 
             connection_params = self.get_connection_params()
             logger.info(
-                f'Connect at Snowflake with {connection_params}, database {database} and warehouse {warehouse}'
+                f'Connect at {connection_params["account"]} (database {database}, warehouse {warehouse} with '
+                f'authentication {connection_params["authenticator"]} for user {connection_params["user"]} and'
+                f' session_id {connection_params["session_id"]}'
             )
             connect_start = timer()
             connection = snowflake.connector.connect(
