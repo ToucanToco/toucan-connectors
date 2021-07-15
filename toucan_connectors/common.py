@@ -397,3 +397,25 @@ def pandas_read_sql(
             raise
 
     return df
+
+
+def extract_limit(query: str) -> Optional[int]:
+    m = re.search(r'(?<=\slimit\s)\s*(\d+)\s*', query, re.I)
+    if m:
+        try:
+            return int(m[0])
+        except (ValueError):
+            return None
+    else:
+        return None
+
+
+def extract_offset(query: str) -> Optional[int]:
+    m = re.search(r'(?<=\soffset\s)\s*(\d+)\s*', query, re.I)
+    if m:
+        try:
+            return int(m[0])
+        except (ValueError):
+            return None
+    else:
+        return None

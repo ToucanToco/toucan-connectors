@@ -58,6 +58,7 @@ def _get_connection(
         connect_method=__connect,
         alive_method=__alive,
         close_method=__close,
+        save=True,
     )
     return connection
 

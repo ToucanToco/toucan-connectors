@@ -1,7 +1,7 @@
 import concurrent
 import logging
 from timeit import default_timer as timer
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from pydantic import Field, constr
@@ -79,6 +79,7 @@ class SnowflakeCommon:
                     'operation': 'execute',
                     'execution_time': execution_time,
                     'connector': 'snowflake',
+                    'query': query,
                 }
             },
         )
@@ -127,7 +128,6 @@ class SnowflakeCommon:
                 connection,
                 prepared_query,
                 prepared_query_parameters,
-                # get_row_count,
             )
             future_1.add_done_callback(self.set_data)
             futures = [future_1]
@@ -142,7 +142,6 @@ class SnowflakeCommon:
                     connection,
                     prepared_query_count,
                     prepared_query_parameters_count,
-                    # get_row_count,
                 )
                 future_2.add_done_callback(self.set_total_rows_count)
                 futures.append(future_2)
@@ -152,8 +151,9 @@ class SnowflakeCommon:
                 else:
                     self.logger.info('query finish')
         return DataSlice(self.data)
+        return DataSlice(self.data)
 
-    def _fetch_data(
+    def fetch_data(
         self,
         connection,
         data_source: SfDataSource,
@@ -179,7 +179,7 @@ class SnowflakeCommon:
         limit: Optional[int] = None,
         get_row_count: bool = False,
     ) -> DataSlice:
-        result = self._fetch_data(connection, data_source, offset, limit, get_row_count)
+        result = self.fetch_data(connection, data_source, offset, limit, get_row_count)
 
         if offset and limit:
             result = result[offset : limit + offset]

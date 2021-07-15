@@ -198,6 +198,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             connect_method=connect_function,
             alive_method=alive_function,
             close_method=close_function,
+            save=True if database and warehouse else False,
         )
 
         return connection

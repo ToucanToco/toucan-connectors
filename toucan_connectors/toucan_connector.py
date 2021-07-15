@@ -39,6 +39,8 @@ class DataSlice(NamedTuple):
     """
 
     df: pd.DataFrame  # the dataframe of the slice
+    # TODO total_count field should be removed
+    total_count: Optional[int] = None  # the length of the raw dataframe (without slicing)
     input_parameters: Optional[dict] = None
     stats: Optional[DataStats] = None
 
@@ -251,7 +253,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     secrets_storage_version = Field('1', **{'ui.hidden': True})
 
     # Used to defined the connection
-    identifier = Field('XXXXX', **{'ui.hidden': True})
+    identifier: str = Field(None, **{'ui.hidden': True})
 
     class Config:
         extra = 'forbid'
