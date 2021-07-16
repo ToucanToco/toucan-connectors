@@ -484,6 +484,8 @@ def test_snowflake_connection_alive_exception(gat, is_closed, close, connect, sn
     cm.time_keep_alive = 1
     snowflake_connector._get_connection('test_database', 'test_warehouse')
     assert len(cm.connection_list) == 1
+    time.sleep(4)
+    assert is_closed.call_count >= 1
     cm.time_between_clean = t1
     cm.time_keep_alive = t2
     cm.force_clean()
@@ -521,11 +523,11 @@ def test_snowflake_connection_close_exception(gat, is_closed, close, connect, sn
     cm.time_between_clean = 1
     cm.time_keep_alive = 1
     snowflake_connector._get_connection('test_database', 'test_warehouse')
-    time.sleep(1)
-    assert close.call_count == 1
+    time.sleep(2)
+    assert close.call_count >= 1
     time.sleep(5)
     assert len(cm.connection_list) == 0
-    assert close.call_count == 3
+    assert close.call_count >= 1
     cm.time_between_clean = t1
     cm.time_keep_alive = t2
     cm.force_clean()
