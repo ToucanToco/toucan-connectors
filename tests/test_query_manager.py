@@ -31,7 +31,7 @@ def test_execute_exception():
 
 
 @patch('psycopg2.connect')
-def test_super_awesome_stuff(mock_connect):
+def test_fetchmany(mock_connect):
     expected = ['fake', 'row', 1]
     mock_con = mock_connect.return_value
     mock_cur = mock_con.cursor.return_value
@@ -40,3 +40,15 @@ def test_super_awesome_stuff(mock_connect):
 
     result = QueryManager.fetchmany(mock_cur)
     assert len(result) == 1
+
+
+@patch('psycopg2.connect')
+def test_fetchmany_row_none(mock_connect):
+    expected = None
+    mock_con = mock_connect.return_value
+    mock_cur = mock_con.cursor.return_value
+    mock_cur.fetchone.return_value = expected
+    mock_cur.arraysize = 1
+
+    result = QueryManager.fetchmany(mock_cur)
+    assert len(result) == 0
