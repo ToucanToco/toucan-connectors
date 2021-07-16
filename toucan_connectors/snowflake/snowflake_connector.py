@@ -143,14 +143,6 @@ class SnowflakeConnector(ToucanConnector):
             ]
             schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
 
-    @staticmethod
-    def _get_status_details(index: int, status: Optional[bool]):
-        checks = ['Connection to Snowflake', 'Default warehouse exists']
-        ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
-        new_check = (checks[index], status)
-        not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
-        return ok_checks + [new_check] + not_validated_checks
-
     @property
     def access_token(self) -> Optional[str]:
         return self.user_tokens_keeper and self.user_tokens_keeper.access_token.get_secret_value()
@@ -169,6 +161,14 @@ class SnowflakeConnector(ToucanConnector):
             self.sso_credentials_keeper
             and self.sso_credentials_keeper.client_secret.get_secret_value()
         )
+
+    @staticmethod
+    def _get_status_details(index: int, status: Optional[bool]):
+        checks = ['Connection to Snowflake', 'Default warehouse exists']
+        ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
+        new_check = (checks[index], status)
+        not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
+        return ok_checks + [new_check] + not_validated_checks
 
     def get_status(self) -> ConnectorStatus:
         try:
@@ -288,7 +288,7 @@ class SnowflakeConnector(ToucanConnector):
                 f' session_id {connection_params["session_id"]}'
             )
             connect_start = timer()
-            connection = snowflake.connector.connect(
+            conn = snowflake.connector.connect(
                 **connection_params, database=database, warehouse=warehouse
             )
             connect_end = timer()
@@ -302,7 +302,7 @@ class SnowflakeConnector(ToucanConnector):
                     }
                 },
             )
-            return connection
+            return conn
 
         def alive_function(conn):
             logger.debug('Check Snowflake connection alive')
@@ -388,8 +388,14 @@ class SnowflakeConnector(ToucanConnector):
         offset: int = 0,
         limit: Optional[int] = None,
     ) -> DataSlice:
+        data_source = self._set_warehouse(data_source)
         with self._get_connection(data_source.database, data_source.warehouse) as connection:
-            result = SnowflakeCommon().get_slice(connection, data_source, offset, limit)
+            result = SnowflakeCommon().get_slice(
+                connection,
+                data_source,
+                offset=offset,
+                limit=limit,
+            )
         return result
 
     @staticmethod

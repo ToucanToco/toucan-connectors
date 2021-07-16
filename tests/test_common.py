@@ -12,8 +12,6 @@ from toucan_connectors.common import (
     apply_query_parameters,
     convert_to_printf_templating_style,
     convert_to_qmark_paramstyle,
-    extract_limit,
-    extract_offset,
     extract_table_name,
     fetch,
     is_interpolating_table_name,
@@ -416,29 +414,3 @@ def test_pandas_read_sql_error(mocker: MockFixture):
             params={'max_pop': 1_000_000},
         )
     assert 'Some error' in str(e.value)
-
-
-def test_extract_limit():
-    query = 'select * from cool_table;'
-    assert not extract_limit(query)
-    query = 'select * from cool_table limit 567;'
-    assert extract_limit(query) == 567
-
-
-def test_extract_limit_error(mocker):
-    mocker.patch('toucan_connectors.common.re.search', return_value=['1.3'])
-    query = 'select * from cool_table;'
-    assert extract_limit(query) is None
-
-
-def test_extract_offset():
-    query = 'select * from cool_table limit 10;'
-    assert extract_offset(query) is None
-    query = 'select * from cool_table limit 567 offset 765;'
-    assert extract_offset(query) == 765
-
-
-def test_extract_offset_error(mocker):
-    mocker.patch('toucan_connectors.common.re.search', return_value=['1.2'])
-    query = 'select * from cool_table limit 10;'
-    assert extract_offset(query) is None

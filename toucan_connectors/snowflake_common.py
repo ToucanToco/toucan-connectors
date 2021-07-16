@@ -1,18 +1,14 @@
 import concurrent
 import logging
 from timeit import default_timer as timer
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import pandas as pd
 from pydantic import Field, constr
 from snowflake.connector import DictCursor
 
-from toucan_connectors.common import (
-    convert_to_printf_templating_style,
-    convert_to_qmark_paramstyle,
-    extract_limit,
-    extract_offset,
-)
+from toucan_connectors.query_manager import QueryManager
+from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import DataSlice, DataStats, ToucanDataSource
 
 
@@ -57,14 +53,19 @@ class SnowflakeCommon:
     def set_conversion_time(self, conversion_time):
         self.conversion_time = conversion_time
 
-    def _execute_query(
+    def _execute_query(self, connection, query: str, query_parameters: Optional[Dict] = None):
+        return QueryManager().execute(
+            execute_method=self._execute_query_internal,
+            connection=connection,
+            query=query,
+            query_parameters=query_parameters,
+        )
+
+    def _execute_query_internal(
         self,
         connection,
         query: str,
         query_parameters: Optional[dict] = None,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        get_row_count=False,
     ) -> pd.DataFrame:
         execution_start = timer()
         cursor = connection.cursor(DictCursor)
@@ -84,20 +85,8 @@ class SnowflakeCommon:
         )
         self.set_execution_time(execution_time)
         convert_start = timer()
-        if offset and limit:
-            self.logger.debug('limit & offset')
-            rows = limit + offset
-            values = pd.DataFrame.from_dict(query_res.fetchmany(rows))
-        elif limit and not offset:
-            self.logger.debug('limit & not offset')
-            values = pd.DataFrame.from_dict(query_res.fetchmany(limit))
-        elif not limit and not offset:
-            self.logger.debug('not limit & not offset')
-            values = pd.DataFrame.from_dict(query_res.fetchall())
-        else:
-            values = pd.DataFrame.from_dict(query_res.fetchall())
-        if get_row_count:
-            self.set_total_returned_rows_count(len(values))
+        # Here call our customized fetch
+        values = pd.DataFrame.from_dict(QueryManager.fetchmany(query_res))
         convert_end = timer()
         conversion_time = convert_end - convert_start
         self.logger.info(
@@ -125,41 +114,41 @@ class SnowflakeCommon:
     ) -> DataSlice:
         """Call parallelized execute query to extract data & row count from query"""
 
-        is_count_request_needed = self.count_request_needed(query, get_row_count)
+        is_count_request_needed = SqlQueryHelper.count_request_needed(query, get_row_count)
+        self.logger.info(f'Execute count request: {is_count_request_needed}')
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=2 if is_count_request_needed else 1
         ) as executor:
-            prepared_query, prepared_query_parameters = self._prepare_query(query, query_parameters)
+            prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_limit_query(
+                query, query_parameters, offset, limit
+            )
             future_1 = executor.submit(
                 self._execute_query,
                 connection,
                 prepared_query,
                 prepared_query_parameters,
-                offset,
-                limit,
-                get_row_count,
             )
             future_1.add_done_callback(self.set_data)
             futures = [future_1]
 
             if is_count_request_needed:
-                prepared_query_count, prepared_query_parameters_count = self._prepare_count_query(
-                    query, query_parameters
-                )
+                (
+                    prepared_query_count,
+                    prepared_query_parameters_count,
+                ) = SqlQueryHelper.prepare_count_query(query, query_parameters)
                 future_2 = executor.submit(
                     self._execute_query,
                     connection,
                     prepared_query_count,
                     prepared_query_parameters_count,
-                    offset,
-                    limit,
-                    False,
                 )
                 future_2.add_done_callback(self.set_total_rows_count)
                 futures.append(future_2)
             for future in concurrent.futures.as_completed(futures):
                 if future.exception() is not None:
                     raise future.exception()
+                else:
+                    self.logger.info('query finish')
         return DataSlice(self.data)
 
     def fetch_data(
@@ -198,12 +187,11 @@ class SnowflakeCommon:
             total_returned_rows=len(result),
             df_memory_size=result.memory_usage().sum(),
         )
-
         return DataSlice(
             df=result,
             input_parameters={
-                'limit': extract_limit(data_source.query),
-                'offset': extract_offset(data_source.query),
+                'limit': SqlQueryHelper.extract_limit(data_source.query),
+                'offset': SqlQueryHelper.extract_offset(data_source.query),
             },
             stats=stats,
         )
@@ -221,33 +209,3 @@ class SnowflakeCommon:
             query = f"{query} LIKE '{database_name}'"
         res = self._execute_query(connection, query).to_dict().get('name')
         return [database for database in res.values()] if res else []
-
-    def _prepare_query(
-        self,
-        query: str,
-        query_parameters: Optional[Dict] = None,
-    ) -> Tuple[str, list]:
-        """Prepare actual query by applying parameters"""
-        query = convert_to_printf_templating_style(query)
-        converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
-        return converted_query, ordered_values
-
-    def _prepare_count_query(
-        self,
-        query_string: str,
-        query_parameters: Optional[Dict] = None,
-    ) -> Tuple[str, list]:
-        """Transform input query into a query to count rows in dataset"""
-        prepared_query, prepared_values = self._prepare_query(query_string, query_parameters)
-        prepared_query = prepared_query.replace(';', '')
-        prepared_query = f'SELECT COUNT(*) AS TOTAL_ROWS FROM ({prepared_query});'
-        return prepared_query, prepared_values
-
-    def count_request_needed(
-        self,
-        query,
-        get_row_count,
-    ) -> bool:
-        if get_row_count and 'select' in query.lower():
-            return True
-        return False
