@@ -288,7 +288,7 @@ class SnowflakeConnector(ToucanConnector):
                 f' session_id {connection_params["session_id"]}'
             )
             connect_start = timer()
-            connection = snowflake.connector.connect(
+            conn = snowflake.connector.connect(
                 **connection_params, database=database, warehouse=warehouse
             )
             connect_end = timer()
@@ -302,7 +302,7 @@ class SnowflakeConnector(ToucanConnector):
                     }
                 },
             )
-            return connection
+            return conn
 
         def alive_function(conn):
             logger.debug('Check Snowflake connection alive')
