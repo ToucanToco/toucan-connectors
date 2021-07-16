@@ -150,7 +150,6 @@ class SnowflakeCommon:
                 else:
                     self.logger.info('query finish')
         return DataSlice(self.data)
-        return DataSlice(self.data)
 
     def fetch_data(
         self,

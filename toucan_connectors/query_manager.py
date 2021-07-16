@@ -20,22 +20,12 @@ class QueryManager:
             result = execute_method(connection, query, parameters)
             return result
         else:
-            raise Exception('execute_method is not callable')
+            raise TypeError('execute_method is not callable')
 
     def execute(
         self, execute_method, connection, query: str, query_parameters: Optional[Dict] = None
     ):
-        logger.debug('execute query if query is not in cache')
-        # cast query with parameters to hash
-        # hash_query = hash(query)
-        # hash_parameters = hash(str(parameters))
-        # hash_all = str(hash_query) + '_' + str(hash_parameters)
-
-        # if hash_query in self.query:
-        #     return self.query[hash_all]
-        # else:
         result = QueryManager._execute(execute_method, connection, query, query_parameters)
-        # self.query[hash_all] = result
         return result
 
     @staticmethod
