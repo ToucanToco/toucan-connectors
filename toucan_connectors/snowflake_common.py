@@ -86,7 +86,7 @@ class SnowflakeCommon:
         self.set_execution_time(execution_time)
         convert_start = timer()
         # Here call our customized fetch
-        values = pd.DataFrame.from_dict(QueryManager.fetchmany(query_res))
+        values = pd.DataFrame.from_dict(query_res.fetchall())
         convert_end = timer()
         conversion_time = convert_end - convert_start
         self.logger.info(

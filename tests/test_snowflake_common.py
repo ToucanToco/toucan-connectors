@@ -59,10 +59,7 @@ warehouses_result_one = [{'name': 'warehouse_1'}]
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute', return_value=None)
-@patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
-    return_value=pd.DataFrame(databases_result_all),
-)
+@patch('pandas.DataFrame.from_dict', return_value=pd.DataFrame(databases_result_all))
 def test_get_database_without_filter(database_result, execute_query, connect):
     result = SnowflakeCommon().get_databases(connect)
     assert database_result.call_count == 1
@@ -74,7 +71,7 @@ def test_get_database_without_filter(database_result, execute_query, connect):
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(databases_result_none),
 )
 def test_get_database_with_filter_no_result(database_result, execute_query, connect):
@@ -86,7 +83,7 @@ def test_get_database_with_filter_no_result(database_result, execute_query, conn
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(databases_result_one),
 )
 def test_get_database_with_filter_one_result(database_result, execute_query, connect):
@@ -99,7 +96,7 @@ def test_get_database_with_filter_one_result(database_result, execute_query, con
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(warehouses_result_all),
 )
 def test_get_warehouse_without_filter(warehouse_result, execute_query, connect, mocker):
@@ -113,7 +110,7 @@ def test_get_warehouse_without_filter(warehouse_result, execute_query, connect, 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(warehouses_result_none),
 )
 def test_get_warehouse_with_filter_no_result(warehouse_result, execute_query, connect):
@@ -125,7 +122,7 @@ def test_get_warehouse_with_filter_no_result(warehouse_result, execute_query, co
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(warehouses_result_one),
 )
 def test_get_warehouse_with_filter_one_result(warehouse_result, execute_query, connect):
@@ -138,7 +135,7 @@ def test_get_warehouse_with_filter_one_result(warehouse_result, execute_query, c
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_retrieve_data(result, execute_query, connect, snowflake_datasource):
@@ -150,7 +147,7 @@ def test_retrieve_data(result, execute_query, connect, snowflake_datasource):
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_without_limit_without_offset(
@@ -165,7 +162,7 @@ def test_get_slice_without_limit_without_offset(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_5),
 )
 def test_get_slice_with_limit_without_offset(result, execute_query, connect, snowflake_datasource):
@@ -178,7 +175,7 @@ def test_get_slice_with_limit_without_offset(result, execute_query, connect, sno
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_none),
 )
 def test_get_slice_with_limit_without_offset_no_data(
@@ -193,7 +190,7 @@ def test_get_slice_with_limit_without_offset_no_data(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_one),
 )
 def test_get_slice_with_limit_without_offset_not_enough_data(
@@ -208,7 +205,7 @@ def test_get_slice_with_limit_without_offset_not_enough_data(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_with_limit_with_offset(result, execute_query, connect, snowflake_datasource):
@@ -221,7 +218,7 @@ def test_get_slice_with_limit_with_offset(result, execute_query, connect, snowfl
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_none),
 )
 def test_get_slice_with_limit_with_offset_no_data(
@@ -236,7 +233,7 @@ def test_get_slice_with_limit_with_offset_no_data(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_one),
 )
 def test_get_slice_with_limit_with_offset_not_enough_data(
@@ -251,7 +248,7 @@ def test_get_slice_with_limit_with_offset_not_enough_data(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_without_limit_with_offset(result, execute_query, connect, snowflake_datasource):
@@ -264,7 +261,7 @@ def test_get_slice_without_limit_with_offset(result, execute_query, connect, sno
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_with_limit_extracted_from_query(
@@ -281,7 +278,7 @@ def test_get_slice_with_limit_extracted_from_query(
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_with_offset_extracted_from_query(
@@ -296,7 +293,7 @@ def test_get_slice_with_offset_extracted_from_query(
 
 
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_metadata(snowflake_datasource, mocker):
@@ -310,7 +307,7 @@ def test_get_slice_metadata(snowflake_datasource, mocker):
 
 
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_metadata_no_select_in_query(result, snowflake_datasource, mocker):
@@ -325,7 +322,7 @@ def test_get_slice_metadata_no_select_in_query(result, snowflake_datasource, moc
 
 
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_all),
 )
 def test_get_slice_metadata_wrong_response_from_count_query(snowflake_datasource, mocker):
@@ -362,7 +359,7 @@ def test_execute_broken_query(execute_query, snowflake_datasource, mocker):
 
 
 @patch(
-    'toucan_connectors.query_manager.QueryManager.fetchmany',
+    'pandas.DataFrame.from_dict',
     side_effect=[pd.DataFrame(data_result_all), pd.DataFrame({'TOTAL_ROWS': 20}, index=[0])],
 )
 def test_retrieve_data_with_row_count_limit_in_query(fetchmany, snowflake_datasource, mocker):

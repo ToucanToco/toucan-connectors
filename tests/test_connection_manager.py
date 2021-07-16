@@ -1,4 +1,3 @@
-import concurrent.futures
 import time
 from typing import Optional
 
@@ -192,34 +191,6 @@ def test_multiple_different_get(connection_manager):
         connection_manager.force_clean()
 
 
-def test_waiting_connection_success(connection_manager, mocker):
-    spy = mocker.spy(connection_manager, '_ConnectionManager__get_wait')
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        futures = [
-            executor.submit(_get_connection, connection_manager, 'conn_1', 0.1),
-            executor.submit(_get_connection, connection_manager, 'conn_1', 0.6),
-        ]
-        for future in concurrent.futures.as_completed(futures):
-            if future.exception() is not None:
-                raise future.exception()
-        assert spy.call_count >= 1
-    connection_manager.force_clean()
-
-
-def test_waiting_connection_timeout(connection_manager, mocker):
-    spy = mocker.spy(connection_manager, '_ConnectionManager__get_wait')
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        with pytest.raises(TimeoutError):
-            futures = [executor.submit(_get_connection, connection_manager, 'conn_1', 4)]
-            time.sleep(0.3)
-            futures.append(executor.submit(_get_connection, connection_manager, 'conn_1', 0))
-            for future in concurrent.futures.as_completed(futures):
-                if future.exception() is not None:
-                    raise future.exception()
-            assert spy.call_count >= 1
-    connection_manager.force_clean()
-
-
 def test_auto_clean_exception(connection_manager):
     t1 = connection_manager.time_keep_alive
     t2 = connection_manager.time_between_clean
@@ -329,26 +300,4 @@ def test_connect_method_is_not_callable(connection_manager):
     with pytest.raises(Exception):
         with _get_connection_without_connect_method(connection_manager, 'conn_1'):
             assert len(connection_manager.connection_list) == 0
-    connection_manager.force_clean()
-
-
-def test_get_wait_lock(connection_manager, mocker):
-    t1 = connection_manager.time_keep_alive
-    t2 = connection_manager.time_between_clean
-    connection_manager.time_keep_alive = 1
-    connection_manager.time_between_clean = 1
-    spy = mocker.spy(connection_manager, '_ConnectionManager__get_wait')
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        futures = [executor.submit(_get_connection_long_closing, connection_manager, 'conn_1', 2)]
-        time.sleep(0.3)
-        assert not connection_manager.lock
-        time.sleep(1)
-        assert connection_manager.lock
-        futures.append(executor.submit(_get_connection, connection_manager, 'conn_1'))
-        for future in concurrent.futures.as_completed(futures):
-            if future.exception() is not None:
-                raise future.exception()
-        assert spy.call_count > 1
-    connection_manager.time_keep_alive = t1
-    connection_manager.time_between_clean = t2
     connection_manager.force_clean()
