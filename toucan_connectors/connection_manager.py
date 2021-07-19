@@ -180,7 +180,12 @@ class ConnectionManager:
             self.clean_active = False
 
     def _create(
-        self, identifier: str, connect_method, alive_method, close_method, save: bool = True
+        self,
+        identifier: Optional[str],
+        connect_method,
+        alive_method,
+        close_method,
+        save: bool = True,
     ):
         if isinstance(connect_method, types.FunctionType) or isinstance(
             connect_method, types.MethodType
@@ -204,45 +209,16 @@ class ConnectionManager:
         else:
             raise Exception('Connection is not a method')
 
-    def __get_wait(
-        self,
-        identifier: str,
-        connect_method,
-        alive_method,
-        close_method,
-        retry_time: float,
-        save: bool = True,
-    ):
-        """Retrieve connection when the connection as Status.AVAILABLE or Status.QUERY_IN_PROGRESS"""
-        if identifier not in self.connection_list:
-            return self._create(identifier, connect_method, alive_method, close_method, save)
-        elif self.lock or not self.connection_list[identifier].is_ready():
-            logger.debug(f'Connection is in progress - wait since {retry_time}')
-            time.sleep(self.wait)
-            if self.wait + retry_time < self.timeout:
-                return self.__get_wait(
-                    identifier,
-                    connect_method,
-                    alive_method,
-                    close_method,
-                    self.wait + retry_time,
-                    save,
-                )
-            else:
-                logger.error(
-                    f'Timeout - Impossible to retrieve connection (Timeout: {self.timeout})'
-                )
-                raise TimeoutError(f'Impossible to retrieve connection (Timeout: {self.timeout})')
-        elif self.connection_list[identifier].is_ready():
-            logger.debug('Connection is ready')
-            return self.connection_list[identifier].get_connection()
-
     def get(self, identifier: str, connect_method, alive_method, close_method, save: bool = True):
         """Retrieve or create connection if not exist in connection_list"""
         logger.debug(f'Get element in Dict {identifier}')
-        if identifier is not None and identifier in self.connection_list:
+        if (
+            identifier is not None
+            and identifier in self.connection_list
+            and self.connection_list[identifier].is_ready()
+        ):
             logging.getLogger(__name__).debug('Connection exist')
-            return self.__get_wait(identifier, connect_method, alive_method, close_method, 0, save)
+            return self.connection_list[identifier].get_connection()
         else:
             logger.debug('Connection does not exist, create and save it')
             return self._create(identifier, connect_method, alive_method, close_method, save)

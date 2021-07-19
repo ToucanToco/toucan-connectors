@@ -27,17 +27,3 @@ class QueryManager:
     ):
         result = QueryManager._execute(execute_method, connection, query, query_parameters)
         return result
-
-    @staticmethod
-    def fetchmany(executed_cursor):
-
-        size = executed_cursor.arraysize
-        ret = []
-        while size > 0:
-            row = executed_cursor.fetchone()
-            if not row:
-                break
-            ret.append(row)
-            size -= 1 if size else None
-
-        return ret
