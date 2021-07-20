@@ -32,6 +32,11 @@ def test_prepare_query_with_limit():
         assert f'SELECT * FROM ({request.replace(";", "")}) LIMIT 10;' == new_request[0]
 
 
+def test_prepare_query_show():
+    new_request = SqlQueryHelper().prepare_limit_query(query_string='show schemas', limit=10)
+    assert 'show schemas' == new_request[0]
+
+
 def test_prepare_count_query_no_change():
     request_sum = 'SELECT SUM(population_2010) FROM communes;'
     new_request_sum = SqlQueryHelper().prepare_count_query(query_string=request_sum)
