@@ -387,6 +387,7 @@ class SnowflakeConnector(ToucanConnector):
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
+        get_row_count: Optional[bool] = False,
     ) -> DataSlice:
         data_source = self._set_warehouse(data_source)
         with self._get_connection(data_source.database, data_source.warehouse) as connection:
@@ -395,6 +396,7 @@ class SnowflakeConnector(ToucanConnector):
                 data_source,
                 offset=offset,
                 limit=limit,
+                get_row_count=get_row_count
             )
         return result
 

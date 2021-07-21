@@ -179,20 +179,21 @@ class SnowflakeCommon:
     ) -> DataSlice:
         result = self.fetch_data(connection, data_source, offset, limit, get_row_count)
 
-        if offset and limit:
-            result = result[offset : limit + offset]
         stats = DataStats(
             execution_time=self.execution_time,
             conversion_time=self.conversion_time,
             total_returned_rows=len(result),
             df_memory_size=result.memory_usage().sum(),
+            total_rows=self.total_rows_count
         )
         return DataSlice(
             df=result,
-            input_parameters={
-                'limit': SqlQueryHelper.extract_limit(data_source.query),
-                'offset': SqlQueryHelper.extract_offset(data_source.query),
-            },
+            # In the case of user defined limit/offset, get the info
+            # Not used for now
+            # input_parameters={
+            #     'limit': SqlQueryHelper.extract_limit(data_source.query),
+            #     'offset': SqlQueryHelper.extract_offset(data_source.query),
+            # },
             stats=stats,
         )
 
