@@ -222,6 +222,7 @@ class GoogleSheets2Connector(ToucanConnector):
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit=50,
+        get_row_count: Optional[bool] = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
