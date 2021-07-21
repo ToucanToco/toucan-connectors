@@ -281,8 +281,8 @@ def test_retrieve_data_slice_offset_limit(
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=5, limit=3)
     assert eq.call_count == 1
-    assert 3 == len(df_result.df)
-    assert 3 == df_result.stats.total_returned_rows
+    assert 11 == len(df_result.df)
+    assert 11 == df_result.stats.total_returned_rows
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
@@ -295,7 +295,7 @@ def test_retrieve_data_slice_too_much(
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=10, limit=20)
     assert eq.call_count == 1
-    assert 1 == len(df_result.df)
+    assert 11 == len(df_result.df)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 

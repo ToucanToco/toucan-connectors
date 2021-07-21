@@ -184,7 +184,7 @@ class SnowflakeCommon:
             conversion_time=self.conversion_time,
             total_returned_rows=len(result),
             df_memory_size=result.memory_usage().sum(),
-            total_rows=self.total_rows_count
+            total_rows=self.total_rows_count,
         )
         return DataSlice(
             df=result,

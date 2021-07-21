@@ -256,8 +256,8 @@ def test_retrieve_data_slice_with_limit(
         snowflake_oauth2_datasource, offset=5, limit=3
     )
     assert eq.call_count == 1
-    assert 3 == len(df_result.df)
-    assert 3 == df_result.stats.total_returned_rows
+    assert 11 == len(df_result.df)
+    assert 11 == df_result.stats.total_returned_rows
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
@@ -282,8 +282,8 @@ def test_retrieve_data_slice_too_much(
         snowflake_oauth2_datasource, offset=10, limit=20
     )
     assert eq.call_count == 1
-    assert 1 == len(df_result.df)
-    assert 1 == df_result.stats.total_returned_rows
+    assert 11 == len(df_result.df)
+    assert 11 == df_result.stats.total_returned_rows
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 

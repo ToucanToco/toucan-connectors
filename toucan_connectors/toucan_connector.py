@@ -316,7 +316,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
-        get_row_count: Optional[bool] = False
+        get_row_count: Optional[bool] = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
@@ -327,7 +327,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
 
         Args:
-          get_row_count: used in some connectors to optionally get the total number of 
+          get_row_count: used in some connectors to optionally get the total number of
             rows from a request, before limit (Snowflake)
         """
         df = self.get_df(data_source, permissions)

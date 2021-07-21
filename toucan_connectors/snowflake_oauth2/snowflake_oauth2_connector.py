@@ -226,7 +226,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
-        get_row_count: Optional[bool] = False
+        get_row_count: Optional[bool] = False,
     ) -> DataSlice:
         with self._get_connection(
             database=data_source.database, warehouse=data_source.warehouse

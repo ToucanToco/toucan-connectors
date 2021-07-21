@@ -211,8 +211,8 @@ def test_get_slice_with_limit_without_offset_not_enough_data(
 def test_get_slice_with_limit_with_offset(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 1
-    assert len(ds.df) == 5
-    assert ds.stats.total_returned_rows == 5
+    assert len(ds.df) == 14
+    assert ds.stats.total_returned_rows == 14
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
@@ -241,8 +241,8 @@ def test_get_slice_with_limit_with_offset_not_enough_data(
 ):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 1
-    assert len(ds.df) == 0
-    assert ds.stats.total_returned_rows == 0
+    assert len(ds.df) == 1
+    assert ds.stats.total_returned_rows == 1
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
@@ -256,40 +256,6 @@ def test_get_slice_without_limit_with_offset(result, execute_query, connect, sno
     assert result.call_count == 1
     assert len(ds.df) == 14
     assert ds.stats.total_returned_rows == 14
-
-
-@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
-@patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-@patch(
-    'pandas.DataFrame.from_dict',
-    return_value=pd.DataFrame(data_result_all),
-)
-def test_get_slice_with_limit_extracted_from_query(
-    result, execute_query, connect, snowflake_datasource
-):
-    snowflake_datasource.query = 'select name from favourite_drinks limit 12;'
-    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert ds.input_parameters.get('limit') == 12
-    snowflake_datasource.query = 'select name from favourite_drinks;'
-    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert not ds.input_parameters.get('limit')
-
-
-@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
-@patch('snowflake.connector.cursor.SnowflakeCursor.execute')
-@patch(
-    'pandas.DataFrame.from_dict',
-    return_value=pd.DataFrame(data_result_all),
-)
-def test_get_slice_with_offset_extracted_from_query(
-    result, execute_query, connect, snowflake_datasource
-):
-    snowflake_datasource.query = 'select name from favourite_drinks limit 12 offset 23;'
-    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert ds.input_parameters.get('offset') == 23
-    snowflake_datasource.query = 'select name from favourite_drinks limit 12;'
-    ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert ds.input_parameters.get('offset') is None
 
 
 @patch(

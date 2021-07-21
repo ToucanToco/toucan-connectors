@@ -392,11 +392,7 @@ class SnowflakeConnector(ToucanConnector):
         data_source = self._set_warehouse(data_source)
         with self._get_connection(data_source.database, data_source.warehouse) as connection:
             result = SnowflakeCommon().get_slice(
-                connection,
-                data_source,
-                offset=offset,
-                limit=limit,
-                get_row_count=get_row_count
+                connection, data_source, offset=offset, limit=limit, get_row_count=get_row_count
             )
         return result
 
