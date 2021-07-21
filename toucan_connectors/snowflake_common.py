@@ -42,6 +42,7 @@ class SnowflakeCommon:
         self.data = data.result()
 
     def set_total_rows_count(self, count):
+        print(count)
         self.total_rows_count = count.result()['TOTAL_ROWS'][0]
 
     def set_total_returned_rows_count(self, count):

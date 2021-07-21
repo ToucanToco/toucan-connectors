@@ -331,5 +331,13 @@ def test_execute_broken_query(execute_query, snowflake_datasource, mocker):
 def test_retrieve_data_with_row_count_limit_in_query(fetchmany, snowflake_datasource, mocker):
     snowflake_datasource.query = 'select name from favourite_drinks limit 10;'
     connect = mocker.MagicMock()
-    SnowflakeCommon().retrieve_data(connect, snowflake_datasource, get_row_count=True)
+    sc = SnowflakeCommon()
+    sc.retrieve_data(connect, snowflake_datasource, get_row_count=True)
     assert fetchmany.call_count == 2
+    assert sc.total_rows_count == 20
+
+
+def test_retrieve_total_rows():
+    sc = SnowflakeCommon()
+    sc.set_total_returned_rows_count(20)
+    assert sc.total_returned_rows_count == 20

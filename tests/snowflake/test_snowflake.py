@@ -299,6 +299,47 @@ def test_retrieve_data_slice_too_much(
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
+def test_retrieve_data_fetch(
+    eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
+):
+    df_result = snowflake_connector._fetch_data(snowflake_datasource)
+    assert eq.call_count == 1
+    assert 11 == len(df_result)
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
+def test_retrieve_data_fetch_offset_limit(
+    eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
+):
+    df_result: DataSlice = snowflake_connector._fetch_data(snowflake_datasource, offset=5, limit=3)
+    assert eq.call_count == 1
+    assert 11 == len(df_result)
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('toucan_connectors.snowflake_common.SnowflakeCommon._execute_query', return_value=df)
+def test_retrieve_data_fetch_too_much(
+    eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
+):
+    df_result: DataSlice = snowflake_connector._fetch_data(
+        snowflake_datasource, offset=10, limit=20
+    )
+    assert eq.call_count == 1
+    assert 11 == len(df_result)
+    SnowflakeConnector.get_snowflake_connection_manager().force_clean()
+
+
 def test_schema_fields_order():
     schema_props_keys = list(
         JsonWrapper.loads(SnowflakeConnector.schema_json())['properties'].keys()

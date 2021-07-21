@@ -371,10 +371,7 @@ class SnowflakeConnector(ToucanConnector):
         limit: Optional[int] = None,
         get_row_count: bool = False,
     ) -> pd.DataFrame:
-        warehouse = data_source.warehouse
-        # Default to default warehouse if not specified in `data_source`
-        if self.default_warehouse and not warehouse:
-            data_source.warehouse = self.default_warehouse
+        data_source = self._set_warehouse(data_source)
         with self._get_connection(data_source.database, data_source.warehouse) as connection:
             result = SnowflakeCommon().fetch_data(
                 connection, data_source, offset, limit, get_row_count
