@@ -5,7 +5,7 @@ from toucan_connectors.azure_mssql.azure_mssql_connector import (
 
 
 def test_connection_params():
-    connector = AzureMSSQLConnector(host='my_host', user='my_user', password='', name='')
+    connector = AzureMSSQLConnector(host='my_host', user='my_user', name='')
     params = connector.get_connection_params()
     assert params['server'] == 'my_host.database.windows.net'
     assert params['user'] == 'my_user@my_host'
@@ -42,4 +42,4 @@ def test_gcmysql_get_df(mocker):
         password='ilovetoucan',
         driver='{ODBC Driver 17 for SQL Server}',
     )
-    reasq.assert_called_once_with('my_query', con=snock(), params=None)
+    reasq.assert_called_once_with('my_query', con=snock(), params=[])

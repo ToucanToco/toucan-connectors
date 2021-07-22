@@ -35,7 +35,8 @@ def test_gbq(mocker):
     datasource = GoogleBigQueryDataSource(
         name='MyGBQ',
         domain='wiki',
-        query='SELECT * FROM bigquery-public-data:samples.wikipedia LIMIT 1000',
+        query='SELECT * FROM bigquery-public-data:samples.wikipedia WHERE test = "{{key}}" LIMIT 1000',
+        parameters={'key': 'tortank'},
     )
     assert connector.get_df(datasource).equals(mydf)
 
@@ -47,7 +48,7 @@ def test_gbq(mocker):
         'https://www.googleapis.com/auth/drive',
     ]
     assert kwargs == {
-        'query': 'SELECT * FROM bigquery-public-data:samples.wikipedia LIMIT 1000',
+        'query': 'SELECT * FROM bigquery-public-data:samples.wikipedia WHERE test = "tortank" LIMIT 1000',
         'project_id': 'my_project_id',
         'dialect': 'standard',
     }

@@ -20,13 +20,29 @@ except ImportError:
     pass
 
 
+class DataStats(NamedTuple):
+    total_rows: Optional[int] = None  # total number of rows in original dataset
+    total_returned_rows: Optional[int] = None  # the number of rows returned by the query
+    execution_time: Optional[float] = None  # query's execution time in ms
+    conversion_time: Optional[float] = None  # Result conversion to DataFrame time
+    df_memory_size: Optional[int] = None  # Dataframe's memory usage in bytes
+
+
 class Category(str, Enum):
     SNOWFLAKE: str = 'Snowflake'
 
 
 class DataSlice(NamedTuple):
+    """
+    A detailed doc is available here: https://toucantoco.atlassian.net/wiki/spaces/TTA/pages/3018784933/Snowflake+-+Query+execution+metadata
+    for explanations about metadata available in the DataSlice object.
+    """
+
     df: pd.DataFrame  # the dataframe of the slice
-    total_count: int  # the length of the raw dataframe (without slicing)
+    # TODO total_count field should be removed
+    total_count: Optional[int] = None  # the length of the raw dataframe (without slicing)
+    input_parameters: Optional[dict] = None
+    stats: Optional[DataStats] = None
 
 
 class StrEnum(str, Enum):
@@ -236,6 +252,9 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     type: str = Field(None)
     secrets_storage_version = Field('1', **{'ui.hidden': True})
 
+    # Used to defined the connection
+    identifier: str = Field(None, **{'ui.hidden': True})
+
     class Config:
         extra = 'forbid'
         validate_assignment = True
@@ -297,6 +316,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
+        get_row_count: Optional[bool] = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
@@ -305,12 +325,18 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         - offset is the index of the starting row
         - limit is the number of rows to retrieve
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
+
+        Args:
+          get_row_count: used in some connectors to optionally get the total number of
+            rows from a request, before limit (Snowflake)
         """
         df = self.get_df(data_source, permissions)
         if limit is not None:
-            return DataSlice(df[offset : offset + limit], len(df))
+            return DataSlice(
+                df[offset : offset + limit], stats=DataStats(total_returned_rows=len(df))
+            )
         else:
-            return DataSlice(df[offset:], len(df))
+            return DataSlice(df[offset:], stats=DataStats(total_returned_rows=len(df)))
 
     def explain(self, data_source: ToucanDataSource, permissions: Optional[dict] = None):
         """Method to give metrics about the query"""

@@ -103,15 +103,28 @@ class OAuth2Connector:
         """
         token = self.secrets_keeper.load(self.auth_flow_id)
 
-        if 'expires_at' in token and token['expires_at'].timestamp() < time():
-            if 'refresh_token' not in token:
-                raise NoOAuth2RefreshToken
-            client = OAuth2Session(
-                client_id=self.config.client_id,
-                client_secret=self.config.client_secret.get_secret_value(),
-            )
-            new_token = client.refresh_token(self.token_url, refresh_token=token['refresh_token'])
-            self.secrets_keeper.save(self.auth_flow_id, new_token)
+        if 'expires_at' in token:
+
+            expires_at = token['expires_at']
+            if isinstance(expires_at, bool):
+                is_expired = expires_at
+            elif isinstance(expires_at, (int, float)):
+                is_expired = expires_at < time()
+            else:
+                is_expired = expires_at.timestamp() < time()
+
+            if is_expired:
+                if 'refresh_token' not in token:
+                    raise NoOAuth2RefreshToken
+                client = OAuth2Session(
+                    client_id=self.config.client_id,
+                    client_secret=self.config.client_secret.get_secret_value(),
+                )
+                new_token = client.refresh_token(
+                    self.token_url, refresh_token=token['refresh_token']
+                )
+                self.secrets_keeper.save(self.auth_flow_id, new_token)
+
         return self.secrets_keeper.load(self.auth_flow_id)['access_token']
 
     def get_access_data(self):

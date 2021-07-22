@@ -224,26 +224,26 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
 def test_get_slice(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.get_slice(datasource)
-    assert res.total_count == 3
+    assert res.stats.total_returned_rows == 3
     assert res.df.shape == (3, 5)
     assert res.df['country'].tolist() == ['France', 'England', 'Germany']
 
     # With a limit
     res = mongo_connector.get_slice(datasource, limit=1)
     expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
-    assert res.total_count == 3
+    assert res.stats.total_returned_rows == 3
     assert res.df.shape == (1, 5)
     assert res.df[['country', 'language', 'value']].equals(expected)
 
     # With a offset
     res = mongo_connector.get_slice(datasource, offset=1)
-    assert res.total_count == 3
+    assert res.stats.total_returned_rows == 3
     assert res.df.shape == (2, 5)
     assert res.df['country'].tolist() == ['England', 'Germany']
 
     # With both
     res = mongo_connector.get_slice(datasource, offset=1, limit=1)
-    assert res.total_count == 3
+    assert res.stats.total_returned_rows == 3
     assert res.df.shape == (1, 5)
     assert res.df.loc[0, 'country'] == 'England'
 
@@ -258,16 +258,16 @@ def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
             {'$sort': [{'pays': 1}]},
         ],
     )
-    df, count = mongo_connector.get_slice(datasource, limit=1)
-    assert count == 3
-    assert df.shape == (1, 1)
-    assert df.iloc[0].pays in ['France', 'England', 'Germany']
+    dataslice = mongo_connector.get_slice(datasource, limit=1)
+    assert dataslice.stats.total_returned_rows == 3
+    assert dataslice.df.shape == (1, 1)
+    assert dataslice.df.iloc[0].pays in ['France', 'England', 'Germany']
 
 
 def test_get_slice_no_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    df, count = mongo_connector.get_slice(datasource, limit=None)
-    assert count == 3
+    ds = mongo_connector.get_slice(datasource, limit=None)
+    assert ds.stats.total_returned_rows == 3
     expected = pd.DataFrame(
         {
             'country': ['France', 'England', 'Germany'],
@@ -275,15 +275,15 @@ def test_get_slice_no_limit(mongo_connector, mongo_datasource):
             'value': [20, 14, 17],
         }
     )
-    assert df.shape == (3, 5)
-    assert df[['country', 'language', 'value']].equals(expected)
+    assert ds.df.shape == (3, 5)
+    assert ds.df[['country', 'language', 'value']].equals(expected)
 
 
 def test_get_slice_empty(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'unknown'})
-    df, count = mongo_connector.get_slice(datasource, limit=1)
-    assert count == 0
-    assert df.shape == (0, 0)
+    dataslice = mongo_connector.get_slice(datasource, limit=1)
+    assert dataslice.stats.total_returned_rows == 0
+    assert dataslice.df.shape == (0, 0)
 
 
 def test_get_slice_max_count(mongo_connector, mongo_datasource, mocker):
@@ -296,7 +296,7 @@ def test_get_slice_max_count(mongo_connector, mongo_datasource, mocker):
     aggregate = mocker.spy(pymongo.collection.Collection, 'aggregate')
 
     datasource = mongo_datasource(collection='test_col', query={'domain': 'unknown'})
-    df, count = mongo_connector.get_slice(datasource, limit=50)
+    mongo_connector.get_slice(datasource, limit=50)
 
     aggregate.assert_called_once()
     # count facet must be limited

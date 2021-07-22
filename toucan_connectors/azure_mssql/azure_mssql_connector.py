@@ -31,7 +31,7 @@ class AzureMSSQLConnector(ToucanConnector):
     )
 
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(..., description='Your login password')
+    password: SecretStr = Field('', description='Your login password')
     connect_timeout: int = Field(
         None,
         title='Connection timeout',
@@ -42,6 +42,9 @@ class AzureMSSQLConnector(ToucanConnector):
     def get_connection_params(self, *, database=None):
         base_host = re.sub(f'.{CLOUD_HOST}$', '', self.host)
         user = f'{self.user}@{base_host}' if '@' not in self.user else self.user
+
+        if not self.password:
+            self.password = SecretStr('')
 
         con_params = {
             'driver': '{ODBC Driver 17 for SQL Server}',
@@ -57,7 +60,14 @@ class AzureMSSQLConnector(ToucanConnector):
     def _retrieve_data(self, datasource: AzureMSSQLDataSource) -> pd.DataFrame:
         connection = pyodbc.connect(**self.get_connection_params(database=datasource.database))
 
-        df = pandas_read_sql(datasource.query, con=connection)
+        query_params = datasource.parameters or {}
+        df = pandas_read_sql(
+            datasource.query,
+            con=connection,
+            params=query_params,
+            convert_to_qmark=True,
+            render_user=True,
+        )
 
         connection.close()
         return df

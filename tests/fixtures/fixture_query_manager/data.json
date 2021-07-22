@@ -1,0 +1,22 @@
+{
+  "customer": {
+    "name": [
+      "shanky",
+      "nirma"
+    ],
+    "phone": [
+      123123123,
+      232342342
+    ]
+  },
+  "product": {
+    "name": [
+      "shanky",
+      "nirma"
+    ],
+    "id": [
+      1,
+      2
+    ]
+  }
+}
