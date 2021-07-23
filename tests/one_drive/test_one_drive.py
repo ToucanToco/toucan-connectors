@@ -42,6 +42,31 @@ def ds_without_range():
     )
 
 
+@fixture
+def ds_with_site():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        file='test_file',
+        sheet='test_sheet',
+        range='A2:B3',
+        site_id='1234',
+        list_id='abcd',
+    )
+
+
+@fixture
+def ds_with_site_without_range():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        file='test_file',
+        sheet='test_sheet',
+        site_id='1234',
+        list_id='abcd',
+    )
+
+
 @pytest.fixture
 def http_get_mock(mocker):
     return mocker.patch('requests.get')
@@ -114,6 +139,28 @@ def test_url_without_range(mocker, con, ds_without_range):
     assert (
         url
         == 'https://graph.microsoft.com/v1.0/me/drive/root:/test_file:/workbook/worksheets/test_sheet/usedRange(valuesOnly=true)'
+    )
+
+
+def test_url_with_site_with_range(mocker, con, ds_with_site):
+    mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+
+    url = con._format_url(ds_with_site)
+
+    assert (
+        url
+        == "https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test_file:/workbook/worksheets/test_sheet/range(address='A2:B3')"
+    )
+
+
+def test_url_with_site_without_range(mocker, con, ds_with_site_without_range):
+    mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+
+    url = con._format_url(ds_with_site_without_range)
+
+    assert (
+        url
+        == 'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test_file:/workbook/worksheets/test_sheet/usedRange(valuesOnly=true)'
     )
 
 

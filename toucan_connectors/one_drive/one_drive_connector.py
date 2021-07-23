@@ -13,6 +13,18 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class OneDriveDataSource(ToucanDataSource):
+    site_id: Optional[str] = Field(
+        None,
+        Title='Site Id',
+        description='Access a sharePoint site using the siteId',
+        placeholder='Only for SharePoint',
+    )
+    list_id: Optional[str] = Field(
+        None,
+        Title='List Id',
+        description='Access a sharePoint list of a specific site using the listId',
+        placeholder='Only for SharePoint',
+    )
     file: str
     sheet: str
     range: Optional[str]
@@ -47,7 +59,7 @@ class OneDriveConnector(ToucanConnector):
         None,
         Title='Scope',
         description='The scope determines what type of access the app is granted when the user is signed in',
-        placeholder='offline_access Files.Read',
+        placeholder='offline_access Files.Read Sites.Read.All',
     )
     tenant: str = Field(
         None,
@@ -95,7 +107,11 @@ class OneDriveConnector(ToucanConnector):
 
     def _format_url(self, data_source):
         logging.getLogger(__name__).debug('_format_url')
-        url = f'https://graph.microsoft.com/v1.0/me/drive/root:/{data_source.file}:/workbook/worksheets/{data_source.sheet}/'
+
+        if data_source.site_id and data_source.list_id:
+            url = f'https://graph.microsoft.com/v1.0/sites/{data_source.site_id}/lists/{data_source.list_id}/drive/root:/{data_source.file}:/workbook/worksheets/{data_source.sheet}/'
+        else:
+            url = f'https://graph.microsoft.com/v1.0/me/drive/root:/{data_source.file}:/workbook/worksheets/{data_source.sheet}/'
 
         if data_source.range is None:
             url = url + 'usedRange(valuesOnly=true)'
