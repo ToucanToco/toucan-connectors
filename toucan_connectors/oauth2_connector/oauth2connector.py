@@ -13,13 +13,13 @@ from toucan_connectors.json_wrapper import JsonWrapper
 
 class SecretsKeeper(ABC):
     @abstractmethod
-    def save(self, key: str, value):
+    def save(self, key: str, value, **kwargs):
         """
         Save secrets in a secrets repository
         """
 
     @abstractmethod
-    def load(self, key: str) -> Any:
+    def load(self, key: str, **kwargs) -> Any:
         """
         Load secrets from the secrets repository
         """
