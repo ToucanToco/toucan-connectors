@@ -473,3 +473,22 @@ def test_schema_extra():
             'validation': {},
         }
     }
+
+
+def test_get_cache_key(connector, data_source):
+    data_source.headers = {'name': '%(first_name)s'}
+    data_source.parameters = {'first_name': 'raphael'}
+    key = connector.get_cache_key(data_source)
+
+    assert key == '3562ab28-ab63-324d-8cb4-5e3964fe1310'
+
+    data_source.headers = {'name': '{{ first_name }}'}  # change the templating style
+    key2 = connector.get_cache_key(data_source)
+    assert key2 == key  # same result because the templates are rendered
+
+    data_source.parameters['nickname'] = 'raph'  # add a useless parameter
+    key3 = connector.get_cache_key(data_source)
+    assert key3 == key  # same result because the new parameter does not impact the result
+
+    key4 = connector.get_cache_key(data_source, offset=10)
+    assert key4 != key  # adding an offset changed the result

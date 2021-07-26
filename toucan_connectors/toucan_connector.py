@@ -1,7 +1,9 @@
+import json
 import logging
 import operator
 import os
 import socket
+import uuid
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
@@ -11,7 +13,11 @@ import pandas as pd
 import tenacity as tny
 from pydantic import BaseModel, Field
 
-from toucan_connectors.common import ConnectorStatus, apply_query_parameters
+from toucan_connectors.common import (
+    ConnectorStatus,
+    apply_query_parameters,
+    nosql_apply_parameters_to_query,
+)
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 
 try:
@@ -375,3 +381,30 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         }
         """
         return ConnectorStatus()
+
+    def get_cache_key(
+        self,
+        data_source: ToucanDataSource,
+        permissions: Optional[dict] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
+    ) -> str:
+        """
+        Generate a unique identifier (str) for a query.
+        This identifier will then be used as a cache key.
+        """
+        data_source_rendered = nosql_apply_parameters_to_query(
+            data_source.dict(), data_source.parameters, handle_errors=True
+        )
+        del data_source_rendered['parameters']
+
+        unique_identifier = {
+            'connector': self.dict(),
+            'datasource': data_source_rendered,
+            'permissions': permissions,
+            'offset': offset,
+            'limit': limit,
+        }
+        json_uid = json.dumps(unique_identifier, sort_keys=True)
+        string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
+        return string_uid
