@@ -50,8 +50,8 @@ def ds_with_site():
         file='test_file',
         sheet='test_sheet',
         range='A2:B3',
-        site_id='1234',
-        list_id='abcd',
+        site_url='company_name.sharepoint.com/sites/site_name',
+        document_library='Documents',
     )
 
 
@@ -62,8 +62,8 @@ def ds_with_site_without_range():
         domain='test_domain',
         file='test_file',
         sheet='test_sheet',
-        site_id='1234',
-        list_id='abcd',
+        site_url='company_name.sharepoint.com/sites/site_name',
+        document_library='Documents',
     )
 
 
@@ -144,6 +144,8 @@ def test_url_without_range(mocker, con, ds_without_range):
 
 def test_url_with_site_with_range(mocker, con, ds_with_site):
     mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
 
     url = con._format_url(ds_with_site)
 
@@ -155,6 +157,8 @@ def test_url_with_site_with_range(mocker, con, ds_with_site):
 
 def test_url_with_site_without_range(mocker, con, ds_with_site_without_range):
     mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
 
     url = con._format_url(ds_with_site_without_range)
 
