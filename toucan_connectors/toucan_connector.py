@@ -384,27 +384,31 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     def get_cache_key(
         self,
-        data_source: ToucanDataSource,
+        data_source: Optional[ToucanDataSource] = None,
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
     ) -> str:
         """
-        Generate a unique identifier (str) for a query.
+        Generate a unique identifier (str) for a given connector's configuration
+        (if no parameters are supplied) or for a given couple connector/query
+        configuration (if `data_source` parameter is supplied).
         This identifier will then be used as a cache key.
         """
-        data_source_rendered = nosql_apply_parameters_to_query(
-            data_source.dict(), data_source.parameters, handle_errors=True
-        )
-        del data_source_rendered['parameters']
-
         unique_identifier = {
             'connector': self.dict(),
-            'datasource': data_source_rendered,
             'permissions': permissions,
             'offset': offset,
             'limit': limit,
         }
+
+        if data_source is not None:
+            data_source_rendered = nosql_apply_parameters_to_query(
+                data_source.dict(), data_source.parameters, handle_errors=True
+            )
+            del data_source_rendered['parameters']
+            unique_identifier['datasource'] = data_source_rendered
+
         json_uid = json.dumps(unique_identifier, sort_keys=True)
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
         return string_uid

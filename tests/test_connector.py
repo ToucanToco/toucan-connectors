@@ -139,6 +139,19 @@ def test_get_cache_key():
     assert key3 == key
 
 
+def test_get_cache_key_connector_alone():
+    connector_a1 = DataConnector(name='a')
+    connector_a2 = DataConnector(name='a')
+    connector_b = DataConnector(name='b')
+
+    key_a1 = connector_a1.get_cache_key()
+    key_a2 = connector_a2.get_cache_key()
+    key_b = connector_b.get_cache_key()
+
+    assert key_a1 == key_a2
+    assert key_a1 != key_b
+
+
 class UnreliableDataConnector(ToucanConnector):
     type = 'MyUnreliableDB'
     data_source_model: DataSource
