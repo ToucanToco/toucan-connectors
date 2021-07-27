@@ -1,4 +1,5 @@
 import pytest
+import responses
 from pytest import fixture
 
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
@@ -99,6 +100,8 @@ FAKE_SHEET = {
     'valueTypes': [['String', 'String'], ['String', 'Double'], ['String', 'Double']],
     'values': [['col1', 'col2'], ['A', 1], ['B', 2]],
 }
+
+FAKE_LIBRARIES = {'value': [{'id': 'abcd', 'displayName': 'Documents'}]}
 
 
 def test_sheet_success(mocker, con, ds, http_get_mock):
@@ -207,3 +210,26 @@ def test_run_fetch(con, mocker):
     con._run_fetch('https://jsonplaceholder.typicode.com/posts')
 
     mock_oauth2_connector.get_access_token.assert_called()
+
+
+@responses.activate
+def test_get_site_id(con, mocker, ds_with_site):
+    responses.add(
+        responses.GET,
+        'https://graph.microsoft.com/v1.0/sites/company_name.sharepoint.com:/sites/site_name',
+        json={'id': 1},
+        status=200,
+    )
+
+    id = con._get_site_id(ds_with_site)
+    assert id == 1
+
+
+@responses.activate
+def test_get_list_id(con, mocker, ds_with_site):
+    responses.add(
+        responses.GET, 'https://graph.microsoft.com/v1.0/sites/1234/lists', json=FAKE_LIBRARIES
+    )
+
+    id = con._get_list_id(ds_with_site, '1234')
+    assert id == 'abcd'
