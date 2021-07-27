@@ -121,6 +121,37 @@ def test_get_status():
     assert DataConnector(name='my_name').get_status() == ConnectorStatus()
 
 
+def test_get_cache_key():
+    connector = DataConnector(name='my_name')
+    ds = connector.data_source_model(domain='yo', name='my_name', query='much caching')
+
+    key = connector.get_cache_key(ds)
+    # We should get a deterministic identifier:
+    # /!\ the identifier will change if the model of the connector or the datasource changes
+    assert key == '9d3ac11f-49d4-39ef-bc0e-8fc3ad85131d'
+
+    ds.query = 'wow'
+    key2 = connector.get_cache_key(ds)
+    assert key2 != key
+
+    ds.query = 'much caching'
+    key3 = connector.get_cache_key(ds)
+    assert key3 == key
+
+
+def test_get_cache_key_connector_alone():
+    connector_a1 = DataConnector(name='a')
+    connector_a2 = DataConnector(name='a')
+    connector_b = DataConnector(name='b')
+
+    key_a1 = connector_a1.get_cache_key()
+    key_a2 = connector_a2.get_cache_key()
+    key_b = connector_b.get_cache_key()
+
+    assert key_a1 == key_a2
+    assert key_a1 != key_b
+
+
 class UnreliableDataConnector(ToucanConnector):
     type = 'MyUnreliableDB'
     data_source_model: DataSource
