@@ -393,6 +393,15 @@ class SnowflakeConnector(ToucanConnector):
             )
         return result
 
+    def describe(
+        self,
+        data_source: SnowflakeDataSource,
+    ) -> Dict[str, str]:
+        data_source = self._set_warehouse(data_source)
+        with self._get_connection(data_source.database, data_source.warehouse) as connection:
+            result = SnowflakeCommon().describe(connection, data_source.query)
+        return result
+
     @staticmethod
     def get_snowflake_connection_manager():
         return snowflake_connection_manager

@@ -35,7 +35,7 @@ extras_require = {
     'ROK': ['requests', 'pyjwt', 'simplejson'],
     'sap_hana': ['pyhdb>=0.3.4'],
     'soap': ['zeep', 'lxml==4.2.5'],
-    'snowflake': ['snowflake-connector-python==2.4.1'],
+    'snowflake': ['snowflake-connector-python>=2.5'],
     'toucan_toco': ['toucan_client'],
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))

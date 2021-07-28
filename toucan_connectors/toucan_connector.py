@@ -7,7 +7,7 @@ import uuid
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Iterable, List, NamedTuple, Optional, Type
+from typing import Dict, Iterable, List, NamedTuple, Optional, Type
 
 import pandas as pd
 import tenacity as tny
@@ -34,6 +34,10 @@ class DataStats(NamedTuple):
     df_memory_size: Optional[int] = None  # Dataframe's memory usage in bytes
 
 
+class QueryMetadata(NamedTuple):
+    columns: Optional[Dict[str, str]] = None  # Stores column names and types
+
+
 class Category(str, Enum):
     SNOWFLAKE: str = 'Snowflake'
 
@@ -49,6 +53,7 @@ class DataSlice(NamedTuple):
     total_count: Optional[int] = None  # the length of the raw dataframe (without slicing)
     input_parameters: Optional[dict] = None
     stats: Optional[DataStats] = None
+    query_metadata: Optional[QueryMetadata] = None
 
 
 class StrEnum(str, Enum):
@@ -430,3 +435,6 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         json_uid = json.dumps(unique_identifier, sort_keys=True)
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
         return string_uid
+
+    def describe(self, data_source: ToucanDataSource):
+        """ """
