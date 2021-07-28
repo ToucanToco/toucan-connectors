@@ -73,6 +73,7 @@ class ToucanDataSource(BaseModel):
     live_data: bool = False
     validation: dict = None
     parameters: dict = None
+    ttl: Optional[int] = None  # overrides connector's ttl
 
     class Config:
         extra = 'forbid'
@@ -257,6 +258,10 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     _retry_on: Iterable[Type[BaseException]] = ()
     type: str = Field(None)
     secrets_storage_version = Field('1', **{'ui.hidden': True})
+
+    # Default ttl for all connector's queries (overridable at the data_source level)
+    # /!\ ttl is used by the caching system which is not implemented in toucan_connectors.
+    ttl: Optional[int] = Field(None, title='TTL (cache')
 
     # Used to defined the connection
     identifier: str = Field(None, **{'ui.hidden': True})

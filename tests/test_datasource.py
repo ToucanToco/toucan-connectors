@@ -107,6 +107,7 @@ def test_get_form():
             'live_data': {'title': 'Live Data', 'type': 'boolean', 'default': False},
             'validation': {'title': 'Validation', 'type': 'object'},
             'parameters': {'title': 'Parameters', 'type': 'object'},
+            'ttl': {'title': 'Ttl', 'type': 'integer'},
         },
         'required': ['domain', 'name'],
         'additionalProperties': False,
