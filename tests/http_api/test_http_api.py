@@ -480,7 +480,7 @@ def test_get_cache_key(connector, data_source):
     data_source.parameters = {'first_name': 'raphael'}
     key = connector.get_cache_key(data_source)
 
-    assert key == 'a889058e-46e7-30ae-b6e8-e544c963957d'
+    assert key == 'f31e8815-d1b4-356c-8600-f5b25ed75db2'
 
     data_source.headers = {'name': '{{ first_name }}'}  # change the templating style
     key2 = connector.get_cache_key(data_source)

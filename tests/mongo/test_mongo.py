@@ -645,3 +645,11 @@ def test_format_stages_explain_result():
             },
         ],
     }
+
+
+def test_get_cache_key(mongo_connector):
+    """
+    It should not raise 'TypeError: Object of type 'MongoClient' is not JSON serializable'
+    """
+    assert mongo_connector.client is not None
+    assert isinstance(mongo_connector.get_cache_key(), str)

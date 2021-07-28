@@ -286,8 +286,8 @@ class MongoConnector(ToucanConnector):
         )
         return _format_explain_result(result)
 
-    def to_serializable_dict(self) -> dict:
-        return self.dict(
+    def to_json(self) -> dict:
+        return self.json(
             exclude={'client'}
         )  # client is a MongoClient instance, not json serializable
 

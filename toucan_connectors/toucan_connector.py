@@ -387,14 +387,14 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         return ConnectorStatus()
 
-    def to_serializable_dict(self) -> dict:
+    def to_json(self) -> dict:
         """
-        Returns a serializable version of the connector's config.
+        Returns a serialized version of the connector's config.
         Override this method in connectors which have not-serializable properties.
 
         Used by `get_cache_key` method.
         """
-        return self.dict()
+        return self.json()
 
     def get_cache_key(
         self,
@@ -410,7 +410,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         This identifier will then be used as a cache key.
         """
         unique_identifier = {
-            'connector': self.to_serializable_dict(),
+            'connector': self.to_json(),
             'permissions': permissions,
             'offset': offset,
             'limit': limit,
