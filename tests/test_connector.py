@@ -128,7 +128,7 @@ def test_get_cache_key():
     key = connector.get_cache_key(ds)
     # We should get a deterministic identifier:
     # /!\ the identifier will change if the model of the connector or the datasource changes
-    assert key == 'c1e63213-bb27-3596-a24e-f7542e73e05d'
+    assert key == '78c0a10d-100d-3b1e-bb67-d0cb6f855c6a'
 
     ds.query = 'wow'
     key2 = connector.get_cache_key(ds)
