@@ -11,7 +11,7 @@ from typing import Iterable, List, NamedTuple, Optional, Type
 
 import pandas as pd
 import tenacity as tny
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretBytes, SecretStr
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -269,6 +269,10 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     class Config:
         extra = 'forbid'
         validate_assignment = True
+        json_encoders = {
+            SecretStr: lambda v: v.get_secret_value(),
+            SecretBytes: lambda v: v.get_secret_value(),
+        }
 
     @classmethod
     def __init_subclass__(cls):
