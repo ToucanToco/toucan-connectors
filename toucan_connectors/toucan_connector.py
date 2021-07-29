@@ -261,7 +261,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     # Default ttl for all connector's queries (overridable at the data_source level)
     # /!\ cache ttl is used by the caching system which is not implemented in toucan_connectors.
-    cache_ttl: Optional[int] = Field(None, title='TTL (cache')
+    cache_ttl: Optional[int] = Field(None, title='TTL (cache)')
 
     # Used to defined the connection
     identifier: str = Field(None, **{'ui.hidden': True})
@@ -391,7 +391,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         return ConnectorStatus()
 
-    def to_json(self) -> dict:
+    def get_unique_identifier(self) -> dict:
         """
         Returns a serialized version of the connector's config.
         Override this method in connectors which have not-serializable properties.
@@ -414,7 +414,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         This identifier will then be used as a cache key.
         """
         unique_identifier = {
-            'connector': self.to_json(),
+            'connector': self.get_unique_identifier(),
             'permissions': permissions,
             'offset': offset,
             'limit': limit,
