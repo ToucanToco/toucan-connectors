@@ -13,6 +13,18 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class OneDriveDataSource(ToucanDataSource):
+    site_url: Optional[str] = Field(
+        None,
+        Title='Site URL',
+        description='Access a sharePoint site using the site url (company_name.sharepoint.com/sites/site_name)',
+        placeholder='Only for SharePoint',
+    )
+    document_library: Optional[str] = Field(
+        None,
+        Title='Document Library',
+        description='Access a sharePoint library (Documents)',
+        placeholder='Only for SharePoint',
+    )
     file: str
     sheet: str
     range: Optional[str]
@@ -47,7 +59,7 @@ class OneDriveConnector(ToucanConnector):
         None,
         Title='Scope',
         description='The scope determines what type of access the app is granted when the user is signed in',
-        placeholder='offline_access Files.Read',
+        placeholder='offline_access Files.Read Sites.Read.All',
     )
     tenant: str = Field(
         None,
@@ -93,9 +105,43 @@ class OneDriveConnector(ToucanConnector):
         logging.getLogger(__name__).debug('_get_access_token')
         return self.__dict__['_oauth2_connector'].get_access_token()
 
+    def _get_site_id(self, data_source):
+        logging.getLogger(__name__).debug('_get_site_id')
+
+        access_token = self._get_access_token()
+        headers = {'Authorization': f'Bearer {access_token}'}
+
+        baseroute = data_source.site_url.split('/', 1)[0]
+        endpoint = data_source.site_url.split('/', 1)[1]
+
+        url = f'https://graph.microsoft.com/v1.0/sites/{baseroute}:/{endpoint}'
+        response = requests.get(url, headers=headers)
+
+        return response.json()['id']
+
+    def _get_list_id(self, data_source, site_id):
+        logging.getLogger(__name__).debug('_get_list_id')
+
+        access_token = self._get_access_token()
+        headers = {'Authorization': f'Bearer {access_token}'}
+
+        url = f'https://graph.microsoft.com/v1.0/sites/{site_id}/lists'
+        response = requests.get(url, headers=headers)
+
+        for library in response.json()['value']:
+            if library['displayName'] == data_source.document_library:
+                return library['id']
+
     def _format_url(self, data_source):
         logging.getLogger(__name__).debug('_format_url')
-        url = f'https://graph.microsoft.com/v1.0/me/drive/root:/{data_source.file}:/workbook/worksheets/{data_source.sheet}/'
+
+        if data_source.site_url and data_source.document_library:
+            site_id = self._get_site_id(data_source)
+            list_id = self._get_list_id(data_source, site_id)
+
+            url = f'https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_id}/drive/root:/{data_source.file}:/workbook/worksheets/{data_source.sheet}/'
+        else:
+            url = f'https://graph.microsoft.com/v1.0/me/drive/root:/{data_source.file}:/workbook/worksheets/{data_source.sheet}/'
 
         if data_source.range is None:
             url = url + 'usedRange(valuesOnly=true)'
