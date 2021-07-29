@@ -11,7 +11,7 @@ from typing import Iterable, List, NamedTuple, Optional, Type
 
 import pandas as pd
 import tenacity as tny
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretBytes, SecretStr
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -73,6 +73,7 @@ class ToucanDataSource(BaseModel):
     live_data: bool = False
     validation: dict = None
     parameters: dict = None
+    cache_ttl: Optional[int] = None  # overrides connector's ttl
 
     class Config:
         extra = 'forbid'
@@ -258,12 +259,20 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     type: str = Field(None)
     secrets_storage_version = Field('1', **{'ui.hidden': True})
 
+    # Default ttl for all connector's queries (overridable at the data_source level)
+    # /!\ cache ttl is used by the caching system which is not implemented in toucan_connectors.
+    cache_ttl: Optional[int] = Field(None, title='TTL (cache)')
+
     # Used to defined the connection
     identifier: str = Field(None, **{'ui.hidden': True})
 
     class Config:
         extra = 'forbid'
         validate_assignment = True
+        json_encoders = {
+            SecretStr: lambda v: v.get_secret_value(),
+            SecretBytes: lambda v: v.get_secret_value(),
+        }
 
     @classmethod
     def __init_subclass__(cls):
@@ -382,6 +391,15 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         return ConnectorStatus()
 
+    def get_unique_identifier(self) -> dict:
+        """
+        Returns a serialized version of the connector's config.
+        Override this method in connectors which have not-serializable properties.
+
+        Used by `get_cache_key` method.
+        """
+        return self.json()
+
     def get_cache_key(
         self,
         data_source: Optional[ToucanDataSource] = None,
@@ -396,7 +414,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         This identifier will then be used as a cache key.
         """
         unique_identifier = {
-            'connector': self.dict(),
+            'connector': self.get_unique_identifier(),
             'permissions': permissions,
             'offset': offset,
             'limit': limit,

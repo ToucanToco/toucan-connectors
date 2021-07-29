@@ -286,6 +286,11 @@ class MongoConnector(ToucanConnector):
         )
         return _format_explain_result(result)
 
+    def get_unique_identifier(self) -> dict:
+        return self.json(
+            exclude={'client'}
+        )  # client is a MongoClient instance, not json serializable
+
 
 def _format_explain_result(explain_result):
     """format output of an `explain` mongo command
