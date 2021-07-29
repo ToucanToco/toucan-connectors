@@ -227,6 +227,10 @@ CONNECTORS_REGISTRY = {
         'connector': 'wootric.wootric_connector.WootricConnector',
         'logo': 'wootric/wootric.png',
     },
+    'Spotify': {
+        'connector': 'spotify.spotify_connector.SpotifyConnector',
+        'logo': 'spotify/spotify.png',
+    },
 }
 
 

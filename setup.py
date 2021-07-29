@@ -37,6 +37,7 @@ extras_require = {
     'soap': ['zeep', 'lxml==4.2.5'],
     'snowflake': ['snowflake-connector-python==2.4.1'],
     'toucan_toco': ['toucan_client'],
+    'spotify': ['spotipy'],
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
