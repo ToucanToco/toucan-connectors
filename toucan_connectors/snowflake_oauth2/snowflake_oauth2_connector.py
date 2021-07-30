@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 import snowflake
 from pydantic import Field, SecretStr, create_model
-from snowflake.connector import DictCursor, SnowflakeConnection
+from snowflake.connector import SnowflakeConnection
 
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.oauth2_connector.oauth2connector import (
