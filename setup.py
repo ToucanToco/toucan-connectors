@@ -37,7 +37,7 @@ extras_require = {
     'soap': ['zeep', 'lxml==4.2.5'],
     'snowflake': ['snowflake-connector-python==2.4.1'],
     'toucan_toco': ['toucan_client'],
-    'spotify': ['spotipy'],
+    'spotify': ['spotipy==2.17.1'],
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
 
@@ -48,7 +48,7 @@ install_requires = [
     'jinja2',
     'pydantic',
     'pyjq',
-    'requests<2.24.0',
+    'requests',
     'tenacity',
     'toucan_data_sdk',
     'typing-extensions; python_version < "3.8"',
