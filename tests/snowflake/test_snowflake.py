@@ -675,3 +675,17 @@ def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_c
     assert connect.call_args_list[0][1]['database'] == 'test_database'
     assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
     cm.force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+def test_describe(is_closed, close, connect, mocker, snowflake_datasource, snowflake_connector):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
+    mocked_common_describe = mocker.patch(
+        'toucan_connectors.snowflake.snowflake_connector.SnowflakeCommon.describe',
+        return_value={'toto': 'int', 'tata': 'str'},
+    )
+    snowflake_connector.describe(snowflake_datasource)
+    mocked_common_describe.assert_called_once()
+    cm.force_clean()

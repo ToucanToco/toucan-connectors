@@ -1,12 +1,12 @@
 import logging
 from contextlib import suppress
 from timeit import default_timer as timer
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import snowflake
 from pydantic import Field, SecretStr, create_model
-from snowflake.connector import SnowflakeConnection
+from snowflake.connector import DictCursor, SnowflakeConnection
 
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -208,6 +208,12 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             result = SnowflakeCommon().get_warehouses(connection, warehouse_name)
         return result
 
+    def _set_warehouse(self, data_source: SnowflakeDataSource):
+        warehouse = data_source.warehouse
+        if self.default_warehouse and not warehouse:
+            data_source.warehouse = self.default_warehouse
+        return data_source
+
     def _get_databases(self, database_name: Optional[str] = None) -> List[str]:
         with self._get_connection(database=database_name) as connection:
             result = SnowflakeCommon().get_databases(connection, database_name)
@@ -238,6 +244,15 @@ class SnowflakeoAuth2Connector(ToucanConnector):
                 limit=limit,
                 get_row_count=get_row_count,
             )
+        return result
+
+    def describe(
+        self,
+        data_source: SnowflakeDataSource,
+    ) -> Dict[str, str]:
+        data_source = self._set_warehouse(data_source)
+        with self._get_connection(data_source.database, data_source.warehouse) as connection:
+            result = SnowflakeCommon().describe(connection, data_source.query)
         return result
 
     @staticmethod
