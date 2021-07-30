@@ -72,9 +72,6 @@ class SnowflakeCommon:
     def set_conversion_time(self, conversion_time):
         self.conversion_time = conversion_time
 
-    def set_column_names_and_types(self, column_names_and_types):
-        self.column_names_and_types = column_names_and_types
-
     def _execute_query(self, connection, query: str, query_parameters: Optional[Dict] = None):
         return QueryManager().execute(
             execute_method=self._execute_query_internal,
