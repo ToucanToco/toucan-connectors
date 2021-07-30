@@ -324,6 +324,66 @@ def test_execute_broken_query(execute_query, snowflake_datasource, mocker):
         )
 
 
+@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
+def test_describe(connect, mocker):
+    mocked__describe = mocker.patch('toucan_connectors.query_manager.QueryManager.describe')
+    SnowflakeCommon().describe(connect, 'SELECT FAIRY_DUST FROM STRATON_OAKMONT;')
+    mocked__describe.assert_called_once()
+
+
+@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
+def test__describe(connect, mocker):
+    mocked_cursor = mocker.MagicMock()
+    mocked_describe = mocked_cursor.describe
+
+    class fake_result:
+        def __init__(self, name, type_code):
+            self.name = name
+            self.type_code = type_code
+
+    mocked_describe.return_value = [
+        fake_result(name='steve_madden', type_code=0),
+        fake_result(name='IPO', type_code=1),
+    ]
+    connect.cursor.return_value = mocked_cursor
+    res = SnowflakeCommon()._describe(connect, 'SELECT steve_madden, IPO FROM STRATON_OAKMONT;')
+    mocked_describe.assert_called_once()
+    assert res['steve_madden'] == 'int'
+    assert res['IPO'] == 'float'
+
+
+@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
+def test__describe_api_changed(connect, mocker):
+    mocked_cursor = mocker.MagicMock()
+    mocked_describe = mocked_cursor.describe
+
+    class fake_result:
+        def __init__(self, name, type_code):
+            self.name = name
+            self.type_code = type_code
+
+    mocked_describe.return_value = [
+        fake_result(name='steve_madden', type_code=14),
+        fake_result(name='IPO', type_code=1),
+    ]
+    connect.cursor.return_value = mocked_cursor
+    res = SnowflakeCommon()._describe(connect, 'SELECT steve_madden, IPO FROM STRATON_OAKMONT;')
+    mocked_describe.assert_called_once()
+    assert res['steve_madden'] is None
+    assert res['IPO'] == 'float'
+
+
+@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
+def test__describe_api_didnt_describe(connect, mocker):
+    mocked_cursor = mocker.MagicMock()
+    mocked_describe = mocked_cursor.describe
+    mocked_describe.return_value = None
+    connect.cursor.return_value = mocked_cursor
+    with pytest.raises(TypeError):
+        SnowflakeCommon()._describe(connect, 'SELECT steve_madden, IPO FROM STRATON_OAKMONT;')
+    mocked_describe.assert_called_once()
+
+
 @patch(
     'pandas.DataFrame.from_dict',
     side_effect=[pd.DataFrame(data_result_all), pd.DataFrame({'TOTAL_ROWS': 20}, index=[0])],

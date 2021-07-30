@@ -490,3 +490,35 @@ def test_retrieve_tokens(mocker, snowflake_oauth2_connector):
     snowflake_oauth2_connector.__dict__['_oauth2_connector'] = mock_oauth2_connector
     snowflake_oauth2_connector.retrieve_tokens('bla')
     mock_oauth2_connector.retrieve_tokens.assert_called()
+
+
+@patch(
+    'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
+    return_value='tortank',
+)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+def test_describe(
+    is_closed,
+    close,
+    connect,
+    get_token,
+    mocker,
+    snowflake_oauth2_datasource,
+    snowflake_oauth2_connector,
+):
+    cm = SnowflakeoAuth2Connector.get_connection_manager()
+    mocked_common_describe = mocker.patch(
+        'toucan_connectors.snowflake.snowflake_connector.SnowflakeCommon.describe',
+        return_value={'toto': 'int', 'tata': 'str'},
+    )
+    snowflake_oauth2_connector.describe(snowflake_oauth2_datasource)
+    mocked_common_describe.assert_called_once()
+    cm.force_clean()
+
+
+def test_set_warehouse(snowflake_oauth2_connector, snowflake_oauth2_datasource):
+    snowflake_oauth2_datasource.warehouse = None
+    new_data_source = snowflake_oauth2_connector._set_warehouse(snowflake_oauth2_datasource)
+    assert new_data_source.warehouse == 'warehouse_1'

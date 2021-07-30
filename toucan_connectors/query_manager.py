@@ -27,3 +27,18 @@ class QueryManager:
     ):
         result = QueryManager._execute(execute_method, connection, query, query_parameters)
         return result
+
+    @staticmethod
+    def _describe(describe_method, connection, query: str):
+        logger.debug('call describe method')
+        if isinstance(describe_method, types.MethodType) or isinstance(
+            describe_method, types.FunctionType
+        ):
+            result = describe_method(connection, query)
+            return result
+        else:
+            raise TypeError('describe_method is not callable')
+
+    def describe(self, describe_method, connection, query: str):
+        result = QueryManager._describe(describe_method, connection, query)
+        return result

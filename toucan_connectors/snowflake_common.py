@@ -9,7 +9,24 @@ from snowflake.connector import DictCursor
 
 from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
-from toucan_connectors.toucan_connector import DataSlice, DataStats, ToucanDataSource
+from toucan_connectors.toucan_connector import DataSlice, DataStats, QueryMetadata, ToucanDataSource
+
+type_code_mapping = {
+    0: 'int',
+    1: 'float',
+    2: 'str',
+    3: 'date',
+    4: 'timestamp',
+    5: 'variant',
+    6: 'timestamp_ltz',
+    7: 'timestamp_tz',
+    8: 'timestampe_ntz',
+    9: 'object',
+    10: 'array',
+    11: 'binary',
+    12: 'time',
+    13: 'boolean',
+}
 
 
 class SnowflakeConnectorException(Exception):
@@ -37,6 +54,7 @@ class SnowflakeCommon:
         self.total_returned_rows_count: Optional[int] = -1
         self.execution_time: Optional[float] = None
         self.conversion_time: Optional[float] = None
+        self.column_names_and_types: Optional[Dict[str, str]] = None
 
     def set_data(self, data):
         self.data = data.result()
@@ -189,6 +207,7 @@ class SnowflakeCommon:
         )
         return DataSlice(
             df=result,
+            query_metadata=QueryMetadata(columns=self.column_names_and_types),
             # In the case of user defined limit/offset, get the info
             # Not used for now
             # input_parameters={
@@ -211,3 +230,35 @@ class SnowflakeCommon:
             query = f"{query} LIKE '{database_name}'"
         res = self._execute_query(connection, query).to_dict().get('name')
         return [database for database in res.values()] if res else []
+
+    def describe(self, connection, query):
+        return QueryManager().describe(
+            describe_method=self._describe,
+            connection=connection,
+            query=query,
+        )
+
+    def _describe(
+        self,
+        connection,
+        query: str,
+    ) -> Dict[str, str]:
+        description_start = timer()
+        cursor = connection.cursor(DictCursor)
+        describe_res = cursor.describe(query)
+        description_end = timer()
+        description_time = description_end - description_start
+        self.logger.info(
+            f'[benchmark][snowflake] - description {description_time} seconds',
+            extra={
+                'benchmark': {
+                    'operation': 'describe',
+                    'execution_time': description_time,
+                    'connector': 'snowflake',
+                    'query': query,
+                    'result': describe_res,
+                }
+            },
+        )
+        res = {r.name: type_code_mapping.get(r.type_code) for r in describe_res}
+        return res
