@@ -252,13 +252,14 @@ class SnowflakeCommon:
         description_end = timer()
         description_time = description_end - description_start
         self.logger.info(
-            f'[benchmark][snowflake] - description {description_time} seconds - result {describe_res}',
+            f'[benchmark][snowflake] - description {description_time} seconds',
             extra={
                 'benchmark': {
                     'operation': 'describe',
                     'execution_time': description_time,
                     'connector': 'snowflake',
                     'query': query,
+                    'result': describe_res,
                 }
             },
         )
