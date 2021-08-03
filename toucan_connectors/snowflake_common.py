@@ -60,7 +60,6 @@ class SnowflakeCommon:
         self.data = data.result()
 
     def set_total_rows_count(self, count):
-        print(count)
         self.total_rows_count = count.result()['TOTAL_ROWS'][0]
 
     def set_total_returned_rows_count(self, count):
@@ -178,6 +177,9 @@ class SnowflakeCommon:
         limit: Optional[int] = None,
         get_row_count: bool = False,
     ) -> pd.DataFrame:
+        self._execute_query(connection, f'USE DATABASE {data_source.database}')
+        self._execute_query(connection, f'USE WAREHOUSE {data_source.warehouse}')
+
         ds = self._execute_parallelized_queries(
             connection, data_source.query, data_source.parameters, offset, limit, get_row_count
         )
