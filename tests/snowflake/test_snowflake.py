@@ -254,7 +254,7 @@ def test_retrieve_data(
 ):
     df_result: DataFrame = snowflake_connector._retrieve_data(snowflake_datasource)
 
-    assert eq.call_count == 3
+    assert eq.call_count == 3  # +2 for each data request
     assert 11 == len(df_result)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -267,7 +267,7 @@ def test_retrieve_data_slice(
     eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource)
-    assert eq.call_count == 3
+    assert eq.call_count == 3  # +2 for each data request
     assert 11 == len(df_result.df)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -280,7 +280,7 @@ def test_retrieve_data_slice_offset_limit(
     eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=5, limit=3)
-    assert eq.call_count == 3
+    assert eq.call_count == 3  # +2 for each data request
     assert 11 == len(df_result.df)
     assert 11 == df_result.stats.total_returned_rows
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
@@ -294,7 +294,7 @@ def test_retrieve_data_slice_too_much(
     eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=10, limit=20)
-    assert eq.call_count == 3
+    assert eq.call_count == 3  # +2 for each data request
     assert 11 == len(df_result.df)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -307,7 +307,7 @@ def test_retrieve_data_fetch(
     eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
     df_result = snowflake_connector._fetch_data(snowflake_datasource)
-    assert eq.call_count == 3
+    assert eq.call_count == 3  # +2 for each data request
     assert 11 == len(df_result)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -320,7 +320,7 @@ def test_retrieve_data_fetch_offset_limit(
     eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
     df_result: DataSlice = snowflake_connector._fetch_data(snowflake_datasource, offset=5, limit=3)
-    assert eq.call_count == 3
+    assert eq.call_count == 3  # +2 for each data request
     assert 11 == len(df_result)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -335,7 +335,7 @@ def test_retrieve_data_fetch_too_much(
     df_result: DataSlice = snowflake_connector._fetch_data(
         snowflake_datasource, offset=10, limit=20
     )
-    assert eq.call_count == 3
+    assert eq.call_count == 3  # +2 for each data request
     assert 11 == len(df_result)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 

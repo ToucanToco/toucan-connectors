@@ -400,7 +400,7 @@ def test_retrieve_data_with_row_count_limit_in_query(connect, fetchmany, snowfla
     snowflake_datasource.query = 'select name from favourite_drinks limit 10;'
     sc = SnowflakeCommon()
     sc.retrieve_data(connect, snowflake_datasource, get_row_count=True)
-    assert fetchmany.call_count == 4
+    assert fetchmany.call_count == 4  # +2 for each data request
     assert sc.total_rows_count == 20
 
 
