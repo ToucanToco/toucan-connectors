@@ -625,7 +625,6 @@ def test_oauth_args_endpoint_not_200(
         assert req_mock.call_count == 1
     else:
         cm.force_clean()
-        assert False
 
 
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
