@@ -600,7 +600,7 @@ def test_oauth_args_wrong_type_of_auth(
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
-@patch('toucan_connectors.ToucanConnectors.get_identifier', return_value='test')
+@patch('toucan_connectors.ToucanConnector.get_identifier', return_value='test')
 @patch('requests.post')
 def test_oauth_args_endpoint_not_200(
     req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
