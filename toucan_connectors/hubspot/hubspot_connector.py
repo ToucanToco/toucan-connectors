@@ -114,11 +114,15 @@ class HubspotConnector(ToucanConnector):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
     def _handle_pagination(
-        self, endpoint_info: Dict[str, Any], data_name: str, query_params: Dict[str, str], headers
+        self,
+        endpoint_info: Dict[str, Any],
+        dataset_name: str,
+        query_params: Dict[str, str],
+        headers,
     ) -> List:
         url: str = endpoint_info['url']
         name: Optional[str] = (
-            endpoint_info['sub_name'] if 'sub_name' in endpoint_info else data_name
+            endpoint_info['sub_name'] if 'sub_name' in endpoint_info else dataset_name
         )
         response = None
         res = None
