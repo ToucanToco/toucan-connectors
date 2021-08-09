@@ -1,4 +1,5 @@
 import logging
+import uuid
 from contextlib import suppress
 from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional
@@ -9,6 +10,7 @@ from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
 from toucan_connectors.connection_manager import ConnectionManager
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
@@ -194,7 +196,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
                     raise TypeError('close is not a function')
 
         connection: SnowflakeConnection = connection_manager.get(
-            self.identifier,
+            identifier=self.get_identifier(),
             connect_method=connect_function,
             alive_method=alive_function,
             close_method=close_function,
@@ -202,6 +204,20 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         )
 
         return connection
+
+    def get_identifier(self):
+        json_uid = JsonWrapper.dumps(
+            {
+                'name': self.name,
+                'account': self.account,
+                'client_id': self.client_id,
+                'scope': self.scope,
+                'role': self.role,
+            },
+            sort_keys=True,
+        )
+        string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
+        return string_uid
 
     def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
         with self._get_connection(warehouse=warehouse_name) as connection:

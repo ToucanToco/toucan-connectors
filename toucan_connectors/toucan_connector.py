@@ -1,4 +1,3 @@
-import json
 import logging
 import operator
 import os
@@ -18,6 +17,7 @@ from toucan_connectors.common import (
     apply_query_parameters,
     nosql_apply_parameters_to_query,
 )
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 
 try:
@@ -432,7 +432,12 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
             del data_source_rendered['parameters']
             unique_identifier['datasource'] = data_source_rendered
 
-        json_uid = json.dumps(unique_identifier, sort_keys=True)
+        json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True)
+        string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
+        return string_uid
+
+    def get_identifier(self):
+        json_uid = JsonWrapper.dumps(self.get_unique_identifier(), sort_keys=True)
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
         return string_uid
 
