@@ -16,7 +16,7 @@ extras_require = {
     'github': ['python_graphql_client'],
     'google_analytics': ['google-api-python-client', 'oauth2client'],
     'google_adwords': ['googleads'],
-    'google_big_query': ['pandas_gbq'],
+    'google_big_query': ['google-cloud-bigquery[bqstorage,pandas]'],
     'google_cloud_mysql': ['PyMySQL>=0.8.0'],
     'google_my_business': ['google-api-python-client>=1.7.5'],
     'google_sheets': bearer_deps,
