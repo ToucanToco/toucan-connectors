@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import requests
@@ -16,34 +16,46 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
 )
 
-from .enums import HubspotDataset, HubspotObjectType
-from .helpers import has_next_page, has_next_page_legacy
+from .enums import HubspotDataset
+from .helpers import has_next_page
 
 AUTHORIZATION_URL: str = 'https://app.hubspot.com/oauth/authorize'
 SCOPE: str = 'oauth contacts content forms business-intelligence e-commerce'
 TOKEN_URL: str = 'https://api.hubapi.com/oauth/v1/token'
 HUBSPOT_ENDPOINTS: dict = {
     'contacts': {
-        'url': 'https://api.hubapi.com/crm/v3/objects/contacts',
+        'url': ' https://api.hubapi.com/contacts/v1/lists/all/contacts/all',
+        # 'url': 'https://api.hubapi.com/crm/v3/objects/contacts',
         'legacy': False,
     },
     'companies': {
-        'url': 'https://api.hubapi.com/crm/v3/objects/companies',
+        'url': 'https://api.hubapi.com/companies/v2/companies/paged',
+        # 'url': 'https://api.hubapi.com/crm/v3/objects/companies',
         'legacy': False,
     },
     'deals': {
-        'url': 'https://api.hubapi.com/crm/v3/objects/deals',
+        'url': 'https://api.hubapi.com/deals/v1/deal/paged',
+        # 'url': 'https://api.hubapi.com/crm/v3/objects/deals',
         'legacy': False,
     },
-    'products': {'url': 'https://api.hubapi.com/crm/v3/objects/products', 'legacy': False},
-    'web-analytics': {'url': 'https://api.hubapi.com/events/v3/events', 'legacy': False},
-    # https://legacydocs.hubspot.com/docs/methods/email/get_events?_ga=2.71868499.1363348269.1614853210-1638453014.16134
-    'emails-events': {
-        'url': 'https://api.hubapi.com/email/public/v1/events',
-        'legacy': True,
-        'results_key': 'events',
-        'paging_key': 'offset',
+    'products': {
+        'url': 'https://api.hubapi.com/crm-objects/v1/objects/products/paged',
+        # 'url': 'https://api.hubapi.com/crm/v3/objects/products',
+        'legacy': False,
+        'sub_name': 'objects',
     },
+    # 'web-analytics': {
+    #     'url': 'https://api.hubapi.com/reports/v2/events',
+    #     # 'url': 'https://api.hubapi.com/events/v3/events',
+    #     'legacy': False,
+    # },
+    # https://legacydocs.hubspot.com/docs/methods/email/get_events?_ga=2.71868499.1363348269.1614853210-1638453014.16134
+    # 'emails-events': {
+    #     'url': 'https://api.hubapi.com/email/public/v1/events',
+    #     'legacy': True,
+    #     'results_key': 'events',
+    #     'paging_key': 'offset',
+    # },
 }
 
 
@@ -53,7 +65,6 @@ class HubspotConnectorException(Exception):
 
 class HubspotDataSource(ToucanDataSource):
     dataset: HubspotDataset = 'contacts'
-    object_type: HubspotObjectType = None
     parameters: Dict = Field(None)
 
 
@@ -102,37 +113,40 @@ class HubspotConnector(ToucanConnector):
     def _get_access_token(self):
         return self.__dict__['_oauth2_connector'].get_access_token()
 
-    def _handle_pagination(self, endpoint_info, query_params, headers):
-        url = endpoint_info['url']
-        legacy = endpoint_info['legacy']
+    def _handle_pagination(
+        self,
+        endpoint_info: Dict[str, Any],
+        dataset_name: str,
+        query_params: Dict[str, str],
+        headers,
+    ) -> List:
+        url: str = endpoint_info['url']
+        name: Optional[str] = (
+            endpoint_info['sub_name'] if 'sub_name' in endpoint_info else dataset_name
+        )
         response = None
         res = None
-        data = []
+        data: List = []
 
         next_page_exists = has_next_page
-        if legacy:
-            next_page_exists = has_next_page_legacy
 
+        index = 1
         while not response or next_page_exists(res):
-            if response and not legacy:
+            if res:
                 query_params['after'] = res['paging']['next']['after']
-            elif response:
-                query_params[endpoint_info['paging_key']] = res[endpoint_info['paging_key']]
 
             response = requests.get(url, params=query_params, headers=headers)
             # throw if the request's status is not 200
             response.raise_for_status()
             res = response.json()
             # Flatten the results
-            if not legacy:
-                results = res.get('results')
-            else:
-                results = res.get(endpoint_info['results_key'])
-
+            results = res.get(name)
+            if results is None:
+                raise HubspotConnectorException(f'Impossible to retrieve data for {name}')
             if results:
                 for r in results:
                     data.append(r)
-
+            index += 1
         return data
 
     def _retrieve_data(self, data_source: HubspotDataSource) -> pd.DataFrame:
@@ -141,18 +155,9 @@ class HubspotConnector(ToucanConnector):
             query_params = {}
 
             # The webanalytics endpoint requires an objectType query param
-            if data_source.object_type and data_source.dataset == HubspotDataset.webanalytics:
-                query_params['objectType'] = data_source.object_type
-                # Add properties if specified in parameters
-                # More details are available in HubSpot's documentation: https://developers.hubspot.com/docs/api/events/web-analytics
-                properties = [p for p in data_source.parameters.keys() if 'objectProperty' in p]
-                for prop_name in properties:
-                    query_params[prop_name] = data_source.parameters[prop_name]
-
             data = self._handle_pagination(
-                HUBSPOT_ENDPOINTS[data_source.dataset], query_params, headers
+                HUBSPOT_ENDPOINTS[data_source.dataset], data_source.dataset, query_params, headers
             )
-
             return pd.json_normalize(data)
         except Exception as e:
             raise HubspotConnectorException(f'retrieve_data failed with: {str(e)}')
