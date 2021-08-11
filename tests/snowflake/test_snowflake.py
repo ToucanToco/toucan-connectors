@@ -578,7 +578,9 @@ def test_snowflake_connection_close_exception(gat, is_closed, close, connect, sn
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
 @patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
+@patch('toucan_connectors.ToucanConnector.get_identifier', return_value='test')
 def test_oauth_args_wrong_type_of_auth(
+    get_identifier,
     is_closed,
     close,
     connect,
@@ -598,6 +600,7 @@ def test_oauth_args_wrong_type_of_auth(
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('toucan_connectors.ToucanConnector.get_identifier', return_value='test')
 @patch('requests.post')
 def test_oauth_args_endpoint_not_200(
     req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
@@ -622,16 +625,17 @@ def test_oauth_args_endpoint_not_200(
         assert req_mock.call_count == 1
     else:
         cm.force_clean()
-        assert False
 
 
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('toucan_connectors.ToucanConnector.get_identifier', return_value='test')
 @patch('requests.post')
 def test_refresh_oauth_token(
     req_mock,
+    get_identifier,
     is_closed,
     close,
     connect,
@@ -663,9 +667,13 @@ def test_refresh_oauth_token(
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
-def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_connector_oauth):
+@patch('toucan_connectors.ToucanConnector.get_identifier', return_value='test')
+def test_get_connection_connect_oauth(
+    get_identifier, rt, is_closed, close, connect, snowflake_connector_oauth
+):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
     snowflake_connector_oauth._get_connection('test_database', 'test_warehouse')
+    print(connect.call_args_list)
     assert rt.call_count == 1
     assert connect.call_args_list[0][1]['account'] == 'test_account'
     assert (
