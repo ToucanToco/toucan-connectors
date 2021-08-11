@@ -6,6 +6,7 @@ from typing import Dict, List
 import pandas
 import pandas as pd
 from google.cloud import bigquery
+from google.oauth.credentials import Credentials
 from pydantic import Field
 
 from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
@@ -68,12 +69,12 @@ class GoogleBigQueryConnector(ToucanConnector):
     )
 
     @staticmethod
-    def _get_google_credentials(credentials, scopes):
+    def _get_google_credentials(credentials: GoogleCredentials, scopes: List[str]) -> Credentials:
         credentials = get_google_oauth2_credentials(credentials).with_scopes(scopes)
         return credentials
 
     @staticmethod
-    def _connect(credentials) -> bigquery.Client:
+    def _connect(credentials: Credentials) -> bigquery.Client:
         start = timer()
         client = bigquery.Client(credentials=credentials)
         end = timer()
@@ -91,33 +92,34 @@ class GoogleBigQueryConnector(ToucanConnector):
 
     @staticmethod
     def _execute_query(client: bigquery.Client, query: str, parameters: List) -> pandas.DataFrame:
-        start = timer()
-        result = (
-            client.query(
-                query, job_config=bigquery.QueryJobConfig(query_parameters=parameters)
-            ).result()
-            # Use to generate directly a dataframe pandas
-            .to_dataframe(
-                create_bqstorage_client=True,
+        try:
+            start = timer()
+            result = (
+                client.query(query, job_config=bigquery.QueryJobConfig(query_parameters=parameters))
+                .result()
+                .to_dataframe(
+                    create_bqstorage_client=True,
+                )  # Use to generate directly a dataframe pandas
             )
-        )
-        end = timer()
-        logging.getLogger(__name__).info(
-            f'[benchmark][google_big_query] - execute {end - start} seconds',
-            extra={
-                'benchmark': {
-                    'operation': 'execute',
-                    'execution_time': end - start,
-                    'connector': 'google_big_query',
-                }
-            },
-        )
-        return result
+            end = timer()
+            logging.getLogger(__name__).info(
+                f'[benchmark][google_big_query] - execute {end - start} seconds',
+                extra={
+                    'benchmark': {
+                        'operation': 'execute',
+                        'execution_time': end - start,
+                        'connector': 'google_big_query',
+                    }
+                },
+            )
+            return result
+        except TypeError as e:
+            logging.getLogger(__name__).error(f'Error to execute request {query} - {e}')
 
     @staticmethod
     def _prepare_parameters(query: str, parameters: Dict) -> List:
         query_parameters = []
-        # replace ToucanToco variable definition by Google Big Query variable definition
+        """replace ToucanToco variable definition by Google Big Query variable definition"""
         for k in parameters:
             if query.find('@' + k) > -1:
                 # set all parameters with a type defined and necessary for Big Query
@@ -128,7 +130,7 @@ class GoogleBigQueryConnector(ToucanConnector):
 
     @staticmethod
     def _prepare_query(query: str) -> str:
-        # replace ToucanToco variable definition by Google Big Query variable definition
+        """replace ToucanToco variable definition by Google Big Query variable definition"""
         new_query = query.replace('{{', '@').replace('}}', '')
         return new_query
 
@@ -143,6 +145,6 @@ class GoogleBigQueryConnector(ToucanConnector):
 
         client = GoogleBigQueryConnector._connect(credentials)
         result = GoogleBigQueryConnector._execute_query(client, query, parameters)
-        # client.close()
+        client.close()
 
         return result
