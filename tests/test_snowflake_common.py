@@ -140,7 +140,7 @@ def test_get_warehouse_with_filter_one_result(warehouse_result, execute_query, c
 )
 def test_retrieve_data(result, execute_query, connect, snowflake_datasource):
     df: pd.DataFrame = SnowflakeCommon().retrieve_data(connect, snowflake_datasource)
-    assert result.call_count == 3
+    assert result.call_count == 2
     assert len(df) == 14
 
 
@@ -154,7 +154,7 @@ def test_get_slice_without_limit_without_offset(
     result, execute_query, connect, snowflake_datasource
 ):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert result.call_count == 3
+    assert result.call_count == 2
     assert len(ds.df) == 14
     assert ds.stats.total_returned_rows == 14
 
@@ -167,7 +167,7 @@ def test_get_slice_without_limit_without_offset(
 )
 def test_get_slice_with_limit_without_offset(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
-    assert result.call_count == 3
+    assert result.call_count == 2
     assert len(ds.df) == 5
     assert ds.stats.total_returned_rows == 5
 
@@ -182,7 +182,7 @@ def test_get_slice_with_limit_without_offset_no_data(
     result, execute_query, connect, snowflake_datasource
 ):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
-    assert result.call_count == 3
+    assert result.call_count == 2
     assert len(ds.df) == 0
     assert ds.stats.total_returned_rows == 0
 
@@ -197,7 +197,7 @@ def test_get_slice_with_limit_without_offset_not_enough_data(
     result, execute_query, connect, snowflake_datasource
 ):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
-    assert result.call_count == 3
+    assert result.call_count == 2
     assert len(ds.df) == 1
     assert ds.stats.total_returned_rows == 1
 
@@ -210,7 +210,7 @@ def test_get_slice_with_limit_without_offset_not_enough_data(
 )
 def test_get_slice_with_limit_with_offset(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
-    assert result.call_count == 3
+    assert result.call_count == 2
     assert len(ds.df) == 14
     assert ds.stats.total_returned_rows == 14
 
@@ -225,7 +225,7 @@ def test_get_slice_with_limit_with_offset_no_data(
     result, execute_query, connect, snowflake_datasource
 ):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
-    assert result.call_count == 3
+    assert result.call_count == 2
     assert len(ds.df) == 0
     assert ds.stats.total_returned_rows == 0
 
@@ -240,7 +240,7 @@ def test_get_slice_with_limit_with_offset_not_enough_data(
     result, execute_query, connect, snowflake_datasource
 ):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
-    assert result.call_count == 3
+    assert result.call_count == 2
     assert len(ds.df) == 1
     assert ds.stats.total_returned_rows == 1
 
@@ -253,7 +253,7 @@ def test_get_slice_with_limit_with_offset_not_enough_data(
 )
 def test_get_slice_without_limit_with_offset(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5)
-    assert result.call_count == 3
+    assert result.call_count == 2
     assert len(ds.df) == 14
     assert ds.stats.total_returned_rows == 14
 
@@ -283,7 +283,7 @@ def test_get_slice_metadata_no_select_in_query(result, snowflake_datasource, moc
     )
     connect = mocker.MagicMock()
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert result.call_count == 3
+    assert result.call_count == 2
     assert ds
 
 
@@ -390,7 +390,6 @@ def test__describe_api_didnt_describe(connect, mocker):
     'pandas.DataFrame.from_dict',
     side_effect=[
         None,
-        None,
         pd.DataFrame(data_result_all),
         pd.DataFrame({'TOTAL_ROWS': 20}, index=[0]),
     ],
@@ -400,7 +399,7 @@ def test_retrieve_data_with_row_count_limit_in_query(connect, fetchmany, snowfla
     snowflake_datasource.query = 'select name from favourite_drinks limit 10;'
     sc = SnowflakeCommon()
     sc.retrieve_data(connect, snowflake_datasource, get_row_count=True)
-    assert fetchmany.call_count == 4  # +2 for each data request
+    assert fetchmany.call_count == 3  # +1 to select database and warehouse
     assert sc.total_rows_count == 20
 
 
