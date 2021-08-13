@@ -6,7 +6,7 @@ from typing import Dict, List
 import pandas
 import pandas as pd
 from google.cloud import bigquery
-from google.oauth.credentials import Credentials
+from google.oauth2.service_account import Credentials
 from pydantic import Field
 
 from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
@@ -145,6 +145,5 @@ class GoogleBigQueryConnector(ToucanConnector):
 
         client = GoogleBigQueryConnector._connect(credentials)
         result = GoogleBigQueryConnector._execute_query(client, query, parameters)
-        client.close()
 
         return result
