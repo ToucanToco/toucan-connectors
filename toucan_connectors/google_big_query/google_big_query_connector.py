@@ -115,6 +115,7 @@ class GoogleBigQueryConnector(ToucanConnector):
             return result
         except TypeError as e:
             logging.getLogger(__name__).error(f'Error to execute request {query} - {e}')
+            raise e
 
     @staticmethod
     def _prepare_parameters(query: str, parameters: Dict) -> List:

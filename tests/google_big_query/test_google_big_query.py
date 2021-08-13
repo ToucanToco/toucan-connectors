@@ -99,6 +99,18 @@ def test_execute(client, execute, result, to_dataframe):
 
 
 @patch(
+    'google.cloud.bigquery.table.RowIterator.to_dataframe',
+    return_value=pandas.DataFrame({'a': [1, 1], 'b': [2, 2]}),
+)
+@patch('google.cloud.bigquery.job.query.QueryJob.result', return_value=RowIterator)
+@patch('google.cloud.bigquery.Client.query', side_effect=TypeError)
+@patch('google.cloud.bigquery.Client', autospec=True)
+def test_execute_error(client, execute, result, to_dataframe):
+    with pytest.raises(TypeError):
+        GoogleBigQueryConnector._execute_query(client, 'SELECT 1 FROM my_table', [])
+
+
+@patch(
     'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._get_google_credentials',
     return_value=Credentials,
 )
