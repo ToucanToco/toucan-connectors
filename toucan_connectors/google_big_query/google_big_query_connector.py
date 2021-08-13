@@ -1,13 +1,14 @@
 import logging
 from enum import Enum
 from timeit import default_timer as timer
-from typing import List
+from typing import Dict, List
 
+import pandas
 import pandas as pd
-import pandas_gbq
+from google.cloud import bigquery
+from google.oauth2.service_account import Credentials
 from pydantic import Field
 
-from toucan_connectors.common import apply_query_parameters
 from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -24,6 +25,20 @@ class GoogleBigQueryDataSource(ToucanDataSource):
         '<a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax">here</a>',
         widget='sql',
     )
+
+
+# TODO - check bad return type
+def _define_type(value) -> str:
+    if isinstance(value, bool):
+        return 'BOOL'
+    elif isinstance(value, int):
+        return 'NUMERIC'
+    elif isinstance(value, float):
+        return 'FLOAT64'
+    elif isinstance(value, str):
+        return 'STRING'
+    else:
+        return 'STRING'
 
 
 class GoogleBigQueryConnector(ToucanConnector):
@@ -53,34 +68,83 @@ class GoogleBigQueryConnector(ToucanConnector):
         '<a href="https://developers.google.com/identity/protocols/googlescopes" target="_blank" >documentation</a>',
     )
 
-    def _retrieve_data(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:
-        """
-        Uses Pandas read_gbq method to extract data from Big Query into a dataframe
-        See: http://pandas.pydata.org/pandas-docs/stable/generated/pandas.io.gbq.read_gbq.html
-        Note:
-            The parameter reauth is set to True to force Google BigQuery to reauthenticate the user
-            for each query. This is necessary when extracting multiple data to avoid the error:
-            [Errno 54] Connection reset by peer
-        """
+    @staticmethod
+    def _get_google_credentials(credentials: GoogleCredentials, scopes: List[str]) -> Credentials:
+        credentials = get_google_oauth2_credentials(credentials).with_scopes(scopes)
+        return credentials
+
+    @staticmethod
+    def _connect(credentials: Credentials) -> bigquery.Client:
         start = timer()
-        data_source.query = apply_query_parameters(data_source.query, data_source.parameters)
-        logging.getLogger(__name__).debug(f'Play request {data_source.query}')
-        credentials = get_google_oauth2_credentials(self.credentials).with_scopes(self.scopes)
-        result = pandas_gbq.read_gbq(
-            query=data_source.query,
-            project_id=self.credentials.project_id,
-            credentials=credentials,
-            dialect=self.dialect,
-        )
+        client = bigquery.Client(credentials=credentials)
         end = timer()
         logging.getLogger(__name__).info(
-            f'[benchmark][google_big_query] - execute {end - start} seconds',
+            f'[benchmark][google_big_query] - connect {end - start} seconds',
             extra={
                 'benchmark': {
-                    'operation': 'execute',
+                    'operation': 'connect',
                     'execution_time': end - start,
                     'connector': 'google_big_query',
                 }
             },
         )
+        return client
+
+    @staticmethod
+    def _execute_query(client: bigquery.Client, query: str, parameters: List) -> pandas.DataFrame:
+        try:
+            start = timer()
+            result = (
+                client.query(query, job_config=bigquery.QueryJobConfig(query_parameters=parameters))
+                .result()
+                .to_dataframe(
+                    create_bqstorage_client=True,
+                )  # Use to generate directly a dataframe pandas
+            )
+            end = timer()
+            logging.getLogger(__name__).info(
+                f'[benchmark][google_big_query] - execute {end - start} seconds',
+                extra={
+                    'benchmark': {
+                        'operation': 'execute',
+                        'execution_time': end - start,
+                        'connector': 'google_big_query',
+                    }
+                },
+            )
+            return result
+        except TypeError as e:
+            logging.getLogger(__name__).error(f'Error to execute request {query} - {e}')
+            raise e
+
+    @staticmethod
+    def _prepare_parameters(query: str, parameters: Dict) -> List:
+        query_parameters = []
+        """replace ToucanToco variable definition by Google Big Query variable definition"""
+        for k in parameters:
+            if query.find('@' + k) > -1:
+                # set all parameters with a type defined and necessary for Big Query
+                query_parameters.append(
+                    bigquery.ScalarQueryParameter(k, _define_type(parameters[k]), parameters[k])
+                )
+        return query_parameters
+
+    @staticmethod
+    def _prepare_query(query: str) -> str:
+        """replace ToucanToco variable definition by Google Big Query variable definition"""
+        new_query = query.replace('{{', '@').replace('}}', '')
+        return new_query
+
+    def _retrieve_data(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:
+        logging.getLogger(__name__).debug(
+            f'Play request {data_source.query} with parameters {data_source.parameters}'
+        )
+
+        credentials = GoogleBigQueryConnector._get_google_credentials(self.credentials, self.scopes)
+        query = GoogleBigQueryConnector._prepare_query(data_source.query)
+        parameters = GoogleBigQueryConnector._prepare_parameters(query, data_source.parameters)
+
+        client = GoogleBigQueryConnector._connect(credentials)
+        result = GoogleBigQueryConnector._execute_query(client, query, parameters)
+
         return result
