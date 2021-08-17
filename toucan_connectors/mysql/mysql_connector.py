@@ -35,7 +35,7 @@ class MySQLDataSource(ToucanDataSource):
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
-        'the "table" parameter above',
+        'the "table" parameter',
         widget='sql',
     )
     follow_relations: bool = Field(
@@ -53,8 +53,6 @@ class MySQLDataSource(ToucanDataSource):
         table = data.get('table')
         if query is None and table is None:
             raise ValueError("'query' or 'table' must be set")
-        elif query is not None and table is not None:
-            raise ValueError("Only one of 'query' or 'table' must be set")
 
     @classmethod
     def get_form(cls, connector: 'MySQLConnector', current_config):

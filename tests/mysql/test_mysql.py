@@ -5,6 +5,7 @@ import pandas as pd
 import pymysql
 import pytest
 from pydantic import ValidationError
+from pytest_mock import MockerFixture
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.mysql.mysql_connector import MySQLConnector, MySQLDataSource, handle_date_0
@@ -43,14 +44,11 @@ def test_datasource():
         MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db')
     assert "'query' or 'table' must be set" in str(exc_info.value)
 
-    with pytest.raises(ValueError) as exc_info:
-        MySQLDataSource(
-            name='mycon', domain='mydomain', database='mysql_db', query='myquery', table='mytable'
-        )
-    assert "Only one of 'query' or 'table' must be set" in str(exc_info.value)
-
     MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db', table='mytable')
     MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db', query='myquery')
+    MySQLDataSource(
+        name='mycon', domain='mydomain', database='mysql_db', query='myquery', table='ignored'
+    )
 
 
 def test_get_connection_params():
@@ -154,7 +152,7 @@ def test_get_status_bad_authentication(mysql_connector):
     )
 
 
-def test_get_df(mocker):
+def test_get_df(mocker: MockerFixture):
     """It should call the sql extractor"""
     snock = mocker.patch('pymysql.connect')
     reasq = mocker.patch('pandas.read_sql')
@@ -162,20 +160,20 @@ def test_get_df(mocker):
         'toucan_connectors.mysql.mysql_connector.MySQLConnector.get_foreign_key_info'
     ).return_value = []
 
-    data_sources_spec = [
-        {
+    mysql_connector = MySQLConnector(
+        name='mycon', host='localhost', port=22, user='ubuntu', password='ilovetoucan'
+    )
+
+    # With table
+    data_source = MySQLDataSource(
+        **{
             'domain': 'MySQL test',
             'type': 'external_database',
             'name': 'Some MySQL provider',
             'database': 'mysql_db',
             'table': 'City',
         }
-    ]
-    mysql_connector = MySQLConnector(
-        name='mycon', host='localhost', port=22, user='ubuntu', password='ilovetoucan'
     )
-
-    data_source = MySQLDataSource(**data_sources_spec[0])
     mysql_connector.get_df(data_source)
 
     conv = pymysql.converters.conversions.copy()
@@ -192,6 +190,35 @@ def test_get_df(mocker):
     )
 
     reasq.assert_called_once_with('select * from City', con=snock(), params={})
+
+    # With query
+    reasq.reset_mock()
+    data_source = MySQLDataSource(
+        **{
+            'domain': 'MySQL test',
+            'type': 'external_database',
+            'name': 'Some MySQL provider',
+            'database': 'mysql_db',
+            'query': 'select * from Country',
+        }
+    )
+    mysql_connector.get_df(data_source)
+    reasq.assert_called_once_with('select * from Country', con=snock(), params={})
+
+    # With both: query should take precedence over table
+    reasq.reset_mock()
+    data_source = MySQLDataSource(
+        **{
+            'domain': 'MySQL test',
+            'type': 'external_database',
+            'name': 'Some MySQL provider',
+            'database': 'mysql_db',
+            'table': 'City',
+            'query': 'select * from Country',
+        }
+    )
+    mysql_connector.get_df(data_source)
+    reasq.assert_called_once_with('select * from Country', con=snock(), params={})
 
 
 def test_get_df_db_follow(mysql_connector):
