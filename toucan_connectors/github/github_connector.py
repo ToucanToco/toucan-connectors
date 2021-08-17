@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import requests
 from dateutil import relativedelta
-from pydantic import Field, create_model
+from pydantic import Field, PrivateAttr, create_model
 from python_graphql_client import GraphqlClient
 
 from toucan_connectors.common import ConnectorStatus, get_loop
@@ -100,6 +100,7 @@ class GithubConnector(ToucanConnector):
     auth_flow_id: Optional[str]
     data_source_model: GithubDataSource
     _oauth_trigger = 'instance'
+    _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
@@ -112,7 +113,7 @@ class GithubConnector(ToucanConnector):
         super().__init__(
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
         )
-        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+        self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
@@ -126,7 +127,7 @@ class GithubConnector(ToucanConnector):
         )
 
     def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        return self._oauth2_connector.build_authorization_url(**kwargs)
 
     def get_organizations(self):
         """Retrieve a list of organizations available to the connector"""
@@ -147,10 +148,10 @@ class GithubConnector(ToucanConnector):
         must be sent in the body of the request so we have to set them in
         the mother class. This way they'll be added to her get_access_token method
         """
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        return self._oauth2_connector.retrieve_tokens(authorization_response)
 
     def get_access_token(self):
-        return self.__dict__['_oauth2_connector'].get_access_token()
+        return self._oauth2_connector.get_access_token()
 
     def get_names(
         self,

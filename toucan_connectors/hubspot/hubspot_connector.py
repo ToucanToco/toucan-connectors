@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import requests
-from pydantic import Field
+from pydantic import Field, PrivateAttr
 
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
@@ -74,12 +74,13 @@ class HubspotConnector(ToucanConnector):
     _oauth_trigger = 'instance'
     oauth2_version = Field('1', **{'ui.hidden': True})
     data_source_model: HubspotDataSource
+    _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     def __init__(self, **kwargs) -> None:
         super().__init__(
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
         )
-        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+        self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
@@ -105,13 +106,13 @@ class HubspotConnector(ToucanConnector):
         must be sent in the body of the request so we have to set them in
         the mother class. This way they'll be added to her get_access_token method
         """
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        return self._oauth2_connector.retrieve_tokens(authorization_response)
 
     def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        return self._oauth2_connector.build_authorization_url(**kwargs)
 
     def _get_access_token(self):
-        return self.__dict__['_oauth2_connector'].get_access_token()
+        return self._oauth2_connector.get_access_token()
 
     def _handle_pagination(
         self,

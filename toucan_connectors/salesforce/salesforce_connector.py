@@ -6,7 +6,7 @@ from typing import Optional
 
 import pandas as pd
 from authlib.integrations.base_client import OAuthError
-from pydantic import Field
+from pydantic import Field, PrivateAttr
 from requests import Session
 
 from toucan_connectors.common import ConnectorStatus
@@ -56,6 +56,7 @@ class SalesforceConnector(ToucanConnector):
     )
     _oauth_trigger = 'instance'
     oauth2_version = Field('1', **{'ui.hidden': True})
+    _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
@@ -68,7 +69,7 @@ class SalesforceConnector(ToucanConnector):
         super().__init__(
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
         )
-        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+        self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
@@ -82,7 +83,7 @@ class SalesforceConnector(ToucanConnector):
         )
 
     def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        return self._oauth2_connector.build_authorization_url(**kwargs)
 
     def retrieve_tokens(self, authorization_response: str):
         """
@@ -90,10 +91,10 @@ class SalesforceConnector(ToucanConnector):
         must be sent in the body of the request so we have to set them in
         the parent class. This way they will be added to the get_access_token method
         """
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        return self._oauth2_connector.retrieve_tokens(authorization_response)
 
     def get_access_data(self):
-        return self.__dict__['_oauth2_connector'].get_access_data()
+        return self._oauth2_connector.get_access_data()
 
     def _retrieve_data(self, data_source: SalesforceDataSource) -> pd.DataFrame:
         logging.getLogger(__name__).info('_retrieve_data with Salesforce Connector')

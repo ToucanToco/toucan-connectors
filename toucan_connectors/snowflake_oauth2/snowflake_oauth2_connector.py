@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import snowflake
-from pydantic import Field, SecretStr, create_model
+from pydantic import Field, PrivateAttr, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
 from toucan_connectors.connection_manager import ConnectionManager
@@ -75,6 +75,8 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     _oauth_trigger = 'connector'
     oauth2_version = Field('1', **{'ui.hidden': True})
     redirect_uri: str = Field(None, **{'ui.hidden': True})
+    _oauth2_connector: OAuth2Connector = PrivateAttr()
+
     role: str = Field(
         ...,
         title='Role',
@@ -99,7 +101,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         super().__init__(**{k: v for k, v in kwargs.items() if k != 'secrets_keeper'})
         self.token_url = f'https://{self.account}.snowflakecomputing.com/oauth/token-request'
         self.authorization_url = f'https://{self.account}.snowflakecomputing.com/oauth/authorize'
-        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+        self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=self.authorization_url,
             scope=self.scope,
@@ -113,13 +115,13 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         )
 
     def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        return self._oauth2_connector.build_authorization_url(**kwargs)
 
     def retrieve_tokens(self, authorization_response: str):
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        return self._oauth2_connector.retrieve_tokens(authorization_response)
 
     def get_access_token(self):
-        return self.__dict__['_oauth2_connector'].get_access_token()
+        return self._oauth2_connector.get_access_token()
 
     def _get_connection(self, database: str = None, warehouse: str = None) -> SnowflakeConnection:
         def connect_function() -> SnowflakeConnection:

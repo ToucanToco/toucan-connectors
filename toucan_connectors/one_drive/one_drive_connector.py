@@ -3,7 +3,7 @@ from typing import Optional
 
 import pandas as pd
 import requests
-from pydantic import Field, SecretStr
+from pydantic import Field, PrivateAttr, SecretStr
 
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
@@ -42,6 +42,7 @@ class OneDriveConnector(ToucanConnector):
     authorization_url: str = Field(None, **{'ui.hidden': True})
     token_url: str = Field(None, **{'ui.hidden': True})
     redirect_uri: str = Field(None, **{'ui.hidden': True})
+    _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     client_id: str = Field(
         '',
@@ -80,7 +81,7 @@ class OneDriveConnector(ToucanConnector):
         self.token_url = f'https://login.microsoftonline.com/{self.tenant}/oauth2/v2.0/token'
 
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
-        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+        self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=self.authorization_url,
             scope=self.scope,
@@ -95,15 +96,15 @@ class OneDriveConnector(ToucanConnector):
 
     def build_authorization_url(self, **kwargs):
         logging.getLogger(__name__).debug('build_authorization_url')
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        return self._oauth2_connector.build_authorization_url(**kwargs)
 
     def retrieve_tokens(self, authorization_response: str):
         logging.getLogger(__name__).debug('retrieve_tokens')
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        return self._oauth2_connector.retrieve_tokens(authorization_response)
 
     def _get_access_token(self):
         logging.getLogger(__name__).debug('_get_access_token')
-        return self.__dict__['_oauth2_connector'].get_access_token()
+        return self._oauth2_connector.get_access_token()
 
     def _get_site_id(self, data_source):
         logging.getLogger(__name__).debug('_get_site_id')
