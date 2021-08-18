@@ -31,7 +31,7 @@ def test_hubspot_build_authorization_uri(connector, mocker):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'client_id'
     mock_oauth2_connector.client_secret = 'secret'
-    connector.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    connector._oauth2_connector = mock_oauth2_connector
     connector.build_authorization_url()
 
     mock_oauth2_connector.build_authorization_url.assert_called()
@@ -41,7 +41,7 @@ def test_hubspot_retrieve_tokens(connector, mocker):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'client_id'
     mock_oauth2_connector.client_secret = 'secret'
-    connector.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    connector._oauth2_connector = mock_oauth2_connector
     connector.retrieve_tokens('foo')
 
     mock_oauth2_connector.retrieve_tokens.assert_called()

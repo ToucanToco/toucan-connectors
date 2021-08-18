@@ -248,7 +248,7 @@ def test_delegate_oauth2_methods(mocker, con):
     It should proxy OAuth2Connectors methods
     """
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
-    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    con._oauth2_connector = mock_oauth2_connector
     con.build_authorization_url()
     mock_oauth2_connector.build_authorization_url.assert_called()
     con.retrieve_tokens('toto')
