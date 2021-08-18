@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, Type
 import pandas as pd
 import requests
 from googleads import AdWordsClient, adwords, oauth2
-from pydantic import Field
+from pydantic import Field, PrivateAttr
 from zeep.helpers import serialize_object
 
 from toucan_connectors.common import ConnectorStatus, HttpError
@@ -84,6 +84,7 @@ class GoogleAdwordsConnector(ToucanConnector):
     client_customer_id: str = None
     _oauth_trigger = 'instance'
     oauth2_version = Field('1', **{'ui.hidden': True})
+    _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
@@ -97,7 +98,7 @@ class GoogleAdwordsConnector(ToucanConnector):
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
         )
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
-        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+        self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
@@ -111,16 +112,16 @@ class GoogleAdwordsConnector(ToucanConnector):
         )
 
     def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        return self._oauth2_connector.build_authorization_url(**kwargs)
 
     def retrieve_tokens(self, authorization_response: str):
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        return self._oauth2_connector.retrieve_tokens(authorization_response)
 
     def get_access_token(self):
-        return self.__dict__['_oauth2_connector'].get_access_token()
+        return self._oauth2_connector.get_access_token()
 
     def get_refresh_token(self):
-        return self.__dict__['_oauth2_connector'].get_refresh_token()
+        return self._oauth2_connector.get_refresh_token()
 
     def get_status(self) -> ConnectorStatus:
         """
@@ -148,10 +149,8 @@ class GoogleAdwordsConnector(ToucanConnector):
     def authenticate_client(self) -> AdWordsClient:
         """Configures an oAuth Adwords client"""
         oauth2_client = oauth2.GoogleRefreshTokenClient(
-            client_id=self.__dict__['_oauth2_connector'].config.client_id,
-            client_secret=self.__dict__[
-                '_oauth2_connector'
-            ].config.client_secret.get_secret_value(),
+            client_id=self._oauth2_connector.config.client_id,
+            client_secret=self._oauth2_connector.config.client_secret.get_secret_value(),
             refresh_token=self.get_refresh_token(),
         )
         # Configure an AdWordsClient
