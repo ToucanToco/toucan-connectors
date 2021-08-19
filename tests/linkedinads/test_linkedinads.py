@@ -148,7 +148,7 @@ def test_retrieve_tokens(mocker, connector):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'test_client_id'
     mock_oauth2_connector.client_secret = 'test_client_secret'
-    connector.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    connector._oauth2_connector = mock_oauth2_connector
     connector.retrieve_tokens('bla')
     mock_oauth2_connector.retrieve_tokens.assert_called()
 

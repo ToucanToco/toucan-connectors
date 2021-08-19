@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, Type
 import dateutil.parser
 import pandas as pd
 import requests
-from pydantic import Field
+from pydantic import Field, PrivateAttr
 from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 
 from toucan_connectors.common import ConnectorStatus, HttpError
@@ -104,6 +104,7 @@ class LinkedinadsConnector(ToucanConnector):
     )
     _oauth_trigger = 'instance'
     oauth2_version = Field('1', **{'ui.hidden': True})
+    _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
@@ -117,7 +118,7 @@ class LinkedinadsConnector(ToucanConnector):
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
         )
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
-        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+        self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
@@ -131,13 +132,13 @@ class LinkedinadsConnector(ToucanConnector):
         )
 
     def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        return self._oauth2_connector.build_authorization_url(**kwargs)
 
     def retrieve_tokens(self, authorization_response: str):
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        return self._oauth2_connector.retrieve_tokens(authorization_response)
 
     def get_access_token(self):
-        return self.__dict__['_oauth2_connector'].get_access_token()
+        return self._oauth2_connector.get_access_token()
 
     def _retrieve_data(self, data_source: LinkedinadsDataSource) -> pd.DataFrame:
         """

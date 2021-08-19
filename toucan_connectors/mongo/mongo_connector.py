@@ -210,6 +210,7 @@ class MongoConnector(ToucanConnector):
         permissions: Optional[str] = None,
         offset: int = 0,
         limit: Optional[int] = None,
+        get_row_count: Optional[bool] = False,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
@@ -284,6 +285,11 @@ class MongoConnector(ToucanConnector):
             command='explain', value=agg_cmd, verbosity='executionStats'
         )
         return _format_explain_result(result)
+
+    def get_unique_identifier(self) -> dict:
+        return self.json(
+            exclude={'client'}
+        )  # client is a MongoClient instance, not json serializable
 
 
 def _format_explain_result(explain_result):

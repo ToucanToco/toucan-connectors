@@ -9,7 +9,7 @@ from typing import List, Optional, Tuple
 
 import pandas as pd
 from aiohttp import ClientSession
-from pydantic import Field
+from pydantic import Field, PrivateAttr
 
 from toucan_connectors.common import ConnectorStatus, get_loop
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -180,6 +180,7 @@ class AircallConnector(ToucanConnector):
     data_source_model: AircallDataSource
     _oauth_trigger = 'instance'
     oauth2_version = Field('1', **{'ui.hidden': True})
+    _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
@@ -192,7 +193,7 @@ class AircallConnector(ToucanConnector):
         super().__init__(
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
         )
-        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+        self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
@@ -207,7 +208,7 @@ class AircallConnector(ToucanConnector):
         self.provided_token = kwargs.get('provided_token', None)
 
     def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        return self._oauth2_connector.build_authorization_url(**kwargs)
 
     def retrieve_tokens(self, authorization_response: str):
         """
@@ -215,12 +216,12 @@ class AircallConnector(ToucanConnector):
         must be sent in the body of the request so we have to set them in
         the mother class. This way they'll be added to her get_access_token method
         """
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        return self._oauth2_connector.retrieve_tokens(authorization_response)
 
     def get_access_token(self):
         if self.provided_token:
             return self.provided_token
-        return self.__dict__['_oauth2_connector'].get_access_token()
+        return self._oauth2_connector.get_access_token()
 
     async def _fetch(self, url, headers=None, query_params=None):
         """Build the final request along with headers."""
@@ -348,6 +349,7 @@ class AircallConnector(ToucanConnector):
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
+        get_row_count: Optional[bool] = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe

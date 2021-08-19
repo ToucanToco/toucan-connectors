@@ -16,7 +16,7 @@ extras_require = {
     'github': ['python_graphql_client'],
     'google_analytics': ['google-api-python-client', 'oauth2client'],
     'google_adwords': ['googleads'],
-    'google_big_query': ['pandas_gbq'],
+    'google_big_query': ['google-cloud-bigquery[bqstorage,pandas]'],
     'google_cloud_mysql': ['PyMySQL>=0.8.0'],
     'google_my_business': ['google-api-python-client>=1.7.5'],
     'google_sheets': bearer_deps,
@@ -35,7 +35,7 @@ extras_require = {
     'ROK': ['requests', 'pyjwt', 'simplejson'],
     'sap_hana': ['pyhdb>=0.3.4'],
     'soap': ['zeep', 'lxml==4.2.5'],
-    'snowflake': ['snowflake-connector-python==2.4.1'],
+    'snowflake': ['snowflake-connector-python>=2.5'],
     'toucan_toco': ['toucan_client'],
     'spotify': ['spotipy==2.17.1'],
 }
@@ -72,7 +72,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='1.0.0',
+    version='1.2.6',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',

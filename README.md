@@ -13,7 +13,13 @@ configured with dictionaries (cf. `DataSource` class) and returning
 ## Setup
 In order to work you need `make` and `Python 3.8` (consider
 running `pip install -U pip setuptools` if needed)
-You can then install:
+:warning: On `linux`, you're going to need bindings for `unixodbc` to install `pyodbc` from the requirements, and to install that (using apt), just follow:
+```bash
+sudo apt-get update
+sudo apt-get install unixodbc-dev
+```
+Now, you can then install:
+
 - the main dependencies by typing `pip install -e .`
 - the test requirements by typing `pip install -r requirements-testing.txt`
 

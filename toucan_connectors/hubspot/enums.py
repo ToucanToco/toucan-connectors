@@ -6,8 +6,8 @@ class HubspotDataset(str, Enum):
     companies = 'companies'
     deals = 'deals'
     products = 'products'
-    webanalytics = 'web-analytics'
-    emails_events = 'emails-events'
+    # webanalytics = 'web-analytics'
+    # emails_events = 'emails-events'
 
 
 class HubspotObjectType(str, Enum):

@@ -1,4 +1,5 @@
 import pytest
+import responses
 from pytest import fixture
 
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
@@ -42,6 +43,31 @@ def ds_without_range():
     )
 
 
+@fixture
+def ds_with_site():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        file='test_file',
+        sheet='test_sheet',
+        range='A2:B3',
+        site_url='company_name.sharepoint.com/sites/site_name',
+        document_library='Documents',
+    )
+
+
+@fixture
+def ds_with_site_without_range():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        file='test_file',
+        sheet='test_sheet',
+        site_url='company_name.sharepoint.com/sites/site_name',
+        document_library='Documents',
+    )
+
+
 @pytest.fixture
 def http_get_mock(mocker):
     return mocker.patch('requests.get')
@@ -74,6 +100,8 @@ FAKE_SHEET = {
     'valueTypes': [['String', 'String'], ['String', 'Double'], ['String', 'Double']],
     'values': [['col1', 'col2'], ['A', 1], ['B', 2]],
 }
+
+FAKE_LIBRARIES = {'value': [{'id': 'abcd', 'displayName': 'Documents'}]}
 
 
 def test_sheet_success(mocker, con, ds, http_get_mock):
@@ -117,11 +145,37 @@ def test_url_without_range(mocker, con, ds_without_range):
     )
 
 
+def test_url_with_site_with_range(mocker, con, ds_with_site):
+    mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
+
+    url = con._format_url(ds_with_site)
+
+    assert (
+        url
+        == "https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test_file:/workbook/worksheets/test_sheet/range(address='A2:B3')"
+    )
+
+
+def test_url_with_site_without_range(mocker, con, ds_with_site_without_range):
+    mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
+
+    url = con._format_url(ds_with_site_without_range)
+
+    assert (
+        url
+        == 'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test_file:/workbook/worksheets/test_sheet/usedRange(valuesOnly=true)'
+    )
+
+
 def test_build_authorization_uri(con, mocker):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'client_id'
     mock_oauth2_connector.client_secret = 'secret'
-    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    con._oauth2_connector = mock_oauth2_connector
     con.build_authorization_url()
 
     mock_oauth2_connector.build_authorization_url.assert_called()
@@ -131,7 +185,7 @@ def test_retrieve_tokens(con, mocker):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'client_id'
     mock_oauth2_connector.client_secret = 'secret'
-    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    con._oauth2_connector = mock_oauth2_connector
     con.retrieve_tokens('foo')
 
     mock_oauth2_connector.retrieve_tokens.assert_called()
@@ -141,7 +195,7 @@ def test_get_access_token(con, mocker):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'client_id'
     mock_oauth2_connector.client_secret = 'secret'
-    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    con._oauth2_connector = mock_oauth2_connector
     con._get_access_token()
 
     mock_oauth2_connector.get_access_token.assert_called()
@@ -151,8 +205,31 @@ def test_run_fetch(con, mocker):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'client_id'
     mock_oauth2_connector.client_secret = 'secret'
-    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    con._oauth2_connector = mock_oauth2_connector
 
     con._run_fetch('https://jsonplaceholder.typicode.com/posts')
 
     mock_oauth2_connector.get_access_token.assert_called()
+
+
+@responses.activate
+def test_get_site_id(con, mocker, ds_with_site):
+    responses.add(
+        responses.GET,
+        'https://graph.microsoft.com/v1.0/sites/company_name.sharepoint.com:/sites/site_name',
+        json={'id': 1},
+        status=200,
+    )
+
+    id = con._get_site_id(ds_with_site)
+    assert id == 1
+
+
+@responses.activate
+def test_get_list_id(con, mocker, ds_with_site):
+    responses.add(
+        responses.GET, 'https://graph.microsoft.com/v1.0/sites/1234/lists', json=FAKE_LIBRARIES
+    )
+
+    id = con._get_list_id(ds_with_site, '1234')
+    assert id == 'abcd'

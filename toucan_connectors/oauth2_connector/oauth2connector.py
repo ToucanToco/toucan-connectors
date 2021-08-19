@@ -13,13 +13,13 @@ from toucan_connectors.json_wrapper import JsonWrapper
 
 class SecretsKeeper(ABC):
     @abstractmethod
-    def save(self, key: str, value):
+    def save(self, key: str, value, **kwargs):
         """
         Save secrets in a secrets repository
         """
 
     @abstractmethod
-    def load(self, key: str) -> Any:
+    def load(self, key: str, **kwargs) -> Any:
         """
         Load secrets from the secrets repository
         """
@@ -106,7 +106,9 @@ class OAuth2Connector:
         if 'expires_at' in token:
 
             expires_at = token['expires_at']
-            if isinstance(expires_at, (int, float)):
+            if isinstance(expires_at, bool):
+                is_expired = expires_at
+            elif isinstance(expires_at, (int, float)):
                 is_expired = expires_at < time()
             else:
                 is_expired = expires_at.timestamp() < time()

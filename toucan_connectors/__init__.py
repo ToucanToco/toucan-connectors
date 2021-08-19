@@ -199,6 +199,10 @@ CONNECTORS_REGISTRY = {
         'label': 'SAP HANA',
         'logo': 'sap_hana/sap-hana.png',
     },
+    'SharePoint': {
+        'connector': 'one_drive.one_drive_connector.OneDriveConnector',
+        'logo': 'share_point/share_point.png',
+    },
     'Snowflake': {
         'connector': 'snowflake.snowflake_connector.SnowflakeConnector',
         'logo': 'snowflake/snowflake.png',

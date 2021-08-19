@@ -2,16 +2,22 @@ import logging
 import operator
 import os
 import socket
+import uuid
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Iterable, List, NamedTuple, Optional, Type
+from typing import Dict, Iterable, List, NamedTuple, Optional, Type
 
 import pandas as pd
 import tenacity as tny
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretBytes, SecretStr
 
-from toucan_connectors.common import ConnectorStatus, apply_query_parameters
+from toucan_connectors.common import (
+    ConnectorStatus,
+    apply_query_parameters,
+    nosql_apply_parameters_to_query,
+)
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 
 try:
@@ -28,6 +34,10 @@ class DataStats(NamedTuple):
     df_memory_size: Optional[int] = None  # Dataframe's memory usage in bytes
 
 
+class QueryMetadata(NamedTuple):
+    columns: Optional[Dict[str, str]] = None  # Stores column names and types
+
+
 class Category(str, Enum):
     SNOWFLAKE: str = 'Snowflake'
 
@@ -39,8 +49,11 @@ class DataSlice(NamedTuple):
     """
 
     df: pd.DataFrame  # the dataframe of the slice
+    # TODO total_count field should be removed
+    total_count: Optional[int] = None  # the length of the raw dataframe (without slicing)
     input_parameters: Optional[dict] = None
     stats: Optional[DataStats] = None
+    query_metadata: Optional[QueryMetadata] = None
 
 
 class StrEnum(str, Enum):
@@ -65,6 +78,7 @@ class ToucanDataSource(BaseModel):
     live_data: bool = False
     validation: dict = None
     parameters: dict = None
+    cache_ttl: Optional[int] = None  # overrides connector's ttl
 
     class Config:
         extra = 'forbid'
@@ -250,9 +264,20 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     type: str = Field(None)
     secrets_storage_version = Field('1', **{'ui.hidden': True})
 
+    # Default ttl for all connector's queries (overridable at the data_source level)
+    # /!\ cache ttl is used by the caching system which is not implemented in toucan_connectors.
+    cache_ttl: Optional[int] = Field(None, title='TTL (cache)')
+
+    # Used to defined the connection
+    identifier: str = Field(None, **{'ui.hidden': True})
+
     class Config:
         extra = 'forbid'
         validate_assignment = True
+        json_encoders = {
+            SecretStr: lambda v: v.get_secret_value(),
+            SecretBytes: lambda v: v.get_secret_value(),
+        }
 
     @classmethod
     def __init_subclass__(cls):
@@ -311,6 +336,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
+        get_row_count: Optional[bool] = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
@@ -319,6 +345,10 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         - offset is the index of the starting row
         - limit is the number of rows to retrieve
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
+
+        Args:
+          get_row_count: used in some connectors to optionally get the total number of
+            rows from a request, before limit (Snowflake)
         """
         df = self.get_df(data_source, permissions)
         if limit is not None:
@@ -365,3 +395,51 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         }
         """
         return ConnectorStatus()
+
+    def get_unique_identifier(self) -> dict:
+        """
+        Returns a serialized version of the connector's config.
+        Override this method in connectors which have not-serializable properties.
+
+        Used by `get_cache_key` method.
+        """
+        return self.json()
+
+    def get_cache_key(
+        self,
+        data_source: Optional[ToucanDataSource] = None,
+        permissions: Optional[dict] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
+    ) -> str:
+        """
+        Generate a unique identifier (str) for a given connector's configuration
+        (if no parameters are supplied) or for a given couple connector/query
+        configuration (if `data_source` parameter is supplied).
+        This identifier will then be used as a cache key.
+        """
+        unique_identifier = {
+            'connector': self.get_unique_identifier(),
+            'permissions': permissions,
+            'offset': offset,
+            'limit': limit,
+        }
+
+        if data_source is not None:
+            data_source_rendered = nosql_apply_parameters_to_query(
+                data_source.dict(), data_source.parameters, handle_errors=True
+            )
+            del data_source_rendered['parameters']
+            unique_identifier['datasource'] = data_source_rendered
+
+        json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True)
+        string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
+        return string_uid
+
+    def get_identifier(self):
+        json_uid = JsonWrapper.dumps(self.get_unique_identifier(), sort_keys=True)
+        string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
+        return string_uid
+
+    def describe(self, data_source: ToucanDataSource):
+        """ """
