@@ -1,7 +1,7 @@
 import logging
 from enum import Enum
 from timeit import default_timer as timer
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pandas
 import pandas as pd
@@ -118,10 +118,10 @@ class GoogleBigQueryConnector(ToucanConnector):
             raise e
 
     @staticmethod
-    def _prepare_parameters(query: str, parameters: Dict) -> List:
+    def _prepare_parameters(query: str, parameters: Optional[Dict]) -> List:
         query_parameters = []
         """replace ToucanToco variable definition by Google Big Query variable definition"""
-        for k in parameters:
+        for k in parameters or {}:
             if query.find('@' + k) > -1:
                 # set all parameters with a type defined and necessary for Big Query
                 query_parameters.append(
