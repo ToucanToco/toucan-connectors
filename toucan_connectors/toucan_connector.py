@@ -405,6 +405,14 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         return self.json()
 
+    def _render_datasource(self, data_source: ToucanDataSource) -> dict:
+        data_source_rendered = nosql_apply_parameters_to_query(
+            data_source.dict(), data_source.parameters, handle_errors=True
+        )
+        del data_source_rendered['parameters']
+
+        return data_source_rendered
+
     def get_cache_key(
         self,
         data_source: Optional[ToucanDataSource] = None,
@@ -426,11 +434,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         }
 
         if data_source is not None:
-            data_source_rendered = nosql_apply_parameters_to_query(
-                data_source.dict(), data_source.parameters, handle_errors=True
-            )
-            del data_source_rendered['parameters']
-            unique_identifier['datasource'] = data_source_rendered
+            unique_identifier['datasource'] = self._render_datasource(data_source)
 
         json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True)
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
