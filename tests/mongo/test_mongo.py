@@ -657,3 +657,29 @@ def test_get_cache_key(mongo_connector):
     conn1 = MongoConnector(name='aaa', host='here', port=42, username='me', password='s3cr3t')
     conn2 = MongoConnector(name='aaa', host='here', port=42, username='me', password='?')
     assert conn1.get_cache_key() != conn2.get_cache_key()
+
+
+def test_get_cache_key_with_datasource(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
+    datasource_with_parameters = mongo_datasource(
+        collection='test_col', query={'domain': '{{ DOMAIN }}'}, parameters={'DOMAIN': 'domain1'}
+    )
+    assert mongo_connector.get_cache_key(datasource) == mongo_connector.get_cache_key(
+        datasource_with_parameters
+    )
+
+    datasource_with_bad_parameters = mongo_datasource(
+        collection='test_col', query={'domain': '{{ DOMAIN }}'}, parameters={'DOMAIN': 'domain3'}
+    )
+    assert mongo_connector.get_cache_key(datasource) != mongo_connector.get_cache_key(
+        datasource_with_bad_parameters
+    )
+
+    datasource_with_extra_parameters = mongo_datasource(
+        collection='test_col',
+        query={'domain': '{{ DOMAIN }}'},
+        parameters={'DOMAIN': 'domain1', 'FOO': 'BAR'},
+    )
+    assert mongo_connector.get_cache_key(datasource) == mongo_connector.get_cache_key(
+        datasource_with_extra_parameters
+    )
