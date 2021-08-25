@@ -405,7 +405,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         return self.json()
 
-    def _render_datasource(self, data_source: ToucanDataSource):
+    def _render_datasource(self, data_source: ToucanDataSource) -> dict:
         data_source_rendered = nosql_apply_parameters_to_query(
             data_source.dict(), data_source.parameters, handle_errors=True
         )
