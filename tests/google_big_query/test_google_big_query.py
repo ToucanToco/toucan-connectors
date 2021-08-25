@@ -75,6 +75,13 @@ def test_prepare_parameters():
     assert parameters[1] == ScalarQueryParameter('test_float', 'FLOAT64', 0.0)
 
 
+def test_prepare_parameters_empty():
+    query = 'SELECT stuff FROM `useful-citizen-322414.test.test`'
+    new_query = GoogleBigQueryConnector._prepare_query(query)
+    parameters = GoogleBigQueryConnector._prepare_parameters(new_query, None)
+    assert len(parameters) == 0
+
+
 @patch('google.cloud.bigquery.Client', autospec=True)
 @patch('cryptography.hazmat.primitives.serialization.load_pem_private_key')
 def test_connect(load_pem_private_key, client, _fixture_credentials, _fixture_scope):
