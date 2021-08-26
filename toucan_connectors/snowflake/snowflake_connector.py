@@ -402,6 +402,9 @@ class SnowflakeConnector(ToucanConnector):
             result = SnowflakeCommon().describe(connection, data_source.query)
         return result
 
+    def _render_datasource(self, data_source: SnowflakeDataSource) -> dict:
+        return SnowflakeCommon().render_datasource(data_source)
+
     @staticmethod
     def get_snowflake_connection_manager():
         return snowflake_connection_manager

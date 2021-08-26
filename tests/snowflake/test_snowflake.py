@@ -697,3 +697,48 @@ def test_describe(is_closed, close, connect, mocker, snowflake_datasource, snowf
     snowflake_connector.describe(snowflake_datasource)
     mocked_common_describe.assert_called_once()
     cm.force_clean()
+
+
+def test_render_datasource():
+    snowflake_connector = SnowflakeConnector(
+        identifier='snowflake_test',
+        name='test_name',
+        authentication_method=AuthenticationMethod.PLAIN,
+        user='test_user',
+        password='test_password',
+        account='test_account',
+        default_warehouse='warehouse_1',
+    )
+    datasource = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='database_1',
+        warehouse='warehouse_1',
+        query='test_query with %(foo)s and %(pokemon)s',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
+    )
+    key = snowflake_connector.get_cache_key(datasource)
+
+    datasource2 = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='database_1',
+        warehouse='warehouse_1',
+        query='test_query with %(foo)s and %(pokemon)s',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu', 'foo': 'bar'},
+    )
+    key2 = snowflake_connector.get_cache_key(datasource2)
+
+    assert key == key2
+
+    datasource3 = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='database_2',
+        warehouse='warehouse_1',
+        query='test_query with %(foo)s and %(pokemon)s',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
+    )
+
+    key3 = snowflake_connector.get_cache_key(datasource3)
+    assert key != key3

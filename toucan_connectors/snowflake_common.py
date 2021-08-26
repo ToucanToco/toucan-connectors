@@ -121,6 +121,17 @@ class SnowflakeCommon:
 
         return values  # do not return metadata from now
 
+    def render_datasource(self, datasource: SfDataSource) -> dict:
+        prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_query(
+            datasource.query, datasource.parameters
+        )
+        return {
+            'warehouse': datasource.warehouse,
+            'database': datasource.database,
+            'query': prepared_query,
+            'parameters': prepared_query_parameters,
+        }
+
     def _execute_parallelized_queries(
         self,
         connection: SnowflakeConnection,
