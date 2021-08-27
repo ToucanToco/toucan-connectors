@@ -1,5 +1,6 @@
 import cx_Oracle
 import pytest
+from pytest_mock import MockerFixture
 
 from toucan_connectors.oracle_sql.oracle_sql_connector import (
     OracleSQLConnector,
@@ -36,13 +37,15 @@ def oracle_connector(oracle_server):
     )
 
 
-def test_oracle_get_df(mocker):
+def test_oracle_get_df(mocker: MockerFixture):
     snock = mocker.patch('cx_Oracle.connect')
     reasq = mocker.patch('pandas.read_sql')
 
     oracle_connector = OracleSQLConnector(
         name='my_oracle_sql_con', user='system', password='oracle', dsn='localhost:22/xe'
     )
+
+    # With query
     datasource = OracleSQLDataSource(
         domain='Oracle test', name='my_oracle_sql_con', query='SELECT * FROM City;'
     )
@@ -51,6 +54,27 @@ def test_oracle_get_df(mocker):
     snock.assert_called_once_with(user='system', password='oracle', dsn='localhost:22/xe')
 
     reasq.assert_called_once_with('SELECT * FROM City', con=snock(), params=None)
+
+    # With table
+    reasq.reset_mock()
+    oracle_connector.get_df(
+        OracleSQLDataSource(domain='Oracle test', name='my_oracle_sql_con', table='Nation')
+    )
+
+    reasq.assert_called_once_with('SELECT * FROM Nation', con=snock(), params=None)
+
+    # With both: query must prevail
+    reasq.reset_mock()
+    oracle_connector.get_df(
+        OracleSQLDataSource(
+            domain='Oracle test',
+            name='my_oracle_sql_con',
+            table='Drinks',
+            query='SELECT * FROM Food',
+        )
+    )
+
+    reasq.assert_called_once_with('SELECT * FROM Food', con=snock(), params=None)
 
 
 def test_get_df_db(oracle_connector):
@@ -87,4 +111,4 @@ def test_datasource():
         assert "'query' or 'table' must be set" in str(exc_info.value)
 
     ds = OracleSQLDataSource(name='mycon', domain='mydomain', table='test')
-    assert ds.query == 'select * from test'
+    assert ds.query == 'SELECT * FROM test'
