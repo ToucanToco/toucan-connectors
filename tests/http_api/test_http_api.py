@@ -475,7 +475,7 @@ def test_schema_extra():
     }
 
 
-def test_get_cache_key(connector, data_source):
+def test_get_cache_key(connector, auth, data_source):
     data_source.headers = {'name': '%(first_name)s'}
     data_source.parameters = {'first_name': 'raphael'}
     key = connector.get_cache_key(data_source)
@@ -492,3 +492,7 @@ def test_get_cache_key(connector, data_source):
 
     key4 = connector.get_cache_key(data_source, offset=10)
     assert key4 != key  # adding an offset changed the result
+
+    another_connector = connector.copy(update={'auth': auth})
+
+    assert connector.get_cache_key(data_source) != another_connector.get_cache_key(data_source)
