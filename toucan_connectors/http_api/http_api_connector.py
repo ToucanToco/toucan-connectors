@@ -166,24 +166,31 @@ class HttpAPIConnector(ToucanConnector):
             raise
 
     def _retrieve_data(self, data_source: HttpAPIDataSource) -> pd.DataFrame:
-
         if self.auth:
             session = self.auth.get_session()
         else:
             session = Session()
 
+        query = self._render_query(data_source)
+
+        res = pd.DataFrame(self.do_request(query, session))
+        if data_source.flatten_column:
+            return json_to_table(res, columns=[data_source.flatten_column])
+        return res
+
+    def _render_query(self, data_source):
         query = nosql_apply_parameters_to_query(
             data_source.dict(by_alias=True), data_source.parameters, handle_errors=True
         )
-
         if self.template:
             template = {k: v for k, v in self.template.dict(by_alias=True).items() if v}
             for k in query.keys() & template.keys():
                 if query[k]:
                     template[k].update(query[k])
                 query[k] = template[k]
+        return query
 
-        res = pd.DataFrame(self.do_request(query, session))
-        if data_source.flatten_column:
-            return json_to_table(res, columns=[data_source.flatten_column])
-        return res
+    def _render_datasource(self, data_source: ToucanDataSource) -> dict:
+        query = self._render_query(data_source)
+        del query['parameters']
+        return query

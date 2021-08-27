@@ -475,12 +475,12 @@ def test_schema_extra():
     }
 
 
-def test_get_cache_key(connector, data_source):
+def test_get_cache_key(connector, auth, data_source):
     data_source.headers = {'name': '%(first_name)s'}
     data_source.parameters = {'first_name': 'raphael'}
     key = connector.get_cache_key(data_source)
 
-    assert key == '07d5e581-598f-3729-bc99-d24425945e0a'
+    assert key == 'b35e0189-a527-3f9c-827d-b0c54e23b780'
 
     data_source.headers = {'name': '{{ first_name }}'}  # change the templating style
     key2 = connector.get_cache_key(data_source)
@@ -492,3 +492,7 @@ def test_get_cache_key(connector, data_source):
 
     key4 = connector.get_cache_key(data_source, offset=10)
     assert key4 != key  # adding an offset changed the result
+
+    another_connector = connector.copy(update={'auth': auth})
+
+    assert connector.get_cache_key(data_source) != another_connector.get_cache_key(data_source)
