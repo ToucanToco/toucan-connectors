@@ -709,6 +709,7 @@ def test_render_datasource():
         account='test_account',
         default_warehouse='warehouse_1',
     )
+
     datasource = SnowflakeDataSource(
         name='test_name',
         domain='test_domain',
@@ -742,3 +743,23 @@ def test_render_datasource():
 
     key3 = snowflake_connector.get_cache_key(datasource3)
     assert key != key3
+
+    another_snowflake_connector = SnowflakeConnector(
+        identifier='snowflake_test',
+        name='test_name',
+        authentication_method=AuthenticationMethod.PLAIN,
+        user='test_user',
+        password='test_password',
+        account='another_test_account',
+        default_warehouse='warehouse_1',
+    )
+
+    assert snowflake_connector.get_cache_key(
+        datasource
+    ) != another_snowflake_connector.get_cache_key(datasource)
+    assert snowflake_connector.get_cache_key(
+        datasource2
+    ) != another_snowflake_connector.get_cache_key(datasource2)
+    assert snowflake_connector.get_cache_key(
+        datasource3
+    ) != another_snowflake_connector.get_cache_key(datasource3)
