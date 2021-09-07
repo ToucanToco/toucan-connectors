@@ -1,4 +1,5 @@
 import concurrent
+import json
 import logging
 from timeit import default_timer as timer
 from typing import Dict, List, Optional
@@ -256,7 +257,7 @@ class SnowflakeCommon:
                     'execution_time': description_time,
                     'connector': 'snowflake',
                     'query': query,
-                    'result': describe_res,
+                    'result': json.dumps(describe_res),
                 }
             },
         )
