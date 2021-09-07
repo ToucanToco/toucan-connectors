@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Type
 
 import pandas as pd
 from aiohttp import ClientSession
-from pydantic import Field, create_model
+from pydantic import Field, PrivateAttr, create_model
 
 from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -103,6 +103,8 @@ class GoogleSheets2Connector(ToucanConnector):
     # TODO: turn into a class property
     _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
 
+    _oauth2_connector: OAuth2Connector = PrivateAttr()
+
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
         return ConnectorSecretsForm(
@@ -115,7 +117,7 @@ class GoogleSheets2Connector(ToucanConnector):
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
         )
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
-        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+        self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
@@ -129,13 +131,13 @@ class GoogleSheets2Connector(ToucanConnector):
         )
 
     def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        return self._oauth2_connector.build_authorization_url(**kwargs)
 
     def retrieve_tokens(self, authorization_response: str):
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        return self._oauth2_connector.retrieve_tokens(authorization_response)
 
     def get_access_token(self):
-        return self.__dict__['_oauth2_connector'].get_access_token()
+        return self._oauth2_connector.get_access_token()
 
     async def _fetch(self, url, headers=None):
         """Build the final request along with headers."""

@@ -15,8 +15,7 @@ class OracleSQLDataSource(ToucanDataSource):
     table: constr(min_length=1) = Field(
         None,
         description='The name of the data table that you want to '
-        'get (equivalent to "SELECT * FROM '
-        'your_table")',
+        'get (equivalent to "SELECT * FROM "your_table")',
     )
 
     def __init__(self, **data):
@@ -26,7 +25,7 @@ class OracleSQLDataSource(ToucanDataSource):
         if query is None and table is None:
             raise ValueError("'query' or 'table' must be set")
         elif query is None and table is not None:
-            self.query = f'select * from {table}'
+            self.query = f'SELECT * FROM {table}'
 
     @classmethod
     def get_form(cls, connector: 'OracleSQLConnector', current_config):

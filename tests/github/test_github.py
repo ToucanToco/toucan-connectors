@@ -121,7 +121,7 @@ def test_build_authorization_url(mocker, gc):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'test_client_id'
     mock_oauth2_connector.client_secret = 'test_client_secret'
-    gc.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    gc._oauth2_connector = mock_oauth2_connector
     gc.build_authorization_url()
     mock_oauth2_connector.build_authorization_url.assert_called()
 
@@ -144,7 +144,7 @@ def test_retrieve_tokens(mocker, gc):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'test_client_id'
     mock_oauth2_connector.client_secret = 'test_client_secret'
-    gc.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    gc._oauth2_connector = mock_oauth2_connector
     gc.retrieve_tokens('bla')
     mock_oauth2_connector.retrieve_tokens.assert_called()
 

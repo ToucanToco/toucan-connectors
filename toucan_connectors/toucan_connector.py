@@ -1,4 +1,3 @@
-import json
 import logging
 import operator
 import os
@@ -18,6 +17,7 @@ from toucan_connectors.common import (
     apply_query_parameters,
     nosql_apply_parameters_to_query,
 )
+from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 
 try:
@@ -405,6 +405,14 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         return self.json()
 
+    def _render_datasource(self, data_source: ToucanDataSource) -> dict:
+        data_source_rendered = nosql_apply_parameters_to_query(
+            data_source.dict(), data_source.parameters, handle_errors=True
+        )
+        del data_source_rendered['parameters']
+
+        return data_source_rendered
+
     def get_cache_key(
         self,
         data_source: Optional[ToucanDataSource] = None,
@@ -426,13 +434,14 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         }
 
         if data_source is not None:
-            data_source_rendered = nosql_apply_parameters_to_query(
-                data_source.dict(), data_source.parameters, handle_errors=True
-            )
-            del data_source_rendered['parameters']
-            unique_identifier['datasource'] = data_source_rendered
+            unique_identifier['datasource'] = self._render_datasource(data_source)
 
-        json_uid = json.dumps(unique_identifier, sort_keys=True)
+        json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True)
+        string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
+        return string_uid
+
+    def get_identifier(self):
+        json_uid = JsonWrapper.dumps(self.get_unique_identifier(), sort_keys=True)
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
         return string_uid
 

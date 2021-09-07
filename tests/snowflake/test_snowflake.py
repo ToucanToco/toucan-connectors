@@ -254,7 +254,7 @@ def test_retrieve_data(
 ):
     df_result: DataFrame = snowflake_connector._retrieve_data(snowflake_datasource)
 
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 for each data request
     assert 11 == len(df_result)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -267,7 +267,7 @@ def test_retrieve_data_slice(
     eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource)
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 select database and warehouse
     assert 11 == len(df_result.df)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -280,7 +280,7 @@ def test_retrieve_data_slice_offset_limit(
     eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=5, limit=3)
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 select database and warehouse
     assert 11 == len(df_result.df)
     assert 11 == df_result.stats.total_returned_rows
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
@@ -294,7 +294,7 @@ def test_retrieve_data_slice_too_much(
     eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=10, limit=20)
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 select database and warehouse
     assert 11 == len(df_result.df)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -307,7 +307,7 @@ def test_retrieve_data_fetch(
     eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
     df_result = snowflake_connector._fetch_data(snowflake_datasource)
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 select database and warehouse
     assert 11 == len(df_result)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -320,7 +320,7 @@ def test_retrieve_data_fetch_offset_limit(
     eq, is_closed, close, connect, snowflake_connector, snowflake_datasource, mocker
 ):
     df_result: DataSlice = snowflake_connector._fetch_data(snowflake_datasource, offset=5, limit=3)
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 select database and warehouse
     assert 11 == len(df_result)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -335,7 +335,7 @@ def test_retrieve_data_fetch_too_much(
     df_result: DataSlice = snowflake_connector._fetch_data(
         snowflake_datasource, offset=10, limit=20
     )
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 select database and warehouse
     assert 11 == len(df_result)
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
@@ -578,7 +578,9 @@ def test_snowflake_connection_close_exception(gat, is_closed, close, connect, sn
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('snowflake.connector.connection.SnowflakeConnection.close', return_value=None)
 @patch('snowflake.connector.connection.SnowflakeConnection.is_closed', return_value=None)
+@patch('toucan_connectors.ToucanConnector.get_identifier', return_value='test')
 def test_oauth_args_wrong_type_of_auth(
+    get_identifier,
     is_closed,
     close,
     connect,
@@ -598,6 +600,7 @@ def test_oauth_args_wrong_type_of_auth(
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('toucan_connectors.ToucanConnector.get_identifier', return_value='test')
 @patch('requests.post')
 def test_oauth_args_endpoint_not_200(
     req_mock, is_closed, close, connect, snowflake_connector_oauth, snowflake_datasource
@@ -622,16 +625,17 @@ def test_oauth_args_endpoint_not_200(
         assert req_mock.call_count == 1
     else:
         cm.force_clean()
-        assert False
 
 
 @patch('toucan_connectors.snowflake_common.SnowflakeCommon.retrieve_data', return_value=df)
 @patch('snowflake.connector.connect', return_value=SnowflakeConnection)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+@patch('toucan_connectors.ToucanConnector.get_identifier', return_value='test')
 @patch('requests.post')
 def test_refresh_oauth_token(
     req_mock,
+    get_identifier,
     is_closed,
     close,
     connect,
@@ -663,9 +667,13 @@ def test_refresh_oauth_token(
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
 @patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
 @patch('toucan_connectors.snowflake.snowflake_connector.SnowflakeConnector._refresh_oauth_token')
-def test_get_connection_connect_oauth(rt, is_closed, close, connect, snowflake_connector_oauth):
+@patch('toucan_connectors.ToucanConnector.get_identifier', return_value='test')
+def test_get_connection_connect_oauth(
+    get_identifier, rt, is_closed, close, connect, snowflake_connector_oauth
+):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
     snowflake_connector_oauth._get_connection('test_database', 'test_warehouse')
+    print(connect.call_args_list)
     assert rt.call_count == 1
     assert connect.call_args_list[0][1]['account'] == 'test_account'
     assert (
@@ -689,3 +697,69 @@ def test_describe(is_closed, close, connect, mocker, snowflake_datasource, snowf
     snowflake_connector.describe(snowflake_datasource)
     mocked_common_describe.assert_called_once()
     cm.force_clean()
+
+
+def test_render_datasource():
+    snowflake_connector = SnowflakeConnector(
+        identifier='snowflake_test',
+        name='test_name',
+        authentication_method=AuthenticationMethod.PLAIN,
+        user='test_user',
+        password='test_password',
+        account='test_account',
+        default_warehouse='warehouse_1',
+    )
+
+    datasource = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='database_1',
+        warehouse='warehouse_1',
+        query='test_query with %(foo)s and %(pokemon)s',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
+    )
+    key = snowflake_connector.get_cache_key(datasource)
+
+    datasource2 = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='database_1',
+        warehouse='warehouse_1',
+        query='test_query with %(foo)s and %(pokemon)s',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu', 'foo': 'bar'},
+    )
+    key2 = snowflake_connector.get_cache_key(datasource2)
+
+    assert key == key2
+
+    datasource3 = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='database_2',
+        warehouse='warehouse_1',
+        query='test_query with %(foo)s and %(pokemon)s',
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
+    )
+
+    key3 = snowflake_connector.get_cache_key(datasource3)
+    assert key != key3
+
+    another_snowflake_connector = SnowflakeConnector(
+        identifier='snowflake_test',
+        name='test_name',
+        authentication_method=AuthenticationMethod.PLAIN,
+        user='test_user',
+        password='test_password',
+        account='another_test_account',
+        default_warehouse='warehouse_1',
+    )
+
+    assert snowflake_connector.get_cache_key(
+        datasource
+    ) != another_snowflake_connector.get_cache_key(datasource)
+    assert snowflake_connector.get_cache_key(
+        datasource2
+    ) != another_snowflake_connector.get_cache_key(datasource2)
+    assert snowflake_connector.get_cache_key(
+        datasource3
+    ) != another_snowflake_connector.get_cache_key(datasource3)

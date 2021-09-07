@@ -204,7 +204,7 @@ def test_retrieve_data(
     snowflake_oauth2_datasource,
 ):
     df_result: DataFrame = snowflake_oauth2_connector._retrieve_data(snowflake_oauth2_datasource)
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 select database and warehouse
     assert 11 == len(df_result)
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
@@ -229,7 +229,7 @@ def test_retrieve_data_slice(
     df_result: DataSlice = snowflake_oauth2_connector.get_slice(
         snowflake_oauth2_datasource, offset=0, limit=10
     )
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 select database and warehouse
     assert 11 == len(df_result.df)
     assert 11 == df_result.stats.total_returned_rows
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
@@ -255,7 +255,7 @@ def test_retrieve_data_slice_with_limit(
     df_result: DataSlice = snowflake_oauth2_connector.get_slice(
         snowflake_oauth2_datasource, offset=5, limit=3
     )
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 select database and warehouse
     assert 11 == len(df_result.df)
     assert 11 == df_result.stats.total_returned_rows
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
@@ -281,7 +281,7 @@ def test_retrieve_data_slice_too_much(
     df_result: DataSlice = snowflake_oauth2_connector.get_slice(
         snowflake_oauth2_datasource, offset=10, limit=20
     )
-    assert eq.call_count == 1
+    assert eq.call_count == 2  # +1 select database and warehouse
     assert 11 == len(df_result.df)
     assert 11 == df_result.stats.total_returned_rows
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
@@ -474,7 +474,7 @@ def test_build_authorization_url(mocker, snowflake_oauth2_connector):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'test_client_id'
     mock_oauth2_connector.client_secret = 'test_client_secret'
-    snowflake_oauth2_connector.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    snowflake_oauth2_connector._oauth2_connector = mock_oauth2_connector
     snowflake_oauth2_connector.build_authorization_url()
     mock_oauth2_connector.build_authorization_url.assert_called()
 
@@ -487,7 +487,7 @@ def test_retrieve_tokens(mocker, snowflake_oauth2_connector):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'test_client_id'
     mock_oauth2_connector.client_secret = 'test_client_secret'
-    snowflake_oauth2_connector.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    snowflake_oauth2_connector._oauth2_connector = mock_oauth2_connector
     snowflake_oauth2_connector.retrieve_tokens('bla')
     mock_oauth2_connector.retrieve_tokens.assert_called()
 

@@ -409,9 +409,22 @@ def test_build_authorization_url(mocker, con):
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'test_client_id'
     mock_oauth2_connector.client_secret = 'test_client_secret'
-    con.__dict__['_oauth2_connector'] = mock_oauth2_connector
+    con._oauth2_connector = mock_oauth2_connector
     con.build_authorization_url()
     mock_oauth2_connector.build_authorization_url.assert_called()
+
+
+def test_retrieve_tokens(mocker, con):
+    """
+    Check that the retrieve_tokens method properly returns
+    tokens
+    """
+    mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
+    mock_oauth2_connector.client_id = 'test_client_id'
+    mock_oauth2_connector.client_secret = 'test_client_secret'
+    con._oauth2_connector = mock_oauth2_connector
+    con.retrieve_tokens('bla')
+    mock_oauth2_connector.retrieve_tokens.assert_called()
 
 
 @pytest.mark.asyncio

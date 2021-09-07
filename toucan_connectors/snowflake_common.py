@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 from pydantic import Field, constr
-from snowflake.connector import DictCursor
+from snowflake.connector import DictCursor, SnowflakeConnection
 
 from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
@@ -61,7 +61,6 @@ class SnowflakeCommon:
         self.data = data.result()
 
     def set_total_rows_count(self, count):
-        print(count)
         self.total_rows_count = count.result()['TOTAL_ROWS'][0]
 
     def set_total_returned_rows_count(self, count):
@@ -83,7 +82,7 @@ class SnowflakeCommon:
 
     def _execute_query_internal(
         self,
-        connection,
+        connection: SnowflakeConnection,
         query: str,
         query_parameters: Optional[dict] = None,
     ) -> pd.DataFrame:
@@ -123,9 +122,20 @@ class SnowflakeCommon:
 
         return values  # do not return metadata from now
 
+    def render_datasource(self, datasource: SfDataSource) -> dict:
+        prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_query(
+            datasource.query, datasource.parameters
+        )
+        return {
+            'warehouse': datasource.warehouse,
+            'database': datasource.database,
+            'query': prepared_query,
+            'parameters': prepared_query_parameters,
+        }
+
     def _execute_parallelized_queries(
         self,
-        connection,
+        connection: SnowflakeConnection,
         query: str,
         query_parameters: Optional[Dict] = None,
         offset: Optional[int] = None,
@@ -173,25 +183,36 @@ class SnowflakeCommon:
 
     def fetch_data(
         self,
-        connection,
+        connection: SnowflakeConnection,
         data_source: SfDataSource,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
         get_row_count: bool = False,
     ) -> pd.DataFrame:
+        prepare_query: List = []
+        if data_source.database != connection.database:
+            prepare_query.append(f'USE DATABASE {data_source.database}')
+        if data_source.warehouse != connection.warehouse:
+            prepare_query.append(f'USE WAREHOUSE {data_source.warehouse}')
+        if len(prepare_query) > 0:
+            self._execute_query(connection, ';'.join(prepare_query) + ';')
+            self.logger.info(
+                f'Connection changed to use database {connection.database} and warehouse {connection.warehouse}'
+            )
+
         ds = self._execute_parallelized_queries(
             connection, data_source.query, data_source.parameters, offset, limit, get_row_count
         )
         return ds.df
 
     def retrieve_data(
-        self, c, data_source: SfDataSource, get_row_count: bool = None
+        self, connection: SnowflakeConnection, data_source: SfDataSource, get_row_count: bool = None
     ) -> pd.DataFrame:
-        return self.fetch_data(c, data_source, get_row_count=get_row_count)
+        return self.fetch_data(connection, data_source, get_row_count=get_row_count)
 
     def get_slice(
         self,
-        connection,
+        connection: SnowflakeConnection,
         data_source: SfDataSource,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
@@ -241,7 +262,7 @@ class SnowflakeCommon:
 
     def _describe(
         self,
-        connection,
+        connection: SnowflakeConnection,
         query: str,
     ) -> Dict[str, str]:
         description_start = timer()

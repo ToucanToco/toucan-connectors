@@ -13,7 +13,7 @@ class PostgresDataSource(ToucanDataSource):
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
-        'the "table" parameter above',
+        'the "table" parameter',
         widget='sql',
     )
     table: constr(min_length=1) = Field(

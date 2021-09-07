@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 import pandas as pd
 import requests
-from pydantic import Field
+from pydantic import Field, PrivateAttr
 
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
@@ -82,12 +82,13 @@ class FacebookAdsConnector(ToucanConnector):
     _oauth_trigger = 'instance'
     data_source_model: FacebookAdsDataSource
     oauth2_version = Field('1', **{'ui.hidden': True})
+    _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     def __init__(self, **kwargs) -> None:
         super().__init__(
             **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
         )
-        self.__dict__['_oauth2_connector'] = OAuth2Connector(
+        self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPES,
@@ -113,13 +114,13 @@ class FacebookAdsConnector(ToucanConnector):
         must be sent in the body of the request so we have to set them in
         the mother class. This way they'll be added to her get_access_token method
         """
-        return self.__dict__['_oauth2_connector'].retrieve_tokens(authorization_response)
+        return self._oauth2_connector.retrieve_tokens(authorization_response)
 
     def build_authorization_url(self, **kwargs):
-        return self.__dict__['_oauth2_connector'].build_authorization_url(**kwargs)
+        return self._oauth2_connector.build_authorization_url(**kwargs)
 
     def _get_access_token(self):
-        return self.__dict__['_oauth2_connector'].get_access_token()
+        return self._oauth2_connector.get_access_token()
 
     @staticmethod
     def _handle_pagination(url: str, params: Dict) -> List[Dict]:
