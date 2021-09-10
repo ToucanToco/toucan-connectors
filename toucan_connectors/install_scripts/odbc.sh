@@ -10,7 +10,7 @@ fi
 apt-get update
 apt-get -fyq install wget build-essential odbc-postgresql
 cd /tmp/
-wget http://www.unixodbc.org/unixODBC-2.3.9.tar.gz
+wget https://public-package.toucantoco.com/connectors_sources/odbc/unixODBC-2.3.9.tar.gz
 tar xvf /tmp/unixODBC-2.3.9.tar.gz
 cd /tmp/unixODBC-2.3.9
 ./configure

@@ -9,9 +9,9 @@ fi
 apt-get update
 apt-get install -fyq libaio1 curl wget unzip
 mkdir -p /opt/oracle
-curl -s 'https://raw.githubusercontent.com/circulosmeos/gdown.pl/master/gdown.pl' -o /tmp/gdown.pl
+curl -s 'https://public-package.toucantoco.com/connectors_sources/gdown/gdown.pl' -o /tmp/gdown.pl
 chmod +x /tmp/gdown.pl
-/tmp/gdown.pl 'https://drive.google.com/uc?export=download&id=1prPWRnaVMxDsIiSGJqz0TkFT7wXrCgaO' '/tmp/oracle_client_lib.zip'
+/tmp/gdown.pl 'https://public-package.toucantoco.com/connectors_sources/oracle/oracle_client_lib/oracle_client_lib.zip' '/tmp/oracle_client_lib.zip'
 unzip /tmp/oracle_client_lib.zip -d /opt/oracle
 sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
 ldconfig
