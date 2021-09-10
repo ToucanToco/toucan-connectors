@@ -337,6 +337,7 @@ def test_describe(connect, mocker):
 def test__describe(connect, mocker):
     mocked_cursor = mocker.MagicMock()
     mocked_describe = mocked_cursor.describe
+    mocker.patch('toucan_connectors.snowflake_common.json.dumps')
 
     class fake_result:
         def __init__(self, name, type_code):
@@ -358,6 +359,7 @@ def test__describe(connect, mocker):
 def test__describe_api_changed(connect, mocker):
     mocked_cursor = mocker.MagicMock()
     mocked_describe = mocked_cursor.describe
+    mocker.patch('toucan_connectors.snowflake_common.json.dumps')
 
     class fake_result:
         def __init__(self, name, type_code):
