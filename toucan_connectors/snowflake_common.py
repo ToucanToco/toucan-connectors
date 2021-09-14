@@ -177,7 +177,6 @@ class SnowflakeCommon:
         limit: Optional[int] = None,
         get_row_count: bool = False,
     ) -> pd.DataFrame:
-        # prepare_query: List = []
         if data_source.database != connection.database:
             self.logger.info(f'Connection changed to use database {connection.database}')
             self._execute_query(connection, f'USE DATABASE {data_source.database}')
