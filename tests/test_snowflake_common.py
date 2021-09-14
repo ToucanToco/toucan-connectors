@@ -390,6 +390,7 @@ def test__describe_api_didnt_describe(connect, mocker):
     'pandas.DataFrame.from_dict',
     side_effect=[
         None,
+        None,
         pd.DataFrame(data_result_all),
         pd.DataFrame({'TOTAL_ROWS': 20}, index=[0]),
     ],
@@ -399,7 +400,7 @@ def test_retrieve_data_with_row_count_limit_in_query(connect, fetchmany, snowfla
     snowflake_datasource.query = 'select name from favourite_drinks limit 10;'
     sc = SnowflakeCommon()
     sc.retrieve_data(connect, snowflake_datasource, get_row_count=True)
-    assert fetchmany.call_count == 3  # +1 to select database and warehouse
+    assert fetchmany.call_count == 4  # +1 to select database and warehouse
     assert sc.total_rows_count == 20
 
 
