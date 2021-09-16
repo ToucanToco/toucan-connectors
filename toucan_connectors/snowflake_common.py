@@ -52,7 +52,7 @@ class SfDataSource(ToucanDataSource):
         'For example '
         '{"schema": "SOMW_SCHEMA", "table": "MY_TABLE", columns: ["col1", "col2"]} '
         'This field is used internally',
-        **{'ui.hidden': True}
+        **{'ui.hidden': True},
     )
 
 
