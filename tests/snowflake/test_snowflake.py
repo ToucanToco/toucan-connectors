@@ -85,6 +85,7 @@ def snowflake_datasource():
         database='database_1',
         warehouse='warehouse_1',
         query='test_query with %(foo)s and %(pokemon)s',
+        query_object={"schema": "SHOW_SCHEMA", "table": "MY_TABLE", "columns": ["col1", "col2"]},
         parameters={'foo': 'bar', 'pokemon': 'pikachu'},
     )
 
