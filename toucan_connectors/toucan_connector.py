@@ -80,7 +80,7 @@ class ToucanDataSource(BaseModel):
     parameters: dict = None
     cache_ttl: Optional[int] = Field(
         None,
-        title='Slow Queries\' Cache Expiration Time',
+        title="Slow Queries' Cache Expiration Time",
         description='In seconds. Will override the 5min instance default and/or the connector value',
     )
 
@@ -272,7 +272,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     # /!\ cache ttl is used by the caching system which is not implemented in toucan_connectors.
     cache_ttl: Optional[int] = Field(
         None,
-        title='Slow Queries\' Cache Expiration Time',
+        title="Slow Queries' Cache Expiration Time",
         description='In seconds. Will override the 5min instance default. Can also be overridden at the query level',
     )
 
