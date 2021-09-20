@@ -78,7 +78,11 @@ class ToucanDataSource(BaseModel):
     live_data: bool = False
     validation: dict = None
     parameters: dict = None
-    cache_ttl: Optional[int] = None  # overrides connector's ttl
+    cache_ttl: Optional[int] = Field(
+        None,
+        title='Slow Queries\' Cache Expiration Time',
+        description='In seconds. Will override the 5min instance default and/or the connector value',
+    )
 
     class Config:
         extra = 'forbid'
