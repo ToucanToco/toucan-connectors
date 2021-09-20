@@ -46,6 +46,15 @@ class SfDataSource(ToucanDataSource):
         ..., description='You can write your SQL query here', widget='sql'
     )
 
+    query_object: Dict = Field(
+        None,
+        description='An object describing a simple select query'
+        'For example '
+        '{"schema": "SHOW_SCHEMA", "table": "MY_TABLE", "columns": ["col1", "col2"]}'
+        'This field is used internally',
+        **{'ui.hidden': True},
+    )
+
 
 class SnowflakeCommon:
     def __init__(self):
