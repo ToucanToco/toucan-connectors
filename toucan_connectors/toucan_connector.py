@@ -78,7 +78,11 @@ class ToucanDataSource(BaseModel):
     live_data: bool = False
     validation: dict = None
     parameters: dict = None
-    cache_ttl: Optional[int] = None  # overrides connector's ttl
+    cache_ttl: Optional[int] = Field(
+        None,
+        title="Slow Queries' Cache Expiration Time",
+        description='In seconds. Will override the 5min instance default and/or the connector value',
+    )
 
     class Config:
         extra = 'forbid'
@@ -266,7 +270,11 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     # Default ttl for all connector's queries (overridable at the data_source level)
     # /!\ cache ttl is used by the caching system which is not implemented in toucan_connectors.
-    cache_ttl: Optional[int] = Field(None, title='TTL (cache)')
+    cache_ttl: Optional[int] = Field(
+        None,
+        title="Slow Queries' Cache Expiration Time",
+        description='In seconds. Will override the 5min instance default. Can also be overridden at the query level',
+    )
 
     # Used to defined the connection
     identifier: str = Field(None, **{'ui.hidden': True})

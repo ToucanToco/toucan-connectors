@@ -107,7 +107,11 @@ def test_get_form():
             'live_data': {'title': 'Live Data', 'type': 'boolean', 'default': False},
             'validation': {'title': 'Validation', 'type': 'object'},
             'parameters': {'title': 'Parameters', 'type': 'object'},
-            'cache_ttl': {'title': 'Cache Ttl', 'type': 'integer'},
+            'cache_ttl': {
+                'title': "Slow Queries' Cache Expiration Time",
+                'description': 'In seconds. Will override the 5min instance default and/or the connector value',
+                'type': 'integer',
+            },
         },
         'required': ['domain', 'name'],
         'additionalProperties': False,
