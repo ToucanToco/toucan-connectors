@@ -132,3 +132,18 @@ If you need to add testing dependencies, add them to the `requirements-testing.t
 Make sure your new code is properly formatted by typing `make lint`.
 If it's not, please use `make format`!
 You can now create a pull request!
+
+## Publish
+
+You'll need the `wheel` package:
+
+```shell
+pip install wheel
+```
+
+To publish the `toucan-connectors` package on pypi, use:
+
+```shell
+make build
+make upload
+```
