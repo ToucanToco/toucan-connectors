@@ -198,7 +198,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
                     raise TypeError('close is not a function')
 
         connection: SnowflakeConnection = connection_manager.get(
-            identifier=self.get_identifier(),
+            identifier=f'{self.get_identifier()}{database}{warehouse}',
             connect_method=connect_function,
             alive_method=alive_function,
             close_method=close_function,
