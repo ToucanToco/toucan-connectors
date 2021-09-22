@@ -10,7 +10,7 @@ clean:
 
 .PHONY: install
 install:
-	sudo apt-get install libxml2 libxslt-dev unixodbc-dev
+	sudo apt-get install libxml2-dev libxslt-dev unixodbc-dev
 	pip3 install -U setuptools pip==20.2
 	pip3 install -r requirements-testing.txt --ignore-installed
 	pip3 install '.[all]'
