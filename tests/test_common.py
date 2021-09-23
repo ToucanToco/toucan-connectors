@@ -14,6 +14,7 @@ from toucan_connectors.common import (
     convert_to_qmark_paramstyle,
     extract_table_name,
     fetch,
+    get_param_name,
     is_interpolating_table_name,
     nosql_apply_parameters_to_query,
     pandas_read_sql,
@@ -414,3 +415,17 @@ def test_pandas_read_sql_error(mocker: MockFixture):
             params={'max_pop': 1_000_000},
         )
     assert 'Some error' in str(e.value)
+
+
+def test_get_param_name():
+    assert get_param_name("'%(FOOBAR)s'") == 'FOOBAR'
+    assert get_param_name('%(FOOBAR)s') == 'FOOBAR'
+
+
+def test_convert_to_qmark():
+    assert convert_to_qmark_paramstyle(
+        'SELECT * FROM foobar WHERE x = %(value)s', {'value': 42}
+    ) == ('SELECT * FROM foobar WHERE x = ?', [42])
+    assert convert_to_qmark_paramstyle(
+        "SELECT * FROM foobar WHERE x = '%(value)s'", {'value': 42}
+    ) == ('SELECT * FROM foobar WHERE x = ?', [42])
