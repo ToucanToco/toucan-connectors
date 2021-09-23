@@ -4,7 +4,7 @@ import dataclasses
 import logging
 import re
 from copy import deepcopy
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import pandas as pd
 import pyjq
@@ -27,7 +27,7 @@ RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r'([ )])', RE_JINJA + r'()$']
 
 RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
-RE_NAMED_PARAM = r'%\([a-zA-Z0-9_]*\)s'
+RE_NAMED_PARAM = r'\'?%\([a-zA-Z0-9_]*\)s\'?'
 
 
 class NonValidVariable(Exception):
@@ -286,7 +286,17 @@ class ConnectorStatus:
         return dataclasses.asdict(self)
 
 
-def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> str:
+def get_param_name(printf_style_argument: str) -> str:
+    # %(foobar)s -> foobar
+    # '%(foobar)s' -> foobar
+    if printf_style_argument.startswith("'"):
+        return printf_style_argument[3:-3]
+    return printf_style_argument[2:-2]
+
+
+def convert_to_qmark_paramstyle(
+    query_string: str, params_values: dict
+) -> Tuple[str, List[Optional[Any]]]:
     """Takes a query in pyformat paramstyle and transforms it in qmark
        by replacing placeholders by ? and returning values in right order
     ex :
@@ -295,7 +305,7 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> str:
         ('select * from test where id > ? and price > ?;', [1, 10])"""
 
     extracted_params = re.findall(RE_NAMED_PARAM, query_string)
-    qparams = [m[2:-2] for m in extracted_params]
+    qparams = [get_param_name(m) for m in extracted_params]
     ordered_values = [params_values.get(p) for p in qparams]
 
     # Check if we need to replace a list
