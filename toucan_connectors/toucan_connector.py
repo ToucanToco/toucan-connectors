@@ -32,7 +32,7 @@ class DataStats(NamedTuple):
     execution_time: Optional[float] = None  # query's execution time in ms
     conversion_time: Optional[float] = None  # Result conversion to DataFrame time
     df_memory_size: Optional[int] = None  # Dataframe's memory usage in bytes
-    metadata: Dict[str, Any] = {}
+    others: Dict[str, Any] = {}
 
 
 class QueryMetadata(NamedTuple):
