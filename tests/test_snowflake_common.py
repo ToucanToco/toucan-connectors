@@ -347,12 +347,12 @@ def test__describe(connect, mocker):
 
     mocked_describe.return_value = [
         fake_result(name='steve_madden', type_code=0),
-        fake_result(name='IPO', type_code=1),
+        fake_result(name='IPO', type_code=0),
     ]
     connect.cursor.return_value = mocked_cursor
     res = SnowflakeCommon()._describe(connect, 'SELECT steve_madden, IPO FROM STRATON_OAKMONT;')
     mocked_describe.assert_called_once()
-    assert res['steve_madden'] == 'int'
+    assert res['steve_madden'] == 'float'
     assert res['IPO'] == 'float'
 
 
@@ -369,7 +369,7 @@ def test__describe_api_changed(connect, mocker):
 
     mocked_describe.return_value = [
         fake_result(name='steve_madden', type_code=14),
-        fake_result(name='IPO', type_code=1),
+        fake_result(name='IPO', type_code=0),
     ]
     connect.cursor.return_value = mocked_cursor
     res = SnowflakeCommon()._describe(connect, 'SELECT steve_madden, IPO FROM STRATON_OAKMONT;')

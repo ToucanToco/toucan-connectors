@@ -14,6 +14,7 @@ from toucan_connectors.toucan_connector import DataSlice, DataStats, QueryMetada
 
 type_code_mapping = {
     0: 'float',
+    1: 'real',
     2: 'text',
     3: 'date',
     4: 'timestamp',
