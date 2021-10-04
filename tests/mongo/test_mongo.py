@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 
 import pandas as pd
 import pymongo
@@ -683,3 +684,11 @@ def test_get_cache_key_with_datasource(mongo_connector, mongo_datasource):
     assert mongo_connector.get_cache_key(datasource) == mongo_connector.get_cache_key(
         datasource_with_extra_parameters
     )
+
+    datasource_with_dates = mongo_datasource(
+        collection='test_col',
+        query={'domain': 'plop', 'date': datetime(2021, 10, 4)},
+        parameters={'DOMAIN': 'domain1', 'FOO': 'BAR'},
+    )
+    # should not fail
+    mongo_connector.get_cache_key(datasource_with_dates)
