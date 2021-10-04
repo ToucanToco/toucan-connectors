@@ -686,7 +686,7 @@ def test_get_cache_key_with_datasource(mongo_connector, mongo_datasource):
     )
 
 
-def test_get_cache_key_with_datasource(mongo_connector, mongo_datasource):
+def test_get_cache_key_with_dates(mongo_connector, mongo_datasource):
     """
     Mongo queries can contain objects, like dates, that are not JSON serializable.
     The cache key must be away of the type of these objects
