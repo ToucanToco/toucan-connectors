@@ -446,7 +446,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         if data_source is not None:
             unique_identifier['datasource'] = self._render_datasource(data_source)
 
-        json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True)
+        json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True, default=hash)
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
         return string_uid
 

@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 
 import pandas as pd
 import pymongo
@@ -683,3 +684,26 @@ def test_get_cache_key_with_datasource(mongo_connector, mongo_datasource):
     assert mongo_connector.get_cache_key(datasource) == mongo_connector.get_cache_key(
         datasource_with_extra_parameters
     )
+
+
+def test_get_cache_key_with_dates(mongo_connector, mongo_datasource):
+    """
+    Mongo queries can contain objects, like dates, that are not JSON serializable.
+    The cache key must be away of the type of these objects
+    """
+    datasource_with_date = mongo_datasource(
+        collection='test_col',
+        query={'domain': 'plop', 'date': datetime(2021, 10, 4)},
+        parameters={'DOMAIN': 'domain1', 'FOO': 'BAR'},
+    )
+    # should not fail
+    cache_key_date = mongo_connector.get_cache_key(datasource_with_date)
+
+    datasource_with_str = mongo_datasource(
+        collection='test_col',
+        query={'domain': 'plop', 'date': str(datetime(2021, 10, 4))},
+        parameters={'DOMAIN': 'domain1', 'FOO': 'BAR'},
+    )
+    cache_key_str = mongo_connector.get_cache_key(datasource_with_str)
+
+    assert cache_key_str != cache_key_date
