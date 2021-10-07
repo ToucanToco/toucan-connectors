@@ -241,7 +241,6 @@ class SnowflakeConnector(ToucanConnector):
         if self.token_endpoint and self.refresh_token:
             access_token = jwt.decode(
                 self.access_token,
-                verify=False,
                 options={'verify_signature': False},
             )
             if datetime.fromtimestamp(access_token['exp']) < datetime.now():
