@@ -207,6 +207,7 @@ def test_get_form_query_with_good_database(postgres_connector, mocker):
         'type': 'string',
         'enum': ['city', 'country', 'countrylanguage'],
     }
+    assert form['required'] == ['domain', 'name', 'database']
 
 
 def test_get_form_connection_fails(mocker, postgres_connector):
