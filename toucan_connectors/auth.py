@@ -34,7 +34,7 @@ def oauth2_oidc(*args, **kwargs) -> Session:
     """
     id_token = kwargs['id_token']
     #  check that the id_token is not expired
-    decoded = jwt.decode(kwargs['id_token'], verify=False, options={'verify_signature': False})
+    decoded = jwt.decode(kwargs['id_token'], options={'verify_signature': False})
     if datetime.fromtimestamp(decoded['exp']) < datetime.now():
         response = requests.post(
             kwargs['token_endpoint'],
