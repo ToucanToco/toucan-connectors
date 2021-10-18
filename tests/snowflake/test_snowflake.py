@@ -645,6 +645,7 @@ def test_refresh_oauth_token(
     snowflake_datasource,
 ):
     cm = SnowflakeConnector.get_snowflake_connection_manager()
+    # Expired JWT
     snowflake_connector_oauth.user_tokens_keeper.access_token = SecretStr(
         jwt.encode({'exp': datetime.now() - timedelta(hours=24)}, key='supersecret')
     )
@@ -652,6 +653,20 @@ def test_refresh_oauth_token(
     req_mock.return_value.ok = False
     req_mock.return_value.return_value = {'access_token': 'token', 'refresh_token': 'token'}
 
+    try:
+        snowflake_connector_oauth._retrieve_data(snowflake_datasource)
+        assert req_mock.call_count == 1
+    except Exception as e:
+        assert str(e) == 'HTTP Error 401: Unauthorized'
+        assert False
+    else:
+        assert True
+    finally:
+        cm.force_clean()
+
+    req_mock.reset_mock()
+    # Invalid JWT
+    snowflake_connector_oauth.user_tokens_keeper.access_token = SecretStr('PLOP')
     try:
         snowflake_connector_oauth._retrieve_data(snowflake_datasource)
         assert req_mock.call_count == 1
