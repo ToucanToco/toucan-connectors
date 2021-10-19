@@ -11,7 +11,6 @@ import pandas as pd
 import requests
 import snowflake
 from jinja2 import Template
-from jwt import PyJWTError
 from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
@@ -254,7 +253,7 @@ class SnowflakeConnector(ToucanConnector):
                     },
                 )
                 is_expired = datetime.fromtimestamp(access_token['exp']) < datetime.now()
-            except PyJWTError:
+            except Exception:
                 is_expired = True
 
             if is_expired:
