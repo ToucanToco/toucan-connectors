@@ -333,6 +333,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         filtered by permissions
         """
         res = self._retrieve_data(data_source)
+        res.columns = res.columns.astype(str)
 
         if permissions is not None:
             permissions_query = PandasConditionTranslator.translate(permissions)

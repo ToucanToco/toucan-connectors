@@ -75,7 +75,7 @@ def test_set_columns(mocker, con, ds):
     df = con.get_df(ds)
     assert df.to_dict() == {
         'Animateur': {1: 'pika', 2: 'bulbi'},
-        1: {1: '', 2: ''},
-        2: {1: 'a', 2: ''},
+        '1': {1: '', 2: ''},
+        '2': {1: 'a', 2: ''},
         'Week': {1: 'W1', 2: 'W2'},
     }

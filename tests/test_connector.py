@@ -176,11 +176,12 @@ class CustomPolicyDataConnector(ToucanConnector):
     data_source_model: DataSource
 
     def _retrieve_data(self, data_source, logbook=[]):
+
         if len(logbook) < 3:
             logbook.append(time())
             raise RuntimeError('try again!')
         logbook.clear()
-        return 42
+        return pd.DataFrame({'1': [42, 32]})
 
     @property
     def retry_decorator(self):
@@ -190,7 +191,7 @@ class CustomPolicyDataConnector(ToucanConnector):
 def test_custom_max_attempt_df():
     udc = CustomPolicyDataConnector(name='my_name')
     result = udc.get_df({})
-    assert result == 42
+    assert result['1'].values.tolist() == [42, 32]
 
 
 class CustomRetryOnDataConnector(ToucanConnector):
@@ -279,3 +280,17 @@ def test_should_return_connector_config_form():
         == OAuth2ConnectorConfig.schema()
     )
     assert get_connector_secrets_form(MongoConnector) is None
+
+
+def test_get_df_int_column(mocker):
+    """The int column should be casted as str"""
+
+    class DataConnector(ToucanConnector):
+        type = 'MyDB'
+        data_source_model: DataSource
+
+        def _retrieve_data(self, datasource):
+            return pd.DataFrame({0: [1, 2]})
+
+    dc = DataConnector(name='bla')
+    assert dc.get_df(mocker.MagicMock()).columns == ['0']
