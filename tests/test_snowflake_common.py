@@ -411,3 +411,25 @@ def test_retrieve_total_rows():
     sc = SnowflakeCommon()
     sc.set_total_returned_rows_count(20)
     assert sc.total_returned_rows_count == 20
+
+
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon._execute_query',
+)
+@patch(
+    'toucan_connectors.snowflake_common.SnowflakeCommon._execute_parallelized_queries',
+)
+@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
+def test_fetch_data_warehouse_none(execute_query, execute_parallelized, connect):
+    """The connection's warehouse should not be switched to datasource's if none"""
+    s = SnowflakeDataSource(
+        name='test_name',
+        domain='test_domain',
+        database='database_1',
+        warehouse=None,
+        query='select * from my_table where toto=%(foo);',
+        query_object={'schema': 'SHOW_SCHEMA', 'table': 'MY_TABLE', 'columns': ['col1', 'col2']},
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
+    )
+    SnowflakeCommon().fetch_data(connect, s)
+    assert execute_query.call_count == 0
