@@ -201,7 +201,7 @@ class SnowflakeCommon:
         if data_source.database != connection.database:
             self.logger.info(f'Connection changed to use database {connection.database}')
             self._execute_query(connection, f'USE DATABASE {data_source.database}')
-        if data_source.warehouse != connection.warehouse:
+        if data_source.warehouse and data_source.warehouse != connection.warehouse:
             self.logger.info(f'Connection changed to use  warehouse {connection.warehouse}')
             self._execute_query(connection, f'USE WAREHOUSE {data_source.warehouse}')
 
