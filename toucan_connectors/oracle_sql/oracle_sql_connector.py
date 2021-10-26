@@ -45,7 +45,7 @@ class OracleSQLDataSource(ToucanDataSource):
                 # Filter tables starting with an '_' because strlist_to_enum cannot
                 # set attributes starting with '_'
                 available_tables = [table_name for (table_name,) in res if table_name[0] != '_']
-                constraints['table'] = strlist_to_enum('table', available_tables)
+                constraints['table'] = strlist_to_enum('table', available_tables, None)
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 

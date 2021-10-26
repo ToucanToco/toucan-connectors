@@ -165,6 +165,7 @@ def test_get_form_query_with_good_database(clickhouse_connector):
         'type': 'string',
         'enum': ['city'],
     }
+    assert form['required'] == ['domain', 'name', 'database']
 
 
 def test_get_form_connection_fails(mocker, clickhouse_connector):

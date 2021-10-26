@@ -103,6 +103,7 @@ def test_get_form_empty_query(oracle_connector):
     current_config = {}
     form = OracleSQLDataSource.get_form(oracle_connector, current_config)
     assert 'CITY' in form['definitions']['table']['enum']
+    assert form['required'] == ['domain', 'name']
 
 
 def test_datasource():
