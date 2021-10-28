@@ -82,7 +82,7 @@ class MySQLDataSource(ToucanDataSource):
                     cursor.execute('SHOW TABLES;')
                     res = cursor.fetchall()
                     available_tables = [table_name for (table_name,) in res]
-                    constraints['table'] = strlist_to_enum('table', available_tables)
+                    constraints['table'] = strlist_to_enum('table', available_tables, None)
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 

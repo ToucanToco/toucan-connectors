@@ -72,7 +72,7 @@ class ClickhouseDataSource(ToucanDataSource):
                     )
                     res = cursor.fetchall()
                     available_tables = [table[0] for table in res]
-                    constraints['table'] = strlist_to_enum('table', available_tables)
+                    constraints['table'] = strlist_to_enum('table', available_tables, None)
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 

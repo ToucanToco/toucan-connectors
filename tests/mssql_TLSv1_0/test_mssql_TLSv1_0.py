@@ -236,3 +236,4 @@ def test_get_form_query_with_good_database(mssql_connector):
     }
     assert form['properties']['table'] == {'$ref': '#/definitions/table'}
     assert 'City' in form['definitions']['table']['enum']
+    assert form['required'] == ['domain', 'name', 'database']

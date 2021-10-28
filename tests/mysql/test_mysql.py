@@ -366,6 +366,7 @@ def test_get_form_query_with_good_database(mysql_connector):
         'type': 'string',
         'enum': ['City', 'Country', 'CountryLanguage'],
     }
+    assert form['required'] == ['domain', 'name', 'database']
 
 
 def test_handle_date_0():
