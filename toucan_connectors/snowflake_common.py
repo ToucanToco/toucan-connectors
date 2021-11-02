@@ -147,13 +147,8 @@ class SnowflakeCommon:
         query: str,
         query_columns: Optional[List] = None,
     ):
-        """
-        if it's a SELECT type query and there is not an 'ORDER BY' inside,
-        we sort with the first column of the dataset
-
-        query: the query sting
-        query_columns: the query's columns
-        """
+        """If it's a SELECT type query and there is not an 'ORDER BY' inside, we sort with the first column of the
+        dataset"""
 
         if query_columns and 'WITH SELECT_STEP_' in query and ' ORDER BY ' not in query:
             # we append the order from row_number on the first column
