@@ -32,12 +32,9 @@ class SqlQueryHelper:
         )
         query_check = prepared_query.strip().lower()
         if not query_check.startswith('show') and not query_check.startswith('describe'):
-            if limit and offset:
-                prepared_query = prepared_query.replace(';', '')
-                prepared_query = f'SELECT * FROM ({prepared_query}) LIMIT {limit} OFFSET {offset};'
-            elif limit:
-                prepared_query = prepared_query.replace(';', '')
-                prepared_query = f'SELECT * FROM ({prepared_query}) LIMIT {limit};'
+            if limit:
+                prepared_query = f'SELECT * FROM ({prepared_query.replace(";", "")}) LIMIT {limit}'
+                prepared_query += f' OFFSET {offset};' if offset else ';'
 
         return prepared_query, prepared_values
 

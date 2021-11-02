@@ -142,6 +142,25 @@ class SnowflakeCommon:
             'parameters': prepared_query_parameters,
         }
 
+    def add_default_order_if_needed(
+        self,
+        query: str,
+        query_columns: Optional[List] = None,
+    ):
+        """
+        if it's a SELECT type query and there is not an 'ORDER BY' inside,
+        we sort with the first column of the dataset
+
+        query: the query sting
+        query_columns: the query's columns
+        """
+
+        if query_columns and 'WITH SELECT_STEP_' in query and ' ORDER BY ' not in query:
+            # we append the order from row_number on the first column
+            query += f' ORDER BY ROW_NUMBER() OVER (ORDER BY {query_columns[0]} ASC)'
+
+        return query
+
     def _execute_parallelized_queries(
         self,
         connection: SnowflakeConnection,
@@ -205,8 +224,18 @@ class SnowflakeCommon:
             self.logger.info(f'Connection changed to use  warehouse {connection.warehouse}')
             self._execute_query(connection, f'USE WAREHOUSE {data_source.warehouse}')
 
+        # We add the order if needed
+        data_source.query = self.add_default_order_if_needed(
+            data_source.query, data_source.query_object['columns']
+        )
+
         ds = self._execute_parallelized_queries(
-            connection, data_source.query, data_source.parameters, offset, limit, get_row_count
+            connection,
+            data_source.query,
+            data_source.parameters,
+            offset,
+            limit,
+            get_row_count,
         )
         return ds.df
 

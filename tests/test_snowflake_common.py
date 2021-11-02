@@ -433,3 +433,14 @@ def test_fetch_data_warehouse_none(execute_query, execute_parallelized, connect)
     )
     SnowflakeCommon().fetch_data(connect, s)
     assert execute_query.call_count == 0
+
+
+def test_add_default_order_if_needed():
+    """Test if the add of a default order works as expected"""
+    query_with_order_by = SnowflakeCommon().add_default_order_if_needed('WITH SELECT_STEP_... ORDER BY X', ['COLUMN'])
+    query_with_columns = SnowflakeCommon().add_default_order_if_needed('WITH SELECT_STEP_...', ['COLUMN'])
+    query_without_columns = SnowflakeCommon().add_default_order_if_needed('WITH SELECT_STEP_...')
+
+    assert query_with_order_by == 'WITH SELECT_STEP_... ORDER BY X'
+    assert query_with_columns == 'WITH SELECT_STEP_... ORDER BY ROW_NUMBER() OVER (ORDER BY COLUMN ASC)'
+    assert query_without_columns == 'WITH SELECT_STEP_...'
