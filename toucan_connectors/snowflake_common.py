@@ -1,6 +1,7 @@
 import concurrent
 import json
 import logging
+from re import search
 from timeit import default_timer as timer
 from typing import Dict, List, Optional
 
@@ -147,12 +148,15 @@ class SnowflakeCommon:
         query: str,
         query_columns: Optional[List] = None,
     ):
-        """If it's a SELECT type query and there is not an 'ORDER BY' inside, we sort with the first column of the
-        dataset"""
+        """If it's a SELECT type query and there is not an 'ORDER BY' inside, we sort using ROW_NUMBER function"""
 
-        if query_columns and 'WITH SELECT_STEP_' in query and ' ORDER BY ' not in query:
+        if (
+            query_columns
+            and search(r'SELECT[\r\n|\n| |\t]', query.upper())
+            and not search(r'ORDER[\r\n|\n| |\t]BY', query.upper())
+        ):
             # we append the order from row_number on the first column
-            query += f' ORDER BY ROW_NUMBER() OVER (ORDER BY {query_columns[0]} ASC)'
+            query += f' ORDER BY {", ".join(query_columns)}'
 
         return query
 

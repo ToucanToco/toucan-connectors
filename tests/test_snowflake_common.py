@@ -438,16 +438,25 @@ def test_fetch_data_warehouse_none(execute_query, execute_parallelized, connect)
 def test_add_default_order_if_needed():
     """Test if the add of a default order works as expected"""
     query_with_order_by = SnowflakeCommon().add_default_order_if_needed(
-        'WITH SELECT_STEP_... ORDER BY X', ['COLUMN']
+        'SELECT ... ORDER BY X', ['COLUMN']
+    )
+    query_with_order_by_break_line = SnowflakeCommon().add_default_order_if_needed(
+        """SELECT
+... ORDER
+BY X""",
+        ['COLUMN'],
     )
     query_with_columns = SnowflakeCommon().add_default_order_if_needed(
-        'WITH SELECT_STEP_...', ['COLUMN']
+        'SELECT ...', ['COLUMN', 'COLUMN2']
     )
-    query_without_columns = SnowflakeCommon().add_default_order_if_needed('WITH SELECT_STEP_...')
+    query_without_columns = SnowflakeCommon().add_default_order_if_needed('SELECT ...')
 
-    assert query_with_order_by == 'WITH SELECT_STEP_... ORDER BY X'
+    assert query_with_order_by == 'SELECT ... ORDER BY X'
     assert (
-        query_with_columns
-        == 'WITH SELECT_STEP_... ORDER BY ROW_NUMBER() OVER (ORDER BY COLUMN ASC)'
+        query_with_order_by_break_line
+        == """SELECT
+... ORDER
+BY X"""
     )
-    assert query_without_columns == 'WITH SELECT_STEP_...'
+    assert query_with_columns == 'SELECT ... ORDER BY COLUMN, COLUMN2'
+    assert query_without_columns == 'SELECT ...'
