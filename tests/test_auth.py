@@ -28,6 +28,38 @@ def test_custom_token_server():
 
 
 @responses.activate
+def test_custom_token_server_custom_auth_scheme():
+    """
+    RFC 2617 standard on HTTP Authentication states that credentials should
+    consist of at least a scheme and arbitrary parameters:
+        credentials = auth-scheme #auth-param
+
+    In practice auth-scheme is often "Bearer" because it is used in the OAuth2 standard.
+    This is our default. With the custom_token_server the initial request's response will be
+    injected in the the Authorization header after the Bearer auth-scheme.
+
+    This test show that we support altenative auth-schemes, in this case the `filter`
+    should emit the complete value of the Authorization header.
+    """
+    auth = Auth(
+        type='custom_token_server',
+        args=['POST', 'https://example.com'],
+        kwargs={
+            'data': {'user': 'u', 'password ': 'p'},
+            'filter': '"AnaplanAuthToken \(.token)"',  # noqa: W605
+        },
+    )
+
+    session = auth.get_session()
+    assert isinstance(session.auth, CustomTokenServer)
+
+    responses.add(responses.POST, 'https://example.com', json={'token': 'a'})
+
+    session.auth(DummyRequest())
+    assert DummyRequest.headers['Authorization'] == 'AnaplanAuthToken a'
+
+
+@responses.activate
 def test_custom_token_server_initial_basic():
     """
     Custom_token_server with its own auth class for the initial request

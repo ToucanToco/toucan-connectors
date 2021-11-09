@@ -81,7 +81,12 @@ class CustomTokenServer(AuthBase):
         res = session.request(**self.request_kwargs)
         token = pyjq.first(self.filter, res.json())
 
-        r.headers['Authorization'] = f'Bearer {token}'
+        # If a single string is returned by the filter default
+        # on OAuth "Bearer" auth-scheme.
+        if len(f'{token}'.split(maxsplit=2)) == 1:
+            token = f'Bearer {token}'
+
+        r.headers['Authorization'] = token
         return r
 
 
