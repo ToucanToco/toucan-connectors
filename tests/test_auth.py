@@ -6,6 +6,10 @@ import responses
 from toucan_connectors.auth import Auth, CustomTokenServer
 
 
+class DummyRequest:
+    headers = {}
+
+
 @responses.activate
 def test_custom_token_server():
     auth = Auth(
@@ -19,14 +23,15 @@ def test_custom_token_server():
 
     responses.add(responses.POST, 'https://example.com', json={'token': 'a'})
 
-    # dummy request class just to introspect headers
-    class TMP:
-        headers = {}
+    session.auth(DummyRequest())
+    assert DummyRequest.headers['Authorization'] == 'Bearer a'
 
-    session.auth(TMP())
-    assert TMP.headers['Authorization'] == 'Bearer a'
 
-    # custom_token_server with its own auth class
+@responses.activate
+def test_custom_token_server_initial_basic():
+    """
+    Custom_token_server with its own auth class for the initial request
+    """
     responses.add(responses.POST, 'https://example.com', json={'token': 'a'})
     session = Auth(
         type='custom_token_server',
@@ -34,8 +39,8 @@ def test_custom_token_server():
         kwargs={'auth': {'type': 'basic', 'args': ['u', 'p']}},
     ).get_session()
 
-    session.auth(TMP())
-    assert responses.calls[1].request.headers['Authorization'].startswith('Basic')
+    session.auth(DummyRequest())
+    assert responses.calls[0].request.headers['Authorization'].startswith('Basic')
 
 
 @responses.activate
