@@ -155,7 +155,7 @@ def test_get_form_query_with_good_database(clickhouse_connector):
     assert form['definitions']['database'] == {
         'title': 'database',
         'description': 'An enumeration.',
-        'enum': ['clickhouse_db', 'default'],
+        'enum': ['INFORMATION_SCHEMA', 'clickhouse_db', 'default', 'information_schema'],
         'type': 'string',
     }
     assert form['properties']['table'] == {'$ref': '#/definitions/table'}
