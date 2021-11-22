@@ -238,7 +238,7 @@ class MongoConnector(ToucanConnector):
         else:
             df = self.get_df(data_source, permissions)
             total_count = len(df)
-        return DataSlice(df, stats=DataStats(total_returned_rows=total_count))
+        return DataSlice(df, stats=DataStats(total_returned_rows=len(df), total_rows=total_count))
 
     def get_df_with_regex(
         self,
