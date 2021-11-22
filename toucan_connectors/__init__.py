@@ -158,6 +158,11 @@ CONNECTORS_REGISTRY = {
         'connector': 'mysql.mysql_connector.MySQLConnector',
         'logo': 'mysql/mysql.png',
     },
+    'NetExplorer': {
+        'connector': 'net_explorer.net_explorer_connector.NetExplorerConnector',
+        'label': 'Net Explorer',
+        'logo': 'net_explorer/net_explorer.png',
+    },
     'OData': {
         'connector': 'odata.odata_connector.ODataConnector',
         'logo': 'odata/odata.png',
