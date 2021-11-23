@@ -88,7 +88,12 @@ def test_get_status_ok(mocker, gc):
 
 
 def test_error_pr_extraction(
-    mocker, gc, error_response, extracted_repositories_names, extracted_prs_2
+    mocker,
+    gc,
+    error_response,
+    mock_extraction_start_date,
+    extracted_repositories_names,
+    extracted_prs_2,
 ):
     """
     Check that previously retrieved data is returned if a page is corrupt
@@ -278,6 +283,7 @@ def test_fetch_members_data(
 def test_fetch_pull_requests_data(
     mocker,
     gc,
+    mock_extraction_start_date,
     extracted_repositories_names_2,
     extracted_prs_1,
     extracted_prs_2,
@@ -303,12 +309,13 @@ def test_fetch_pull_requests_data(
     )
     assert mocked_api_call.call_count == 1
     assert mocked_api_call_async.call_count == 3
-    assert len(pr_dataset) == 4
+    assert len(pr_dataset) == 5
 
 
 def test_get_pages(
     mocker,
     gc,
+    mock_extraction_start_date,
     extracted_prs_1,
     extracted_prs_2,
     extracted_prs_3,
@@ -321,8 +328,6 @@ def test_get_pages(
     Check that get_pages is able to retrieve pull requests or members data
     from Github's API
     """
-    mocked_datetime = mocker.patch('toucan_connectors.github.github_connector.datetime')
-    mocked_datetime.strftime.return_value = '2020-02-12T00:00:00Z'
     mocked_api_call = mocker.patch(
         'python_graphql_client.GraphqlClient.execute_async',
         side_effect=[extracted_prs_1, extracted_prs_2],
@@ -384,8 +389,7 @@ def test_get_pages(
         )
     )
     assert mocked_api_call.call_count == 2
-    assert len(pr_rows) == 3
-    assert pr_rows[-1]['PR Name'] == 'chore(something): somethin'
+    assert len(pr_rows) == 4
 
 
 def test_retrieve_members_data(
@@ -423,6 +427,7 @@ def test_retrieve_members_data(
 def test_retrieve_pull_requests_data(
     mocker,
     gc,
+    mock_extraction_start_date,
     extracted_repositories_names_2,
     extracted_prs_1,
     extracted_prs_2,
@@ -442,7 +447,7 @@ def test_retrieve_pull_requests_data(
     pr_dataset = gc._retrieve_data(ds)
     assert mocked_api_call.call_count == 1
     assert mocked_api_call_async.call_count == 3
-    assert len(pr_dataset) == 4
+    assert len(pr_dataset) == 5
 
 
 @responses.activate
@@ -477,7 +482,14 @@ def test_datasource_get_form_no_secret(gc, remove_secrets):
     assert 'organization' not in res['definitions'].keys()
 
 
-def test_get_slice(gc, mocker, extracted_repositories_names_2, extracted_prs_1, extracted_prs_2):
+def test_get_slice(
+    gc,
+    mocker,
+    mock_extraction_start_date,
+    extracted_repositories_names_2,
+    extracted_prs_1,
+    extracted_prs_2,
+):
     """Check that get_slice returns only three pages of data"""
     mocked_api_call = mocker.patch(
         'python_graphql_client.GraphqlClient.execute', return_value=extracted_repositories_names_2
@@ -494,7 +506,12 @@ def test_get_slice(gc, mocker, extracted_repositories_names_2, extracted_prs_1, 
 
 
 def test_get_slice_limit(
-    gc, mocker, extracted_repositories_names_2, extracted_prs_1, extracted_prs_2
+    gc,
+    mocker,
+    mock_extraction_start_date,
+    extracted_repositories_names_2,
+    extracted_prs_1,
+    extracted_prs_2,
 ):
     """Check that get_slice returns only three pages of data"""
     mocked_api_call = mocker.patch(
@@ -525,7 +542,9 @@ def test_get_organizations(gc):
     assert res == ['power_rangers', 'teletubbies']
 
 
-def test_get_rate_limit_exhausted(gc, mocker, extracted_prs_4, extracted_prs_3, event_loop, client):
+def test_get_rate_limit_exhausted(
+    gc, mocker, mock_extraction_start_date, extracted_prs_4, extracted_prs_3, event_loop, client
+):
     """Check that the connector is paused when rate limit is exhausted"""
     mockedsleep = mocker.patch('toucan_connectors.github.github_connector.asyncio.sleep')
     mockeddatetime = mocker.patch('toucan_connectors.github.helpers.datetime')
