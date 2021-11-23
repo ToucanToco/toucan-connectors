@@ -15,11 +15,11 @@ Each connector is dedicated to a single type of source (PostrgeSQL, Mongo, Sales
 - `Connector` which contains all the necessary information to *use a data provider* (e.g. hostname,  auth method and details, etc...).
 - `DataSource` which contains all the information to *get a dataframe* (query, path, etc...) using the `Connector` class above.
 
-The Toucan Toco platform instantiates these clases using values provided by Toucan admin and app designers, it then uses the following methods to get data and metadata : 
+The Toucan Toco platform instantiates these classes using values provided by Toucan admin and app designers, it then uses the following methods to get data and metadata: 
 
 - `Connector._retrieve_data` returning an instance of `pandas.DataFrame`, method used to return data to a Toucan Toco end user
-- `Connector.get_slice` returning an instance of `DataSlice`, methode used to return data to a Toucan Toco application designer when building a query.
-- `Connector.get_status` returning an instance of `ConnectorStatus`, method used to inform an admin or Toucan Toco application designer of the status of its connection to a third party data service. Is it reachable from our servers ? Are the authentication details and method working ? etc...
+- `Connector.get_slice` returning an instance of `DataSlice`, method used to return data to a Toucan Toco application designer when building a query.
+- `Connector.get_status` returning an instance of `ConnectorStatus`, method used to inform an admin or Toucan Toco application designer of the status of its connection to a third party data service. Is it reachable from our servers? Are the authentication details and method working? etc...
 
 
 ## Dependencies
@@ -30,13 +30,13 @@ This project uses `make` and `Python 3.8`. Install the main dependencies :
 pip install -e .
 ```
 
-We are using the `setuptools` construct `extra_requires` to define each connectors dependencies separately. For example to install the MySQL connector dependencies : 
+We are using the `setuptools` construct `extra_requires` to define each connector's dependencies separately. For example to install the MySQL connector dependencies: 
 
 ```bash
 pip install -e ".[mysql]"
 ```
 
-There is a shortcut called `all` to install all the dependencies for all the connectors. I do not recommend that you use this as a contributor to this package, but if you do, use the section bellow to install the necessary system packages.
+There is a shortcut called `all` to install all the dependencies for all the connectors. I do not recommend that you use this as a contributor to this package, but if you do, use the section below to install the necessary system packages.
 
 ```bash
 pip install -e ".[all]"
@@ -68,13 +68,15 @@ You can then install the library with `env LDFLAGS='-L/usr/local/lib -L/usr/loca
 
 ## Testing
 
-We are using `pytest` and various packages of its ecosystem, to install the testing dependencies run:
+We are using `pytest` and various packages of its ecosystem.
+To install the testing dependencies, run:
 
 ```bash
 pip install -r requirements-testing.txt
 ```
 
-As each connector is an independant plugin its test are written idenpendtly from the rest of the codebase. Run the tests for a specifc connector (`http_api` in this example) like this:
+As each connector is an independant plugin, its tests are written independently from the rest of the codebase.
+Run the tests for a specifc connector (`http_api` in this example) like this:
 
 ```bash
 pytest tests/http_api
@@ -89,7 +91,7 @@ pip install -e ".[all]"
 make test
 ```
 
-Some connectors are tested using mocks (cf. `trello`) other are tested by making calls to data providers (cf. `elasticsearch`) running on the system in docker containers. The required images are in the `tests/docker-compose.yml` file, they need to be pulled (cf. `pytest --pull`) to run the relevant tests.
+Some connectors are tested using mocks (cf. `trello`), others are tested by making calls to data providers (cf. `elasticsearch`) running on the system in docker containers. The required images are in the `tests/docker-compose.yml` file, they need to be pulled (cf. `pytest --pull`) to run the relevant tests.
 
 ## Adding a connector
 
@@ -109,7 +111,7 @@ Open the folder in `tests` for the new connector. You can start writing your tes
 Some connectors are tested with calls to the actual data systems that they target,
 for example `elasticsearch`, `mongo`, `mssql`. 
 
-Other are tested with mocks of the
+Others are tested with mocks of the
 classes or functions returning data that you are wrapping (see : `HttpAPI`, or
 `microstrategy`).
 
@@ -117,9 +119,9 @@ If you have a container for your target system, add a docker image in
 the `docker-compose.yml`, then use the `pytest` fixture `service_container` to automatically
 start the docker and shut it down for you when you are running tests.
 
-The fixture will not pull the image for you for each test runs, you need to pull the image on your machine  (at least once) using the `pytest --pull` option.
+The fixture will not pull the image for you for each test runs, you need to pull the image on your machine (at least once) using the `pytest --pull` option.
 
-### Step 2 : New connector
+### Step 2: New connector
 
 Open the folder `mytype` in `toucan_connectors` for your new connector and create your classes.
 
@@ -153,7 +155,7 @@ class MyTypeConnector(ToucanConnector):
         ...
 ```
 
-### Step 3 : Register your connector, add documentation
+### Step 3: Register your connector, add documentation
 
 Add your connector in `toucan_connectors/__init__.py`.
 The key is what we call the `type` of the connector, which

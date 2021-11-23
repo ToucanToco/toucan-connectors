@@ -1,14 +1,14 @@
 # DataSlice object
 
-The DataSlice object contains a slice (or page) of  extracted data enriched with metadata computed from query execution.
+The DataSlice object contains a slice (or page) of extracted data enriched with metadata computed from query execution.
 
-This object is meant to be used when designing a query on the Toucan Toco platform, hence the metadata (to infrom and guide a query designer) and the limited pages of results (to avoid overloading the client with large datasets).
+This object is meant to be used when designing a query on the Toucan Toco platform, hence the metadata (to inform and guide a query designer) and the limited pages of results (to avoid overloading the client with large datasets).
 
 Below is the metadata list and a note explaining how they are calculated.
 
 ## DataSlice attributes
 
-* `input_parameters` (`dict`): contains an extensible list of parameters extracted from user’s input for example:
+* `input_parameters` (`dict`): contains an extensible list of parameters extracted from a user’s input for example:
     
     * `limit` extracted from the query itself
     * `offset` extracted from the query itself
@@ -24,7 +24,7 @@ Below is the metadata list and a note explaining how they are calculated.
 ## DataSlice attributes computation in Snowflake connector
 
 * `input_parameters`:
- contains all parameters we were able to extract from input. In the context of a Snowflake (or SQL) data extraction, we implemented the extraction of limit & offset directly from the query using regular expressions.
+ contains all parameters we were able to extract from the input. In the context of a Snowflake (or SQL) data extraction, we implemented the extraction of limit & offset directly from the query using regular expressions.
 
 * `stats`: this object collects various stats such as execution times, sizes, row numbers etc..
 
