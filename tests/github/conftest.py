@@ -1,3 +1,4 @@
+import datetime
 from typing import Any
 
 import pytest
@@ -490,3 +491,11 @@ def extracted_prs_4():
             'rateLimit': {'remaining': 70, 'resetAt': '2021-02-23T13:26:47Z'},
         }
     }
+
+
+@pytest.fixture
+def mock_extraction_start_date(mocker):
+    return mocker.patch(
+        'toucan_connectors.github.github_connector.extraction_start_date',
+        datetime.datetime(2020, 7, 1),
+    )
