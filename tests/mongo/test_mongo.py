@@ -226,6 +226,7 @@ def test_get_slice(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.get_slice(datasource)
     assert res.stats.total_returned_rows == 3
+    assert res.stats.total_rows == 3
     assert res.df.shape == (3, 5)
     assert res.df['country'].tolist() == ['France', 'England', 'Germany']
 
@@ -233,18 +234,21 @@ def test_get_slice(mongo_connector, mongo_datasource):
     res = mongo_connector.get_slice(datasource, limit=1)
     expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
     assert res.stats.total_returned_rows == 3
+    assert res.stats.total_rows == 3
     assert res.df.shape == (1, 5)
     assert res.df[['country', 'language', 'value']].equals(expected)
 
     # With a offset
     res = mongo_connector.get_slice(datasource, offset=1)
     assert res.stats.total_returned_rows == 3
+    assert res.stats.total_rows == 3
     assert res.df.shape == (2, 5)
     assert res.df['country'].tolist() == ['England', 'Germany']
 
     # With both
     res = mongo_connector.get_slice(datasource, offset=1, limit=1)
     assert res.stats.total_returned_rows == 3
+    assert res.stats.total_rows == 3
     assert res.df.shape == (1, 5)
     assert res.df.loc[0, 'country'] == 'England'
 
@@ -261,6 +265,7 @@ def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
     )
     dataslice = mongo_connector.get_slice(datasource, limit=1)
     assert dataslice.stats.total_returned_rows == 3
+    assert dataslice.stats.total_rows == 3
     assert dataslice.df.shape == (1, 1)
     assert dataslice.df.iloc[0].pays in ['France', 'England', 'Germany']
 
