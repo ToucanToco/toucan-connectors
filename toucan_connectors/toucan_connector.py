@@ -364,10 +364,13 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         df = self.get_df(data_source, permissions)
         if limit is not None:
             return DataSlice(
-                df[offset : offset + limit], stats=DataStats(total_returned_rows=len(df))
+                df[offset : offset + limit],
+                stats=DataStats(total_returned_rows=len(df), total_rows=len(df)),
             )
         else:
-            return DataSlice(df[offset:], stats=DataStats(total_returned_rows=len(df)))
+            return DataSlice(
+                df[offset:], stats=DataStats(total_returned_rows=len(df), total_rows=len(df))
+            )
 
     def explain(self, data_source: ToucanDataSource, permissions: Optional[dict] = None):
         """Method to give metrics about the query"""
