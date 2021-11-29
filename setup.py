@@ -46,7 +46,6 @@ install_requires = [
     'cached_property',
     'jinja2',
     'pydantic',
-    'pyjq',
     'requests<2.24.0',
     'tenacity',
     'toucan_data_sdk',
