@@ -1,9 +1,9 @@
 elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.0.0
-    environment:
-      - discovery.type=single-node
-    ports:
-      - 9200:9200
+  image: docker.elastic.co/elasticsearch/elasticsearch:7.0.0
+  environment:
+    - discovery.type=single-node
+  ports:
+    - 9200:9200
 
 mongo:
   image: mongo
@@ -21,7 +21,6 @@ mssql:
     - SA_PASSWORD=Il0veT0uc@n!
   ports:
     - 1433:1433
-
 mysql:
   image: mysql:5.7.21
   environment:
@@ -52,13 +51,13 @@ oraclesql:
   volumes:
     - ./oracle_sql/fixtures/world.sql:/world.sql:ro
     - ./oracle_sql/fixtures/toucan_entrypoint.sh:/toucan_entrypoint.sh:ro
-  command: ["/toucan_entrypoint.sh"]
+  command: [ "/toucan_entrypoint.sh" ]
 
 hive:
   image: gillax/hive
   ports:
     - 10000:10000
-  command: ["/bin/bash", "-c", "/etc/bootstrap.sh && hiveserver2"]
+  command: [ "/bin/bash", "-c", "/etc/bootstrap.sh && hiveserver2" ]
 
 clickhouse:
   image: yandex/clickhouse-server
