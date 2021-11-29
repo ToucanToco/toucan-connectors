@@ -4,9 +4,13 @@
 		"dockerfile": "Dockerfile",
 		"args": { "VARIANT": "3.8" }
 	},
-	"runArgs": ["--init"],
+	"runArgs": [
+		"--init",
+		"--network=host",
+	],
 	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ],
 	"remoteUser": "vscode",
+	"remoteEnv": { "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}" },
 	"overrideCommand": false,
 	"settings": { 
 		"python.defaultInterpreterPath": "/usr/local/bin/python",
