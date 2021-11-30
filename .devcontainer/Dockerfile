@@ -1,5 +1,5 @@
 ARG VARIANT=3.8
-FROM mcr.microsoft.com/vscode/devcontainers/python:${VARIANT}
+FROM --platform=linux/amd64 mcr.microsoft.com/vscode/devcontainers/python:${VARIANT}
 
 # System update/upgrade
 RUN apt-get update
@@ -12,10 +12,12 @@ RUN apt-get install -y make python3-pip python3-dev
 # Docker
 RUN apt-get update \
     && apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release \
-    && curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | apt-key add - 2>/dev/null \
-    && echo "deb [arch=amd64] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list \
+    && curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
+    && echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
+        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null \
     && apt-get update \
-    && apt-get install -y docker-ce-cli
+    && apt-get install -y docker-ce docker-ce-cli containerd.io
 
 # Install Docker Compose
 RUN LATEST_COMPOSE_VERSION=$(curl -sSL "https://api.github.com/repos/docker/compose/releases/latest" | grep -o -P '(?<="tag_name": ").+(?=")') \

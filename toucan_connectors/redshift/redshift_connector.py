@@ -1,4 +1,3 @@
-
 import pandas as pd
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
