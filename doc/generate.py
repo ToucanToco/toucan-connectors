@@ -5,25 +5,31 @@ import sys
 from contextlib import suppress
 from importlib import import_module
 
+
 def doc_or_empty(klass):
     with suppress(AttributeError):
         return klass.__doc__.strip()
 
+
 def clean_type_str(field_str):
-    Constr_values = {'ConstrainedStrValue': 'str (not empty)', 'ConstrainedIntValue': 'int (not empty)'}
-    field_str = f'{field_str}'.replace("<class '","").replace("'>","").replace("<enum '","")
+    Constr_values = {
+        'ConstrainedStrValue': 'str (not empty)',
+        'ConstrainedIntValue': 'int (not empty)',
+    }
+    field_str = f'{field_str}'.replace("<class '", "").replace("'>", "").replace("<enum '", "")
     field_str = field_str.split('.')
     if field_str[-1] in Constr_values.keys():
         return Constr_values[field_str[-1]]
     if len(field_str) > 1:
         return field_str[-1]
-    else: return field_str[0]
+    else:
+        return field_str[0]
 
 
 def custom_str(field):
     whitelist = ('type_', 'required', 'default')
     m = {
-        'type_': lambda x:  clean_type_str(x) if x else None,
+        'type_': lambda x: clean_type_str(x) if x else None,
         'required': lambda x: 'required' if x else None,
         'default': lambda x: f'default to {x}' if x is not None else x,
     }
@@ -65,8 +71,8 @@ def generate(klass):
     * `id`: str, required
     * `dataset`: Dataset, required
     """
-    klassname = klass.__name__.replace('Connector','')
-    #Retrieving class name from __name__ as type is no longer in the right format
+    klassname = klass.__name__.replace('Connector', '')
+    # Retrieving class name from __name__ as type is no longer in the right format
     doc = [f'# {klassname} connector', doc_or_empty(klass), '## Data provider configuration']
 
     li = [f'* `type`: `"{klassname}"`']

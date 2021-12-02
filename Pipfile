@@ -32,6 +32,10 @@ Authlib = "==0.15.3"
 PyYAML = "==5.4.1"
 pyjq = "*"
 redshift-connector = "*"
+boto3 = "*"
+botocore = "*"
+pydantic = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.8"

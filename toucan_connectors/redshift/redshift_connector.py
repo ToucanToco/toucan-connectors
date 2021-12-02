@@ -1,56 +1,41 @@
-from enum import Enum
+from contextlib import suppress
 
 import pandas as pd
 import redshift_connector
-from pydantic import SecretStr
+from pydantic import create_model
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.redShift_common import RedshiftConnectorDbAuth, RsDataSource
+from toucan_connectors.toucan_connector import (
+    strlist_to_enum,
+)
+import boto3
 
-
-class AuthenticationMethod(str, Enum):
-    DB: str = 'Database credentials'
-    IAM: str = 'IAM Credentials'
-    PROFILE: str = 'Authentication Profile'
-    IDP: str = 'Identity Provider'
-
-
-class RedshiftDataSource(ToucanDataSource):
-
-    database: str
-    query: str
-    table: str
+client = boto3.client('redshift')
 
 
-class RedshiftConnector(ToucanConnector):
-    data_source_model: RedshiftDataSource
+class RedshiftDataSource(RsDataSource):
+    @classmethod
+    def get_clusters(cls):
+        response = client.describe_clusters()["Clusters"]
+        clusters = [cluster["DBName"] for cluster in response]
+        return clusters
 
-    dbname: str
-    user: str
-    password: SecretStr
-    host: str
-    port: int
-    connect_timeout: int
+    @classmethod
+    def get_form(cls, connector: 'RedshiftConnector', current_config):
+        constraints = {}
 
-    def define_params_for_auth_method(self):
-        params = dict(
-            DB=['dbname', 'user', 'password', 'host', 'port', 'connect_timeout'],
-            IAM=['iam', 'database', 'db_user', 'password', 'user', 'cluster_identifier', 'profile'],
-            PROFILE=['host', 'region', 'cluster_identifier', 'db_name'],
-            IDP=[
-                'iam',
-                'database',
-                'cluster_identifier',
-                'credentials_provider',
-                'user',
-                'password',
-                'idp_host',
-            ],
-        )
-        return params
+        with suppress(Exception):
+            databases = cls.get_clusters()
+            constraints['database'] = strlist_to_enum('database', databases)
 
-    def get_connection_params(self, *, database=None):
+        return create_model('FormSchema', **constraints, __base__=cls).schema()
+
+
+class RedshiftConnector(RedshiftConnectorDbAuth):
+    def get_connection_params(self):
         con_params = dict(
-            dbname=database,
+            dbname=self.dbname,
             user=self.user,
             password=self.password.get_secret_value() if self.password else None,
             host=self.host,
@@ -60,22 +45,31 @@ class RedshiftConnector(ToucanConnector):
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def get_cursor_connection(self, data_source: RedshiftDataSource):
-        connection = redshift_connector.connect(
-            **self.get_connection_params(database=data_source.database)
-        )
+    def _get_connection(self):
+        """Establish a connection to an Amazon Redshift cluster."""
+        connection = redshift_connector.connect(**self.get_connection_params())
+        return connection
+
+    def _get_cursor(self, data_source: RedshiftDataSource):
+        connection = self._get_connection()
         cursor: redshift_connector.Cursor = connection.cursor()
         return cursor
 
-    def _retrieve_data(self, data_source: RedshiftDataSource, query) -> pd.DataFrame:
+    def _retrieve_data(self, query) -> pd.DataFrame:
         """Get data: tuple from table."""
-        with redshift_connector.connect(
-            **self.get_connection_params(database=data_source.database)
-        ) as conn:
+        with redshift_connector.connect(**self.get_connection_params()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(query)
-                result = cursor.fetchall()
+                result: pd.DataFrame = cursor.fetch_dataframe()
         return result
 
-    def _validate_connection(con: redshift_connector.Connection) -> None:
-        pass
+    def get_status(self) -> ConnectorStatus:
+        try:
+            response = self._get_connection().describe_clusters(
+                ClusterIdentifier=self.cluster_identifier
+            )['Clusters']
+            return ConnectorStatus(
+                status=True, details=response[0]['ClusterStatus'] if response else None, error=None
+            )
+        except self._get_connection().exceptions.ClusterNotFoundException as error:
+            return ConnectorStatus(status=False, details=None, error=error)
