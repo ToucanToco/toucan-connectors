@@ -1,38 +1,69 @@
 from contextlib import suppress
+from typing import Dict
 
 import pandas as pd
 import redshift_connector
-from pydantic import create_model
+from pydantic import Field, SecretStr, create_model
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.redShift_common import RedshiftConnectorDbAuth, RsDataSource
 from toucan_connectors.toucan_connector import (
     strlist_to_enum,
+    ToucanConnector,
+    ToucanDataSource,
 )
 import boto3
 
 client = boto3.client('redshift')
 
 
-class RedshiftDataSource(RsDataSource):
-    @classmethod
-    def get_clusters(cls):
-        response = client.describe_clusters()["Clusters"]
-        clusters = [cluster["DBName"] for cluster in response]
-        return clusters
+class RedshiftDataSource(ToucanDataSource):
+    database: str = Field(..., description='The name of the database you want to query')
+
+    table: str = Field(None, description='The name of the data table that you want to ')
+
+    query: Dict = Field(None, description='An object describing a simple select query')
 
     @classmethod
     def get_form(cls, connector: 'RedshiftConnector', current_config):
         constraints = {}
 
         with suppress(Exception):
-            databases = cls.get_clusters()
-            constraints['database'] = strlist_to_enum('database', databases)
+            connection = redshift_connector.connect(
+                **connector.get_connection_params(
+                    database=current_config.get('database', 'redshift')
+                )
+            )
+            with connection.cursor() as cursor:
+                cursor.execute("""select * from ?""")
+                res = cursor.fetchall()
+                available_dbs = [db_name for (db_name,) in res]
+                constraints['database'] = strlist_to_enum('database', available_dbs)
+
+                if 'database' in current_config:
+                    cursor.execute("""select * from ?""")
+                    res = cursor.fetchall()
+                    available_tables = [table_name for (_, table_name) in res]
+                    constraints['table'] = strlist_to_enum('table', available_tables, None)
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class RedshiftConnector(RedshiftConnectorDbAuth):
+class RedshiftConnector(ToucanConnector):
+    data_source_model: RedshiftDataSource
+
+    dbname: str = Field(..., description='The database name.')
+    user: str = Field(..., description='Your login username.')
+    password: SecretStr = Field(None, description='Your login password')
+    host: str = Field(None, description='IP address or hostname.')
+    port: int = Field(..., description='port value of 5439 is specified by default')
+    connect_timeout: int = Field(
+        None,
+        title='Connection timeout',
+        description='You can set a connection timeout in seconds here, i.e. the maximum length of '
+        'time you want to wait for the server to respond. None by default',
+    )
+    cluster_identifier: str = Field(..., description='Name of the cluster')
+
     def get_connection_params(self):
         con_params = dict(
             dbname=self.dbname,
@@ -50,7 +81,7 @@ class RedshiftConnector(RedshiftConnectorDbAuth):
         connection = redshift_connector.connect(**self.get_connection_params())
         return connection
 
-    def _get_cursor(self, data_source: RedshiftDataSource):
+    def _get_cursor(self):
         connection = self._get_connection()
         cursor: redshift_connector.Cursor = connection.cursor()
         return cursor
