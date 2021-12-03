@@ -20,6 +20,6 @@ psycopg2 == 2.8.6
 xmltodict == 0.12.0
 python_graphql_client == 0.4.3
 clickhouse_driver == 0.2.0
-lxml >= 4.6.2
+lxml == 4.2.5
 zeep == 4.0.0
 mock == 4.0.3
