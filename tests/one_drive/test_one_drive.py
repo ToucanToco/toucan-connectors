@@ -1,4 +1,3 @@
-import pytest
 import responses
 from pytest import fixture
 
@@ -29,6 +28,17 @@ def ds():
         domain='test_domain',
         file='test_file',
         sheet='test_sheet',
+        range='A2:B3',
+    )
+
+
+@fixture
+def ds_with_multiple_sheets():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        file='test_file',
+        sheet='sheet1, sheet2',
         range='A2:B3',
     )
 
@@ -68,54 +78,62 @@ def ds_with_site_without_range():
     )
 
 
-@pytest.fixture
-def http_get_mock(mocker):
-    return mocker.patch('requests.get')
-
-
 @fixture
 def remove_secrets(secrets_keeper, con):
     secrets_keeper.save('test', {'access_token': None})
 
 
-FAKE_SHEET = {
-    '@odata.context': 'https://graph.microsoft.com/v1.0/$metadata#workbookRange',
-    '@odata.id': '',
-    '@odata.type': '#microsoft.graph.workbookRange',
-    'address': 'Feuil1!A2:B3',
-    'addressLocal': 'Feuil1!A2:B3',
-    'cellCount': 4,
-    'columnCount': 2,
-    'columnHidden': False,
-    'columnIndex': 0,
-    'formulas': [['col1', 'col2'], ['A', 1], ['B', 2]],
-    'formulasLocal': [['col1', 'col2'], ['A', 1], ['B', 2]],
-    'formulasR1C1': [['col1', 'col2'], ['A', 1], ['B', 2]],
-    'hidden': False,
-    'numberFormat': [['General', 'General'], ['General', 'General'], ['General', 'General']],
-    'rowCount': 2,
-    'rowHidden': False,
-    'rowIndex': 1,
-    'text': [['col1', 'col2'], ['A', '1'], ['B', '2']],
-    'valueTypes': [['String', 'String'], ['String', 'Double'], ['String', 'Double']],
-    'values': [['col1', 'col2'], ['A', 1], ['B', 2]],
-}
+def fake_sheet(*args, **kwargs):
+    return {
+        '@odata.context': 'https://graph.microsoft.com/v1.0/$metadata#workbookRange',
+        '@odata.id': '',
+        '@odata.type': '#microsoft.graph.workbookRange',
+        'address': 'Feuil1!A2:B3',
+        'addressLocal': 'Feuil1!A2:B3',
+        'cellCount': 4,
+        'columnCount': 2,
+        'columnHidden': False,
+        'columnIndex': 0,
+        'formulas': [['col1', 'col2'], ['A', 1], ['B', 2]],
+        'formulasLocal': [['col1', 'col2'], ['A', 1], ['B', 2]],
+        'formulasR1C1': [['col1', 'col2'], ['A', 1], ['B', 2]],
+        'hidden': False,
+        'numberFormat': [['General', 'General'], ['General', 'General'], ['General', 'General']],
+        'rowCount': 2,
+        'rowHidden': False,
+        'rowIndex': 1,
+        'text': [['col1', 'col2'], ['A', '1'], ['B', '2']],
+        'valueTypes': [['String', 'String'], ['String', 'Double'], ['String', 'Double']],
+        'values': [['col1', 'col2'], ['A', 1], ['B', 2]],
+    }
+
 
 FAKE_LIBRARIES = {'value': [{'id': 'abcd', 'displayName': 'Documents'}]}
 
 
-def test_sheet_success(mocker, con, ds, http_get_mock):
+def test_sheet_success(mocker, con, ds):
     """It should return a dataframe"""
-    mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+    run_fetch = mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
 
     df = con.get_df(ds)
 
-    assert http_get_mock.called_once()
+    assert run_fetch.call_count == 1
     assert df.shape == (2, 2)
     assert df.columns.tolist() == ['col1', 'col2']
 
 
-def test_empty_sheet(mocker, con, ds, http_get_mock):
+def test_multiple_sheets_success(mocker, con, ds_with_multiple_sheets):
+    """It should return a dataframe"""
+    run_fetch = mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
+
+    df = con.get_df(ds_with_multiple_sheets)
+
+    assert run_fetch.call_count == 2
+    assert df.shape == (4, 3)
+    assert df.columns.tolist() == ['col1', 'col2', '__sheetname__']
+
+
+def test_empty_sheet(mocker, con, ds):
     mocker.patch.object(OneDriveConnector, '_run_fetch', return_value={})
 
     df = con.get_df(ds)
@@ -124,9 +142,9 @@ def test_empty_sheet(mocker, con, ds, http_get_mock):
 
 
 def test_url_with_range(mocker, con, ds):
-    mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+    mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
 
-    url = con._format_url(ds)
+    url = con._format_url(ds, 'test_sheet')
 
     assert (
         url
@@ -135,9 +153,9 @@ def test_url_with_range(mocker, con, ds):
 
 
 def test_url_without_range(mocker, con, ds_without_range):
-    mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+    mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
 
-    url = con._format_url(ds_without_range)
+    url = con._format_url(ds_without_range, 'test_sheet')
 
     assert (
         url
@@ -146,11 +164,11 @@ def test_url_without_range(mocker, con, ds_without_range):
 
 
 def test_url_with_site_with_range(mocker, con, ds_with_site):
-    mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+    mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
     mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
     mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
 
-    url = con._format_url(ds_with_site)
+    url = con._format_url(ds_with_site, 'test_sheet')
 
     assert (
         url
@@ -159,11 +177,11 @@ def test_url_with_site_with_range(mocker, con, ds_with_site):
 
 
 def test_url_with_site_without_range(mocker, con, ds_with_site_without_range):
-    mocker.patch.object(OneDriveConnector, '_run_fetch', return_value=FAKE_SHEET)
+    mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
     mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
     mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
 
-    url = con._format_url(ds_with_site_without_range)
+    url = con._format_url(ds_with_site_without_range, 'test_sheet')
 
     assert (
         url
