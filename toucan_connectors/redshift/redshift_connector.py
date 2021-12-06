@@ -11,9 +11,6 @@ from toucan_connectors.toucan_connector import (
     ToucanConnector,
     ToucanDataSource,
 )
-import boto3
-
-client = boto3.client('redshift')
 
 
 class RedshiftDataSource(ToucanDataSource):
@@ -26,7 +23,7 @@ class RedshiftDataSource(ToucanDataSource):
     @classmethod
     def get_form(cls, connector: 'RedshiftConnector', current_config):
         constraints = {}
-
+        query = """select oid as database_id, datname as database_name, datallowconn as allow_connect from pg_database order by oid;"""
         with suppress(Exception):
             connection = redshift_connector.connect(
                 **connector.get_connection_params(
@@ -34,16 +31,10 @@ class RedshiftDataSource(ToucanDataSource):
                 )
             )
             with connection.cursor() as cursor:
-                cursor.execute("""select * from ?""")
+                cursor.execute(query)
                 res = cursor.fetchall()
                 available_dbs = [db_name for (db_name,) in res]
                 constraints['database'] = strlist_to_enum('database', available_dbs)
-
-                if 'database' in current_config:
-                    cursor.execute("""select * from ?""")
-                    res = cursor.fetchall()
-                    available_tables = [table_name for (_, table_name) in res]
-                    constraints['table'] = strlist_to_enum('table', available_tables, None)
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
