@@ -21,6 +21,6 @@ token = jwt.encode(data, notb64_secret, algorithm='HS256')
 response = requests.post('https://demo.rok-solution.com/graphql',
                          data='{\'query\':\'\'}',
                          headers={'DatabaseName': '', 'JwtString': token,
-                                  'Accept': 'application/json','Content-Type': 'application/json'}).text
+                                  'Accept': 'application/json', 'Content-Type': 'application/json'}).text
 
 print(response)

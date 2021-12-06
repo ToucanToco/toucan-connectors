@@ -10,8 +10,8 @@ def doc_or_empty(klass):
         return klass.__doc__.strip()
 
 def clean_type_str(field_str):
-    Constr_values = {'ConstrainedStrValue': 'str (not empty)','ConstrainedIntValue': 'int (not empty)'}
-    field_str = f'{field_str}'.replace("<class '", "").replace("'>", "").replace("<enum '", "")
+    Constr_values = {'ConstrainedStrValue': 'str (not empty)', 'ConstrainedIntValue': 'int (not empty)'}
+    field_str = f'{field_str}'.replace("<class '","").replace("'>","").replace("<enum '","")
     field_str = field_str.split('.')
     if field_str[-1] in Constr_values.keys():
         return Constr_values[field_str[-1]]
