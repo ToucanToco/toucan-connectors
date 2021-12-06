@@ -67,6 +67,19 @@ def ds_with_site():
 
 
 @fixture
+def ds_with_site_sheme():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        file='test_file',
+        sheet='test_sheet',
+        range='A2:B3',
+        site_url='https://company_name.sharepoint.com/sites/site_name/',
+        document_library='Documents',
+    )
+
+
+@fixture
 def ds_with_site_without_range():
     return OneDriveDataSource(
         name='test_name',
@@ -231,7 +244,8 @@ def test_run_fetch(con, mocker):
 
 
 @responses.activate
-def test_get_site_id(con, mocker, ds_with_site):
+def test_get_site_id(con, mocker, ds_with_site, ds_with_site_sheme):
+    """It should return a site id from a site url (including or not the https:// prefix, ending or not with /)"""
     responses.add(
         responses.GET,
         'https://graph.microsoft.com/v1.0/sites/company_name.sharepoint.com:/sites/site_name',
@@ -240,6 +254,9 @@ def test_get_site_id(con, mocker, ds_with_site):
     )
 
     id = con._get_site_id(ds_with_site)
+    assert id == 1
+
+    id = con._get_site_id(ds_with_site_sheme)
     assert id == 1
 
 

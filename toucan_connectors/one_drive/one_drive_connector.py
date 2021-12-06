@@ -25,7 +25,11 @@ class OneDriveDataSource(ToucanDataSource):
         description='Access a sharePoint library (Documents)',
         placeholder='Only for SharePoint',
     )
-    file: str
+    file: str = Field(
+        None,
+        Title='File',
+        placeholder='Enter your path file',
+    )
     sheet: str = Field(
         None,
         Title='Sheets',
@@ -117,8 +121,9 @@ class OneDriveConnector(ToucanConnector):
         access_token = self._get_access_token()
         headers = {'Authorization': f'Bearer {access_token}'}
 
-        baseroute = data_source.site_url.split('/', 1)[0]
-        endpoint = data_source.site_url.split('/', 1)[1]
+        site_url = data_source.site_url.replace('https://', '').rstrip('/')
+        baseroute = site_url.split('/', 1)[0]
+        endpoint = site_url.split('/', 1)[1]
 
         url = f'https://graph.microsoft.com/v1.0/sites/{baseroute}:/{endpoint}'
         response = requests.get(url, headers=headers)
