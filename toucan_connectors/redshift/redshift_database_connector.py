@@ -3,14 +3,11 @@ from typing import Dict
 
 import pandas as pd
 import redshift_connector
-from pydantic import create_model, Field, SecretStr
+from pydantic import Field, SecretStr, create_model
+from redshift_connector.error import InterfaceError
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import (
-    strlist_to_enum,
-    ToucanConnector,
-    ToucanDataSource,
-)
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class RedshiftDataSource(ToucanDataSource):
@@ -40,7 +37,7 @@ class RedshiftDataSource(ToucanDataSource):
 class RedshiftConnector(ToucanConnector):
     data_source_model: RedshiftDataSource
 
-    dbname: str = Field(..., description='The database name.')
+    database: str = Field(..., description='The database name.')
     user: str = Field(..., description='Your login username.')
     password: SecretStr = Field(None, description='Your login password')
     host: str = Field(None, description='IP address or hostname.')
@@ -55,7 +52,7 @@ class RedshiftConnector(ToucanConnector):
 
     def get_connection_params(self):
         con_params = dict(
-            dbname=self.dbname,
+            database=self.database,
             user=self.user,
             password=self.password.get_secret_value() if self.password else None,
             host=self.host,
@@ -91,5 +88,5 @@ class RedshiftConnector(ToucanConnector):
             )['Clusters']
             details = [(detail['ClusterStatus'],) for detail in response]
             return ConnectorStatus(status=True, details=details if response else None, error=None)
-        except self._get_connection().exceptions.ClusterNotFoundException as error:
-            return ConnectorStatus(status=False, details=None, error=error)
+        except InterfaceError:
+            return ConnectorStatus(status=False, error=InterfaceError)
