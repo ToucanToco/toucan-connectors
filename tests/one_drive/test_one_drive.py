@@ -2,6 +2,7 @@ import pytest
 import responses
 from pytest import fixture
 
+from toucan_connectors.common import HttpError
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 from toucan_connectors.one_drive.one_drive_connector import OneDriveConnector, OneDriveDataSource
 
@@ -187,6 +188,39 @@ def test_user_input(
     with pytest.raises(ValueError) as e:
         con.get_df(ds_error_no_sheet_no_table)
     assert str(e.value) == 'You must specify at least a sheet or a table'
+
+
+def test_get_status_no_secrets(con, remove_secrets):
+    """
+    Check that the connection status is false when no secret is defined
+    """
+    assert con.get_status().status is False
+
+
+def test_get_status_secrets_error(mocker, con):
+    """
+    Check that the connector status is false if the
+    secret manager is not able to retrieve the access token
+    """
+    mocker.patch(f'{import_path}.OAuth2Connector.get_access_token', side_effect=Exception)
+    assert con.get_status().status is False
+
+
+def test_get_status_api_down(mocker, con):
+    """
+    Check that the connection status is false when the secret manager receives an httperror
+    """
+    mocker.patch.object(OneDriveConnector, '_get_access_token', side_effect=HttpError)
+    assert con.get_status().status is False
+
+
+def test_get_status_ok(mocker, con):
+    """
+    Check that we get the connector status set to True if
+    the access token is correctly retrieved
+    """
+    mocker.patch.object(OneDriveConnector, '_get_access_token', return_value='i_am_a_token')
+    assert con.get_status().status is True
 
 
 def test_sheet_success(mocker, con, ds, ds_with_table):

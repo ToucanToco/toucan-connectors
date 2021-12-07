@@ -5,6 +5,7 @@ import pandas as pd
 import requests
 from pydantic import Field, PrivateAttr, SecretStr
 
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
@@ -232,3 +233,18 @@ class OneDriveConnector(ToucanConnector):
             df_all = df_all.append(df_current)
 
         return df_all
+
+    def get_status(self) -> ConnectorStatus:
+        """
+        Test the One Drive's connexion.
+        :return: a ConnectorStatus with the current status
+        """
+        try:
+            access_token = self._get_access_token()
+            if access_token:
+                c = ConnectorStatus(status=True)
+                return c
+            else:
+                return ConnectorStatus(status=False)
+        except Exception:
+            return ConnectorStatus(status=False, error='Credentials are missing')
