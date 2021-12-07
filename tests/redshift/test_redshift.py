@@ -1,16 +1,18 @@
-from unittest.mock import Mock
-
-import pytest
 import pandas as pd
+import pytest
 
+from botocore import exceptions
+from unittest.mock import Mock
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.redshift import redshift_connector
-from toucan_connectors.redshift.redshift_connector import RedshiftDataSource
+from toucan_connectors.redshift import redshift_database_connector
+from toucan_connectors.redshift.redshift_database_connector import (
+    RedshiftDataSource,
+)
 
 
 def test_redshiftdatasource_get_form():
     current_config = {'database': 'redshift'}
-    form = RedshiftDataSource.get_form(redshift_connector, current_config)
+    form = RedshiftDataSource.get_form(redshift_database_connector, current_config)
     assert form['properties']['database']['title'] == 'Database'
     assert form['properties']['table']['title'] == 'Table'
     assert form['properties']['validation']['title'] == 'Validation'
@@ -18,52 +20,49 @@ def test_redshiftdatasource_get_form():
 
 
 def test_redshiftconnector_get_connection_params():
-    instance = redshift_connector.RedshiftConnector()
-    instance.dbname = 'dbname'
-    instance.user = 'user'
-    instance.password = 'password'
-    instance.host = 'host'
-    instance.port = 0
-    instance.connect_timeout = 5000
-    result = instance.get_connection_params
-    assert result == {
-        'dbname': 'dbname',
-        'user': 'user',
-        'password': 'password',
-        'host': 'host',
-        'port': 0,
-        'connect_timeout': 5000,
-    }
+    instance = redshift_database_connector.RedshiftConnector(
+        name='test', dbname='test', host='localhost', user='user', cluster_identifier='test', port=0
+    )
+    result = instance.get_connection_params()
+    assert result == dict(dbname='test', host='localhost', user='user', port=0)
 
 
 def test_redshiftconnector_get_connection():
     ds = RedshiftDataSource(
-        domain='test', name='test', dbname='redshift_db', user='test', port=5000
+        domain='test',
+        name='test',
+        database='redshift_db',
+        host='localhost',
     )
-    result = redshift_connector.RedshiftConnector()._get_connection(ds)
+    result = redshift_database_connector.RedshiftConnector(ds)._get_connection()
     assert isinstance(result, pd.DataFrame)
     assert result == '?'
 
 
 def test_redshiftconnector_get_cursor():
-    instance = redshift_connector.RedshiftConnector()
+    ds = RedshiftDataSource(
+        domain='test',
+        name='test',
+        database='redshift_db',
+    )
+    instance = redshift_database_connector.RedshiftConnector(ds)
     mock_connection = Mock()
     instance._get_connection = mock_connection
     result = instance._get_cursor
+
     assert result == mock_connection
 
 
 def test_redshiftconnector_retrieve_data():
-    ds = RedshiftDataSource(
-        domain='test', name='test', dbname='redshift_db', user='test', port=5000
-    )
-    result = redshift_connector.RedshiftConnector()._retrieve_data(ds)
+    ds = RedshiftDataSource(name='test', database='redshift_db', domain='test')
+    result = redshift_database_connector.RedshiftConnector(ds)._retrieve_data()
     assert isinstance(result, pd.DataFrame)
     assert result == '?'
 
 
 def test_redshiftconnector_get_status():
-    instance = redshift_connector.RedshiftConnector()
+    ds = RedshiftDataSource(name='test', database='redshift_db', domain='test')
+    instance = redshift_database_connector.RedshiftConnector(ds)
     mock_connection = Mock()
     instance._get_connection = mock_connection
     result = instance.get_status
