@@ -5,6 +5,7 @@ import pytest
 import responses
 from pytest import fixture
 
+from toucan_connectors.common import HttpError
 from toucan_connectors.net_explorer.net_explorer_connector import (
     NetExplorerConnector,
     NetExplorerDataSource,
@@ -81,6 +82,31 @@ FAKE_FOLDERS = [
         },
     },
 ]
+
+
+def test_get_status_api_error(mocker, con):
+    """
+    Check that the connection status is false when we receives an httperror
+    """
+    mocker.patch.object(NetExplorerConnector, '_retrieve_token', side_effect=Exception)
+    assert con.get_status().status is False
+
+
+def test_get_status_api_down(mocker, con):
+    """
+    Check that the connection status is false when we receives an httperror
+    """
+    mocker.patch.object(NetExplorerConnector, '_retrieve_token', side_effect=HttpError)
+    assert con.get_status().status is False
+
+
+def test_get_status_ok(mocker, con):
+    """
+    Check that we get the connector status set to True if
+    the access token is correctly retrieved
+    """
+    mocker.patch.object(NetExplorerConnector, '_retrieve_token', return_value='i_am_a_token')
+    assert con.get_status().status is True
 
 
 @responses.activate

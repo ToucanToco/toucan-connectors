@@ -7,6 +7,7 @@ import pandas as pd
 import requests
 from pydantic import Field, SecretStr
 
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -104,3 +105,14 @@ class NetExplorerConnector(ToucanConnector):
             df = pd.read_excel(data, sheet_name=data_source.sheet)
 
         return df
+
+    def get_status(self) -> ConnectorStatus:
+        """
+        Test the Net Explorer's connexion.
+        :return: a ConnectorStatus with the current status
+        """
+        try:
+            self._retrieve_token()
+            return ConnectorStatus(status=True)
+        except Exception:
+            return ConnectorStatus(status=False, error='Unable to connect')
