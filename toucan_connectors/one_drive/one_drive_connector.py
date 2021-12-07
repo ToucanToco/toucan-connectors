@@ -30,13 +30,19 @@ class OneDriveDataSource(ToucanDataSource):
         Title='File',
         placeholder='Enter your path file',
     )
-    sheet: str = Field(
+    sheet: Optional[str] = Field(
         None,
         Title='Sheets',
         description='Read one sheet or append multiple sheets',
         placeholder='Enter a sheet or a comma separated list of sheets',
     )
     range: Optional[str]
+    table: Optional[str] = Field(
+        None,
+        Title='Tables',
+        description='Read one table or append multiple tables',
+        placeholder='Enter a table or a comma separated list of tables',
+    )
 
 
 class OneDriveConnector(ToucanConnector):
@@ -143,21 +149,32 @@ class OneDriveConnector(ToucanConnector):
             if library['displayName'] == data_source.document_library:
                 return library['id']
 
-    def _format_url(self, data_source, sheet):
+    def _format_url(self, data_source, workbook_element):
         logging.getLogger(__name__).debug('_format_url')
 
+        # Baseroute for Share Point
         if data_source.site_url and data_source.document_library:
             site_id = self._get_site_id(data_source)
             list_id = self._get_list_id(data_source, site_id)
 
-            url = f'https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_id}/drive/root:/{data_source.file}:/workbook/worksheets/{sheet}/'
+            url = f'https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_id}/drive/root:/{data_source.file}:/workbook/'
+        # Baseroute for One Drive
         else:
-            url = f'https://graph.microsoft.com/v1.0/me/drive/root:/{data_source.file}:/workbook/worksheets/{sheet}/'
+            url = f'https://graph.microsoft.com/v1.0/me/drive/root:/{data_source.file}:/workbook/'
 
-        if data_source.range is None:
-            url = url + 'usedRange(valuesOnly=true)'
+        # Endpoint for Sheet
+        if data_source.sheet:
+            url = url + f'worksheets/{workbook_element}/'
+
+            # Param for sheet's range
+            if data_source.range:
+                url = url + f"range(address='{data_source.range}')"
+            # Param for complete sheet
+            else:
+                url = url + 'usedRange(valuesOnly=true)'
+        # Endpoint for Table
         else:
-            url = url + f"range(address='{data_source.range}')"
+            url = url + f'tables/{workbook_element}/range'
 
         return url
 
@@ -174,12 +191,25 @@ class OneDriveConnector(ToucanConnector):
     def _retrieve_data(self, data_source: OneDriveDataSource) -> pd.DataFrame:
         logging.getLogger(__name__).debug('_retrieve_data')
 
-        df_sheet_all = pd.DataFrame()
+        if data_source.sheet and data_source.table:
+            raise ValueError('You cannot specifiy both sheets and tables')
 
-        sheet_list = data_source.sheet.replace(', ', ',').split(',')
+        if data_source.range and data_source.table:
+            raise ValueError('You cannot specify a range for tables (tables is a kind of range)')
 
-        for sheet in sheet_list:
-            url = self._format_url(data_source, sheet)
+        if not data_source.sheet and not data_source.table:
+            raise ValueError('You must specify at least a sheet or a table')
+
+        df_all = pd.DataFrame()
+
+        workbook_elements_list = []
+        if data_source.sheet:
+            workbook_elements_list = data_source.sheet.replace(', ', ',').split(',')
+        else:
+            workbook_elements_list = data_source.table.replace(', ', ',').split(',')
+
+        for workbook_element in workbook_elements_list:
+            url = self._format_url(data_source, workbook_element)
 
             response = self._run_fetch(url)
 
@@ -192,10 +222,13 @@ class OneDriveConnector(ToucanConnector):
             cols = data[0]
             data.pop(0)
 
-            df_sheet_current = pd.DataFrame(data, columns=cols)
-            if len(sheet_list) > 1:
-                df_sheet_current['__sheetname__'] = sheet
+            df_current = pd.DataFrame(data, columns=cols)
+            if len(workbook_elements_list) > 1:
+                if data_source.sheet:
+                    df_current['__sheetname__'] = workbook_element
+                else:
+                    df_current['__tablename__'] = workbook_element
 
-            df_sheet_all = df_sheet_all.append(df_sheet_current)
+            df_all = df_all.append(df_current)
 
-        return df_sheet_all
+        return df_all

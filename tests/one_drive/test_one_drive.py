@@ -1,3 +1,4 @@
+import pytest
 import responses
 from pytest import fixture
 
@@ -33,6 +34,34 @@ def ds():
 
 
 @fixture
+def ds_error_sheet_and_table():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        sheet='test_sheet',
+        table='test_table',
+    )
+
+
+@fixture
+def ds_error_range_and_table():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        range='A2:B3',
+        table='test_table',
+    )
+
+
+@fixture
+def ds_error_no_sheet_no_table():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+    )
+
+
+@fixture
 def ds_with_multiple_sheets():
     return OneDriveDataSource(
         name='test_name',
@@ -50,6 +79,26 @@ def ds_without_range():
         domain='test_domain',
         file='test_file',
         sheet='test_sheet',
+    )
+
+
+@fixture
+def ds_with_table():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        file='test_file',
+        table='test_table',
+    )
+
+
+@fixture
+def ds_with_multiple_tables():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        file='test_file',
+        table='table1, table2',
     )
 
 
@@ -124,7 +173,23 @@ def fake_sheet(*args, **kwargs):
 FAKE_LIBRARIES = {'value': [{'id': 'abcd', 'displayName': 'Documents'}]}
 
 
-def test_sheet_success(mocker, con, ds):
+def test_user_input(
+    con, ds_error_sheet_and_table, ds_error_range_and_table, ds_error_no_sheet_no_table
+):
+    with pytest.raises(ValueError) as e:
+        con.get_df(ds_error_sheet_and_table)
+    assert str(e.value) == 'You cannot specifiy both sheets and tables'
+
+    with pytest.raises(ValueError) as e:
+        con.get_df(ds_error_range_and_table)
+    assert str(e.value) == 'You cannot specify a range for tables (tables is a kind of range)'
+
+    with pytest.raises(ValueError) as e:
+        con.get_df(ds_error_no_sheet_no_table)
+    assert str(e.value) == 'You must specify at least a sheet or a table'
+
+
+def test_sheet_success(mocker, con, ds, ds_with_table):
     """It should return a dataframe"""
     run_fetch = mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
 
@@ -134,8 +199,14 @@ def test_sheet_success(mocker, con, ds):
     assert df.shape == (2, 2)
     assert df.columns.tolist() == ['col1', 'col2']
 
+    df = con.get_df(ds_with_table)
 
-def test_multiple_sheets_success(mocker, con, ds_with_multiple_sheets):
+    assert run_fetch.call_count == 2
+    assert df.shape == (2, 2)
+    assert df.columns.tolist() == ['col1', 'col2']
+
+
+def test_multiple_sheets_success(mocker, con, ds_with_multiple_sheets, ds_with_multiple_tables):
     """It should return a dataframe"""
     run_fetch = mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
 
@@ -144,6 +215,12 @@ def test_multiple_sheets_success(mocker, con, ds_with_multiple_sheets):
     assert run_fetch.call_count == 2
     assert df.shape == (4, 3)
     assert df.columns.tolist() == ['col1', 'col2', '__sheetname__']
+
+    df = con.get_df(ds_with_multiple_tables)
+
+    assert run_fetch.call_count == 4
+    assert df.shape == (4, 3)
+    assert df.columns.tolist() == ['col1', 'col2', '__tablename__']
 
 
 def test_empty_sheet(mocker, con, ds):
@@ -173,6 +250,17 @@ def test_url_without_range(mocker, con, ds_without_range):
     assert (
         url
         == 'https://graph.microsoft.com/v1.0/me/drive/root:/test_file:/workbook/worksheets/test_sheet/usedRange(valuesOnly=true)'
+    )
+
+
+def test_url_with_table(mocker, con, ds_with_table):
+    mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
+
+    url = con._format_url(ds_with_table, 'test_table')
+
+    assert (
+        url
+        == 'https://graph.microsoft.com/v1.0/me/drive/root:/test_file:/workbook/tables/test_table/range'
     )
 
 
