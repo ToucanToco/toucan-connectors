@@ -204,10 +204,14 @@ class OneDriveConnector(ToucanConnector):
         df_all = pd.DataFrame()
 
         workbook_elements_list = []
+        workbook_key_column = ''
         if data_source.sheet:
-            workbook_elements_list = data_source.sheet.replace(', ', ',').split(',')
+            workbook_elements_list = data_source.sheet
+            workbook_key_column = '__sheetname__'
         else:
-            workbook_elements_list = data_source.table.replace(', ', ',').split(',')
+            workbook_elements_list = data_source.table
+            workbook_key_column = '__tablename__'
+        workbook_elements_list = workbook_elements_list.replace(', ', ',').split(',')
 
         for workbook_element in workbook_elements_list:
             url = self._format_url(data_source, workbook_element)
@@ -225,10 +229,7 @@ class OneDriveConnector(ToucanConnector):
 
             df_current = pd.DataFrame(data, columns=cols)
             if len(workbook_elements_list) > 1:
-                if data_source.sheet:
-                    df_current['__sheetname__'] = workbook_element
-                else:
-                    df_current['__tablename__'] = workbook_element
+                df_current[workbook_key_column] = workbook_element
 
             df_all = df_all.append(df_current)
 
