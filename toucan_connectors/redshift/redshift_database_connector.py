@@ -30,7 +30,7 @@ class RedshiftDataSource(ToucanDataSource):
                 available_dbs = [db_name for (db_name,) in res]
                 constraints['database'] = strlist_to_enum('database', available_dbs)
             return create_model('FormSchema', **constraints, __base__=cls).schema()
-        except InterfaceError:
+        except Exception:
             return create_model('FormSchema', __base__=None).schema()
 
 
