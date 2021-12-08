@@ -32,7 +32,7 @@ extras_require = {
     'odbc': ['pyodbc>=3'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'postgres': ['psycopg2>=2.7.4'],
-    'Redshift': ['redshift_connector', 'pandas', 'pydantic', 'lxml==4.2.5'],
+    'Redshift': ['redshift_connector', 'lxml==4.2.5'],
     'ROK': ['requests', 'pyjwt', 'simplejson'],
     'sap_hana': ['pyhdb>=0.3.4'],
     'soap': ['zeep', 'lxml==4.2.5'],
