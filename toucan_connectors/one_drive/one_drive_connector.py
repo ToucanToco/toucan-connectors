@@ -25,8 +25,17 @@ class OneDriveDataSource(ToucanDataSource):
         description='Access a sharePoint library (Documents)',
         placeholder='Only for SharePoint',
     )
-    file: str
-    sheet: str
+    file: str = Field(
+        None,
+        Title='File',
+        placeholder='Enter your path file',
+    )
+    sheet: str = Field(
+        None,
+        Title='Sheets',
+        description='Read one sheet or append multiple sheets',
+        placeholder='Enter a sheet or a comma separated list of sheets',
+    )
     range: Optional[str]
 
 
@@ -112,8 +121,9 @@ class OneDriveConnector(ToucanConnector):
         access_token = self._get_access_token()
         headers = {'Authorization': f'Bearer {access_token}'}
 
-        baseroute = data_source.site_url.split('/', 1)[0]
-        endpoint = data_source.site_url.split('/', 1)[1]
+        site_url = data_source.site_url.replace('https://', '').rstrip('/')
+        baseroute = site_url.split('/', 1)[0]
+        endpoint = site_url.split('/', 1)[1]
 
         url = f'https://graph.microsoft.com/v1.0/sites/{baseroute}:/{endpoint}'
         response = requests.get(url, headers=headers)
@@ -133,16 +143,16 @@ class OneDriveConnector(ToucanConnector):
             if library['displayName'] == data_source.document_library:
                 return library['id']
 
-    def _format_url(self, data_source):
+    def _format_url(self, data_source, sheet):
         logging.getLogger(__name__).debug('_format_url')
 
         if data_source.site_url and data_source.document_library:
             site_id = self._get_site_id(data_source)
             list_id = self._get_list_id(data_source, site_id)
 
-            url = f'https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_id}/drive/root:/{data_source.file}:/workbook/worksheets/{data_source.sheet}/'
+            url = f'https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_id}/drive/root:/{data_source.file}:/workbook/worksheets/{sheet}/'
         else:
-            url = f'https://graph.microsoft.com/v1.0/me/drive/root:/{data_source.file}:/workbook/worksheets/{data_source.sheet}/'
+            url = f'https://graph.microsoft.com/v1.0/me/drive/root:/{data_source.file}:/workbook/worksheets/{sheet}/'
 
         if data_source.range is None:
             url = url + 'usedRange(valuesOnly=true)'
@@ -163,17 +173,29 @@ class OneDriveConnector(ToucanConnector):
 
     def _retrieve_data(self, data_source: OneDriveDataSource) -> pd.DataFrame:
         logging.getLogger(__name__).debug('_retrieve_data')
-        url = self._format_url(data_source)
 
-        response = self._run_fetch(url)
+        df_sheet_all = pd.DataFrame()
 
-        data = response.get('values')
+        sheet_list = data_source.sheet.replace(', ', ',').split(',')
 
-        if not data:
-            logging.getLogger(__name__).debug('No data retrieved from response')
-            return pd.DataFrame()
+        for sheet in sheet_list:
+            url = self._format_url(data_source, sheet)
 
-        cols = data[0]
-        data.pop(0)
+            response = self._run_fetch(url)
 
-        return pd.DataFrame(data, columns=cols)
+            data = response.get('values')
+
+            if not data:
+                logging.getLogger(__name__).debug('No data retrieved from response')
+                return pd.DataFrame()
+
+            cols = data[0]
+            data.pop(0)
+
+            df_sheet_current = pd.DataFrame(data, columns=cols)
+            if len(sheet_list) > 1:
+                df_sheet_current['__sheetname__'] = sheet
+
+            df_sheet_all = df_sheet_all.append(df_sheet_current)
+
+        return df_sheet_all
