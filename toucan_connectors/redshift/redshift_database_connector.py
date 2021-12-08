@@ -1,4 +1,3 @@
-from contextlib import suppress
 from typing import Dict
 
 import pandas as pd
@@ -21,7 +20,7 @@ class RedshiftDataSource(ToucanDataSource):
     def get_form(cls, connector: 'RedshiftConnector', current_config):
         constraints = {}
         query = """select oid as database_id, datname as database_name, datallowconn as allow_connect from pg_database order by oid;"""
-        with suppress(Exception):
+        try:
             connection = redshift_connector.connect(
                 **connector.get_connection_params(database=current_config.get('database'))
             )
@@ -30,8 +29,9 @@ class RedshiftDataSource(ToucanDataSource):
                 res = cursor.fetchall()
                 available_dbs = [db_name for (db_name,) in res]
                 constraints['database'] = strlist_to_enum('database', available_dbs)
-
-        return create_model('FormSchema', **constraints, __base__=cls).schema()
+            return create_model('FormSchema', **constraints, __base__=cls).schema()
+        except InterfaceError:
+            return create_model('FormSchema', __base__=None).schema()
 
 
 class RedshiftConnector(ToucanConnector):
@@ -50,9 +50,9 @@ class RedshiftConnector(ToucanConnector):
     )
     cluster_identifier: str = Field(..., description='Name of the cluster')
 
-    def get_connection_params(self):
+    def get_connection_params(self, *, database):
         con_params = dict(
-            database=self.database,
+            database=database,
             user=self.user,
             password=self.password.get_secret_value() if self.password else None,
             host=self.host,
@@ -63,9 +63,11 @@ class RedshiftConnector(ToucanConnector):
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _get_connection(self):
+    def _get_connection(self, datasource):
         """Establish a connection to an Amazon Redshift cluster."""
-        connection = redshift_connector.connect(**self.get_connection_params())
+        connection = redshift_connector.connect(
+            **self.get_connection_params(database=datasource.database)
+        )
         return connection
 
     def _get_cursor(self):
@@ -73,17 +75,19 @@ class RedshiftConnector(ToucanConnector):
         cursor: redshift_connector.Cursor = connection.cursor()
         return cursor
 
-    def _retrieve_data(self, query) -> pd.DataFrame:
+    def _retrieve_data(self, datasource) -> pd.DataFrame:
         """Get data: tuple from table."""
-        with redshift_connector.connect(**self.get_connection_params()) as conn:
+        with redshift_connector.connect(
+            **self.get_connection_params(database=datasource.database)
+        ) as conn:
             with conn.cursor() as cursor:
-                cursor.execute(query)
+                cursor.execute(datasource.query)
                 result: pd.DataFrame = cursor.fetch_dataframe()
         return result
 
     def get_status(self) -> ConnectorStatus:
         try:
-            response = self._get_connection().describe_clusters(
+            response = self._get_connection(self.data_source_model).describe_clusters(
                 ClusterIdentifier=self.cluster_identifier
             )['Clusters']
             details = [(detail['ClusterStatus'],) for detail in response]
