@@ -181,7 +181,7 @@ CONNECTORS_REGISTRY = {
         'logo': 'postgres/postgres.png',
     },
     'Redshift': {
-        'connector': 'redshift.redshift_connector.RedshiftConnector',
+        'connector': 'redshift.redshift_database_connector.RedshiftConnector',
         'label': 'Redshift',
         'logo': 'redshift/redshift.png',
     },
