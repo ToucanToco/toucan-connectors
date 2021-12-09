@@ -23,8 +23,15 @@ DATA_PROVIDERS: [
 * `domain`: str, required
 * `name`: str, required
 * `file`: str
-* `sheet`: str
+* `sheet`: str, optional. You can use table instead
 * `range`: str, optional. Range represents a set of one or more contiguous cells such as a cell, a row, a column, block of cells, etc. Ex 'A2:B3'
+* `table`: str optional. You can use sheet instead
+
+`sheet` and `table` are both optional but you must choose between them :
+* You must not leave them both blank.
+* You must not fill them both.
+
+`table` is a kind of dynamic range. You must not set a `range` if a `table` is provided.
 
 ```javascript
 DATA_SOURCES: [
