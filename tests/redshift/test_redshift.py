@@ -24,7 +24,7 @@ def redshift_connector():
 
 @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
 def test_redshiftdatasource_get_form(mock_redshift_connector, redshift_connector):
-    instance = RedshiftDataSource(database='test', table='test', domain='test', name='test')
+    instance = RedshiftDataSource(table='test', domain='test', name='test')
     current_config = {'database': 'redshift'}
     mock_redshift_connector.connect().return_value = Mock()
     result = instance.get_form(redshift_connector, current_config)
@@ -36,7 +36,7 @@ def test_redshiftdatasource_get_form(mock_redshift_connector, redshift_connector
 
 @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
 def test_redshiftdatasource_get_form_with_error(mock_redshift_connector):
-    instance = RedshiftDataSource(database='test', table='test', domain='test', name='test')
+    instance = RedshiftDataSource(table='test', domain='test', name='test')
     mock_redshift_connector.connect.side_effect = InterfaceError
     connector = RedshiftConnector(
         name='test',
@@ -79,10 +79,9 @@ def test_redshiftconnector_get_connection(mock_redshift_connector):
         cluster_identifier='test',
         port=0,
     )
-    datasource = RedshiftDataSource(database='test', table='test', domain='test', name='test')
     redshift_mock = Mock()
     mock_redshift_connector.connect.return_value = redshift_mock
-    result = instance._get_connection(datasource)
+    result = instance._get_connection()
     assert result == redshift_mock
 
 
@@ -112,12 +111,11 @@ def test_redshiftconnector_retrieve_data(mock_redshift_connector):
         cluster_identifier='test',
         port=0,
     )
-    datasource = RedshiftDataSource(database='test', table='test', domain='test', name='test')
     dataframe_mock = Mock()
     mock_redshift_connector.connect().__enter__().cursor().__enter__().fetch_dataframe.return_value = (
         dataframe_mock
     )
-    result = instance._retrieve_data(datasource)
+    result = instance._retrieve_data()
     assert result == dataframe_mock
 
 
