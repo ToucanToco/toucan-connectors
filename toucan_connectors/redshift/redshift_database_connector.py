@@ -1,36 +1,40 @@
-from typing import Dict
+from contextlib import suppress
 
 import pandas as pd
 import redshift_connector
 from pydantic import Field, SecretStr, create_model
+from pydantic.types import constr
 from redshift_connector.error import InterfaceError
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
-DATABASE_QUERY = """select oid as database_id, datname as database_name, datallowconn as allow_connect from pg_database order by oid;"""
+DATABASE_QUERY = """select datname from pg_database;"""
 
 
 class RedshiftDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
-
-    query: Dict = Field(None, description='An object describing a simple select query')
+    table: str = Field(None, description='The name of the data table that you want to ')
+    query: constr(min_length=1) = Field(
+        None,
+        description='A string describing a query (CAUTION: Use limit to avoid to retrieve too many datas)',
+        widget='sql',
+    )
 
     @classmethod
     def get_form(cls, connector: 'RedshiftConnector', current_config):
         constraints = {}
-        try:
-            connection = redshift_connector.connect(**connector.get_connection_params())
+
+        with suppress(Exception):
+            connection = redshift_connector.connect(
+                **connector.get_connection_params(database=None)
+            )
             with connection.cursor() as cursor:
                 cursor.execute(DATABASE_QUERY)
                 res = cursor.fetchall()
-                available_dbs = [db for element in res for db in element if isinstance(db, str)]
-                constraints['databases'] = strlist_to_enum('databases', available_dbs)
+                available_dbs = [datname for (datname,) in res]
+                constraints['database'] = strlist_to_enum('database', available_dbs)
             return create_model('FormSchema', **constraints, __base__=cls).schema()
-        except Exception as err:
-            model = create_model('FormSchema', __base__=None).schema()
-            model['error'] = err
-            return model
 
 
 class RedshiftConnector(ToucanConnector):
@@ -48,9 +52,9 @@ class RedshiftConnector(ToucanConnector):
     )
     cluster_identifier: str = Field(..., description='Name of the cluster')
 
-    def get_connection_params(self):
+    def get_connection_params(self, database):
         con_params = dict(
-            database=self.data_source_model.database,
+            database=database,
             user=self.user,
             password=self.password.get_secret_value() if self.password else None,
             host=self.host,
@@ -61,31 +65,27 @@ class RedshiftConnector(ToucanConnector):
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _get_connection(self):
+    def _get_connection(self, datasource):
         """Establish a connection to an Amazon Redshift cluster."""
-        connection = redshift_connector.connect(**self.get_connection_params())
-        return connection
+        return redshift_connector.connect(
+            **self.get_connection_params(
+                database=datasource.database if datasource is not None else None
+            )
+        )
 
-    def _get_cursor(self):
-        connection = self._get_connection()
-        cursor: redshift_connector.Cursor = connection.cursor()
-        return cursor
+    def _get_cursor(self, datasource) -> redshift_connector.Cursor:
+        return self._get_connection(datasource=datasource).cursor()
 
-    def _retrieve_data(self) -> pd.DataFrame:
+    def _retrieve_data(self, datasource) -> pd.DataFrame:
         """Get data: tuple from table."""
-        with redshift_connector.connect(**self.get_connection_params()) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(self.data_source_model.query)
-                result: pd.DataFrame = cursor.fetch_dataframe()
+        with self._get_cursor(datasource=datasource) as cursor:
+            cursor.execute(datasource.query)
+            result: pd.DataFrame = cursor.fetch_dataframe()
         return result
 
     def get_status(self) -> ConnectorStatus:
         try:
-            with redshift_connector.connect(**self.get_connection_params()) as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(DATABASE_QUERY)
-                    result: pd.DataFrame = cursor.fetch_dataframe()
-                    print(f'{result=}')
-                    return ConnectorStatus(status=True, details=None, error=None)
+            with self._get_connection(datasource=None):
+                return ConnectorStatus(status=True, details=None, error=None)
         except InterfaceError as err:
             return ConnectorStatus(status=False, error=err)

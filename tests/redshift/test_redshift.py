@@ -3,7 +3,6 @@ from unittest.mock import Mock, patch
 import pytest
 from redshift_connector.error import InterfaceError
 
-from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.redshift.redshift_database_connector import (
     RedshiftConnector,
     RedshiftDataSource,
@@ -14,7 +13,6 @@ from toucan_connectors.redshift.redshift_database_connector import (
 def redshift_connector():
     return RedshiftConnector(
         name='test',
-        database='test',
         host='localhost',
         user='user',
         cluster_identifier='test',
@@ -24,8 +22,8 @@ def redshift_connector():
 
 @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
 def test_redshiftdatasource_get_form(mock_redshift_connector, redshift_connector):
-    instance = RedshiftDataSource(table='test', domain='test', name='test')
-    current_config = {'database': 'redshift'}
+    instance = RedshiftDataSource(database='test', domain='test', name='test')
+    current_config = {}
     mock_redshift_connector.connect().return_value = Mock()
     result = instance.get_form(redshift_connector, current_config)
     assert result['properties']['parameters']['title'] == 'Parameters'
@@ -34,34 +32,16 @@ def test_redshiftdatasource_get_form(mock_redshift_connector, redshift_connector
     assert result['required'] == ['domain', 'name', 'database']
 
 
-@patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
-def test_redshiftdatasource_get_form_with_error(mock_redshift_connector):
-    instance = RedshiftDataSource(table='test', domain='test', name='test')
-    mock_redshift_connector.connect.side_effect = InterfaceError
-    connector = RedshiftConnector(
-        name='test',
-        database='test',
-        host='localhost',
-        user='user',
-        cluster_identifier='test',
-        port=0,
-    )
-    result = instance.get_form(connector, {})
-    assert result == {'title': 'FormSchema', 'type': 'object', 'properties': {}}
-
-
 def test_redshiftconnector_get_connection_params():
     instance = RedshiftConnector(
         name='test',
-        database='test',
         host='localhost',
         user='user',
         cluster_identifier='test',
         port=0,
     )
-    result = instance.get_connection_params(database='redshift_database')
+    result = instance.get_connection_params(database=None)
     assert result == dict(
-        database='redshift_database',
         host='localhost',
         user='user',
         cluster_identifier='test',
@@ -73,15 +53,18 @@ def test_redshiftconnector_get_connection_params():
 def test_redshiftconnector_get_connection(mock_redshift_connector):
     instance = RedshiftConnector(
         name='test',
-        database='test',
         host='localhost',
         user='user',
         cluster_identifier='test',
         port=0,
     )
+    ds = RedshiftDataSource(
+        domain='test', name='redshift', database='dev', query='SELECT * FROM public.sales;'
+    )
+
     redshift_mock = Mock()
     mock_redshift_connector.connect.return_value = redshift_mock
-    result = instance._get_connection()
+    result = instance._get_connection(datasource=ds)
     assert result == redshift_mock
 
 
@@ -89,83 +72,64 @@ def test_redshiftconnector_get_connection(mock_redshift_connector):
 def test_redshiftconnector_get_cursor(mock_get_connection):
     instance = RedshiftConnector(
         name='test',
-        database='test',
         host='localhost',
         user='user',
         cluster_identifier='test',
         port=0,
+    )
+    ds = RedshiftDataSource(
+        domain='test', name='redshift', database='dev', query='SELECT * FROM public.sales;'
     )
     connection_mock = Mock()
     mock_get_connection().cursor.return_value = connection_mock
-    result = instance._get_cursor()
+    result = instance._get_cursor(datasource=ds)
     assert result == connection_mock
 
 
-@patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
-def test_redshiftconnector_retrieve_data(mock_redshift_connector):
+@patch.object(RedshiftConnector, '_get_cursor')
+def test_redshiftconnector_retrieve_data(mock_cursor):
     instance = RedshiftConnector(
         name='test',
-        database='test',
         host='localhost',
         user='user',
         cluster_identifier='test',
         port=0,
     )
-    dataframe_mock = Mock()
-    mock_redshift_connector.connect().__enter__().cursor().__enter__().fetch_dataframe.return_value = (
-        dataframe_mock
+    ds = RedshiftDataSource(
+        domain='test', name='redshift', database='dev', query='SELECT * FROM public.sales;'
     )
-    result = instance._retrieve_data()
-    assert result == dataframe_mock
+    mock = Mock()
+    mock_cursor().__enter__().fetch_dataframe.return_value = mock
+    result = instance._retrieve_data(datasource=ds)
+    assert result == mock
 
 
 @patch.object(RedshiftConnector, '_get_connection')
-def test_redshiftconnector_get_status(mock_get_connection):
+def test_redshiftconnector_get_status(mock_connection):
     instance = RedshiftConnector(
         name='test',
-        database='test',
         host='localhost',
         user='user',
         cluster_identifier='test',
         port=0,
     )
-    response = {
-        'Marker': 'string',
-        'Clusters': [
-            {
-                'ClusterIdentifier': 'test_id1',
-                'NodeType': 'test_type1',
-                'ClusterStatus': 'status1',
-            },
-            {
-                'ClusterIdentifier': 'test_id2',
-                'NodeType': 'test_type2',
-                'ClusterStatus': 'status2',
-            },
-            {
-                'ClusterIdentifier': 'test_id3',
-                'NodeType': 'test_type3',
-                'ClusterStatus': 'status3',
-            },
-        ],
-    }
-    mock_get_connection().describe_clusters.return_value = response
+    mock_connection().__enter__().return_value = Mock()
     result = instance.get_status()
-    assert result == ConnectorStatus(
-        status=True, details=[('status1',), ('status2',), ('status3',)], error=None
-    )
+    assert result.status is True
+    assert result.error is None
 
 
 @patch.object(RedshiftConnector, '_get_connection')
-def test_redshiftconnector_get_status_with_error(mock_get_connection):
+def test_redshiftconnector_get_status_with_error(mock_connection):
     instance = RedshiftConnector(
         name='test',
-        database='test',
         host='localhost',
         user='user',
         cluster_identifier='test',
         port=0,
     )
-    mock_get_connection().describe_clusters.side_effect = InterfaceError
+    mock_connection.side_effect = InterfaceError('error mock')
     result = instance.get_status()
-    assert result == ConnectorStatus(status=False, error=InterfaceError)
+    assert type(result.error) == InterfaceError
+    assert result.status is False
+    assert str(result.error) == 'error mock'
