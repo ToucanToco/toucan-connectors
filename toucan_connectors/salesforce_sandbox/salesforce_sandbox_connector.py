@@ -183,12 +183,15 @@ class SalesforceSandboxConnector(ToucanConnector):
             else:
                 return ConnectorStatus(status=False, error='Impossible to retrieve access_token')
         except OAuthError as ex:
+            logging.getLogger(__name__).error(f'Error during oauth authentication flow: {ex}')
             return ConnectorStatus(status=False, error=f'Error to get status - {ex.error}')
-        except NoOAuth2RefreshToken:
+        except NoOAuth2RefreshToken as ex:
+            logging.getLogger(__name__).error(f'Error during oauth authentication flow: {ex}')
             return ConnectorStatus(
                 status=False, error='Error to get status - no refresh token found'
             )
         except Exception as ex:
+            logging.getLogger(__name__).error(f'Error during oauth authentication flow: {ex}')
             return ConnectorStatus(
                 status=False, error=f'Error to get status - unknown exception - {ex}'
             )

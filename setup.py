@@ -71,7 +71,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='1.3.30',
+    version='1.3.31',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',
