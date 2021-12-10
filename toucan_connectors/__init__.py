@@ -195,7 +195,7 @@ CONNECTORS_REGISTRY = {
         'logo': 'salesforce/salesforce-service-cloud.png',
     },
     'SalesforceSandbox': {
-        'connector': 'salesforce_sandbox.salesforce_sandbox_connector.SalesforceSandboxConnector',
+        'connector': 'salesforce_sandbox.salesforce_sandbox_connector.SalesforceConnector',
         'label': 'Salesforce Service Cloud Sandbox',
         'logo': 'salesforce_sandbox/salesforce-service-cloud.png',
     },

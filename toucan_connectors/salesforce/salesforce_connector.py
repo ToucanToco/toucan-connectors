@@ -21,10 +21,14 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
 )
 
-AUTHORIZATION_URL = 'https://login.salesforce.com/services/oauth2/authorize'
+AUTHORIZATION_URL_PROD = 'https://login.salesforce.com/services/oauth2/authorize'
+AUTHORIZATION_URL_SANDBOX = 'https://test.salesforce.com/services/oauth2/authorize'
+
 SCOPE = 'full api refresh_token'
 # In Sandbox case, TOKEN_URL must be set to https://login.salesforce.com/services/oauth2/token
-TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
+TOKEN_URL_PROD = 'https://login.salesforce.com/services/oauth2/token'
+TOKEN_URL_SANDBOX = 'https://test.salesforce.com/services/oauth2/token'
+
 NO_CREDENTIALS_ERROR = 'No credentials'
 DATA_ENDPOINT = 'services/data/v39.0/query'
 
@@ -71,9 +75,11 @@ class SalesforceConnector(ToucanConnector):
         )
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
-            authorization_url=AUTHORIZATION_URL,
+            authorization_url=AUTHORIZATION_URL_SANDBOX
+            if self.type == 'SalesforceSandbox'
+            else AUTHORIZATION_URL_PROD,
             scope=SCOPE,
-            token_url=TOKEN_URL,
+            token_url=TOKEN_URL_SANDBOX if self.type == 'SalesforceSandbox' else TOKEN_URL_PROD,
             secrets_keeper=kwargs['secrets_keeper'],
             redirect_uri=kwargs['redirect_uri'],
             config=OAuth2ConnectorConfig(
