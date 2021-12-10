@@ -30,6 +30,8 @@
 
 * [MySQLConnector](connectors/mysql.md)
 
+* [NetExplorerConnector](connectors/net_explorer.md)
+
 * [ODataConnector](connectors/odata.md)
 
 * [OneDriveConnector](connectors/one_drive.md)

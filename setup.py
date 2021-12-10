@@ -31,6 +31,7 @@ extras_require = {
     'odata': auth_deps + ['tctc_odata'],
     'odbc': ['pyodbc>=3'],
     'oracle_sql': ['cx_Oracle>=6.2.1'],
+    'net_explorer': ['openpyxl>=3.0.9'],
     'postgres': ['psycopg2>=2.7.4'],
     'ROK': ['requests', 'pyjwt', 'simplejson'],
     'sap_hana': ['pyhdb>=0.3.4'],
