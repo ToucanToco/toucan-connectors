@@ -33,7 +33,7 @@ class NetExplorerConnector(ToucanConnector):
 
         headers = {'Content-Type': 'application/json'}
 
-        resp = requests.request('POST', login_url, data=data, headers=headers)
+        resp = requests.post(login_url, data=data, headers=headers)
 
         return resp.json()['token']
 
@@ -42,7 +42,7 @@ class NetExplorerConnector(ToucanConnector):
 
         headers = {'Authorization': f'Bearer {token}'}
 
-        resp = requests.request('GET', folders_url, data={}, headers=headers)
+        resp = requests.get(folders_url, data={}, headers=headers)
 
         return resp.json()
 
@@ -51,39 +51,35 @@ class NetExplorerConnector(ToucanConnector):
         basedir = data_source.file.split('/')[0]
         path = data_source.file.split('/')[1:]
 
-        id = None
+        _id = None
+
+        def _search(iterate_on, compare_to, for_id=False):
+            for element in iterate_on:
+                if element['name'] == compare_to:
+                    return element['id'] if for_id else element['content']
 
         try:
             # Search among base directories
-            for folder in folders:
-                if folder['name'] == basedir:
-                    folders = folder['content']
-                    break
-
-            # Serch among paths
+            folders = _search(folders, basedir)
+            # Search among paths
             for elem in path:
                 if elem.endswith(('xlsx', 'xls', 'csv')):
-                    for file in folders['files']:
-                        if file['name'] == elem:
-                            id = file['id']
-                            break
+                    _id = _search(folders['files'], elem, True)
+                    assert _id
                 else:
-                    for folder in folders['folders']:
-                        if folder['name'] == elem:
-                            folders = folder['content']
-
-            assert id
+                    folders = _search(folders['folders'], elem)
+                    assert folders
         except AssertionError:
             raise ValueError('Unable to find the file')
 
-        return id
+        return _id
 
-    def _retrieve_file(self, token, id):
-        download_url = f'https://{self.instance_url}/api/file/{id}/download'
+    def _retrieve_file(self, token, _id):
+        download_url = f'https://{self.instance_url}/api/file/{_id}/download'
 
         headers = {'Authorization': f'Bearer {token}'}
 
-        resp = requests.request('GET', download_url, data={}, headers=headers)
+        resp = requests.get(download_url, data={}, headers=headers)
 
         return BytesIO(resp.content)
 
@@ -95,8 +91,8 @@ class NetExplorerConnector(ToucanConnector):
 
         token = self._retrieve_token()
         folders = self._retrieve_folders(token)
-        id = self._retrieve_file_id(folders, data_source)
-        data = self._retrieve_file(token, id)
+        _id = self._retrieve_file_id(folders, data_source)
+        data = self._retrieve_file(token, _id)
 
         df = pd.DataFrame()
         if data_source.file.endswith('csv'):
