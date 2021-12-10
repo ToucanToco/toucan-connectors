@@ -17,13 +17,13 @@ def redshift_connector():
         user='user',
         cluster_identifier='test',
         port=0,
-        database="test"
+        database='test',
     )
 
 
 @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
 def test_redshiftdatasource_get_form(mock_redshift_connector, redshift_connector):
-    instance = RedshiftDataSource(domain='test', name='test', query="SELECT * FROM test")
+    instance = RedshiftDataSource(domain='test', name='test', query='SELECT * FROM test')
     current_config = {}
     mock_redshift_connector.connect().return_value = Mock()
     result = instance.get_form(redshift_connector, current_config)
@@ -36,20 +36,12 @@ def test_redshiftdatasource_get_form(mock_redshift_connector, redshift_connector
 def test_redshiftconnector_get_connection_params(redshift_connector):
     result = redshift_connector.get_connection_params()
     assert result == dict(
-        host='localhost',
-        user='user',
-        cluster_identifier='test',
-        port=0,
-        database='test'
+        host='localhost', user='user', cluster_identifier='test', port=0, database='test'
     )
 
 
 @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
 def test_redshiftconnector_get_connection(mock_redshift_connector, redshift_connector):
-    ds = RedshiftDataSource(
-        domain='test', name='redshift', query='SELECT * FROM public.sales;'
-    )
-
     redshift_mock = Mock()
     mock_redshift_connector.connect.return_value = redshift_mock
     result = redshift_connector._get_connection()
@@ -58,9 +50,6 @@ def test_redshiftconnector_get_connection(mock_redshift_connector, redshift_conn
 
 @patch.object(RedshiftConnector, '_get_connection')
 def test_redshiftconnector_get_cursor(mock_get_connection, redshift_connector):
-    ds = RedshiftDataSource(
-        domain='test', name='redshift', query='SELECT * FROM public.sales;'
-    )
     connection_mock = Mock()
     mock_get_connection().cursor.return_value = connection_mock
     result = redshift_connector._get_cursor()
@@ -69,9 +58,7 @@ def test_redshiftconnector_get_cursor(mock_get_connection, redshift_connector):
 
 @patch.object(RedshiftConnector, '_get_cursor')
 def test_redshiftconnector_retrieve_data(mock_cursor, redshift_connector):
-    ds = RedshiftDataSource(
-        domain='test', name='redshift', query='SELECT * FROM public.sales;'
-    )
+    ds = RedshiftDataSource(domain='test', name='redshift', query='SELECT * FROM public.sales;')
     mock = Mock()
     mock_cursor().__enter__().fetch_dataframe.return_value = mock
     result = redshift_connector._retrieve_data(datasource=ds)

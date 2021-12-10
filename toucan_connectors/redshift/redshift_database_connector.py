@@ -1,13 +1,11 @@
-from contextlib import suppress
-
 import pandas as pd
 import redshift_connector
-from pydantic import Field, SecretStr, create_model
+from pydantic import Field, SecretStr
 from pydantic.types import constr
 from redshift_connector.error import InterfaceError
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class RedshiftDataSource(ToucanDataSource):
@@ -16,6 +14,7 @@ class RedshiftDataSource(ToucanDataSource):
         description='A string describing a query (CAUTION: Use limit to avoid to retrieve too many datas)',
         widget='sql',
     )
+
 
 class RedshiftConnector(ToucanConnector):
     data_source_model: RedshiftDataSource
