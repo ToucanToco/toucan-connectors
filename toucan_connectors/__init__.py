@@ -194,6 +194,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Salesforce Service Cloud (SFSC)',
         'logo': 'salesforce/salesforce-service-cloud.png',
     },
+    'SalesforceSandbox': {
+        'connector': 'salesforce_sandbox.salesforce_sandbox_connector.SalesforceConnector',
+        'label': 'Salesforce Service Cloud Sandbox',
+        'logo': 'salesforce_sandbox/salesforce-service-cloud.png',
+    },
     'SapHana': {
         'connector': 'sap_hana.sap_hana_connector.SapHanaConnector',
         'label': 'SAP HANA',
