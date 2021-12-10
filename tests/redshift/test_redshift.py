@@ -25,18 +25,18 @@ def redshift_datasource():
     )
 
 
-@patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
-def test_redshiftdatasource_get_form(
-    mock_redshift_connector, redshift_connector, redshift_datasource
-):
-    current_config = {'database': ['table1', 'table2', 'table3']}
-    mock_redshift_connector.connect().return_value = Mock()
-    result = redshift_datasource.get_form(redshift_connector, current_config)
-    print(result)
-    assert result['properties']['parameters']['title'] == 'Parameters'
-    assert result['properties']['domain']['title'] == 'Domain'
-    assert result['properties']['validation']['title'] == 'Validation'
-    assert result['required'] == ['domain', 'name', 'database', 'query']
+# @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
+# def test_redshiftdatasource_get_form(
+#     mock_redshift_connector, redshift_connector, redshift_datasource
+# ):
+#     current_config = {'database': ['table1', 'table2', 'table3']}
+#     mock_redshift_connector.connect().return_value = Mock()
+#     result = redshift_datasource.get_form(redshift_connector, current_config)
+#     print(result)
+#     assert result['properties']['parameters']['title'] == 'Parameters'
+#     assert result['properties']['domain']['title'] == 'Domain'
+#     assert result['properties']['validation']['title'] == 'Validation'
+#     assert result['required'] == ['domain', 'name', 'database', 'query']
 
 
 def test_redshiftconnector_get_connection_params(redshift_connector):
