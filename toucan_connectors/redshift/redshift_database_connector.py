@@ -8,6 +8,7 @@ from pydantic.types import constr
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 DATABASE_QUERY = """select datname from pg_database;"""
+TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
 
 
 class RedshiftDataSource(ToucanDataSource):
@@ -31,6 +32,13 @@ class RedshiftDataSource(ToucanDataSource):
                 res = cursor.fetchall()
                 available_dbs = [datname for (datname,) in res]
                 constraints['database'] = strlist_to_enum('database', available_dbs)
+
+                if 'database' in current_config:
+                    cursor.execute(TABLE_QUERY)
+                    res = cursor.fetchall()
+                    available_tables = [table_name for (_, table_name) in res]
+                    constraints['table'] = strlist_to_enum('table', available_tables, None)
+
             return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 

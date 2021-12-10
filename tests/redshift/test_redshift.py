@@ -29,11 +29,12 @@ def redshift_datasource():
 def test_redshiftdatasource_get_form(
     mock_redshift_connector, redshift_connector, redshift_datasource
 ):
-    current_config = {}
+    current_config = {'database': ['table1', 'table2', 'table3']}
     mock_redshift_connector.connect().return_value = Mock()
     result = redshift_datasource.get_form(redshift_connector, current_config)
+    print(result)
     assert result['properties']['parameters']['title'] == 'Parameters'
-    assert result['properties']['table']['title'] == 'Table'
+    assert result['properties']['domain']['title'] == 'Domain'
     assert result['properties']['validation']['title'] == 'Validation'
     assert result['required'] == ['domain', 'name', 'database', 'query']
 
