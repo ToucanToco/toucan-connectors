@@ -24,7 +24,7 @@ class RedshiftDataSource(ToucanDataSource):
 
         with suppress(Exception):
             connection = redshift_connector.connect(
-                **connector.get_connection_params(database=None)
+                **connector.get_connection_params(database=current_config.get('database'))
             )
             with connection.cursor() as cursor:
                 cursor.execute(DATABASE_QUERY)
