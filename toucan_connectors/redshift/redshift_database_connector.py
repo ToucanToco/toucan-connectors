@@ -41,13 +41,6 @@ class RedshiftConnector(ToucanConnector):
     password: SecretStr = Field(None, description='Your login password')
     host: str = Field(None, description='IP address or hostname.')
     port: int = Field(..., description='The listening port of your Redshift Database')
-    connect_timeout: int = Field(
-        None,
-        title='Connection timeout',
-        description='You can set a connection timeout in seconds here, i.e. the maximum length of '
-        'time you want to wait for the server to respond. None by default',
-    )
-    cluster_identifier: str = Field(..., description='Name of the cluster')
 
     def get_connection_params(self, database):
         con_params = dict(
@@ -56,8 +49,6 @@ class RedshiftConnector(ToucanConnector):
             password=self.password.get_secret_value() if self.password else None,
             host=self.host,
             port=self.port,
-            connect_timeout=self.connect_timeout,
-            cluster_identifier=self.cluster_identifier,
         )
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}

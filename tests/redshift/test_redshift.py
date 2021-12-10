@@ -14,7 +14,6 @@ def redshift_connector():
         name='test',
         host='localhost',
         user='user',
-        cluster_identifier='test',
         port=0,
     )
 
@@ -27,13 +26,12 @@ def redshift_datasource():
 
 
 @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
-def test_redshiftdatasource_get_form(mock_redshift_connector, redshift_connector):
-    instance = RedshiftDataSource(
-        database='test', domain='test', name='test', query='SELECT * FROM test'
-    )
+def test_redshiftdatasource_get_form(
+    mock_redshift_connector, redshift_connector, redshift_datasource
+):
     current_config = {}
     mock_redshift_connector.connect().return_value = Mock()
-    result = instance.get_form(redshift_connector, current_config)
+    result = redshift_datasource.get_form(redshift_connector, current_config)
     assert result['properties']['parameters']['title'] == 'Parameters'
     assert result['properties']['table']['title'] == 'Table'
     assert result['properties']['validation']['title'] == 'Validation'
@@ -46,7 +44,6 @@ def test_redshiftconnector_get_connection_params(redshift_connector):
         host='localhost',
         database='test',
         user='user',
-        cluster_identifier='test',
         port=0,
     )
 
