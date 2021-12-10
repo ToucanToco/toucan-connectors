@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 
 import pandas as pd
 import requests
@@ -43,6 +43,11 @@ class OneDriveDataSource(ToucanDataSource):
         Title='Tables',
         description='Read one table or append multiple tables',
         placeholder='Enter a table or a comma separated list of tables',
+    )
+    parse_dates: List[str] = Field(
+        [],
+        Title='Date columns',
+        description='By default, dates are converted in the number of days since 1900/01/01',
     )
 
 
@@ -232,6 +237,13 @@ class OneDriveConnector(ToucanConnector):
                 df_current[workbook_key_column] = workbook_element
 
             df_all = df_all.append(df_current)
+
+        for date_col in data_source.parse_dates:
+            df_all[date_col] = pd.to_datetime(
+                (df_all[date_col] * 24 * 60 * 60).astype(int),
+                origin=pd.Timestamp('1899-12-30'),
+                unit='s',
+            )
 
         return df_all
 

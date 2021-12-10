@@ -1,7 +1,11 @@
+import copy
+
+import pandas as pd
 import pytest
 import responses
 from pytest import fixture
 
+from tests.one_drive.fake_sheet import FAKE_SHEET
 from toucan_connectors.common import HttpError
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 from toucan_connectors.one_drive.one_drive_connector import OneDriveConnector, OneDriveDataSource
@@ -142,33 +146,23 @@ def ds_with_site_without_range():
 
 
 @fixture
+def ds_with_dates():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        file='test_file',
+        sheet='test_sheet',
+        parse_dates=['col_datetime', 'col_datetime_bis'],
+    )
+
+
+@fixture
 def remove_secrets(secrets_keeper, con):
     secrets_keeper.save('test', {'access_token': None})
 
 
 def fake_sheet(*args, **kwargs):
-    return {
-        '@odata.context': 'https://graph.microsoft.com/v1.0/$metadata#workbookRange',
-        '@odata.id': '',
-        '@odata.type': '#microsoft.graph.workbookRange',
-        'address': 'Feuil1!A2:B3',
-        'addressLocal': 'Feuil1!A2:B3',
-        'cellCount': 4,
-        'columnCount': 2,
-        'columnHidden': False,
-        'columnIndex': 0,
-        'formulas': [['col1', 'col2'], ['A', 1], ['B', 2]],
-        'formulasLocal': [['col1', 'col2'], ['A', 1], ['B', 2]],
-        'formulasR1C1': [['col1', 'col2'], ['A', 1], ['B', 2]],
-        'hidden': False,
-        'numberFormat': [['General', 'General'], ['General', 'General'], ['General', 'General']],
-        'rowCount': 2,
-        'rowHidden': False,
-        'rowIndex': 1,
-        'text': [['col1', 'col2'], ['A', '1'], ['B', '2']],
-        'valueTypes': [['String', 'String'], ['String', 'Double'], ['String', 'Double']],
-        'values': [['col1', 'col2'], ['A', 1], ['B', 2]],
-    }
+    return copy.deepcopy(FAKE_SHEET)
 
 
 FAKE_LIBRARIES = {'value': [{'id': 'abcd', 'displayName': 'Documents'}]}
@@ -231,14 +225,32 @@ def test_sheet_success(mocker, con, ds, ds_with_table):
     df = con.get_df(ds)
 
     assert run_fetch.call_count == 1
-    assert df.shape == (2, 2)
-    assert df.columns.tolist() == ['col1', 'col2']
+    assert df.shape == (2, 8)
+    assert df.columns.tolist() == [
+        'col_text',
+        'col_int',
+        'col_float',
+        'col_money',
+        'col_date',
+        'col_datetime',
+        'col_datetime_bis',
+        'col_mixed_type',
+    ]
 
     df = con.get_df(ds_with_table)
 
     assert run_fetch.call_count == 2
-    assert df.shape == (2, 2)
-    assert df.columns.tolist() == ['col1', 'col2']
+    assert df.shape == (2, 8)
+    assert df.columns.tolist() == [
+        'col_text',
+        'col_int',
+        'col_float',
+        'col_money',
+        'col_date',
+        'col_datetime',
+        'col_datetime_bis',
+        'col_mixed_type',
+    ]
 
 
 def test_multiple_sheets_success(mocker, con, ds_with_multiple_sheets, ds_with_multiple_tables):
@@ -248,14 +260,59 @@ def test_multiple_sheets_success(mocker, con, ds_with_multiple_sheets, ds_with_m
     df = con.get_df(ds_with_multiple_sheets)
 
     assert run_fetch.call_count == 2
-    assert df.shape == (4, 3)
-    assert df.columns.tolist() == ['col1', 'col2', '__sheetname__']
+    assert df.shape == (4, 9)
+    assert df.columns.tolist() == [
+        'col_text',
+        'col_int',
+        'col_float',
+        'col_money',
+        'col_date',
+        'col_datetime',
+        'col_datetime_bis',
+        'col_mixed_type',
+        '__sheetname__',
+    ]
 
     df = con.get_df(ds_with_multiple_tables)
 
     assert run_fetch.call_count == 4
-    assert df.shape == (4, 3)
-    assert df.columns.tolist() == ['col1', 'col2', '__tablename__']
+    assert df.shape == (4, 9)
+    assert df.columns.tolist() == [
+        'col_text',
+        'col_int',
+        'col_float',
+        'col_money',
+        'col_date',
+        'col_datetime',
+        'col_datetime_bis',
+        'col_mixed_type',
+        '__tablename__',
+    ]
+
+
+def test_sheets_without_date(mocker, con, ds):
+    mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
+
+    df = con.get_df(ds)
+
+    assert df.loc[0].values.tolist() == ['foo', 1, 1.1, 1, 44197, 44198, 44198.5017476852, 'toto']
+
+
+def test_sheets_with_dates(mocker, con, ds_with_dates):
+    mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
+
+    df = con.get_df(ds_with_dates)
+
+    assert df.loc[0].values.tolist() == [
+        'foo',
+        1,
+        1.1,
+        1,
+        44197,
+        pd.Timestamp('2021-01-02 00:00:00'),
+        pd.Timestamp('2021-01-02 12:02:31'),
+        'toto',
+    ]
 
 
 def test_empty_sheet(mocker, con, ds):
