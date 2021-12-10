@@ -1,12 +1,23 @@
+import logging
+
 import pandas as pd
 import redshift_connector
 from pydantic import Field, SecretStr
 from pydantic.types import constr
 
+from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 DATABASE_QUERY = """select datname from pg_database;"""
 TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
+
+logger = logging.getLogger(__name__)
+
+redshift_connection_manager = None
+if not redshift_connection_manager:
+    redshift_connection_manager = ConnectionManager(
+        name='redshift', timeout=10, wait=0.2, time_between_clean=10, time_keep_alive=600
+    )
 
 
 class RedshiftDataSource(ToucanDataSource):
@@ -48,6 +59,10 @@ class RedshiftConnector(ToucanConnector):
     host: str = Field(None, description='IP address or hostname.')
     port: int = Field(..., description='The listening port of your Redshift Database')
 
+    @staticmethod
+    def get_redshift_connection_manager():
+        return redshift_connection_manager
+
     def get_connection_params(self, database):
         con_params = dict(
             database=database,
@@ -61,11 +76,33 @@ class RedshiftConnector(ToucanConnector):
 
     def _get_connection(self, datasource):
         """Establish a connection to an Amazon Redshift cluster."""
-        return redshift_connector.connect(
-            **self.get_connection_params(
-                database=datasource.database if datasource is not None else None
+
+        def connect_function():
+            return redshift_connector.connect(
+                **self.get_connection_params(
+                    database=datasource.database if datasource is not None else None
+                )
             )
+
+        def alive_function(connection):
+            logger.debug('Check Redshift connection alive')
+            if hasattr(connection, 'is_closed'):
+                print(not connection.is_closed())
+                return not connection.is_closed()
+
+        def close_function(connection):
+            logger.info('Close Redshift connection')
+            if hasattr(connection, 'close'):
+                connection.close()
+
+        connection = redshift_connection_manager.get(
+            identifier=datasource.database,
+            connect_method=connect_function,
+            alive_method=alive_function,
+            close_method=close_function,
+            save=True if datasource.database else False,
         )
+        return connection.connect_method
 
     def _get_cursor(self, datasource) -> redshift_connector.Cursor:
         return self._get_connection(datasource=datasource).cursor()
