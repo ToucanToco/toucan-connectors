@@ -33,8 +33,8 @@ def test_redshiftdatasource_init():
 
     with pytest.raises(ValueError):
         ds = RedshiftDataSource(domain='test', name='redshift', database='test')
-        assert ds.query == None
-        assert ds.table == None
+        assert ds.query is None
+        assert ds.table is None
 
 
 @patch.object(RedshiftConnector, '_retrieve_tables')
@@ -73,6 +73,14 @@ def test_redshiftconnector_get_connection(
     mock_redshift_connector.connect.return_value = redshift_mock
     result = redshift_connector._get_connection(datasource=redshift_datasource)
     assert result == redshift_mock
+
+
+# @patch.object(RedshiftConnector, '_get_connection')
+# def test_redshiftconnector_get_connection_alive_function( redshift_connector,
+# ):
+#     redshift_connector.connect_timeout = 3
+#     result = redshift_connector.alive_function(Mock())
+#     assert result is True
 
 
 @patch.object(RedshiftConnector, '_get_connection')
@@ -114,7 +122,7 @@ def test_redshiftconnector_get_status_true(
     mock_build_connection().__enter__().return_value = True
     result = redshift_connector.get_status()
     assert result.status is True
-    assert result.error == None
+    assert result.error is None
 
 
 @patch.object(RedshiftConnector, 'check_hostname')
@@ -138,7 +146,7 @@ def test_redshiftconnector_get_status_with_error_port(mock_hostname, redshift_co
 @patch.object(RedshiftConnector, '_build_connection')
 @patch.object(RedshiftConnector, 'check_hostname')
 @patch.object(RedshiftConnector, 'check_port')
-def test_redshiftconnector_get_status_true(
+def test_redshiftconnector_get_status_programming_error(
     mock_check_hostname, mock_check_port, mock_build_connection, redshift_connector
 ):
     mock_check_hostname.return_value = 'hostname_test'
@@ -148,6 +156,21 @@ def test_redshiftconnector_get_status_true(
         "'S': 'FATAL', 'C': '3D000', 'M': 'database user_test does not exist'"
     )
     result = redshift_connector.get_status()
+    assert result.status is True
+    assert result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'database user_test does not exist'"
+
+
+@patch.object(RedshiftConnector, '_build_connection')
+@patch.object(RedshiftConnector, 'check_hostname')
+@patch.object(RedshiftConnector, 'check_port')
+def test_redshiftconnector_get_status_exception(
+    mock_check_hostname, mock_check_port, mock_build_connection, redshift_connector
+):
+    mock_check_hostname.return_value = 'hostname_test'
+    mock_check_port.return_value = 'port_test'
+    redshift_connector.user = 'user_test'
+    mock_build_connection.side_effect = Exception
+    result = redshift_connector.get_status()
     print(result)
     assert result.status is True
-    assert result.error == "None"
+    assert result.error is None

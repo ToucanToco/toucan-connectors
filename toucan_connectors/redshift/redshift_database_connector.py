@@ -2,8 +2,8 @@ import logging
 from contextlib import suppress
 from enum import Enum
 from time import sleep
-from typing import Dict, List, Optional
 from timeit import default_timer as timer
+from typing import Dict, List, Optional
 
 import pandas as pd
 import redshift_connector
@@ -36,7 +36,7 @@ class RedshiftDataSource(ToucanDataSource):
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
-        'the "table" parameter',
+        'the table parameter',
         widget='sql',
     )
     table: constr(min_length=1) = Field(
@@ -167,33 +167,25 @@ class RedshiftConnector(ToucanConnector):
     def get_status(self) -> ConnectorStatus:
         # Check hostname
         try:
-            print("try1")
             self.check_hostname(self.host)
         except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(0, False), error=str(e))
 
         # Check port
         try:
-            print("try2")
             self.check_port(self.host, self.port)
         except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
 
         # Check connection
         try:
-            print("try3")
             with self._build_connection(None):
                 return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
         except redshift_connector.error.ProgrammingError as ex:
-            print("là")
-            print(ex)
             # Use to validate if the issue is "only" an issue with database (set after with datasource)
-            if (
-                f"'S': 'FATAL', 'C': '3D000', 'M': 'database \"{self.user}\" does not exist'"
-                in str(ex)
-            ):
-                print("in if")
-                return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
+            if f"'S': 'FATAL', 'C': '3D000', 'M': 'database {self.user} does not exist'" in str(ex):
+                return ConnectorStatus(
+                    status=True, details=self._get_details(2, True), error=str(ex)
+                )
         except Exception:
-            print("rr")
             return ConnectorStatus(status=True, details=self._get_details(2, False), error=None)
