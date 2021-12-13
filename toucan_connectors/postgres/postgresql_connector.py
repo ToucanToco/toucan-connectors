@@ -1,9 +1,10 @@
 from contextlib import suppress
+from typing import Optional
 
 import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr, create_model
 
-from toucan_connectors.common import pandas_read_sql
+from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -119,3 +120,44 @@ class PostgresConnector(ToucanConnector):
         connection.close()
 
         return df
+
+    @staticmethod
+    def _get_details(index: int, status: Optional[bool]):
+        checks = ['Hostname resolved', 'Port opened', 'Host connection', 'Authenticated']
+        ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
+        new_check = (checks[index], status)
+        not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
+        return ok_checks + [new_check] + not_validated_checks
+
+    def get_status(self) -> ConnectorStatus:
+        # Check hostname
+        try:
+            self.check_hostname(self.host)
+        except (Exception, pgsql.Error) as e:
+            return ConnectorStatus(status=False, details=self._get_details(0, False), error=str(e))
+
+        # Check port
+        try:
+            self.check_port(self.host, self.port)
+        except (Exception, pgsql.Error) as e:
+            return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
+
+        # Check basic access
+        try:
+            pgsql.connect(**self.get_connection_params())
+        except (Exception, pgsql.Error) as e:
+            error_code = e.args[0]
+
+            # Can't connect to full URI
+            if 'Connection refused' in error_code:
+                return ConnectorStatus(
+                    status=False, details=self._get_details(2, False), error=e.args[0]
+                )
+
+            # Wrong user/password
+            else:
+                return ConnectorStatus(
+                    status=False, details=self._get_details(3, False), error=e.args[0]
+                )
+
+        return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
