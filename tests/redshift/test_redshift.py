@@ -1,7 +1,6 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from pydantic import ValidationError
 from redshift_connector.error import InterfaceError, ProgrammingError
 
 from toucan_connectors import DataSlice
@@ -114,6 +113,16 @@ def test_redshiftconnector_get_redshift_connection_manager(
     assert redshift_connector.get_redshift_connection_manager() == mock_connection_manager
 
 
+def test_redshiftconnector_get_connection_params_missing_authentication_mode():
+    with pytest.raises(ValueError) as exc_info_user:
+        RedshiftConnector(
+            name='test',
+            host='localhost',
+            port=0,
+        )
+    assert 'Unknown AuthenticationMethod' in str(exc_info_user.value)
+
+
 def test_redshiftconnector_get_connection_params_db_cred_mode_missing_params():
     with pytest.raises(ValueError) as exc_info_user:
         RedshiftConnector(
@@ -214,7 +223,7 @@ def test_redshiftconnector_get_connection_params_aws_creds_mode(redshift_connect
 
 
 def test_redshiftconnector_get_connection_params_aws_profile_mode_missing_params():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as exc_info_profile:
         RedshiftConnector(
             authentication_method=AuthenticationMethod.AWS_PROFILE,
             name='test',
@@ -223,15 +232,8 @@ def test_redshiftconnector_get_connection_params_aws_profile_mode_missing_params
             db_user='db_user_test',
             region='eu-west-1',
         )
-    assert ValidationError(
-        model='RedshiftConnector',
-        errors=[
-            {
-                'loc': ('__root__',),
-                'msg': 'Profile are required for aws_profile',
-                'type': 'value_error',
-            }
-        ],
+    assert f'Profile is required for {AuthenticationMethod.AWS_PROFILE}' in str(
+        exc_info_profile.value
     )
 
 
@@ -247,16 +249,6 @@ def test_redshiftconnector_get_connection_params_aws_profile_mode(redshift_conne
         region='eu-west-1',
         profile='sample',
     )
-
-
-def test_redshiftconnector_get_connection_params_missing_authentication_mode():
-    with pytest.raises(ValueError) as exc_info:
-        RedshiftConnector(
-            name='test',
-            host='localhost',
-            port=0,
-        )
-    assert 'Unknown AuthenticationMethod' in str(exc_info.value)
 
 
 @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
@@ -280,7 +272,9 @@ def test_redshiftconnector_get_connection(
 
 def test_redshiftconnector_close(redshift_connector):
     cm = redshift_connector.get_redshift_connection_manager()
+    assert cm.connection_list['test'].exec_alive() is True
     cm.force_clean()
+    assert len(cm.connection_list) == 0
 
 
 @patch('toucan_connectors.redshift.redshift_database_connector.Thread')

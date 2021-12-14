@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 redshift_connection_manager = None
 if not redshift_connection_manager:
     redshift_connection_manager = ConnectionManager(
-        name='redshift', timeout=25, wait=0.2, time_between_clean=10, time_keep_alive=10
+        name='redshift', timeout=25, wait=0.2, time_between_clean=10, time_keep_alive=600
     )
 
 
@@ -154,7 +154,7 @@ class RedshiftConnector(ToucanConnector):
         elif mode == AuthenticationMethod.AWS_PROFILE:
             profile = values.get('profile')
             if profile is None:
-                raise ValueError(f'Profile are required for {AuthenticationMethod.AWS_PROFILE}')
+                raise ValueError(f'Profile is required for {AuthenticationMethod.AWS_PROFILE}')
         else:
             raise ValueError('Unknown AuthenticationMethod')
         return values
