@@ -22,6 +22,21 @@ def redshift_connector():
 
 
 @pytest.fixture
+def redshift_connector_iam():
+    return RedshiftConnector(
+        user='',
+        name='test',
+        port=0,
+        iam=True,
+        db_user='db_user_test',
+        cluster_identifier='cluster_test',
+        access_key_id='access_key',
+        session_token='token',
+        region='eu_est_1',
+    )
+
+
+@pytest.fixture
 def redshift_datasource():
     return RedshiftDataSource(
         domain='test', name='redshift', database='test', query='SELECT * FROM public.sales;'
@@ -74,7 +89,7 @@ def test_redshiftconnector_get_redshift_connection_manager(
     assert redshift_connector.get_redshift_connection_manager() == mock_connection_manager
 
 
-def test_redshiftconnector_get_connection_params(redshift_connector):
+def test_redshiftconnector_get_connection_params_db_cred_mode(redshift_connector):
     redshift_connector.authentication_method = 'db_cred'
     result = redshift_connector._get_connection_params(database='test')
     assert result == dict(
@@ -82,6 +97,19 @@ def test_redshiftconnector_get_connection_params(redshift_connector):
         database='test',
         user='user',
         port=0,
+    )
+
+
+def test_redshiftconnector_get_connection_params_iam_mode(redshift_connector_iam):
+    redshift_connector_iam.authentication_method = 'iam_cred'
+    result = redshift_connector_iam._get_connection_params(database='test')
+    assert result == dict(
+        iam=True,
+        db_user='db_user_test',
+        cluster_identifier='cluster_test',
+        access_key_id='access_key',
+        session_token='token',
+        region='eu_est_1',
     )
 
 
