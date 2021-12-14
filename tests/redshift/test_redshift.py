@@ -3,7 +3,9 @@ from unittest.mock import Mock, patch
 import pytest
 from redshift_connector.error import InterfaceError, ProgrammingError
 
+from toucan_connectors import DataSlice
 from toucan_connectors.redshift.redshift_database_connector import (
+    Config,
     RedshiftConnector,
     RedshiftDataSource,
 )
@@ -24,6 +26,23 @@ def redshift_datasource():
     return RedshiftDataSource(
         domain='test', name='redshift', database='test', query='SELECT * FROM public.sales;'
     )
+
+
+def test_config_schema_extra():
+    schema = {
+        'properties': {
+            'type': 'type_test',
+            'name': 'name_test',
+            'host': 'host_test',
+            'port': 'port_test',
+            'authentication_method': 'authentication_method_test',
+            'user': 'user_test',
+            'password': 'password_test',
+            'timeout': 5,
+        }
+    }
+    result = Config().schema_extra(schema)
+    assert result is None
 
 
 def test_redshiftdatasource_init():
@@ -56,7 +75,7 @@ def test_redshiftconnector_get_redshift_connection_manager(
 
 
 def test_redshiftconnector_get_connection_params(redshift_connector):
-    result = redshift_connector.get_connection_params(database='test')
+    result = redshift_connector._get_connection_params(database='test')
     assert result == dict(
         host='localhost',
         database='test',
@@ -66,21 +85,33 @@ def test_redshiftconnector_get_connection_params(redshift_connector):
 
 
 @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
-def test_redshiftconnector_get_connection(
+def test_redshiftconnector_build_connection(
     mock_redshift_connector, redshift_connector, redshift_datasource
 ):
-    redshift_mock = Mock()
-    mock_redshift_connector.connect.return_value = redshift_mock
+    result = redshift_connector._build_connection(datasource=redshift_datasource)
+    assert result == mock_redshift_connector.connect()
+
+
+@patch.object(RedshiftConnector, '_start_timer_alive')
+@patch.object(RedshiftConnector, '_build_connection')
+def test_redshiftconnector_get_connection(
+    mock_build_connection, mock_start_timer_alive, redshift_connector, redshift_datasource
+):
+    redshift_connector.connect_timeout = 1
     result = redshift_connector._get_connection(datasource=redshift_datasource)
-    assert result == redshift_mock
+    assert result == mock_build_connection()
 
 
-# @patch.object(RedshiftConnector, '_get_connection')
-# def test_redshiftconnector_get_connection_alive_function( redshift_connector,
-# ):
-#     redshift_connector.connect_timeout = 3
-#     result = redshift_connector.alive_function(Mock())
-#     assert result is True
+@patch('toucan_connectors.redshift.redshift_database_connector.Thread')
+def test_redshiftconnector_start_timer_alive(mock_thread, redshift_connector):
+    redshift_connector._start_timer_alive()
+    assert mock_thread().start.called
+
+
+def test_redshiftconnector_set_alive_done(redshift_connector):
+    redshift_connector.connect_timeout = 2
+    redshift_connector._set_alive_done()
+    assert redshift_connector.is_alive is False
 
 
 @patch.object(RedshiftConnector, '_get_connection')
@@ -104,6 +135,14 @@ def test_redshiftconnector_retrieve_data(mock_cursor, redshift_connector, redshi
     mock_cursor().__enter__().fetch_dataframe.return_value = mock
     result = redshift_connector._retrieve_data(datasource=redshift_datasource)
     assert result == mock
+
+
+@patch.object(RedshiftConnector, '_retrieve_data')
+def test_redshiftconnector_get_slice(mock_retreive_data, redshift_datasource, redshift_connector):
+    result1 = redshift_connector.get_slice(data_source=redshift_datasource, offset=0, limit=3)
+    assert result1 == DataSlice(df=mock_retreive_data().__getitem__(), total_count=0)
+    result2 = redshift_connector.get_slice(data_source=redshift_datasource, offset=0, limit=None)
+    assert result2 == DataSlice(df=mock_retreive_data().__getitem__(), total_count=0)
 
 
 def test_redshiftconnector__get_details(redshift_connector):
@@ -171,6 +210,5 @@ def test_redshiftconnector_get_status_exception(
     redshift_connector.user = 'user_test'
     mock_build_connection.side_effect = Exception
     result = redshift_connector.get_status()
-    print(result)
     assert result.status is True
-    assert result.error is None
+    assert result.error == ''

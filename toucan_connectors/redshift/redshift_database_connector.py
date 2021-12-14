@@ -1,9 +1,9 @@
 import logging
+import time
 from contextlib import suppress
 from enum import Enum
-from time import sleep
-from timeit import default_timer as timer
-from typing import Dict, List, Optional
+from threading import Thread
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import redshift_connector
@@ -12,7 +12,12 @@ from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    DataSlice,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
 
@@ -21,7 +26,7 @@ logger = logging.getLogger(__name__)
 redshift_connection_manager = None
 if not redshift_connection_manager:
     redshift_connection_manager = ConnectionManager(
-        name='redshift', timeout=10, wait=0.2, time_between_clean=10, time_keep_alive=10
+        name='redshift', timeout=25, wait=0.2, time_between_clean=10, time_keep_alive=10
     )
 
 
@@ -75,22 +80,36 @@ class RedshiftConnector(ToucanConnector):
         title='Authentication Method',
         description='The authentication mechanism that will be used to connect to your snowflake data source',
     )
-    user: str = Field(..., description='Your login username.')
-    password: SecretStr = Field(None, description='Your login password')
-    host: str = Field(None, description='IP address or hostname.')
-    port: int = Field(..., description='The listening port of your Redshift Database')
-    connect_timeout: int = Field(
+    user: Optional[str] = Field(..., description='Your login username.')
+    password: Optional[SecretStr] = Field(None, description='Your login password')
+    host: Optional[str] = Field(None, description='IP address or hostname.')
+    port: Optional[int] = Field(..., description='The listening port of your Redshift Database')
+    connect_timeout: Optional[int] = Field(
         None,
         title='Connection timeout',
         description='You can set a connection timeout in seconds here, i.e. the maximum length of '
         'time you want to wait for the server to respond. None by default',
     )
+    iam: Optional[bool] = Field(
+        None, description='Set to True for using iam credentials connection.'
+    )
+    db_user: Optional[str] = Field(None, description='The user of the database')
+    cluster_identifier: Optional[str] = Field(None, description='The cluster of redshift.')
+    access_key_id: Optional[str] = Field(None, description='The access key id of your aws account.')
+    secret_access_key: Optional[SecretStr] = Field(
+        None, description='The secret access key of your aws account.'
+    )
+    session_token: Optional[str] = Field(None, description='Your session token')
+    region: Optional[str] = Field(
+        None, description='The region in which there is your aws account.'
+    )
+    is_alive: bool = True
 
     @staticmethod
     def get_redshift_connection_manager() -> ConnectionManager:
         return redshift_connection_manager
 
-    def get_connection_params(self, database) -> Dict:
+    def _get_connection_params(self, database) -> Dict:
         con_params = dict(
             database=database,
             user=self.user,
@@ -98,12 +117,19 @@ class RedshiftConnector(ToucanConnector):
             host=self.host,
             port=self.port,
             timeout=self.connect_timeout,
+            iam=self.iam,
+            db_user=self.db_user,
+            cluster_identifier=self.cluster_identifier,
+            access_key_id=self.access_key_id,
+            secret_access_key=self.secret_access_key,
+            session_token=self.session_token,
+            region=self.region,
         )
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _build_connection(self, datasource) -> redshift_connector.Connection:
         return redshift_connector.connect(
-            **self.get_connection_params(
+            **self._get_connection_params(
                 database=datasource.database if datasource is not None else None
             )
         )
@@ -116,13 +142,7 @@ class RedshiftConnector(ToucanConnector):
 
         def alive_function(connection) -> bool:
             logger.info(f'Alive Redshift connection: {connection}')
-            if self.connect_timeout is not None:
-                start = timer()
-                while self.connect_timeout - start > 0:
-                    sleep(1)
-                    return True
-            else:
-                return False
+            return self.is_alive
 
         def close_function(connection) -> None:
             logger.info('Close Redshift connection')
@@ -138,7 +158,18 @@ class RedshiftConnector(ToucanConnector):
         )
 
         connection.paramstyle = 'pyformat'
+        if self.connect_timeout is not None:
+            self._start_timer_alive()
         return connection.__enter__()
+
+    def _start_timer_alive(self):
+        timerThread = Thread(target=self._set_alive_done)
+        timerThread.daemon = True
+        timerThread.start()
+
+    def _set_alive_done(self):
+        time.sleep(self.connect_timeout)
+        self.is_alive = False
 
     def _get_cursor(self, datasource) -> redshift_connector.Cursor:
         return self._get_connection(datasource=datasource).cursor()
@@ -152,9 +183,31 @@ class RedshiftConnector(ToucanConnector):
     def _retrieve_data(self, datasource) -> pd.DataFrame:
         """Get data: tuple from table."""
         with self._get_cursor(datasource=datasource) as cursor:
-            cursor.execute(datasource.query, datasource.parameters or {})
+            cursor.execute(datasource.query)
             result: pd.DataFrame = cursor.fetch_dataframe()
         return result
+
+    def get_slice(
+        self,
+        data_source: RedshiftDataSource,
+        permissions: Optional[dict] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
+        get_row_count: Optional[bool] = False,
+    ) -> DataSlice:
+        """
+        Method to retrieve a part of the data as a pandas dataframe
+        and the total size filtered with permissions
+
+        - offset is the index of the starting row
+        - limit is the number of pages to retrieve
+        Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
+        """
+        df = self._retrieve_data(data_source)
+        if limit is not None:
+            return DataSlice(df[offset : offset + limit], len(df))
+        else:
+            return DataSlice(df[offset:], len(df))
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
@@ -187,5 +240,23 @@ class RedshiftConnector(ToucanConnector):
                 return ConnectorStatus(
                     status=True, details=self._get_details(2, True), error=str(ex)
                 )
-        except Exception:
-            return ConnectorStatus(status=True, details=self._get_details(2, False), error=None)
+        except Exception as e:
+            return ConnectorStatus(status=True, details=self._get_details(2, False), error=str(e))
+
+
+class Config:
+    underscore_attrs_are_private = True
+
+    @staticmethod
+    def schema_extra(schema: Dict[str, Any]) -> None:
+        ordered_keys = [
+            'type',
+            'name',
+            'host',
+            'port',
+            'authentication_method',
+            'user',
+            'password',
+            'timeout',
+        ]
+        schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
