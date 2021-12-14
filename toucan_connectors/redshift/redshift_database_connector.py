@@ -32,7 +32,7 @@ if not redshift_connection_manager:
 
 class AuthenticationMethod(str, Enum):
     DB_CREDENTIAL: str = 'db_cred'
-    IAM: str = 'iam'
+    IAM: str = 'iam_cred'
 
 
 class RedshiftDataSource(ToucanDataSource):
@@ -76,7 +76,7 @@ class RedshiftConnector(ToucanConnector):
     data_source_model: RedshiftDataSource
 
     authentication_method: AuthenticationMethod = Field(
-        AuthenticationMethod.DB_CREDENTIAL,
+        None,
         title='Authentication Method',
         description='The authentication mechanism that will be used to connect to your snowflake data source',
     )
@@ -111,28 +111,35 @@ class RedshiftConnector(ToucanConnector):
 
     def _get_connection_params(self, database) -> Dict:
         con_params = dict(
-            database=database,
-            user=self.user,
-            password=self.password.get_secret_value() if self.password else None,
-            host=self.host,
-            port=self.port,
+            db_cred=dict(
+                database=database,
+                user=self.user,
+                password=self.password.get_secret_value() if self.password else None,
+                host=self.host,
+                port=self.port,
+            ),
+            iam_cred=dict(
+                iam=self.iam,
+                db_user=self.db_user,
+                cluster_identifier=self.cluster_identifier,
+                access_key_id=self.access_key_id,
+                secret_access_key=self.secret_access_key,
+                session_token=self.session_token,
+                region=self.region,
+            ),
             timeout=self.connect_timeout,
-            iam=self.iam,
-            db_user=self.db_user,
-            cluster_identifier=self.cluster_identifier,
-            access_key_id=self.access_key_id,
-            secret_access_key=self.secret_access_key,
-            session_token=self.session_token,
-            region=self.region,
         )
-        return {k: v for k, v in con_params.items() if v is not None}
+        for key in ['db_cred', 'iam_cred']:
+            con_params[key] = {k: v for k, v in con_params[key].items() if v is not None}
+        return con_params[self.authentication_method]
 
     def _build_connection(self, datasource) -> redshift_connector.Connection:
-        return redshift_connector.connect(
+        connection = redshift_connector.connect(
             **self._get_connection_params(
-                database=datasource.database if datasource is not None else None
+                database=datasource.database if datasource is not None else None,
             )
         )
+        return connection
 
     def _get_connection(self, datasource) -> redshift_connector.Connection:
         """Establish a connection to an Amazon Redshift cluster."""

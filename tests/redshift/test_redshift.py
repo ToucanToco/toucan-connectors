@@ -75,6 +75,7 @@ def test_redshiftconnector_get_redshift_connection_manager(
 
 
 def test_redshiftconnector_get_connection_params(redshift_connector):
+    redshift_connector.authentication_method = 'db_cred'
     result = redshift_connector._get_connection_params(database='test')
     assert result == dict(
         host='localhost',
@@ -88,6 +89,7 @@ def test_redshiftconnector_get_connection_params(redshift_connector):
 def test_redshiftconnector_build_connection(
     mock_redshift_connector, redshift_connector, redshift_datasource
 ):
+    redshift_connector.authentication_method = 'db_cred'
     result = redshift_connector._build_connection(datasource=redshift_datasource)
     assert result == mock_redshift_connector.connect()
 
@@ -100,6 +102,17 @@ def test_redshiftconnector_get_connection(
     redshift_connector.connect_timeout = 1
     result = redshift_connector._get_connection(datasource=redshift_datasource)
     assert result == mock_build_connection()
+
+
+# @patch.object(RedshiftConnector, '_start_timer_alive')
+# @patch.object(RedshiftConnector, '_build_connection')
+# def test_redshiftconnector_get_connection_alive_close(
+#     mock_build_connection, mock_start_timer_alive, redshift_connector, redshift_datasource
+# ):
+#     redshift_connector.connect_timeout = None
+#     result = redshift_connector._get_connection(datasource=redshift_datasource)
+#     assert result == mock_build_connection()
+#     assert False
 
 
 @patch('toucan_connectors.redshift.redshift_database_connector.Thread')
