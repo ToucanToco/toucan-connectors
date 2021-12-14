@@ -1,11 +1,12 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pydantic import ValidationError
 from redshift_connector.error import InterfaceError, ProgrammingError
 
 from toucan_connectors import DataSlice
 from toucan_connectors.redshift.redshift_database_connector import (
-    Config,
+    AuthenticationMethod,
     RedshiftConnector,
     RedshiftDataSource,
 )
@@ -14,25 +15,43 @@ from toucan_connectors.redshift.redshift_database_connector import (
 @pytest.fixture
 def redshift_connector():
     return RedshiftConnector(
+        authentication_method=AuthenticationMethod.DB_CREDENTIALS,
         name='test',
         host='localhost',
-        user='user',
         port=0,
+        user='user',
+        password='sample',
+        connect_timeout=10,
     )
 
 
 @pytest.fixture
-def redshift_connector_iam():
+def redshift_connector_aws_creds():
     return RedshiftConnector(
-        user='',
+        authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
         name='test',
+        host='localhost',
         port=0,
-        iam=True,
         db_user='db_user_test',
         cluster_identifier='cluster_test',
         access_key_id='access_key',
+        secret_access_key='secret_access_key',
         session_token='token',
-        region='eu_est_1',
+        region='eu-west-1',
+    )
+
+
+@pytest.fixture
+def redshift_connector_aws_profile():
+    return RedshiftConnector(
+        authentication_method=AuthenticationMethod.AWS_PROFILE,
+        name='test',
+        host='localhost',
+        port=0,
+        db_user='db_user_test',
+        cluster_identifier='cluster_test',
+        region='eu-west-1',
+        profile='sample',
     )
 
 
@@ -49,14 +68,21 @@ def test_config_schema_extra():
             'type': 'type_test',
             'name': 'name_test',
             'host': 'host_test',
-            'port': 'port_test',
+            'port': 0,
+            'cluster_identifier': 'cluster_identifier_test',
+            'db_user': 'db_user_test',
+            'connect_timeout': 'connect_timeout_test',
             'authentication_method': 'authentication_method_test',
             'user': 'user_test',
             'password': 'password_test',
-            'timeout': 5,
+            'access_key_id': 'access_key_id_test',
+            'secret_access_key': 'secret_access_key_test',
+            'session_token': 'session_token_test',
+            'profile': 'profile_test',
+            'region': 'region_test',
         }
     }
-    result = Config().schema_extra(schema)
+    result = RedshiftConnector.Config().schema_extra(schema)
     assert result is None
 
 
@@ -64,7 +90,6 @@ def test_redshiftdatasource_init():
     ds = RedshiftDataSource(domain='test', name='redshift', database='test', table='table_test')
     assert ds.query == 'select * from table_test;'
     assert ds.table == 'table_test'
-
     with pytest.raises(ValueError):
         ds = RedshiftDataSource(domain='test', name='redshift', database='test')
         assert ds.query is None
@@ -89,35 +114,156 @@ def test_redshiftconnector_get_redshift_connection_manager(
     assert redshift_connector.get_redshift_connection_manager() == mock_connection_manager
 
 
-def test_redshiftconnector_get_connection_params_db_cred_mode(redshift_connector):
-    redshift_connector.authentication_method = 'db_cred'
-    result = redshift_connector._get_connection_params(database='test')
-    assert result == dict(
-        host='localhost',
-        database='test',
-        user='user',
-        port=0,
+def test_redshiftconnector_get_connection_params_db_cred_mode_missing_params():
+    with pytest.raises(ValueError) as exc_info_user:
+        RedshiftConnector(
+            authentication_method=AuthenticationMethod.DB_CREDENTIALS,
+            name='test',
+            host='localhost',
+            port=0,
+            password='pass',
+        )
+    assert f'User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}' in str(
+        exc_info_user.value
+    )
+    with pytest.raises(ValueError) as exc_info_pwd:
+        RedshiftConnector(
+            authentication_method=AuthenticationMethod.DB_CREDENTIALS,
+            name='test',
+            host='localhost',
+            port=0,
+            user='user',
+        )
+    assert f'User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}' in str(
+        exc_info_pwd.value
     )
 
 
-def test_redshiftconnector_get_connection_params_iam_mode(redshift_connector_iam):
-    redshift_connector_iam.authentication_method = 'iam_cred'
-    result = redshift_connector_iam._get_connection_params(database='test')
+def test_redshiftconnector_get_connection_params_db_cred_mode(redshift_connector):
+    result = redshift_connector._get_connection_params(database='test')
     assert result == dict(
+        host='localhost', database='test', port=0, user='user', password='sample', timeout=10
+    )
+
+
+def test_redshiftconnector_get_connection_params_aws_creds_mode_missing_params():
+    with pytest.raises(ValueError) as exc_info_session:
+        RedshiftConnector(
+            authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
+            name='test',
+            host='localhost',
+            port=0,
+            db_user='db_user_test',
+            cluster_identifier='cluster_test',
+            access_key_id='access_key',
+            secret_access_key='secret_access_key',
+            region='eu-west-1',
+        )
+    assert (
+        f'AccessKeyId, SecretAccessKey & SessionToken are required for {AuthenticationMethod.AWS_CREDENTIALS}'
+        in str(exc_info_session.value)
+    )
+    with pytest.raises(ValueError) as exc_info_secret:
+        RedshiftConnector(
+            authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
+            name='test',
+            host='localhost',
+            port=0,
+            db_user='db_user_test',
+            cluster_identifier='cluster_test',
+            access_key_id='access_key',
+            session_token='token',
+            region='eu-west-1',
+        )
+    assert (
+        f'AccessKeyId, SecretAccessKey & SessionToken are required for {AuthenticationMethod.AWS_CREDENTIALS}'
+        in str(exc_info_secret.value)
+    )
+    with pytest.raises(ValueError) as exc_info_key:
+        RedshiftConnector(
+            authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
+            name='test',
+            host='localhost',
+            port=0,
+            db_user='db_user_test',
+            cluster_identifier='cluster_test',
+            secret_access_key='secret_access_key',
+            session_token='token',
+            region='eu-west-1',
+        )
+    assert (
+        f'AccessKeyId, SecretAccessKey & SessionToken are required for {AuthenticationMethod.AWS_CREDENTIALS}'
+        in str(exc_info_key.value)
+    )
+
+
+def test_redshiftconnector_get_connection_params_aws_creds_mode(redshift_connector_aws_creds):
+    result = redshift_connector_aws_creds._get_connection_params(database='test')
+    assert result == dict(
+        host='localhost',
+        database='test',
+        port=0,
         iam=True,
         db_user='db_user_test',
         cluster_identifier='cluster_test',
         access_key_id='access_key',
+        secret_access_key='secret_access_key',
         session_token='token',
-        region='eu_est_1',
+        region='eu-west-1',
     )
+
+
+def test_redshiftconnector_get_connection_params_aws_profile_mode_missing_params():
+    with pytest.raises(ValueError):
+        RedshiftConnector(
+            authentication_method=AuthenticationMethod.AWS_PROFILE,
+            name='test',
+            host='localhost',
+            port=0,
+            db_user='db_user_test',
+            region='eu-west-1',
+        )
+    assert ValidationError(
+        model='RedshiftConnector',
+        errors=[
+            {
+                'loc': ('__root__',),
+                'msg': 'Profile are required for aws_profile',
+                'type': 'value_error',
+            }
+        ],
+    )
+
+
+def test_redshiftconnector_get_connection_params_aws_profile_mode(redshift_connector_aws_profile):
+    result = redshift_connector_aws_profile._get_connection_params(database='test')
+    assert result == dict(
+        host='localhost',
+        database='test',
+        port=0,
+        iam=True,
+        db_user='db_user_test',
+        cluster_identifier='cluster_test',
+        region='eu-west-1',
+        profile='sample',
+    )
+
+
+def test_redshiftconnector_get_connection_params_missing_authentication_mode():
+    with pytest.raises(ValueError) as exc_info:
+        RedshiftConnector(
+            name='test',
+            host='localhost',
+            port=0,
+        )
+    assert 'Unknown AuthenticationMethod' in str(exc_info.value)
 
 
 @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
 def test_redshiftconnector_build_connection(
     mock_redshift_connector, redshift_connector, redshift_datasource
 ):
-    redshift_connector.authentication_method = 'db_cred'
+    redshift_connector.authentication_method = AuthenticationMethod.DB_CREDENTIALS
     result = redshift_connector._build_connection(datasource=redshift_datasource)
     assert result == mock_redshift_connector.connect()
 
@@ -132,15 +278,9 @@ def test_redshiftconnector_get_connection(
     assert result == mock_build_connection()
 
 
-# @patch.object(RedshiftConnector, '_start_timer_alive')
-# @patch.object(RedshiftConnector, '_build_connection')
-# def test_redshiftconnector_get_connection_alive_close(
-#     mock_build_connection, mock_start_timer_alive, redshift_connector, redshift_datasource
-# ):
-#     redshift_connector.connect_timeout = None
-#     result = redshift_connector._get_connection(datasource=redshift_datasource)
-#     assert result == mock_build_connection()
-#     assert False
+def test_redshiftconnector_close(redshift_connector):
+    cm = redshift_connector.get_redshift_connection_manager()
+    cm.force_clean()
 
 
 @patch('toucan_connectors.redshift.redshift_database_connector.Thread')
@@ -152,7 +292,7 @@ def test_redshiftconnector_start_timer_alive(mock_thread, redshift_connector):
 def test_redshiftconnector_set_alive_done(redshift_connector):
     redshift_connector.connect_timeout = 2
     redshift_connector._set_alive_done()
-    assert redshift_connector.is_alive is False
+    assert redshift_connector._is_alive is False
 
 
 @patch.object(RedshiftConnector, '_get_connection')

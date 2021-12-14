@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import redshift_connector
-from pydantic import Field, SecretStr, create_model
+from pydantic import Field, SecretStr, create_model, root_validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
@@ -31,8 +31,9 @@ if not redshift_connection_manager:
 
 
 class AuthenticationMethod(str, Enum):
-    DB_CREDENTIAL: str = 'db_cred'
-    IAM: str = 'iam_cred'
+    DB_CREDENTIALS: str = 'db_credentials'
+    AWS_CREDENTIALS: str = 'aws_credentials'
+    AWS_PROFILE: str = 'aws_profile'
 
 
 class RedshiftDataSource(ToucanDataSource):
@@ -63,47 +64,100 @@ class RedshiftDataSource(ToucanDataSource):
     @classmethod
     def get_form(cls, connector: 'RedshiftConnector', current_config):
         constraints = {}
-
         with suppress(Exception):
             if 'database' in current_config:
                 available_tables = connector._retrieve_tables(current_config['database'])
                 constraints['table'] = strlist_to_enum('table', available_tables, None)
-
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
 class RedshiftConnector(ToucanConnector):
     data_source_model: RedshiftDataSource
-
     authentication_method: AuthenticationMethod = Field(
         None,
         title='Authentication Method',
         description='The authentication mechanism that will be used to connect to your snowflake data source',
     )
-    user: Optional[str] = Field(..., description='Your login username.')
-    password: Optional[SecretStr] = Field(None, description='Your login password')
-    host: Optional[str] = Field(None, description='IP address or hostname.')
-    port: Optional[int] = Field(..., description='The listening port of your Redshift Database')
+    host: str = Field(None, description='IP address or hostname.')
+    port: int = Field(..., description='The listening port of your Redshift Database')
     connect_timeout: Optional[int] = Field(
         None,
         title='Connection timeout',
         description='You can set a connection timeout in seconds here, i.e. the maximum length of '
         'time you want to wait for the server to respond. None by default',
     )
-    iam: Optional[bool] = Field(
-        None, description='Set to True for using iam credentials connection.'
-    )
-    db_user: Optional[str] = Field(None, description='The user of the database')
     cluster_identifier: Optional[str] = Field(None, description='The cluster of redshift.')
+    db_user: Optional[str] = Field(None, description='The user of the database')
+
+    user: Optional[str] = Field(None, description='Your login username.')
+    password: Optional[SecretStr] = Field(None, description='Your login password')
+
     access_key_id: Optional[str] = Field(None, description='The access key id of your aws account.')
     secret_access_key: Optional[SecretStr] = Field(
         None, description='The secret access key of your aws account.'
     )
     session_token: Optional[str] = Field(None, description='Your session token')
+    profile: Optional[str] = Field(None, description='AWS profile')
     region: Optional[str] = Field(
         None, description='The region in which there is your aws account.'
     )
-    is_alive: bool = True
+    _is_alive: bool = True
+
+    class Config:
+        underscore_attrs_are_private = True
+
+        @staticmethod
+        def schema_extra(schema: Dict[str, Any]) -> None:
+            ordered_keys = [
+                'type',
+                'name',
+                'host',
+                'port',
+                'cluster_identifier',
+                'db_user',
+                'connect_timeout',
+                'authentication_method',
+                'user',
+                'password',
+                'access_key_id',
+                'secret_access_key',
+                'session_token',
+                'profile',
+                'region',
+            ]
+            schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
+
+    @root_validator
+    def check_requirements(cls, values):
+        mode = values.get('authentication_method')
+        if mode == AuthenticationMethod.DB_CREDENTIALS:
+            user, password = values.get('user'), values.get('password')
+            if user is None or password is None or password.get_secret_value() is None:
+                raise ValueError(
+                    f'User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}'
+                )
+        elif mode == AuthenticationMethod.AWS_CREDENTIALS:
+            access_key_id, secret_access_key, session_token = (
+                values.get('access_key_id'),
+                values.get('secret_access_key'),
+                values.get('session_token'),
+            )
+            if (
+                access_key_id is None
+                or secret_access_key is None
+                or secret_access_key.get_secret_value() is None
+                or session_token is None
+            ):
+                raise ValueError(
+                    f'AccessKeyId, SecretAccessKey & SessionToken are required for {AuthenticationMethod.AWS_CREDENTIALS}'
+                )
+        elif mode == AuthenticationMethod.AWS_PROFILE:
+            profile = values.get('profile')
+            if profile is None:
+                raise ValueError(f'Profile are required for {AuthenticationMethod.AWS_PROFILE}')
+        else:
+            raise ValueError('Unknown AuthenticationMethod')
+        return values
 
     @staticmethod
     def get_redshift_connection_manager() -> ConnectionManager:
@@ -111,27 +165,29 @@ class RedshiftConnector(ToucanConnector):
 
     def _get_connection_params(self, database) -> Dict:
         con_params = dict(
-            db_cred=dict(
-                database=database,
-                user=self.user,
-                password=self.password.get_secret_value() if self.password else None,
-                host=self.host,
-                port=self.port,
-            ),
-            iam_cred=dict(
-                iam=self.iam,
-                db_user=self.db_user,
-                cluster_identifier=self.cluster_identifier,
-                access_key_id=self.access_key_id,
-                secret_access_key=self.secret_access_key,
-                session_token=self.session_token,
-                region=self.region,
-            ),
+            database=database,
+            host=self.host,
+            port=self.port,
             timeout=self.connect_timeout,
+            db_user=self.db_user,
+            cluster_identifier=self.cluster_identifier,
         )
-        for key in ['db_cred', 'iam_cred']:
-            con_params[key] = {k: v for k, v in con_params[key].items() if v is not None}
-        return con_params[self.authentication_method]
+        if self.authentication_method == AuthenticationMethod.DB_CREDENTIALS:
+            con_params['user'] = self.user
+            con_params['password'] = self.password.get_secret_value() if self.password else None
+        elif self.authentication_method == AuthenticationMethod.AWS_CREDENTIALS:
+            con_params['iam'] = True
+            con_params['access_key_id'] = self.access_key_id
+            con_params['secret_access_key'] = (
+                self.secret_access_key.get_secret_value() if self.secret_access_key else None
+            )
+            con_params['session_token'] = self.session_token
+            con_params['region'] = self.region
+        elif self.authentication_method == AuthenticationMethod.AWS_PROFILE:
+            con_params['iam'] = True
+            con_params['profile'] = self.profile
+            con_params['region'] = self.region
+        return {k: v for k, v in con_params.items() if v is not None}
 
     def _build_connection(self, datasource) -> redshift_connector.Connection:
         connection = redshift_connector.connect(
@@ -149,7 +205,7 @@ class RedshiftConnector(ToucanConnector):
 
         def alive_function(connection) -> bool:
             logger.info(f'Alive Redshift connection: {connection}')
-            return self.is_alive
+            return self._is_alive
 
         def close_function(connection) -> None:
             logger.info('Close Redshift connection')
@@ -163,7 +219,6 @@ class RedshiftConnector(ToucanConnector):
             close_method=close_function,
             save=True if datasource.database else False,
         )
-
         connection.paramstyle = 'pyformat'
         if self.connect_timeout is not None:
             self._start_timer_alive()
@@ -176,7 +231,7 @@ class RedshiftConnector(ToucanConnector):
 
     def _set_alive_done(self):
         time.sleep(self.connect_timeout)
-        self.is_alive = False
+        self._is_alive = False
 
     def _get_cursor(self, datasource) -> redshift_connector.Cursor:
         return self._get_connection(datasource=datasource).cursor()
@@ -205,7 +260,6 @@ class RedshiftConnector(ToucanConnector):
         """
         Method to retrieve a part of the data as a pandas dataframe
         and the total size filtered with permissions
-
         - offset is the index of the starting row
         - limit is the number of pages to retrieve
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
@@ -230,13 +284,11 @@ class RedshiftConnector(ToucanConnector):
             self.check_hostname(self.host)
         except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(0, False), error=str(e))
-
         # Check port
         try:
             self.check_port(self.host, self.port)
         except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
-
         # Check connection
         try:
             with self._build_connection(None):
@@ -249,21 +301,3 @@ class RedshiftConnector(ToucanConnector):
                 )
         except Exception as e:
             return ConnectorStatus(status=True, details=self._get_details(2, False), error=str(e))
-
-
-class Config:
-    underscore_attrs_are_private = True
-
-    @staticmethod
-    def schema_extra(schema: Dict[str, Any]) -> None:
-        ordered_keys = [
-            'type',
-            'name',
-            'host',
-            'port',
-            'authentication_method',
-            'user',
-            'password',
-            'timeout',
-        ]
-        schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
