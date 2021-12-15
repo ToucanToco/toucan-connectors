@@ -9,6 +9,7 @@ from toucan_connectors.redshift.redshift_database_connector import (
     AuthenticationMethodError,
     RedshiftConnector,
     RedshiftDataSource,
+    ORDERED_KEYS,
 )
 
 CLUSTER_IDENTIFIER = 'toucan_test'
@@ -72,25 +73,28 @@ def redshift_datasource():
 def test_config_schema_extra():
     schema = {
         'properties': {
-            'type': 'type_test',
-            'name': 'name_test',
             'host': 'host_test',
-            'port': 0,
-            'cluster_identifier': 'cluster_identifier_test',
-            'db_user': 'db_user_test',
-            'connect_timeout': 'connect_timeout_test',
             'authentication_method': 'authentication_method_test',
             'user': 'user_test',
             'password': 'password_test',
-            'access_key_id': 'access_key_id_test',
+            'port': 0,
+            'db_user': 'db_user_test',
+            'connect_timeout': 'connect_timeout_test',
+            'cluster_identifier': 'cluster_identifier_test',
             'secret_access_key': 'secret_access_key_test',
             'session_token': 'session_token_test',
             'profile': 'profile_test',
+            'access_key_id': 'access_key_id_test',
             'region': 'region_test',
+            'type': 'type_test',
+            'name': 'name_test',
         }
     }
-    result = RedshiftConnector.Config().schema_extra(schema)
-    assert result is None
+    RedshiftConnector.Config().schema_extra(schema)
+    assert schema['properties'] is not None
+    keys = list(schema['properties'].keys())
+    for i in range(len(keys)):
+        assert keys[i] == ORDERED_KEYS[i]
 
 
 def test_redshiftdatasource_init():
@@ -169,19 +173,6 @@ def test_redshiftconnector_get_connection_params_db_cred_mode(redshift_connector
 
 
 def test_redshiftconnector_get_connection_params_aws_creds_mode_missing_params():
-    with pytest.raises(ValueError) as exc_info_session:
-        RedshiftConnector(
-            authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
-            name='test',
-            cluster_identifier='sample',
-            host='localhost',
-            port=0,
-            db_user='db_user_test',
-            access_key_id='access_key',
-            secret_access_key='secret_access_key',
-            region='eu-west-1',
-        )
-    assert str(AuthenticationMethodError.AWS_CREDENTIALS) in str(exc_info_session.value)
     with pytest.raises(ValueError) as exc_info_secret:
         RedshiftConnector(
             authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
@@ -447,7 +438,6 @@ def test_redshiftconnector_get_status_programming_error_unknown(
         "'S': 'FATAL', 'C': '3D000', 'M': 'Other issue'"
     )
     result = redshift_connector.get_status()
-    print(result)
     assert result.status is False
     assert result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'Other issue'"
 

@@ -21,6 +21,24 @@ from toucan_connectors.toucan_connector import (
 
 TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
 
+ORDERED_KEYS = [
+    'type',
+    'name',
+    'host',
+    'port',
+    'cluster_identifier',
+    'db_user',
+    'connect_timeout',
+    'authentication_method',
+    'user',
+    'password',
+    'access_key_id',
+    'secret_access_key',
+    'session_token',
+    'profile',
+    'region',
+]
+
 logger = logging.getLogger(__name__)
 
 redshift_connection_manager = None
@@ -83,7 +101,7 @@ class RedshiftConnector(ToucanConnector):
     authentication_method: AuthenticationMethod = Field(
         None,
         title='Authentication Method',
-        description='The authentication mechanism that will be used to connect to your snowflake data source',
+        description='The authentication mechanism that will be used to connect to your redshift data source',
     )
     host: str = Field(..., description='IP address or hostname.')
     port: int = Field(..., description='The listening port of your Redshift Database')
@@ -115,24 +133,7 @@ class RedshiftConnector(ToucanConnector):
 
         @staticmethod
         def schema_extra(schema: Dict[str, Any]) -> None:
-            ordered_keys = [
-                'type',
-                'name',
-                'host',
-                'port',
-                'cluster_identifier',
-                'db_user',
-                'connect_timeout',
-                'authentication_method',
-                'user',
-                'password',
-                'access_key_id',
-                'secret_access_key',
-                'session_token',
-                'profile',
-                'region',
-            ]
-            schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
+            schema['properties'] = {k: schema['properties'][k] for k in ORDERED_KEYS}
 
     @root_validator
     def check_requirements(cls, values):
@@ -142,17 +143,15 @@ class RedshiftConnector(ToucanConnector):
             if user is None or password is None or password.get_secret_value() is None:
                 raise ValueError(AuthenticationMethodError.DB_CREDENTIALS)
         elif mode == AuthenticationMethod.AWS_CREDENTIALS:
-            access_key_id, secret_access_key, session_token, db_user = (
+            access_key_id, secret_access_key, db_user = (
                 values.get('access_key_id'),
                 values.get('secret_access_key'),
-                values.get('session_token'),
                 values.get('db_user'),
             )
             if (
                 access_key_id is None
                 or secret_access_key is None
                 or secret_access_key.get_secret_value() is None
-                or session_token is None
                 or db_user is None
             ):
                 raise ValueError(AuthenticationMethodError.AWS_CREDENTIALS)
@@ -251,7 +250,7 @@ class RedshiftConnector(ToucanConnector):
     def _retrieve_data(self, datasource) -> pd.DataFrame:
         """Get data: tuple from table."""
         with self._get_cursor(datasource=datasource) as cursor:
-            cursor.execute(datasource.query)
+            cursor.execute(datasource.query, datasource.parameters or {})
             result: pd.DataFrame = cursor.fetch_dataframe()
         return result
 
