@@ -5,11 +5,11 @@ from redshift_connector.error import InterfaceError, ProgrammingError
 
 from toucan_connectors import DataSlice
 from toucan_connectors.redshift.redshift_database_connector import (
+    ORDERED_KEYS,
     AuthenticationMethod,
     AuthenticationMethodError,
     RedshiftConnector,
     RedshiftDataSource,
-    ORDERED_KEYS,
 )
 
 CLUSTER_IDENTIFIER: str = 'toucan_test'
@@ -390,7 +390,9 @@ def test_redshiftconnector_get_status_programming_error_creds(
     )
     result = redshift_connector.get_status()
     assert result.status is True
-    assert result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'database \"user_test\" does not exist'"
+    assert (
+        result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'database \"user_test\" does not exist'"
+    )
 
 
 @patch.object(RedshiftConnector, '_build_connection')
