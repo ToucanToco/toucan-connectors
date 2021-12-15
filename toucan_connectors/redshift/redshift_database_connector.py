@@ -36,6 +36,13 @@ class AuthenticationMethod(str, Enum):
     AWS_PROFILE: str = 'aws_profile'
 
 
+class AuthenticationMethodError(str, Enum):
+    DB_CREDENTIALS: str = f'User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}'
+    AWS_CREDENTIALS: str = f'AccessKeyId, SecretAccessKey, SessionToken & db_user are required for {AuthenticationMethod.AWS_CREDENTIALS}'
+    AWS_PROFILE: str = f'Profile & db_user are required for {AuthenticationMethod.AWS_PROFILE}'
+    UNKNOWN: str = 'Unknown AuthenticationMethod'
+
+
 class RedshiftDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
     query: constr(min_length=1) = Field(
@@ -133,30 +140,28 @@ class RedshiftConnector(ToucanConnector):
         if mode == AuthenticationMethod.DB_CREDENTIALS:
             user, password = values.get('user'), values.get('password')
             if user is None or password is None or password.get_secret_value() is None:
-                raise ValueError(
-                    f'User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}'
-                )
+                raise ValueError(AuthenticationMethodError.DB_CREDENTIALS)
         elif mode == AuthenticationMethod.AWS_CREDENTIALS:
-            access_key_id, secret_access_key, session_token = (
+            access_key_id, secret_access_key, session_token, db_user = (
                 values.get('access_key_id'),
                 values.get('secret_access_key'),
                 values.get('session_token'),
+                values.get('db_user'),
             )
             if (
                 access_key_id is None
                 or secret_access_key is None
                 or secret_access_key.get_secret_value() is None
                 or session_token is None
+                or db_user is None
             ):
-                raise ValueError(
-                    f'AccessKeyId, SecretAccessKey & SessionToken are required for {AuthenticationMethod.AWS_CREDENTIALS}'
-                )
+                raise ValueError(AuthenticationMethodError.AWS_CREDENTIALS)
         elif mode == AuthenticationMethod.AWS_PROFILE:
-            profile = values.get('profile')
-            if profile is None:
-                raise ValueError(f'Profile is required for {AuthenticationMethod.AWS_PROFILE}')
+            profile, db_user = (values.get('profile'), values.get('db_user'))
+            if profile is None or db_user is None:
+                raise ValueError(AuthenticationMethodError.AWS_PROFILE)
         else:
-            raise ValueError('Unknown AuthenticationMethod')
+            raise ValueError(AuthenticationMethodError.UNKNOWN)
         return values
 
     @staticmethod
@@ -169,7 +174,6 @@ class RedshiftConnector(ToucanConnector):
             host=self.host,
             port=self.port,
             timeout=self.connect_timeout,
-            db_user=self.db_user,
             cluster_identifier=self.cluster_identifier,
         )
         if self.authentication_method == AuthenticationMethod.DB_CREDENTIALS:
@@ -177,6 +181,7 @@ class RedshiftConnector(ToucanConnector):
             con_params['password'] = self.password.get_secret_value() if self.password else None
         elif self.authentication_method == AuthenticationMethod.AWS_CREDENTIALS:
             con_params['iam'] = True
+            con_params['db_user'] = self.db_user
             con_params['access_key_id'] = self.access_key_id
             con_params['secret_access_key'] = (
                 self.secret_access_key.get_secret_value() if self.secret_access_key else None
@@ -185,6 +190,7 @@ class RedshiftConnector(ToucanConnector):
             con_params['region'] = self.region
         elif self.authentication_method == AuthenticationMethod.AWS_PROFILE:
             con_params['iam'] = True
+            con_params['db_user'] = self.db_user
             con_params['profile'] = self.profile
             con_params['region'] = self.region
         return {k: v for k, v in con_params.items() if v is not None}
@@ -213,7 +219,7 @@ class RedshiftConnector(ToucanConnector):
                 connection.close()
 
         connection: RedshiftConnector = redshift_connection_manager.get(
-            identifier=datasource.database,
+            identifier=f'{self.cluster_identifier}_{datasource.database}',
             connect_method=connect_function,
             alive_method=alive_function,
             close_method=close_function,
@@ -298,6 +304,18 @@ class RedshiftConnector(ToucanConnector):
             if f"'S': 'FATAL', 'C': '3D000', 'M': 'database {self.user} does not exist'" in str(ex):
                 return ConnectorStatus(
                     status=True, details=self._get_details(2, True), error=str(ex)
+                )
+            # Same check for IAM mode
+            elif (
+                f"'S': 'FATAL', 'C': '3D000', 'M': 'database IAM:{self.db_user} does not exist'"
+                in str(ex)
+            ):
+                return ConnectorStatus(
+                    status=True, details=self._get_details(2, True), error=str(ex)
+                )
+            else:
+                return ConnectorStatus(
+                    status=True, details=self._get_details(2, False), error=str(ex)
                 )
         except Exception as e:
             return ConnectorStatus(status=True, details=self._get_details(2, False), error=str(e))
