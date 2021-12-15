@@ -85,20 +85,20 @@ class RedshiftConnector(ToucanConnector):
         title='Authentication Method',
         description='The authentication mechanism that will be used to connect to your snowflake data source',
     )
-    host: str = Field(None, description='IP address or hostname.')
+    host: str = Field(..., description='IP address or hostname.')
     port: int = Field(..., description='The listening port of your Redshift Database')
+    cluster_identifier: str = Field(..., description='The cluster of redshift.')
     connect_timeout: Optional[int] = Field(
         None,
         title='Connection timeout',
         description='You can set a connection timeout in seconds here, i.e. the maximum length of '
         'time you want to wait for the server to respond. None by default',
     )
-    cluster_identifier: Optional[str] = Field(None, description='The cluster of redshift.')
-    db_user: Optional[str] = Field(None, description='The user of the database')
 
     user: Optional[str] = Field(None, description='Your login username.')
     password: Optional[SecretStr] = Field(None, description='Your login password')
 
+    db_user: Optional[str] = Field(None, description='The user of the database')
     access_key_id: Optional[str] = Field(None, description='The access key id of your aws account.')
     secret_access_key: Optional[SecretStr] = Field(
         None, description='The secret access key of your aws account.'
@@ -307,7 +307,7 @@ class RedshiftConnector(ToucanConnector):
                 )
             # Same check for IAM mode
             elif (
-                f"'S': 'FATAL', 'C': '3D000', 'M': 'database IAM:{self.db_user} does not exist'"
+                f"'S': 'FATAL', 'C': '3D000', 'M': 'database \"IAM:{self.db_user}\" does not exist'"
                 in str(ex)
             ):
                 return ConnectorStatus(
@@ -315,7 +315,7 @@ class RedshiftConnector(ToucanConnector):
                 )
             else:
                 return ConnectorStatus(
-                    status=True, details=self._get_details(2, False), error=str(ex)
+                    status=False, details=self._get_details(2, False), error=str(ex)
                 )
-        except Exception as e:
-            return ConnectorStatus(status=True, details=self._get_details(2, False), error=str(e))
+        except Exception as ex:
+            return ConnectorStatus(status=False, details=self._get_details(2, False), error=str(ex))

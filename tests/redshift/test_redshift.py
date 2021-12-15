@@ -23,9 +23,9 @@ def redshift_connector():
         host='localhost',
         port=0,
         cluster_identifier=str(CLUSTER_IDENTIFIER),
+        connect_timeout=10,
         user='user',
         password='sample',
-        connect_timeout=10,
     )
 
 
@@ -54,8 +54,8 @@ def redshift_connector_aws_profile():
         port=0,
         db_user='db_user_test',
         cluster_identifier=str(CLUSTER_IDENTIFIER),
-        region='eu-west-1',
         profile='sample',
+        region='eu-west-1',
     )
 
 
@@ -173,10 +173,10 @@ def test_redshiftconnector_get_connection_params_aws_creds_mode_missing_params()
         RedshiftConnector(
             authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
             name='test',
+            cluster_identifier='sample',
             host='localhost',
             port=0,
             db_user='db_user_test',
-            cluster_identifier='sample',
             access_key_id='access_key',
             secret_access_key='secret_access_key',
             region='eu-west-1',
@@ -186,10 +186,10 @@ def test_redshiftconnector_get_connection_params_aws_creds_mode_missing_params()
         RedshiftConnector(
             authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
             name='test',
+            cluster_identifier='sample',
             host='localhost',
             port=0,
             db_user='db_user_test',
-            cluster_identifier='sample',
             access_key_id='access_key',
             session_token='token',
             region='eu-west-1',
@@ -228,10 +228,10 @@ def test_redshiftconnector_get_connection_params_aws_creds_mode(redshift_connect
     assert result == dict(
         host='localhost',
         database='test',
+        cluster_identifier='toucan_test',
         port=0,
         iam=True,
         db_user='db_user_test',
-        cluster_identifier='toucan_test',
         access_key_id='access_key',
         secret_access_key='secret_access_key',
         session_token='token',
@@ -264,16 +264,28 @@ def test_redshiftconnector_get_connection_params_aws_profile_mode_missing_params
         )
     assert str(AuthenticationMethodError.AWS_CREDENTIALS) in str(exc_info_db_user.value)
 
+    with pytest.raises(ValueError) as exc_info_db_user:
+        RedshiftConnector(
+            authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
+            name='test',
+            cluster_identifier='sample',
+            host='localhost',
+            port=0,
+            profile='profile',
+            region='eu-west-1',
+        )
+    assert str(AuthenticationMethodError.AWS_CREDENTIALS) in str(exc_info_db_user.value)
+
 
 def test_redshiftconnector_get_connection_params_aws_profile_mode(redshift_connector_aws_profile):
     result = redshift_connector_aws_profile._get_connection_params(database='test')
     assert result == dict(
         host='localhost',
         database='test',
+        cluster_identifier='toucan_test',
         port=0,
         iam=True,
         db_user='db_user_test',
-        cluster_identifier='toucan_test',
         region='eu-west-1',
         profile='sample',
     )
@@ -388,7 +400,7 @@ def test_redshiftconnector_get_status_with_error_port(mock_hostname, redshift_co
 @patch.object(RedshiftConnector, '_build_connection')
 @patch.object(RedshiftConnector, 'check_hostname')
 @patch.object(RedshiftConnector, 'check_port')
-def test_redshiftconnector_get_status_programming_error(
+def test_redshiftconnector_get_status_programming_error_creds(
     mock_check_hostname, mock_check_port, mock_build_connection, redshift_connector
 ):
     mock_check_hostname.return_value = 'hostname_test'
@@ -405,6 +417,44 @@ def test_redshiftconnector_get_status_programming_error(
 @patch.object(RedshiftConnector, '_build_connection')
 @patch.object(RedshiftConnector, 'check_hostname')
 @patch.object(RedshiftConnector, 'check_port')
+def test_redshiftconnector_get_status_programming_error_with_profile(
+    mock_check_hostname, mock_check_port, mock_build_connection, redshift_connector_aws_profile
+):
+    mock_check_hostname.return_value = 'hostname_test'
+    mock_check_port.return_value = 'port_test'
+    redshift_connector_aws_profile.db_user = 'user_test'
+    mock_build_connection.side_effect = ProgrammingError(
+        "'S': 'FATAL', 'C': '3D000', 'M': 'database \"IAM:user_test\" does not exist'"
+    )
+    result = redshift_connector_aws_profile.get_status()
+    assert result.status is True
+    assert (
+        result.error
+        == "'S': 'FATAL', 'C': '3D000', 'M': 'database \"IAM:user_test\" does not exist'"
+    )
+
+
+@patch.object(RedshiftConnector, '_build_connection')
+@patch.object(RedshiftConnector, 'check_hostname')
+@patch.object(RedshiftConnector, 'check_port')
+def test_redshiftconnector_get_status_programming_error_unknown(
+    mock_check_hostname, mock_check_port, mock_build_connection, redshift_connector
+):
+    mock_check_hostname.return_value = 'hostname_test'
+    mock_check_port.return_value = 'port_test'
+    redshift_connector.user = 'user_test'
+    mock_build_connection.side_effect = ProgrammingError(
+        "'S': 'FATAL', 'C': '3D000', 'M': 'Other issue'"
+    )
+    result = redshift_connector.get_status()
+    print(result)
+    assert result.status is False
+    assert result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'Other issue'"
+
+
+@patch.object(RedshiftConnector, '_build_connection')
+@patch.object(RedshiftConnector, 'check_hostname')
+@patch.object(RedshiftConnector, 'check_port')
 def test_redshiftconnector_get_status_exception(
     mock_check_hostname, mock_check_port, mock_build_connection, redshift_connector
 ):
@@ -413,5 +463,5 @@ def test_redshiftconnector_get_status_exception(
     redshift_connector.user = 'user_test'
     mock_build_connection.side_effect = Exception
     result = redshift_connector.get_status()
-    assert result.status is True
+    assert result.status is False
     assert result.error == ''
