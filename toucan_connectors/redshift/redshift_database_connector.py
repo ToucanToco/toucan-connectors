@@ -56,7 +56,7 @@ class AuthenticationMethod(str, Enum):
 
 class AuthenticationMethodError(str, Enum):
     DB_CREDENTIALS: str = f'User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}'
-    AWS_CREDENTIALS: str = f'AccessKeyId, SecretAccessKey, SessionToken & db_user are required for {AuthenticationMethod.AWS_CREDENTIALS}'
+    AWS_CREDENTIALS: str = f'AccessKeyId, SecretAccessKey & db_user are required for {AuthenticationMethod.AWS_CREDENTIALS}'
     AWS_PROFILE: str = f'Profile & db_user are required for {AuthenticationMethod.AWS_PROFILE}'
     UNKNOWN: str = 'Unknown AuthenticationMethod'
 
@@ -102,6 +102,7 @@ class RedshiftConnector(ToucanConnector):
         None,
         title='Authentication Method',
         description='The authentication mechanism that will be used to connect to your redshift data source',
+        **{'ui': {'checkbox': False}},
     )
     host: str = Field(..., description='IP address or hostname.')
     port: int = Field(..., description='The listening port of your Redshift Database')
@@ -138,11 +139,11 @@ class RedshiftConnector(ToucanConnector):
     @root_validator
     def check_requirements(cls, values):
         mode = values.get('authentication_method')
-        if mode == AuthenticationMethod.DB_CREDENTIALS:
+        if mode == AuthenticationMethod.DB_CREDENTIALS.value:
             user, password = values.get('user'), values.get('password')
             if user is None or password is None or password.get_secret_value() is None:
-                raise ValueError(str(AuthenticationMethodError.DB_CREDENTIALS))
-        elif mode == AuthenticationMethod.AWS_CREDENTIALS:
+                raise ValueError(AuthenticationMethodError.DB_CREDENTIALS.value)
+        elif mode == AuthenticationMethod.AWS_CREDENTIALS.value:
             access_key_id, secret_access_key, db_user = (
                 values.get('access_key_id'),
                 values.get('secret_access_key'),
@@ -154,13 +155,13 @@ class RedshiftConnector(ToucanConnector):
                 or secret_access_key.get_secret_value() is None
                 or db_user is None
             ):
-                raise ValueError(str(AuthenticationMethodError.AWS_CREDENTIALS))
-        elif mode == AuthenticationMethod.AWS_PROFILE:
+                raise ValueError(AuthenticationMethodError.AWS_CREDENTIALS.value)
+        elif mode == AuthenticationMethod.AWS_PROFILE.value:
             profile, db_user = (values.get('profile'), values.get('db_user'))
             if profile is None or db_user is None:
-                raise ValueError(str(AuthenticationMethodError.AWS_PROFILE))
+                raise ValueError(AuthenticationMethodError.AWS_PROFILE.value)
         else:
-            raise ValueError(str(AuthenticationMethodError.UNKNOWN))
+            raise ValueError(AuthenticationMethodError.UNKNOWN.value)
         return values
 
     @staticmethod
@@ -175,10 +176,10 @@ class RedshiftConnector(ToucanConnector):
             timeout=self.connect_timeout,
             cluster_identifier=self.cluster_identifier,
         )
-        if self.authentication_method == AuthenticationMethod.DB_CREDENTIALS:
+        if self.authentication_method == AuthenticationMethod.DB_CREDENTIALS.value:
             con_params['user'] = self.user
             con_params['password'] = self.password.get_secret_value() if self.password else None
-        elif self.authentication_method == AuthenticationMethod.AWS_CREDENTIALS:
+        elif self.authentication_method == AuthenticationMethod.AWS_CREDENTIALS.value:
             con_params['iam'] = True
             con_params['db_user'] = self.db_user
             con_params['access_key_id'] = self.access_key_id
@@ -187,7 +188,7 @@ class RedshiftConnector(ToucanConnector):
             )
             con_params['session_token'] = self.session_token
             con_params['region'] = self.region
-        elif self.authentication_method == AuthenticationMethod.AWS_PROFILE:
+        elif self.authentication_method == AuthenticationMethod.AWS_PROFILE.value:
             con_params['iam'] = True
             con_params['db_user'] = self.db_user
             con_params['profile'] = self.profile

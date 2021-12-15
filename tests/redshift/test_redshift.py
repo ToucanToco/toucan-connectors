@@ -12,18 +12,18 @@ from toucan_connectors.redshift.redshift_database_connector import (
     ORDERED_KEYS,
 )
 
-CLUSTER_IDENTIFIER = 'toucan_test'
-DATABASE_NAME = 'toucan'
+CLUSTER_IDENTIFIER: str = 'toucan_test'
+DATABASE_NAME: str = 'toucan'
 
 
 @pytest.fixture
 def redshift_connector():
     return RedshiftConnector(
-        authentication_method=AuthenticationMethod.DB_CREDENTIALS,
+        authentication_method=AuthenticationMethod.DB_CREDENTIALS.value,
         name='test',
         host='localhost',
         port=0,
-        cluster_identifier=str(CLUSTER_IDENTIFIER),
+        cluster_identifier=CLUSTER_IDENTIFIER,
         connect_timeout=10,
         user='user',
         password='sample',
@@ -33,12 +33,12 @@ def redshift_connector():
 @pytest.fixture
 def redshift_connector_aws_creds():
     return RedshiftConnector(
-        authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
+        authentication_method=AuthenticationMethod.AWS_CREDENTIALS.value,
         name='test',
         host='localhost',
         port=0,
         db_user='db_user_test',
-        cluster_identifier=str(CLUSTER_IDENTIFIER),
+        cluster_identifier=CLUSTER_IDENTIFIER,
         access_key_id='access_key',
         secret_access_key='secret_access_key',
         session_token='token',
@@ -49,12 +49,12 @@ def redshift_connector_aws_creds():
 @pytest.fixture
 def redshift_connector_aws_profile():
     return RedshiftConnector(
-        authentication_method=AuthenticationMethod.AWS_PROFILE,
+        authentication_method=AuthenticationMethod.AWS_PROFILE.value,
         name='test',
         host='localhost',
         port=0,
         db_user='db_user_test',
-        cluster_identifier=str(CLUSTER_IDENTIFIER),
+        cluster_identifier=CLUSTER_IDENTIFIER,
         profile='sample',
         region='eu-west-1',
     )
@@ -65,7 +65,7 @@ def redshift_datasource():
     return RedshiftDataSource(
         domain='test',
         name='redshift',
-        database=str(DATABASE_NAME),
+        database=DATABASE_NAME,
         query='SELECT * FROM public.sales;',
     )
 
@@ -133,30 +133,30 @@ def test_redshiftconnector_get_connection_params_missing_authentication_mode():
             cluster_identifier='sample',
             port=0,
         )
-    assert str(AuthenticationMethodError.UNKNOWN) in str(exc_info_user.value)
+    assert AuthenticationMethodError.UNKNOWN.value in str(exc_info_user.value)
 
 
 def test_redshiftconnector_get_connection_params_db_cred_mode_missing_params():
     with pytest.raises(ValueError) as exc_info_user:
         RedshiftConnector(
-            authentication_method=AuthenticationMethod.DB_CREDENTIALS,
+            authentication_method=AuthenticationMethod.DB_CREDENTIALS.value,
             name='test',
             cluster_identifier='sample',
             host='localhost',
             port=0,
             password='pass',
         )
-    assert str(AuthenticationMethodError.DB_CREDENTIALS) in str(exc_info_user.value)
+    assert AuthenticationMethodError.DB_CREDENTIALS.value in str(exc_info_user.value)
     with pytest.raises(ValueError) as exc_info_pwd:
         RedshiftConnector(
-            authentication_method=AuthenticationMethod.DB_CREDENTIALS,
+            authentication_method=AuthenticationMethod.DB_CREDENTIALS.value,
             name='test',
             cluster_identifier='sample',
             host='localhost',
             port=0,
             user='user',
         )
-    assert str(AuthenticationMethodError.DB_CREDENTIALS) in str(exc_info_pwd.value)
+    assert AuthenticationMethodError.DB_CREDENTIALS.value in str(exc_info_pwd.value)
 
 
 def test_redshiftconnector_get_connection_params_db_cred_mode(redshift_connector):
@@ -175,7 +175,7 @@ def test_redshiftconnector_get_connection_params_db_cred_mode(redshift_connector
 def test_redshiftconnector_get_connection_params_aws_creds_mode_missing_params():
     with pytest.raises(ValueError) as exc_info_secret:
         RedshiftConnector(
-            authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
+            authentication_method=AuthenticationMethod.AWS_CREDENTIALS.value,
             name='test',
             cluster_identifier='sample',
             host='localhost',
@@ -185,10 +185,10 @@ def test_redshiftconnector_get_connection_params_aws_creds_mode_missing_params()
             session_token='token',
             region='eu-west-1',
         )
-    assert str(AuthenticationMethodError.AWS_CREDENTIALS) in str(exc_info_secret.value)
+    assert AuthenticationMethodError.AWS_CREDENTIALS.value in str(exc_info_secret.value)
     with pytest.raises(ValueError) as exc_info_key:
         RedshiftConnector(
-            authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
+            authentication_method=AuthenticationMethod.AWS_CREDENTIALS.value,
             name='test',
             cluster_identifier='sample',
             host='localhost',
@@ -198,10 +198,10 @@ def test_redshiftconnector_get_connection_params_aws_creds_mode_missing_params()
             session_token='token',
             region='eu-west-1',
         )
-    assert str(AuthenticationMethodError.AWS_CREDENTIALS) in str(exc_info_key.value)
+    assert AuthenticationMethodError.AWS_CREDENTIALS in str(exc_info_key.value)
     with pytest.raises(ValueError) as exc_info_db_user:
         RedshiftConnector(
-            authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
+            authentication_method=AuthenticationMethod.AWS_CREDENTIALS.value,
             name='test',
             cluster_identifier='sample',
             host='localhost',
@@ -211,7 +211,7 @@ def test_redshiftconnector_get_connection_params_aws_creds_mode_missing_params()
             session_token='token',
             region='eu-west-1',
         )
-    assert str(AuthenticationMethodError.AWS_CREDENTIALS) in str(exc_info_db_user.value)
+    assert AuthenticationMethodError.AWS_CREDENTIALS.value in str(exc_info_db_user.value)
 
 
 def test_redshiftconnector_get_connection_params_aws_creds_mode(redshift_connector_aws_creds):
@@ -233,7 +233,7 @@ def test_redshiftconnector_get_connection_params_aws_creds_mode(redshift_connect
 def test_redshiftconnector_get_connection_params_aws_profile_mode_missing_params():
     with pytest.raises(ValueError) as exc_info_profile:
         RedshiftConnector(
-            authentication_method=AuthenticationMethod.AWS_PROFILE,
+            authentication_method=AuthenticationMethod.AWS_PROFILE.value,
             name='test',
             cluster_identifier='toucan_test',
             host='localhost',
@@ -241,11 +241,11 @@ def test_redshiftconnector_get_connection_params_aws_profile_mode_missing_params
             db_user='db_user_test',
             region='eu-west-1',
         )
-    assert str(AuthenticationMethodError.AWS_PROFILE) in str(exc_info_profile.value)
+    assert AuthenticationMethodError.AWS_PROFILE.value in str(exc_info_profile.value)
 
     with pytest.raises(ValueError) as exc_info_db_user:
         RedshiftConnector(
-            authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
+            authentication_method=AuthenticationMethod.AWS_PROFILE.value,
             name='test',
             cluster_identifier='sample',
             host='localhost',
@@ -253,19 +253,7 @@ def test_redshiftconnector_get_connection_params_aws_profile_mode_missing_params
             profile='profile',
             region='eu-west-1',
         )
-    assert str(AuthenticationMethodError.AWS_CREDENTIALS) in str(exc_info_db_user.value)
-
-    with pytest.raises(ValueError) as exc_info_db_user:
-        RedshiftConnector(
-            authentication_method=AuthenticationMethod.AWS_CREDENTIALS,
-            name='test',
-            cluster_identifier='sample',
-            host='localhost',
-            port=0,
-            profile='profile',
-            region='eu-west-1',
-        )
-    assert str(AuthenticationMethodError.AWS_CREDENTIALS) in str(exc_info_db_user.value)
+    assert AuthenticationMethodError.AWS_PROFILE.value in str(exc_info_db_user.value)
 
 
 def test_redshiftconnector_get_connection_params_aws_profile_mode(redshift_connector_aws_profile):
