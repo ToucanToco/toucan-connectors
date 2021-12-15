@@ -12,14 +12,35 @@ from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
+from toucan_connectors.query_manager import QueryManager
+from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
+    DataStats,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
 )
 
 TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
+
+ORDERED_KEYS = [
+    'type',
+    'name',
+    'host',
+    'port',
+    'cluster_identifier',
+    'db_user',
+    'connect_timeout',
+    'authentication_method',
+    'user',
+    'password',
+    'access_key_id',
+    'secret_access_key',
+    'session_token',
+    'profile',
+    'region',
+]
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +59,7 @@ class AuthenticationMethod(str, Enum):
 
 class AuthenticationMethodError(str, Enum):
     DB_CREDENTIALS: str = f'User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}'
-    AWS_CREDENTIALS: str = f'AccessKeyId, SecretAccessKey, SessionToken & db_user are required for {AuthenticationMethod.AWS_CREDENTIALS}'
+    AWS_CREDENTIALS: str = f'AccessKeyId, SecretAccessKey & db_user are required for {AuthenticationMethod.AWS_CREDENTIALS}'
     AWS_PROFILE: str = f'Profile & db_user are required for {AuthenticationMethod.AWS_PROFILE}'
     UNKNOWN: str = 'Unknown AuthenticationMethod'
 
@@ -59,15 +80,6 @@ class RedshiftDataSource(ToucanDataSource):
         'your_table")',
     )
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        query = data.get('query')
-        table = data.get('table')
-        if query is None and table is None:
-            raise ValueError("'query' or 'table' must be set")
-        elif query is None and table is not None:
-            self.query = f'select * from {table};'
-
     @classmethod
     def get_form(cls, connector: 'RedshiftConnector', current_config):
         constraints = {}
@@ -83,22 +95,23 @@ class RedshiftConnector(ToucanConnector):
     authentication_method: AuthenticationMethod = Field(
         None,
         title='Authentication Method',
-        description='The authentication mechanism that will be used to connect to your snowflake data source',
+        description='The authentication mechanism that will be used to connect to your redshift data source',
+        **{'ui': {'checkbox': False}},
     )
-    host: str = Field(None, description='IP address or hostname.')
+    host: str = Field(..., description='IP address or hostname.')
     port: int = Field(..., description='The listening port of your Redshift Database')
+    cluster_identifier: str = Field(..., description='The cluster of redshift.')
     connect_timeout: Optional[int] = Field(
         None,
         title='Connection timeout',
         description='You can set a connection timeout in seconds here, i.e. the maximum length of '
         'time you want to wait for the server to respond. None by default',
     )
-    cluster_identifier: Optional[str] = Field(None, description='The cluster of redshift.')
-    db_user: Optional[str] = Field(None, description='The user of the database')
 
     user: Optional[str] = Field(None, description='Your login username.')
     password: Optional[SecretStr] = Field(None, description='Your login password')
 
+    db_user: Optional[str] = Field(None, description='The user of the database')
     access_key_id: Optional[str] = Field(None, description='The access key id of your aws account.')
     secret_access_key: Optional[SecretStr] = Field(
         None, description='The secret access key of your aws account.'
@@ -115,53 +128,34 @@ class RedshiftConnector(ToucanConnector):
 
         @staticmethod
         def schema_extra(schema: Dict[str, Any]) -> None:
-            ordered_keys = [
-                'type',
-                'name',
-                'host',
-                'port',
-                'cluster_identifier',
-                'db_user',
-                'connect_timeout',
-                'authentication_method',
-                'user',
-                'password',
-                'access_key_id',
-                'secret_access_key',
-                'session_token',
-                'profile',
-                'region',
-            ]
-            schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
+            schema['properties'] = {k: schema['properties'][k] for k in ORDERED_KEYS}
 
     @root_validator
     def check_requirements(cls, values):
         mode = values.get('authentication_method')
-        if mode == AuthenticationMethod.DB_CREDENTIALS:
+        if mode == AuthenticationMethod.DB_CREDENTIALS.value:
             user, password = values.get('user'), values.get('password')
             if user is None or password is None or password.get_secret_value() is None:
-                raise ValueError(AuthenticationMethodError.DB_CREDENTIALS)
-        elif mode == AuthenticationMethod.AWS_CREDENTIALS:
-            access_key_id, secret_access_key, session_token, db_user = (
+                raise ValueError(AuthenticationMethodError.DB_CREDENTIALS.value)
+        elif mode == AuthenticationMethod.AWS_CREDENTIALS.value:
+            access_key_id, secret_access_key, db_user = (
                 values.get('access_key_id'),
                 values.get('secret_access_key'),
-                values.get('session_token'),
                 values.get('db_user'),
             )
             if (
                 access_key_id is None
                 or secret_access_key is None
                 or secret_access_key.get_secret_value() is None
-                or session_token is None
                 or db_user is None
             ):
-                raise ValueError(AuthenticationMethodError.AWS_CREDENTIALS)
-        elif mode == AuthenticationMethod.AWS_PROFILE:
+                raise ValueError(AuthenticationMethodError.AWS_CREDENTIALS.value)
+        elif mode == AuthenticationMethod.AWS_PROFILE.value:
             profile, db_user = (values.get('profile'), values.get('db_user'))
             if profile is None or db_user is None:
-                raise ValueError(AuthenticationMethodError.AWS_PROFILE)
+                raise ValueError(AuthenticationMethodError.AWS_PROFILE.value)
         else:
-            raise ValueError(AuthenticationMethodError.UNKNOWN)
+            raise ValueError(AuthenticationMethodError.UNKNOWN.value)
         return values
 
     @staticmethod
@@ -176,10 +170,10 @@ class RedshiftConnector(ToucanConnector):
             timeout=self.connect_timeout,
             cluster_identifier=self.cluster_identifier,
         )
-        if self.authentication_method == AuthenticationMethod.DB_CREDENTIALS:
+        if self.authentication_method == AuthenticationMethod.DB_CREDENTIALS.value:
             con_params['user'] = self.user
             con_params['password'] = self.password.get_secret_value() if self.password else None
-        elif self.authentication_method == AuthenticationMethod.AWS_CREDENTIALS:
+        elif self.authentication_method == AuthenticationMethod.AWS_CREDENTIALS.value:
             con_params['iam'] = True
             con_params['db_user'] = self.db_user
             con_params['access_key_id'] = self.access_key_id
@@ -188,7 +182,7 @@ class RedshiftConnector(ToucanConnector):
             )
             con_params['session_token'] = self.session_token
             con_params['region'] = self.region
-        elif self.authentication_method == AuthenticationMethod.AWS_PROFILE:
+        elif self.authentication_method == AuthenticationMethod.AWS_PROFILE.value:
             con_params['iam'] = True
             con_params['db_user'] = self.db_user
             con_params['profile'] = self.profile
@@ -248,12 +242,55 @@ class RedshiftConnector(ToucanConnector):
             res = cursor.fetchall()
         return [table_name for (table_name,) in res]
 
-    def _retrieve_data(self, datasource) -> pd.DataFrame:
-        """Get data: tuple from table."""
-        with self._get_cursor(datasource=datasource) as cursor:
-            cursor.execute(datasource.query)
-            result: pd.DataFrame = cursor.fetch_dataframe()
+    def _execute_query(self, cursor, query: str, query_parameters: Optional[Dict] = None):
+        return QueryManager().execute(
+            execute_method=self._execute_query_internal,
+            connection=cursor,
+            query=query,
+            query_parameters=query_parameters,
+        )
+
+    def _execute_query_internal(
+        self,
+        connection: redshift_connector.cursor,
+        query: str,
+        query_parameters: Optional[dict] = None,
+    ) -> pd.DataFrame:
+        connection.execute(query, query_parameters)
+        result: pd.DataFrame = connection.fetch_dataframe()
         return result
+
+    def _retrieve_data(
+        self,
+        datasource: RedshiftDataSource,
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
+        get_row_count: bool = False,
+    ) -> pd.DataFrame:
+        result: pd.DataFrame = None
+        result_count: pd.DataFrame = None
+
+        is_count_request_needed = SqlQueryHelper.count_request_needed(
+            datasource.query, get_row_count
+        )
+        self.logger.info(f'Execute count request: {is_count_request_needed}')
+        with self._get_cursor(datasource=datasource) as cursor:
+            # Query data
+            prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_limit_query(
+                datasource.query, datasource.parameters, offset, limit
+            )
+            result = self._execute_query(cursor, prepared_query, prepared_query_parameters)
+
+            # Query row_count if needed
+            if is_count_request_needed:
+                (
+                    prepared_query_count,
+                    prepared_query_parameters_count,
+                ) = SqlQueryHelper.prepare_count_query(datasource.query, datasource.parameters)
+                result_count = self._execute_query(
+                    cursor, prepared_query_count, prepared_query_parameters_count
+                )
+        return result, result_count
 
     def get_slice(
         self,
@@ -270,11 +307,14 @@ class RedshiftConnector(ToucanConnector):
         - limit is the number of pages to retrieve
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
         """
-        df = self._retrieve_data(data_source)
-        if limit is not None:
-            return DataSlice(df[offset : offset + limit], len(df))
+        df, df_count = self._retrieve_data(data_source, offset, limit, get_row_count)
+
+        if (offset or limit is not None) and df_count is not None:
+            total_rows = df_count.total_rows[0] if len(df_count.total_rows) > 0 else 0
         else:
-            return DataSlice(df[offset:], len(df))
+            total_rows = len(df)
+
+        return DataSlice(df, stats=DataStats(total_returned_rows=len(df), total_rows=total_rows))
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
@@ -315,7 +355,7 @@ class RedshiftConnector(ToucanConnector):
                 )
             else:
                 return ConnectorStatus(
-                    status=True, details=self._get_details(2, False), error=str(ex)
+                    status=False, details=self._get_details(2, False), error=str(ex)
                 )
         except Exception as e:
-            return ConnectorStatus(status=True, details=self._get_details(2, False), error=str(e))
+            return ConnectorStatus(status=False, details=self._get_details(2, False), error=str(e))
