@@ -141,7 +141,7 @@ class RedshiftConnector(ToucanConnector):
         if mode == AuthenticationMethod.DB_CREDENTIALS:
             user, password = values.get('user'), values.get('password')
             if user is None or password is None or password.get_secret_value() is None:
-                raise ValueError(AuthenticationMethodError.DB_CREDENTIALS)
+                raise ValueError(str(AuthenticationMethodError.DB_CREDENTIALS))
         elif mode == AuthenticationMethod.AWS_CREDENTIALS:
             access_key_id, secret_access_key, db_user = (
                 values.get('access_key_id'),
@@ -154,13 +154,13 @@ class RedshiftConnector(ToucanConnector):
                 or secret_access_key.get_secret_value() is None
                 or db_user is None
             ):
-                raise ValueError(AuthenticationMethodError.AWS_CREDENTIALS)
+                raise ValueError(str(AuthenticationMethodError.AWS_CREDENTIALS))
         elif mode == AuthenticationMethod.AWS_PROFILE:
             profile, db_user = (values.get('profile'), values.get('db_user'))
             if profile is None or db_user is None:
-                raise ValueError(AuthenticationMethodError.AWS_PROFILE)
+                raise ValueError(str(AuthenticationMethodError.AWS_PROFILE))
         else:
-            raise ValueError(AuthenticationMethodError.UNKNOWN)
+            raise ValueError(str(AuthenticationMethodError.UNKNOWN))
         return values
 
     @staticmethod
@@ -300,7 +300,7 @@ class RedshiftConnector(ToucanConnector):
                 return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
         except redshift_connector.error.ProgrammingError as ex:
             # Use to validate if the issue is "only" an issue with database (set after with datasource)
-            if f"'S': 'FATAL', 'C': '3D000', 'M': 'database {self.user} does not exist'" in str(ex):
+            if f"'S': 'FATAL', 'C': '3D000', 'M': 'database \"{self.user}\" does not exist'" in str(ex):
                 return ConnectorStatus(
                     status=True, details=self._get_details(2, True), error=str(ex)
                 )
