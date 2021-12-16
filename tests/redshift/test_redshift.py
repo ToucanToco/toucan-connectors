@@ -418,11 +418,11 @@ def test_redshiftconnector_get_status_programming_error_creds(
     mock_check_port.return_value = 'port_test'
     redshift_connector.user = 'user_test'
     mock_build_connection.side_effect = ProgrammingError(
-        "'S': 'FATAL', 'C': '3D000', 'M': 'database user_test does not exist'"
+        "'S': 'FATAL', 'C': '3D000', 'M': 'database \"user_test\" does not exist'"
     )
     result = redshift_connector.get_status()
     assert result.status is True
-    assert result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'database user_test does not exist'"
+    assert result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'database \"user_test\" does not exist'"
 
 
 @patch.object(RedshiftConnector, '_build_connection')
@@ -435,12 +435,12 @@ def test_redshiftconnector_get_status_programming_error_with_profile(
     mock_check_port.return_value = 'port_test'
     redshift_connector_aws_profile.db_user = 'user_test'
     mock_build_connection.side_effect = ProgrammingError(
-        "'S': 'FATAL', 'C': '3D000', 'M': 'database IAM:user_test does not exist'"
+        "'S': 'FATAL', 'C': '3D000', 'M': 'database \"IAM:user_test\" does not exist'"
     )
     result = redshift_connector_aws_profile.get_status()
     assert result.status is True
     assert (
-        result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'database IAM:user_test does not exist'"
+        result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'database \"IAM:user_test\" does not exist'"
     )
 
 
