@@ -111,7 +111,7 @@ def test_redshiftdatasource_init_none_values(redshift_datasource):
 
 @patch.object(RedshiftConnector, '_retrieve_tables')
 def test_redshiftdatasource_get_form(redshift_connector, redshift_datasource):
-    current_config = {'database': ['table1', 'table2', 'table3']}
+    current_config = {'database': 'dev'}
     redshift_connector._retrieve_tables.return_value = ['table1', 'table2', 'table3']
     result = redshift_datasource.get_form(redshift_connector, current_config)
     assert result['properties']['parameters']['title'] == 'Parameters'

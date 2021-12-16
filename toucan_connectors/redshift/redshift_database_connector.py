@@ -93,7 +93,10 @@ class RedshiftDataSource(ToucanDataSource):
         constraints = {}
         with suppress(Exception):
             if 'database' in current_config:
-                available_tables = connector._retrieve_tables(current_config['database'])
+                ds = RedshiftDataSource(
+                    domain='Redshift', name='redshift', database=current_config['database']
+                )
+                available_tables = connector._retrieve_tables(datasource=ds)
                 constraints['table'] = strlist_to_enum('table', available_tables, None)
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
