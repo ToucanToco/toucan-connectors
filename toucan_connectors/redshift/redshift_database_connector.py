@@ -84,7 +84,7 @@ class RedshiftDataSource(ToucanDataSource):
         query = data.get('query')
         table = data.get('table')
         if query is None and table is None:
-            raise ValueError("'query' or 'table' must be set")
+            self.query = TABLE_QUERY
         elif query is None and table is not None:
             self.query = f'select * from {table};'
 
