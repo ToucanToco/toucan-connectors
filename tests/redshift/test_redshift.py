@@ -342,6 +342,19 @@ def test_redshiftconnector_retrieve_data(
 
 @patch.object(RedshiftConnector, '_get_cursor')
 @patch('toucan_connectors.redshift.redshift_database_connector.SqlQueryHelper')
+def test_redshiftconnector_retrieve_data_empty_result(
+    mock_SqlQueryHelper, mock_cursor, redshift_connector, redshift_datasource
+):
+    mock_SqlQueryHelper.count_request_needed.return_value = True
+    mock_SqlQueryHelper.prepare_limit_query.return_value = Mock(), Mock()
+    mock_SqlQueryHelper.prepare_count_query.return_value = Mock(), Mock()
+    mock_cursor().__enter__().fetch_dataframe.return_value = None
+    result = redshift_connector._retrieve_data(datasource=redshift_datasource, get_row_count=True)
+    assert result.empty is True
+
+
+@patch.object(RedshiftConnector, '_get_cursor')
+@patch('toucan_connectors.redshift.redshift_database_connector.SqlQueryHelper')
 def test_redshiftconnector_retrieve_data_without_count(
     mock_SqlQueryHelper, mock_cursor, redshift_connector, redshift_datasource
 ):

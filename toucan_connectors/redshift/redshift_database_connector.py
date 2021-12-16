@@ -265,6 +265,8 @@ class RedshiftConnector(ToucanConnector):
         with self._get_cursor(datasource=datasource) as cursor:
             cursor.execute(prepared_query, prepared_query_parameters)
             result: pd.DataFrame = cursor.fetch_dataframe()
+        if result is None:
+            result = pd.DataFrame()
         return result
 
     def get_slice(
