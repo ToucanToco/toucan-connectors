@@ -133,21 +133,17 @@ class RedshiftConnector(ToucanConnector):
     def check_requirements(cls, values):
         mode = values.get('authentication_method')
         if mode == AuthenticationMethod.DB_CREDENTIALS.value:
-            user, password = values.get('user'), values.get('password')
-            if user is None or password is None or password.get_secret_value() is None:
+            # TODO: Partial check due to missing context in some operations (Missing: password)
+            user = values.get('user')
+            if user is None:
                 raise ValueError(AuthenticationMethodError.DB_CREDENTIALS.value)
         elif mode == AuthenticationMethod.AWS_CREDENTIALS.value:
-            access_key_id, secret_access_key, db_user = (
+            # TODO: Partial check due to missing context in some operations (Missing: secret_access_key)
+            access_key_id, db_user = (
                 values.get('access_key_id'),
-                values.get('secret_access_key'),
                 values.get('db_user'),
             )
-            if (
-                access_key_id is None
-                or secret_access_key is None
-                or secret_access_key.get_secret_value() is None
-                or db_user is None
-            ):
+            if access_key_id is None or db_user is None:
                 raise ValueError(AuthenticationMethodError.AWS_CREDENTIALS.value)
         elif mode == AuthenticationMethod.AWS_PROFILE.value:
             profile, db_user = (values.get('profile'), values.get('db_user'))
