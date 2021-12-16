@@ -12,7 +12,6 @@ from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
-from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
@@ -242,55 +241,26 @@ class RedshiftConnector(ToucanConnector):
             res = cursor.fetchall()
         return [table_name for (table_name,) in res]
 
-    def _execute_query(self, cursor, query: str, query_parameters: Optional[Dict] = None):
-        return QueryManager().execute(
-            execute_method=self._execute_query_internal,
-            connection=cursor,
-            query=query,
-            query_parameters=query_parameters,
-        )
-
-    def _execute_query_internal(
-        self,
-        connection: redshift_connector.cursor,
-        query: str,
-        query_parameters: Optional[dict] = None,
-    ) -> pd.DataFrame:
-        connection.execute(query, query_parameters)
-        result: pd.DataFrame = connection.fetch_dataframe()
-        return result
-
     def _retrieve_data(
         self,
         datasource: RedshiftDataSource,
+        get_row_count: bool = False,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
-        get_row_count: bool = False,
     ) -> pd.DataFrame:
-        result: pd.DataFrame = None
-        result_count: pd.DataFrame = None
-
-        is_count_request_needed = SqlQueryHelper.count_request_needed(
-            datasource.query, get_row_count
-        )
-        self.logger.info(f'Execute count request: {is_count_request_needed}')
-        with self._get_cursor(datasource=datasource) as cursor:
-            # Query data
+        if get_row_count:
+            prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_count_query(
+                datasource.query, datasource.parameters
+            )
+        else:
             prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_limit_query(
                 datasource.query, datasource.parameters, offset, limit
             )
-            result = self._execute_query(cursor, prepared_query, prepared_query_parameters)
 
-            # Query row_count if needed
-            if is_count_request_needed:
-                (
-                    prepared_query_count,
-                    prepared_query_parameters_count,
-                ) = SqlQueryHelper.prepare_count_query(datasource.query, datasource.parameters)
-                result_count = self._execute_query(
-                    cursor, prepared_query_count, prepared_query_parameters_count
-                )
-        return result, result_count
+        with self._get_cursor(datasource=datasource) as cursor:
+            cursor.execute(prepared_query, prepared_query_parameters)
+            result: pd.DataFrame = cursor.fetch_dataframe()
+        return result
 
     def get_slice(
         self,
@@ -307,9 +277,14 @@ class RedshiftConnector(ToucanConnector):
         - limit is the number of pages to retrieve
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
         """
-        df, df_count = self._retrieve_data(data_source, offset, limit, get_row_count)
+        df: pd.DataFrame = self._retrieve_data(data_source, False, offset, limit)
+        df_count: pd.DataFrame = None
 
-        if (offset or limit is not None) and df_count is not None:
+        is_count_request_needed = SqlQueryHelper.count_request_needed(
+            data_source.query, get_row_count
+        )
+        if is_count_request_needed:
+            df_count: pd.DataFrame = self._retrieve_data(data_source, True)
             total_rows = df_count.total_rows[0] if len(df_count.total_rows) > 0 else 0
         else:
             total_rows = len(df)

@@ -1,4 +1,4 @@
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from redshift_connector.error import InterfaceError, ProgrammingError
@@ -314,60 +314,57 @@ def test_redshiftconnector_retrieve_tables(mock_cursor, redshift_connector, reds
 
 
 @patch.object(RedshiftConnector, '_get_cursor')
-@patch.object(RedshiftConnector, '_execute_query')
 @patch('toucan_connectors.redshift.redshift_database_connector.SqlQueryHelper')
 def test_redshiftconnector_retrieve_data(
-    mock_SqlQueryHelper, mock_execute_query, mock_cursor, redshift_connector, redshift_datasource
+    mock_SqlQueryHelper, mock_cursor, redshift_connector, redshift_datasource
 ):
+    mock_response = Mock()
     mock_SqlQueryHelper.count_request_needed.return_value = True
     mock_SqlQueryHelper.prepare_limit_query.return_value = Mock(), Mock()
     mock_SqlQueryHelper.prepare_count_query.return_value = Mock(), Mock()
-    mock_cursor().__enter__().fetch_dataframe.return_value = Mock()
-    result = redshift_connector._retrieve_data(datasource=redshift_datasource)
-    assert result == (mock_execute_query(), mock_execute_query())
+    mock_cursor().__enter__().fetch_dataframe.return_value = mock_response
+    result = redshift_connector._retrieve_data(datasource=redshift_datasource, get_row_count=True)
+    assert result == mock_response
 
 
-@patch('toucan_connectors.redshift.redshift_database_connector.QueryManager')
-def test_redshiftconnector_execute_query(mock_QueryManager, redshift_connector):
-    mock_query_manager = Mock()
-    mock_QueryManager().execute.return_value = mock_query_manager
-    result = redshift_connector._execute_query(
-        cursor='cursor', query='select * from test', query_parameters=None
-    )
-    assert result == mock_query_manager
-
-
-def test_redshiftconnector_execute_query_internal(redshift_connector):
-    mock_connection = Mock()
-    mock_dataframe = Mock()
-    mock_connection.fetch_dataframe.return_value = mock_dataframe
-    result = redshift_connector._execute_query_internal(
-        connection=mock_connection, query='select * from test', query_parameters=None
-    )
-    assert result == mock_dataframe
+@patch.object(RedshiftConnector, '_get_cursor')
+@patch('toucan_connectors.redshift.redshift_database_connector.SqlQueryHelper')
+def test_redshiftconnector_retrieve_data_without_count(
+    mock_SqlQueryHelper, mock_cursor, redshift_connector, redshift_datasource
+):
+    mock_response = Mock()
+    mock_SqlQueryHelper.prepare_limit_query.return_value = Mock(), Mock()
+    mock_cursor().__enter__().fetch_dataframe.return_value = mock_response
+    result = redshift_connector._retrieve_data(datasource=redshift_datasource, limit=10)
+    assert result == mock_response
 
 
 @patch.object(RedshiftConnector, '_retrieve_data')
 def test_redshiftconnector_get_slice(mock_retreive_data, redshift_datasource, redshift_connector):
-    mock_df = [Mock()]
-    mock_df_count1 = Mock()
-    mock_df_count2 = None
-    p1 = PropertyMock(return_value=['test'])
+    mock_df = Mock()
+    mock_df.__len__ = lambda x: 1
+    type(mock_df).total_rows = [10]
 
-    type(mock_df_count1).total_rows = p1
-
-    mock_retreive_data.return_value = mock_df, mock_df_count1
+    mock_retreive_data.return_value = mock_df
     result1 = redshift_connector.get_slice(
-        data_source=redshift_datasource, permissions=None, offset=0, limit=3, get_row_count=True
+        data_source=redshift_datasource, permissions=None, offset=0, limit=1, get_row_count=True
     )
     assert result1 == DataSlice(
-        df=mock_df, total_count=None, stats=DataStats(total_rows='test', total_returned_rows=1)
+        df=mock_df, total_count=None, stats=DataStats(total_rows=10, total_returned_rows=1)
     )
 
-    mock_retreive_data.return_value = mock_df, mock_df_count2
-    result2 = redshift_connector.get_slice(data_source=redshift_datasource)
-    assert result2 == DataSlice(
-        df=mock_df, total_count=None, stats=DataStats(total_rows=1, total_returned_rows=1)
+
+@patch.object(RedshiftConnector, '_retrieve_data')
+def test_redshiftconnector_get_slice_without_count(
+    mock_retreive_data, redshift_datasource, redshift_connector
+):
+    mock_df = Mock()
+    mock_df.__len__ = lambda x: 10
+
+    mock_retreive_data.return_value = mock_df
+    result1 = redshift_connector.get_slice(data_source=redshift_datasource)
+    assert result1 == DataSlice(
+        df=mock_df, total_count=None, stats=DataStats(total_rows=10, total_returned_rows=10)
     )
 
 
