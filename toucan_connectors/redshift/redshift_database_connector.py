@@ -312,7 +312,10 @@ class RedshiftConnector(ToucanConnector):
                 return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
         except redshift_connector.error.ProgrammingError as ex:
             # Use to validate if the issue is "only" an issue with database (set after with datasource)
-            if f"'S': 'FATAL', 'C': '3D000', 'M': 'database \"{self.user}\" does not exist'" in str(ex):
+            if (
+                f"'S': 'FATAL', 'C': '3D000', 'M': 'database \"{self.user}\" does not exist'"
+                in str(ex)
+            ):
                 return ConnectorStatus(
                     status=True, details=self._get_details(2, True), error=str(ex)
                 )

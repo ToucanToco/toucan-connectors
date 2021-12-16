@@ -422,7 +422,9 @@ def test_redshiftconnector_get_status_programming_error_creds(
     )
     result = redshift_connector.get_status()
     assert result.status is True
-    assert result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'database \"user_test\" does not exist'"
+    assert (
+        result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'database \"user_test\" does not exist'"
+    )
 
 
 @patch.object(RedshiftConnector, '_build_connection')
@@ -440,7 +442,8 @@ def test_redshiftconnector_get_status_programming_error_with_profile(
     result = redshift_connector_aws_profile.get_status()
     assert result.status is True
     assert (
-        result.error == "'S': 'FATAL', 'C': '3D000', 'M': 'database \"IAM:user_test\" does not exist'"
+        result.error
+        == "'S': 'FATAL', 'C': '3D000', 'M': 'database \"IAM:user_test\" does not exist'"
     )
 
 
