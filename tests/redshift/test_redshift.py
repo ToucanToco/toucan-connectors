@@ -97,6 +97,16 @@ def test_config_schema_extra():
         assert keys[i] == ORDERED_KEYS[i]
 
 
+def test_redshiftdatasource_init_(redshift_datasource):
+    ds = RedshiftDataSource(domain='test', name='redshift', database='test', table='table_test')
+    assert ds.query == 'select * from table_test;'
+    assert ds.table == 'table_test'
+    with pytest.raises(ValueError):
+        ds = RedshiftDataSource(domain='test', name='redshift', database='test')
+        assert ds.query is None
+        assert ds.table is None
+
+
 @patch.object(RedshiftConnector, '_retrieve_tables')
 def test_redshiftdatasource_get_form(redshift_connector, redshift_datasource):
     current_config = {'database': ['table1', 'table2', 'table3']}
@@ -349,10 +359,10 @@ def test_redshiftconnector_get_slice(mock_retreive_data, redshift_datasource, re
     type(mock_df).total_rows = [10]
 
     mock_retreive_data.return_value = mock_df
-    result1 = redshift_connector.get_slice(
+    result = redshift_connector.get_slice(
         data_source=redshift_datasource, permissions=None, offset=0, limit=1, get_row_count=True
     )
-    assert result1 == DataSlice(
+    assert result == DataSlice(
         df=mock_df, total_count=None, stats=DataStats(total_rows=10, total_returned_rows=1)
     )
 
@@ -365,9 +375,20 @@ def test_redshiftconnector_get_slice_without_count(
     mock_df.__len__ = lambda x: 10
 
     mock_retreive_data.return_value = mock_df
-    result1 = redshift_connector.get_slice(data_source=redshift_datasource)
-    assert result1 == DataSlice(
+    result = redshift_connector.get_slice(data_source=redshift_datasource)
+    assert result == DataSlice(
         df=mock_df, total_count=None, stats=DataStats(total_rows=10, total_returned_rows=10)
+    )
+
+
+@patch.object(RedshiftConnector, '_retrieve_data')
+def test_redshiftconnector_get_slice_df_is_none(
+    mock_retreive_data, redshift_datasource, redshift_connector
+):
+    mock_retreive_data.return_value = None
+    result = redshift_connector.get_slice(data_source=redshift_datasource)
+    assert result == DataSlice(
+        df=None, total_count=None, stats=DataStats(total_rows=0, total_returned_rows=0)
     )
 
 

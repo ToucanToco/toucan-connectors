@@ -79,6 +79,15 @@ class RedshiftDataSource(ToucanDataSource):
         'your_table")',
     )
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        query = data.get('query')
+        table = data.get('table')
+        if query is None and table is None:
+            raise ValueError("'query' or 'table' must be set")
+        elif query is None and table is not None:
+            self.query = f'select * from {table};'
+
     @classmethod
     def get_form(cls, connector: 'RedshiftConnector', current_config):
         constraints = {}
@@ -274,7 +283,6 @@ class RedshiftConnector(ToucanConnector):
         Exemple: if offset = 5 and limit = 10 then 10 results are expected from 6th row
         """
         df: pd.DataFrame = self._retrieve_data(data_source, False, offset, limit)
-        df_count: pd.DataFrame = None
 
         is_count_request_needed = SqlQueryHelper.count_request_needed(
             data_source.query, get_row_count
@@ -283,9 +291,17 @@ class RedshiftConnector(ToucanConnector):
             df_count: pd.DataFrame = self._retrieve_data(data_source, True)
             total_rows = df_count.total_rows[0] if len(df_count.total_rows) > 0 else 0
         else:
-            total_rows = len(df)
+            if df is None:
+                total_rows = 0
+            else:
+                total_rows = len(df)
 
-        return DataSlice(df, stats=DataStats(total_returned_rows=len(df), total_rows=total_rows))
+        return DataSlice(
+            df,
+            stats=DataStats(
+                total_returned_rows=len(df) if df is not None else 0, total_rows=total_rows
+            ),
+        )
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
