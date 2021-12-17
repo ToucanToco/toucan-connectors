@@ -185,6 +185,11 @@ CONNECTORS_REGISTRY = {
         'label': 'PostgreSQL',
         'logo': 'postgres/postgres.png',
     },
+    'Redshift': {
+        'connector': 'redshift.redshift_database_connector.RedshiftConnector',
+        'label': 'Redshift',
+        'logo': 'redshift/redshift.png',
+    },
     'Revinate': {
         'connector': 'revinate.revinate_connector.RevinateConnector',
         'label': 'Revinate',

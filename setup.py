@@ -33,6 +33,7 @@ extras_require = {
     'oracle_sql': ['cx_Oracle>=6.2.1'],
     'net_explorer': ['openpyxl>=3.0.9'],
     'postgres': ['psycopg2>=2.7.4'],
+    'Redshift': ['redshift_connector', 'lxml==4.2.5'],
     'ROK': ['requests', 'pyjwt', 'simplejson'],
     'sap_hana': ['pyhdb>=0.3.4'],
     'soap': ['zeep', 'lxml==4.2.5'],
