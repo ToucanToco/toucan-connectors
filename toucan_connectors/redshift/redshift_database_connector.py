@@ -3,6 +3,7 @@ import time
 from contextlib import suppress
 from enum import Enum
 from threading import Thread
+from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -212,12 +213,13 @@ class RedshiftConnector(ToucanConnector):
 
         def alive_function(connection) -> bool:
             logger.info(f'Alive Redshift connection: {connection}')
+            print(f'Alive Redshift connection: {connection}')
             return self._is_alive
 
         def close_function(connection) -> None:
             logger.info('Close Redshift connection')
-            if hasattr(connection, 'close'):
-                connection.close()
+            if not self._is_alive:
+                return connection.close()
 
         connection: RedshiftConnector = redshift_connection_manager.get(
             identifier=f'{self.cluster_identifier}_{datasource.database}',
@@ -228,25 +230,27 @@ class RedshiftConnector(ToucanConnector):
         )
         connection.paramstyle = 'pyformat'
         if self.connect_timeout is not None:
-            self._start_timer_alive()
-        return connection.__enter__()
+            time.sleep(self.connect_timeout)
+            self._is_alive = False
+        return connection
 
-    def _start_timer_alive(self):
-        timerThread = Thread(target=self._set_alive_done)
-        timerThread.daemon = True
-        timerThread.start()
-
-    def _set_alive_done(self):
-        time.sleep(self.connect_timeout)
-        self._is_alive = False
+    # def _start_timer_alive(self):
+    #     timerThread = Thread(target=self._set_alive_done)
+    #     timerThread.daemon = True
+    #     timerThread.start()
+    #
+    # def _set_alive_done(self):
+    #     time.sleep(self.connect_timeout)
+    #     self._is_alive = False
 
     def _get_cursor(self, datasource) -> redshift_connector.Cursor:
         return self._get_connection(datasource=datasource).cursor()
 
     def _retrieve_tables(self, datasource) -> List[str]:
-        with self._get_cursor(datasource=datasource) as cursor:
-            cursor.execute(TABLE_QUERY)
-            res = cursor.fetchall()
+        with self._get_connection(datasource=datasource) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(TABLE_QUERY)
+                res = cursor.fetchall()
         return [table_name for (table_name,) in res]
 
     def _retrieve_data(
@@ -264,12 +268,12 @@ class RedshiftConnector(ToucanConnector):
             prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_limit_query(
                 datasource.query, datasource.parameters, offset, limit
             )
-
-        with self._get_cursor(datasource=datasource) as cursor:
-            cursor.execute(prepared_query, prepared_query_parameters)
-            result: pd.DataFrame = cursor.fetch_dataframe()
-        if result is None:
-            result = pd.DataFrame()
+        with self._get_connection(datasource=datasource) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(prepared_query, prepared_query_parameters)
+                result: pd.DataFrame = cursor.fetch_dataframe()
+            if result is None:
+                result = pd.DataFrame()
         return result
 
     def get_slice(
