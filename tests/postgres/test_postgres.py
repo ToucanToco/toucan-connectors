@@ -3,6 +3,7 @@ import psycopg2
 import pytest
 from pydantic import ValidationError
 
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.postgres.postgresql_connector import (
     PostgresConnector,
     PostgresDataSource,
@@ -37,6 +38,74 @@ def postgres_connector(postgres_server):
         password='ilovetoucan',
         port=postgres_server['port'],
     )
+
+
+def test_get_status_all_good(postgres_connector):
+    assert postgres_connector.get_status() == ConnectorStatus(
+        status=True,
+        details=[
+            ('Hostname resolved', True),
+            ('Port opened', True),
+            ('Host connection', True),
+            ('Authenticated', True),
+        ],
+    )
+
+
+def test_get_status_bad_host(postgres_connector):
+    postgres_connector.host = 'bad_host'
+    status = postgres_connector.get_status()
+    assert status.status is False
+    assert status.details == [
+        ('Hostname resolved', False),
+        ('Port opened', None),
+        ('Host connection', None),
+        ('Authenticated', None),
+    ]
+    assert status.error == '[Errno -3] Temporary failure in name resolution'
+
+
+def test_get_status_bad_port(postgres_connector):
+    postgres_connector.port = 9999
+    status = postgres_connector.get_status()
+    assert status.status is False
+    assert status.details == [
+        ('Hostname resolved', True),
+        ('Port opened', False),
+        ('Host connection', None),
+        ('Authenticated', None),
+    ]
+    assert status.error == '[Errno 111] Connection refused'
+
+
+def test_get_status_bad_connection(postgres_connector, unused_port, mocker):
+    postgres_connector.port = unused_port()
+    mocker.patch(
+        'toucan_connectors.postgres.postgresql_connector.PostgresConnector.check_port',
+        return_value=True,
+    )
+    status = postgres_connector.get_status()
+    assert status.status is False
+    assert status.details == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', False),
+        ('Authenticated', None),
+    ]
+    assert 'Connection refused' in status.error
+
+
+def test_get_status_bad_authentication(postgres_connector):
+    postgres_connector.user = 'pika'
+    status = postgres_connector.get_status()
+    assert status.status is False
+    assert status.details == [
+        ('Hostname resolved', True),
+        ('Port opened', True),
+        ('Host connection', True),
+        ('Authenticated', False),
+    ]
+    assert 'password authentication failed for user "pika"' in status.error
 
 
 def test_no_user():
