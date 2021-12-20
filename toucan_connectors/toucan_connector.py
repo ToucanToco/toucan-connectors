@@ -365,11 +365,20 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         if limit is not None:
             return DataSlice(
                 df[offset : offset + limit],
-                stats=DataStats(total_returned_rows=len(df), total_rows=len(df)),
+                stats=DataStats(
+                    total_returned_rows=len(df),
+                    total_rows=len(df),
+                    df_memory_size=df.memory_usage().sum(),
+                ),
             )
         else:
             return DataSlice(
-                df[offset:], stats=DataStats(total_returned_rows=len(df), total_rows=len(df))
+                df[offset:],
+                stats=DataStats(
+                    total_returned_rows=len(df),
+                    total_rows=len(df),
+                    df_memory_size=df.memory_usage().sum(),
+                ),
             )
 
     def explain(self, data_source: ToucanDataSource, permissions: Optional[dict] = None):
