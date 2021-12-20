@@ -169,4 +169,3 @@ class PostgresConnector(ToucanConnector):
             cursor.execute(f"""select * from ({data_source.query.replace(';','')}) as q LIMIT 0;""")
             res = cursor.description
         return {r.name: types.get(r.type_code) for r in res}
-
