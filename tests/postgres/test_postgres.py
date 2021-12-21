@@ -284,3 +284,39 @@ def test_get_form_connection_fails(mocker, postgres_connector):
     mocker.patch.object(pgsql, 'connect').side_effect = IOError
     form = PostgresDataSource.get_form(postgres_connector, current_config={})
     assert 'table' in form['properties']
+
+
+def test_describe(mocker, postgres_connector):
+    """It should return a table description"""
+    ds = PostgresDataSource(
+        domain='test', name='test', database='postgres_db', query='SELECT * FROM city;'
+    )
+    res = postgres_connector.describe(ds)
+    assert res == {
+        'id': 'int4',
+        'name': 'text',
+        'countrycode': 'bpchar',
+        'district': 'text',
+        'population': 'int4',
+    }
+
+
+def test_describe_error(mocker, postgres_connector):
+    """It should return a table description"""
+    ds = PostgresDataSource(
+        domain='test', name='test', database='postgres_db', query='SELECT * FROM city;'
+    )
+    mocked_connect = mocker.MagicMock()
+    mocked_cursor = mocker.MagicMock()
+    mocked_connect.cursor.return_value = mocked_cursor
+
+    def execute(q):
+        raise psycopg2.ProgrammingError
+
+    mocked_cursor.__enter__().execute = execute
+    mocker.patch(
+        'toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect
+    )
+
+    with pytest.raises(psycopg2.ProgrammingError):
+        postgres_connector.describe(ds)
