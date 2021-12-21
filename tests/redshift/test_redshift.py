@@ -1,3 +1,4 @@
+from contextlib import _GeneratorContextManager
 from unittest.mock import Mock, patch
 
 import pytest
@@ -295,11 +296,11 @@ def test_redshiftconnector_get_connection(
 
 @patch.object(RedshiftConnector, '_build_connection')
 def test_redshiftconnector_get_connection_alive_close(
-    mock_build_connection, redshift_connector, redshift_datasource
+    mock_redshift_connector, redshift_connector, redshift_datasource
 ):
     redshift_connector.connect_timeout = 1
     result = redshift_connector._get_connection(datasource=redshift_datasource)
-    assert result == mock_build_connection()
+    assert isinstance(result, _GeneratorContextManager)
 
 
 def test_redshiftconnector_close(redshift_connector):
