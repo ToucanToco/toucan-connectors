@@ -1,3 +1,5 @@
+import logging
+import time
 from contextlib import suppress
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -8,6 +10,7 @@ from pydantic import Field, SecretStr, create_model, root_validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
@@ -36,6 +39,14 @@ ORDERED_KEYS = [
     'profile',
     'region',
 ]
+
+logger = logging.getLogger(__name__)
+
+redshift_connection_manager = None
+if not redshift_connection_manager:
+    redshift_connection_manager = ConnectionManager(
+        name='redshift', timeout=25, wait=0.2, time_between_clean=10, time_keep_alive=60
+    )
 
 
 class AuthenticationMethod(str, Enum):
@@ -153,6 +164,10 @@ class RedshiftConnector(ToucanConnector):
             raise ValueError(AuthenticationMethodError.UNKNOWN.value)
         return values
 
+    @staticmethod
+    def get_redshift_connection_manager() -> ConnectionManager:
+        return redshift_connection_manager
+
     def _get_connection_params(self, database) -> Dict:
         con_params = dict(
             database=database,
@@ -180,13 +195,40 @@ class RedshiftConnector(ToucanConnector):
             con_params['region'] = self.region
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _get_connection(self, datasource) -> redshift_connector.Connection:
-        """Establish a connection to an Amazon Redshift cluster."""
+    def _build_connection(self, datasource) -> redshift_connector.Connection:
         return redshift_connector.connect(
             **self._get_connection_params(
                 database=datasource.database if datasource is not None else None,
             )
         )
+
+    def _get_connection(self, datasource) -> redshift_connector.Connection:
+        """Establish a connection to an Amazon Redshift cluster."""
+
+        def connect_function() -> redshift_connector.Connection:
+            return self._build_connection(datasource)
+
+        def alive_function(connection) -> bool:
+            logger.info(f'Alive Redshift connection: {connection}')
+            return self._is_alive
+
+        def close_function(connection) -> None:
+            logger.info('Close Redshift connection')
+            if not self._is_alive:
+                return connection.close()
+
+        connection: RedshiftConnector = redshift_connection_manager.get(
+            identifier=f'{self.cluster_identifier}_{datasource.database}',
+            connect_method=connect_function,
+            alive_method=alive_function,
+            close_method=close_function,
+            save=True if datasource.database else False,
+        )
+        connection.paramstyle = 'pyformat'
+        if self.connect_timeout is not None:
+            time.sleep(self.connect_timeout)
+            self._is_alive = False
+        return connection
 
     def _get_cursor(self, datasource) -> redshift_connector.Cursor:
         return self._get_connection(datasource=datasource).cursor()
@@ -279,7 +321,7 @@ class RedshiftConnector(ToucanConnector):
             return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
         # Check connection
         try:
-            with self._get_connection(None):
+            with self._build_connection(None):
                 return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
         except redshift_connector.error.ProgrammingError as ex:
             # Use to validate if the issue is "only" an issue with database (set after with datasource)
