@@ -297,16 +297,14 @@ def test_redshiftconnector_get_connection(
 def test_redshiftconnector_get_connection_alive_close(
     mock_build_connection, redshift_connector, redshift_datasource
 ):
-    mock_build_connection.return_value = True
-    redshift_connector._is_alive = True
     redshift_connector.connect_timeout = 1
     result = redshift_connector._get_connection(datasource=redshift_datasource)
-    assert result is None
+    assert result == mock_build_connection()
 
 
 def test_redshiftconnector_close(redshift_connector):
     cm = redshift_connector.get_redshift_connection_manager()
-    assert cm.connection_list[f'{CLUSTER_IDENTIFIER}_{DATABASE_NAME}'].exec_alive() is True
+    assert cm.connection_list[f'{CLUSTER_IDENTIFIER}_{DATABASE_NAME}'].exec_alive() is False
     cm.force_clean()
     assert len(cm.connection_list) == 0
 
