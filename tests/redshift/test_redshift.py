@@ -313,7 +313,7 @@ def test_redshiftconnector_close(redshift_connector):
 @patch.object(RedshiftConnector, '_get_connection')
 def test_redshiftconnector_get_cursor(mock_get_connection, redshift_connector, redshift_datasource):
     connection_mock = Mock()
-    mock_get_connection().cursor.return_value = connection_mock
+    mock_get_connection().__enter__().cursor.return_value = connection_mock
     result = redshift_connector._get_cursor(datasource=redshift_datasource)
     assert result == connection_mock
 

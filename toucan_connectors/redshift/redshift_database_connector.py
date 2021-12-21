@@ -231,7 +231,7 @@ class RedshiftConnector(ToucanConnector):
         return connection
 
     def _get_cursor(self, datasource) -> redshift_connector.Cursor:
-        return self._get_connection(datasource=datasource).cursor()
+        return self._get_connection(datasource=datasource).__enter__().cursor()
 
     def _retrieve_tables(self, datasource) -> List[str]:
         with self._get_connection(datasource=datasource) as conn:
