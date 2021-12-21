@@ -2,8 +2,6 @@ import logging
 import time
 from contextlib import suppress
 from enum import Enum
-from threading import Thread
-from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -47,7 +45,7 @@ logger = logging.getLogger(__name__)
 redshift_connection_manager = None
 if not redshift_connection_manager:
     redshift_connection_manager = ConnectionManager(
-        name='redshift', timeout=25, wait=0.2, time_between_clean=10, time_keep_alive=600
+        name='redshift', timeout=25, wait=0.2, time_between_clean=10, time_keep_alive=60
     )
 
 
@@ -198,12 +196,11 @@ class RedshiftConnector(ToucanConnector):
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _build_connection(self, datasource) -> redshift_connector.Connection:
-        connection = redshift_connector.connect(
+        return redshift_connector.connect(
             **self._get_connection_params(
                 database=datasource.database if datasource is not None else None,
             )
         )
-        return connection
 
     def _get_connection(self, datasource) -> redshift_connector.Connection:
         """Establish a connection to an Amazon Redshift cluster."""
@@ -213,7 +210,6 @@ class RedshiftConnector(ToucanConnector):
 
         def alive_function(connection) -> bool:
             logger.info(f'Alive Redshift connection: {connection}')
-            print(f'Alive Redshift connection: {connection}')
             return self._is_alive
 
         def close_function(connection) -> None:
@@ -233,15 +229,6 @@ class RedshiftConnector(ToucanConnector):
             time.sleep(self.connect_timeout)
             self._is_alive = False
         return connection
-
-    # def _start_timer_alive(self):
-    #     timerThread = Thread(target=self._set_alive_done)
-    #     timerThread.daemon = True
-    #     timerThread.start()
-    #
-    # def _set_alive_done(self):
-    #     time.sleep(self.connect_timeout)
-    #     self._is_alive = False
 
     def _get_cursor(self, datasource) -> redshift_connector.Cursor:
         return self._get_connection(datasource=datasource).cursor()
