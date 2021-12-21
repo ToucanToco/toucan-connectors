@@ -44,10 +44,11 @@ class OneDriveDataSource(ToucanDataSource):
         description='Read one table or append multiple tables',
         placeholder='Enter a table or a comma separated list of tables',
     )
-    parse_dates: List[str] = Field(
+    parse_dates: Optional[List[str]] = Field(
         [],
         Title='Date columns',
         description='By default, dates are converted in the number of days since 1900/01/01',
+        placeholder='Enter your date columns',
     )
 
 
@@ -238,12 +239,16 @@ class OneDriveConnector(ToucanConnector):
 
             df_all = df_all.append(df_current)
 
-        for date_col in data_source.parse_dates:
-            df_all[date_col] = pd.to_datetime(
-                (df_all[date_col] * 24 * 60 * 60).astype(int),
-                origin=pd.Timestamp('1899-12-30'),
-                unit='s',
-            )
+        if data_source.parse_dates:
+            for date_col in data_source.parse_dates:
+                try:
+                    df_all[date_col] = pd.to_datetime(
+                        (df_all[date_col] * 24 * 60 * 60).astype(int),
+                        origin=pd.Timestamp('1899-12-30'),
+                        unit='s',
+                    )
+                except ValueError:
+                    raise ValueError(f"Cannot convert column '{date_col}' to datetime")
 
         return df_all
 

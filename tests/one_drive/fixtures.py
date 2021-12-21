@@ -1,3 +1,5 @@
+FAKE_LIBRARIES = {'value': [{'id': 'abcd', 'displayName': 'Documents'}]}
+
 FAKE_SHEET = {
     '@odata.context': 'https://graph.microsoft.com/v1.0/$metadata#workbookRange',
     '@odata.type': '#microsoft.graph.workbookRange',

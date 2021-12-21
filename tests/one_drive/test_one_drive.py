@@ -5,7 +5,7 @@ import pytest
 import responses
 from pytest import fixture
 
-from tests.one_drive.fake_sheet import FAKE_SHEET
+from tests.one_drive.fixtures import FAKE_LIBRARIES, FAKE_SHEET
 from toucan_connectors.common import HttpError
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
 from toucan_connectors.one_drive.one_drive_connector import OneDriveConnector, OneDriveDataSource
@@ -157,15 +157,23 @@ def ds_with_dates():
 
 
 @fixture
+def ds_error_with_dates():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        file='test_file',
+        sheet='test_sheet',
+        parse_dates=['col_text'],
+    )
+
+
+@fixture
 def remove_secrets(secrets_keeper, con):
     secrets_keeper.save('test', {'access_token': None})
 
 
 def fake_sheet(*args, **kwargs):
     return copy.deepcopy(FAKE_SHEET)
-
-
-FAKE_LIBRARIES = {'value': [{'id': 'abcd', 'displayName': 'Documents'}]}
 
 
 def test_user_input(
@@ -313,6 +321,14 @@ def test_sheets_with_dates(mocker, con, ds_with_dates):
         pd.Timestamp('2021-01-02 12:02:31'),
         'toto',
     ]
+
+
+def test_error_sheets_with_dates(mocker, con, ds_error_with_dates):
+    mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
+
+    with pytest.raises(ValueError) as e:
+        con.get_df(ds_error_with_dates)
+        assert str(e.value) == "Cannot convert column 'col_text' to datetime"
 
 
 def test_empty_sheet(mocker, con, ds):
