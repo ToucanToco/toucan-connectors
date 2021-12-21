@@ -166,6 +166,6 @@ class PostgresConnector(ToucanConnector):
     def describe(self, data_source):
         connection = pgsql.connect(**self.get_connection_params(database=data_source.database))
         with connection.cursor() as cursor:
-            cursor.execute(f"""select * from ({data_source.query.replace(';','')}) as q LIMIT 0;""")
+            cursor.execute(f"""SELECT * FROM ({data_source.query.replace(';','')}) AS q LIMIT 0;""")
             res = cursor.description
         return {r.name: types.get(r.type_code) for r in res}

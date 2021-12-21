@@ -289,7 +289,7 @@ def test_get_form_connection_fails(mocker, postgres_connector):
 def test_describe(mocker, postgres_connector):
     """It should return a table description"""
     ds = PostgresDataSource(
-        domain='test', name='test', database='postgres_db', query='select * from city;'
+        domain='test', name='test', database='postgres_db', query='SELECT * FROM city;'
     )
     res = postgres_connector.describe(ds)
     assert res == {
@@ -304,7 +304,7 @@ def test_describe(mocker, postgres_connector):
 def test_describe_error(mocker, postgres_connector):
     """It should return a table description"""
     ds = PostgresDataSource(
-        domain='test', name='test', database='postgres_db', query='select * from city;'
+        domain='test', name='test', database='postgres_db', query='SELECT * FROM city;'
     )
     mocked_connect = mocker.MagicMock()
     mocked_cursor = mocker.MagicMock()
