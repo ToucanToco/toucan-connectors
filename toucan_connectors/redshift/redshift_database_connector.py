@@ -11,6 +11,7 @@ from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
+from toucan_connectors.redshift.data_types import types_map
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
@@ -317,3 +318,16 @@ class RedshiftConnector(ToucanConnector):
         except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
         return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
+
+    def describe(self, data_source) -> Dict:
+        with self._get_connection(datasource=data_source) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"""SELECT * FROM ({data_source.query.replace(';','')}) AS q LIMIT 0;"""
+                )
+                res = cursor.description
+                print(res)
+        return {
+            col[0].decode('utf-8') if isinstance(col[0], bytes) else col[0]: types_map.get(col[1])
+            for col in res
+        }
