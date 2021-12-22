@@ -326,7 +326,6 @@ class RedshiftConnector(ToucanConnector):
                     f"""SELECT * FROM ({data_source.query.replace(';','')}) AS q LIMIT 0;"""
                 )
                 res = cursor.description
-                print(res)
         return {
             col[0].decode('utf-8') if isinstance(col[0], bytes) else col[0]: types_map.get(col[1])
             for col in res
