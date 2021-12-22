@@ -1,0 +1,18 @@
+types_map = {
+    16: 'BOOLEAN',
+    20: 'BIGINT',
+    21: 'SMALLINT',
+    23: 'INTEGER',
+    700: 'REAL',
+    701: 'DOUBLE_PRECISION',
+    1008: 'VARCHAR',
+    1009: 'VARCHAR',
+    1014: 'VARCHAR',
+    1015: 'VARCHAR',
+    1082: 'DATE',
+    1043: 'VARCHAR',
+    1114: 'TIMESTAMPTZ',
+    1184: 'TIMESTAMPTZ',
+    1700: 'DECIMAL',
+    2951: 'VARCHAR',
+}

@@ -445,3 +445,17 @@ def test_redshiftconnector_get_status_with_error_port(mock_port, redshift_connec
     assert type(result.error) == str
     assert result.status is False
     assert str(result.error) == 'error mock'
+
+
+@patch.object(RedshiftConnector, '_get_connection')
+def test_redshiftconnector_describe(mock_connection, redshift_connector, redshift_datasource):
+    mock_description = Mock()
+    type(mock_description).description = [
+        (b'salesid', 23, None, None, None),
+        (b'listid', 23, None, None, None),
+        (b'pricepaid', 1700, None, None, None),
+    ]
+    mock_connection().__enter__().cursor().__enter__.return_value = mock_description
+    result = redshift_connector.describe(data_source=redshift_datasource)
+    expected = {'salesid': 'INTEGER', 'listid': 'INTEGER', 'pricepaid': 'DECIMAL'}
+    assert result == expected
