@@ -322,9 +322,7 @@ class RedshiftConnector(ToucanConnector):
     def describe(self, data_source) -> Dict:
         with self._get_connection(datasource=data_source) as conn:
             with conn.cursor() as cursor:
-                cursor.execute(
-                    f"""SELECT * FROM ({data_source.query.replace(';','')}) AS q LIMIT 0;"""
-                )
+                cursor.execute(f"""{data_source.query}""")
                 res = cursor.description
         return {
             col[0].decode('utf-8') if isinstance(col[0], bytes) else col[0]: types_map.get(col[1])
