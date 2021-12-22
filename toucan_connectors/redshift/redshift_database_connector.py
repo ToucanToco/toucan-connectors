@@ -200,11 +200,13 @@ class RedshiftConnector(ToucanConnector):
         """Establish a connection to an Amazon Redshift cluster."""
 
         def connect_function() -> redshift_connector.Connection:
-            return redshift_connector.connect(
+            con = redshift_connector.connect(
                 **self._get_connection_params(
                     database=datasource.database if datasource is not None else None,
-                )
+                ),
             )
+            con.autocommit = True  # see https://stackoverflow.com/q/22019154
+            return con
 
         def alive_function(connection) -> bool:
             logger.info(f'Alive Redshift connection: {connection}')
