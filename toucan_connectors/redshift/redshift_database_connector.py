@@ -2,6 +2,7 @@ import logging
 import time
 from contextlib import contextmanager, suppress
 from enum import Enum
+from threading import Thread
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -228,9 +229,13 @@ class RedshiftConnector(ToucanConnector):
             save=True if datasource.database else False,
         )
         if self.connect_timeout is not None:
-            time.sleep(self.connect_timeout)
-            self._is_alive = False
+            t = Thread(target=self.sleeper)
+            t.start()
         return connection
+
+    def sleeper(self):
+        time.sleep(self.connect_timeout)
+        self._is_alive = False
 
     @contextmanager
     def _get_cursor(self, datasource) -> redshift_connector.Cursor:
