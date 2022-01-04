@@ -292,6 +292,7 @@ def test_redshiftconnector_get_connection(
 def test_redshiftconnector_get_connection_alive_close(
     mock_get_identifier, mock_redshift_connector, redshift_connector, redshift_datasource
 ):
+    redshift_connector._is_alive = False
     mock_redshift_connector.return_value = 'id_test'
 
     redshift_connector.connect_timeout = 1
@@ -308,12 +309,15 @@ def test_redshiftconnector_close(mock_get_identifier, redshift_connector):
     assert len(cm.connection_list) == 0
 
 
-@patch.object(RedshiftConnector, '_get_connection')
-def test_redshiftconnector_get_cursor(mock_get_connection, redshift_connector, redshift_datasource):
-    connection_mock = Mock()
-    mock_get_connection().__enter__().cursor.return_value = connection_mock
+def test_redshiftconnector_sleeper(redshift_connector):
+    redshift_connector.connect_timeout = 0.01
+    redshift_connector.sleeper()
+    assert redshift_connector._is_alive is False
+
+
+def test_redshiftconnector_get_cursor(redshift_connector, redshift_datasource):
     result = redshift_connector._get_cursor(datasource=redshift_datasource)
-    assert result == connection_mock
+    assert isinstance(result, _GeneratorContextManager)
 
 
 @patch.object(RedshiftConnector, '_get_connection')
