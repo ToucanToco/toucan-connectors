@@ -206,6 +206,7 @@ class RedshiftConnector(ToucanConnector):
                 ),
             )
             con.autocommit = True  # see https://stackoverflow.com/q/22019154
+            con.paramstyle = 'pyformat'
             return con
 
         def alive_function(connection) -> bool:
@@ -224,7 +225,6 @@ class RedshiftConnector(ToucanConnector):
             close_method=close_function,
             save=True if datasource.database else False,
         )
-        connection.paramstyle = 'pyformat'
         if self.connect_timeout is not None:
             time.sleep(self.connect_timeout)
             self._is_alive = False
