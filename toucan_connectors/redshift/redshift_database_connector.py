@@ -1,7 +1,8 @@
 import logging
 import time
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from enum import Enum
+from threading import Thread
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -22,6 +23,8 @@ from toucan_connectors.toucan_connector import (
 )
 
 TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
+
+DESCRIBE_QUERY = """SELECT * FROM ({column}) AS q LIMIT 0;"""
 
 ORDERED_KEYS = [
     'type',
@@ -206,6 +209,7 @@ class RedshiftConnector(ToucanConnector):
                 ),
             )
             con.autocommit = True  # see https://stackoverflow.com/q/22019154
+            con.paramstyle = 'pyformat'
             return con
 
         def alive_function(connection) -> bool:
@@ -224,20 +228,24 @@ class RedshiftConnector(ToucanConnector):
             close_method=close_function,
             save=True if datasource.database else False,
         )
-        connection.paramstyle = 'pyformat'
         if self.connect_timeout is not None:
-            time.sleep(self.connect_timeout)
-            self._is_alive = False
+            t = Thread(target=self.sleeper)
+            t.start()
         return connection
 
+    def sleeper(self):
+        time.sleep(self.connect_timeout)
+        self._is_alive = False
+
+    @contextmanager
     def _get_cursor(self, datasource) -> redshift_connector.Cursor:
-        return self._get_connection(datasource=datasource).__enter__().cursor()
+        with self._get_connection(datasource=datasource) as conn, conn.cursor() as cursor:
+            yield cursor
 
     def _retrieve_tables(self, datasource) -> List[str]:
-        with self._get_connection(datasource=datasource) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(TABLE_QUERY)
-                res = cursor.fetchall()
+        with self._get_cursor(datasource=datasource) as cursor:
+            cursor.execute(TABLE_QUERY)
+            res = cursor.fetchall()
         return [table_name for (table_name,) in res]
 
     def _retrieve_data(
@@ -255,10 +263,9 @@ class RedshiftConnector(ToucanConnector):
             prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_limit_query(
                 datasource.query, datasource.parameters, offset, limit
             )
-        with self._get_connection(datasource=datasource) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(prepared_query, prepared_query_parameters)
-                result: pd.DataFrame = cursor.fetch_dataframe()
+        with self._get_cursor(datasource=datasource) as cursor:
+            cursor.execute(prepared_query, prepared_query_parameters)
+            result: pd.DataFrame = cursor.fetch_dataframe()
             if result is None:
                 result = pd.DataFrame()
         return result
@@ -322,12 +329,9 @@ class RedshiftConnector(ToucanConnector):
         return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
 
     def describe(self, data_source) -> Dict:
-        with self._get_connection(datasource=data_source) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    f"""SELECT * FROM ({data_source.query.replace(';','')}) AS q LIMIT 0;"""
-                )
-                res = cursor.description
+        with self._get_cursor(datasource=data_source) as cursor:
+            cursor.execute(DESCRIBE_QUERY.format(column=data_source.query.replace(';', '')))
+            res = cursor.description
         return {
             col[0].decode('utf-8') if isinstance(col[0], bytes) else col[0]: types_map.get(col[1])
             for col in res
