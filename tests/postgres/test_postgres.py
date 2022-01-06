@@ -44,7 +44,7 @@ def test_get_status_all_good(postgres_connector):
     assert postgres_connector.get_status() == ConnectorStatus(
         status=True,
         details=[
-            ('Hostname resolved', True),
+            ('Host resolved', True),
             ('Port opened', True),
             ('Host connection', True),
             ('Authenticated', True),
@@ -57,7 +57,7 @@ def test_get_status_bad_host(postgres_connector):
     status = postgres_connector.get_status()
     assert status.status is False
     assert status.details == [
-        ('Hostname resolved', False),
+        ('Host resolved', False),
         ('Port opened', None),
         ('Host connection', None),
         ('Authenticated', None),
@@ -70,7 +70,7 @@ def test_get_status_bad_port(postgres_connector):
     status = postgres_connector.get_status()
     assert status.status is False
     assert status.details == [
-        ('Hostname resolved', True),
+        ('Host resolved', True),
         ('Port opened', False),
         ('Host connection', None),
         ('Authenticated', None),
@@ -87,7 +87,7 @@ def test_get_status_bad_connection(postgres_connector, unused_port, mocker):
     status = postgres_connector.get_status()
     assert status.status is False
     assert status.details == [
-        ('Hostname resolved', True),
+        ('Host resolved', True),
         ('Port opened', True),
         ('Host connection', False),
         ('Authenticated', None),
@@ -100,7 +100,7 @@ def test_get_status_bad_authentication(postgres_connector):
     status = postgres_connector.get_status()
     assert status.status is False
     assert status.details == [
-        ('Hostname resolved', True),
+        ('Host resolved', True),
         ('Port opened', True),
         ('Host connection', True),
         ('Authenticated', False),

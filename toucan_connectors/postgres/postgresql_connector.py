@@ -76,15 +76,8 @@ class PostgresConnector(ToucanConnector):
 
     data_source_model: PostgresDataSource
 
-    hostname: str = Field(
-        None,
-        description='Use this parameter if you have a domain name (preferred option as more dynamic). '
-        'If not, please use the "host" parameter',
-    )
     host: str = Field(
-        None,
-        description='Use this parameter if you have an IP address. '
-        'If not, please use the "hostname" parameter (preferred option as more dynamic)',
+        None, description='The listening address of your database server (IP adress or hostname)'
     )
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
@@ -100,7 +93,7 @@ class PostgresConnector(ToucanConnector):
     def get_connection_params(self, *, database='postgres'):
         con_params = dict(
             user=self.user,
-            host=self.host if self.host else self.hostname,
+            host=self.host,
             client_encoding=self.charset,
             dbname=database,
             password=self.password.get_secret_value() if self.password else None,
@@ -124,7 +117,7 @@ class PostgresConnector(ToucanConnector):
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
-        checks = ['Hostname resolved', 'Port opened', 'Host connection', 'Authenticated']
+        checks = ['Host resolved', 'Port opened', 'Host connection', 'Authenticated']
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
