@@ -117,7 +117,7 @@ class PostgresConnector(ToucanConnector):
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
-        checks = ['Host resolved', 'Port opened', 'Host connection', 'Authenticated']
+        checks = ['Host resolved', 'Port opened', 'Connected to PostgreSQL', 'Authenticated']
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
