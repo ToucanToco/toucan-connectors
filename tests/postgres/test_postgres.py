@@ -44,9 +44,9 @@ def test_get_status_all_good(postgres_connector):
     assert postgres_connector.get_status() == ConnectorStatus(
         status=True,
         details=[
-            ('Hostname resolved', True),
+            ('Host resolved', True),
             ('Port opened', True),
-            ('Host connection', True),
+            ('Connected to PostgreSQL', True),
             ('Authenticated', True),
         ],
     )
@@ -57,9 +57,9 @@ def test_get_status_bad_host(postgres_connector):
     status = postgres_connector.get_status()
     assert status.status is False
     assert status.details == [
-        ('Hostname resolved', False),
+        ('Host resolved', False),
         ('Port opened', None),
-        ('Host connection', None),
+        ('Connected to PostgreSQL', None),
         ('Authenticated', None),
     ]
     assert status.error == '[Errno -3] Temporary failure in name resolution'
@@ -70,9 +70,9 @@ def test_get_status_bad_port(postgres_connector):
     status = postgres_connector.get_status()
     assert status.status is False
     assert status.details == [
-        ('Hostname resolved', True),
+        ('Host resolved', True),
         ('Port opened', False),
-        ('Host connection', None),
+        ('Connected to PostgreSQL', None),
         ('Authenticated', None),
     ]
     assert status.error == '[Errno 111] Connection refused'
@@ -87,9 +87,9 @@ def test_get_status_bad_connection(postgres_connector, unused_port, mocker):
     status = postgres_connector.get_status()
     assert status.status is False
     assert status.details == [
-        ('Hostname resolved', True),
+        ('Host resolved', True),
         ('Port opened', True),
-        ('Host connection', False),
+        ('Connected to PostgreSQL', False),
         ('Authenticated', None),
     ]
     assert 'Connection refused' in status.error
@@ -100,9 +100,9 @@ def test_get_status_bad_authentication(postgres_connector):
     status = postgres_connector.get_status()
     assert status.status is False
     assert status.details == [
-        ('Hostname resolved', True),
+        ('Host resolved', True),
         ('Port opened', True),
-        ('Host connection', True),
+        ('Connected to PostgreSQL', True),
         ('Authenticated', False),
     ]
     assert 'password authentication failed for user "pika"' in status.error
