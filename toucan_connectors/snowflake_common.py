@@ -153,10 +153,9 @@ class SnowflakeCommon:
     ) -> DataSlice:
         """Call parallelized execute query to extract data & row count from query"""
 
-        is_count_request_needed = SqlQueryHelper.count_request_needed(query, get_row_count)
-        self.logger.info(f'Execute count request: {is_count_request_needed}')
+        self.logger.info(f'Execute count request: {get_row_count}')
         with concurrent.futures.ThreadPoolExecutor(
-            max_workers=2 if is_count_request_needed else 1
+            max_workers=2 if get_row_count else 1
         ) as executor:
             prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_limit_query(
                 query, query_parameters, offset, limit
@@ -170,7 +169,7 @@ class SnowflakeCommon:
             future_1.add_done_callback(self.set_data)
             futures = [future_1]
 
-            if is_count_request_needed:
+            if get_row_count:
                 (
                     prepared_query_count,
                     prepared_query_parameters_count,

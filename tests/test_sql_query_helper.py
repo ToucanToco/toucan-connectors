@@ -136,21 +136,3 @@ def test_extract_offset():
     request = 'SELECT * FROM (SELECT * FROM communes OFFSET)'
     result = SqlQueryHelper().extract_offset(request)
     assert result is None
-
-
-def test_count_request_needed():
-    request_select = 'SELECT * FROM communes;'
-    result = SqlQueryHelper().count_request_needed(request_select, True)
-    assert result is True
-
-    request_select = 'SELECT * FROM communes;'
-    result = SqlQueryHelper().count_request_needed(request_select, False)
-    assert result is False
-
-    request_select = 'SHOW DATABASES;'
-    result = SqlQueryHelper().count_request_needed(request_select, True)
-    assert result is False
-
-    request_select = 'SHOW DATABASES;'
-    result = SqlQueryHelper().count_request_needed(request_select, False)
-    assert result is False

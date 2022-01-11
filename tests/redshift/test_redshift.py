@@ -339,7 +339,6 @@ def test_redshiftconnector_retrieve_data(
     mock_SqlQueryHelper, mock_get_connection, redshift_connector, redshift_datasource
 ):
     mock_response = Mock()
-    mock_SqlQueryHelper.count_request_needed.return_value = True
     mock_SqlQueryHelper.prepare_limit_query.return_value = Mock(), Mock()
     mock_SqlQueryHelper.prepare_count_query.return_value = Mock(), Mock()
     mock_get_connection().__enter__().cursor().__enter__().fetch_dataframe.return_value = (
@@ -354,7 +353,6 @@ def test_redshiftconnector_retrieve_data(
 def test_redshiftconnector_retrieve_data_empty_result(
     mock_SqlQueryHelper, mock_get_connection, redshift_connector, redshift_datasource
 ):
-    mock_SqlQueryHelper.count_request_needed.return_value = True
     mock_SqlQueryHelper.prepare_limit_query.return_value = Mock(), Mock()
     mock_SqlQueryHelper.prepare_count_query.return_value = Mock(), Mock()
     mock_get_connection().__enter__().cursor().__enter__().fetch_dataframe.return_value = None
