@@ -60,8 +60,8 @@ class SnowflakeCommon:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.data: pd.DataFrame
-        self.total_rows_count: Optional[int] = -1
-        self.total_returned_rows_count: Optional[int] = -1
+        self.total_rows_count: Optional[int] = None
+        self.total_returned_rows_count: Optional[int] = None
         self.execution_time: Optional[float] = None
         self.conversion_time: Optional[float] = None
         self.column_names_and_types: Optional[Dict[str, str]] = None
