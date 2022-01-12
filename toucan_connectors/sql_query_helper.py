@@ -6,6 +6,14 @@ from toucan_connectors.common import convert_to_printf_templating_style, convert
 
 class SqlQueryHelper:
     @staticmethod
+    def count_query_needed(
+        query: str,
+    ) -> bool:
+        # We can process all type of SQL queries and some return payload for which we don't want
+        # or cannot get the total row count, like DESCRIBE or SHOW
+        return bool(re.search(r'select.*', query, re.I))
+
+    @staticmethod
     def prepare_count_query(
         query_string: str, query_parameters: Optional[Dict] = None
     ) -> Tuple[str, list]:
