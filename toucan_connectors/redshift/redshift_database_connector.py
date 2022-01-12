@@ -288,11 +288,7 @@ class RedshiftConnector(ToucanConnector):
         df: pd.DataFrame = self._retrieve_data(data_source, False, offset, limit)
         total_returned_rows = len(df) if df is not None else 0
 
-        is_count_request_needed = SqlQueryHelper.count_request_needed(
-            data_source.query, get_row_count
-        )
-
-        if is_count_request_needed:
+        if get_row_count:
             df_count: pd.DataFrame = self._retrieve_data(data_source, True)
             total_rows = (
                 df_count.total_rows[0]

@@ -37,29 +37,7 @@ def test_prepare_query_show():
     assert 'show schemas' == new_request[0]
 
 
-def test_prepare_count_query_no_change():
-    request_sum = 'SELECT SUM(population_2010) FROM communes;'
-    new_request_sum = SqlQueryHelper().prepare_count_query(query_string=request_sum)
-    assert new_request_sum[0] == request_sum
-
-    request_sum = 'SELECT COUNT(population_2010) FROM communes;'
-    new_request_sum = SqlQueryHelper().prepare_count_query(query_string=request_sum)
-    assert new_request_sum[0] == request_sum
-
-    request_sum = 'SELECT MIN(population_2010) FROM communes;'
-    new_request_sum = SqlQueryHelper().prepare_count_query(query_string=request_sum)
-    assert new_request_sum[0] == request_sum
-
-    request_sum = 'SELECT MAX(population_2010) FROM communes;'
-    new_request_sum = SqlQueryHelper().prepare_count_query(query_string=request_sum)
-    assert new_request_sum[0] == request_sum
-
-    request_sum = 'SELECT AVG(population_2010) FROM communes;'
-    new_request_sum = SqlQueryHelper().prepare_count_query(query_string=request_sum)
-    assert new_request_sum[0] == request_sum
-
-
-def test_prepare_count_query_with_change():
+def test_prepare_count_query():
     request_sum = 'SELECT nom, num_departement, surface FROM communes ORDER BY surface LIMIT 10;'
     new_request_sum = SqlQueryHelper().prepare_count_query(query_string=request_sum)
     assert (
@@ -136,21 +114,3 @@ def test_extract_offset():
     request = 'SELECT * FROM (SELECT * FROM communes OFFSET)'
     result = SqlQueryHelper().extract_offset(request)
     assert result is None
-
-
-def test_count_request_needed():
-    request_select = 'SELECT * FROM communes;'
-    result = SqlQueryHelper().count_request_needed(request_select, True)
-    assert result is True
-
-    request_select = 'SELECT * FROM communes;'
-    result = SqlQueryHelper().count_request_needed(request_select, False)
-    assert result is False
-
-    request_select = 'SHOW DATABASES;'
-    result = SqlQueryHelper().count_request_needed(request_select, True)
-    assert result is False
-
-    request_select = 'SHOW DATABASES;'
-    result = SqlQueryHelper().count_request_needed(request_select, False)
-    assert result is False

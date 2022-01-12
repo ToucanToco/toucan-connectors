@@ -14,9 +14,8 @@ class SqlQueryHelper:
         prepared_query, prepared_values = SqlQueryHelper.prepare_query(
             query_string, query_parameters
         )
-        if len(re.findall(r'(?i)select.*( sum| max| count| min| avg).*', prepared_query)) == 0:
-            prepared_query = prepared_query.replace(';', '')
-            prepared_query = f'SELECT COUNT(*) AS TOTAL_ROWS FROM ({prepared_query});'
+        prepared_query = prepared_query.replace(';', '')
+        prepared_query = f'SELECT COUNT(*) AS TOTAL_ROWS FROM ({prepared_query});'
         return prepared_query, prepared_values
 
     @staticmethod
@@ -47,19 +46,6 @@ class SqlQueryHelper:
         query = convert_to_printf_templating_style(query)
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
         return converted_query, ordered_values
-
-    @staticmethod
-    def count_request_needed(
-        query: str,
-        get_row_count: bool,
-    ) -> bool:
-        if (
-            get_row_count
-            and re.search(r'select.*', query, re.I)
-            and len(re.findall(r'(?i).*( sum| max| count| min| avg).*', query)) == 0
-        ):
-            return True
-        return False
 
     @staticmethod
     def extract_offset(query: str) -> Optional[int]:
