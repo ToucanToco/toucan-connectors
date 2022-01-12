@@ -1,11 +1,11 @@
 from contextlib import suppress
-from typing import Optional
+from typing import Dict, Optional
 
 import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
-from toucan_connectors.postgres.constants import types
+from toucan_connectors.postgres.constants import create_query_editor_query, types
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -23,6 +23,14 @@ class PostgresDataSource(ToucanDataSource):
         description='The name of the data table that you want to '
         'get (equivalent to "SELECT * FROM '
         'your_table")',
+    )
+    query_object: Dict = Field(
+        None,
+        description='An object describing a simple select query'
+        'For example '
+        '{"schema": "SHOW_SCHEMA", "table": "MY_TABLE", "columns": ["col1", "col2"]}'
+        'This field is used internally',
+        **{'ui.hidden': True},
     )
 
     def __init__(self, **data):
@@ -57,15 +65,23 @@ class PostgresDataSource(ToucanDataSource):
                 available_dbs = [db_name for (db_name,) in res]
                 constraints['database'] = strlist_to_enum('database', available_dbs)
 
-                if 'database' in current_config:
-                    cursor.execute(
-                        """select table_schema, table_name from information_schema.tables
-                    where table_schema NOT IN ('pg_catalog', 'information_schema');"""
-                    )
-                    res = cursor.fetchall()
-                    available_tables = [table_name for (_, table_name) in res]
-                    constraints['table'] = strlist_to_enum('table', available_tables, None)
+                cursor.execute(
+                    """select table_schema, table_name from information_schema.tables
+                where table_schema NOT IN ('pg_catalog', 'information_schema');"""
+                )
+                res = cursor.fetchall()
+                available_tables = [table_name for (_, table_name) in res]
+                constraints['table'] = strlist_to_enum('table', available_tables, None)
 
+                databases_tree = []
+                for db in available_dbs:
+                    connection = pgsql.connect(**connector.get_connection_params(database=db))
+                    with connection.cursor() as cursor:
+                        cursor.execute(create_query_editor_query(db))
+                        res = cursor.fetchall()
+                        databases_tree.append(res)
+                        # call util function to generate front's awaited payload
+                print(databases_tree)
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 

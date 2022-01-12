@@ -274,6 +274,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     _retry_on: Iterable[Type[BaseException]] = ()
     type: str = Field(None)
     secrets_storage_version = Field('1', **{'ui.hidden': True})
+    language: str = Field(None, **{'ui.hidden': True})
 
     # Default ttl for all connector's queries (overridable at the data_source level)
     # /!\ cache ttl is used by the caching system which is not implemented in toucan_connectors.

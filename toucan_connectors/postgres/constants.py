@@ -601,3 +601,20 @@ types = {
     13741: 'user_mappings',
     13740: '_user_mappings',
 }
+
+
+def create_query_editor_query(database: str):
+    return f"""select '{database}',
+    t.table_schema as schema,
+    CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE t.table_type END as type,
+    t.table_name as name,
+    json_object_agg(c.column_name::text, c.data_type::text) as columns
+from
+    information_schema.tables t
+inner join information_schema.columns c on
+    t.table_name = c.table_name
+where
+    t.table_schema = 'public'
+    and t.table_type in ('BASE TABLE', 'VIEW')
+    and c.table_schema = 'public'
+group by t.table_schema, t.table_name, t.table_type;"""
