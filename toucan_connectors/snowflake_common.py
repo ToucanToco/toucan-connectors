@@ -63,7 +63,7 @@ class SnowflakeCommon:
         self.total_rows_count: Optional[int] = None
         self.total_returned_rows_count: Optional[int] = None
         self.execution_time: Optional[float] = None
-        self.conversion_time: Optional[float] = None
+        self.extraction_time: Optional[float] = None
         self.column_names_and_types: Optional[Dict[str, str]] = None
 
     def set_data(self, data):
@@ -78,8 +78,8 @@ class SnowflakeCommon:
     def set_execution_time(self, execution_time):
         self.execution_time = execution_time
 
-    def set_conversion_time(self, conversion_time):
-        self.conversion_time = conversion_time
+    def set_extraction_time(self, extraction_time):
+        self.extraction_time = extraction_time
 
     def _execute_query(self, connection, query: str, query_parameters: Optional[Dict] = None):
         return QueryManager().execute(
@@ -112,22 +112,22 @@ class SnowflakeCommon:
             },
         )
         self.set_execution_time(execution_time)
-        convert_start = timer()
+        extract_start = timer()
         # Here call our customized fetch
         values = pd.DataFrame.from_dict(query_res.fetchall())
-        convert_end = timer()
-        conversion_time = convert_end - convert_start
+        extract_end = timer()
+        extraction_time = extract_end - extract_start
         self.logger.info(
-            f'[benchmark][snowflake] - dataframe {conversion_time} seconds',
+            f'[benchmark][snowflake] - dataframe {extraction_time} seconds',
             extra={
                 'benchmark': {
                     'operation': 'dataframe',
-                    'execution_time': conversion_time,
+                    'extraction_time': extraction_time,
                     'connector': 'snowflake',
                 }
             },
         )
-        self.set_conversion_time(conversion_time)
+        self.set_extraction_time(extraction_time)
 
         return values  # do not return metadata from now
 
@@ -227,7 +227,7 @@ class SnowflakeCommon:
 
         stats = DataStats(
             execution_time=self.execution_time,
-            conversion_time=self.conversion_time,
+            extraction_time=self.extraction_time,
             total_returned_rows=len(result),
             df_memory_size=result.memory_usage().sum(),
             total_rows=self.total_rows_count,
@@ -280,7 +280,7 @@ class SnowflakeCommon:
             extra={
                 'benchmark': {
                     'operation': 'describe',
-                    'execution_time': description_time,
+                    'description_time': description_time,
                     'connector': 'snowflake',
                     'query': query,
                     'result': json.dumps(describe_res),

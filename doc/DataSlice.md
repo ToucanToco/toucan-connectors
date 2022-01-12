@@ -18,7 +18,7 @@ Below is the metadata list and a note explaining how they are calculated.
     * `total_rows` (`int`): total rows returned by a user query.
     * `total_returned_rows` (`int`): total of rows returned in a slice of results.
     * `execution_time` (`float`): in milliseconds, query execution time.
-    * `conversion_time` (`float`): in milliseconds, time to convert results in a `pandas.DataFrame`.
+    * `extraction_time` (`float`): in milliseconds, time to convert results in a `pandas.DataFrame`.
     * `df_memory_size` (`int`): size of extracted data in bytes.
 
 ## DataSlice attributes computation in Snowflake connector
@@ -43,13 +43,13 @@ Below is the metadata list and a note explaining how they are calculated.
     execution_end = timer()
     ```
 
-    * `conversion_time`
+    * `extraction_time`
 
     ```
-    convert_start = timer()
+    extract_start = timer()
     ....
     values = pd.DataFrame.from_dict(query_res.fetch*())
     ....
-    convert_end = timer()
+    extract_end = timer()
     ```
 
