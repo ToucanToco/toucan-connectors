@@ -5,7 +5,11 @@ import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
-from toucan_connectors.postgres.constants import create_query_editor_query, types
+from toucan_connectors.postgres.postgres_utils import (
+    create_query_editor_query,
+    format_db_tree,
+    types,
+)
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -32,6 +36,7 @@ class PostgresDataSource(ToucanDataSource):
         'This field is used internally',
         **{'ui.hidden': True},
     )
+    language: str = Field('sql', **{'ui.hidden': True})
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -51,6 +56,7 @@ class PostgresDataSource(ToucanDataSource):
         - if `database` is set, we are able to give suggestions for the `table` field
         """
         constraints = {}
+        formatted_res = []
 
         with suppress(Exception):
             connection = pgsql.connect(
@@ -79,10 +85,10 @@ class PostgresDataSource(ToucanDataSource):
                     with connection.cursor() as cursor:
                         cursor.execute(create_query_editor_query(db))
                         res = cursor.fetchall()
-                        databases_tree.append(res)
-                        # call util function to generate front's awaited payload
-                print(databases_tree)
-        return create_model('FormSchema', **constraints, __base__=cls).schema()
+                        databases_tree += res
+
+                formatted_res = format_db_tree(databases_tree)
+        return create_model('FormSchema', **constraints, tree=formatted_res, __base__=cls).schema()
 
 
 class PostgresConnector(ToucanConnector):

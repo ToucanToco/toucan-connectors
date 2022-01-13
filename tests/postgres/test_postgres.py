@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.postgres.postgres_utils import format_db_tree
 from toucan_connectors.postgres.postgresql_connector import (
     PostgresConnector,
     PostgresDataSource,
@@ -286,6 +287,65 @@ def test_get_form_connection_fails(mocker, postgres_connector):
     assert 'table' in form['properties']
 
 
+def test_get_form_get_tree(mocker, postgres_connector):
+    """It should a correctly formatted databases description tree"""
+    current_config = {'database': 'postgres_db'}
+    form = PostgresDataSource.get_form(postgres_connector, current_config)
+    assert form['properties']['tree']['default'] == [
+        {
+            'name': 'public',
+            'database': 'postgres_db',
+            'tables': [
+                {
+                    'name': 'city',
+                    'schema': 'public',
+                    'type': 'table',
+                    'columns': [
+                        {'name': 'id', 'type': 'integer', 'parent': 'city'},
+                        {'name': 'name', 'type': 'text', 'parent': 'city'},
+                        {'name': 'countrycode', 'type': 'character', 'parent': 'city'},
+                        {'name': 'district', 'type': 'text', 'parent': 'city'},
+                        {'name': 'population', 'type': 'integer', 'parent': 'city'},
+                    ],
+                },
+                {
+                    'name': 'country',
+                    'schema': 'public',
+                    'type': 'table',
+                    'columns': [
+                        {'name': 'code', 'type': 'character', 'parent': 'country'},
+                        {'name': 'name', 'type': 'text', 'parent': 'country'},
+                        {'name': 'continent', 'type': 'text', 'parent': 'country'},
+                        {'name': 'region', 'type': 'text', 'parent': 'country'},
+                        {'name': 'surfacearea', 'type': 'real', 'parent': 'country'},
+                        {'name': 'indepyear', 'type': 'smallint', 'parent': 'country'},
+                        {'name': 'population', 'type': 'integer', 'parent': 'country'},
+                        {'name': 'lifeexpectancy', 'type': 'real', 'parent': 'country'},
+                        {'name': 'gnp', 'type': 'numeric', 'parent': 'country'},
+                        {'name': 'gnpold', 'type': 'numeric', 'parent': 'country'},
+                        {'name': 'localname', 'type': 'text', 'parent': 'country'},
+                        {'name': 'governmentform', 'type': 'text', 'parent': 'country'},
+                        {'name': 'headofstate', 'type': 'text', 'parent': 'country'},
+                        {'name': 'capital', 'type': 'integer', 'parent': 'country'},
+                        {'name': 'code2', 'type': 'character', 'parent': 'country'},
+                    ],
+                },
+                {
+                    'name': 'countrylanguage',
+                    'schema': 'public',
+                    'type': 'table',
+                    'columns': [
+                        {'name': 'countrycode', 'type': 'character', 'parent': 'countrylanguage'},
+                        {'name': 'language', 'type': 'text', 'parent': 'countrylanguage'},
+                        {'name': 'isofficial', 'type': 'boolean', 'parent': 'countrylanguage'},
+                        {'name': 'percentage', 'type': 'real', 'parent': 'countrylanguage'},
+                    ],
+                },
+            ],
+        }
+    ]
+
+
 def test_describe(mocker, postgres_connector):
     """It should return a table description"""
     ds = PostgresDataSource(
@@ -320,3 +380,86 @@ def test_describe_error(mocker, postgres_connector):
 
     with pytest.raises(psycopg2.ProgrammingError):
         postgres_connector.describe(ds)
+
+
+def test_format_db_tree():
+    """
+    Check format_db_tree returns the frontend's awaited format
+    when given a valid db exploration query response
+    """
+    assert format_db_tree(
+        [
+            (
+                'postgres',
+                'public',
+                'table',
+                'test',
+                [
+                    {'name': 'id', 'type': 'integer', 'parent': 'test'},
+                    {'name': 'price', 'type': 'integer', 'parent': 'test'},
+                ],
+            ),
+            (
+                'demo',
+                'public',
+                'table',
+                'test',
+                [
+                    {'name': 'id', 'type': 'integer', 'parent': 'test'},
+                    {'name': 'price', 'type': 'integer', 'parent': 'test'},
+                ],
+            ),
+            (
+                'demo',
+                'public',
+                'view',
+                'testoiiii',
+                [
+                    {'name': 'id', 'type': 'integer', 'parent': 'testoiiii'},
+                    {'name': 'price', 'type': 'integer', 'parent': 'testoiiii'},
+                ],
+            ),
+        ]
+    ) == [
+        {
+            'name': 'public',
+            'database': 'postgres',
+            'tables': [
+                {
+                    'name': 'test',
+                    'type': 'table',
+                    'schema': 'public',
+                    'columns': [
+                        {'name': 'id', 'type': 'integer', 'parent': 'test'},
+                        {'name': 'price', 'type': 'integer', 'parent': 'test'},
+                    ],
+                },
+            ],
+        },
+        {
+            'name': 'public',
+            'database': 'demo',
+            'tables': [
+                {
+                    'name': 'test',
+                    'type': 'table',
+                    'schema': 'public',
+                    'columns': [
+                        {'name': 'id', 'type': 'integer', 'parent': 'test'},
+                        {'name': 'price', 'type': 'integer', 'parent': 'test'},
+                    ],
+                },
+            ],
+            'views': [
+                {
+                    'name': 'testoiiii',
+                    'type': 'table',
+                    'schema': 'public',
+                    'columns': [
+                        {'name': 'id', 'type': 'integer', 'parent': 'testoiiii'},
+                        {'name': 'price', 'type': 'integer', 'parent': 'testoiiii'},
+                    ],
+                },
+            ],
+        },
+    ]
