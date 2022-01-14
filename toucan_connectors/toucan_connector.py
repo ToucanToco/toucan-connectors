@@ -29,8 +29,13 @@ except ImportError:
 class DataStats(BaseModel):
     total_rows: Optional[int] = None
     total_returned_rows: Optional[int] = None
-    extraction_time: Optional[float] = None
-    execution_time: Optional[float] = None
+    query_generation_time: Optional[float] = None
+    data_extraction_time: Optional[float] = None
+    data_conversion_time: Optional[float] = None
+    stats_computed_time: Optional[float] = None
+    conversion_time: Optional[float] = None
+    compute_stats_time: Optional[float] = None
+    data_filtered_from_permission_time: Optional[float] = None
     df_memory_size: Optional[int] = None
     others: Optional[Dict[str, Any]] = None
 
