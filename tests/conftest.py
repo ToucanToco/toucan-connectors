@@ -76,8 +76,14 @@ def container_starter(request, docker, docker_pull):
             docker.pull(image)
 
         # Use in devcontainer to allow volumes access
-        if getenv("LOCAL_WORKSPACE_FOLDER") is not None:
-            volumes = [vol.replace('/workspaces/toucan-connectors/tests/.', f'{getenv("LOCAL_WORKSPACE_FOLDER")}/tests') for vol in volumes]
+        if getenv('LOCAL_WORKSPACE_FOLDER') is not None:
+            volumes = [
+                vol.replace(
+                    '/workspaces/toucan-connectors/tests/.',
+                    f'{getenv("LOCAL_WORKSPACE_FOLDER")}/tests',
+                )
+                for vol in volumes
+            ]
 
         host_config = docker.create_host_config(
             port_bindings={internal_port: host_port}, binds=volumes
