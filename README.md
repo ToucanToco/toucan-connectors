@@ -42,6 +42,11 @@ There is a shortcut called `all` to install all the dependencies for all the con
 pip install -e ".[all]"
 ```
 
+You may face issues when instally the repo locally due to dependencies.
+That's why a dev container is available to be used with visual studio.
+Refer to [this doc](https://code.visualstudio.com/docs/remote/containers) to use it.
+
+
 ### System packages
 
 Some connectors dependencies require specific system packages. As each connector can define its dependencies separatly you do not need this until you want to use these specific connectors.
