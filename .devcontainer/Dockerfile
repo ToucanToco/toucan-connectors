@@ -7,7 +7,7 @@ RUN apt-get -y upgrade
 
 # Install dependencies
 RUN apt-get install -y libxml2-dev libxslt-dev libxslt1-dev unixodbc-dev libpq-dev libssl-dev libffi-dev libcurl4-openssl-dev libblas-dev libatlas-base-dev libsasl2-dev
-RUN apt-get install -y make python3-pip python3-dev
+RUN apt-get install -y make python3-dev python3-pip
 
 # Docker
 RUN apt-get update \
