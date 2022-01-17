@@ -29,7 +29,6 @@ ARG NONROOT_USER=vscode
 # Default to root only access to the Docker socket, set up non-root init script
 RUN touch /var/run/docker-host.sock \
     && ln -s /var/run/docker-host.sock /var/run/docker.sock \
-    && apt-get update \
     && apt-get -y install socat
 
 # Create docker-init.sh to spin up socat
