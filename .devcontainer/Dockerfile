@@ -2,8 +2,7 @@ ARG VARIANT=3.8
 FROM --platform=linux/amd64 mcr.microsoft.com/vscode/devcontainers/python:${VARIANT}
 
 # System update/upgrade
-RUN apt-get update
-RUN apt-get -y upgrade
+RUN apt-get update && apt-get -y upgrade
 
 # Install dependencies
 RUN apt-get install -y libxml2-dev libxslt-dev libxslt1-dev unixodbc-dev libpq-dev libssl-dev libffi-dev libcurl4-openssl-dev libblas-dev libatlas-base-dev libsasl2-dev
