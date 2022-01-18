@@ -36,11 +36,8 @@ class OneDriveDataSource(ToucanDataSource):
         Title='File',
         placeholder='Enter your path file',
     )
-    filenames_to_match: str = Field(
-        None,
-        Title='Pattern to match for filenames',
-        description='Provide a pattern to find matching filenames in directory',
-        placeholder='.*\.jpg'
+    match: bool = Field(
+        False, Title='Match', description='Try to match files using provided file name'
     )
     sheet: Optional[str] = Field(
         None,
@@ -225,10 +222,22 @@ class OneDriveConnector(ToucanConnector):
 
         return response.json()
 
-    def _retrieve_files(self, data_source: OneDriveDataSource) -> List[str]:
-        logging.getLogger(__name__).debug('_retrieve_files')
+    def _retrieve_files_path(self, data_source: OneDriveDataSource) -> List[str]:
+        logging.getLogger(__name__).debug('_retrieve_files_path')
+        path = None
+        # Split the "file" input to retrieve the path & the pattern
+        splitted = data_source.file.split('/')
+        if len(splitted) > 1:
+            path = f"/{('/').join(splitted[:len(splitted)-1])}:"
+            pattern = splitted[-1]
+        else:
+            pattern = splitted[0]
+
         url = self._build_url_root(data_source)
-        url += '/children'
+        if path:
+            url += f'{path}/children'
+        else:
+            url = f'{url[:-1]}/children'
         response = requests.get(
             url,
             headers={
@@ -239,12 +248,16 @@ class OneDriveConnector(ToucanConnector):
         response.raise_for_status()
         children = response.json().get('value')
         if children:
-            return list(
+            val = list(
                 filter(
-                    lambda f: re.match(re.compile(data_source.filenames_to_match), f),
+                    lambda f: re.match(re.compile(pattern), f),
                     [c['name'] for c in children if 'folder' not in c],
                 )
             )
+            if path:
+                return [f'{path[1:-1] if path else ""}/{v}' for v in val]
+            else:
+                return [f'/{v}' for v in val]
         else:
             raise NotFoundError('No matching file name')
 
@@ -260,14 +273,12 @@ class OneDriveConnector(ToucanConnector):
         if not data_source.sheet and not data_source.table:
             raise ValueError('You must specify at least a sheet or a table')
 
-        file_names = []
-        if data_source.filenames_to_match:
-            file_names = self._retrieve_files(data_source)
+        file_names = None
+        if data_source.match:
+            file_names = self._retrieve_files_path(data_source)
 
         df_all = pd.DataFrame()
-        workbook_elements_list, workbook_key_column = _prepare_workbook_elements(
-            data_source
-        )
+        workbook_elements_list, workbook_key_column = _prepare_workbook_elements(data_source)
 
         for workbook_element in workbook_elements_list:
             if file_names:
@@ -275,7 +286,15 @@ class OneDriveConnector(ToucanConnector):
             else:
                 urls = [self._format_url(data_source, workbook_element, data_source.file)]
 
-            data = [self._run_fetch(url).get('values') for url in urls]
+            data = []
+            for url in urls:
+                try:
+                    # TODO: some day make it async
+                    data.append(self._run_fetch(url).get('values'))
+                except requests.exceptions.HTTPError:
+                    logging.getLogger(__name__).warning(
+                        f'Fetch failed for {url}, maybe sheet, range or table are invalid for this file'
+                    )
 
             for d in [d for d in data if d]:
                 cols = d[0]

@@ -2,6 +2,7 @@ import copy
 
 import pandas as pd
 import pytest
+import requests.exceptions
 import responses
 from pytest import fixture
 
@@ -129,7 +130,22 @@ def ds_with_site_with_filename_pattern():
     return OneDriveDataSource(
         name='test_name',
         domain='test_domain',
-        filenames_to_match=r'.*\.jpg',
+        match=True,
+        file=r'test/.*\.jpg',
+        sheet='test_sheet, other_sheet',
+        range='A2:B3',
+        site_url='company_name.sharepoint.com/sites/site_name',
+        document_library='Documents',
+    )
+
+
+@fixture
+def ds_with_site_with_file_regex_pattern():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        match=True,
+        file=r'.*\.jpg',
         sheet='test_sheet, other_sheet',
         range='A2:B3',
         site_url='company_name.sharepoint.com/sites/site_name',
@@ -317,7 +333,7 @@ def test_multiple_sheets_success(mocker, con, ds_with_multiple_sheets, ds_with_m
 
 def test_multiple_files_sheets_success(mocker, con, ds_with_site_with_filename_pattern):
     """It should return a dataframe"""
-    mocker.patch.object(OneDriveConnector, '_retrieve_files', return_value=['foo', 'bar'])
+    mocker.patch.object(OneDriveConnector, '_retrieve_files_path', return_value=['foo', 'bar'])
     run_fetch = mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
     mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
     mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
@@ -507,11 +523,11 @@ def test_run_fetch(con, mocker):
 
 
 @responses.activate
-def test__retrieve_files(con, mocker, ds_with_site_with_filename_pattern):
+def test__retrieve_files_path(con, mocker, ds_with_site_with_filename_pattern):
     """Check that _retrieve_files returns a list of files"""
     responses.add(
         responses.GET,
-        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/children',
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test:/children',
         status=200,
         json={
             'value': [
@@ -525,7 +541,29 @@ def test__retrieve_files(con, mocker, ds_with_site_with_filename_pattern):
     )
     mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
     mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
-    assert con._retrieve_files(ds_with_site_with_filename_pattern) == ['myfile.jpg']
+    assert con._retrieve_files_path(ds_with_site_with_filename_pattern) == ['test/myfile.jpg']
+
+
+@responses.activate
+def test__retrieve_files(con, mocker, ds_with_site_with_file_regex_pattern):
+    """Check that _retrieve_files returns a list of files"""
+    responses.add(
+        responses.GET,
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root/children',
+        status=200,
+        json={
+            'value': [
+                {'name': 'myfile.jpg', 'size': 2048, 'file': {}},
+                {'name': 'Documents', 'folder': {'childCount': 4}},
+                {'name': 'Photos', 'folder': {'childCount': 203}},
+                {'name': 'my sheet(1).xlsx', 'size': 197},
+            ],
+            '@odata.nextLink': 'https://...',
+        },
+    )
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
+    assert con._retrieve_files_path(ds_with_site_with_file_regex_pattern) == ['/myfile.jpg']
 
 
 @responses.activate
@@ -533,7 +571,7 @@ def test__retrieve_files_empty(con, mocker, ds_with_site_with_filename_pattern):
     """Check that _retrieve_files returns a list of files"""
     responses.add(
         responses.GET,
-        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/children',
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test:/children',
         status=200,
         json={
             'value': [],
@@ -543,7 +581,7 @@ def test__retrieve_files_empty(con, mocker, ds_with_site_with_filename_pattern):
     mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
     mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
     with pytest.raises(NotFoundError):
-        con._retrieve_files(ds_with_site_with_filename_pattern)
+        con._retrieve_files_path(ds_with_site_with_filename_pattern)
 
 
 @responses.activate
@@ -572,3 +610,27 @@ def test_get_list_id(con, mocker, ds_with_site):
 
     id = con._get_list_id(ds_with_site, '1234')
     assert id == 'abcd'
+
+
+@responses.activate
+def test__run_fetch_failed(con, mocker, ds_with_site):
+    """It should return nothing as run fetch failed because of something"""
+    responses.add(
+        responses.GET,
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root/children',
+        status=200,
+        json={
+            'value': [
+                {'name': 'myfile.jpg', 'size': 2048, 'file': {}},
+                {'name': 'Documents', 'folder': {'childCount': 4}},
+                {'name': 'Photos', 'folder': {'childCount': 203}},
+                {'name': 'my sheet(1).xlsx', 'size': 197},
+            ],
+            '@odata.nextLink': 'https://...',
+        },
+    )
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
+    mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=requests.exceptions.HTTPError)
+    df = con._retrieve_data(ds_with_site)
+    assert df.empty
