@@ -67,7 +67,7 @@ def _prepare_workbook_elements(data_source):
     else:
         workbook_elements_list = data_source.table
         workbook_key_column = '__tablename__'
-    workbook_elements_list = workbook_elements_list.replace(', ', ',').split(',')
+    workbook_elements_list = [a.strip() for a in workbook_elements_list.split(',')]
     return workbook_elements_list, workbook_key_column
 
 
@@ -286,15 +286,17 @@ class OneDriveConnector(ToucanConnector):
             else:
                 urls = [self._format_url(data_source, workbook_element, data_source.file)]
 
-            data = []
-            for url in urls:
-                try:
-                    # TODO: some day make it async
-                    data.append(self._run_fetch(url).get('values'))
-                except requests.exceptions.HTTPError:
-                    logging.getLogger(__name__).warning(
-                        f'Fetch failed for {url}, maybe sheet, range or table are invalid for this file'
-                    )
+            def url_yielder():
+                for url in urls:
+                    try:
+                        yield self._run_fetch(url).get('values')
+                    except requests.exceptions.HTTPError:
+                        logging.getLogger(__name__).warning(
+                            f'Fetch failed for {url}, maybe sheet, range or table are invalid for this file'
+                        )
+                        # TODO: some day make it async
+
+            data = list(url_yielder())
 
             for d in [d for d in data if d]:
                 cols = d[0]
