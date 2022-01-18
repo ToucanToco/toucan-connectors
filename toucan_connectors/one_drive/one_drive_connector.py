@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import List, Optional
 
 import pandas as pd
@@ -11,6 +12,10 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2ConnectorConfig,
 )
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+
+
+class NotFoundError(Exception):
+    """ """
 
 
 class OneDriveDataSource(ToucanDataSource):
@@ -30,6 +35,9 @@ class OneDriveDataSource(ToucanDataSource):
         None,
         Title='File',
         placeholder='Enter your path file',
+    )
+    match: bool = Field(
+        False, Title='Match', description='Try to match files using provided file name'
     )
     sheet: Optional[str] = Field(
         None,
@@ -52,8 +60,18 @@ class OneDriveDataSource(ToucanDataSource):
     )
 
 
-class OneDriveConnector(ToucanConnector):
+def _prepare_workbook_elements(data_source):
+    if data_source.sheet:
+        workbook_elements_list = data_source.sheet
+        workbook_key_column = '__sheetname__'
+    else:
+        workbook_elements_list = data_source.table
+        workbook_key_column = '__tablename__'
+    workbook_elements_list = [a.strip() for a in workbook_elements_list.split(',')]
+    return workbook_elements_list, workbook_key_column
 
+
+class OneDriveConnector(ToucanConnector):
     data_source_model: OneDriveDataSource
 
     _auth_flow = 'oauth2'
@@ -156,18 +174,11 @@ class OneDriveConnector(ToucanConnector):
             if library['displayName'] == data_source.document_library:
                 return library['id']
 
-    def _format_url(self, data_source, workbook_element):
+    def _format_url(self, data_source, workbook_element, file):
         logging.getLogger(__name__).debug('_format_url')
 
-        # Baseroute for Share Point
-        if data_source.site_url and data_source.document_library:
-            site_id = self._get_site_id(data_source)
-            list_id = self._get_list_id(data_source, site_id)
-
-            url = f'https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_id}/drive/root:/{data_source.file}:/workbook/'
-        # Baseroute for One Drive
-        else:
-            url = f'https://graph.microsoft.com/v1.0/me/drive/root:/{data_source.file}:/workbook/'
+        url = self._build_url_root(data_source)
+        url += f'/{file}:/workbook/'
 
         # Endpoint for Sheet
         if data_source.sheet:
@@ -185,6 +196,22 @@ class OneDriveConnector(ToucanConnector):
 
         return url
 
+    def _format_urls(self, data_source, workbook_element, filenames):
+        logging.getLogger(__name__).debug('_format_url')
+        return [self._format_url(data_source, workbook_element, file) for file in filenames]
+
+    def _build_url_root(self, data_source):
+        # Baseroute for Share Point
+        if data_source.site_url and data_source.document_library:
+            site_id = self._get_site_id(data_source)
+            list_id = self._get_list_id(data_source, site_id)
+
+            url = f'https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_id}/drive/root:'
+        # Baseroute for One Drive
+        else:
+            url = 'https://graph.microsoft.com/v1.0/me/drive/root:'
+        return url
+
     def _run_fetch(self, url):
         logging.getLogger(__name__).debug('_run_fetch')
         access_token = self._get_access_token()
@@ -194,6 +221,45 @@ class OneDriveConnector(ToucanConnector):
         response.raise_for_status()
 
         return response.json()
+
+    def _retrieve_files_path(self, data_source: OneDriveDataSource) -> List[str]:
+        logging.getLogger(__name__).debug('_retrieve_files_path')
+        path = None
+        # Split the "file" input to retrieve the path & the pattern
+        splitted = data_source.file.split('/')
+        if len(splitted) > 1:
+            path = f"/{('/').join(splitted[:len(splitted)-1])}:"
+            pattern = splitted[-1]
+        else:
+            pattern = splitted[0]
+
+        url = self._build_url_root(data_source)
+        if path:
+            url += f'{path}/children'
+        else:
+            url = f'{url[:-1]}/children'
+        response = requests.get(
+            url,
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self._get_access_token()}',
+            },
+        )
+        response.raise_for_status()
+        children = response.json().get('value')
+        if children:
+            val = list(
+                filter(
+                    lambda f: re.match(re.compile(pattern), f),
+                    [c['name'] for c in children if 'folder' not in c],
+                )
+            )
+            if path:
+                return [f'{path[1:-1] if path else ""}/{v}' for v in val]
+            else:
+                return [f'/{v}' for v in val]
+        else:
+            raise NotFoundError('No matching file name')
 
     def _retrieve_data(self, data_source: OneDriveDataSource) -> pd.DataFrame:
         logging.getLogger(__name__).debug('_retrieve_data')
@@ -207,37 +273,39 @@ class OneDriveConnector(ToucanConnector):
         if not data_source.sheet and not data_source.table:
             raise ValueError('You must specify at least a sheet or a table')
 
-        df_all = pd.DataFrame()
+        file_names = None
+        if data_source.match:
+            file_names = self._retrieve_files_path(data_source)
 
-        workbook_elements_list = []
-        workbook_key_column = ''
-        if data_source.sheet:
-            workbook_elements_list = data_source.sheet
-            workbook_key_column = '__sheetname__'
-        else:
-            workbook_elements_list = data_source.table
-            workbook_key_column = '__tablename__'
-        workbook_elements_list = workbook_elements_list.replace(', ', ',').split(',')
+        df_all = pd.DataFrame()
+        workbook_elements_list, workbook_key_column = _prepare_workbook_elements(data_source)
 
         for workbook_element in workbook_elements_list:
-            url = self._format_url(data_source, workbook_element)
+            if file_names:
+                urls = self._format_urls(data_source, workbook_element, file_names)
+            else:
+                urls = [self._format_url(data_source, workbook_element, data_source.file)]
 
-            response = self._run_fetch(url)
+            def url_yielder():
+                for url in urls:
+                    try:
+                        yield self._run_fetch(url).get('values')
+                    except requests.exceptions.HTTPError:
+                        logging.getLogger(__name__).warning(
+                            f'Fetch failed for {url}, maybe sheet, range or table are invalid for this file'
+                        )
+                        # TODO: some day make it async
 
-            data = response.get('values')
+            data = list(url_yielder())
 
-            if not data:
-                logging.getLogger(__name__).debug('No data retrieved from response')
-                return pd.DataFrame()
+            for d in [d for d in data if d]:
+                cols = d[0]
+                d.pop(0)
+                df_current = pd.DataFrame(d, columns=cols)
 
-            cols = data[0]
-            data.pop(0)
-
-            df_current = pd.DataFrame(data, columns=cols)
-            if len(workbook_elements_list) > 1:
-                df_current[workbook_key_column] = workbook_element
-
-            df_all = df_all.append(df_current)
+                if len(workbook_elements_list) > 1:
+                    df_current[workbook_key_column] = workbook_element
+                df_all = df_all.append(df_current)
 
         if data_source.parse_dates:
             for date_col in data_source.parse_dates:

@@ -2,13 +2,18 @@ import copy
 
 import pandas as pd
 import pytest
+import requests.exceptions
 import responses
 from pytest import fixture
 
 from tests.one_drive.fixtures import FAKE_LIBRARIES, FAKE_SHEET
 from toucan_connectors.common import HttpError
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector
-from toucan_connectors.one_drive.one_drive_connector import OneDriveConnector, OneDriveDataSource
+from toucan_connectors.one_drive.one_drive_connector import (
+    NotFoundError,
+    OneDriveConnector,
+    OneDriveDataSource,
+)
 
 import_path = 'toucan_connectors.one_drive.one_drive_connector'
 
@@ -114,6 +119,34 @@ def ds_with_site():
         domain='test_domain',
         file='test_file',
         sheet='test_sheet',
+        range='A2:B3',
+        site_url='company_name.sharepoint.com/sites/site_name',
+        document_library='Documents',
+    )
+
+
+@fixture
+def ds_with_site_with_filename_pattern():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        match=True,
+        file=r'test/.*\.jpg',
+        sheet='test_sheet, other_sheet',
+        range='A2:B3',
+        site_url='company_name.sharepoint.com/sites/site_name',
+        document_library='Documents',
+    )
+
+
+@fixture
+def ds_with_site_with_file_regex_pattern():
+    return OneDriveDataSource(
+        name='test_name',
+        domain='test_domain',
+        match=True,
+        file=r'.*\.jpg',
+        sheet='test_sheet, other_sheet',
         range='A2:B3',
         site_url='company_name.sharepoint.com/sites/site_name',
         document_library='Documents',
@@ -298,6 +331,44 @@ def test_multiple_sheets_success(mocker, con, ds_with_multiple_sheets, ds_with_m
     ]
 
 
+def test_multiple_files_sheets_success(mocker, con, ds_with_site_with_filename_pattern):
+    """It should return a dataframe"""
+    mocker.patch.object(OneDriveConnector, '_retrieve_files_path', return_value=['foo', 'bar'])
+    run_fetch = mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
+    df = con.get_df(ds_with_site_with_filename_pattern)
+    assert run_fetch.call_count == 4
+    assert run_fetch.call_args_list[0][0][0] == (
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/foo:'
+        "/workbook/worksheets/test_sheet/range(address='A2:B3')"
+    )
+    assert run_fetch.call_args_list[1][0][0] == (
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/bar:'
+        "/workbook/worksheets/test_sheet/range(address='A2:B3')"
+    )
+    assert run_fetch.call_args_list[2][0][0] == (
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/foo:'
+        "/workbook/worksheets/other_sheet/range(address='A2:B3')"
+    )
+    assert run_fetch.call_args_list[3][0][0] == (
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/bar:'
+        "/workbook/worksheets/other_sheet/range(address='A2:B3')"
+    )
+    assert df.shape == (8, 9)
+    assert df.columns.tolist() == [
+        'col_text',
+        'col_int',
+        'col_float',
+        'col_money',
+        'col_date',
+        'col_datetime',
+        'col_datetime_bis',
+        'col_mixed_type',
+        '__sheetname__',
+    ]
+
+
 def test_sheets_without_date(mocker, con, ds):
     mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
 
@@ -344,11 +415,11 @@ def test_url_with_range(mocker, con, ds):
     """It should format the url when a range is provided"""
     mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
 
-    url = con._format_url(ds, 'test_sheet')
+    url = con._format_url(ds, 'test_sheet', ds.file)
 
     assert (
-        url
-        == "https://graph.microsoft.com/v1.0/me/drive/root:/test_file:/workbook/worksheets/test_sheet/range(address='A2:B3')"
+        url == 'https://graph.microsoft.com/v1.0/me/drive'
+        "/root:/test_file:/workbook/worksheets/test_sheet/range(address='A2:B3')"
     )
 
 
@@ -356,11 +427,11 @@ def test_url_without_range(mocker, con, ds_without_range):
     """It should format the url when no range is provided"""
     mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
 
-    url = con._format_url(ds_without_range, 'test_sheet')
+    url = con._format_url(ds_without_range, 'test_sheet', ds_without_range.file)
 
     assert (
-        url
-        == 'https://graph.microsoft.com/v1.0/me/drive/root:/test_file:/workbook/worksheets/test_sheet/usedRange(valuesOnly=true)'
+        url == 'https://graph.microsoft.com/v1.0/me/drive/'
+        'root:/test_file:/workbook/worksheets/test_sheet/usedRange(valuesOnly=true)'
     )
 
 
@@ -368,7 +439,7 @@ def test_url_with_table(mocker, con, ds_with_table):
     """It should format the url when a table is provided"""
     mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=fake_sheet)
 
-    url = con._format_url(ds_with_table, 'test_table')
+    url = con._format_url(ds_with_table, 'test_table', ds_with_table.file)
 
     assert (
         url
@@ -382,11 +453,12 @@ def test_url_with_site_with_range(mocker, con, ds_with_site):
     mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
     mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
 
-    url = con._format_url(ds_with_site, 'test_sheet')
+    url = con._format_url(ds_with_site, 'test_sheet', ds_with_site.file)
 
     assert (
-        url
-        == "https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test_file:/workbook/worksheets/test_sheet/range(address='A2:B3')"
+        url == 'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/'
+        'root:/test_file:/workbook/worksheets'
+        "/test_sheet/range(address='A2:B3')"
     )
 
 
@@ -396,11 +468,12 @@ def test_url_with_site_without_range(mocker, con, ds_with_site_without_range):
     mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
     mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
 
-    url = con._format_url(ds_with_site_without_range, 'test_sheet')
+    url = con._format_url(ds_with_site_without_range, 'test_sheet', ds_with_site_without_range.file)
 
     assert (
         url
-        == 'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test_file:/workbook/worksheets/test_sheet/usedRange(valuesOnly=true)'
+        == 'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test_file:/workbook/worksheets'
+        '/test_sheet/usedRange(valuesOnly=true)'
     )
 
 
@@ -450,6 +523,68 @@ def test_run_fetch(con, mocker):
 
 
 @responses.activate
+def test__retrieve_files_path(con, mocker, ds_with_site_with_filename_pattern):
+    """Check that _retrieve_files returns a list of files"""
+    responses.add(
+        responses.GET,
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test:/children',
+        status=200,
+        json={
+            'value': [
+                {'name': 'myfile.jpg', 'size': 2048, 'file': {}},
+                {'name': 'Documents', 'folder': {'childCount': 4}},
+                {'name': 'Photos', 'folder': {'childCount': 203}},
+                {'name': 'my sheet(1).xlsx', 'size': 197},
+            ],
+            '@odata.nextLink': 'https://...',
+        },
+    )
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
+    assert con._retrieve_files_path(ds_with_site_with_filename_pattern) == ['test/myfile.jpg']
+
+
+@responses.activate
+def test__retrieve_files(con, mocker, ds_with_site_with_file_regex_pattern):
+    """Check that _retrieve_files returns a list of files"""
+    responses.add(
+        responses.GET,
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root/children',
+        status=200,
+        json={
+            'value': [
+                {'name': 'myfile.jpg', 'size': 2048, 'file': {}},
+                {'name': 'Documents', 'folder': {'childCount': 4}},
+                {'name': 'Photos', 'folder': {'childCount': 203}},
+                {'name': 'my sheet(1).xlsx', 'size': 197},
+            ],
+            '@odata.nextLink': 'https://...',
+        },
+    )
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
+    assert con._retrieve_files_path(ds_with_site_with_file_regex_pattern) == ['/myfile.jpg']
+
+
+@responses.activate
+def test__retrieve_files_empty(con, mocker, ds_with_site_with_filename_pattern):
+    """Check that _retrieve_files returns a list of files"""
+    responses.add(
+        responses.GET,
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test:/children',
+        status=200,
+        json={
+            'value': [],
+            '@odata.nextLink': 'https://...',
+        },
+    )
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
+    with pytest.raises(NotFoundError):
+        con._retrieve_files_path(ds_with_site_with_filename_pattern)
+
+
+@responses.activate
 def test_get_site_id(con, mocker, ds_with_site, ds_with_site_sheme):
     """It should return a site id from a site url (including or not the https:// prefix, ending or not with /)"""
     responses.add(
@@ -475,3 +610,27 @@ def test_get_list_id(con, mocker, ds_with_site):
 
     id = con._get_list_id(ds_with_site, '1234')
     assert id == 'abcd'
+
+
+@responses.activate
+def test__run_fetch_failed(con, mocker, ds_with_site):
+    """It should return nothing as run fetch failed because of something"""
+    responses.add(
+        responses.GET,
+        'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root/children',
+        status=200,
+        json={
+            'value': [
+                {'name': 'myfile.jpg', 'size': 2048, 'file': {}},
+                {'name': 'Documents', 'folder': {'childCount': 4}},
+                {'name': 'Photos', 'folder': {'childCount': 203}},
+                {'name': 'my sheet(1).xlsx', 'size': 197},
+            ],
+            '@odata.nextLink': 'https://...',
+        },
+    )
+    mocker.patch.object(OneDriveConnector, '_get_site_id', return_value='1234')
+    mocker.patch.object(OneDriveConnector, '_get_list_id', return_value='abcd')
+    mocker.patch.object(OneDriveConnector, '_run_fetch', side_effect=requests.exceptions.HTTPError)
+    df = con._retrieve_data(ds_with_site)
+    assert df.empty
