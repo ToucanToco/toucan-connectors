@@ -65,8 +65,8 @@ class SnowflakeCommon:
         self.query_generation_time: Optional[float] = None
         self.data_extraction_time: Optional[float] = None
         self.data_conversion_time: Optional[float] = None
-        self.permission_application_time: Optional[float] = None
-        self.stats_computed_time: Optional[float] = None
+        self.data_filtered_from_permission_time: Optional[float] = None
+        self.compute_stats_time: Optional[float] = None
         self.column_names_and_types: Optional[Dict[str, str]] = None
 
     def set_data(self, data):

@@ -20,8 +20,8 @@ Below is the metadata list and a note explaining how they are calculated.
     * `query_generation_time` (`float`): in seconds, the time to modify/create a query to get just the slice and start the process to request external data.
     * `data_extraction_time` (`float`): in seconds, the time to request the result of the modified query from external service. 
     * `data_conversion_time` (`float`): in seconds, the time to convert results in a `pandas.DataFrame`.
-    * `permission_application_time` (`float`): in seconds, the time to filter datas with permissions.
-    * `stats_computed_time` (`float`): in seconds, the time to compute statistics and return data as result.
+    * `data_filtered_from_permission_time` (`float`): in seconds, the time to filter datas with permissions.
+    * `compute_stats_time` (`float`): in seconds, the time to compute statistics and return data as result.
     * `df_memory_size` (`int`): size of extracted data in bytes.
 
 ## DataSlice attributes computation
