@@ -1,6 +1,6 @@
 # Changelog (Pypi package)
 
-## [1.3.44] 2022-01-19
+## [2.0.0] 2022-01-19
 
 ### Changed
 
@@ -19,5 +19,5 @@ Some DataStats properties changed in the naming and some of them was added, see 
 - Added a dev container for developping safely on connectors.
 
 
-[1.3.44]: https://github.com/ToucanToco/toucan-connectors/compare/v1.3.40...v1.3.44
+[2.0.0]: https://github.com/ToucanToco/toucan-connectors/compare/v1.3.40...v2.0.0
 [1.3.43]: https://github.com/ToucanToco/toucan-connectors/compare/v1.3.40...v1.3.44
