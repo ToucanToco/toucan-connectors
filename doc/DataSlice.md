@@ -17,11 +17,14 @@ Below is the metadata list and a note explaining how they are calculated.
 
     * `total_rows` (`int`): total rows returned by a user query.
     * `total_returned_rows` (`int`): total of rows returned in a slice of results.
-    * `execution_time` (`float`): in milliseconds, query execution time.
-    * `conversion_time` (`float`): in milliseconds, time to convert results in a `pandas.DataFrame`.
+    * `query_generation_time` (`float`): in seconds, the time to modify/create a query to get just the slice and start the process to request external data.
+    * `data_extraction_time` (`float`): in seconds, the time to request the result of the modified query from external service. 
+    * `data_conversion_time` (`float`): in seconds, the time to convert results in a `pandas.DataFrame`.
+    * `data_filtered_from_permission_time` (`float`): in seconds, the time to filter datas with permissions.
+    * `compute_stats_time` (`float`): in seconds, the time to compute statistics and return data as result.
     * `df_memory_size` (`int`): size of extracted data in bytes.
 
-## DataSlice attributes computation in Snowflake connector
+## DataSlice attributes computation
 
 * `input_parameters`:
  contains all parameters we were able to extract from the input. In the context of a Snowflake (or SQL) data extraction, we implemented the extraction of limit & offset directly from the query using regular expressions.
@@ -34,16 +37,16 @@ Below is the metadata list and a note explaining how they are calculated.
         * Execute both queries (“data” & “count”) in parallel and store the result.
     * `total_returned_rows`: this metric is retrieved using cursor.execute().rowcount
     * `df_memory_size`: computed using pandas.DataFrame().memory_usage().sum()
-    * `execution_time`: 
+    * `query_generation_time`: 
     ```
-    execution_start = timer()
+    generation_start = timer()
     cursor = c.cursor(DictCursor)
     query_res = cursor.execute(query, query_parameters)
     ...
-    execution_end = timer()
+    generation_end = timer()
     ```
 
-    * `conversion_time`
+    * `data_conversion_time`
 
     ```
     convert_start = timer()

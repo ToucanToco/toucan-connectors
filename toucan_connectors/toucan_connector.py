@@ -26,13 +26,18 @@ except ImportError:
     pass
 
 
-class DataStats(NamedTuple):
-    total_rows: Optional[int] = None  # total number of rows in original dataset
-    total_returned_rows: Optional[int] = None  # the number of rows returned by the query
-    execution_time: Optional[float] = None  # query's execution time in ms
-    conversion_time: Optional[float] = None  # Result conversion to DataFrame time
-    df_memory_size: Optional[int] = None  # Dataframe's memory usage in bytes
-    others: Dict[str, Any] = {}
+class DataStats(BaseModel):
+    total_rows: Optional[int] = None
+    total_returned_rows: Optional[int] = None
+    query_generation_time: Optional[float] = None
+    data_extraction_time: Optional[float] = None
+    data_conversion_time: Optional[float] = None
+    compute_stats_time: Optional[float] = None
+    conversion_time: Optional[float] = None
+    compute_stats_time: Optional[float] = None
+    data_filtered_from_permission_time: Optional[float] = None
+    df_memory_size: Optional[int] = None
+    others: Optional[Dict[str, Any]] = None
 
 
 class QueryMetadata(NamedTuple):

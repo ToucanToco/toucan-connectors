@@ -60,10 +60,13 @@ class SnowflakeCommon:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.data: pd.DataFrame
-        self.total_rows_count: Optional[int] = None
-        self.total_returned_rows_count: Optional[int] = None
-        self.execution_time: Optional[float] = None
-        self.conversion_time: Optional[float] = None
+        self.total_rows_count: Optional[int] = -1
+        self.total_returned_rows_count: Optional[int] = -1
+        self.query_generation_time: Optional[float] = None
+        self.data_extraction_time: Optional[float] = None
+        self.data_conversion_time: Optional[float] = None
+        self.data_filtered_from_permission_time: Optional[float] = None
+        self.compute_stats_time: Optional[float] = None
         self.column_names_and_types: Optional[Dict[str, str]] = None
 
     def set_data(self, data):
@@ -75,11 +78,11 @@ class SnowflakeCommon:
     def set_total_returned_rows_count(self, count):
         self.total_returned_rows_count = count
 
-    def set_execution_time(self, execution_time):
-        self.execution_time = execution_time
+    def set_query_generation_time(self, query_generation_time):
+        self.query_generation_time = query_generation_time
 
-    def set_conversion_time(self, conversion_time):
-        self.conversion_time = conversion_time
+    def set_data_conversion_time(self, data_conversion_time):
+        self.data_conversion_time = data_conversion_time
 
     def _execute_query(self, connection, query: str, query_parameters: Optional[Dict] = None):
         return QueryManager().execute(
@@ -98,36 +101,36 @@ class SnowflakeCommon:
         execution_start = timer()
         cursor = connection.cursor(DictCursor)
         query_res = cursor.execute(query, query_parameters)
-        execution_end = timer()
-        execution_time = execution_end - execution_start
+
+        query_generation_time = timer() - execution_start
         self.logger.info(
-            f'[benchmark][snowflake] - execute {execution_time} seconds',
+            f'[benchmark][snowflake] - execute {query_generation_time} seconds',
             extra={
                 'benchmark': {
                     'operation': 'execute',
-                    'execution_time': execution_time,
+                    'query_generation_time': query_generation_time,
                     'connector': 'snowflake',
                     'query': query,
                 }
             },
         )
-        self.set_execution_time(execution_time)
+        self.set_query_generation_time(query_generation_time)
         convert_start = timer()
         # Here call our customized fetch
         values = pd.DataFrame.from_dict(query_res.fetchall())
-        convert_end = timer()
-        conversion_time = convert_end - convert_start
+
+        data_conversion_time = timer() - convert_start
         self.logger.info(
-            f'[benchmark][snowflake] - dataframe {conversion_time} seconds',
+            f'[benchmark][snowflake] - dataframe {data_conversion_time} seconds',
             extra={
                 'benchmark': {
                     'operation': 'dataframe',
-                    'execution_time': conversion_time,
+                    'data_conversion_time': data_conversion_time,
                     'connector': 'snowflake',
                 }
             },
         )
-        self.set_conversion_time(conversion_time)
+        self.set_data_conversion_time(data_conversion_time)
 
         return values  # do not return metadata from now
 
@@ -198,6 +201,7 @@ class SnowflakeCommon:
         limit: Optional[int] = None,
         get_row_count: bool = False,
     ) -> pd.DataFrame:
+        extraction_start = timer()
         if data_source.database != connection.database:
             self.logger.info(f'Connection changed to use database {connection.database}')
             self._execute_query(connection, f'USE DATABASE {data_source.database}')
@@ -208,6 +212,8 @@ class SnowflakeCommon:
         ds = self._execute_parallelized_queries(
             connection, data_source.query, data_source.parameters, offset, limit, get_row_count
         )
+        self.data_extraction_time = timer() - extraction_start
+
         return ds.df
 
     def retrieve_data(
@@ -226,8 +232,9 @@ class SnowflakeCommon:
         result = self.fetch_data(connection, data_source, offset, limit, get_row_count)
 
         stats = DataStats(
-            execution_time=self.execution_time,
-            conversion_time=self.conversion_time,
+            query_generation_time=self.query_generation_time,
+            data_extraction_time=self.data_extraction_time,
+            data_conversion_time=self.data_conversion_time,
             total_returned_rows=len(result),
             df_memory_size=result.memory_usage().sum(),
             total_rows=self.total_rows_count,
@@ -273,14 +280,14 @@ class SnowflakeCommon:
         description_start = timer()
         cursor = connection.cursor(DictCursor)
         describe_res = cursor.describe(query)
-        description_end = timer()
-        description_time = description_end - description_start
+
+        description_time = timer() - description_start
         self.logger.info(
             f'[benchmark][snowflake] - description {description_time} seconds',
             extra={
                 'benchmark': {
                     'operation': 'describe',
-                    'execution_time': description_time,
+                    'description_time': description_time,
                     'connector': 'snowflake',
                     'query': query,
                     'result': json.dumps(describe_res),
