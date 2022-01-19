@@ -35,7 +35,7 @@ class DataStats(BaseModel):
     stats_computed_time: Optional[float] = None
     conversion_time: Optional[float] = None
     compute_stats_time: Optional[float] = None
-    data_filtered_from_permission_time: Optional[float] = None
+    permission_application_time: Optional[float] = None
     df_memory_size: Optional[int] = None
     others: Optional[Dict[str, Any]] = None
 

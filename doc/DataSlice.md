@@ -20,11 +20,11 @@ Below is the metadata list and a note explaining how they are calculated.
     * `query_generation_time` (`float`): in seconds, the time to modify/create a query to get just the slice and start the process to request external data.
     * `data_extraction_time` (`float`): in seconds, the time to request the result of the modified query from external service. 
     * `data_conversion_time` (`float`): in seconds, the time to convert results in a `pandas.DataFrame`.
-    * `data_filtered_from_permission_time` (`float`): in seconds, the time to filter datas with permissions.
+    * `permission_application_time` (`float`): in seconds, the time to filter datas with permissions.
     * `stats_computed_time` (`float`): in seconds, the time to compute statistics and return data as result.
     * `df_memory_size` (`int`): size of extracted data in bytes.
 
-## DataSlice attributes computation in Snowflake connector
+## DataSlice attributes computation
 
 * `input_parameters`:
  contains all parameters we were able to extract from the input. In the context of a Snowflake (or SQL) data extraction, we implemented the extraction of limit & offset directly from the query using regular expressions.
