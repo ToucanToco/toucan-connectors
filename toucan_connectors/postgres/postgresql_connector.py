@@ -88,6 +88,12 @@ class PostgresDataSource(ToucanDataSource):
                         databases_tree += res
 
                 formatted_res = format_db_tree(databases_tree)
+            # In database dropdown, remove database with only system schema 'information_schema' or 'pg_catalog'
+            constraints['database'] = strlist_to_enum(
+                'database',
+                [db for db in available_dbs if db in [r['database'] for r in formatted_res]],
+            )
+
         return create_model('FormSchema', **constraints, tree=formatted_res, __base__=cls).schema()
 
 

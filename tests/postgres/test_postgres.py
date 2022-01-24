@@ -255,7 +255,7 @@ def test_get_form_empty_query(postgres_connector):
         'title': 'database',
         'description': 'An enumeration.',
         'type': 'string',
-        'enum': ['postgres', 'postgres_db'],
+        'enum': ['postgres_db'],
     }
 
 
@@ -268,7 +268,7 @@ def test_get_form_query_with_good_database(postgres_connector, mocker):
         'title': 'database',
         'description': 'An enumeration.',
         'type': 'string',
-        'enum': ['postgres', 'postgres_db'],
+        'enum': ['postgres_db'],
     }
     assert form['properties']['table'] == {'$ref': '#/definitions/table'}
     assert form['definitions']['table'] == {
@@ -293,56 +293,53 @@ def test_get_form_get_tree(mocker, postgres_connector):
     form = PostgresDataSource.get_form(postgres_connector, current_config)
     assert form['properties']['tree']['default'] == [
         {
-            'name': 'public',
+            'name': 'city',
+            'schema': 'public',
             'database': 'postgres_db',
-            'tables': [
-                {
-                    'name': 'city',
-                    'schema': 'public',
-                    'type': 'table',
-                    'columns': [
-                        {'name': 'id', 'type': 'integer', 'parent': 'city'},
-                        {'name': 'name', 'type': 'text', 'parent': 'city'},
-                        {'name': 'countrycode', 'type': 'character', 'parent': 'city'},
-                        {'name': 'district', 'type': 'text', 'parent': 'city'},
-                        {'name': 'population', 'type': 'integer', 'parent': 'city'},
-                    ],
-                },
-                {
-                    'name': 'country',
-                    'schema': 'public',
-                    'type': 'table',
-                    'columns': [
-                        {'name': 'code', 'type': 'character', 'parent': 'country'},
-                        {'name': 'name', 'type': 'text', 'parent': 'country'},
-                        {'name': 'continent', 'type': 'text', 'parent': 'country'},
-                        {'name': 'region', 'type': 'text', 'parent': 'country'},
-                        {'name': 'surfacearea', 'type': 'real', 'parent': 'country'},
-                        {'name': 'indepyear', 'type': 'smallint', 'parent': 'country'},
-                        {'name': 'population', 'type': 'integer', 'parent': 'country'},
-                        {'name': 'lifeexpectancy', 'type': 'real', 'parent': 'country'},
-                        {'name': 'gnp', 'type': 'numeric', 'parent': 'country'},
-                        {'name': 'gnpold', 'type': 'numeric', 'parent': 'country'},
-                        {'name': 'localname', 'type': 'text', 'parent': 'country'},
-                        {'name': 'governmentform', 'type': 'text', 'parent': 'country'},
-                        {'name': 'headofstate', 'type': 'text', 'parent': 'country'},
-                        {'name': 'capital', 'type': 'integer', 'parent': 'country'},
-                        {'name': 'code2', 'type': 'character', 'parent': 'country'},
-                    ],
-                },
-                {
-                    'name': 'countrylanguage',
-                    'schema': 'public',
-                    'type': 'table',
-                    'columns': [
-                        {'name': 'countrycode', 'type': 'character', 'parent': 'countrylanguage'},
-                        {'name': 'language', 'type': 'text', 'parent': 'countrylanguage'},
-                        {'name': 'isofficial', 'type': 'boolean', 'parent': 'countrylanguage'},
-                        {'name': 'percentage', 'type': 'real', 'parent': 'countrylanguage'},
-                    ],
-                },
+            'type': 'table',
+            'columns': [
+                {'name': 'id', 'type': 'integer'},
+                {'name': 'name', 'type': 'text'},
+                {'name': 'countrycode', 'type': 'character'},
+                {'name': 'district', 'type': 'text'},
+                {'name': 'population', 'type': 'integer'},
             ],
-        }
+        },
+        {
+            'name': 'country',
+            'schema': 'public',
+            'database': 'postgres_db',
+            'type': 'table',
+            'columns': [
+                {'name': 'code', 'type': 'character'},
+                {'name': 'name', 'type': 'text'},
+                {'name': 'continent', 'type': 'text'},
+                {'name': 'region', 'type': 'text'},
+                {'name': 'surfacearea', 'type': 'real'},
+                {'name': 'indepyear', 'type': 'smallint'},
+                {'name': 'population', 'type': 'integer'},
+                {'name': 'lifeexpectancy', 'type': 'real'},
+                {'name': 'gnp', 'type': 'numeric'},
+                {'name': 'gnpold', 'type': 'numeric'},
+                {'name': 'localname', 'type': 'text'},
+                {'name': 'governmentform', 'type': 'text'},
+                {'name': 'headofstate', 'type': 'text'},
+                {'name': 'capital', 'type': 'integer'},
+                {'name': 'code2', 'type': 'character'},
+            ],
+        },
+        {
+            'name': 'countrylanguage',
+            'schema': 'public',
+            'database': 'postgres_db',
+            'type': 'table',
+            'columns': [
+                {'name': 'countrycode', 'type': 'character'},
+                {'name': 'language', 'type': 'text'},
+                {'name': 'isofficial', 'type': 'boolean'},
+                {'name': 'percentage', 'type': 'real'},
+            ],
+        },
     ]
 
 

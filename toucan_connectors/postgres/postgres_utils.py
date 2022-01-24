@@ -615,10 +615,8 @@ def create_query_editor_query(database: str):
         information_schema.tables t
     inner join information_schema.columns c on
         t.table_name = c.table_name
-    where
-        t.table_schema = 'public'
-        and t.table_type in ('BASE TABLE', 'VIEW')
-        and c.table_schema = 'public'
+    where t.table_type in ('BASE TABLE', 'VIEW')
+    and t.table_schema not in  ('pg_catalog', 'information_schema')
     group by t.table_schema, t.table_name, t.table_type;
     """
 

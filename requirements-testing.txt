@@ -17,6 +17,7 @@ python-slugify == 5.0.0
 PyYAML == 5.4.1
 responses >= 0.13.3
 psycopg2 == 2.8.6
+sqlalchemy == 1.4.31
 xmltodict == 0.12.0
 python_graphql_client == 0.4.3
 clickhouse_driver == 0.2.0
