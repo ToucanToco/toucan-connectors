@@ -629,31 +629,31 @@ def format_db_tree(unformatted_db_tree: list):
     ('database', 'schema', 'table', 'table type', {'column name':'column type'}), ...
     ]
     to
-    [
-        {
-        "name": "schema name",
-        "database": "database name",
-         "tables": [
-         {
-             "name":"table name",
-             "type":"table type"
-             "columns": [
-             {
-                "name": "column name",
-                "type": "column type",
-                "parent":"Parent table",
-            }
-
-             ]
-         },
-         ...
-         ],
-         "views": [
-              {
-             "name":"view name",
-             "type":"view"
-             "parent":"Parent table"
-         },
+        [
+      {
+        name: "Table 1",
+        type: "table",
+        database: 'Database 1',
+        schema: 'Schema 1',
+        columns: [
+          {
+            name: "ColA",
+            type: "string"
+          }
+        ]
+      },
+      {
+        name: "View 1",
+        type: "view",
+        database: 'Database 1',
+        schema: 'Schema 1',
+        columns: [
+          {
+            name: "ColO",
+            type: "string",
+          }
+        ]
+      },
     ]
     """
     df = pd.DataFrame(unformatted_db_tree)
@@ -661,26 +661,24 @@ def format_db_tree(unformatted_db_tree: list):
     output = []
 
     for db in df['database'].unique():
-        current_db_tree = {
-            'name': df[df['database'] == db]['schema'].unique()[0],
-            'database': db,
-        }
-        for type in ('table', 'view'):
-            object_list = []
-            for object_name in df[(df['database'] == db) & (df['type'] == type)]['name'].unique():
-                object_list.append(
-                    {
-                        'name': object_name,
-                        'schema': df[(df['database'] == db)]['schema'].unique()[0],
-                        'type': 'table',
+        schemas = df[df['database'] == db]['schema'].unique()
+        for schema in schemas:
+            for type in ('table', 'view'):
+                objects = df[
+                    (df['database'] == db) & (df['schema'] == schema) & (df['type'] == type)
+                ]['name'].unique()
+                for object in objects:
+                    current_object = {
+                        'name': object,
+                        'schema': schema,
+                        'database': db,
+                        'type': type,
                         'columns': df[
                             (df['database'] == db)
+                            & (df['schema'] == schema)
                             & (df['type'] == type)
-                            & (df['name'] == object_name)
+                            & (df['name'] == object)
                         ]['columns'].values[0],
                     }
-                )
-            if object_list:
-                current_db_tree[f'{type}s'] = object_list
-        output.append(current_db_tree)
+                    output.append(current_object)
     return output

@@ -422,44 +422,33 @@ def test_format_db_tree():
         ]
     ) == [
         {
-            'name': 'public',
+            'name': 'test',
+            'type': 'table',
             'database': 'postgres',
-            'tables': [
-                {
-                    'name': 'test',
-                    'type': 'table',
-                    'schema': 'public',
-                    'columns': [
-                        {'name': 'id', 'type': 'integer', 'parent': 'test'},
-                        {'name': 'price', 'type': 'integer', 'parent': 'test'},
-                    ],
-                },
+            'schema': 'public',
+            'columns': [
+                {'name': 'id', 'type': 'integer', 'parent': 'test'},
+                {'name': 'price', 'type': 'integer', 'parent': 'test'},
             ],
         },
         {
-            'name': 'public',
+            'name': 'test',
+            'type': 'table',
+            'schema': 'public',
             'database': 'demo',
-            'tables': [
-                {
-                    'name': 'test',
-                    'type': 'table',
-                    'schema': 'public',
-                    'columns': [
-                        {'name': 'id', 'type': 'integer', 'parent': 'test'},
-                        {'name': 'price', 'type': 'integer', 'parent': 'test'},
-                    ],
-                },
+            'columns': [
+                {'name': 'id', 'type': 'integer', 'parent': 'test'},
+                {'name': 'price', 'type': 'integer', 'parent': 'test'},
             ],
-            'views': [
-                {
-                    'name': 'testoiiii',
-                    'type': 'table',
-                    'schema': 'public',
-                    'columns': [
-                        {'name': 'id', 'type': 'integer', 'parent': 'testoiiii'},
-                        {'name': 'price', 'type': 'integer', 'parent': 'testoiiii'},
-                    ],
-                },
+        },
+        {
+            'name': 'testoiiii',
+            'type': 'view',
+            'schema': 'public',
+            'database': 'demo',
+            'columns': [
+                {'name': 'id', 'type': 'integer', 'parent': 'testoiiii'},
+                {'name': 'price', 'type': 'integer', 'parent': 'testoiiii'},
             ],
         },
     ]
