@@ -395,8 +395,8 @@ def test_format_db_tree():
                 'table',
                 'test',
                 [
-                    {'name': 'id', 'type': 'integer', 'parent': 'test'},
-                    {'name': 'price', 'type': 'integer', 'parent': 'test'},
+                    {'name': 'id', 'type': 'integer'},
+                    {'name': 'price', 'type': 'integer'},
                 ],
             ),
             (
@@ -405,8 +405,8 @@ def test_format_db_tree():
                 'table',
                 'test',
                 [
-                    {'name': 'id', 'type': 'integer', 'parent': 'test'},
-                    {'name': 'price', 'type': 'integer', 'parent': 'test'},
+                    {'name': 'id', 'type': 'integer'},
+                    {'name': 'price', 'type': 'integer'},
                 ],
             ),
             (
@@ -415,8 +415,8 @@ def test_format_db_tree():
                 'view',
                 'testoiiii',
                 [
-                    {'name': 'id', 'type': 'integer', 'parent': 'testoiiii'},
-                    {'name': 'price', 'type': 'integer', 'parent': 'testoiiii'},
+                    {'name': 'id', 'type': 'integer'},
+                    {'name': 'price', 'type': 'integer'},
                 ],
             ),
         ]
@@ -427,8 +427,8 @@ def test_format_db_tree():
             'database': 'postgres',
             'schema': 'public',
             'columns': [
-                {'name': 'id', 'type': 'integer', 'parent': 'test'},
-                {'name': 'price', 'type': 'integer', 'parent': 'test'},
+                {'name': 'id', 'type': 'integer'},
+                {'name': 'price', 'type': 'integer'},
             ],
         },
         {
@@ -437,8 +437,8 @@ def test_format_db_tree():
             'schema': 'public',
             'database': 'demo',
             'columns': [
-                {'name': 'id', 'type': 'integer', 'parent': 'test'},
-                {'name': 'price', 'type': 'integer', 'parent': 'test'},
+                {'name': 'id', 'type': 'integer'},
+                {'name': 'price', 'type': 'integer'},
             ],
         },
         {
@@ -447,8 +447,8 @@ def test_format_db_tree():
             'schema': 'public',
             'database': 'demo',
             'columns': [
-                {'name': 'id', 'type': 'integer', 'parent': 'testoiiii'},
-                {'name': 'price', 'type': 'integer', 'parent': 'testoiiii'},
+                {'name': 'id', 'type': 'integer'},
+                {'name': 'price', 'type': 'integer'},
             ],
         },
     ]
