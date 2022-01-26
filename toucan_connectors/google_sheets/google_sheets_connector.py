@@ -118,7 +118,7 @@ class GoogleSheetsConnector(ToucanConnector):
             columns=values[data_source.header_row], data=values[data_source.header_row + 1 :]
         )
 
-        # TODO Columns must be uniquely named (raise an error or suffix some of them)
+        # TODO Columns must be uniquely named (raise an error or suffix some of them) - otherwise, .to_json will fail
         return df
 
 
