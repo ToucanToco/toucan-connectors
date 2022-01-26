@@ -1,9 +1,10 @@
+from datetime import datetime
 from typing import Callable, List, Optional
 
 import pandas as pd
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from pydantic import Field
+from pydantic import Field, PrivateAttr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -38,15 +39,21 @@ class GoogleSheetsConnector(ToucanConnector):
     data_source_model: GoogleSheetsDataSource
 
     _auth_flow = 'managed_oauth2'
+    _retrieve_token: Callable[[str], str] = PrivateAttr()
+
     auth_flow_id: str
 
-    def __init__(self, retrieve_token: Callable[[str], str]):
+    def __init__(self, retrieve_token: Callable[[str], str], *args, **kwargs):
+        super().__init__(**kwargs)
         self._retrieve_token = retrieve_token  # Could be async
 
-    def build_sheets_api(self):
+    def _google_client_build_kwargs(self):
+        # Override it for testing purposes
         access_token = self._retrieve_token(self.auth_flow_id)
-        credentials = Credentials(token=access_token)
-        return build('sheets', 'v4', credentials=credentials)
+        return {'credentials': Credentials(token=access_token)}
+
+    def build_sheets_api(self):
+        return build('sheets', 'v4', **self._google_client_build_kwargs())
 
     def list_sheets(self, spreadsheet_id: str) -> List[str]:
         """
@@ -79,25 +86,24 @@ class GoogleSheetsConnector(ToucanConnector):
                 .execute()
             )
 
-        sheets = [s for s in spreadsheet_data['sheets'] if s['sheetType'] == 'GRID']
+        sheets = [s for s in spreadsheet_data['sheets'] if s['properties']['sheetType'] == 'GRID']
         if data_source.sheet is None:
             # Select the first sheet
             sheet = sheets[0]
         else:
             try:
-                sheet = [s for s in sheets if s['title'] == data_source.sheet][0]
+                sheet = [s for s in sheets if s['properties']['title'] == data_source.sheet][0]
             except KeyError:
                 raise InvalidSheetException(
-                    f'No sheet named {data_source.sheet} (available sheets: {[s["title"] for s in sheets]}'
+                    f'No sheet named {data_source.sheet} (available sheets: {[s["properties"]["title"] for s in sheets]}'
                 )
 
-        # TODO extract data from sheet
-        sheet
+        values = [
+            [get_cell_effective_value(cell) for cell in row['values']]
+            for row in sheet['data'][0]['rowData']
+        ]
 
-        # https://developers.google.com/sheets/api/samples/reading
-        read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}'
-        data = self.bearer_oauth_get_endpoint(read_sheet_endpoint)['values']
-        df = pd.DataFrame(data)
+        df = pd.DataFrame(values)
 
         # Since `data` is a list of lists, the columns are not set properly
         # df =
@@ -112,6 +118,31 @@ class GoogleSheetsConnector(ToucanConnector):
         df = df[data_source.header_row + 1 :]
 
         return df
+
+
+SERIAL_REFERENCE_DAY = datetime.fromisoformat('1899-12-30')
+
+
+def serial_number_to_date(serial_number: float) -> datetime:
+    """
+    https://developers.google.com/sheets/api/reference/rest/v4/DateTimeRenderOption
+    """
+    return NotImplemented
+
+
+def get_cell_effective_value(cell):
+    if 'effectiveValue' not in cell:
+        return None
+
+    if 'stringValue' in cell['effectiveValue']:
+        return cell['effectiveValue']['stringValue']
+
+    elif 'numberValue' in cell['effectiveValue']:
+        if 'effectiveFormat' in cell and 'numberFormat' in cell['effectiveFormat']:
+            if cell['effectiveFormat']['numberFormat']['type'] == 'DATE':
+                return serial_number_to_date(cell['effectiveValue']['numberValue'])
+        else:
+            return cell['effectiveValue']['numberValue']
 
 
 class GoogleSheetException(Exception):
