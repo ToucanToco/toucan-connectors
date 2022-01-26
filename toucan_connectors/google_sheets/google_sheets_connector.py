@@ -42,7 +42,7 @@ class GoogleSheetsConnector(ToucanConnector):
     _auth_flow = 'managed_oauth2'
     _retrieve_token: Callable[[str], str] = PrivateAttr()
 
-    auth_flow_id: str
+    auth_id: str
 
     def __init__(self, retrieve_token: Callable[[str], str], *args, **kwargs):
         super().__init__(**kwargs)

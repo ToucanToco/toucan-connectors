@@ -4,20 +4,17 @@
 
 * `type`: `"GoogleSheets"`
 * `name`: str, required
-* `bearer_auth_id`: str, required
+* `auth_id`: str, required
 
-The `bearer_auth_id` is a token retrieved by the front-end
-to let Bearer handle the OAuth dance for you.
+Note: this connector needs a `retrieve_token` function that will be given the `auth_id` and should return a valid token.
 
 
-```coffee
-DATA_PROVIDERS: [
-  type:    'GoogleSheets'
-  name:    '<name>'
-  bearer_auth_id: '<bearer_auth_id>'
-,
-  ...
-]
+```python
+GoogleSheetsConnector(
+    name='<name>',
+    auth_id='<auth_id>',
+    retrieve_token=lambda auth_id: '<valid_access_token>',
+)
 ```
 
 ## Data source configuration
@@ -34,10 +31,20 @@ the url: https://docs.google.com/spreadsheets/d/<spreadsheet_id_is_here>/edit?pr
 DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
-  spreadsheet_id:    '<spreadsheet_id>'
+  :    '<spreadsheet_id>'
   sheetname:    '<sheetname>'
   skip_rows:    <skip_rows>
 ,
   ...
 ]
+```
+
+```python
+GoogleSheetsDataSource(
+    name='<name>',
+    domain='<domain>',
+    spreadsheet_id='<spreadsheet_id>',
+    sheet='<sheet>',
+    header_row='<header_row>',
+)
 ```

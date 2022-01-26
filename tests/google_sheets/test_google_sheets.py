@@ -29,7 +29,7 @@ def test_retrieve_data_with_dates(mocker: MockFixture):
     gsheet_connector = GoogleSheetsConnector(
         name='test_connector',
         retrieve_token=lambda _: 'test_access_token',
-        auth_flow_id='test_auth_flow_id',
+        auth_id='test_auth_id',
     )
 
     df = gsheet_connector.get_df(
@@ -70,7 +70,7 @@ def test_retrieve_data_no_sheet(mocker: MockFixture):
     gsheet_connector = GoogleSheetsConnector(
         name='test_connector',
         retrieve_token=lambda _: 'test_access_token',
-        auth_flow_id='test_auth_flow_id',
+        auth_id='test_auth_id',
     )
 
     df = gsheet_connector.get_df(
@@ -99,7 +99,7 @@ def test_retrieve_data_header_row(mocker: MockFixture):
     gsheet_connector = GoogleSheetsConnector(
         name='test_connector',
         retrieve_token=lambda _: 'test_access_token',
-        auth_flow_id='test_auth_flow_id',
+        auth_id='test_auth_id',
     )
 
     df = gsheet_connector.get_df(
