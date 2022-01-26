@@ -103,6 +103,16 @@ class GoogleSheetsConnector(ToucanConnector):
             for row in sheet['data'][0]['rowData']
         ]
 
+        # Remove empty trailing rows
+        while True:
+            if len(values) <= 0:
+                raise EmptySheetException()
+
+            if any(values[len(values) - 1]):
+                break
+            else:
+                values.pop()
+
         df = pd.DataFrame(values)
 
         # Since `data` is a list of lists, the columns are not set properly
@@ -150,4 +160,8 @@ class GoogleSheetException(Exception):
 
 
 class InvalidSheetException(GoogleSheetException):
+    ...
+
+
+class EmptySheetException(GoogleSheetException):
     ...
