@@ -14120,6 +14120,15 @@
                   }
                 }
               ]
+            },
+            {
+              "values": [
+                {
+                  "effectiveValue": {
+                    "stringValue": "vampire"
+                  }
+                }
+              ]
             }
           ]
         }

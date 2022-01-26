@@ -116,10 +116,6 @@ def test_retrieve_data_header_row(mocker: MockFixture):
         df,
         pd.DataFrame(
             columns=['animal', 'lives'],
-            data=[
-                ['cat', 7],
-                ['elephant', 1],
-                ['mouse', 0],
-            ],
+            data=[['cat', 7], ['elephant', 1], ['mouse', 0], ['vampire', None]],
         ),
     )
