@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Callable, List, Optional
 
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from pydantic import Field, PrivateAttr
@@ -128,7 +129,8 @@ def serial_number_to_date(serial_number: float) -> datetime:
     """
     https://developers.google.com/sheets/api/reference/rest/v4/DateTimeRenderOption
     """
-    return NotImplemented
+    # TODO implement the time part
+    return SERIAL_REFERENCE_DAY + relativedelta(days=int(serial_number))
 
 
 def get_cell_effective_value(cell):

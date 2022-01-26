@@ -48,7 +48,7 @@ def test_retrieve_data_with_dates(mocker: MockFixture):
             data=[
                 ['A', 1, datetime.fromisoformat('2022-01-04')],
                 ['B', 2, datetime.fromisoformat('2022-01-26')],
-                ['C', 3, datetime.fromisoformat('2022-11-30')],
+                ['C', 3, datetime.fromisoformat('2021-11-30')],
             ],
         ),
     )
