@@ -6,11 +6,15 @@ from datetime import datetime
 from os import path
 
 import pandas as pd
-from google_sheets.google_sheets_connector import GoogleSheetsConnector, GoogleSheetsDataSource
 from googleapiclient.http import HttpMock
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 from pytest_mock import MockFixture
+
+from toucan_connectors.google_sheets.google_sheets_connector import (
+    GoogleSheetsConnector,
+    GoogleSheetsDataSource,
+)
 
 
 def test_retrieve_data_with_dates(mocker: MockFixture):
@@ -18,12 +22,12 @@ def test_retrieve_data_with_dates(mocker: MockFixture):
     It should retrieve the first sheet when no sheet has been indicated
     """
     mocker.patch(
-        'google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_build_kwargs',
+        'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_build_kwargs',
         return_value={'http': HttpMock()},
     )
 
     mocker.patch(
-        'google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
+        'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
         side_effect=[
             {
                 # First call with sheet values
@@ -74,12 +78,12 @@ def test_retrieve_data_no_sheet(mocker: MockFixture):
     It should retrieve the first sheet when no sheet has been indicated
     """
     mocker.patch(
-        'google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_build_kwargs',
+        'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_build_kwargs',
         return_value={'http': HttpMock()},
     )
 
     mocker.patch(
-        'google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
+        'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
         side_effect=[
             {  # First request to get sheet names
                 'http': HttpMock(
@@ -123,12 +127,12 @@ def test_retrieve_data_header_row(mocker: MockFixture):
     It should use the provided header row for column names, and discard the others before
     """
     mocker.patch(
-        'google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_build_kwargs',
+        'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_build_kwargs',
         return_value={'http': HttpMock()},
     )
 
     mocker.patch(
-        'google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
+        'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
         side_effect=[
             {
                 # First call with sheet values
