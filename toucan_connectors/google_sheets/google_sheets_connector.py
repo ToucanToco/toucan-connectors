@@ -48,12 +48,12 @@ class GoogleSheetsConnector(ToucanConnector):
         super().__init__(**kwargs)
         self._retrieve_token = retrieve_token  # Could be async
 
-    def _google_client_build_kwargs(self):
+    def _google_client_build_kwargs(self):  # pragma: no cover
         # Override it for testing purposes
         access_token = self._retrieve_token(self.auth_id)
         return {'credentials': Credentials(token=access_token)}
 
-    def _google_client_request_kwargs(self):
+    def _google_client_request_kwargs(self):  # pragma: no cover
         # Override it for testing purposes
         return {}
 
