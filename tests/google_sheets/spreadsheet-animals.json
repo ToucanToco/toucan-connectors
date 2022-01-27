@@ -1,0 +1,78 @@
+{
+  "sheets": [
+    {
+      "data": [
+        {
+          "rowData": [
+            {},
+            {
+              "values": [
+                {
+                  "effectiveValue": {
+                    "stringValue": "animal"
+                  }
+                },
+                {
+                  "effectiveValue": {
+                    "stringValue": "lives"
+                  }
+                }
+              ]
+            },
+            {
+              "values": [
+                {
+                  "effectiveValue": {
+                    "stringValue": "cat"
+                  }
+                },
+                {
+                  "effectiveValue": {
+                    "numberValue": 7
+                  }
+                }
+              ]
+            },
+            {
+              "values": [
+                {
+                  "effectiveValue": {
+                    "stringValue": "elephant"
+                  }
+                },
+                {
+                  "effectiveValue": {
+                    "numberValue": 1
+                  }
+                }
+              ]
+            },
+            {
+              "values": [
+                {
+                  "effectiveValue": {
+                    "stringValue": "mouse"
+                  }
+                },
+                {
+                  "effectiveValue": {
+                    "numberValue": 0
+                  }
+                }
+              ]
+            },
+            {
+              "values": [
+                {
+                  "effectiveValue": {
+                    "stringValue": "vampire"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

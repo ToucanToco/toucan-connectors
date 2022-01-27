@@ -50,7 +50,7 @@ class GoogleSheetsConnector(ToucanConnector):
 
     def _google_client_build_kwargs(self):
         # Override it for testing purposes
-        access_token = self._retrieve_token(self.auth_flow_id)
+        access_token = self._retrieve_token(self.auth_id)
         return {'credentials': Credentials(token=access_token)}
 
     def build_sheets_api(self):
@@ -65,17 +65,24 @@ class GoogleSheetsConnector(ToucanConnector):
                 sheets_api.spreadsheets()
                 .get(
                     spreadsheetId=spreadsheet_id,
-                    includeGridData=True,
                     fields="sheets.properties.title,sheets.properties.sheetType",
                 )
                 .execute()
             )
 
         return [
-            sheet['title'] for sheet in spreadsheet_data['sheets'] if sheet['sheetType'] == "GRID"
+            sheet['properties']['title']
+            for sheet in spreadsheet_data['sheets']
+            if sheet['properties']['sheetType'] == "GRID"
         ]
 
     def _retrieve_data(self, data_source: GoogleSheetsDataSource) -> pd.DataFrame:
+
+        if data_source.sheet is None:
+            # Select the first sheet by default
+            sheet_names = self.list_sheets(data_source.spreadsheet_id)
+            data_source.sheet = sheet_names[0]
+
         with self.build_sheets_api() as sheets_api:
             spreadsheet_data = (
                 sheets_api.spreadsheets()
@@ -83,21 +90,17 @@ class GoogleSheetsConnector(ToucanConnector):
                     spreadsheetId=data_source.spreadsheet_id,
                     includeGridData=True,
                     fields="sheets.properties.title,sheets.properties.sheetType,sheets.data.rowData.values.effectiveValue,sheets.data.rowData.values.effectiveFormat.numberFormat",
+                    ranges=[
+                        f"'{data_source.sheet}'"
+                    ],  # FIXME what will happen is the sheet name contains a single quote?
                 )
                 .execute()
             )
 
-        sheets = [s for s in spreadsheet_data['sheets'] if s['properties']['sheetType'] == 'GRID']
-        if data_source.sheet is None:
-            # Select the first sheet
-            sheet = sheets[0]
-        else:
-            try:
-                sheet = [s for s in sheets if s['properties']['title'] == data_source.sheet][0]
-            except KeyError:
-                raise InvalidSheetException(
-                    f'No sheet named {data_source.sheet} (available sheets: {[s["properties"]["title"] for s in sheets]}'
-                )
+        try:
+            sheet = spreadsheet_data['sheets'][0]
+        except KeyError:
+            raise InvalidSheetException(f'No sheet named {data_source.sheet}')
 
         values = [
             [get_cell_effective_value(cell) for cell in row.get('values', [])]

@@ -21,7 +21,8 @@ def test_retrieve_data_with_dates(mocker: MockFixture):
         'google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_build_kwargs',
         return_value={
             'http': HttpMock(
-                path.join(path.dirname(__file__), './sample-response.json'), {'status': '200'}
+                path.join(path.dirname(__file__), './spreadsheet-sample-data.json'),
+                {'status': '200'},
             )
         },
     )
@@ -60,11 +61,21 @@ def test_retrieve_data_no_sheet(mocker: MockFixture):
     """
     mocker.patch(
         'google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_build_kwargs',
-        return_value={
-            'http': HttpMock(
-                path.join(path.dirname(__file__), './sample-response.json'), {'status': '200'}
-            )
-        },
+        side_effect=[
+            {
+                # First request to get sheet names
+                'http': HttpMock(
+                    path.join(path.dirname(__file__), './spreadsheet-sheets-properties.json'),
+                    {'status': '200'},
+                )
+            },
+            {
+                'http': HttpMock(
+                    path.join(path.dirname(__file__), './spreadsheet-sample-data.json'),
+                    {'status': '200'},
+                )
+            },
+        ],
     )
 
     gsheet_connector = GoogleSheetsConnector(
@@ -91,7 +102,7 @@ def test_retrieve_data_header_row(mocker: MockFixture):
         'google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_build_kwargs',
         return_value={
             'http': HttpMock(
-                path.join(path.dirname(__file__), './sample-response.json'), {'status': '200'}
+                path.join(path.dirname(__file__), './spreadsheet-animals.json'), {'status': '200'}
             )
         },
     )
