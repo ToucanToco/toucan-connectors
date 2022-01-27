@@ -1,0 +1,26 @@
+{
+  "range": "animals!A1:Z1000",
+  "majorDimension": "ROWS",
+  "values": [
+    [],
+    [
+      "animal",
+      "lives"
+    ],
+    [
+      "cat",
+      7
+    ],
+    [
+      "elephant",
+      1
+    ],
+    [
+      "mouse",
+      0
+    ],
+    [
+      "vampire"
+    ]
+  ]
+}

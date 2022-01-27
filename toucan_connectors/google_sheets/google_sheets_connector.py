@@ -53,6 +53,10 @@ class GoogleSheetsConnector(ToucanConnector):
         access_token = self._retrieve_token(self.auth_id)
         return {'credentials': Credentials(token=access_token)}
 
+    def _google_client_request_kwargs(self):
+        # Override it for testing purposes
+        return {}
+
     def build_sheets_api(self):
         return build('sheets', 'v4', **self._google_client_build_kwargs())
 
@@ -65,15 +69,15 @@ class GoogleSheetsConnector(ToucanConnector):
                 sheets_api.spreadsheets()
                 .get(
                     spreadsheetId=spreadsheet_id,
-                    fields="sheets.properties.title,sheets.properties.sheetType",
+                    fields='sheets.properties.title,sheets.properties.sheetType',
                 )
-                .execute()
+                .execute(**self._google_client_request_kwargs())
             )
 
         return [
             sheet['properties']['title']
             for sheet in spreadsheet_data['sheets']
-            if sheet['properties']['sheetType'] == "GRID"
+            if sheet['properties']['sheetType'] == 'GRID'
         ]
 
     def _retrieve_data(self, data_source: GoogleSheetsDataSource) -> pd.DataFrame:
@@ -84,38 +88,44 @@ class GoogleSheetsConnector(ToucanConnector):
             data_source.sheet = sheet_names[0]
 
         with self.build_sheets_api() as sheets_api:
-            spreadsheet_data = (
+            sheet_values = (
+                sheets_api.spreadsheets()
+                .values()
+                .get(
+                    spreadsheetId=data_source.spreadsheet_id,
+                    range=f"'{data_source.sheet}'",  # FIXME what will happen is the sheet name contains a single quote?
+                    dateTimeRenderOption='SERIAL_NUMBER',
+                    majorDimension='ROWS',
+                    valueRenderOption='UNFORMATTED_VALUE',
+                )
+                .execute(**self._google_client_request_kwargs())
+            )
+            # Fetch metadata associated with values
+            sheet_cell_formats = (
                 sheets_api.spreadsheets()
                 .get(
                     spreadsheetId=data_source.spreadsheet_id,
-                    includeGridData=True,
-                    fields="sheets.properties.title,sheets.properties.sheetType,sheets.data.rowData.values.effectiveValue,sheets.data.rowData.values.effectiveFormat.numberFormat",
-                    ranges=[
-                        f"'{data_source.sheet}'"
-                    ],  # FIXME what will happen is the sheet name contains a single quote?
+                    fields='sheets.data.rowData.values.effectiveFormat.numberFormat',
+                    ranges=[sheet_values['range']],
                 )
-                .execute()
+                .execute(**self._google_client_request_kwargs())
             )
 
-        try:
-            sheet = spreadsheet_data['sheets'][0]
-        except KeyError:
-            raise InvalidSheetException(f'No sheet named {data_source.sheet}')
+        def cell_format(row_index: int, column_index: int):
+            try:
+                return sheet_cell_formats['sheets'][0]['data'][0]['rowData'][row_index]['values'][
+                    column_index
+                ]['effectiveFormat']
+            except KeyError:
+                return None
 
         values = [
-            [get_cell_effective_value(cell) for cell in row.get('values', [])]
-            for row in sheet['data'][0]['rowData']
+            [
+                parse_cell_value(cell_value, cell_format(row_index, column_index))
+                for column_index, cell_value in enumerate(row_values)
+            ]
+            for row_index, row_values in enumerate(sheet_values['values'])
         ]
-
-        # Remove empty trailing rows
-        while True:
-            if len(values) <= 0:
-                raise EmptySheetException()
-
-            if any(values[len(values) - 1]):
-                break
-            else:
-                values.pop()
 
         df = pd.DataFrame(
             columns=values[data_source.header_row], data=values[data_source.header_row + 1 :]
@@ -136,19 +146,18 @@ def serial_number_to_date(serial_number: float) -> datetime:
     return SERIAL_REFERENCE_DAY + relativedelta(days=int(serial_number))
 
 
-def get_cell_effective_value(cell):
-    if 'effectiveValue' not in cell:
-        return None
-
-    if 'stringValue' in cell['effectiveValue']:
-        return cell['effectiveValue']['stringValue']
-
-    elif 'numberValue' in cell['effectiveValue']:
-        if 'effectiveFormat' in cell and 'numberFormat' in cell['effectiveFormat']:
-            if cell['effectiveFormat']['numberFormat']['type'] == 'DATE':
-                return serial_number_to_date(cell['effectiveValue']['numberValue'])
-        else:
-            return cell['effectiveValue']['numberValue']
+def parse_cell_value(value, format):
+    """
+    Use the format (if provided) to parse the value in its intended type
+    """
+    if (
+        (type(value) == int or type(value) == float)
+        and format
+        and 'numberFormat' in format
+        and format['numberFormat']['type'] == 'DATE'
+    ):
+        return serial_number_to_date(value)
+    return value
 
 
 class GoogleSheetException(Exception):
