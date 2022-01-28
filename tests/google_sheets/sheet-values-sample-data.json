@@ -1,0 +1,26 @@
+{
+  "range": "'sample data'!A1:Z1000",
+  "majorDimension": "ROWS",
+  "values": [
+    [
+      "label",
+      "value",
+      "date"
+    ],
+    [
+      "A",
+      1,
+      44565
+    ],
+    [
+      "B",
+      2,
+      44587
+    ],
+    [
+      "C",
+      3,
+      44530
+    ]
+  ]
+}

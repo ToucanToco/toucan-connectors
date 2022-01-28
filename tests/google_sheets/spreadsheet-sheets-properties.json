@@ -1,0 +1,16 @@
+{
+  "sheets": [
+    {
+      "properties": {
+        "title": "sample data",
+        "sheetType": "GRID"
+      }
+    },
+    {
+      "properties": {
+        "title": "animals",
+        "sheetType": "GRID"
+      }
+    }
+  ]
+}
