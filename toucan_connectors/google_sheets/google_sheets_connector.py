@@ -2,9 +2,11 @@ from datetime import datetime
 from typing import Callable, List, Optional
 
 import pandas as pd
+from common import ConnectorStatus
 from dateutil.relativedelta import relativedelta
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.errors import Error as GoogleApiClientError
 from pydantic import Field, PrivateAttr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -101,8 +103,10 @@ class GoogleSheetsConnector(ToucanConnector):
         try:
             with self.build_oauth2() as oauth2_api:
                 user_info = oauth2_api.userinfo().get().execute()
-                return ConnectorStatus(status=True, message=f"Connected as {user_info.get('email')}")
-        except HttpError:
+                return ConnectorStatus(
+                    status=True, message=f"Connected as {user_info.get('email')}"
+                )
+        except GoogleApiClientError:
             return ConnectorStatus(status=False, error="Couldn't retrieve user infos")
 
     def _retrieve_data(self, data_source: GoogleSheetsDataSource) -> pd.DataFrame:
