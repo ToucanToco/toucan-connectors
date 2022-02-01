@@ -173,3 +173,81 @@ def test_retrieve_data_header_row(mocker: MockFixture):
             data=[['cat', 7], ['elephant', 1], ['mouse', 0], ['vampire', None]],
         ),
     )
+
+
+def test_get_status_no_secrets():
+    """
+    It should fail if no secrets are provided
+    """
+    gsheet_connector = GoogleSheetsConnector(
+        name='test_connector',
+        retrieve_token=lambda _: None,
+        auth_id='test_auth_id',
+    )
+    assert gsheet_connector.get_status().status is False
+
+
+def test_get_status_secrets_error():
+    """
+    It should fail if secrets can't be retrieved
+    """
+
+    def failing_retrieve_token(_):
+        raise
+
+    gsheet_connector = GoogleSheetsConnector(
+        name='test_connector',
+        retrieve_token=failing_retrieve_token,
+        auth_id='test_auth_id',
+    )
+    assert gsheet_connector.get_status().status is False
+
+
+def test_get_status_success(mocker: MockFixture):
+    """
+    It should be OK and indicate the email of the authenticated user
+    """
+    mocker.patch(
+        'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
+        return_value={
+            'http': HttpMock(
+                path.join(path.dirname(__file__), './user-infos.json'),
+                {'status': '200'},
+            )
+        },
+    )
+
+    gsheet_connector = GoogleSheetsConnector(
+        name='test_connector',
+        retrieve_token=lambda _: 'access_token',
+        auth_id='test_auth_id',
+    )
+    connector_status = gsheet_connector.get_status()
+    assert connector_status.status is True
+    assert 'mewto@toucantoco.com' in connector_status.message
+
+
+def test_get_status_api_down(mocker):
+    """
+    It should fail if the third-party api is down.
+    """
+
+    mocker.patch(
+        'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
+        return_value={
+            'http': HttpMock(
+                path.join(
+                    path.dirname(__file__), './user-infos.json'
+                ),  # the content will not be read
+                {'status': '400'},
+            )
+        },
+    )
+
+    gsheet_connector = GoogleSheetsConnector(
+        name='test_connector',
+        retrieve_token=lambda _: 'access_token',
+        auth_id='test_auth_id',
+    )
+    connector_status = gsheet_connector.get_status()
+    assert connector_status.status is False
