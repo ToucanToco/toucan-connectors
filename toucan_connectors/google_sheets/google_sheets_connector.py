@@ -61,6 +61,9 @@ class GoogleSheetsConnector(ToucanConnector):
     def build_sheets_api(self):
         return build('sheets', 'v4', **self._google_client_build_kwargs())
 
+    def build_oauth2(self):
+        return build('oauth2', 'v2', **self._google_client_build_kwargs())
+
     def list_sheets(self, spreadsheet_id: str) -> List[str]:
         """
         List available sheets
@@ -80,6 +83,27 @@ class GoogleSheetsConnector(ToucanConnector):
             for sheet in spreadsheet_data['sheets']
             if sheet['properties']['sheetType'] == 'GRID'
         ]
+
+    def get_status(self) -> ConnectorStatus:
+        """
+        Test the Google Sheets connexion.
+
+        If successful, returns a message with the email of the connected user account.
+        """
+        try:
+            access_token = self._retrieve_token(self.auth_id)
+        except Exception:
+            return ConnectorStatus(status=False, error='Credentials are missing')
+
+        if not access_token:
+            return ConnectorStatus(status=False, error='Credentials are missing')
+
+        try:
+            with self.build_oauth2() as oauth2_api:
+                user_info = oauth2_api.userinfo().get().execute()
+                return ConnectorStatus(status=True, message=f"Connected as {user_info.get('email')}")
+        except HttpError:
+            return ConnectorStatus(status=False, error="Couldn't retrieve user infos")
 
     def _retrieve_data(self, data_source: GoogleSheetsDataSource) -> pd.DataFrame:
 
