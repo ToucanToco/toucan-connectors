@@ -102,7 +102,9 @@ class GoogleSheetsConnector(ToucanConnector):
 
         try:
             with self.build_oauth2() as oauth2_api:
-                user_info = oauth2_api.userinfo().get().execute()
+                user_info = (
+                    oauth2_api.userinfo().get().execute(**self._google_client_request_kwargs())
+                )
                 return ConnectorStatus(
                     status=True, message=f"Connected as {user_info.get('email')}"
                 )
