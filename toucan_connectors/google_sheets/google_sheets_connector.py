@@ -40,6 +40,7 @@ class GoogleSheetsConnector(ToucanConnector):
     data_source_model: GoogleSheetsDataSource
 
     _auth_flow = 'managed_oauth2'
+    _managed_oauth_service_id = 'google-sheets'
     _retrieve_token: Callable[[str], str] = PrivateAttr()
 
     auth_id: str
