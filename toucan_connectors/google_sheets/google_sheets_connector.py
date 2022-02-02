@@ -64,10 +64,10 @@ class GoogleSheetsConnector(ToucanConnector):
         return {}
 
     def build_sheets_api(self):
-        return build('sheets', 'v4', **self._google_client_build_kwargs())
+        return build('sheets', 'v4', cache_discovery=False, **self._google_client_build_kwargs())
 
     def build_oauth2(self):
-        return build('oauth2', 'v2', **self._google_client_build_kwargs())
+        return build('oauth2', 'v2', cache_discovery=False, **self._google_client_build_kwargs())
 
     def list_sheets(self, spreadsheet_id: str) -> List[str]:
         """
