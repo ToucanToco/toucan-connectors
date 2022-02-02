@@ -44,17 +44,20 @@ class GoogleSheetsConnector(ToucanConnector):
     _auth_flow = 'managed_oauth2'
     _managed_oauth_service_id = 'google-sheets'
     _oauth_trigger = 'retrieve_token'
-    _retrieve_token: Callable[[str], str] = PrivateAttr()
+    _retrieve_token: Callable[[str, str], str] = PrivateAttr()
 
     auth_id: SecretStr
 
-    def __init__(self, retrieve_token: Callable[[str], str], *args, **kwargs):
+    def __init__(self, retrieve_token: Callable[[str, str], str], *args, **kwargs):
         super().__init__(**kwargs)
         self._retrieve_token = retrieve_token  # Could be async
 
     def _google_client_build_kwargs(self):  # pragma: no cover
         # Override it for testing purposes
-        access_token = self._retrieve_token(self.auth_id)
+        access_token = self._retrieve_token(
+            self._managed_oauth_service_id, self.auth_id.get_secret_value()
+        )
+        print('access_token', access_token)
         return {'credentials': Credentials(token=access_token)}
 
     def _google_client_request_kwargs(self):  # pragma: no cover
@@ -93,8 +96,11 @@ class GoogleSheetsConnector(ToucanConnector):
 
         If successful, returns a message with the email of the connected user account.
         """
+        return ConnectorStatus(status=True, error="Couldn't retrieve user infos")
         try:
-            access_token = self._retrieve_token(self.auth_id)
+            access_token = self._retrieve_token(
+                self._managed_oauth_service_id, self.auth_id.get_secret_value()
+            )
         except Exception:
             return ConnectorStatus(status=False, error='Credentials are missing')
 
