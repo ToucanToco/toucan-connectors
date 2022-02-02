@@ -95,7 +95,6 @@ class GoogleSheetsConnector(ToucanConnector):
 
         If successful, returns a message with the email of the connected user account.
         """
-        return ConnectorStatus(status=True, error="Couldn't retrieve user infos")
         try:
             access_token = self._retrieve_token(
                 self._managed_oauth_service_id, self.auth_id.get_secret_value()
