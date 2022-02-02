@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import Error as GoogleApiClientError
-from pydantic import Field, PrivateAttr
+from pydantic import Field, PrivateAttr, SecretStr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -43,9 +43,10 @@ class GoogleSheetsConnector(ToucanConnector):
 
     _auth_flow = 'managed_oauth2'
     _managed_oauth_service_id = 'google-sheets'
+    _oauth_trigger = 'retrieve_token'
     _retrieve_token: Callable[[str], str] = PrivateAttr()
 
-    auth_id: str
+    auth_id: SecretStr
 
     def __init__(self, retrieve_token: Callable[[str], str], *args, **kwargs):
         super().__init__(**kwargs)
