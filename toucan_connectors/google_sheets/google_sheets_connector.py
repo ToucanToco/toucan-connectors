@@ -57,7 +57,6 @@ class GoogleSheetsConnector(ToucanConnector):
         access_token = self._retrieve_token(
             self._managed_oauth_service_id, self.auth_id.get_secret_value()
         )
-        print('access_token', access_token)
         return {'credentials': Credentials(token=access_token)}
 
     def _google_client_request_kwargs(self):  # pragma: no cover
