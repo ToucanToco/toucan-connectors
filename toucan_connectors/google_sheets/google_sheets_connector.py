@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import Error as GoogleApiClientError
-from pydantic import Field, PrivateAttr
+from pydantic import Field, PrivateAttr, SecretStr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -43,17 +43,20 @@ class GoogleSheetsConnector(ToucanConnector):
 
     _auth_flow = 'managed_oauth2'
     _managed_oauth_service_id = 'google-sheets'
-    _retrieve_token: Callable[[str], str] = PrivateAttr()
+    _oauth_trigger = 'retrieve_token'
+    _retrieve_token: Callable[[str, str], str] = PrivateAttr()
 
-    auth_id: str
+    auth_id: SecretStr = None
 
-    def __init__(self, retrieve_token: Callable[[str], str], *args, **kwargs):
+    def __init__(self, retrieve_token: Callable[[str, str], str], *args, **kwargs):
         super().__init__(**kwargs)
         self._retrieve_token = retrieve_token  # Could be async
 
     def _google_client_build_kwargs(self):  # pragma: no cover
         # Override it for testing purposes
-        access_token = self._retrieve_token(self.auth_id)
+        access_token = self._retrieve_token(
+            self._managed_oauth_service_id, self.auth_id.get_secret_value()
+        )
         return {'credentials': Credentials(token=access_token)}
 
     def _google_client_request_kwargs(self):  # pragma: no cover
@@ -61,10 +64,10 @@ class GoogleSheetsConnector(ToucanConnector):
         return {}
 
     def build_sheets_api(self):
-        return build('sheets', 'v4', **self._google_client_build_kwargs())
+        return build('sheets', 'v4', cache_discovery=False, **self._google_client_build_kwargs())
 
     def build_oauth2(self):
-        return build('oauth2', 'v2', **self._google_client_build_kwargs())
+        return build('oauth2', 'v2', cache_discovery=False, **self._google_client_build_kwargs())
 
     def list_sheets(self, spreadsheet_id: str) -> List[str]:
         """
@@ -93,7 +96,9 @@ class GoogleSheetsConnector(ToucanConnector):
         If successful, returns a message with the email of the connected user account.
         """
         try:
-            access_token = self._retrieve_token(self.auth_id)
+            access_token = self._retrieve_token(
+                self._managed_oauth_service_id, self.auth_id.get_secret_value()
+            )
         except Exception:
             return ConnectorStatus(status=False, error='Credentials are missing')
 

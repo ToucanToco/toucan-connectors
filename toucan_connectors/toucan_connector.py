@@ -214,7 +214,7 @@ def get_oauth2_configuration(cls):
     """Return a tuple indicating if the connector is an oauth2 connector
     and in this case, where can the credentials be located
     """
-    oauth2_enabled = hasattr(cls, '_auth_flow') and getattr(cls, '_auth_flow') == 'oauth2'
+    oauth2_enabled = hasattr(cls, '_auth_flow') and 'oauth2' in getattr(cls, '_auth_flow')
     oauth2_credentials_location = None
     if hasattr(cls, '_oauth_trigger'):
         oauth2_credentials_location = getattr(cls, '_oauth_trigger')

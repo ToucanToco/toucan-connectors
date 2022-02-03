@@ -47,7 +47,7 @@ def test_retrieve_data_with_dates(mocker: MockFixture):
 
     gsheet_connector = GoogleSheetsConnector(
         name='test_connector',
-        retrieve_token=lambda _: 'test_access_token',
+        retrieve_token=lambda _a, _b: 'test_access_token',
         auth_id='test_auth_id',
     )
 
@@ -108,7 +108,7 @@ def test_retrieve_data_no_sheet(mocker: MockFixture):
 
     gsheet_connector = GoogleSheetsConnector(
         name='test_connector',
-        retrieve_token=lambda _: 'test_access_token',
+        retrieve_token=lambda _a, _b: 'test_access_token',
         auth_id='test_auth_id',
     )
 
@@ -152,7 +152,7 @@ def test_retrieve_data_header_row(mocker: MockFixture):
 
     gsheet_connector = GoogleSheetsConnector(
         name='test_connector',
-        retrieve_token=lambda _: 'test_access_token',
+        retrieve_token=lambda _a, _b: 'test_access_token',
         auth_id='test_auth_id',
     )
 
@@ -181,7 +181,7 @@ def test_get_status_no_secrets():
     """
     gsheet_connector = GoogleSheetsConnector(
         name='test_connector',
-        retrieve_token=lambda _: None,
+        retrieve_token=lambda _a, _b: None,
         auth_id='test_auth_id',
     )
     assert gsheet_connector.get_status().status is False
@@ -192,7 +192,7 @@ def test_get_status_secrets_error():
     It should fail if secrets can't be retrieved
     """
 
-    def failing_retrieve_token(_):
+    def failing_retrieve_token(_a, _b):
         raise
 
     gsheet_connector = GoogleSheetsConnector(
@@ -219,7 +219,7 @@ def test_get_status_success(mocker: MockFixture):
 
     gsheet_connector = GoogleSheetsConnector(
         name='test_connector',
-        retrieve_token=lambda _: 'access_token',
+        retrieve_token=lambda _a, _b: 'access_token',
         auth_id='test_auth_id',
     )
     connector_status = gsheet_connector.get_status()
@@ -246,7 +246,7 @@ def test_get_status_api_down(mocker):
 
     gsheet_connector = GoogleSheetsConnector(
         name='test_connector',
-        retrieve_token=lambda _: 'access_token',
+        retrieve_token=lambda _a, _b: 'access_token',
         auth_id='test_auth_id',
     )
     connector_status = gsheet_connector.get_status()
