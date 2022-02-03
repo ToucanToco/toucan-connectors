@@ -46,7 +46,7 @@ class GoogleSheetsConnector(ToucanConnector):
     _oauth_trigger = 'retrieve_token'
     _retrieve_token: Callable[[str, str], str] = PrivateAttr()
 
-    auth_id: SecretStr
+    auth_id: SecretStr = None
 
     def __init__(self, retrieve_token: Callable[[str, str], str], *args, **kwargs):
         super().__init__(**kwargs)
