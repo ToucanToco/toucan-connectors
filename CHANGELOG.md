@@ -1,5 +1,14 @@
 # Changelog (Pypi package)
 
+## [3.0.0] 2022-02-03
+
+### Changed
+
+The connector `GoogleSheets` based on bearer.sh (discontinued service) has been replaced by a new one, agnostic of the
+OAuth manager used. This new connector needs a `retrieve_token` function to get valid authentication tokens.
+
+It also features automatic dates parsing and uses the official google API python client.
+
 ## [2.0.0] 2022-01-19
 
 ### Changed
