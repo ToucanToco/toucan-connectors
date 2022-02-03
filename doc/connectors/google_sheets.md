@@ -48,3 +48,12 @@ GoogleSheetsDataSource(
     header_row='<header_row>',
 )
 ```
+
+## Additional methods
+
+### `list_sheets`
+
+Arguments:
+- `spreadsheet_id`: `str`
+
+List available sheets of a particular spreadsheet
