@@ -1,15 +1,16 @@
+from contextlib import suppress
 from datetime import datetime
-from typing import Callable, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Type
 
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import Error as GoogleApiClientError
-from pydantic import Field, PrivateAttr, SecretStr
+from pydantic import Field, PrivateAttr, SecretStr, create_model
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
 class GoogleSheetsDataSource(ToucanDataSource):
@@ -29,6 +30,25 @@ class GoogleSheetsDataSource(ToucanDataSource):
     header_row: int = Field(
         0, title='Header row', description='Row of the header of the spreadsheet'
     )
+
+    class Config:
+        @staticmethod
+        def schema_extra(schema: Dict[str, Any], model: Type['GoogleSheetsDataSource']) -> None:
+            keys = schema['properties'].keys()
+            prio_keys = ['domain', 'spreadsheet_id', 'sheet']
+            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+
+    @classmethod
+    def get_form(cls, connector: 'GoogleSheetsConnector', current_config, **kwargs):
+        """Retrieve a form filled with suggestions of available sheets."""
+        # Always add the suggestions for the available sheets
+        constraints = {}
+        with suppress(Exception):
+            available_sheets = connector.list_sheets(current_config['spreadsheet_id'])
+            constraints['sheet'] = strlist_to_enum('sheet', available_sheets)
+
+        return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
 class GoogleSheetsConnector(ToucanConnector):
