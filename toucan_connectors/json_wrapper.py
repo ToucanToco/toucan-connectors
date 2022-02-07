@@ -2,6 +2,14 @@ import json
 import logging
 from typing import Dict
 
+from pydantic import SecretStr
+
+
+def custom_json_serializer(obj):
+    if isinstance(obj, SecretStr):
+        return obj.get_secret_value()
+    return obj
+
 
 class JsonWrapper:
     @staticmethod
@@ -16,7 +24,7 @@ class JsonWrapper:
         cls=None,
         indent=None,
         # separators=None,
-        default=None,
+        default=custom_json_serializer,
         sort_keys=False,
         **kwargs,
     ):
@@ -48,7 +56,7 @@ class JsonWrapper:
         cls=None,
         indent=None,
         # separators=None,
-        default=None,
+        default=custom_json_serializer,
         sort_keys=False,
         **kwargs,
     ):
