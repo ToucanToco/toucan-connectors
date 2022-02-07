@@ -261,3 +261,38 @@ def test_schema_fields_order():
     assert schema_props_keys[0] == 'domain'
     assert schema_props_keys[1] == 'spreadsheet_id'
     assert schema_props_keys[2] == 'sheet'
+
+
+def test_get_form(mocker):
+    """It should return a list of spreadsheet titles."""
+    mocker.patch(
+        'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
+        side_effect=[
+            {  # First request to get sheet names
+                'http': HttpMock(
+                    path.join(path.dirname(__file__), './spreadsheet-sheets-properties.json'),
+                    {'status': '200'},
+                )
+            },
+        ],
+    )
+
+    gsheet_connector = GoogleSheetsConnector(
+        name='test_connector',
+        retrieve_token=lambda _a, _b: 'test_access_token',
+        auth_id='test_auth_id',
+    )
+
+    data_source = GoogleSheetsDataSource(
+        name='test_datasource',
+        domain='test_domain',
+        spreadsheet_id='test_spreadsheet_id',
+        sheet='sample data',
+    )
+
+    schema = data_source.get_form(
+        connector=gsheet_connector,
+        current_config={'spreadsheet_id': 'test_spreadsheet_id'},
+    )
+    expected_results = ['sample data', 'animals']
+    assert schema['definitions']['sheet']['enum'] == expected_results
