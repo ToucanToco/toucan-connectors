@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Callable, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Type
 
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -29,6 +29,14 @@ class GoogleSheetsDataSource(ToucanDataSource):
     header_row: int = Field(
         0, title='Header row', description='Row of the header of the spreadsheet'
     )
+
+    class Config:
+        @staticmethod
+        def schema_extra(schema: Dict[str, Any], model: Type['GoogleSheetsDataSource']) -> None:
+            keys = schema['properties'].keys()
+            prio_keys = ['domain', 'spreadsheet_id', 'sheet']
+            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
 
 
 class GoogleSheetsConnector(ToucanConnector):

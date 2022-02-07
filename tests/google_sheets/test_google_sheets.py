@@ -15,6 +15,7 @@ from toucan_connectors.google_sheets.google_sheets_connector import (
     GoogleSheetsConnector,
     GoogleSheetsDataSource,
 )
+from toucan_connectors.json_wrapper import JsonWrapper
 
 
 def test_retrieve_data_with_dates(mocker: MockFixture):
@@ -251,3 +252,12 @@ def test_get_status_api_down(mocker):
     )
     connector_status = gsheet_connector.get_status()
     assert connector_status.status is False
+
+
+def test_schema_fields_order():
+    schema_props_keys = list(
+        JsonWrapper.loads(GoogleSheetsDataSource.schema_json())['properties'].keys()
+    )
+    assert schema_props_keys[0] == 'domain'
+    assert schema_props_keys[1] == 'spreadsheet_id'
+    assert schema_props_keys[2] == 'sheet'
