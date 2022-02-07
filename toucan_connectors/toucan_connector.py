@@ -415,14 +415,17 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         return ConnectorStatus()
 
-    def get_unique_identifier(self) -> dict:
+    def get_unique_identifier(self, data_source: Optional[ToucanDataSource] = None) -> dict:
         """
         Returns a serialized version of the connector's config.
         Override this method in connectors which have not-serializable properties.
 
         Used by `get_cache_key` method.
         """
-        return self.json()
+        if data_source is not None:
+            return nosql_apply_parameters_to_query(self.dict(), data_source.parameters)
+        else:
+            return self.dict()
 
     def _render_datasource(self, data_source: ToucanDataSource) -> dict:
         data_source_rendered = nosql_apply_parameters_to_query(
@@ -446,7 +449,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         This identifier will then be used as a cache key.
         """
         unique_identifier = {
-            'connector': self.get_unique_identifier(),
+            'connector': self.get_unique_identifier(data_source),
             'permissions': permissions,
             'offset': offset,
             'limit': limit,
