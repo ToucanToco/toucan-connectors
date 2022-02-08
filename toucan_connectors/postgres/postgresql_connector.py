@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import Optional
+from typing import Dict, Optional
 
 import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr, create_model
@@ -18,12 +18,18 @@ class PostgresDataSource(ToucanDataSource):
         'the "table" parameter',
         widget='sql',
     )
+    query_object: Dict = Field(
+        None,
+        description='An object describing a simple select query' 'This field is used internally',
+        **{'ui.hidden': True},
+    )
     table: constr(min_length=1) = Field(
         None,
         description='The name of the data table that you want to '
         'get (equivalent to "SELECT * FROM '
         'your_table")',
     )
+    language: str = Field('sql', **{'ui.hidden': True})
 
     def __init__(self, **data):
         super().__init__(**data)

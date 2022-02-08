@@ -54,6 +54,7 @@ class SfDataSource(ToucanDataSource):
         'This field is used internally',
         **{'ui.hidden': True},
     )
+    language: str = Field('sql', **{'ui.hidden': True})
 
 
 class SnowflakeCommon:

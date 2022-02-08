@@ -138,6 +138,8 @@ def test_datasource():
 
     ds = PostgresDataSource(name='mycon', domain='mydomain', database='ubuntu', table='test')
     assert ds.query == 'select * from test;'
+    assert ds.language == 'sql'
+    assert hasattr(ds, 'query_object')
 
 
 def test_postgress_get_df(mocker):
