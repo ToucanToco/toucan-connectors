@@ -318,7 +318,7 @@ def test_redshiftconnector_sleeper(redshift_connector):
 
 
 def test_redshiftconnector_get_cursor(redshift_connector, redshift_datasource):
-    result = redshift_connector._get_cursor(datasource=redshift_datasource)
+    result = redshift_connector._get_cursor(database=redshift_datasource.database)
     assert isinstance(result, _GeneratorContextManager)
 
 
@@ -331,7 +331,7 @@ def test_redshiftconnector_retrieve_tables(
         ['table2'],
         ['table3'],
     )
-    result = redshift_connector._retrieve_tables(datasource=redshift_datasource)
+    result = redshift_connector._retrieve_tables(database=redshift_datasource.database)
     assert result == ['table1', 'table2', 'table3']
 
 

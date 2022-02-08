@@ -23,9 +23,11 @@ types_map = {
 
 
 def create_columns_query(database: str):
-    records = """REPLACE(CHR(123) || '"name"' || ':' || '"' || c.column_name || '"' || ',' ||  '"type"' ||  ':'  || 
-    '"' || c.data_type  || '"' || CHR(125), '""', '"')"""
-    return f'''SELECT '{database}', table_name, {records} from information_schema.columns c'''
+    records = (
+        """REPLACE(CHR(123) || '"name"' || ':' || '"' || c.column_name || '"' || ',' ||  '"type"' ||  ':'  ||"""
+        """"'"' || c.data_type  || '"' || CHR(125), '""', '"')"""
+    )
+    return f"""SELECT '{database}', table_name, {records} from information_schema.columns c"""
 
 
 def aggregate_columns(cols_records: tuple):
@@ -37,7 +39,7 @@ def aggregate_columns(cols_records: tuple):
 
 
 def create_table_info_query(database: str):
-    return f'''select '{database}',
+    return f"""select '{database}',
     t.table_schema as schema,
     CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END as type,
     t.table_name as name
@@ -48,8 +50,7 @@ def create_table_info_query(database: str):
     where t.table_type in ('BASE TABLE', 'VIEW')
     and t.table_schema not in  ('pg_catalog', 'information_schema', 'pg_internal')
     group by t.table_schema, t.table_name, t.table_type
-    order by schema;
-    '''
+    order by schema;"""
 
 
 def merge_columns_and_tables(cols: pd.DataFrame, tables: tuple):
