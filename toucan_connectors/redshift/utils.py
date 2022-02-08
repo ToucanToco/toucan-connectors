@@ -27,14 +27,16 @@ def create_columns_query(database: str):
         """REPLACE(CHR(123) || '"name"' || ':' || '"' || c.column_name || '"' || ',' ||  '"type"' ||  ':'  ||"""
         """"'"' || c.data_type  || '"' || CHR(125), '""', '"')"""
     )
-    return f"""SELECT '{database}', table_name, {records} from information_schema.columns c"""
+    return (
+        f"""SELECT '{database}', table_name as name, {records} from information_schema.columns c"""
+    )
 
 
-def aggregate_columns(cols_records: tuple):
-    df = pd.DataFrame(cols_records)
-    df[2] = df[2].apply(json.loads)
-    df = pd.DataFrame(df.groupby([0, 1])[2].apply(lambda x: list(x))).reset_index()
-    df.columns = ['database', 'table_name', 'columns']
+def aggregate_columns(df: pd.DataFrame):
+    df['columns'] = df['columns'].apply(json.loads)
+    df = pd.DataFrame(
+        df.groupby(['database', 'name'])['columns'].apply(lambda x: list(x))
+    ).reset_index()
     return df
 
 
@@ -53,8 +55,6 @@ def create_table_info_query(database: str):
     order by schema;"""
 
 
-def merge_columns_and_tables(cols: pd.DataFrame, tables: tuple):
-    tables = pd.DataFrame(tables)
-    tables.columns = ['database', 'schema', 'table_type', 'table_name']
-    output = pd.merge(tables, cols, on=['database', 'table_name'])
+def merge_columns_and_tables(cols: pd.DataFrame, tables: pd.DataFrame):
+    output = pd.merge(tables, cols, on=['database', 'name'])
     return output.to_dict('records')
