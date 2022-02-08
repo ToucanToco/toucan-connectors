@@ -2,7 +2,7 @@ import concurrent
 import json
 import logging
 from timeit import default_timer as timer
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Literal
 
 import pandas as pd
 from pydantic import Field, constr
@@ -297,3 +297,19 @@ class SnowflakeCommon:
         )
         res = {r.name: type_code_mapping.get(r.type_code) for r in describe_res}
         return res
+
+    def get_tables_and_views(self, connection: SnowflakeConnection, database_name: str) -> List[tuple]:
+        query = f'select TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE from {database_name}.information_schema.tables;'
+        res = self._execute_query(connection, query).to_dict()
+        return [content for content in res.values()] if res else []
+
+    def describe_table_or_view(
+            self,
+            connection: SnowflakeConnection,
+            table_type: Literal['table', 'view'],
+            schema: str,
+            name: str
+    ) -> List[tuple]:
+        query = f'describe {table_type} "{schema}"."{name}";'
+        res = self._execute_query(connection, query).to_dict()
+        return [content for content in res.values()] if res else []
