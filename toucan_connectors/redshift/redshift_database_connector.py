@@ -77,7 +77,7 @@ class RedshiftDataSource(ToucanDataSource):
     )
     query_object: Dict = Field(
         None,
-        description='An object describing a simple select query' 'This field is used internally',
+        description='An object describing a simple select query, this field is used internally',
         **{'ui.hidden': True},
     )
     table: constr(min_length=1) = Field(
