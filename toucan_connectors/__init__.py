@@ -97,12 +97,12 @@ CONNECTORS_REGISTRY = {
     },
     'GoogleSheets': {
         'connector': 'google_sheets.google_sheets_connector.GoogleSheetsConnector',
-        'label': 'Google Sheets (Legacy)',
+        'label': 'Google Sheets',
         'logo': 'google_sheets/google-sheets.png',
     },
     'GoogleSheets2': {
         'connector': 'google_sheets_2.google_sheets_2_connector.GoogleSheets2Connector',
-        'label': 'Google Sheets',
+        'label': 'Google Sheets (custom OAuth2)',
         'logo': 'google_sheets/google-sheets.png',
     },
     'GoogleSpreadsheet': {
