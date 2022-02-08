@@ -12,7 +12,14 @@ from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
-from toucan_connectors.redshift.data_types import types_map
+from toucan_connectors.postgres.utils import format_db_tree
+from toucan_connectors.redshift.utils import (
+    aggregate_columns,
+    create_columns_query,
+    create_table_info_query,
+    merge_columns_and_tables,
+    types_map,
+)
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
@@ -105,7 +112,7 @@ class RedshiftDataSource(ToucanDataSource):
                 ds = RedshiftDataSource(
                     domain='Redshift', name='redshift', database=current_config['database']
                 )
-                available_tables = connector._retrieve_tables(datasource=ds)
+                available_tables = connector._retrieve_tables(database=ds.database)
                 constraints['table'] = strlist_to_enum('table', available_tables, None)
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
@@ -205,13 +212,13 @@ class RedshiftConnector(ToucanConnector):
             con_params['region'] = self.region
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _get_connection(self, datasource) -> redshift_connector.Connection:
+    def _get_connection(self, database) -> redshift_connector.Connection:
         """Establish a connection to an Amazon Redshift cluster."""
 
         def connect_function() -> redshift_connector.Connection:
             con = redshift_connector.connect(
                 **self._get_connection_params(
-                    database=datasource.database if datasource is not None else None,
+                    database=database if database else None,
                 ),
             )
             con.autocommit = True  # see https://stackoverflow.com/q/22019154
@@ -227,12 +234,12 @@ class RedshiftConnector(ToucanConnector):
             if not self._is_alive:
                 return connection.close()
 
-        connection: RedshiftConnector = redshift_connection_manager.get(
-            identifier=f'{self.get_identifier()}{datasource.database}{self.cluster_identifier}',
+        connection: redshift_connector.Connection = redshift_connection_manager.get(
+            identifier=f'{self.get_identifier()}{database}{self.cluster_identifier}',
             connect_method=connect_function,
             alive_method=alive_function,
             close_method=close_function,
-            save=True if datasource.database else False,
+            save=True if database else False,
         )
         if self.connect_timeout is not None:
             t = Thread(target=self.sleeper)
@@ -244,12 +251,12 @@ class RedshiftConnector(ToucanConnector):
         self._is_alive = False
 
     @contextmanager
-    def _get_cursor(self, datasource) -> redshift_connector.Cursor:
-        with self._get_connection(datasource=datasource) as conn, conn.cursor() as cursor:
+    def _get_cursor(self, database) -> redshift_connector.Cursor:
+        with self._get_connection(database=database) as conn, conn.cursor() as cursor:
             yield cursor
 
-    def _retrieve_tables(self, datasource) -> List[str]:
-        with self._get_cursor(datasource=datasource) as cursor:
+    def _retrieve_tables(self, database) -> List[str]:
+        with self._get_cursor(database=database) as cursor:
             cursor.execute(TABLE_QUERY)
             res = cursor.fetchall()
         return [table_name for (table_name,) in res]
@@ -269,7 +276,7 @@ class RedshiftConnector(ToucanConnector):
             prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_limit_query(
                 datasource.query, datasource.parameters, offset, limit
             )
-        with self._get_cursor(datasource=datasource) as cursor:
+        with self._get_cursor(database=datasource.database) as cursor:
             cursor.execute(prepared_query, prepared_query_parameters)
             result: pd.DataFrame = cursor.fetch_dataframe()
             if result is None:
@@ -332,11 +339,24 @@ class RedshiftConnector(ToucanConnector):
             return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
         return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
 
-    def describe(self, data_source) -> Dict:
-        with self._get_cursor(datasource=data_source) as cursor:
+    def describe(self, data_source: RedshiftDataSource) -> Dict:
+        with self._get_cursor(database=data_source.database) as cursor:
             cursor.execute(DESCRIBE_QUERY.format(column=data_source.query.replace(';', '')))
             res = cursor.description
         return {
             col[0].decode('utf-8') if isinstance(col[0], bytes) else col[0]: types_map.get(col[1])
             for col in res
         }
+
+    def get_model(self, db_name: str):
+        with self._get_cursor(database=db_name) as cursor:
+            cursor.execute("""select datname from pg_database where datistemplate = false;""")
+            available_dbs = [db_name for (db_name,) in cursor.fetchall()]
+            databases_tree = []
+        for db in available_dbs:
+            with self._get_cursor(database=db_name) as cursor:
+                cursor.execute(create_columns_query(db))
+                cols = aggregate_columns(cursor.fetchall())
+                cursor.execute(create_table_info_query(db))
+                databases_tree += merge_columns_and_tables(cols, cursor.fetchall())
+        return format_db_tree(databases_tree)

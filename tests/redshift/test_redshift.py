@@ -285,7 +285,7 @@ def test_redshiftconnector_get_connection(
 ):
     mock_get_identifier.return_value = 'id_test'
     redshift_connector.connect_timeout = 1
-    result = redshift_connector._get_connection(datasource=redshift_datasource)
+    result = redshift_connector._get_connection(database=redshift_datasource)
     assert result == mock_connection_manager.get()
 
 
@@ -298,7 +298,7 @@ def test_redshiftconnector_get_connection_alive_close(
     mock_redshift_connector.return_value = 'id_test'
 
     redshift_connector.connect_timeout = 1
-    result = redshift_connector._get_connection(datasource=redshift_datasource)
+    result = redshift_connector._get_connection(database=redshift_datasource)
     assert isinstance(result, _GeneratorContextManager)
 
 

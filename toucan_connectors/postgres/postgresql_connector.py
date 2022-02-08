@@ -5,7 +5,7 @@ import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
-from toucan_connectors.postgres.constants import types
+from toucan_connectors.postgres.utils import create_query_editor_query, format_db_tree, types
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -162,9 +162,24 @@ class PostgresConnector(ToucanConnector):
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
-    def describe(self, data_source):
+    def describe(self, data_source: PostgresDataSource):
         connection = pgsql.connect(**self.get_connection_params(database=data_source.database))
         with connection.cursor() as cursor:
             cursor.execute(f"""SELECT * FROM ({data_source.query.replace(';','')}) AS q LIMIT 0;""")
             res = cursor.description
         return {r.name: types.get(r.type_code) for r in res}
+
+    def get_model(self):
+        """Retrieves the database tree structure using current connection"""
+        connection = pgsql.connect(**self.get_connection_params(database='postgres'))
+        with connection.cursor() as cursor:
+            cursor.execute("""select datname from pg_database where datistemplate = false;""")
+            available_dbs = [db_name for (db_name,) in cursor.fetchall()]
+            databases_tree = []
+            for db in available_dbs:
+                connection = pgsql.connect(**self.get_connection_params(database=db))
+                with connection.cursor() as cursor:
+                    cursor.execute(create_query_editor_query(db))
+                    res = cursor.fetchall()
+                    databases_tree += res
+            return format_db_tree(res)
