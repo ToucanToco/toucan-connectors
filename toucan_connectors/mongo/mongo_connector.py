@@ -288,10 +288,17 @@ class MongoConnector(ToucanConnector):
         )
         return _format_explain_result(result)
 
-    def get_unique_identifier(self) -> dict:
-        return self.json(
-            exclude={'client'}
-        )  # client is a MongoClient instance, not json serializable
+    def get_unique_identifier(self, data_source: Optional[ToucanDataSource] = None) -> str:
+        if data_source is not None:
+            return JsonWrapper.dumps(
+                nosql_apply_parameters_to_query(
+                    self.dict(exclude={'client'}), data_source.parameters
+                )
+            )
+        else:
+            return self.json(
+                exclude={'client'}
+            )  # client is a MongoClient instance, not json serializable
 
     def _render_datasource(self, data_source: MongoDataSource) -> dict:
         # let's make a copy first

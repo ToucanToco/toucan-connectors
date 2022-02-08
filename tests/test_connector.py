@@ -19,11 +19,13 @@ from toucan_connectors.toucan_connector import (
 
 class DataSource(ToucanDataSource):
     query: str
+    parameters: dict = {}
 
 
 class DataConnector(ToucanConnector):
     type = 'MyDB'
     data_source_model: DataSource
+    a_parameter: str = ''
 
     def _retrieve_data(self, data_source):
         pass
@@ -128,7 +130,7 @@ def test_get_cache_key():
     key = connector.get_cache_key(ds)
     # We should get a deterministic identifier:
     # /!\ the identifier will change if the model of the connector or the datasource changes
-    assert key == '0e302d62-fab4-3855-8aed-05bcd641302a'
+    assert key == '71c8bdbe-b719-3b19-8249-1a0d2b3cd12d'
 
     ds.query = 'wow'
     key2 = connector.get_cache_key(ds)
@@ -294,3 +296,13 @@ def test_get_df_int_column(mocker):
 
     dc = DataConnector(name='bla')
     assert dc.get_df(mocker.MagicMock()).columns == ['0']
+
+
+def test_get_cache_key_should_be_different_with_different_parameters():
+    connector_a1 = DataConnector(name='a', a_parameter='{{ a }}')
+    ds_1 = DataSource(name='ds_1', parameters={'a': 1}, domain='foo', query='bar')
+    ds_2 = DataSource(name='ds_1', parameters={'a': 2}, domain='foo', query='bar')
+    key_a1 = connector_a1.get_cache_key(ds_1)
+    key_a2 = connector_a1.get_cache_key(ds_2)
+
+    assert key_a1 != key_a2

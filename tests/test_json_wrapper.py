@@ -2,8 +2,9 @@ import os
 from json import JSONDecodeError
 
 import pytest
+from pydantic import SecretStr
 
-from toucan_connectors.json_wrapper import JsonWrapper
+from toucan_connectors.json_wrapper import JsonWrapper, custom_json_serializer
 
 json_not_string = None
 json_string = '{"key1":"value1","key2":"value2"}'
@@ -53,3 +54,8 @@ def test_json_load():
 def test_json_load_file_not_found():
     with pytest.raises(FileNotFoundError):
         JsonWrapper.load(open(path_not_found, 'r'))
+
+
+def test_custom_json_serializer():
+    assert custom_json_serializer(SecretStr('foobar')) == 'foobar'
+    assert custom_json_serializer(42) == 42
