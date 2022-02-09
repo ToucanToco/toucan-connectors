@@ -24,11 +24,12 @@ types_map = {
 
 def create_columns_query(database: str):
     records = (
-        """REPLACE(CHR(123) || '"name"' || ':' || '"' || c.column_name || '"' || ',' ||  '"type"' ||  ':'  ||"""
-        """"'"' || c.data_type  || '"' || CHR(125), '""', '"')"""
+        """REPLACE(CHR(123) || '"name"' || ':' || '"' || c.column_name"""
+        """ || '"' || ',' ||  '"type"' ||  ':'  || '"' || c.data_type  || '"' || CHR(125), '""', '"')"""
     )
     return (
-        f"""SELECT '{database}', table_name as name, {records} from information_schema.columns c"""
+        f'SELECT table_catalog as database, table_name as name, {records} as columns from information_schema.columns c '
+        f"WHERE table_schema not in ('information_schema', 'pg_catalog') and table_name not like 'redshift%'"
     )
 
 
@@ -41,17 +42,16 @@ def aggregate_columns(df: pd.DataFrame):
 
 
 def create_table_info_query(database: str):
-    return f"""select '{database}',
+    return """select t.table_catalog as database,
     t.table_schema as schema,
     CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END as type,
     t.table_name as name
     from
         information_schema.tables t
-    inner join information_schema.columns c on
-        t.table_name = c.table_name
     where t.table_type in ('BASE TABLE', 'VIEW')
     and t.table_schema not in  ('pg_catalog', 'information_schema', 'pg_internal')
-    group by t.table_schema, t.table_name, t.table_type
+    and t.table_name not like 'redshift%'
+    group by t.table_catalog, t.table_schema, t.table_name, t.table_type
     order by schema;"""
 
 
