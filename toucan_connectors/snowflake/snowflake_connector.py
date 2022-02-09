@@ -1,3 +1,4 @@
+import concurrent
 import logging
 from contextlib import suppress
 from datetime import datetime
@@ -14,7 +15,7 @@ from jinja2 import Template
 from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
-from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.common import ConnectorStatus, format_db_tree
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.snowflake_common import (
     SfDataSource,
@@ -425,15 +426,27 @@ class SnowflakeConnector(ToucanConnector):
     def get_snowflake_connection_manager():
         return snowflake_connection_manager
 
+    def _get_connection_and_db_content(self, database: str, db_contents: List):
+        with self._get_connection(
+            database=database, warehouse=self.default_warehouse
+        ) as connection:
+            db_contents += SnowflakeCommon().get_db_content(connection, database).to_dict('records')
+
     def get_model(self):
-        warehouses = self._get_warehouses()
-        databases = self._get_databases()
+        with self._get_connection() as connection:
+            databases = SnowflakeCommon().get_databases(connection=connection)
+        content_queries = []
         for db in databases:
-            tables_and_views = self._get_tables_and_views(db)
-            tables_content = []
-            views_content = []
-            for table_or_view in tables_and_views:
-                if table:= table_or_view.get('table_type') == 'table':
-                    self._describe_table_or_view()
-
-
+            content_queries.append(SnowflakeCommon().create_query_editor_query(db))
+        db_contents = []
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [
+                executor.submit(self._get_connection_and_db_content, db, db_contents)
+                for db in databases
+            ]
+            for future in concurrent.futures.as_completed(futures):
+                if future.exception():
+                    raise future.exception()
+                else:
+                    self.logger.info('query finished')
+        return format_db_tree(db_contents)

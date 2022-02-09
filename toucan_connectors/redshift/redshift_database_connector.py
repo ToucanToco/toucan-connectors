@@ -10,9 +10,8 @@ import redshift_connector
 from pydantic import Field, SecretStr, create_model, root_validator
 from pydantic.types import constr
 
-from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.common import ConnectorStatus, format_db_tree
 from toucan_connectors.connection_manager import ConnectionManager
-from toucan_connectors.postgres.utils import format_db_tree
 from toucan_connectors.redshift.utils import (
     aggregate_columns,
     create_columns_query,

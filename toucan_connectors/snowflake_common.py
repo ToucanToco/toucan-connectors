@@ -2,7 +2,7 @@ import concurrent
 import json
 import logging
 from timeit import default_timer as timer
-from typing import Dict, List, Optional, Literal
+from typing import Dict, List, Optional
 
 import pandas as pd
 from pydantic import Field, constr
@@ -252,14 +252,18 @@ class SnowflakeCommon:
             stats=stats,
         )
 
-    def get_warehouses(self, connection, warehouse_name: Optional[str] = None) -> List[str]:
+    def get_warehouses(
+        self, connection: SnowflakeConnection, warehouse_name: Optional[str] = None
+    ) -> List[str]:
         query = 'SHOW WAREHOUSES'
         if warehouse_name:
             query = f"{query} LIKE '{warehouse_name}'"
         res = self._execute_query(connection, query).to_dict().get('name')
         return [warehouse for warehouse in res.values()] if res else []
 
-    def get_databases(self, connection, database_name: Optional[str] = None) -> List[str]:
+    def get_databases(
+        self, connection: SnowflakeConnection, database_name: Optional[str] = None
+    ) -> List[str]:
         query = 'SHOW DATABASES'
         if database_name:
             query = f"{query} LIKE '{database_name}'"
@@ -298,18 +302,20 @@ class SnowflakeCommon:
         res = {r.name: type_code_mapping.get(r.type_code) for r in describe_res}
         return res
 
-    def get_tables_and_views(self, connection: SnowflakeConnection, database_name: str) -> List[tuple]:
-        query = f'select TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE from {database_name}.information_schema.tables;'
-        res = self._execute_query(connection, query).to_dict()
-        return [content for content in res.values()] if res else []
+    def create_query_editor_query(self, database: str) -> str:
+        return f"""select '{database}' as database, t.table_schema as schema,
+        CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END as type,
+        t.table_name as name,
+        ARRAY_AGG(object_construct('name', c.column_name, 'type', c.data_type)) as columns
+        from
+            information_schema.tables t
+        inner join information_schema.columns c on
+            t.table_name = c.table_name
+        where t.table_type in ('BASE TABLE', 'VIEW')
+        and t.table_schema not in  ('PG_CATALOG', 'INFORMATION_SCHEMA', 'PG_INTERNAL')
+        and t.table_name not in ('LOAD_HISTORY')
+        group by t.table_schema, t.table_name, t.table_type;"""
 
-    def describe_table_or_view(
-            self,
-            connection: SnowflakeConnection,
-            table_type: Literal['table', 'view'],
-            schema: str,
-            name: str
-    ) -> List[tuple]:
-        query = f'describe {table_type} "{schema}"."{name}";'
-        res = self._execute_query(connection, query).to_dict()
-        return [content for content in res.values()] if res else []
+    def get_db_content(self, connection: SnowflakeConnection, database: str) -> pd.DataFrame:
+        query = self.create_query_editor_query(database)
+        return self._execute_query(connection, query)

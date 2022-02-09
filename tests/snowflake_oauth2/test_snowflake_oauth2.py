@@ -523,3 +523,106 @@ def test_set_warehouse(snowflake_oauth2_connector, snowflake_oauth2_datasource):
     snowflake_oauth2_datasource.warehouse = None
     new_data_source = snowflake_oauth2_connector._set_warehouse(snowflake_oauth2_datasource)
     assert new_data_source.warehouse == 'warehouse_1'
+
+
+@patch(
+    'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
+    return_value='tortank',
+)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+def test_get_model(
+    is_closed,
+    close,
+    connect,
+    get_token,
+    mocker,
+    snowflake_oauth2_datasource,
+    snowflake_oauth2_connector,
+):
+    cm = SnowflakeoAuth2Connector.get_connection_manager()
+    mocked_common_get_databases = mocker.patch(
+        'toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector.SnowflakeCommon.get_databases',
+        return_value=['booo'],
+    )
+    mocked_common_get_db_content = mocker.patch(
+        'toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector.SnowflakeCommon.get_db_content',
+        return_value=pd.DataFrame(
+            [
+                {
+                    'DATABASE': 'SNOWFLAKE_SAMPLE_DATA',
+                    'SCHEMA': 'TPCH_SF1000',
+                    'TYPE': 'table',
+                    'NAME': 'REGION',
+                    'COLUMNS': '[\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": '
+                    '"R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": '
+                    '"TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    '
+                    '"name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_NAME",'
+                    '\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },'
+                    '\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",'
+                    '\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  '
+                    '},\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": '
+                    '"R_REGIONKEY",\n    "type": "NUMBER"\n  }\n]',
+                }
+            ]
+        ),
+    )
+    res = snowflake_oauth2_connector.get_model()
+    mocked_common_get_databases.assert_called_once()
+    mocked_common_get_db_content.assert_called_once()
+    assert res == [
+        {
+            'name': 'REGION',
+            'schema': 'TPCH_SF1000',
+            'database': 'SNOWFLAKE_SAMPLE_DATA',
+            'type': 'table',
+            'columns': [
+                {'name': 'R_COMMENT', 'type': 'TEXT'},
+                {'name': 'R_COMMENT', 'type': 'TEXT'},
+                {'name': 'R_NAME', 'type': 'TEXT'},
+                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+                {'name': 'R_NAME', 'type': 'TEXT'},
+                {'name': 'R_COMMENT', 'type': 'TEXT'},
+                {'name': 'R_NAME', 'type': 'TEXT'},
+                {'name': 'R_NAME', 'type': 'TEXT'},
+                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+                {'name': 'R_COMMENT', 'type': 'TEXT'},
+                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+            ],
+        }
+    ]
+    cm.force_clean()
+
+
+@patch(
+    'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token',
+    return_value='tortank',
+)
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+def test_get_model_exception(
+    is_closed,
+    close,
+    connect,
+    get_token,
+    mocker,
+    snowflake_oauth2_datasource,
+    snowflake_oauth2_connector,
+):
+    cm = SnowflakeoAuth2Connector.get_connection_manager()
+    mocked_common_get_databases = mocker.patch(
+        'toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector.SnowflakeCommon.get_databases',
+        return_value=['booo'],
+    )
+    mocker.patch(
+        'toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector.SnowflakeCommon.get_db_content',
+        side_effect=Exception,
+    )
+
+    with pytest.raises(Exception):
+        snowflake_oauth2_connector.get_model()
+    mocked_common_get_databases.assert_called_once()
+    cm.force_clean()

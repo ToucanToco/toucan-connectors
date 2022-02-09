@@ -1,6 +1,7 @@
 import ast
 import asyncio
 import dataclasses
+import json
 import logging
 import re
 from copy import deepcopy
@@ -385,3 +386,65 @@ def pandas_read_sql(
             raise
 
     return df
+
+
+def format_db_tree(unformatted_db_tree: list):
+    """
+    From [
+    ('database', 'schema', 'table', 'table type', {'column name':'column type'}), ...
+    ]
+    to
+        [
+      {
+        name: "Table 1",
+        type: "table",
+        database: 'Database 1',
+        schema: 'Schema 1',
+        columns: [
+          {
+            name: "ColA",
+            type: "string"
+          }
+        ]
+      },
+      {
+        name: "View 1",
+        type: "view",
+        database: 'Database 1',
+        schema: 'Schema 1',
+        columns: [
+          {
+            name: "ColO",
+            type: "string",
+          }
+        ]
+      },
+    ]
+    """
+    df = pd.DataFrame(unformatted_db_tree)
+    df.columns = ['database', 'schema', 'type', 'name', 'columns']
+    df['columns'] = df['columns'].apply(json.loads)
+    output = []
+
+    for db in df['database'].unique():
+        schemas = df[df['database'] == db]['schema'].unique()
+        for schema in schemas:
+            for type in ('table', 'view'):
+                objects = df[
+                    (df['database'] == db) & (df['schema'] == schema) & (df['type'] == type)
+                ]['name'].unique()
+                for object in objects:
+                    current_object = {
+                        'name': object,
+                        'schema': schema,
+                        'database': db,
+                        'type': type,
+                        'columns': df[
+                            (df['database'] == db)
+                            & (df['schema'] == schema)
+                            & (df['type'] == type)
+                            & (df['name'] == object)
+                        ]['columns'].values[0],
+                    }
+                    output.append(current_object)
+    return output
