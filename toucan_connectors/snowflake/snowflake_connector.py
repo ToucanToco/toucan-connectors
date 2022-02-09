@@ -372,10 +372,6 @@ class SnowflakeConnector(ToucanConnector):
             result = SnowflakeCommon().get_databases(connection, database_name)
         return result
 
-    def _get_tables_and_views(self, database_name: Optional[str] = None) -> List[tuple]:
-        with self._get_connection(database=database_name) as connection:
-            return SnowflakeCommon().get_tables_and_views(connection, database_name)
-
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         with self._get_connection(data_source.database, data_source.warehouse) as connection:
             result = SnowflakeCommon().retrieve_data(connection, data_source)

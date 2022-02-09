@@ -423,7 +423,10 @@ def format_db_tree(unformatted_db_tree: list):
     """
     df = pd.DataFrame(unformatted_db_tree)
     df.columns = ['database', 'schema', 'type', 'name', 'columns']
-    df['columns'] = df['columns'].apply(json.loads)
+    try:  # if columns is a string
+        df['columns'] = df['columns'].apply(json.loads)
+    except TypeError:  # else ignore
+        pass
     output = []
 
     for db in df['database'].unique():
