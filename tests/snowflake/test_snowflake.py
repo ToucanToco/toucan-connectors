@@ -125,6 +125,12 @@ def test_datasource_get_databases(
     result = snowflake_datasource._get_databases(snowflake_connector)
     assert len(result) == 2
     assert result[1] == 'database_2'
+    assert snowflake_datasource.language == 'sql'
+    assert snowflake_datasource.query_object == {
+        'schema': 'SHOW_SCHEMA',
+        'table': 'MY_TABLE',
+        'columns': ['col1', 'col2'],
+    }
     SnowflakeConnector.get_snowflake_connection_manager().force_clean()
 
 

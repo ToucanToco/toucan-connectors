@@ -102,6 +102,8 @@ def test_redshiftdatasource_init_(redshift_datasource):
     ds = RedshiftDataSource(domain='test', name='redshift', database='test', table='table_test')
     assert ds.query == 'select * from table_test;'
     assert ds.table == 'table_test'
+    assert ds.language == 'sql'
+    assert hasattr(ds, 'query_object')
 
 
 def test_redshiftdatasource_init_none_values(redshift_datasource):
