@@ -130,7 +130,7 @@ def test_get_cache_key():
     key = connector.get_cache_key(ds)
     # We should get a deterministic identifier:
     # /!\ the identifier will change if the model of the connector or the datasource changes
-    assert key == '71c8bdbe-b719-3b19-8249-1a0d2b3cd12d'
+    assert key == '7b1ecd94-86e1-3e76-b9e1-44e97375a4e8'
 
     ds.query = 'wow'
     key2 = connector.get_cache_key(ds)
@@ -298,11 +298,12 @@ def test_get_df_int_column(mocker):
     assert dc.get_df(mocker.MagicMock()).columns == ['0']
 
 
-def test_get_cache_key_should_be_different_with_different_parameters():
-    connector_a1 = DataConnector(name='a', a_parameter='{{ a }}')
+def test_get_cache_key_should_be_different_with_different_permissions():
+    connector_a1 = DataConnector(name='a')
     ds_1 = DataSource(name='ds_1', parameters={'a': 1}, domain='foo', query='bar')
     ds_2 = DataSource(name='ds_1', parameters={'a': 2}, domain='foo', query='bar')
-    key_a1 = connector_a1.get_cache_key(ds_1)
-    key_a2 = connector_a1.get_cache_key(ds_2)
+    permissions = {'column': 'a_group', 'value': '{{ a }}', 'operator': 'in'}
+    key_a1 = connector_a1.get_cache_key(ds_1, permissions=permissions)
+    key_a2 = connector_a1.get_cache_key(ds_2, permissions=permissions)
 
     assert key_a1 != key_a2
