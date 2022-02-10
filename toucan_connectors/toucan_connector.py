@@ -25,6 +25,8 @@ try:
 except ImportError:
     pass
 
+LOGGER = logging.getLogger(__name__)
+
 
 class DataStats(BaseModel):
     total_rows: Optional[int] = None
@@ -415,19 +417,14 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         return ConnectorStatus()
 
-    def get_unique_identifier(self, data_source: Optional[ToucanDataSource] = None) -> str:
+    def get_unique_identifier(self) -> str:
         """
         Returns a serialized version of the connector's config.
         Override this method in connectors which have not-serializable properties.
 
         Used by `get_cache_key` method.
         """
-        if data_source is not None:
-            return JsonWrapper.dumps(
-                nosql_apply_parameters_to_query(self.dict(), data_source.parameters)
-            )
-        else:
-            return self.json()
+        return self.json()
 
     def _render_datasource(self, data_source: ToucanDataSource) -> dict:
         data_source_rendered = nosql_apply_parameters_to_query(
@@ -451,15 +448,16 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         This identifier will then be used as a cache key.
         """
         unique_identifier = {
-            'connector': self.get_unique_identifier(data_source),
-            'permissions': permissions,
+            'connector': self.get_unique_identifier(),
+            'permissions': nosql_apply_parameters_to_query(permissions, data_source.parameters)
+            if data_source
+            else permissions,
             'offset': offset,
             'limit': limit,
         }
 
         if data_source is not None:
             unique_identifier['datasource'] = self._render_datasource(data_source)
-
         json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True, default=hash)
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
         return string_uid
