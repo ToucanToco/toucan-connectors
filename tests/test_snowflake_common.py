@@ -457,7 +457,7 @@ def test_get_db_content(connect, mocker):
             '"R_REGIONKEY",\n    "type": "NUMBER"\n  }\n]',
         },
     )
-    scommon.get_db_content(connection=connect, database='food')
+    scommon.get_db_content(connection=connect)
     assert (
         mocked_execute.call_args_list[0][0][1]
         == """select 'food' as database, t.table_schema as schema,

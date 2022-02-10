@@ -15,12 +15,13 @@ from jinja2 import Template
 from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
-from toucan_connectors.common import ConnectorStatus, format_db_tree
+from toucan_connectors.common import ConnectorStatus, format_db_model
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.snowflake_common import (
     SfDataSource,
     SnowflakeCommon,
     SnowflakeConnectorWarehouseDoesNotExists,
+    build_database_model_extraction_query,
 )
 from toucan_connectors.toucan_connector import Category, DataSlice, ToucanConnector, strlist_to_enum
 
@@ -426,14 +427,14 @@ class SnowflakeConnector(ToucanConnector):
         with self._get_connection(
             database=database, warehouse=self.default_warehouse
         ) as connection:
-            db_contents += SnowflakeCommon().get_db_content(connection, database).to_dict('records')
+            db_contents += SnowflakeCommon().get_db_content(connection).to_dict('records')
 
     def get_model(self):
         with self._get_connection() as connection:
             databases = SnowflakeCommon().get_databases(connection=connection)
         content_queries = []
         for db in databases:
-            content_queries.append(SnowflakeCommon().create_query_editor_query(db))
+            content_queries.append(build_database_model_extraction_query())
         db_contents = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [
@@ -445,4 +446,4 @@ class SnowflakeConnector(ToucanConnector):
                     raise future.exception()
                 else:
                     self.logger.info('query finished')
-        return format_db_tree(db_contents)
+        return format_db_model(db_contents)

@@ -5,7 +5,7 @@ import json
 import logging
 import re
 from copy import deepcopy
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import pyjq
@@ -388,39 +388,9 @@ def pandas_read_sql(
     return df
 
 
-def format_db_tree(unformatted_db_tree: list):
-    """
-    From [
-    ('database', 'schema', 'table', 'table type', {'column name':'column type'}), ...
-    ]
-    to
-        [
-      {
-        name: "Table 1",
-        type: "table",
-        database: 'Database 1',
-        schema: 'Schema 1',
-        columns: [
-          {
-            name: "ColA",
-            type: "string"
-          }
-        ]
-      },
-      {
-        name: "View 1",
-        type: "view",
-        database: 'Database 1',
-        schema: 'Schema 1',
-        columns: [
-          {
-            name: "ColO",
-            type: "string",
-          }
-        ]
-      },
-    ]
-    """
+def format_db_model(
+    unformatted_db_tree: List[Tuple[str, str, str, str, Dict[str, str]]]
+) -> List[Dict[str, Union[str, List[Dict[str, str]]]]]:
     df = pd.DataFrame(unformatted_db_tree)
     df.columns = ['database', 'schema', 'type', 'name', 'columns']
     try:  # if columns is a string

@@ -41,7 +41,7 @@ def aggregate_columns(df: pd.DataFrame):
     return df
 
 
-def create_table_info_query(database: str):
+def build_database_model_extraction_query() -> str:
     return """select t.table_catalog as database,
     t.table_schema as schema,
     CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END as type,

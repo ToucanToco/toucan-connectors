@@ -603,8 +603,8 @@ types = {
 }
 
 
-def create_query_editor_query(database: str):
-    return f"""select '{database}',
+def build_database_model_extraction_query() -> str:
+    return """select t.table_catalog as database,
     t.table_schema as schema,
     CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END as type,
     t.table_name as name,

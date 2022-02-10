@@ -4,8 +4,8 @@ from typing import Dict, Optional
 import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr, create_model
 
-from toucan_connectors.common import ConnectorStatus, format_db_tree, pandas_read_sql
-from toucan_connectors.postgres.utils import create_query_editor_query, types
+from toucan_connectors.common import ConnectorStatus, format_db_model, pandas_read_sql
+from toucan_connectors.postgres.utils import build_database_model_extraction_query, types
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
 
@@ -179,7 +179,7 @@ class PostgresConnector(ToucanConnector):
             for db in available_dbs:
                 connection = pgsql.connect(**self.get_connection_params(database=db))
                 with connection.cursor() as cursor:
-                    cursor.execute(create_query_editor_query(db))
+                    cursor.execute(build_database_model_extraction_query())
                     res = cursor.fetchall()
                     databases_tree += res
-            return format_db_tree(res)
+            return format_db_model(res)
