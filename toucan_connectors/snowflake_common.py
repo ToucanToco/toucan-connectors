@@ -2,7 +2,7 @@ import concurrent
 import json
 import logging
 from timeit import default_timer as timer
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from pydantic import Field, constr
@@ -317,6 +317,6 @@ class SnowflakeCommon:
         res = {r.name: type_code_mapping.get(r.type_code) for r in describe_res}
         return res
 
-    def get_db_content(self, connection: SnowflakeConnection) -> pd.DataFrame:
+    def get_db_content(self, connection: SnowflakeConnection) -> List[Dict[str, Any]]:
         query = build_database_model_extraction_query()
         return self._execute_query(connection, query)
