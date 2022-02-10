@@ -615,5 +615,5 @@ def build_database_model_extraction_query() -> str:
         t.table_name = c.table_name
     where t.table_type in ('BASE TABLE', 'VIEW')
     and t.table_schema not in  ('pg_catalog', 'information_schema', 'pg_internal')
-    group by t.table_schema, t.table_name, t.table_type;
+    group by t.table_schema, t.table_catalog, t.table_name, t.table_type;
     """

@@ -484,13 +484,7 @@ def test_get_model(mocker, redshift_connector):
                 'schema': 'public',
                 'type': 'table',
                 'name': 'cool',
-            },
-            {
-                'database': 'dev',
-                'schema': 'public',
-                'type': 'table',
-                'name': 'cool',
-            },
+            }
         ]
     )
     mock_get_connection().__enter__().cursor().__enter__().fetchall.return_value = [('dev',)]

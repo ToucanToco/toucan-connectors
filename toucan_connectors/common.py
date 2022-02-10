@@ -397,27 +397,9 @@ def format_db_model(
         df['columns'] = df['columns'].apply(json.loads)
     except TypeError:  # else ignore
         pass
-    output = []
-
-    for db in df['database'].unique():
-        schemas = df[df['database'] == db]['schema'].unique()
-        for schema in schemas:
-            for type in ('table', 'view'):
-                objects = df[
-                    (df['database'] == db) & (df['schema'] == schema) & (df['type'] == type)
-                ]['name'].unique()
-                for object in objects:
-                    current_object = {
-                        'name': object,
-                        'schema': schema,
-                        'database': db,
-                        'type': type,
-                        'columns': df[
-                            (df['database'] == db)
-                            & (df['schema'] == schema)
-                            & (df['type'] == type)
-                            & (df['name'] == object)
-                        ]['columns'].values[0],
-                    }
-                    output.append(current_object)
-    return output
+    return (
+        df.groupby(by=['schema', 'database', 'type', 'name'])['columns']
+        .apply(sum)
+        .reset_index()
+        .to_dict('records')
+    )

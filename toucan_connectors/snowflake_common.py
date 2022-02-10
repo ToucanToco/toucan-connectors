@@ -69,7 +69,7 @@ def build_database_model_extraction_query() -> str:
     where t.table_type in ('BASE TABLE', 'VIEW')
     and t.table_schema not in  ('PG_CATALOG', 'INFORMATION_SCHEMA', 'PG_INTERNAL')
     and t.table_name not in ('LOAD_HISTORY')
-    group by t.table_schema, t.table_name, t.table_type;"""
+    group by t.table_catalog, t.table_schema, t.table_name, t.table_type;"""
 
 
 class SnowflakeCommon:

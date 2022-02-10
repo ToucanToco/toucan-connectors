@@ -356,6 +356,6 @@ class RedshiftConnector(ToucanConnector):
             with self._get_cursor(database=db_name) as cursor:
                 cursor.execute(create_columns_query(db))
                 cols = aggregate_columns(cursor.fetch_dataframe())
-                cursor.execute(build_database_model_extraction_query(db))
+                cursor.execute(build_database_model_extraction_query())
                 databases_tree += merge_columns_and_tables(cols, cursor.fetch_dataframe())
         return format_db_model(databases_tree)
