@@ -601,3 +601,19 @@ types = {
     13741: 'user_mappings',
     13740: '_user_mappings',
 }
+
+
+def build_database_model_extraction_query() -> str:
+    return """select t.table_catalog as database,
+    t.table_schema as schema,
+    CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END as type,
+    t.table_name as name,
+    json_agg(json_build_object('name', c.column_name, 'type', c.data_type)) as columns
+    from
+        information_schema.tables t
+    inner join information_schema.columns c on
+        t.table_name = c.table_name
+    where t.table_type in ('BASE TABLE', 'VIEW')
+    and t.table_schema not in  ('pg_catalog', 'information_schema', 'pg_internal')
+    group by t.table_schema, t.table_catalog, t.table_name, t.table_type;
+    """

@@ -433,3 +433,34 @@ def test_fetch_data_warehouse_none(execute_query, execute_parallelized, connect)
     )
     SnowflakeCommon().fetch_data(connect, s)
     assert execute_query.call_count == 0
+
+
+@patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
+def test_get_db_content(connect, mocker):
+    scommon = SnowflakeCommon()
+    mocker.patch.object(
+        scommon,
+        '_execute_query',
+        return_value={
+            'DATABASE': 'SNOWFLAKE_SAMPLE_DATA',
+            'SCHEMA': 'TPCH_SF1000',
+            'TYPE': 'table',
+            'NAME': 'REGION',
+            'COLUMNS': '[\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": '
+            '"R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": '
+            '"TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    '
+            '"name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_NAME",'
+            '\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },'
+            '\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",'
+            '\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  '
+            '},\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": '
+            '"R_REGIONKEY",\n    "type": "NUMBER"\n  }\n]',
+        },
+    )
+    assert scommon.get_db_content(connection=connect) == {
+        'DATABASE': 'SNOWFLAKE_SAMPLE_DATA',
+        'SCHEMA': 'TPCH_SF1000',
+        'TYPE': 'table',
+        'NAME': 'REGION',
+        'COLUMNS': '[\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  }\n]',
+    }

@@ -1,6 +1,7 @@
 from contextlib import _GeneratorContextManager
 from unittest.mock import Mock, patch
 
+import pandas as pd
 import pytest
 from redshift_connector.error import InterfaceError
 
@@ -285,7 +286,7 @@ def test_redshiftconnector_get_connection(
 ):
     mock_get_identifier.return_value = 'id_test'
     redshift_connector.connect_timeout = 1
-    result = redshift_connector._get_connection(datasource=redshift_datasource)
+    result = redshift_connector._get_connection(database=redshift_datasource)
     assert result == mock_connection_manager.get()
 
 
@@ -298,10 +299,11 @@ def test_redshiftconnector_get_connection_alive_close(
     mock_redshift_connector.return_value = 'id_test'
 
     redshift_connector.connect_timeout = 1
-    result = redshift_connector._get_connection(datasource=redshift_datasource)
+    result = redshift_connector._get_connection(database=redshift_datasource)
     assert isinstance(result, _GeneratorContextManager)
 
 
+@pytest.mark.skip(reason='flaky test')
 @patch('toucan_connectors.ToucanConnector.get_identifier')
 def test_redshiftconnector_close(mock_get_identifier, redshift_connector):
     mock_get_identifier().return_value = 'id_test'
@@ -318,7 +320,7 @@ def test_redshiftconnector_sleeper(redshift_connector):
 
 
 def test_redshiftconnector_get_cursor(redshift_connector, redshift_datasource):
-    result = redshift_connector._get_cursor(datasource=redshift_datasource)
+    result = redshift_connector._get_cursor(database=redshift_datasource.database)
     assert isinstance(result, _GeneratorContextManager)
 
 
@@ -331,7 +333,7 @@ def test_redshiftconnector_retrieve_tables(
         ['table2'],
         ['table3'],
     )
-    result = redshift_connector._retrieve_tables(datasource=redshift_datasource)
+    result = redshift_connector._retrieve_tables(database=redshift_datasource.database)
     assert result == ['table1', 'table2', 'table3']
 
 
@@ -465,3 +467,37 @@ def test_redshiftconnector_describe(mock_connection, redshift_connector, redshif
     result = redshift_connector.describe(data_source=redshift_datasource)
     expected = {'salesid': 'INTEGER', 'listid': 'INTEGER', 'pricepaid': 'DECIMAL'}
     assert result == expected
+
+
+def test_get_model(mocker, redshift_connector):
+    mock_get_connection = mocker.patch.object(RedshiftConnector, '_get_connection')
+    mock_cols_response = pd.DataFrame(
+        [
+            {'database': 'dev', 'name': 'cool', 'columns': '{"name":"foo", "type":"bar"}'},
+            {'database': 'dev', 'name': 'cool', 'columns': '{"name":"roo", "type":"far"}'},
+        ]
+    )
+    mock_tables_response = pd.DataFrame(
+        [
+            {
+                'database': 'dev',
+                'schema': 'public',
+                'type': 'table',
+                'name': 'cool',
+            }
+        ]
+    )
+    mock_get_connection().__enter__().cursor().__enter__().fetchall.return_value = [('dev',)]
+    mock_get_connection().__enter__().cursor().__enter__().fetch_dataframe.side_effect = [
+        mock_cols_response,
+        mock_tables_response,
+    ]
+    assert redshift_connector.get_model(DATABASE_NAME) == [
+        {
+            'database': 'dev',
+            'schema': 'public',
+            'name': 'cool',
+            'type': 'table',
+            'columns': [{'name': 'foo', 'type': 'bar'}, {'name': 'roo', 'type': 'far'}],
+        }
+    ]

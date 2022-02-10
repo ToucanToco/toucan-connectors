@@ -788,3 +788,84 @@ def test_render_datasource():
     assert snowflake_connector.get_cache_key(
         datasource3
     ) != another_snowflake_connector.get_cache_key(datasource3)
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+def test_get_model(is_closed, close, connect, mocker, snowflake_datasource, snowflake_connector):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
+    mocked_common_get_databases = mocker.patch(
+        'toucan_connectors.snowflake.snowflake_connector.SnowflakeCommon.get_databases',
+        return_value=['booo'],
+    )
+    mocked_common_get_db_content = mocker.patch(
+        'toucan_connectors.snowflake.snowflake_connector.SnowflakeCommon.get_db_content',
+        return_value=pd.DataFrame(
+            [
+                {
+                    'DATABASE': 'SNOWFLAKE_SAMPLE_DATA',
+                    'SCHEMA': 'TPCH_SF1000',
+                    'TYPE': 'table',
+                    'NAME': 'REGION',
+                    'COLUMNS': '[\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": '
+                    '"R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": '
+                    '"TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    '
+                    '"name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_NAME",'
+                    '\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },'
+                    '\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",'
+                    '\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  '
+                    '},\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": '
+                    '"R_REGIONKEY",\n    "type": "NUMBER"\n  }\n]',
+                }
+            ]
+        ),
+    )
+    res = snowflake_connector.get_model()
+    mocked_common_get_databases.assert_called_once()
+    mocked_common_get_db_content.assert_called_once()
+    assert res == [
+        {
+            'name': 'REGION',
+            'schema': 'TPCH_SF1000',
+            'database': 'SNOWFLAKE_SAMPLE_DATA',
+            'type': 'table',
+            'columns': [
+                {'name': 'R_COMMENT', 'type': 'TEXT'},
+                {'name': 'R_COMMENT', 'type': 'TEXT'},
+                {'name': 'R_NAME', 'type': 'TEXT'},
+                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+                {'name': 'R_NAME', 'type': 'TEXT'},
+                {'name': 'R_COMMENT', 'type': 'TEXT'},
+                {'name': 'R_NAME', 'type': 'TEXT'},
+                {'name': 'R_NAME', 'type': 'TEXT'},
+                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+                {'name': 'R_COMMENT', 'type': 'TEXT'},
+                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+            ],
+        }
+    ]
+    cm.force_clean()
+
+
+@patch('snowflake.connector.connect', return_value=SnowflakeConnection)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_close', return_value=True)
+@patch('toucan_connectors.connection_manager.ConnectionBO.exec_alive', return_value=True)
+def test_get_model_exception(
+    is_closed, close, connect, mocker, snowflake_datasource, snowflake_connector
+):
+    cm = SnowflakeConnector.get_snowflake_connection_manager()
+    mocked_common_get_databases = mocker.patch(
+        'toucan_connectors.snowflake.snowflake_connector.SnowflakeCommon.get_databases',
+        return_value=['booo'],
+    )
+    mocker.patch(
+        'toucan_connectors.snowflake.snowflake_connector.SnowflakeCommon.get_db_content',
+        side_effect=Exception,
+    )
+
+    with pytest.raises(Exception):
+        snowflake_connector.get_model()
+    mocked_common_get_databases.assert_called_once()
+    cm.force_clean()
