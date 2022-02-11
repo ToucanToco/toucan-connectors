@@ -11,7 +11,7 @@ extras_require = {
     'azure_mssql': ['pyodbc>=3'],
     'clickhouse': ['clickhouse_driver', 'sqlalchemy'],
     'dataiku': ['dataiku-api-client'],
-    'elasticsearch': ['elasticsearch'],
+    'elasticsearch': ['elasticsearch<8'],
     'facebook': ['facebook-sdk'],
     'github': ['python_graphql_client'],
     'google_analytics': ['google-api-python-client', 'oauth2client'],
