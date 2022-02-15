@@ -182,4 +182,4 @@ class PostgresConnector(ToucanConnector):
                     cursor.execute(build_database_model_extraction_query())
                     res = cursor.fetchall()
                     databases_tree += res
-            return format_db_model(res)
+            return format_db_model(databases_tree)
