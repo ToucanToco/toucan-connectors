@@ -9,6 +9,7 @@ Be aware that this connector needs a specific driver to be installed on the serv
 * `type`: `"Odbc"`
 * `name`: str, required
 * `connection_string`: str, required
+* `autocommit`: bool, default to False
 * `ansi`: bool, default to False
 * `connect_timeout`: int
 
