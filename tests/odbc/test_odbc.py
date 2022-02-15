@@ -64,7 +64,11 @@ def test_odbc_connector_autocommit(mocker):
     mocker.patch('pandas.read_sql')
 
     odbc_connector = OdbcConnector(name='test', connection_string='blah', autocommit=True)
-    ds = OdbcDataSource( domain='test', name='test', query='SELECT 1;',)
+    ds = OdbcDataSource(
+        domain='test',
+        name='test',
+        query='SELECT 1;',
+    )
     odbc_connector.get_df(ds)
 
     mock_pyodbc_connect.assert_called_once_with('blah', autocommit=True, ansi=False)
