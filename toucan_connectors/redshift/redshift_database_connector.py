@@ -349,7 +349,11 @@ class RedshiftConnector(ToucanConnector):
 
     def get_model(self, db_name: str):
         with self._get_cursor(database=db_name) as cursor:
-            cursor.execute("""select datname from pg_database where datistemplate = false;""")
+            # redshift has a weird system db called padb_harvest duplicating the content of 'dev' database
+            # https://bit.ly/3GQJCdy, we have to filter it
+            cursor.execute(
+                """select datname from pg_database where datistemplate = false and datname != 'padb_harvest';"""
+            )
             available_dbs = [db_name for (db_name,) in cursor.fetchall()]
             databases_tree = []
         for db in available_dbs:
