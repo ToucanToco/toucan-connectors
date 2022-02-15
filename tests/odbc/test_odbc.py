@@ -58,6 +58,18 @@ def test_raise_on_empty_query():
         OdbcDataSource(domain='test', name='test', database='postgres_db', query='')
 
 
+def test_odbc_connector_autocommit(mocker):
+    """Test that we are passing the autocommit param properly"""
+    mock_pyodbc_connect = mocker.patch('pyodbc.connect')
+    mocker.patch('pandas.read_sql')
+
+    odbc_connector = OdbcConnector(name='test', connection_string='blah', autocommit=True)
+    ds = OdbcDataSource( domain='test', name='test', query='SELECT 1;',)
+    odbc_connector.get_df(ds)
+
+    mock_pyodbc_connect.assert_called_once_with('blah', autocommit=True, ansi=False)
+
+
 def test_odbc_get_df(mocker):
     mock_pyodbc_connect = mocker.patch('pyodbc.connect')
     mock_pandas_read_sql = mocker.patch('pandas.read_sql')
