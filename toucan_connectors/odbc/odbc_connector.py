@@ -20,12 +20,13 @@ class OdbcConnector(ToucanConnector):
     data_source_model: OdbcDataSource
 
     connection_string: str = Field(..., description='The connection string')
+    autocommit: bool = False
     ansi: bool = False
     connect_timeout: int = None
 
     def get_connection_params(self):
         con_params = {
-            'autocommit': False,
+            'autocommit': self.autocommit,
             'ansi': self.ansi,
             'timeout': self.connect_timeout,
         }
