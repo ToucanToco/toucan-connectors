@@ -65,7 +65,7 @@ def build_database_model_extraction_query() -> str:
     from
         information_schema.tables t
     inner join information_schema.columns c on
-        t.table_name = c.table_name
+        t.table_name = c.table_name and t.table_schema = c.table_schema
     where t.table_type in ('BASE TABLE', 'VIEW')
     and t.table_schema not in  ('PG_CATALOG', 'INFORMATION_SCHEMA', 'PG_INTERNAL')
     and t.table_name not in ('LOAD_HISTORY')
