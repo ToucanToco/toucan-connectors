@@ -154,6 +154,17 @@ def test_get_cache_key_connector_alone():
     assert key_a1 != key_b
 
 
+def test_get_cache_key_should_be_different_with_different_permissions():
+    connector_a1 = DataConnector(name='a')
+    ds_1 = DataSource(name='ds_1', parameters={'a': 1}, domain='foo', query='bar')
+    ds_2 = DataSource(name='ds_1', parameters={'a': 2}, domain='foo', query='bar')
+    permissions = {'column': 'a_group', 'value': '{{ a }}', 'operator': 'in'}
+    key_a1 = connector_a1.get_cache_key(ds_1, permissions=permissions)
+    key_a2 = connector_a1.get_cache_key(ds_2, permissions=permissions)
+
+    assert key_a1 != key_a2
+
+
 class UnreliableDataConnector(ToucanConnector):
     type = 'MyUnreliableDB'
     data_source_model: DataSource
@@ -296,14 +307,3 @@ def test_get_df_int_column(mocker):
 
     dc = DataConnector(name='bla')
     assert dc.get_df(mocker.MagicMock()).columns == ['0']
-
-
-def test_get_cache_key_should_be_different_with_different_permissions():
-    connector_a1 = DataConnector(name='a')
-    ds_1 = DataSource(name='ds_1', parameters={'a': 1}, domain='foo', query='bar')
-    ds_2 = DataSource(name='ds_1', parameters={'a': 2}, domain='foo', query='bar')
-    permissions = {'column': 'a_group', 'value': '{{ a }}', 'operator': 'in'}
-    key_a1 = connector_a1.get_cache_key(ds_1, permissions=permissions)
-    key_a2 = connector_a1.get_cache_key(ds_2, permissions=permissions)
-
-    assert key_a1 != key_a2
