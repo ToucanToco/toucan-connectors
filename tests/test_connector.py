@@ -130,7 +130,7 @@ def test_get_cache_key():
     key = connector.get_cache_key(ds)
     # We should get a deterministic identifier:
     # /!\ the identifier will change if the model of the connector or the datasource changes
-    assert key == '7b1ecd94-86e1-3e76-b9e1-44e97375a4e8'
+    assert key == '3ffe037e-3559-3a17-aede-c4ab0669cc25'
 
     ds.query = 'wow'
     key2 = connector.get_cache_key(ds)
@@ -152,6 +152,17 @@ def test_get_cache_key_connector_alone():
 
     assert key_a1 == key_a2
     assert key_a1 != key_b
+
+
+def test_get_cache_key_with_custom_variable_syntax():
+    connector_a1 = DataConnector(name='a')
+    # sample with Google BigQuery `@my_var` syntax
+    ds_1 = DataSource(name='ds_1', parameters={'a': 1}, domain='foo', query='bar=@a')
+    ds_2 = DataSource(name='ds_1', parameters={'a': 2}, domain='foo', query='bar=@a')
+    key_a1 = connector_a1.get_cache_key(ds_1)
+    key_a2 = connector_a1.get_cache_key(ds_2)
+
+    assert key_a1 != key_a2
 
 
 def test_get_cache_key_should_be_different_with_different_permissions():
