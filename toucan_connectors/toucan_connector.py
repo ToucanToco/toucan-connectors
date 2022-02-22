@@ -428,9 +428,9 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     def _get_unique_datasource_identifier(self, data_source: ToucanDataSource) -> dict:
         # By default we don't know which variable syntax is be supported by the inheriting connector,
-        # so calling `nosql_apply_parameters_to_query` is wrong and will produce the same cache key 
+        # so calling `nosql_apply_parameters_to_query` is wrong and will produce the same cache key
         # for different queries when using custom variable syntax !
-        # Overwrite this method to improve the cache key at places where supported syntaxes are clear. 
+        # Overwrite this method to improve the cache key at places where supported syntaxes are clear.
         return data_source.dict()
 
     def get_cache_key(
