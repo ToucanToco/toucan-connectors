@@ -721,7 +721,7 @@ def test_describe(is_closed, close, connect, mocker, snowflake_datasource, snowf
     cm.force_clean()
 
 
-def test_render_datasource():
+def test_get_unique_datasource_identifier():
     snowflake_connector = SnowflakeConnector(
         identifier='snowflake_test',
         name='test_name',

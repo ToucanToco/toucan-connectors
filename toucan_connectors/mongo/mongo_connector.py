@@ -293,7 +293,7 @@ class MongoConnector(ToucanConnector):
             exclude={'client'}
         )  # client is a MongoClient instance, not json serializable
 
-    def _render_datasource(self, data_source: MongoDataSource) -> dict:
+    def _get_unique_datasource_identifier(self, data_source: MongoDataSource) -> dict:
         # let's make a copy first
         data_source_rendered = MongoDataSource.parse_obj(data_source)
         data_source_rendered.query = normalize_query(data_source.query, data_source.parameters)

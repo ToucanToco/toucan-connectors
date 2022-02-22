@@ -190,7 +190,7 @@ class HttpAPIConnector(ToucanConnector):
                 query[k] = template[k]
         return query
 
-    def _render_datasource(self, data_source: ToucanDataSource) -> dict:
+    def _get_unique_datasource_identifier(self, data_source: ToucanDataSource) -> dict:
         query = self._render_query(data_source)
         del query['parameters']
         return query
