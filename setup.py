@@ -49,7 +49,7 @@ install_requires = [
     'jinja2',
     'pydantic',
     'pyjq',
-    'requests<2.24.0',
+    'requests',
     'tenacity',
     'toucan_data_sdk',
     'typing-extensions; python_version < "3.8"',
