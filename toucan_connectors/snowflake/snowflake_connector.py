@@ -416,7 +416,7 @@ class SnowflakeConnector(ToucanConnector):
             result = SnowflakeCommon().describe(connection, data_source.query)
         return result
 
-    def _render_datasource(self, data_source: SnowflakeDataSource) -> dict:
+    def _get_unique_datasource_identifier(self, data_source: SnowflakeDataSource) -> dict:
         return SnowflakeCommon().render_datasource(data_source)
 
     @staticmethod
