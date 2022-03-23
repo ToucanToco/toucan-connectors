@@ -1,12 +1,18 @@
 from contextlib import suppress
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr, create_model
 
-from toucan_connectors.common import ConnectorStatus, format_db_model, pandas_read_sql
+from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.postgres.utils import build_database_model_extraction_query, types
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    DiscoverableConnector,
+    TableInfo,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 
 class PostgresDataSource(ToucanDataSource):
@@ -75,7 +81,7 @@ class PostgresDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class PostgresConnector(ToucanConnector):
+class PostgresConnector(ToucanConnector, DiscoverableConnector):
     """
     Import data from PostgreSQL.
     """
@@ -169,14 +175,31 @@ class PostgresConnector(ToucanConnector):
             res = cursor.description
         return {r.name: types.get(r.type_code) for r in res}
 
-    def get_model(self):
+    def get_model(self) -> Tuple[List[TableInfo], Dict]:
         """Retrieves the database tree structure using current connection"""
         available_dbs = self._list_db_names()
         databases_tree = []
         for db in available_dbs:
-            if result := self._list_tables_info(db):
-                databases_tree += result
-        return format_db_model(databases_tree)
+            with suppress(pgsql.OperationalError):
+                databases_tree += self._list_tables_info(db)
+        return DiscoverableConnector.format_db_model(databases_tree)
+
+    def get_model_with_info(self) -> Tuple[List[TableInfo], Dict]:
+        """Retrieves the database tree structure using current connection"""
+        available_dbs = self._list_db_names()
+        databases_tree = []
+        failed_databases = []
+        for db in available_dbs:
+            try:
+                databases_tree += self._list_tables_info(db)
+            except pgsql.OperationalError:
+                failed_databases.append(db)
+
+        tables_info = DiscoverableConnector.format_db_model(databases_tree)
+        metadata = dict()
+        if len(failed_databases):
+            metadata["info"] = {"Could not reach databases": failed_databases}
+        return (tables_info, metadata)
 
     def _list_db_names(self):
         connection = pgsql.connect(**self.get_connection_params(database='postgres'))
@@ -185,10 +208,8 @@ class PostgresConnector(ToucanConnector):
             return [db_name for (db_name,) in cursor.fetchall()]
 
     def _list_tables_info(self, db):
-        try:
-            connection = pgsql.connect(**self.get_connection_params(database=db))
-            with connection.cursor() as cursor:
-                cursor.execute(build_database_model_extraction_query())
-                return cursor.fetchall()
-        except pgsql.OperationalError:
-            pass
+
+        connection = pgsql.connect(**self.get_connection_params(database=db))
+        with connection.cursor() as cursor:
+            cursor.execute(build_database_model_extraction_query())
+            return cursor.fetchall()
