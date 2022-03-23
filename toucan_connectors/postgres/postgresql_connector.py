@@ -171,15 +171,24 @@ class PostgresConnector(ToucanConnector):
 
     def get_model(self):
         """Retrieves the database tree structure using current connection"""
+        available_dbs = self._list_db_names()
+        databases_tree = []
+        for db in available_dbs:
+            if result := self._list_tables_info(db):
+                databases_tree += result
+        return format_db_model(databases_tree)
+
+    def _list_db_names(self):
         connection = pgsql.connect(**self.get_connection_params(database='postgres'))
         with connection.cursor() as cursor:
             cursor.execute("""select datname from pg_database where datistemplate = false;""")
-            available_dbs = [db_name for (db_name,) in cursor.fetchall()]
-            databases_tree = []
-            for db in available_dbs:
-                connection = pgsql.connect(**self.get_connection_params(database=db))
-                with connection.cursor() as cursor:
-                    cursor.execute(build_database_model_extraction_query())
-                    res = cursor.fetchall()
-                    databases_tree += res
-            return format_db_model(databases_tree)
+            return [db_name for (db_name,) in cursor.fetchall()]
+
+    def _list_tables_info(self, db):
+        try:
+            connection = pgsql.connect(**self.get_connection_params(database=db))
+            with connection.cursor() as cursor:
+                cursor.execute(build_database_model_extraction_query())
+                return cursor.fetchall()
+        except pgsql.OperationalError:
+            pass
