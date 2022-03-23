@@ -15,7 +15,7 @@ from jinja2 import Template
 from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
-from toucan_connectors.common import ConnectorStatus, format_db_model
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.snowflake_common import (
     SfDataSource,
@@ -23,7 +23,13 @@ from toucan_connectors.snowflake_common import (
     SnowflakeConnectorWarehouseDoesNotExists,
     build_database_model_extraction_query,
 )
-from toucan_connectors.toucan_connector import Category, DataSlice, ToucanConnector, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    Category,
+    DataSlice,
+    DiscoverableConnector,
+    ToucanConnector,
+    strlist_to_enum,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -446,4 +452,4 @@ class SnowflakeConnector(ToucanConnector):
                     raise future.exception()
                 else:
                     self.logger.info('query finished')
-        return format_db_model(db_contents)
+        return DiscoverableConnector.format_db_model(db_contents)

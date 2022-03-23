@@ -208,7 +208,6 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
             return [db_name for (db_name,) in cursor.fetchall()]
 
     def _list_tables_info(self, db):
-
         connection = pgsql.connect(**self.get_connection_params(database=db))
         with connection.cursor() as cursor:
             cursor.execute(build_database_model_extraction_query())

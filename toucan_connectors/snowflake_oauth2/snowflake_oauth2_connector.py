@@ -10,7 +10,6 @@ import snowflake
 from pydantic import Field, PrivateAttr, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
-from toucan_connectors.common import format_db_model
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -25,7 +24,13 @@ from toucan_connectors.snowflake_common import (
     SnowflakeCommon,
     build_database_model_extraction_query,
 )
-from toucan_connectors.toucan_connector import Category, DataSlice, ToucanConnector, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    Category,
+    DataSlice,
+    DiscoverableConnector,
+    ToucanConnector,
+    strlist_to_enum,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -308,4 +313,4 @@ class SnowflakeoAuth2Connector(ToucanConnector):
                     raise future.exception()
                 else:
                     self.logger.info('query finished')
-        return format_db_model(db_contents)
+        return DiscoverableConnector.format_db_model(db_contents)

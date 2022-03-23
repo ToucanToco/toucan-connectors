@@ -10,7 +10,7 @@ import redshift_connector
 from pydantic import Field, SecretStr, create_model, root_validator
 from pydantic.types import constr
 
-from toucan_connectors.common import ConnectorStatus, format_db_model
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.redshift.utils import (
     aggregate_columns,
@@ -23,6 +23,7 @@ from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
     DataStats,
+    DiscoverableConnector,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
@@ -362,4 +363,4 @@ class RedshiftConnector(ToucanConnector):
                 cols = aggregate_columns(cursor.fetch_dataframe())
                 cursor.execute(build_database_model_extraction_query())
                 databases_tree += merge_columns_and_tables(cols, cursor.fetch_dataframe())
-        return format_db_model(databases_tree)
+        return DiscoverableConnector.format_db_model(databases_tree)
