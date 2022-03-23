@@ -1,12 +1,13 @@
+import json
 import logging
 import operator
 import os
 import socket
 import uuid
-from abc import ABCMeta, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Type
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple, Type
 
 import pandas as pd
 import tenacity as tny
@@ -469,3 +470,37 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     def describe(self, data_source: ToucanDataSource):
         """ """
+
+
+TableInfo = Tuple[str, str, str, str, Dict[str, str]]
+
+
+class DiscoverableConnector(ABC):
+    @abstractmethod
+    def get_model(self) -> List[TableInfo]:
+        """Tries to get all tables that are available for the connector"""
+        pass
+
+    @abstractmethod
+    def get_model_with_info(self) -> Tuple[List[TableInfo], Dict]:
+        """Tries to get all tables that are available for the connector and gives back some infos about what happenned"""
+        return (self.get_model(), dict())
+
+    @staticmethod
+    def format_db_model(
+        unformatted_db_tree: List[Tuple[str, str, str, str, Dict[str, str]]]
+    ) -> List[TableInfo]:
+        if not len(unformatted_db_tree):
+            return []
+        df = pd.DataFrame(unformatted_db_tree)
+        df.columns = ['database', 'schema', 'type', 'name', 'columns']
+        try:  # if columns is a string
+            df['columns'] = df['columns'].apply(json.loads)
+        except TypeError:  # else ignore
+            pass
+        return (
+            df.groupby(by=['schema', 'database', 'type', 'name'])['columns']
+            .apply(sum)
+            .reset_index()
+            .to_dict('records')
+        )

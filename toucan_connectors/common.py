@@ -1,11 +1,10 @@
 import ast
 import asyncio
 import dataclasses
-import json
 import logging
 import re
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple
 
 import pandas as pd
 import pyjq
@@ -386,22 +385,3 @@ def pandas_read_sql(
             raise
 
     return df
-
-
-def format_db_model(
-    unformatted_db_tree: List[Tuple[str, str, str, str, Dict[str, str]]]
-) -> List[Dict[str, Union[str, List[Dict[str, str]]]]]:
-    if not len(unformatted_db_tree):
-        return []
-    df = pd.DataFrame(unformatted_db_tree)
-    df.columns = ['database', 'schema', 'type', 'name', 'columns']
-    try:  # if columns is a string
-        df['columns'] = df['columns'].apply(json.loads)
-    except TypeError:  # else ignore
-        pass
-    return (
-        df.groupby(by=['schema', 'database', 'type', 'name'])['columns']
-        .apply(sum)
-        .reset_index()
-        .to_dict('records')
-    )
