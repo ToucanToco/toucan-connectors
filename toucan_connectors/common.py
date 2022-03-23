@@ -391,7 +391,7 @@ def pandas_read_sql(
 def format_db_model(
     unformatted_db_tree: List[Tuple[str, str, str, str, Dict[str, str]]]
 ) -> List[Dict[str, Union[str, List[Dict[str, str]]]]]:
-    if len(unformatted_db_tree) == 0:
+    if not len(unformatted_db_tree):
         return []
     df = pd.DataFrame(unformatted_db_tree)
     df.columns = ['database', 'schema', 'type', 'name', 'columns']
