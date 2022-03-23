@@ -376,3 +376,9 @@ def test_get_model(postgres_connector):
             ],
         },
     ]
+
+
+def test_get_model_with_error(mocker, postgres_connector):
+    """Check that it returns the db tree structure"""
+    with mocker.patch.object(PostgresConnector, "_list_tables_info", return_value=None):
+        assert postgres_connector.get_model() == []
