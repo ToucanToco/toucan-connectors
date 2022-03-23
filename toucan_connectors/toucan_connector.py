@@ -7,7 +7,7 @@ import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple, Type
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple, Type, Union
 
 import pandas as pd
 import tenacity as tny
@@ -472,7 +472,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """ """
 
 
-TableInfo = Tuple[str, str, str, str, Dict[str, str]]
+TableInfo = Dict[str, Union[str, List[Dict[str, str]]]]
 
 
 class DiscoverableConnector(ABC):
