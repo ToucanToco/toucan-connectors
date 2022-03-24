@@ -376,3 +376,79 @@ def test_get_model(postgres_connector):
             ],
         },
     ]
+
+
+def test_raised_error_for_get_model(mocker, postgres_connector):
+    """Check that it returns the db tree structure"""
+    with mocker.patch.object(
+        PostgresConnector, '_list_tables_info', side_effect=psycopg2.OperationalError()
+    ):
+        assert postgres_connector.get_model() == []
+
+
+def test_get_model_with_info(postgres_connector):
+    """Check that it returns the db tree structure"""
+    assert postgres_connector.get_model_with_info() == (
+        [
+            {
+                'name': 'city',
+                'schema': 'public',
+                'database': 'postgres_db',
+                'type': 'table',
+                'columns': [
+                    {'name': 'id', 'type': 'integer'},
+                    {'name': 'name', 'type': 'text'},
+                    {'name': 'countrycode', 'type': 'character'},
+                    {'name': 'district', 'type': 'text'},
+                    {'name': 'population', 'type': 'integer'},
+                ],
+            },
+            {
+                'name': 'country',
+                'schema': 'public',
+                'database': 'postgres_db',
+                'type': 'table',
+                'columns': [
+                    {'name': 'code', 'type': 'character'},
+                    {'name': 'name', 'type': 'text'},
+                    {'name': 'continent', 'type': 'text'},
+                    {'name': 'region', 'type': 'text'},
+                    {'name': 'surfacearea', 'type': 'real'},
+                    {'name': 'indepyear', 'type': 'smallint'},
+                    {'name': 'population', 'type': 'integer'},
+                    {'name': 'lifeexpectancy', 'type': 'real'},
+                    {'name': 'gnp', 'type': 'numeric'},
+                    {'name': 'gnpold', 'type': 'numeric'},
+                    {'name': 'localname', 'type': 'text'},
+                    {'name': 'governmentform', 'type': 'text'},
+                    {'name': 'headofstate', 'type': 'text'},
+                    {'name': 'capital', 'type': 'integer'},
+                    {'name': 'code2', 'type': 'character'},
+                ],
+            },
+            {
+                'name': 'countrylanguage',
+                'schema': 'public',
+                'database': 'postgres_db',
+                'type': 'table',
+                'columns': [
+                    {'name': 'countrycode', 'type': 'character'},
+                    {'name': 'language', 'type': 'text'},
+                    {'name': 'isofficial', 'type': 'boolean'},
+                    {'name': 'percentage', 'type': 'real'},
+                ],
+            },
+        ],
+        {},
+    )
+
+
+def test_raised_error_for_get_model_with_info(mocker, postgres_connector):
+    """Check that it returns the db tree structure"""
+    with mocker.patch.object(
+        PostgresConnector, '_list_tables_info', side_effect=psycopg2.OperationalError
+    ):
+        assert postgres_connector.get_model_with_info() == (
+            [],
+            {'info': {'Could not reach databases': ['postgres', 'postgres_db']}},
+        )
