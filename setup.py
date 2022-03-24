@@ -49,7 +49,7 @@ install_requires = [
     'jinja2',
     'pydantic',
     'pyjq',
-    'requests<2.24.0',
+    'requests',
     'tenacity',
     'toucan_data_sdk',
     'typing-extensions; python_version < "3.8"',
@@ -73,7 +73,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='3.1.7',
+    version='3.1.10',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',

@@ -427,13 +427,12 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         return self.json()
 
-    def _render_datasource(self, data_source: ToucanDataSource) -> dict:
-        data_source_rendered = nosql_apply_parameters_to_query(
-            data_source.dict(), data_source.parameters, handle_errors=True
-        )
-        del data_source_rendered['parameters']
-
-        return data_source_rendered
+    def _get_unique_datasource_identifier(self, data_source: ToucanDataSource) -> dict:
+        # By default we don't know which variable syntax is be supported by the inheriting connector,
+        # so calling `nosql_apply_parameters_to_query` is wrong and will produce the same cache key
+        # for different queries when using custom variable syntax !
+        # Overwrite this method to improve the cache key at places where supported syntaxes are clear.
+        return data_source.dict()
 
     def get_cache_key(
         self,
@@ -458,7 +457,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         }
 
         if data_source is not None:
-            unique_identifier['datasource'] = self._render_datasource(data_source)
+            unique_identifier['datasource'] = self._get_unique_datasource_identifier(data_source)
         json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True, default=hash)
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
         return string_uid
