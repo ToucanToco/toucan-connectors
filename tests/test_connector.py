@@ -1,4 +1,5 @@
 from time import time
+from typing import List
 
 import pandas as pd
 import pytest
@@ -10,6 +11,8 @@ from toucan_connectors.google_sheets_2.google_sheets_2_connector import GoogleSh
 from toucan_connectors.mongo.mongo_connector import MongoConnector
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2ConnectorConfig
 from toucan_connectors.toucan_connector import (
+    DiscoverableConnector,
+    TableInfo,
     ToucanConnector,
     ToucanDataSource,
     get_connector_secrets_form,
@@ -318,3 +321,32 @@ def test_get_df_int_column(mocker):
 
     dc = DataConnector(name='bla')
     assert dc.get_df(mocker.MagicMock()).columns == ['0']
+
+
+def test_default_implementation_of_discoverable_connector():
+    class DataConnector(ToucanConnector, DiscoverableConnector):
+        type = 'MyDB'
+        data_source_model: DataSource
+
+        def _retrieve_data(self, datasource):
+            return pd.DataFrame()
+
+        def get_model(self) -> List[TableInfo]:
+            model = [('database', 'schema', 'type', 'name', [{'name': 'column', 'type': 'type'}])]
+            return DiscoverableConnector.format_db_model(model)
+
+    dc = DataConnector(name='test')
+    result = dc.get_model_with_info()
+    print(result)
+    assert result == (
+        [
+            {
+                'name': 'name',
+                'database': 'database',
+                'schema': 'schema',
+                'type': 'type',
+                'columns': [{'name': 'column', 'type': 'type'}],
+            }
+        ],
+        {},
+    )

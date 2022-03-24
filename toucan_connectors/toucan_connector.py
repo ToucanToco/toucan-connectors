@@ -485,7 +485,7 @@ class DiscoverableConnector(ABC):
 
     @staticmethod
     def format_db_model(
-        unformatted_db_tree: List[Tuple[str, str, str, str, Dict[str, str]]]
+        unformatted_db_tree: List[Tuple[str, str, str, str, List[Dict[str, str]]]]
     ) -> List[TableInfo]:
         if not unformatted_db_tree:
             return []
