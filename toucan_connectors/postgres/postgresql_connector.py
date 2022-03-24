@@ -175,7 +175,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
             res = cursor.description
         return {r.name: types.get(r.type_code) for r in res}
 
-    def get_model(self) -> Tuple[List[TableInfo], Dict]:
+    def get_model(self) -> List[TableInfo]:
         """Retrieves the database tree structure using current connection"""
         available_dbs = self._list_db_names()
         databases_tree = []
@@ -196,19 +196,19 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
                 failed_databases.append(db)
 
         tables_info = DiscoverableConnector.format_db_model(databases_tree)
-        metadata = dict()
-        if len(failed_databases):
-            metadata["info"] = {"Could not reach databases": failed_databases}
+        metadata = {}
+        if failed_databases:
+            metadata['info'] = {'Could not reach databases': failed_databases}
         return (tables_info, metadata)
 
-    def _list_db_names(self):
+    def _list_db_names(self) -> List[str]:
         connection = pgsql.connect(**self.get_connection_params(database='postgres'))
         with connection.cursor() as cursor:
             cursor.execute("""select datname from pg_database where datistemplate = false;""")
             return [db_name for (db_name,) in cursor.fetchall()]
 
-    def _list_tables_info(self, db):
-        connection = pgsql.connect(**self.get_connection_params(database=db))
+    def _list_tables_info(self, database_name: str) -> List[tuple]:
+        connection = pgsql.connect(**self.get_connection_params(database=database_name))
         with connection.cursor() as cursor:
             cursor.execute(build_database_model_extraction_query())
             return cursor.fetchall()

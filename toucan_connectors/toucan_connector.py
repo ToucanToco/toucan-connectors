@@ -479,18 +479,16 @@ class DiscoverableConnector(ABC):
     @abstractmethod
     def get_model(self) -> List[TableInfo]:
         """Tries to get all tables that are available for the connector"""
-        pass
 
-    @abstractmethod
     def get_model_with_info(self) -> Tuple[List[TableInfo], Dict]:
         """Tries to get all tables that are available for the connector and gives back some infos about what happenned"""
-        return (self.get_model(), dict())
+        return (self.get_model(), {})
 
     @staticmethod
     def format_db_model(
         unformatted_db_tree: List[Tuple[str, str, str, str, Dict[str, str]]]
     ) -> List[TableInfo]:
-        if not len(unformatted_db_tree):
+        if not unformatted_db_tree:
             return []
         df = pd.DataFrame(unformatted_db_tree)
         df.columns = ['database', 'schema', 'type', 'name', 'columns']
