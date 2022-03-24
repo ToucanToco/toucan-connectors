@@ -336,9 +336,7 @@ def test_default_implementation_of_discoverable_connector():
             return DiscoverableConnector.format_db_model(model)
 
     dc = DataConnector(name='test')
-    result = dc.get_model_with_info()
-    print(result)
-    assert result == (
+    assert dc.get_model_with_info() == (
         [
             {
                 'name': 'name',
