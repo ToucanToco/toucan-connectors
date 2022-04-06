@@ -2,8 +2,8 @@ import json
 
 import pandas as pd
 import requests
-from common import ConnectorStatus
 
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -41,16 +41,14 @@ class AnaplanConnector(ToucanConnector):
                 raise AnaplanAuthError(
                     f"Invalid credentials for {self.username}: got HTTP status {resp.status_code}"
                 )
-            # elif resp.status_code not in range(200, 300):
-            #    raise AnaplanAuthError(f"Unexpected HTTP status code: {resp.status_code}")
             body = resp.json()
             return body["tokenInfo"]["tokenValue"]
         except requests.RequestException as exc:  # pragma: no cover
             raise AnaplanAuthError(f"Encountered error while fetching token: {exc}") from exc
-        except (json.JSONDecodeError, KeyError) as exc:
-            raise AnaplanAuthError(
-                f"did not find expected information in response body: {body}"
-            ) from exc
+        except json.JSONDecodeError as exc:
+            raise AnaplanAuthError(f"could not parse response body as json: {resp.text}") from exc
+        except KeyError as key:
+            raise AnaplanAuthError(f"did not find expected key {key} in response body:  {body}")
 
     def get_status(self) -> ConnectorStatus:
         try:
