@@ -9,23 +9,30 @@ def anaplan_auth_response() -> dict:
     return {"tokenInfo": {"tokenValue": "SomethingNotEntirelySecret"}}
 
 
+@pytest.fixture()
+def connector() -> AnaplanConnector:
+    return AnaplanConnector(
+        username="JohnDoe",
+        password="s3cr3t",
+        name="John's connector",
+    )
+
+
 @responses.activate
-def test_get_status_expect_auth_ok():
+def test_get_status_expect_auth_ok(connector):
     responses.add(
         responses.POST,
         'https://auth.anaplan.com/token/authenticate',
         json={"tokenInfo": {"tokenValue": "youpi"}},
         status=200,
     )
-    connector = AnaplanConnector(username="JohnDoe", password="s3cr3t", name="John's connector")
     status = connector.get_status()
     assert status.status
     assert status.error is None
 
 
 @responses.activate
-def test_get_status_expect_auth_failed_http_40X():
-    connector = AnaplanConnector(username="JohnDoe", password="s3cr3t", name="John's connector")
+def test_get_status_expect_auth_failed_http_40X(connector):
     responses.add(
         responses.POST,
         'https://auth.anaplan.com/token/authenticate',
@@ -38,8 +45,7 @@ def test_get_status_expect_auth_failed_http_40X():
 
 
 @responses.activate
-def test_get_status_expect_auth_failed_invalid_resp_body():
-    connector = AnaplanConnector(username="JohnDoe", password="s3cr3t", name="John's connector")
+def test_get_status_expect_auth_failed_invalid_resp_body(connector):
     responses.add(
         responses.POST,
         'https://auth.anaplan.com/token/authenticate',
