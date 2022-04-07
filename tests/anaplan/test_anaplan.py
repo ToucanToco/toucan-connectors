@@ -6,13 +6,13 @@ from toucan_connectors.anaplan.anaplan_connector import AnaplanConnector, Anapla
 
 @pytest.fixture()
 def anaplan_auth_response() -> dict:
-    return {"tokenInfo": {"tokenValue": "SomethingNotEntirelySecret"}}
+    return {'tokenInfo': {'tokenValue': 'SomethingNotEntirelySecret'}}
 
 
 @pytest.fixture()
 def connector() -> AnaplanConnector:
     return AnaplanConnector(
-        username="JohnDoe", password="s3cr3t", name="John's connector", workspace_id="w1"
+        username='JohnDoe', password='s3cr3t', name="John's connector", workspace_id='w1'
     )
 
 
@@ -21,7 +21,7 @@ def test_get_status_expect_auth_ok(connector):
     responses.add(
         responses.POST,
         'https://auth.anaplan.com/token/authenticate',
-        json={"tokenInfo": {"tokenValue": "youpi"}},
+        json={'tokenInfo': {'tokenValue': 'youpi'}},
         status=200,
     )
     status = connector.get_status()
@@ -48,7 +48,7 @@ def test_get_status_expect_auth_failed_invalid_resp_body(connector):
         responses.POST,
         'https://auth.anaplan.com/token/authenticate',
         status=200,
-        json={"nein": "nope"},
+        json={'nein': 'nope'},
     )
 
     status = connector.get_status()
@@ -63,7 +63,7 @@ def test_get_form(connector):
     responses.add(
         responses.POST,
         'https://auth.anaplan.com/token/authenticate',
-        json={"tokenInfo": {"tokenValue": "youpi"}},
+        json={'tokenInfo': {'tokenValue': 'youpi'}},
         status=200,
     )
 
@@ -74,18 +74,18 @@ def test_get_form(connector):
         json={
             # NOTE: There's paging information in here, we
             # should think about checking if we retrieved all pages
-            "meta": {},
+            'meta': {},
             # HTTP status info. Are the returned HTTP status
             # codes consistent with what's in here ?
-            "status": {},
-            "models": [
+            'status': {},
+            'models': [
                 {
-                    "id": "m1",
-                    "activeState": "UNLOCKED",
-                    "name": "ModelOne",
-                    "currentWorkspaceId": "w1",
-                    "currentWorkspaceName": "NiceWorkspace",
-                    "categoryValues": [],
+                    'id': 'm1',
+                    'activeState': 'UNLOCKED',
+                    'name': 'ModelOne',
+                    'currentWorkspaceId': 'w1',
+                    'currentWorkspaceName': 'NiceWorkspace',
+                    'categoryValues': [],
                 }
             ],
         },

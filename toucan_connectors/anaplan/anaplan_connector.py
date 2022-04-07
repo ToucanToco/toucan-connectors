@@ -11,8 +11,8 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class AnaplanDataSource(ToucanDataSource):
-    model_id: constr(min_length=1) = Field(..., description="The model you want to query")
-    view_id: constr(min_length=1) = Field(..., description="The view you want to query")
+    model_id: constr(min_length=1) = Field(..., description='The model you want to query')
+    view_id: constr(min_length=1) = Field(..., description='The view you want to query')
 
     @classmethod
     def get_form(
@@ -53,8 +53,8 @@ class AnaplanAuthError(AnaplanError):
 
 
 # refactor to fields when required
-_ANAPLAN_AUTH_ROUTE = "https://auth.anaplan.com/token/authenticate"
-_ANAPLAN_API_BASEROUTE = "https://api.anaplan.com/2/0"
+_ANAPLAN_AUTH_ROUTE = 'https://auth.anaplan.com/token/authenticate'
+_ANAPLAN_API_BASEROUTE = 'https://api.anaplan.com/2/0'
 
 
 class AnaplanConnector(ToucanConnector):
@@ -62,7 +62,7 @@ class AnaplanConnector(ToucanConnector):
     username: str
     password: str
 
-    workspace_id: str = Field(..., description="The ID of the workspace you want to query")
+    workspace_id: str = Field(..., description='The ID of the workspace you want to query')
 
     def _retrieve_data(self, data_source: AnaplanDataSource) -> pd.DataFrame:
         raise NotImplementedError
@@ -73,29 +73,29 @@ class AnaplanConnector(ToucanConnector):
             resp = requests.post(_ANAPLAN_AUTH_ROUTE, auth=(self.username, self.password))
             if resp.status_code in (401, 403):
                 raise AnaplanAuthError(
-                    f"Invalid credentials for {self.username}: got HTTP status {resp.status_code}"
+                    f'Invalid credentials for {self.username}: got HTTP status {resp.status_code}'
                 )
             body = resp.json()
-            return body["tokenInfo"]["tokenValue"]
+            return body['tokenInfo']['tokenValue']
         except requests.RequestException as exc:  # pragma: no cover
-            raise AnaplanAuthError(f"Encountered error while fetching token: {exc}") from exc
+            raise AnaplanAuthError(f'Encountered error while fetching token: {exc}') from exc
         except json.JSONDecodeError as exc:
-            raise AnaplanAuthError(f"could not parse response body as json: {resp.text}") from exc
+            raise AnaplanAuthError(f'could not parse response body as json: {resp.text}') from exc
         except KeyError as key:
-            raise AnaplanAuthError(f"did not find expected key {key} in response body:  {body}")
+            raise AnaplanAuthError(f'did not find expected key {key} in response body:  {body}')
 
     def get_status(self) -> ConnectorStatus:
         try:
             self._fetch_token()
-            return ConnectorStatus(status=True, message=f"connected as {self.username}")
+            return ConnectorStatus(status=True, message=f'connected as {self.username}')
         except AnaplanAuthError as exc:
-            return ConnectorStatus(status=False, error=f"could not retrieve token: {exc}")
+            return ConnectorStatus(status=False, error=f'could not retrieve token: {exc}')
 
     def get_available_models(self) -> List[Dict[str, str]]:
         token = self._fetch_token()
         resp = requests.get(
-            f"{_ANAPLAN_API_BASEROUTE}/models",
-            headers={"Accept": "application/json", "Authorization": f"AnaplanAuthToken {token}"},
+            f'{_ANAPLAN_API_BASEROUTE}/models',
+            headers={'Accept': 'application/json', 'Authorization': f'AnaplanAuthToken {token}'},
         )
         # TODO: Add same checks as in _fetch_token()
         body = resp.json()
@@ -104,8 +104,8 @@ class AnaplanConnector(ToucanConnector):
     def get_available_views(self, model_id: str) -> List[Dict[str, str]]:
         token = self._fetch_token()
         resp = requests.get(
-            f"{_ANAPLAN_API_BASEROUTE}/models/{model_id}/views",
-            headers={"Accept": "application/json", "Authorization": f"AnaplanAuthToken {token}"},
+            f'{_ANAPLAN_API_BASEROUTE}/models/{model_id}/views',
+            headers={'Accept': 'application/json', 'Authorization': f'AnaplanAuthToken {token}'},
         )
         # TODO: Add same checks as in _fetch_token()
         body = resp.json()
