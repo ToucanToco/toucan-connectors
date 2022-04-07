@@ -1,5 +1,10 @@
+import json
+import os
+
+import pandas as pd
 import pytest
 import responses
+from responses import matchers
 
 from toucan_connectors.anaplan.anaplan_connector import AnaplanConnector, AnaplanDataSource
 
@@ -107,3 +112,62 @@ def test_get_form(connector):
 
     assert form_schema['definitions']['model_id']['enum'] == ['m1']
     assert form_schema['definitions']['view_id']['enum'] == ['m1v1', 'm1v2']
+
+
+@responses.activate
+def test_get_df(connector):
+    responses.add(
+        responses.POST,
+        'https://auth.anaplan.com/token/authenticate',
+        json={'tokenInfo': {'tokenValue': 'youpi'}},
+        status=200,
+    )
+
+    # response format taken from
+    # https://anaplanbulkapi20.docs.apiary.io/#RetrieveCellDataView
+    with open(
+        os.path.join(os.path.dirname(__file__), 'fixtures/cell-data-view.json')
+    ) as fixture_file:
+        responses.add(
+            responses.GET,
+            'https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1',
+            status=200,
+            match=[
+                matchers.header_matcher(
+                    {"Accept": "application/json", "Authorization": "AnaplanAuthToken youpi"}
+                )
+            ],
+            json=json.load(fixture_file),
+        )
+
+    df = connector.get_df(
+        AnaplanDataSource(
+            name="anaplan_test_api",
+            domain="data_for_m1v1",
+            model_id="m1",
+            view_id="m1v1",
+        )
+    )
+
+    assert isinstance(df, pd.DataFrame)
+    assert df.columns.to_list() == [
+        "Jan 13",
+        "Feb 13",
+        "Mar 13",
+        "Q1 FY13",
+        "Apr 13",
+        "May 13",
+        "Jun 13",
+        "Q2 FY13",
+        "H1 FY13",
+        "Jul 13",
+        "Aug 13",
+        "Sep 13",
+        "Q3 FY13",
+        "Oct 13",
+        "Nov 13",
+        "Dec 13",
+        "Q4 FY13",
+        "H2 FY13",
+        "FY13",
+    ]

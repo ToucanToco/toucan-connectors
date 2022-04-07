@@ -65,7 +65,19 @@ class AnaplanConnector(ToucanConnector):
     workspace_id: str = Field(..., description='The ID of the workspace you want to query')
 
     def _retrieve_data(self, data_source: AnaplanDataSource) -> pd.DataFrame:
-        raise NotImplementedError
+        response = requests.get(
+            f'{_ANAPLAN_API_BASEROUTE}/models/{data_source.model_id}/views/{data_source.view_id}/data?format=v1',
+            headers={
+                "Accept": "application/json",
+                "Authorization": f"AnaplanAuthToken {self._fetch_token()}",
+            },
+        )
+        data = response.json()
+
+        # TODO handle row index
+        # TODO handle row data
+        # Columns can have several levels, we flatten them with the "/" separator
+        return pd.DataFrame(columns=["/".join(col) for col in data["columnCoordinates"]])
 
     def _fetch_token(self) -> str:
         try:
