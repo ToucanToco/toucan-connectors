@@ -28,13 +28,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Cache docker images
-      id: cache-docker-images
-      uses: actions/cache@v1
-      with:
-        path: /var/lib/docker/overlay2
-        key: ${{ runner.os }}-docker-images
-
     - name: Install system dependencies
       run: |
         sudo apt-get update
@@ -58,11 +51,18 @@ jobs:
     - name: install
       run: make install
 
-    - name: Pulling all docker images
-      run: docker-compose -f tests/docker-compose.yml pull
-
     - name: lint
       run: make lint
+
+    - name: Cache docker images
+      id: cache-docker-images
+      uses: actions/cache@v1
+      with:
+        path: /var/lib/docker/overlay2
+        key: ${{ runner.os }}-docker-images
+
+    - name: Pulling all docker images
+      run: docker-compose -f tests/docker-compose.yml pull
 
     - name: test
       run: make test
