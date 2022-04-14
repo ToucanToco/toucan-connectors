@@ -2,12 +2,9 @@
 Use this file to initiate the OAuth2 dance and test the connectors that requires it.
 """
 
-from toucan_connectors.github.github_connector import (
-    GithubConnector,
-    GithubDataSource,
-)
-
 from helpers import JsonFileSecretsKeeper, get_authorization_response
+
+from toucan_connectors.github.github_connector import GithubConnector
 
 # Get these info from the provider
 CLIENT_ID = ''

@@ -6,13 +6,13 @@
 	},
 	"runArgs": [
 		"--init",
-		"--network=host",
+		"--network=host"
 	],
 	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ],
 	"remoteUser": "vscode",
 	"remoteEnv": { "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}" },
 	"overrideCommand": false,
-	"settings": { 
+	"settings": {
 		"python.defaultInterpreterPath": "/usr/local/bin/python",
 		"python.linting.enabled": true,
 		"python.linting.pylintEnabled": true,
@@ -29,6 +29,6 @@
 	"extensions": [
 		"ms-azuretools.vscode-docker",
 		"ms-python.python",
-		"ms-python.vscode-pylance",
-	],
+		"ms-python.vscode-pylance"
+	]
 }

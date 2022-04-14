@@ -21,7 +21,7 @@ repos:
         name: Sort Python imports
 
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 22.3.0
     hooks:
       - id: black
         name: Reformat Python files

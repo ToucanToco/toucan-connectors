@@ -15,7 +15,7 @@ An example of such configuration would be:
       "name": "user_specific_ROK_data",
       "username": "{{ user.username }}",
       "authentified_with_rok_token": true,
-      "secret": "xxxxxx", 
+      "secret": "xxxxxx",
       ...
     }
 

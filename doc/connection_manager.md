@@ -6,7 +6,7 @@ ConnectionManager is a Class to store and maintain connections to a data provide
 In the previous workflow, when we received a live data request, we created a connection, used it once and immediately closed it.
 With this workflow, when we received a request, we ask a connection, create it if not exist, use it but then it is kept live for further requests.
 
-There is a thread that cleans ConnectionManager and closes connections after checking  first : 
+There is a thread that cleans ConnectionManager and closes connections after checking  first :
 - whether it is alive
 - if has been used since X times
 
@@ -23,7 +23,7 @@ if not snowflake_connection_manager:
     )
 
 def __connect():
-    return connection  
+    return connection
 
 def __alive():
     return boolean

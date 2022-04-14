@@ -1,7 +1,8 @@
-import requests
-from datetime import datetime, timedelta
-import jwt
 import base64
+from datetime import datetime, timedelta
+
+import jwt
+import requests
 
 secret = ''
 # The secret provided by ROK is b64 encoded, we need to decode it for jwt
@@ -18,9 +19,15 @@ data = {
 }
 
 token = jwt.encode(data, notb64_secret, algorithm='HS256')
-response = requests.post('https://demo.rok-solution.com/graphql',
-                         data='{\'query\':\'\'}',
-                         headers={'DatabaseName': '', 'JwtString': token,
-                                  'Accept': 'application/json', 'Content-Type': 'application/json'}).text
+response = requests.post(
+    'https://demo.rok-solution.com/graphql',
+    data='{\'query\':\'\'}',
+    headers={
+        'DatabaseName': '',
+        'JwtString': token,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+    },
+).text
 
 print(response)
