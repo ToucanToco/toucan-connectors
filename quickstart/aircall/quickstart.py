@@ -4,10 +4,7 @@ Use this file to initiate the OAuth2 dance and test the connectors that requires
 
 from helpers import JsonFileSecretsKeeper, get_authorization_response
 
-from toucan_connectors.aircall.aircall_connector import (
-    AircallConnector,
-    AircallDataSource,
-)
+from toucan_connectors.aircall.aircall_connector import AircallConnector, AircallDataSource
 
 # Get these info from the provider
 CLIENT_ID = ''

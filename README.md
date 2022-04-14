@@ -15,7 +15,7 @@ Each connector is dedicated to a single type of source (PostrgeSQL, Mongo, Sales
 - `Connector` which contains all the necessary information to *use a data provider* (e.g. hostname,  auth method and details, etc...).
 - `DataSource` which contains all the information to *get a dataframe* (query, path, etc...) using the `Connector` class above.
 
-The Toucan Toco platform instantiates these classes using values provided by Toucan admin and app designers, it then uses the following methods to get data and metadata: 
+The Toucan Toco platform instantiates these classes using values provided by Toucan admin and app designers, it then uses the following methods to get data and metadata:
 
 - `Connector._retrieve_data` returning an instance of `pandas.DataFrame`, method used to return data to a Toucan Toco end user
 - `Connector.get_slice` returning an instance of `DataSlice`, method used to return data to a Toucan Toco application designer when building a query.
@@ -24,13 +24,13 @@ The Toucan Toco platform instantiates these classes using values provided by Tou
 
 ## Dependencies
 
-This project uses `make` and `Python 3.8`. Install the main dependencies : 
+This project uses `make` and `Python 3.8`. Install the main dependencies :
 
 ```bash
 pip install -e .
 ```
 
-We are using the `setuptools` construct `extra_requires` to define each connector's dependencies separately. For example to install the MySQL connector dependencies: 
+We are using the `setuptools` construct `extra_requires` to define each connector's dependencies separately. For example to install the MySQL connector dependencies:
 
 ```bash
 pip install -e ".[mysql]"
@@ -66,7 +66,7 @@ To test and use `mssql` (and `azure_mssql`) you need to install the Microsoft OD
 [Linux](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15)
 or [MacOS](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/install-microsoft-odbc-driver-sql-server-macos?view=sql-server-ver15)
 
-#### PostgreSQL 
+#### PostgreSQL
 
 On macOS, to test the `postgres` connector, you need to install `postgresql` by running for instance `brew install postgres`.
 You can then install the library with `env LDFLAGS='-L/usr/local/lib -L/usr/local/opt/openssl/lib -L/usr/local/opt/readline/lib' pip install psycopg2`
@@ -89,7 +89,7 @@ pytest tests/http_api
 
 Note: running the tests above implies that you have installed the specific dependencies of the `http_api` connector (using the `pip install -e .[http_api]` command)
 
-Our CI does run all the tests for all the connectors, like this: 
+Our CI does run all the tests for all the connectors, like this:
 
 ```
 pip install -e ".[all]"
@@ -100,7 +100,7 @@ Some connectors are tested using mocks (cf. `trello`), others are tested by maki
 
 ## Adding a connector
 
-### Step 1: Generate base classes and tests files 
+### Step 1: Generate base classes and tests files
 
 To generate the connector and test modules from boilerplate, run:
 
@@ -114,7 +114,7 @@ such as `MySQL` or `Hive` or `Magento`.
 Open the folder in `tests` for the new connector. You can start writing your tests before implementing it.
 
 Some connectors are tested with calls to the actual data systems that they target,
-for example `elasticsearch`, `mongo`, `mssql`. 
+for example `elasticsearch`, `mongo`, `mssql`.
 
 Others are tested with mocks of the
 classes or functions returning data that you are wrapping (see : `HttpAPI`, or

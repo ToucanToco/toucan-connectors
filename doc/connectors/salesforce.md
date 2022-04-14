@@ -8,7 +8,7 @@ Import data from Salesforce API.
 * `_auth_flow`: str
 * `auth_flow_id`: str
 * `instance_url`: str
-  
+
 
 
 The `_auth_flow` property marks this as being a connector that requires initiating the oauth dance and prevents it from being in the schema.
