@@ -16,7 +16,9 @@ extras_require = {
     'github': ['python_graphql_client'],
     'google_analytics': ['google-api-python-client', 'oauth2client'],
     'google_adwords': ['googleads'],
-    'google_big_query': ['google-cloud-bigquery[bqstorage,pandas]'],
+    # google_big_query v3 uses Nullable types (https://pandas.pydata.org/docs/user_guide/integer_na.html) which are
+    # not compatible with eval. Once the formula will be compatible with these types, we can upgrade to v3
+    'google_big_query': ['google-cloud-bigquery[bqstorage,pandas]==2.*'],
     'google_cloud_mysql': ['PyMySQL>=0.8.0'],
     'google_my_business': ['google-api-python-client>=1.7.5'],
     'google_sheets': ['google-api-python-client>=2'],
