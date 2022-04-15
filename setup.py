@@ -61,6 +61,8 @@ classifiers = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: BSD License',
     'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
 ]
 
 HERE = Path(__file__).resolve().parent
