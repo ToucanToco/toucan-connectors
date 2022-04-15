@@ -8,7 +8,6 @@ import datetime
 import logging
 
 import pandas as pd
-from _pyjq import ScriptRuntimeError
 from aiohttp import ClientSession
 from pydantic import BaseModel, Field, SecretStr
 
@@ -116,9 +115,6 @@ class RevinateConnector(ToucanConnector):
                 return transform_with_jq(data['content'], jq_filter)
             except ValueError:
                 # This follows the HTTP connector's behavior for a similar situation
-                LOGGER.error('Could not transform the data using %s as filter', jq_filter)
-                raise
-            except ScriptRuntimeError:
                 LOGGER.error('Could not transform the data using %s as filter', jq_filter)
                 raise
 
