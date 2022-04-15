@@ -35,10 +35,10 @@ extras_require = {
     'oracle_sql': ['cx_Oracle>=6.2.1', 'sqlalchemy'],
     'net_explorer': ['openpyxl>=3.0.9'],
     'postgres': ['psycopg2>=2.7.4', 'sqlalchemy'],
-    'Redshift': ['redshift_connector', 'lxml==4.2.5'],
+    'Redshift': ['redshift_connector', 'lxml==4.6.5'],
     'ROK': ['requests', 'pyjwt', 'simplejson'],
     'sap_hana': ['pyhdb>=0.3.4'],
-    'soap': ['zeep', 'lxml==4.2.5'],
+    'soap': ['zeep', 'lxml==4.6.5'],
     'snowflake': ['snowflake-connector-python>=2.5', 'pyjwt'],
     'toucan_toco': ['toucan_client'],
 }
