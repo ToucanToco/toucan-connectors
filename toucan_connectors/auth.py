@@ -2,8 +2,8 @@ from datetime import datetime
 from enum import Enum
 from typing import List
 
+import jq
 import jwt
-import pyjq
 import requests
 from oauthlib.oauth2 import BackendApplicationClient
 from pydantic import BaseModel, Field
@@ -79,7 +79,7 @@ class CustomTokenServer(AuthBase):
             session = Session()
 
         res = session.request(**self.request_kwargs)
-        token = pyjq.first(self.filter, res.json())
+        token = jq.first(self.filter, res.json())
 
         # If a single string is returned by the filter default
         # on OAuth "Bearer" auth-scheme.

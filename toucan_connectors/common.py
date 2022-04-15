@@ -6,8 +6,8 @@ import re
 from copy import deepcopy
 from typing import Any, List, Optional, Tuple
 
+import jq
 import pandas as pd
-import pyjq
 from aiohttp import ClientSession
 from jinja2 import Environment, StrictUndefined, Template, meta
 from jinja2.nativetypes import NativeEnvironment
@@ -219,7 +219,7 @@ def apply_query_parameters(query: str, parameters: dict) -> str:
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
-    data = pyjq.all(jq_filter, data)
+    data = jq.all(jq_filter, data)
 
     # jq 'multiple outout': the data is already presented as a list of rows
     multiple_output = len(data) == 1 and isinstance(data[0], list)

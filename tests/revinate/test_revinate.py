@@ -1,5 +1,4 @@
 import pytest
-from _pyjq import ScriptRuntimeError
 from aiohttp import web
 from pydantic import ValidationError
 
@@ -120,7 +119,7 @@ async def test__get_data_w_incorrect_filter(base_connector, ds, mocker):
     """It should return an array with None if the jq filter does not match the data"""
     fake_fetch = mocker.patch(fetch_fn_name, return_value=FAKE_DATA)
 
-    with pytest.raises(ScriptRuntimeError):
+    with pytest.raises(ValueError):
         await base_connector._get_data(f'/{ds.endpoint}', '.putzes')
 
     assert fake_fetch.call_count == 1
@@ -175,16 +174,6 @@ def test__retrieve_data_happy_case(base_connector, ds, mocker):
 
     assert fake__run_fetch.call_count == 1
     assert df.shape == (1, 15)
-
-
-def test__retrieve_data_exception_case(base_connector, ds, mocker):
-    """It should pass on an Exception or some other error"""
-    fake_fetch = mocker.patch(fetch_fn_name, side_effect=ScriptRuntimeError)
-
-    with pytest.raises(ScriptRuntimeError):
-        base_connector._retrieve_data(ds)
-
-    assert fake_fetch.call_count == 1
 
 
 def test__retrieve_data_bad_connector(authentication, ds, mocker):

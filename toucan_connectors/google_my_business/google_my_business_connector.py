@@ -1,7 +1,7 @@
 from typing import List
 
+import jq
 import pandas as pd
-import pyjq
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from pandas.io.json import json_normalize
@@ -93,7 +93,7 @@ class GoogleMyBusinessConnector(ToucanConnector):
                       {"metric": $mv.metric} * $mv.totalValue
                     end
         """
-        res = pyjq.all(f, location_metrics)
+        res = jq.all(f, location_metrics)
         df = json_normalize(res)
 
         return df
