@@ -25,7 +25,7 @@ class LightspeedConnector(ToucanConnector):
     bearer_integration = 'lightspeed'
     bearer_auth_id: str
 
-    def _retrieve_data(self, data_source: LightspeedDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: LightspeedDataSource) -> pd.DataFrame:  # pragma: no cover
         endpoint = nosql_apply_parameters_to_query(data_source.endpoint, data_source.parameters)
         data = self.bearer_oauth_get_endpoint(endpoint)
         data = jq.first(data_source.filter, data)
