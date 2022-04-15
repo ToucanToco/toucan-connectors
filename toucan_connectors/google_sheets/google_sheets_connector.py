@@ -172,7 +172,7 @@ class GoogleSheetsConnector(ToucanConnector):
                 return sheet_cell_formats['sheets'][0]['data'][0]['rowData'][row_index]['values'][
                     column_index
                 ]['effectiveFormat']
-            except KeyError:
+            except (KeyError, IndexError):
                 return None
 
         values = [
