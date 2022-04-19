@@ -16,9 +16,4 @@ wget 'https://public-package.toucantoco.com/connectors_sources/databricks/SimbaS
 unzip /tmp/databricks/simbaspark.zip -d /tmp/databricks
 dpkg -i /tmp/databricks/SimbaSparkODBC-2.6.4.1004-Debian-64bit/simbaspark_2.6.4.1004-2_amd64.deb
 rm -rf /tmp/databricks
-
-echo "Writing Simba Spark Driver's config in odbcinst.ini"
-echo '[Simba Spark ODBC Driver]
-Description = ODBC Driver for Databricks
-Driver = /opt/simba/spark/lib/64/libsparkodbc_sb64.so' >> /usr/local/etc/odbcinst.ini
 touch ~/databricks-installed

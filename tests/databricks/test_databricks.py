@@ -34,13 +34,6 @@ CONNECTION_STATUS_OK = ConnectorStatus(
 )
 
 
-def test_postgres_driver_installed():
-    """
-    Check that pgodbc is installed
-    """
-    assert 'Simba Spark ODBC Driver' in pyodbc.drivers()
-
-
 @pytest.fixture
 def databricks_connector() -> DatabricksConnector:
     return DatabricksConnector(
