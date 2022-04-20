@@ -1,5 +1,5 @@
-from time import sleep
-from typing import Any, Optional, Tuple
+import time
+from typing import Optional
 
 import pandas as pd
 import pyodbc
@@ -11,7 +11,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 class DatabricksDataSource(ToucanDataSource):
     query: constr(min_length=1) = Field(
-        None,
+        ...,
         description='You can write a query here',
         widget='sql',
     )
@@ -35,7 +35,7 @@ class DatabricksConnector(ToucanConnector):
         ..., description='Databricks compute resources URL', placeholder='sql/protocolv1/o/xxx/yyy'
     )
     PWD: SecretStr = Field(
-        ..., description='Your personal access token', placeholder='dapixxxxxxxxxxx'
+        None, description='Your personal access token', placeholder='dapixxxxxxxxxxx'
     )
     Ansi: bool = False
     connect_timeout: int = None
@@ -93,47 +93,33 @@ class DatabricksConnector(ToucanConnector):
                 )
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
-    def _cluster_started(self) -> Tuple[bool, Any]:
-        """First check that the connection params are valid, then fire a dummy query to start the cluster
-        and wait a given time for the answer before returning the check's outcome"""
-        checks = self.get_status()
-        if checks.status:
+    def _retrieve_data(self, data_source: DatabricksDataSource) -> pd.DataFrame:
+        """
+        The connector can face a shutdown cluster and must wait it to be started before querying.
+        Try to trigger the query, if we receive an error wait for cluster to start then try again
+        """
+        query_params = data_source.parameters or {}
+        try:
+            connection = pyodbc.connect(
+                self._build_connection_string(), autocommit=True, ansi=self.Ansi
+            )
+        except pyodbc.Error:
+            self.logger.warning(
+                f'Cluster seems to be shutdown, trying again in {self.cluster_start_timeout} seconds'
+            )
             try:
+                time.sleep(self.cluster_start_timeout)
                 connection = pyodbc.connect(
                     self._build_connection_string(), autocommit=True, ansi=self.Ansi
                 )
-                try:
-                    connection.cursor().execute('select 1;').fetchone()
-                    return True, connection
-                except Exception:
-                    sleep(self.cluster_start_timeout)
-                    try:
-                        connection.cursor().execute('select 1;').fetchone()
-                        return True, connection
-                    except Exception:
-                        return False, None
-            except Exception:
-                raise DataBricksConnectionError
-        else:
-            return False, None
-
-    def _retrieve_data(self, data_source: DatabricksDataSource) -> pd.DataFrame:
-        """
-        The connector can face a shutdown cluster and must wait it to be started before querying. To do so, call
-        _is_cluster_started, then fire the given query
-        """
-        cluster_started, connection = self._cluster_started()
-
-        if cluster_started:
-            query_params = data_source.parameters or {}
-            result = pandas_read_sql(
-                data_source.query,
-                con=connection,
-                params=query_params,
-                convert_to_qmark=True,
-                render_user=True,
-            )
-            connection.close()
-            return result
-        else:
-            raise DataBricksConnectionError
+            except pyodbc.Error:
+                raise DataBricksConnectionError('Cluster unavailable')
+        result = pandas_read_sql(
+            data_source.query,
+            con=connection,
+            params=query_params,
+            convert_to_qmark=True,
+            render_user=True,
+        )
+        connection.close()
+        return result

@@ -34,6 +34,11 @@ CONNECTION_STATUS_OK = ConnectorStatus(
 )
 
 
+@pytest.fixture(autouse=True)
+def mocksleep(mocker: MockFixture) -> None:
+    mocker.patch('toucan_connectors.databricks.databricks_connector.time.sleep')
+
+
 @pytest.fixture
 def databricks_connector() -> DatabricksConnector:
     return DatabricksConnector(
@@ -53,19 +58,6 @@ def test_raise_on_empty_query():
 def test_databricks_get_df(mocker: MockFixture, databricks_connector: DatabricksConnector):
     mock_pyodbc_connect = mocker.patch('pyodbc.connect')
     mock_pandas_read_sql = mocker.patch('pandas.read_sql')
-    mocker.patch(
-        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.get_status',
-        return_value=ConnectorStatus(
-            status=True,
-            error=None,
-            details=[
-                ('Host resolved', True),
-                ('Port opened', True),
-                ('Connected to Databricks', True),
-                ('Authenticated', True),
-            ],
-        ),
-    )
 
     ds = DatabricksDataSource(
         domain='test',
@@ -85,19 +77,6 @@ def test_query_variability(mocker: MockFixture, databricks_connector: Databricks
     """It should connect to the database and retrieve the response to the query"""
     mock_pyodbc_connect = mocker.patch('pyodbc.connect')
     mock_pandas_read_sql = mocker.patch('pandas.read_sql')
-    mocker.patch(
-        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.get_status',
-        return_value=ConnectorStatus(
-            status=True,
-            error=None,
-            details=[
-                ('Host resolved', True),
-                ('Port opened', True),
-                ('Connected to Databricks', True),
-                ('Authenticated', True),
-            ],
-        ),
-    )
 
     ds = DatabricksDataSource(
         query='select * from test where id_nb > %(id_nb)s and price > %(price)s;',
@@ -204,56 +183,3 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
         'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname'
     )
     assert databricks_connector.get_status() == CONNECTION_STATUS_OK
-
-
-def test__cluster_started_failed(
-    mocker: MockFixture, databricks_connector: DatabricksConnector
-) -> None:
-    mocker.patch(
-        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.get_status',
-        return_value=CONNECTION_STATUS_OK,
-    )
-    mocker.patch('toucan_connectors.databricks.databricks_connector.sleep')
-    connection = mocker.MagicMock()
-    fake_cursor = mocker.MagicMock()
-    connection.cursor.return_value = fake_cursor
-
-    def raise_error() -> None:
-        raise Exception
-
-    fake_cursor.execute = raise_error
-    mocker.patch('pyodbc.connect', return_value=connection)
-    assert databricks_connector._cluster_started() == (False, None)
-
-
-def test__cluster_started_error(
-    mocker: MockFixture, databricks_connector: DatabricksConnector
-) -> None:
-    mocker.patch(
-        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.get_status',
-        return_value=CONNECTION_STATUS_OK,
-    )
-    mocker.patch('pyodbc.connect', side_effect=Exception)
-    with pytest.raises(DataBricksConnectionError):
-        databricks_connector._cluster_started()
-
-
-def test__cluster_started_ok(
-    mocker: MockFixture, databricks_connector: DatabricksConnector
-) -> None:
-    mocker.patch(
-        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.get_status',
-        return_value=CONNECTION_STATUS_OK,
-    )
-    mocker.patch('toucan_connectors.databricks.databricks_connector.sleep')
-    connection = mocker.MagicMock()
-    fake_cursor1 = mocker.MagicMock()
-    fake_cursor2 = mocker.MagicMock()
-    connection.cursor.side_effect = (fake_cursor1, fake_cursor2)
-
-    def raise_error() -> None:
-        raise Exception
-
-    fake_cursor1.execute = raise_error
-    mocker.patch('pyodbc.connect', return_value=connection)
-    assert databricks_connector._cluster_started() == (True, connection)
