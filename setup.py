@@ -8,6 +8,7 @@ bearer_deps = ['bearer==3.1.0']
 extras_require = {
     'adobe': ['adobe_analytics'],
     'aircall': bearer_deps,
+    'awsathena': ['awswrangler==2.15.1'],
     'azure_mssql': ['pyodbc>=3'],
     'clickhouse': ['clickhouse_driver', 'sqlalchemy'],
     'dataiku': ['dataiku-api-client'],
