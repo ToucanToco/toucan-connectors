@@ -56,4 +56,4 @@ def test_get_session(athena_connector):
     assert sess.region_name == 'test-region'
     creds = sess.get_credentials()
     assert creds.access_key == 'test_access_key_id'
-    assert creds.secret_key == SecretStr('test_secret_access_key')
+    assert creds.secret_key == 'test_secret_access_key'

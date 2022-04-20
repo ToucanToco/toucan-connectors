@@ -33,7 +33,9 @@ class AwsathenaConnector(ToucanConnector):
     def get_session(self):
         session = boto3.Session(
             aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key,
+            # This is required because this gets appended by boto3
+            # internally, and a SecretStr can't be appended to an str
+            aws_secret_access_key=self.aws_secret_access_key.get_secret_value(),
             region_name=self.region_name,
         )
         return session
