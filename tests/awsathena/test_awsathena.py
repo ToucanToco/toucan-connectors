@@ -1,7 +1,5 @@
 import os
-from unittest import mock
 
-import boto3
 import pandas as pd
 import pytest
 
@@ -13,8 +11,8 @@ def athena_connector():
     return AwsathenaConnector(
         name='test',
         s3_output_bucket='s3://test/results/',
-        aws_access_key_id='ascacsc',
-        aws_secret_access_key='ascdscds09120983298sdcdsca',
+        aws_access_key_id='test_access_key_id',
+        aws_secret_access_key='test_secret_access_key',
         region_name='test-region',
     )
 
@@ -52,9 +50,9 @@ def test_get_df(mocker, athena_connector):
     boto_session_mocked.assert_called_once()
 
 
-def test_get_session():
-    pass
-
-
-def test_datasource():
-    pass
+def test_get_session(athena_connector):
+    sess = athena_connector.get_session()
+    assert sess.region_name == 'test-region'
+    creds = sess.get_credentials()
+    assert creds.access_key == 'test_access_key_id'
+    assert creds.secret_key == 'test_secret_access_key'
