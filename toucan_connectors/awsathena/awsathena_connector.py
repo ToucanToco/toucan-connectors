@@ -39,7 +39,11 @@ class AwsathenaConnector(ToucanConnector):
         return session
 
     def _retrieve_data(self, data_source: AwsathenaDataSource) -> pd.DataFrame:
+        query_params = data_source.parameters or {}
         df = wr.athena.read_sql_query(
-            data_source.query, database=data_source.database, boto3_session=self.get_session()
+            data_source.query,
+            database=data_source.database,
+            boto3_session=self.get_session(),
+            params=query_params
         )
         return df
