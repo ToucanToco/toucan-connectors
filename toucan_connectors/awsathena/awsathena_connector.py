@@ -44,6 +44,6 @@ class AwsathenaConnector(ToucanConnector):
             data_source.query,
             database=data_source.database,
             boto3_session=self.get_session(),
-            params=query_params
+            params=query_params,
         )
         return df
