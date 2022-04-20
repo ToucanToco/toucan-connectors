@@ -1,7 +1,7 @@
 import awswrangler as wr
 import boto3
 import pandas as pd
-from pydantic import Field, constr
+from pydantic import Field, SecretStr, constr
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -27,7 +27,7 @@ class AwsathenaConnector(ToucanConnector):
         ..., description='Your S3 Output bucket (where query results are stored.)'
     )
     aws_access_key_id: str = Field(..., description='Your AWS access key ID')
-    aws_secret_access_key: str = Field(..., description='Your AWS secret key')
+    aws_secret_access_key: SecretStr = Field(None, description='Your AWS secret key')
     region_name: str = Field(..., description='Your AWS region name')
 
     def get_session(self):
