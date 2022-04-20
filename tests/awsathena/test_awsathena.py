@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 import pytest
+from pydantic import SecretStr
 
 from toucan_connectors.awsathena.awsathena_connector import AwsathenaConnector, AwsathenaDataSource
 
@@ -12,7 +13,7 @@ def athena_connector():
         name='test',
         s3_output_bucket='s3://test/results/',
         aws_access_key_id='test_access_key_id',
-        aws_secret_access_key='test_secret_access_key',
+        aws_secret_access_key=SecretStr('test_secret_access_key'),
         region_name='test-region',
     )
 
@@ -55,4 +56,4 @@ def test_get_session(athena_connector):
     assert sess.region_name == 'test-region'
     creds = sess.get_credentials()
     assert creds.access_key == 'test_access_key_id'
-    assert creds.secret_key == 'test_secret_access_key'
+    assert creds.secret_key == SecretStr('test_secret_access_key')
