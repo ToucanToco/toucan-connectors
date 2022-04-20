@@ -1,12 +1,14 @@
-import time
-from typing import Optional
+from typing import Any, Optional
 
+import backoff
 import pandas as pd
 import pyodbc
 from pydantic import Field, SecretStr, constr
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+
+CLUSTER_START_TIMEOUT = 90
 
 
 class DatabricksDataSource(ToucanDataSource):
@@ -18,6 +20,10 @@ class DatabricksDataSource(ToucanDataSource):
 
 
 class DataBricksConnectionError(Exception):
+    """ """
+
+
+class DataBricksUnauthorizedError(Exception):
     """ """
 
 
@@ -39,9 +45,21 @@ class DatabricksConnector(ToucanConnector):
     )
     Ansi: bool = False
     connect_timeout: int = None
-    cluster_start_timeout: int = Field(
-        10, description='The time to wait for cluster to be started before querying'
-    )
+
+    @backoff.on_exception(backoff.expo, pyodbc.Error, max_time=CLUSTER_START_TIMEOUT)
+    def _connect(self) -> Any:
+        """
+        In case of on-demand clusters, the connector might fail to connect.
+        However, the first connection trial starts the cluster so this method will exponentially retry
+        to connect until CLUSTER_START_TIMEOUT is reached.
+        """
+        try:
+            return pyodbc.connect(self._build_connection_string(), autocommit=True, ansi=self.Ansi)
+        except pyodbc.InterfaceError as e:
+            if len(e.args) >= 2 and 'Authentication/authorization error occured' in e.args[1]:
+                raise DataBricksUnauthorizedError('Invalid credentials')
+            else:
+                raise DataBricksConnectionError('Invalid connection params')
 
     def _build_connection_string(self) -> str:
         """For constants see: https://docs.databricks.com/integrations/bi/jdbc-odbc-bi.html"""
@@ -80,17 +98,17 @@ class DatabricksConnector(ToucanConnector):
         except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
         try:
-            pyodbc.connect(self._build_connection_string(), autocommit=True)
-        except (pyodbc.InterfaceError, Exception) as e:
-            error_code = e.args[0]
-            if 'Authentication/authorization error occured' in error_code:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(3, False), error=e.args[0]
-                )
-            else:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(2, False), error=e.args[0]
-                )
+            self._connect()
+        except DataBricksConnectionError as e:
+            return ConnectorStatus(
+                status=False, details=self._get_details(2, False), error=e.args[0]
+            )
+
+        except (DataBricksUnauthorizedError, Exception) as e:
+            return ConnectorStatus(
+                status=False, details=self._get_details(3, False), error=e.args[0]
+            )
+
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
     def _retrieve_data(self, data_source: DatabricksDataSource) -> pd.DataFrame:
@@ -99,21 +117,7 @@ class DatabricksConnector(ToucanConnector):
         Try to trigger the query, if we receive an error wait for cluster to start then try again
         """
         query_params = data_source.parameters or {}
-        try:
-            connection = pyodbc.connect(
-                self._build_connection_string(), autocommit=True, ansi=self.Ansi
-            )
-        except pyodbc.Error:
-            self.logger.warning(
-                f'Cluster seems to be shutdown, trying again in {self.cluster_start_timeout} seconds'
-            )
-            try:
-                time.sleep(self.cluster_start_timeout)
-                connection = pyodbc.connect(
-                    self._build_connection_string(), autocommit=True, ansi=self.Ansi
-                )
-            except pyodbc.Error:
-                raise DataBricksConnectionError('Cluster unavailable')
+        connection = self._connect()
         result = pandas_read_sql(
             data_source.query,
             con=connection,

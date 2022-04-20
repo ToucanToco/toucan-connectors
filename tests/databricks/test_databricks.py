@@ -5,7 +5,6 @@ from pytest_mock import MockFixture
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.databricks.databricks_connector import (
-    DataBricksConnectionError,
     DatabricksConnector,
     DatabricksDataSource,
 )
@@ -32,11 +31,6 @@ CONNECTION_STATUS_OK = ConnectorStatus(
         ('Authenticated', True),
     ],
 )
-
-
-@pytest.fixture(autouse=True)
-def mocksleep(mocker: MockFixture) -> None:
-    mocker.patch('toucan_connectors.databricks.databricks_connector.time.sleep')
 
 
 @pytest.fixture
@@ -94,17 +88,6 @@ def test_query_variability(mocker: MockFixture, databricks_connector: Databricks
     )
 
 
-def test__retrieve_data_error(databricks_connector: DatabricksConnector) -> None:
-    with pytest.raises(DataBricksConnectionError):
-        databricks_connector._retrieve_data(
-            DatabricksDataSource(
-                domain='test',
-                name='test',
-                query='SELECT Name, CountryCode, Population from city LIMIT 2;',
-            )
-        )
-
-
 def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockFixture):
     mocker.patch(
         'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname',
@@ -141,25 +124,6 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
     )
     mocker.patch(
         'pyodbc.connect',
-        side_effect=pyodbc.InterfaceError('Authentication/authorization error occured'),
-    )
-    mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_port')
-    mocker.patch(
-        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname'
-    )
-    assert databricks_connector.get_status() == ConnectorStatus(
-        status=False,
-        message=None,
-        error='Authentication/authorization error occured',
-        details=[
-            ('Host resolved', True),
-            ('Port opened', True),
-            ('Connected to Databricks', True),
-            ('Authenticated', False),
-        ],
-    )
-    mocker.patch(
-        'pyodbc.connect',
         side_effect=pyodbc.InterfaceError("I don't know mate"),
     )
     mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_port')
@@ -169,12 +133,31 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
     assert databricks_connector.get_status() == ConnectorStatus(
         status=False,
         message=None,
-        error="I don't know mate",
+        error='Invalid connection params',
         details=[
             ('Host resolved', True),
             ('Port opened', True),
             ('Connected to Databricks', False),
             ('Authenticated', None),
+        ],
+    )
+    mocker.patch(
+        'pyodbc.connect',
+        side_effect=pyodbc.InterfaceError('foo', 'Authentication/authorization error occured'),
+    )
+    mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_port')
+    mocker.patch(
+        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname'
+    )
+    assert databricks_connector.get_status() == ConnectorStatus(
+        status=False,
+        message=None,
+        error='Invalid credentials',
+        details=[
+            ('Host resolved', True),
+            ('Port opened', True),
+            ('Connected to Databricks', True),
+            ('Authenticated', False),
         ],
     )
     mocker.patch('pyodbc.connect')
@@ -183,3 +166,15 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
         'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname'
     )
     assert databricks_connector.get_status() == CONNECTION_STATUS_OK
+
+
+def test__connect_backoff(databricks_connector: DatabricksConnector, mocker: MockFixture) -> None:
+    ds = DatabricksDataSource(
+        query='select * from test where id_nb > %(id_nb)s and price > %(price)s;',
+        domain='test',
+        name='test',
+        parameters={'price': 10, 'id_nb': 1},
+    )
+    mock_connect = mocker.patch('pyodbc.connect', side_effect=[pyodbc.Error, mocker.MagicMock()])
+    databricks_connector.get_df(ds)
+    assert mock_connect.call_count == 2
