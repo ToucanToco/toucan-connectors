@@ -1,7 +1,9 @@
-import pytest
-import pandas as pd
 import os
+from unittest import mock
+
 import boto3
+import pandas as pd
+import pytest
 
 from toucan_connectors.awsathena.awsathena_connector import AwsathenaConnector, AwsathenaDataSource
 
@@ -13,7 +15,7 @@ def athena_connector():
         s3_output_bucket='s3://test/results/',
         aws_access_key_id='ascacsc',
         aws_secret_access_key='ascdscds09120983298sdcdsca',
-        region_name='test-region'
+        region_name='test-region',
     )
 
 
@@ -27,19 +29,24 @@ def test_get_df(mocker, athena_connector):
 
     fixture_path = f'{os.path.dirname(__file__)}/fixtures/beers.csv'
     fixture_csv = pd.read_csv(fixture_path)
-    read_sql_query_mocked = mocker.patch('awswrangler.athena.read_sql_query', return_value=fixture_csv)
+    read_sql_query_mocked = mocker.patch(
+        'awswrangler.athena.read_sql_query', return_value=fixture_csv
+    )
 
-    boto_session_mocked = mocker.patch.object(athena_connector, 'get_session')
-    boto_session_mocked.result({'titi': 'toto'})
+    # Mocking because the comparison of two boto3.Session objects is always false
+    # We cannot mock get_session on the athena_connector instance directly, because
+    # pydantic models alter getattr behaviour
+    boto_session_mocked = mocker.patch.object(
+        AwsathenaConnector, 'get_session', return_value={'a': 'b'}
+    )
 
     # The actual data request
     df = athena_connector.get_df(data_source=sample_data_source)
+
     assert df.equals(fixture_csv)
 
     read_sql_query_mocked.assert_called_once_with(
-        'SELECT * FROM beers',
-        database='mydatabase',
-        boto3_session={'titi': 'toto'}
+        'SELECT * FROM beers', database='mydatabase', boto3_session={'a': 'b'}
     )
 
     boto_session_mocked.assert_called_once()
