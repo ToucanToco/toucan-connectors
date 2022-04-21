@@ -45,7 +45,11 @@ def test_get_df(mocker, athena_connector):
     assert df.equals(fixture_csv)
 
     read_sql_query_mocked.assert_called_once_with(
-        'SELECT * FROM beers', database='mydatabase', boto3_session={'a': 'b'}, params={}
+        'SELECT * FROM beers',
+        database='mydatabase',
+        boto3_session={'a': 'b'},
+        params={},
+        s3_output='s3://test/results/',
     )
 
     boto_session_mocked.assert_called_once()

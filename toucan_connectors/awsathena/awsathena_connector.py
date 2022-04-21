@@ -1,9 +1,18 @@
+from typing import Optional
+
 import awswrangler as wr
 import boto3
 import pandas as pd
 from pydantic import Field, SecretStr, constr
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.common import apply_query_parameters
+from toucan_connectors.pandas_translator import PandasConditionTranslator
+from toucan_connectors.toucan_connector import (
+    DataSlice,
+    DataStats,
+    ToucanConnector,
+    ToucanDataSource,
+)
 
 
 class AwsathenaDataSource(ToucanDataSource):
@@ -12,10 +21,25 @@ class AwsathenaDataSource(ToucanDataSource):
         ..., description='The name of the database you want to query.'
     )
     query: constr(min_length=1) = Field(
-        ...,
+        None,
         description='The SQL query to execute.',
         widget='sql',
     )
+    table: constr(min_length=1) = Field(
+        None,
+        description='The name of the data table that you want to '
+        'get (equivalent to "SELECT * FROM '
+        'your_table")',
+    )
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        query = data.get('query')
+        table = data.get('table')
+        if query is None and table is None:
+            raise ValueError("'table' or 'query' must be specified")
+        elif query is None and table is not None:
+            self.query = f'SELECT * FROM {table};'
 
 
 class AwsathenaConnector(ToucanConnector):
@@ -40,12 +64,50 @@ class AwsathenaConnector(ToucanConnector):
         )
         return session
 
-    def _retrieve_data(self, data_source: AwsathenaDataSource) -> pd.DataFrame:
-        query_params = data_source.parameters or {}
+    @staticmethod
+    def _add_pagination_to_query(query: str, offset: int = 0, limit: Optional[int] = None) -> str:
+        if offset and limit:
+            return f'SELECT * FROM ({query}) LIMIT {limit} OFFSET {offset};'
+        if limit:
+            return f'SELECT * FROM ({query}) LIMIT {limit};'
+        return query
+
+    def _retrieve_data(
+        self,
+        data_source: AwsathenaDataSource,
+        offset: int = 0,
+        limit: Optional[int] = None,
+    ) -> pd.DataFrame:
         df = wr.athena.read_sql_query(
-            data_source.query,
+            self._add_pagination_to_query(data_source.query, offset=offset, limit=limit),
             database=data_source.database,
             boto3_session=self.get_session(),
-            params=query_params,
+            params=data_source.parameters or {},
+            s3_output=self.s3_output_bucket,
         )
         return df
+
+    def get_slice(
+        self,
+        data_source: AwsathenaDataSource,
+        permissions: Optional[dict] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
+        get_row_count: Optional[bool] = False,
+    ) -> DataSlice:
+        df = self._retrieve_data(data_source, offset=offset, limit=limit)
+        df.columns = df.columns.astype(str)
+
+        if permissions is not None:
+            permissions_query = PandasConditionTranslator.translate(permissions)
+            permissions_query = apply_query_parameters(permissions_query, data_source.parameters)
+            df = df.query(permissions_query)
+
+        return DataSlice(
+            df,
+            stats=DataStats(
+                total_returned_rows=len(df),
+                total_rows=len(df),
+                df_memory_size=df.memory_usage().sum(),
+            ),
+        )
