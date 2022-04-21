@@ -58,6 +58,16 @@ def test_AwsathenaDataSource():
     assert s2.query == 'SELECT * FROM coucou;'
     assert s2.table is None
 
+    # with parameters
+    s3 = AwsathenaDataSource(
+        domain='d',
+        name='source_three',
+        database='db',
+        query='SELECT * FROM coucou WHERE toto > {{tata}}',
+        parameters={'tata': 12345},
+    )
+    assert s3.query == 'SELECT * FROM coucou WHERE toto > 12345'
+
     with pytest.raises(ValueError, match="'table' or 'query' must be specified"):
         AwsathenaDataSource(domain='d', name='source_three', database='db')
 
