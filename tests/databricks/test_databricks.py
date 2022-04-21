@@ -1,5 +1,6 @@
 import pyodbc
 import pytest
+import responses
 from pydantic import ValidationError
 from pytest_mock import MockFixture
 
@@ -36,7 +37,7 @@ CONNECTION_STATUS_OK = ConnectorStatus(
 @pytest.fixture
 def databricks_connector() -> DatabricksConnector:
     return DatabricksConnector(
-        name='test', Host='127.0.0.1', Port='443', HTTPPath='foo/path', PWD='12345'
+        name='test', host='127.0.0.1', port='443', http_path='foo/path', pwd='12345'
     )
 
 
@@ -125,7 +126,7 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
     )
     mocker.patch(
         'pyodbc.connect',
-        side_effect=pyodbc.InterfaceError("I don't know mate"),
+        side_effect=pyodbc.Error("I don't know mate"),
     )
     mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_port')
     mocker.patch(
@@ -134,7 +135,7 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
     assert databricks_connector.get_status() == ConnectorStatus(
         status=False,
         message=None,
-        error='Invalid connection params',
+        error="I don't know mate",
         details=[
             ('Host resolved', True),
             ('Port opened', True),
@@ -144,7 +145,9 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
     )
     mocker.patch(
         'pyodbc.connect',
-        side_effect=pyodbc.InterfaceError('foo', 'Authentication/authorization error occured'),
+        side_effect=pyodbc.InterfaceError(
+            'Invalid credentials', 'Authentication/authorization error occured'
+        ),
     )
     mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_port')
     mocker.patch(
@@ -169,13 +172,21 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
     assert databricks_connector.get_status() == CONNECTION_STATUS_OK
 
 
-def test__connect_backoff(databricks_connector: DatabricksConnector, mocker: MockFixture) -> None:
-    ds = DatabricksDataSource(
-        query='select * from test where id_nb > %(id_nb)s and price > %(price)s;',
-        domain='test',
-        name='test',
-        parameters={'price': 10, 'id_nb': 1},
+@responses.activate
+def test_cluster_methods(databricks_connector: DatabricksConnector) -> None:
+    responses.add(
+        method='GET',
+        url='https://127.0.0.1/api/2.0/clusters/get',
+        headers={'login': 'token', 'password': '12345'},
+        match=[responses.matchers.urlencoded_params_matcher({'cluster_id': 'path'})],
+        json={'state': 'TERMINATED'},
     )
-    mock_connect = mocker.patch('pyodbc.connect', side_effect=[pyodbc.Error, mocker.MagicMock()])
-    databricks_connector.get_df(ds)
-    assert mock_connect.call_count == 2
+    assert databricks_connector.check_cluster_state() == 'TERMINATED'
+    responses.add(
+        method='GET',
+        url='https://127.0.0.1/api/2.0/clusters/start',
+        headers={'login': 'token', 'password': '12345'},
+        match=[responses.matchers.urlencoded_params_matcher({'cluster_id': 'path'})],
+        json={},
+    )
+    assert databricks_connector.start_cluster() == {}
