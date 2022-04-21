@@ -16,6 +16,11 @@ CONNECTORS_REGISTRY = {
         'connector': 'aircall.aircall_connector.AircallConnector',
         'logo': 'aircall/Aircall.svg',
     },
+    'AWSAthena': {
+        'connector': 'awsathena.awsathena_connector.AwsathenaConnector',
+        'label': 'Amazon Athena',
+        'logo': 'awsathena/athena.png',
+    },
     'AWSDocumentDB': {
         'connector': 'mongo.mongo_connector.MongoConnector',
         'label': 'Amazon Document DB',

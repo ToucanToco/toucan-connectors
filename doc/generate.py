@@ -31,7 +31,7 @@ def custom_str(field):
     m = {
         'type_': lambda x: clean_type_str(x) if x else None,
         'required': lambda x: 'required' if x else None,
-        'default': lambda x: f'default to {x}' if x is not None else x,
+        'default': lambda x: f'defaults to {x}' if x is not None else x,
     }
     infos = []
     infos.append(m['type_'](field.type_))
