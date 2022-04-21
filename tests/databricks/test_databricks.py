@@ -181,7 +181,7 @@ def test_cluster_methods(databricks_connector: DatabricksConnector) -> None:
         match=[responses.matchers.urlencoded_params_matcher({'cluster_id': 'path'})],
         json={'state': 'TERMINATED'},
     )
-    assert databricks_connector.check_cluster_state() == 'TERMINATED'
+    assert not databricks_connector.check_cluster_running()
     responses.add(
         method='GET',
         url='https://127.0.0.1/api/2.0/clusters/start',
