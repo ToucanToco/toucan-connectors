@@ -100,13 +100,13 @@ class DatabricksConnector(ToucanConnector):
         endpoint = f'https://{self.host}/api/2.0/clusters/get'
         headers = {'login': 'token', 'password': self.pwd.get_secret_value()}
         data = {'cluster_id': self.http_path.split('/')[-1]}
-        return requests.get(endpoint, headers=headers, data=data).json().get('state') == 'RUNNING'
+        return requests.get(endpoint, headers=headers, json=data).json().get('state') == 'RUNNING'
 
     def start_cluster(self) -> None:
         endpoint = f'https://{self.host}/api/2.0/clusters/start'
         headers = {'login': 'token', 'password': self.pwd.get_secret_value()}
         data = {'cluster_id': self.http_path.split('/')[-1]}
-        resp = requests.post(endpoint, headers=headers, data=data)
+        resp = requests.post(endpoint, headers=headers, json=data)
         if resp.status_code == 200:
             logger.info('Databricks cluster started')
         else:
