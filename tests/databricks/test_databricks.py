@@ -173,7 +173,7 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
 
 
 @responses.activate
-def test_cluster_methods(databricks_connector: DatabricksConnector) -> None:
+def test_cluster_methods(databricks_connector: DatabricksConnector, mocker: MockFixture) -> None:
     responses.add(
         method='GET',
         url='https://127.0.0.1/api/2.0/clusters/get',
@@ -189,4 +189,6 @@ def test_cluster_methods(databricks_connector: DatabricksConnector) -> None:
         match=[responses.matchers.urlencoded_params_matcher({'cluster_id': 'path'})],
         json={},
     )
-    assert databricks_connector.start_cluster() == {}
+    sypied_start = mocker.spy(DatabricksConnector, 'start_cluster')
+    databricks_connector.start_cluster()
+    sypied_start.assert_called_once()

@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Optional
 
 import pandas as pd
@@ -7,6 +8,8 @@ from pydantic import Field, SecretStr, constr
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+
+logger = logging.getLogger(__name__)
 
 
 class DatabricksDataSource(ToucanDataSource):
@@ -99,11 +102,15 @@ class DatabricksConnector(ToucanConnector):
         data = {'cluster_id': self.http_path.split('/')[-1]}
         return requests.get(endpoint, headers=headers, data=data).json().get('state') == 'RUNNING'
 
-    def start_cluster(self) -> Dict[str, str]:
+    def start_cluster(self) -> None:
         endpoint = f'https://{self.host}/api/2.0/clusters/start'
         headers = {'login': 'token', 'password': self.pwd.get_secret_value()}
         data = {'cluster_id': self.http_path.split('/')[-1]}
-        return requests.post(endpoint, headers=headers, data=data).json()
+        resp = requests.post(endpoint, headers=headers, data=data)
+        if resp.status_code == 200:
+            logger.info('Databricks cluster started')
+        else:
+            logger.info(resp.json().get('message', 'Failed to start Databricks cluster'))
 
     def _retrieve_data(self, data_source: DatabricksDataSource) -> pd.DataFrame:
         """
