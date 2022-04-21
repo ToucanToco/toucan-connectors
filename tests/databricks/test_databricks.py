@@ -56,14 +56,15 @@ def test_databricks_get_df(mocker: MockFixture, databricks_connector: Databricks
     ds = DatabricksDataSource(
         domain='test',
         name='test',
-        query='SELECT Name, CountryCode, Population from city LIMIT 2;',
+        query='SELECT * FROM City WHERE Population > {{ max_pop }}',
+        parameters={'max_pop': 5000000},
     )
     databricks_connector.get_df(ds)
     mock_pyodbc_connect.assert_called_once_with(CONNECTION_STRING, autocommit=True, ansi=False)
     mock_pandas_read_sql.assert_called_once_with(
-        'SELECT Name, CountryCode, Population from city LIMIT 2;',
+        'SELECT * FROM City WHERE Population > %(max_pop)s',
         con=mock_pyodbc_connect(),
-        params=[],
+        params={'max_pop': 5000000},
     )
 
 
@@ -187,12 +188,13 @@ def test_databricks_get_slice(mocker: MockFixture, databricks_connector: Databri
     ds = DatabricksDataSource(
         domain='test',
         name='test',
-        query='SELECT Name, CountryCode, Population from city;',
+        query='SELECT Name, CountryCode, Population from city where city={{ foo }};',
+        parameters={'foo': 'bar'},
     )
     databricks_connector.get_slice(data_source=ds, offset=2, limit=10)
     mock_pyodbc_connect.assert_called_once_with(CONNECTION_STRING, autocommit=True, ansi=False)
     mock_pandas_read_sql.assert_called_once_with(
-        'SELECT * FROM (SELECT Name, CountryCode, Population from city) LIMIT 10 OFFSET 2;',
+        'SELECT * FROM (SELECT Name, CountryCode, Population from city where city=%(foo)s) LIMIT 10 OFFSET 2;',
         con=mock_pyodbc_connect(),
-        params=[],
+        params={'foo': 'bar'},
     )

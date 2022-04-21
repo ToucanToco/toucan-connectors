@@ -136,6 +136,7 @@ class DatabricksConnector(ToucanConnector):
             domain=data_source.domain,
             name=data_source.name,
             query=f'SELECT * FROM ({data_source.query.replace(";", "")}) LIMIT {limit} OFFSET {offset};',
+            parameters=data_source.parameters,
         )
         df = self.get_df(preview_datasource, permissions)
         return DataSlice(df=df, stats=DataStats(total_returned_rows=len(df)))
@@ -148,11 +149,7 @@ class DatabricksConnector(ToucanConnector):
         query_params = data_source.parameters or {}
         connection = self._connect()
         result = pandas_read_sql(
-            data_source.query,
-            con=connection,
-            params=query_params,
-            convert_to_qmark=True,
-            render_user=True,
+            data_source.query, con=connection, params=query_params, adapt_params=True
         )
         connection.close()
         return result
