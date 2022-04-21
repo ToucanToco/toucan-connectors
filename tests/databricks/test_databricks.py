@@ -178,3 +178,21 @@ def test__connect_backoff(databricks_connector: DatabricksConnector, mocker: Moc
     mock_connect = mocker.patch('pyodbc.connect', side_effect=[pyodbc.Error, mocker.MagicMock()])
     databricks_connector.get_df(ds)
     assert mock_connect.call_count == 2
+
+
+def test_databricks_get_slice(mocker: MockFixture, databricks_connector: DatabricksConnector):
+    mock_pyodbc_connect = mocker.patch('pyodbc.connect')
+    mock_pandas_read_sql = mocker.patch('pandas.read_sql')
+
+    ds = DatabricksDataSource(
+        domain='test',
+        name='test',
+        query='SELECT Name, CountryCode, Population from city;',
+    )
+    databricks_connector.get_slice(data_source=ds, offset=2, limit=10)
+    mock_pyodbc_connect.assert_called_once_with(CONNECTION_STRING, autocommit=True, ansi=False)
+    mock_pandas_read_sql.assert_called_once_with(
+        'SELECT * FROM (SELECT Name, CountryCode, Population from city) LIMIT 10 OFFSET 2;',
+        con=mock_pyodbc_connect(),
+        params=[],
+    )
