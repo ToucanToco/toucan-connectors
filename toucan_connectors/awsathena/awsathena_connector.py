@@ -64,11 +64,18 @@ class AwsathenaConnector(ToucanConnector):
         )
 
     @staticmethod
-    def _add_pagination_to_query(query: str, offset: int = 0, limit: Optional[int] = None) -> str:
+    def _strip_trailing_semicolumn(query: str) -> str:
+        q = query.strip()
+        return q[:-1] if q.endswith(';') else q
+
+    @classmethod
+    def _add_pagination_to_query(
+        cls, query: str, offset: int = 0, limit: Optional[int] = None
+    ) -> str:
         if offset and limit:
-            return f'SELECT * FROM ({query}) LIMIT {limit} OFFSET {offset};'
+            return f'SELECT * FROM ({cls._strip_trailing_semicolumn(query)}) LIMIT {limit} OFFSET {offset};'
         if limit:
-            return f'SELECT * FROM ({query}) LIMIT {limit};'
+            return f'SELECT * FROM ({cls._strip_trailing_semicolumn(query)}) LIMIT {limit};'
         return query
 
     def _retrieve_data(
