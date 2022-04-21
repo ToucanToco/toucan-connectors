@@ -6,12 +6,7 @@ import pyodbc
 from pydantic import Field, SecretStr, constr
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
-from toucan_connectors.toucan_connector import (
-    DataSlice,
-    DataStats,
-    ToucanConnector,
-    ToucanDataSource,
-)
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 CLUSTER_START_TIMEOUT = 90
 
@@ -116,31 +111,6 @@ class DatabricksConnector(ToucanConnector):
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
-    def get_slice(
-        self,
-        data_source: DatabricksDataSource,
-        permissions: Optional[dict] = None,
-        offset: int = 0,
-        limit=50,
-        get_row_count: Optional[bool] = False,
-    ) -> DataSlice:
-        """
-        Method to retrieve a part of the data as a pandas dataframe
-        and the total size filtered with permissions
-
-        - offset is the index of the starting row
-        - limit is the number of rows to retrieve
-        Exemple: if offset = 5 and limit = 10 then 10 rows are expected from 6th row
-        """
-        preview_datasource = DatabricksDataSource(
-            domain=data_source.domain,
-            name=data_source.name,
-            query=f'SELECT * FROM ({data_source.query.replace(";", "")}) LIMIT {limit} OFFSET {offset};',
-            parameters=data_source.parameters,
-        )
-        df = self.get_df(preview_datasource, permissions)
-        return DataSlice(df=df, stats=DataStats(total_returned_rows=len(df)))
-
     def _retrieve_data(self, data_source: DatabricksDataSource) -> pd.DataFrame:
         """
         The connector can face a shutdown cluster and must wait it to be started before querying.
@@ -149,7 +119,10 @@ class DatabricksConnector(ToucanConnector):
         query_params = data_source.parameters or {}
         connection = self._connect()
         result = pandas_read_sql(
-            data_source.query, con=connection, params=query_params, adapt_params=True
+            data_source.query,
+            con=connection,
+            params=query_params,
+            convert_to_qmark=True,
         )
         connection.close()
         return result

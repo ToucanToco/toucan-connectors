@@ -62,9 +62,9 @@ def test_databricks_get_df(mocker: MockFixture, databricks_connector: Databricks
     databricks_connector.get_df(ds)
     mock_pyodbc_connect.assert_called_once_with(CONNECTION_STRING, autocommit=True, ansi=False)
     mock_pandas_read_sql.assert_called_once_with(
-        'SELECT * FROM City WHERE Population > %(max_pop)s',
+        'SELECT * FROM City WHERE Population > ?',
         con=mock_pyodbc_connect(),
-        params={'max_pop': 5000000},
+        params=[5000000],
     )
 
 
@@ -179,22 +179,3 @@ def test__connect_backoff(databricks_connector: DatabricksConnector, mocker: Moc
     mock_connect = mocker.patch('pyodbc.connect', side_effect=[pyodbc.Error, mocker.MagicMock()])
     databricks_connector.get_df(ds)
     assert mock_connect.call_count == 2
-
-
-def test_databricks_get_slice(mocker: MockFixture, databricks_connector: DatabricksConnector):
-    mock_pyodbc_connect = mocker.patch('pyodbc.connect')
-    mock_pandas_read_sql = mocker.patch('pandas.read_sql')
-
-    ds = DatabricksDataSource(
-        domain='test',
-        name='test',
-        query='SELECT Name, CountryCode, Population from city where city={{ foo }};',
-        parameters={'foo': 'bar'},
-    )
-    databricks_connector.get_slice(data_source=ds, offset=2, limit=10)
-    mock_pyodbc_connect.assert_called_once_with(CONNECTION_STRING, autocommit=True, ansi=False)
-    mock_pandas_read_sql.assert_called_once_with(
-        'SELECT * FROM (SELECT Name, CountryCode, Population from city where city=%(foo)s) LIMIT 10 OFFSET 2;',
-        con=mock_pyodbc_connect(),
-        params={'foo': 'bar'},
-    )
