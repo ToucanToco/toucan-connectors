@@ -103,7 +103,7 @@ class DatabricksConnector(ToucanConnector):
         endpoint = f'https://{self.host}/api/2.0/clusters/start'
         headers = {'login': 'token', 'password': self.pwd.get_secret_value()}
         data = {'cluster_id': self.http_path.split('/')[-1]}
-        return requests.get(endpoint, headers=headers, data=data).json()
+        return requests.post(endpoint, headers=headers, data=data).json()
 
     def _retrieve_data(self, data_source: DatabricksDataSource) -> pd.DataFrame:
         """
