@@ -54,15 +54,14 @@ class AwsathenaConnector(ToucanConnector):
     aws_secret_access_key: SecretStr = Field(None, description='Your AWS secret key')
     region_name: str = Field(..., description='Your AWS region name')
 
-    def get_session(self):
-        session = boto3.Session(
+    def get_session(self) -> boto3.Session:
+        return boto3.Session(
             aws_access_key_id=self.aws_access_key_id,
             # This is required because this gets appended by boto3
             # internally, and a SecretStr can't be appended to an str
             aws_secret_access_key=self.aws_secret_access_key.get_secret_value(),
             region_name=self.region_name,
         )
-        return session
 
     @staticmethod
     def _add_pagination_to_query(query: str, offset: int = 0, limit: Optional[int] = None) -> str:

@@ -6,10 +6,10 @@
 * `name`: str, required
 * `cache_ttl`: int
 * `identifier`: str
-* `secrets_storage_version`: str, default to 1
+* `secrets_storage_version`: str, defaults to 1
 * `s3_output_bucket`: str, required. Your S3 Output bucket (where query results are stored.)
 * `aws_access_key_id`: str, required. Your AWS access key ID.
-* `aws_secret_access_key`: str, required, Your AWS secret key.
+* `aws_secret_access_key`: str, required. Your AWS secret key.
 * `region_name`: str, required
 
 ```coffee
