@@ -41,6 +41,11 @@ class AwsathenaDataSource(ToucanDataSource):
         elif query is None and table is not None:
             self.query = f'SELECT * FROM {table};'
 
+        # Because wrangler manage it's own way to format extras variables Ex: :param;
+        # and because we don't want our clients to learn a new way to write extras-variables,
+        # + this is not our usual format, it could be better to use our old school method to apply query parameters [jinja]
+        self.query = apply_query_parameters(self.query, self.parameters or {})
+
 
 class AwsathenaConnector(ToucanConnector):
     data_source_model: AwsathenaDataSource
