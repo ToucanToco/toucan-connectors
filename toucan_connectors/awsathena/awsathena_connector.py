@@ -93,7 +93,6 @@ class AwsathenaConnector(ToucanConnector):
             self._add_pagination_to_query(data_source.query, offset=offset, limit=limit),
             database=data_source.database,
             boto3_session=self.get_session(),
-            params=data_source.parameters or {},
             s3_output=self.s3_output_bucket,
         )
         return df

@@ -84,7 +84,6 @@ def test_get_df(
         'SELECT * FROM beers;',
         database='mydatabase',
         boto3_session={'a': 'b'},
-        params={},
         s3_output='s3://test/results/',
     )
 
@@ -110,7 +109,6 @@ def test_get_slice(
         'SELECT * FROM (SELECT * FROM beers) LIMIT 110 OFFSET 10;',
         database='mydatabase',
         boto3_session={'a': 'b'},
-        params={},
         s3_output='s3://test/results/',
     )
 
