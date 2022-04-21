@@ -71,7 +71,7 @@ class DatabricksConnector(ToucanConnector):
         connection_params = {
             'Driver': '/opt/simba/spark/lib/64/libsparkodbc_sb64.so',  # This path must be correct when installing
             # ODBC driver
-            'Host': '127.0.0.0.1' if self.Host == 'localhost' else self.Host,
+            'Host': '127.0.0.1' if self.Host == 'localhost' else self.Host,
             'Port': self.Port,
             'HTTPPath': self.HTTPPath,
             'ThriftTransport': 2,
