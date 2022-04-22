@@ -178,7 +178,7 @@ def test_cluster_methods(databricks_connector: DatabricksConnector, mocker: Mock
         method='GET',
         url='https://127.0.0.1/api/2.0/clusters/get',
         headers={'login': 'token', 'password': '12345'},
-        match=[responses.matchers.urlencoded_params_matcher({'cluster_id': 'path'})],
+        match=[responses.matchers.json_params_matcher({'cluster_id': 'path'})],
         json={'state': 'TERMINATED'},
     )
     assert not databricks_connector.check_cluster_running()
@@ -186,7 +186,7 @@ def test_cluster_methods(databricks_connector: DatabricksConnector, mocker: Mock
         method='POST',
         url='https://127.0.0.1/api/2.0/clusters/start',
         headers={'login': 'token', 'password': '12345'},
-        match=[responses.matchers.urlencoded_params_matcher({'cluster_id': 'path'})],
+        match=[responses.matchers.json_params_matcher({'cluster_id': 'path'})],
         json={},
     )
     sypied_start = mocker.spy(DatabricksConnector, 'start_cluster')
