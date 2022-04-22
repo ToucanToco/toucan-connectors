@@ -5,6 +5,7 @@ import pandas as pd
 import pyodbc
 import requests
 from pydantic import Field, SecretStr, constr
+from requests.auth import HTTPBasicAuth
 from werkzeug.exceptions import BadRequest
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
@@ -90,15 +91,15 @@ class DatabricksConnector(ToucanConnector):
 
     def get_cluster_state(self) -> bool:
         endpoint = f'https://{self.host}/api/2.0/clusters/get'
-        headers = {'login': 'token', 'password': self.pwd.get_secret_value()}
+        auth = HTTPBasicAuth('token', self.pwd.get_secret_value())
         data = {'cluster_id': self.http_path.split('/')[-1]}
-        return requests.get(endpoint, headers=headers, json=data).json().get('state')
+        return requests.get(endpoint, auth=auth, json=data).json().get('state')
 
     def start_cluster(self) -> None:
         endpoint = f'https://{self.host}/api/2.0/clusters/start'
-        headers = {'login': 'token', 'password': self.pwd.get_secret_value()}
+        auth = HTTPBasicAuth('token', self.pwd.get_secret_value())
         data = {'cluster_id': self.http_path.split('/')[-1]}
-        resp = requests.post(endpoint, headers=headers, json=data)
+        resp = requests.post(endpoint, auth=auth, json=data)
         if resp.status_code == 200:
             logger.info('Databricks cluster started')
         else:
