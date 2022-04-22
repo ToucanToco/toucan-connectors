@@ -5,6 +5,7 @@ import pandas as pd
 import pyodbc
 import requests
 from pydantic import Field, SecretStr, constr
+from werkzeug.exceptions import BadRequest
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -18,18 +19,6 @@ class DatabricksDataSource(ToucanDataSource):
         description='You can write a query here',
         widget='sql',
     )
-
-
-class DataBricksConnectionError(Exception):
-    """ """
-
-
-class DataBricksUnauthorizedError(Exception):
-    """ """
-
-
-class DatabricksClusterStartFailed(Exception):
-    """ """
 
 
 class DatabricksConnector(ToucanConnector):
@@ -115,7 +104,7 @@ class DatabricksConnector(ToucanConnector):
         else:
             message = resp.json().get('message', 'Failed to start Databricks cluster')
             logger.error(f'Error while starting cluster: {message}')
-            raise DatabricksClusterStartFailed(f'failed to start cluster: {message}')
+            raise BadRequest(f'failed to start cluster: {message}')
 
     def _retrieve_data(self, data_source: DatabricksDataSource) -> pd.DataFrame:
         """
