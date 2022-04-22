@@ -6,6 +6,7 @@ import pytest
 from pydantic import SecretStr
 
 from toucan_connectors.awsathena.awsathena_connector import AwsathenaConnector, AwsathenaDataSource
+from toucan_connectors.common import ConnectorStatus
 
 
 @pytest.fixture
@@ -110,6 +111,29 @@ def test_get_slice(
         database='mydatabase',
         boto3_session={'a': 'b'},
         s3_output='s3://test/results/',
+    )
+
+
+def test_get_status(mocker, athena_connector):
+    mocked_session = mocker.MagicMock()
+    mocked_session.return_value.client.return_value.get_caller_identity.side_effect = [
+        Exception('Authentication failed'),
+        {},
+    ]
+
+    mocker.patch.object(AwsathenaConnector, 'get_session', new=mocked_session)
+
+    # should failed
+    assert athena_connector.get_status() == ConnectorStatus(
+        status=False,
+        message=None,
+        error='Authentication failed',
+        details=[('Authenticated', False)],
+    )
+
+    # should not failed
+    assert athena_connector.get_status() == ConnectorStatus(
+        status=True, message=None, error=None, details=[('Authenticated', True)]
     )
 
 

@@ -5,7 +5,7 @@ import boto3
 import pandas as pd
 from pydantic import Field, SecretStr, constr
 
-from toucan_connectors.common import apply_query_parameters
+from toucan_connectors.common import ConnectorStatus, apply_query_parameters
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
@@ -121,3 +121,16 @@ class AwsathenaConnector(ToucanConnector):
                 df_memory_size=df.memory_usage().sum(),
             ),
         )
+
+    def get_status(self) -> ConnectorStatus:
+        try:
+            # Because there is no way for us to ensure that
+            # AWSAthena connection is valid, so we just check that
+            # the AWS account exist but not we have read/w access to Athena
+            # nor S3_output_bucket exist
+            sts_client = self.get_session().client('sts')
+            sts_client.get_caller_identity()
+        except Exception as e:
+            return ConnectorStatus(status=False, details=[('Authenticated', False)], error=str(e))
+
+        return ConnectorStatus(status=True, details=[('Authenticated', True)], error=None)
