@@ -6,6 +6,7 @@ from pytest_mock import MockFixture
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.databricks.databricks_connector import (
+    DatabricksClusterStartFailed,
     DatabricksConnector,
     DatabricksDataSource,
 )
@@ -189,9 +190,7 @@ def test_cluster_methods(databricks_connector: DatabricksConnector, mocker: Mock
         match=[responses.matchers.json_params_matcher({'cluster_id': 'path'})],
         json={},
     )
-    sypied_start = mocker.spy(DatabricksConnector, 'start_cluster')
     databricks_connector.start_cluster()
-    sypied_start.assert_called_once()
 
 
 @responses.activate
@@ -206,8 +205,9 @@ def test_cluster_start_failed(
         json={'message': 'Failed to start Databricks cluster'},
         status=400,
     )
-    sypied_start = mocker.spy(DatabricksConnector, 'start_cluster')
-    mockedlog = mocker.patch('toucan_connectors.databricks.databricks_connector.logger.info')
-    databricks_connector.start_cluster()
-    sypied_start.assert_called_once()
-    mockedlog.assert_called_once_with('Failed to start Databricks cluster')
+    mockedlog = mocker.patch('toucan_connectors.databricks.databricks_connector.logger.error')
+    with pytest.raises(DatabricksClusterStartFailed):
+        databricks_connector.start_cluster()
+    mockedlog.assert_called_once_with(
+        'Error while starting cluster: Failed to start Databricks cluster'
+    )

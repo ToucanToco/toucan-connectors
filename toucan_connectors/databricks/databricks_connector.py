@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import pyodbc
@@ -25,6 +25,10 @@ class DataBricksConnectionError(Exception):
 
 
 class DataBricksUnauthorizedError(Exception):
+    """ """
+
+
+class DatabricksClusterStartFailed(Exception):
     """ """
 
 
@@ -66,7 +70,7 @@ class DatabricksConnector(ToucanConnector):
         return ';'.join(f'{k}={v}' for k, v in connection_params.items() if v is not None)
 
     @staticmethod
-    def _get_details(index: int, status: Optional[bool]):
+    def _get_details(index: int, status: Optional[bool]) -> List[Tuple[str, bool]]:
         checks = ['Host resolved', 'Port opened', 'Connected to Databricks', 'Authenticated']
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
@@ -88,7 +92,6 @@ class DatabricksConnector(ToucanConnector):
             pyodbc.connect(self._build_connection_string())
         except pyodbc.InterfaceError as e:
             details = self._get_details(3, False)
-            details[2] = ('Connected to Databricks', True)
             return ConnectorStatus(status=False, details=details, error=e.args[0])
         except pyodbc.Error as e:
             return ConnectorStatus(
@@ -110,7 +113,9 @@ class DatabricksConnector(ToucanConnector):
         if resp.status_code == 200:
             logger.info('Databricks cluster started')
         else:
-            logger.info(resp.json().get('message', 'Failed to start Databricks cluster'))
+            message = resp.json().get('message', 'Failed to start Databricks cluster')
+            logger.error(f'Error while starting cluster: {message}')
+            raise DatabricksClusterStartFailed(f'failed to start cluster: {message}')
 
     def _retrieve_data(self, data_source: DatabricksDataSource) -> pd.DataFrame:
         """
