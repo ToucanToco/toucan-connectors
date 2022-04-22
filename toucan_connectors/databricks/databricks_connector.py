@@ -99,7 +99,7 @@ class DatabricksConnector(ToucanConnector):
             )
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
-    def check_cluster_running(self) -> Dict[str, str]:
+    def check_cluster_running(self) -> bool:
         endpoint = f'https://{self.host}/api/2.0/clusters/get'
         headers = {'login': 'token', 'password': self.pwd.get_secret_value()}
         data = {'cluster_id': self.http_path.split('/')[-1]}
