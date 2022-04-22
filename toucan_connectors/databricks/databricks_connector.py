@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import pandas as pd
 import pyodbc
@@ -99,11 +99,11 @@ class DatabricksConnector(ToucanConnector):
             )
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
-    def check_cluster_running(self) -> bool:
+    def get_cluster_state(self) -> bool:
         endpoint = f'https://{self.host}/api/2.0/clusters/get'
         headers = {'login': 'token', 'password': self.pwd.get_secret_value()}
         data = {'cluster_id': self.http_path.split('/')[-1]}
-        return requests.get(endpoint, headers=headers, json=data).json().get('state') == 'RUNNING'
+        return requests.get(endpoint, headers=headers, json=data).json().get('state')
 
     def start_cluster(self) -> None:
         endpoint = f'https://{self.host}/api/2.0/clusters/start'
