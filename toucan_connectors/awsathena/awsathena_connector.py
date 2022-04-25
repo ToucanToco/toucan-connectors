@@ -5,7 +5,7 @@ import boto3
 import pandas as pd
 from pydantic import Field, SecretStr, constr
 
-from toucan_connectors.common import apply_query_parameters
+from toucan_connectors.common import ConnectorStatus, apply_query_parameters
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
@@ -121,3 +121,37 @@ class AwsathenaConnector(ToucanConnector):
                 df_memory_size=df.memory_usage().sum(),
             ),
         )
+
+    def get_status(self) -> ConnectorStatus:
+        checks = [
+            'Host resolved',
+            'Port opened',
+            'Connected',
+            'Authenticated',
+            'Can list databases',
+        ]
+        session = self.get_session()
+        try:
+            # Returns a pandas DataFrame of DBs
+            wr.catalog.databases(boto3_session=session)
+            return ConnectorStatus(status=True, details=[(c, True) for c in checks], error=None)
+        # aws-wrangler exceptions all inherit Exception directly:
+        # https://github.com/awslabs/aws-data-wrangler/blob/main/awswrangler/exceptions.py
+        except Exception as exc:
+            try:
+                sts_client = session.client('sts')
+                sts_client.get_caller_identity()
+                # We consider an authenticated client capable of
+                # connecting to AWS to be valid, even if sub-optimal
+                return ConnectorStatus(
+                    status=True,
+                    details=[(c, i < 4) for (i, c) in enumerate(checks)],
+                    error=f'Cannot list databases: {exc}',
+                )
+            except Exception as sts_exc:
+                # Cannot list databases nor get identity
+                return ConnectorStatus(
+                    status=False,
+                    details=[(c, False) for c in checks],
+                    error=f'Cannot verify connection to Athena: {exc}, {sts_exc}',
+                )

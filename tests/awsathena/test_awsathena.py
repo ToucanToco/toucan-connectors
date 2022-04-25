@@ -1,11 +1,12 @@
 import os
-from typing import Optional
+from typing import List, Optional
 
 import pandas as pd
 import pytest
 from pydantic import SecretStr
 
 from toucan_connectors.awsathena.awsathena_connector import AwsathenaConnector, AwsathenaDataSource
+from toucan_connectors.common import ConnectorStatus
 
 
 @pytest.fixture
@@ -46,6 +47,17 @@ def mocked_boto_session(mocker):
     # We cannot mock get_session on the athena_connector instance directly, because
     # pydantic models alter getattr behaviour
     return mocker.patch.object(AwsathenaConnector, 'get_session', return_value={'a': 'b'})
+
+
+@pytest.fixture
+def status_checks() -> List[str]:
+    return [
+        'Host resolved',
+        'Port opened',
+        'Connected',
+        'Authenticated',
+        'Can list databases',
+    ]
 
 
 def test_AwsathenaDataSource():
@@ -110,6 +122,46 @@ def test_get_slice(
         database='mydatabase',
         boto3_session={'a': 'b'},
         s3_output='s3://test/results/',
+    )
+
+
+def test_get_status_list_dbs_ok(mocker, athena_connector, status_checks):
+    mocker.patch('awswrangler.catalog.databases', return_value=pd.DataFrame())
+    assert athena_connector.get_status() == ConnectorStatus(
+        status=True, message=None, details=[(c, True) for c in status_checks], error=None
+    )
+
+
+def test_get_status_list_dbs_ko_sts_ok(mocker, athena_connector, status_checks):
+    mocker.patch('awswrangler.catalog.databases', side_effect=Exception('coucou'))
+
+    mocked_session = mocker.MagicMock()
+    mocked_session.return_value.client.return_value.get_caller_identity.return_value = True
+    mocker.patch.object(AwsathenaConnector, 'get_session', new=mocked_session)
+
+    expected_details = [(c, True) for c in status_checks]
+    expected_details[4] = ('Can list databases', False)
+
+    assert athena_connector.get_status() == ConnectorStatus(
+        status=True, message=None, details=expected_details, error='Cannot list databases: coucou'
+    )
+
+
+def test_get_status_ko(mocker, athena_connector, status_checks):
+    mocker.patch('awswrangler.catalog.databases', side_effect=Exception('Insufficient permissions'))
+
+    mocked_session = mocker.MagicMock()
+    mocked_session.return_value.client.return_value.get_caller_identity.side_effect = Exception(
+        'Authentication failed'
+    )
+    mocker.patch.object(AwsathenaConnector, 'get_session', new=mocked_session)
+
+    # should failed
+    assert athena_connector.get_status() == ConnectorStatus(
+        status=False,
+        message=None,
+        error='Cannot verify connection to Athena: Insufficient permissions, Authentication failed',
+        details=[(c, False) for c in status_checks],
     )
 
 
