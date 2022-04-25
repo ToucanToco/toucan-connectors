@@ -130,15 +130,16 @@ class AwsathenaConnector(ToucanConnector):
             'Authenticated',
             'Can list databases',
         ]
+        session = self.get_session()
         try:
             # Returns a pandas DataFrame of DBs
-            wr.catalog.databases()
+            wr.catalog.databases(boto3_session=session)
             return ConnectorStatus(status=True, details=[(c, True) for c in checks], error=None)
         # aws-wrangler exceptions all inherit Exception directly:
         # https://github.com/awslabs/aws-data-wrangler/blob/main/awswrangler/exceptions.py
         except Exception as exc:
             try:
-                sts_client = self.get_session().client('sts')
+                sts_client = session.client('sts')
                 sts_client.get_caller_identity()
                 # We consider an authenticated client capable of
                 # connecting to AWS to be valid, even if sub-optimal
