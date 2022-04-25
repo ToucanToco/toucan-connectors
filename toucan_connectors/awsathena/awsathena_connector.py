@@ -123,14 +123,34 @@ class AwsathenaConnector(ToucanConnector):
         )
 
     def get_status(self) -> ConnectorStatus:
+        checks = [
+            'Host resolved',
+            'Port opened',
+            'Connected',
+            'Authenticated',
+            'Can list databases',
+        ]
         try:
-            # Because there is no way for us to ensure that
-            # AWSAthena connection is valid, so we just check that
-            # the AWS account exist but not we have read/w access to Athena
-            # nor S3_output_bucket exist
-            sts_client = self.get_session().client('sts')
-            sts_client.get_caller_identity()
-        except Exception as e:
-            return ConnectorStatus(status=False, details=[('Authenticated', False)], error=str(e))
-
-        return ConnectorStatus(status=True, details=[('Authenticated', True)], error=None)
+            # Returns a pandas DataFrame of DBs
+            wr.catalog.databases()
+            return ConnectorStatus(status=True, details=[(c, True) for c in checks], error=None)
+        # aws-wrangler exceptions all inherit Exception directly:
+        # https://github.com/awslabs/aws-data-wrangler/blob/main/awswrangler/exceptions.py
+        except Exception as exc:
+            try:
+                sts_client = self.get_session().client('sts')
+                sts_client.get_caller_identity()
+                # We consider an authenticated client capable of
+                # connecting to AWS to be valid, even if sub-optimal
+                return ConnectorStatus(
+                    status=True,
+                    details=[(c, i < 4) for (i, c) in enumerate(checks)],
+                    error=f'Cannot list databases: {exc}',
+                )
+            except Exception as sts_exc:
+                # Cannot list databases nor get identity
+                return ConnectorStatus(
+                    status=False,
+                    details=[(c, False) for c in checks],
+                    error=f'Cannot verify connection to Athena: {exc}, {sts_exc}',
+                )
