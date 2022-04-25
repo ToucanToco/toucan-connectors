@@ -14,7 +14,6 @@ extras_require = {
     'azure_mssql': ['pyodbc>=3'],
     'clickhouse': ['clickhouse_driver', 'sqlalchemy'],
     'dataiku': ['dataiku-api-client'],
-    'databricks': ['backoff'],
     'elasticsearch': ['elasticsearch<8'],
     'facebook': ['facebook-sdk'],
     'github': ['python_graphql_client'],
@@ -81,7 +80,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='3.3.0',
+    version='3.3.1',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',
