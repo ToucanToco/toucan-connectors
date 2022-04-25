@@ -16,5 +16,4 @@ wget 'https://public-package.toucantoco.com/connectors_sources/databricks/SimbaS
 unzip /tmp/databricks/simbaspark.zip -d /tmp/databricks
 dpkg -i /tmp/databricks/SimbaSparkODBC-2.6.4.1004-Debian-64bit/simbaspark_2.6.4.1004-2_amd64.deb
 rm -rf /tmp/databricks
-
 touch ~/databricks-installed

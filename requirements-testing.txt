@@ -25,3 +25,4 @@ lxml == 4.6.5
 zeep == 4.0.0
 mock == 4.0.3
 sqlalchemy == 1.4.31
+werkzeug

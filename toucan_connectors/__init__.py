@@ -45,10 +45,10 @@ CONNECTORS_REGISTRY = {
         'connector': 'dataiku.dataiku_connector.DataikuConnector',
         'logo': 'dataiku/dataiku.png',
     },
-    'DatabricksDeltaLake': {
-        'connector': 'azure_mssql.azure_mssql_connector.AzureMSSQLConnector',
-        'label': 'Databricks Delta Lake',
-        'logo': 'databricks_delta_lake/databricks.png',
+    'Databricks': {
+        'connector': 'databricks.databricks_connector.DatabricksConnector',
+        'label': 'Databricks',
+        'logo': 'databricks/databricks.png',
     },
     'Denodo': {
         'connector': 'postgres.postgresql_connector.PostgresConnector',
