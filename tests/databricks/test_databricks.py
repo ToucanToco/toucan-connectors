@@ -1,3 +1,5 @@
+from unittest.mock import call
+
 import pyodbc
 import pytest
 import responses
@@ -165,12 +167,18 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
             ('Authenticated', False),
         ],
     )
-    mocker.patch('pyodbc.connect')
+    mocked_connect = mocker.patch('pyodbc.connect')
     mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_port')
     mocker.patch(
         'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname'
     )
     assert databricks_connector.get_status() == CONNECTION_STATUS_OK
+    assert mocked_connect.call_args_list[0] == call(
+        'Driver=/opt/simba/spark/lib/64/libsparkodbc_sb64.so;'
+        'Host=127.0.0.1;Port=443;HTTPPath=foo/path;ThriftTransport=2;SSL=1;AuthMech=3;UID=token;PWD=12345',
+        autocommit=True,
+        ansi=False,
+    )
 
 
 @responses.activate
