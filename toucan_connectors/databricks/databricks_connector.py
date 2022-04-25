@@ -79,7 +79,7 @@ class DatabricksConnector(ToucanConnector):
         except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
         try:
-            pyodbc.connect(self._build_connection_string())
+            pyodbc.connect(self._build_connection_string(), autocommit=True, ansi=self.ansi)
         except pyodbc.InterfaceError as e:
             details = self._get_details(3, False)
             return ConnectorStatus(status=False, details=details, error=e.args[0])
