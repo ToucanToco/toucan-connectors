@@ -134,7 +134,7 @@ def test_get_df(connector):
             status=200,
             match=[
                 matchers.header_matcher(
-                    {"Accept": "application/json", "Authorization": "AnaplanAuthToken youpi"}
+                    {'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'}
                 )
             ],
             json=json.load(fixture_file),
@@ -142,32 +142,32 @@ def test_get_df(connector):
 
     df = connector.get_df(
         AnaplanDataSource(
-            name="anaplan_test_api",
-            domain="data_for_m1v1",
-            model_id="m1",
-            view_id="m1v1",
+            name='anaplan_test_api',
+            domain='data_for_m1v1',
+            model_id='m1',
+            view_id='m1v1',
         )
     )
 
     assert isinstance(df, pd.DataFrame)
     assert df.columns.to_list() == [
-        "Jan 13",
-        "Feb 13",
-        "Mar 13",
-        "Q1 FY13",
-        "Apr 13",
-        "May 13",
-        "Jun 13",
-        "Q2 FY13",
-        "H1 FY13",
-        "Jul 13",
-        "Aug 13",
-        "Sep 13",
-        "Q3 FY13",
-        "Oct 13",
-        "Nov 13",
-        "Dec 13",
-        "Q4 FY13",
-        "H2 FY13",
-        "FY13",
+        'Jan 13',
+        'Feb 13',
+        'Mar 13',
+        'Q1 FY13',
+        'Apr 13',
+        'May 13',
+        'Jun 13',
+        'Q2 FY13',
+        'H1 FY13',
+        'Jul 13',
+        'Aug 13',
+        'Sep 13',
+        'Q3 FY13',
+        'Oct 13',
+        'Nov 13',
+        'Dec 13',
+        'Q4 FY13',
+        'H2 FY13',
+        'FY13',
     ]
