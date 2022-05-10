@@ -1,8 +1,10 @@
 import ast
 import asyncio
 import dataclasses
+import datetime
 import logging
 import re
+from contextlib import suppress
 from copy import deepcopy
 from typing import Any, List, Optional, Tuple
 
@@ -356,6 +358,25 @@ def is_interpolating_table_name(query: str) -> bool:
     return table_name.startswith('%(')
 
 
+def infer_datetime_dtype(df: pd.DataFrame) -> None:
+    """
+    Even if a RDBMS table's column has type `date NOT NULL`,
+    we get a `object` dtype in the resulting pandas dataframe.
+    This util allows to automatically convert it to `datetime64[ns]`.
+    """
+    for colname in df:
+        if df[colname].dtype == 'object':
+            # get the first non-null value in the series.
+            # if it's a datetime, try to convert the whole serie to datetime dtype.
+            s = df[colname]
+            idx = s.first_valid_index()
+            if idx is not None:
+                first_value = s.loc[idx]
+                if isinstance(first_value, (datetime.datetime, datetime.date)):
+                    with suppress(Exception):
+                        df[colname] = pd.to_datetime(df[colname], errors='coerce')
+
+
 def pandas_read_sql(
     query: str,
     con,
@@ -384,4 +405,5 @@ def pandas_read_sql(
         else:
             raise
 
+    infer_datetime_dtype(df)
     return df

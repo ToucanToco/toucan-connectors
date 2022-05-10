@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
+import numpy as np
 import pandas as pd
 import pytest
 from aiohttp import web
@@ -15,6 +16,7 @@ from toucan_connectors.common import (
     extract_table_name,
     fetch,
     get_param_name,
+    infer_datetime_dtype,
     is_interpolating_table_name,
     nosql_apply_parameters_to_query,
     pandas_read_sql,
@@ -383,6 +385,15 @@ def test_extract_table_name():
 def test_is_interpolating_table_name():
     assert is_interpolating_table_name('select * from mytable;') is False
     assert is_interpolating_table_name('SELECT * FROM %(plop)s WHERE age > 21;')
+
+
+def test_infer_datetime_dtype():
+    data = [np.nan, None, datetime(2022, 1, 1, 12, 34, 56), date(2022, 1, 1)]
+    df = pd.DataFrame({'date': data}, dtype='object')
+    assert df.date.dtype == 'object'
+    infer_datetime_dtype(df)
+    assert df.date.dtype == 'datetime64[ns]'
+    assert list(df.date.dt.year.dropna()) == [2022.0, 2022.0]
 
 
 def test_pandas_read_sql_forbidden_interpolation(mocker: MockFixture):
