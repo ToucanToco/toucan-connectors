@@ -79,22 +79,29 @@ class AnaplanConnector(ToucanConnector):
         # Columns can have several levels, we flatten them with the "/" separator
         return pd.DataFrame(columns=["/".join(col) for col in data["columnCoordinates"]])
 
+    def _extract_json(self, resp: requests.Response) -> dict:
+        if resp.status_code in (401, 403):
+            raise AnaplanAuthError(
+                f'Invalid credentials for {self.username}: got HTTP status {resp.status_code}'
+            )
+        try:
+            return resp.json()
+        except requests.RequestException as exc:  # pragma: no cover
+            raise AnaplanError(f'Encountered error while executing request: {exc}') from exc
+        except json.JSONDecodeError as exc:
+            raise AnaplanError(f'could not parse response body as json: {resp.text}') from exc
+
     def _fetch_token(self) -> str:
         try:
             # FIXME: use a session
-            resp = requests.post(_ANAPLAN_AUTH_ROUTE, auth=(self.username, self.password))
-            if resp.status_code in (401, 403):
-                raise AnaplanAuthError(
-                    f'Invalid credentials for {self.username}: got HTTP status {resp.status_code}'
-                )
-            body = resp.json()
+            body = self._extract_json(
+                requests.post(_ANAPLAN_AUTH_ROUTE, auth=(self.username, self.password))
+            )
             return body['tokenInfo']['tokenValue']
-        except requests.RequestException as exc:  # pragma: no cover
-            raise AnaplanAuthError(f'Encountered error while fetching token: {exc}') from exc
-        except json.JSONDecodeError as exc:
-            raise AnaplanAuthError(f'could not parse response body as json: {resp.text}') from exc
+        except AnaplanError as exc:
+            raise AnaplanAuthError(f'encountered error while retrieving auth token: {exc}') from exc
         except KeyError as key:
-            raise AnaplanAuthError(f'did not find expected key {key} in response body:  {body}')
+            raise AnaplanAuthError(f'did not find expected key {key} in response body: {body}')
 
     def get_status(self) -> ConnectorStatus:
         try:
@@ -105,20 +112,30 @@ class AnaplanConnector(ToucanConnector):
 
     def get_available_models(self) -> List[Dict[str, str]]:
         token = self._fetch_token()
-        resp = requests.get(
-            f'{_ANAPLAN_API_BASEROUTE}/models',
-            headers={'Accept': 'application/json', 'Authorization': f'AnaplanAuthToken {token}'},
+        body = self._extract_json(
+            requests.get(
+                f'{_ANAPLAN_API_BASEROUTE}/models',
+                headers={
+                    'Accept': 'application/json',
+                    'Authorization': f'AnaplanAuthToken {token}',
+                },
+            )
         )
-        # TODO: Add same checks as in _fetch_token()
-        body = resp.json()
-        return body['models']
+        # TODO: We should also check the pagination here to see if the
+        # key is expected to be missing
+        return body.get('models', [])
 
     def get_available_views(self, model_id: str) -> List[Dict[str, str]]:
         token = self._fetch_token()
-        resp = requests.get(
-            f'{_ANAPLAN_API_BASEROUTE}/models/{model_id}/views',
-            headers={'Accept': 'application/json', 'Authorization': f'AnaplanAuthToken {token}'},
+        body = self._extract_json(
+            requests.get(
+                f'{_ANAPLAN_API_BASEROUTE}/models/{model_id}/views',
+                headers={
+                    'Accept': 'application/json',
+                    'Authorization': f'AnaplanAuthToken {token}',
+                },
+            )
         )
-        # TODO: Add same checks as in _fetch_token()
-        body = resp.json()
-        return body['views']
+        # TODO: We should also check the pagination here to see if the
+        # key is expected to be missing
+        return body.get('views', [])
