@@ -143,10 +143,7 @@ class GoogleBigQueryConnector(ToucanConnector):
         for param_name, param_value in (parameters or {}).items():
             if query.find('@' + param_name) > -1:
                 # set all parameters with a type defined and necessary for Big Query
-                query_parameters.append(
-                    _define_query_param(param_name, param_value)
-                    # bigquery.ScalarQueryParameter(k, _define_type(parameters[k]), parameters[k])
-                )
+                query_parameters.append(_define_query_param(param_name, param_value))
         return query_parameters
 
     @staticmethod
