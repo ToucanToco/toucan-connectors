@@ -1,16 +1,17 @@
+from unittest.mock import patch
+
 import pandas
 import pytest
-from google.cloud.bigquery import Client, ScalarQueryParameter
+from google.cloud.bigquery import ArrayQueryParameter, Client, ScalarQueryParameter
 from google.cloud.bigquery.job.query import QueryJob
 from google.cloud.bigquery.table import RowIterator
 from google.oauth2.service_account import Credentials
-from mock import patch
 from pandas.util.testing import assert_frame_equal  # <-- for testing dataframes
 
 from toucan_connectors.google_big_query.google_big_query_connector import (
     GoogleBigQueryConnector,
     GoogleBigQueryDataSource,
-    _define_type,
+    _define_query_param,
 )
 from toucan_connectors.google_credentials import GoogleCredentials
 
@@ -41,12 +42,22 @@ def _fixture_scope():
     return scopes
 
 
-def test__define_type():
-    assert 'STRING' == _define_type('test')
-    assert 'NUMERIC' == _define_type(0)
-    assert 'FLOAT64' == _define_type(0.0)
-    assert 'BOOL' == _define_type(True)
-    assert 'STRING' == _define_type(['test'])
+@pytest.mark.parametrize(
+    'input_value,expected_output',
+    [
+        ('test', ScalarQueryParameter('test_param', 'STRING', 'test')),
+        (0, ScalarQueryParameter('test_param', 'NUMERIC', 0)),
+        (0.0, ScalarQueryParameter('test_param', 'FLOAT64', 0.0)),
+        (True, ScalarQueryParameter('test_param', 'BOOL', True)),
+        ([], ArrayQueryParameter('test_param', 'STRING', [])),
+        (['hi'], ArrayQueryParameter('test_param', 'STRING', ['hi'])),
+        ([0], ArrayQueryParameter('test_param', 'NUMERIC', [0])),
+        ([0.0, 2], ArrayQueryParameter('test_param', 'FLOAT64', [0.0, 2])),
+        ([True, False], ArrayQueryParameter('test_param', 'BOOL', [True, False])),
+    ],
+)
+def test__define_query_param(input_value, expected_output):
+    assert _define_query_param('test_param', input_value) == expected_output
 
 
 def test_prepare_query():
