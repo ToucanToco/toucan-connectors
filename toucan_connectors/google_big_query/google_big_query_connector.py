@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 import pandas
 import pandas as pd
 from google.cloud import bigquery
+from google.cloud.bigquery.dbapi import _helpers as bigquery_helpers
 from google.oauth2.service_account import Credentials
 from pydantic import Field
 
@@ -30,34 +31,16 @@ class GoogleBigQueryDataSource(ToucanDataSource):
 BigQueryParam = Union[bigquery.ScalarQueryParameter, bigquery.ArrayQueryParameter]
 
 
-# NOTE: This does not play nicely with dates. They're a bit tricky
-# though, as we'd have to try and parse dates from strings to
-# determine if something is a date or not. Until then, we can just
-# use a cast. eg: SELECT * FROM table WHERE STRING(date_col) IN UNNEST({{my_dates}})
-def _define_scalar_type(value: Any) -> str:
-    if isinstance(value, bool):
-        return 'BOOL'
-    elif isinstance(value, int):
-        return 'NUMERIC'
-    elif isinstance(value, float):
-        return 'FLOAT64'
-    elif isinstance(value, str):
-        return 'STRING'
-    # TODO - check bad return type
-    return 'STRING'
-
-
-def _define_array_type(name: str, values: List[Any]) -> BigQueryParam:
-    return bigquery.ArrayQueryParameter(
-        name, _define_scalar_type(values[0] if len(values) > 0 else ''), values
-    )
-
-
 def _define_query_param(name: str, value: Any) -> BigQueryParam:
     if isinstance(value, list):
-        return _define_array_type(name, value)
+        return (
+            bigquery_helpers.array_to_query_parameter(value=value, name=name)
+            if len(value) > 0
+            # array_to_query_parameter raises an exception in case of an empty list
+            else bigquery.ArrayQueryParameter(name=name, array_type='STRING', values=value)
+        )
     else:
-        return bigquery.ScalarQueryParameter(name, _define_scalar_type(value), value)
+        return bigquery_helpers.scalar_to_query_parameter(value=value, name=name)
 
 
 class GoogleBigQueryConnector(ToucanConnector):
