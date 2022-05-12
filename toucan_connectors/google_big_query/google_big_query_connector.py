@@ -1,7 +1,7 @@
 import logging
 from enum import Enum
 from timeit import default_timer as timer
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import pandas
 import pandas as pd
@@ -27,8 +27,14 @@ class GoogleBigQueryDataSource(ToucanDataSource):
     )
 
 
-# TODO - check bad return type
-def _define_type(value) -> str:
+BigQueryParam = Union[bigquery.ScalarQueryParameter, bigquery.ArrayQueryParameter]
+
+
+# NOTE: This does not play nicely with dates. They're a bit tricky
+# though, as we'd have to try and parse dates from strings to
+# determine if something is a date or not. Until then, we can just
+# use a cast. eg: SELECT * FROM table WHERE STRING(date_col) IN UNNEST({{my_dates}})
+def _define_scalar_type(value: Any) -> str:
     if isinstance(value, bool):
         return 'BOOL'
     elif isinstance(value, int):
@@ -37,8 +43,21 @@ def _define_type(value) -> str:
         return 'FLOAT64'
     elif isinstance(value, str):
         return 'STRING'
+    # TODO - check bad return type
+    return 'STRING'
+
+
+def _define_array_type(name: str, values: List[Any]) -> BigQueryParam:
+    return bigquery.ArrayQueryParameter(
+        name, _define_scalar_type(values[0] if len(values) > 0 else ''), values
+    )
+
+
+def _define_query_param(name: str, value: Any) -> BigQueryParam:
+    if isinstance(value, list):
+        return _define_array_type(name, value)
     else:
-        return 'STRING'
+        return bigquery.ScalarQueryParameter(name, _define_scalar_type(value), value)
 
 
 class GoogleBigQueryConnector(ToucanConnector):
@@ -119,14 +138,12 @@ class GoogleBigQueryConnector(ToucanConnector):
 
     @staticmethod
     def _prepare_parameters(query: str, parameters: Optional[Dict]) -> List:
+        """replace ToucanToco variable definitions by Google Big Query variable definition"""
         query_parameters = []
-        """replace ToucanToco variable definition by Google Big Query variable definition"""
-        for k in parameters or {}:
-            if query.find('@' + k) > -1:
+        for param_name, param_value in (parameters or {}).items():
+            if query.find('@' + param_name) > -1:
                 # set all parameters with a type defined and necessary for Big Query
-                query_parameters.append(
-                    bigquery.ScalarQueryParameter(k, _define_type(parameters[k]), parameters[k])
-                )
+                query_parameters.append(_define_query_param(param_name, param_value))
         return query_parameters
 
     @staticmethod
