@@ -101,6 +101,7 @@ class GoogleBigQueryConnector(ToucanConnector):
                 .result()
                 .to_dataframe(
                     create_bqstorage_client=True,
+                    date_as_object=False,  # so date columns get dtype 'datetime64[ns]' instead of 'object'
                 )  # Use to generate directly a dataframe pandas
             )
             end = timer()
