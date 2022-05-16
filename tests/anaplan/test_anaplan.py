@@ -33,6 +33,7 @@ def datasource() -> AnaplanDataSource:
         workspace_id='w1',
     )
 
+
 @responses.activate
 def test_get_status_expect_auth_ok(connector):
     responses.add(
