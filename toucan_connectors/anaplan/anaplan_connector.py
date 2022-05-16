@@ -5,6 +5,7 @@ from typing import Any, Dict, List
 import pandas as pd
 import requests
 from pydantic import Field, constr, create_model
+from pydantic.types import SecretStr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
@@ -63,7 +64,7 @@ _ANAPLAN_API_BASEROUTE = 'https://api.anaplan.com/2/0'
 class AnaplanConnector(ToucanConnector):
     data_source_model: AnaplanDataSource
     username: str
-    password: str
+    password: SecretStr
 
     def _extract_json(self, resp: requests.Response) -> dict:
         if resp.status_code in (401, 403):
@@ -107,7 +108,9 @@ class AnaplanConnector(ToucanConnector):
         try:
             # FIXME: use a session
             body = self._extract_json(
-                requests.post(_ANAPLAN_AUTH_ROUTE, auth=(self.username, self.password))
+                requests.post(
+                    _ANAPLAN_AUTH_ROUTE, auth=(self.username, self.password.get_secret_value())
+                )
             )
         except AnaplanError as exc:
             raise AnaplanAuthError(f'encountered error while retrieving auth token: {exc}') from exc
