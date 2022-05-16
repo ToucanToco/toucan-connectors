@@ -16,7 +16,6 @@ _ID_SEPARATOR = ' - '
 
 def _sanitize_id(id_: str) -> str:
     return id_.split(_ID_SEPARATOR)[0]
-    # return ''.join(id_.split(_ID_SEPARATOR)[1:]) if _ID_SEPARATOR in id_ else id_
 
 
 def _format_name_and_id(obj: Dict[str, str]) -> str:
@@ -51,16 +50,12 @@ class AnaplanDataSource(ToucanDataSource):
             token = connector.fetch_token()
             available_workspaces = connector.get_available_workspaces(token=token)
             constraints['workspace_id'] = strlist_to_enum(
-                'workspace_id',
-                [_format_name_and_id(w) for w in available_workspaces]
+                'workspace_id', [_format_name_and_id(w) for w in available_workspaces]
             )
 
             if 'workspace_id' in current_config:
                 workspace_id = _sanitize_id(current_config['workspace_id'])
-                available_models = connector.get_available_models(
-                    workspace_id,
-                    token=token
-                )
+                available_models = connector.get_available_models(workspace_id, token=token)
                 constraints['model_id'] = strlist_to_enum(
                     'model_id',
                     [_format_name_and_id(m) for m in available_models],
@@ -68,9 +63,7 @@ class AnaplanDataSource(ToucanDataSource):
 
                 if 'model_id' in current_config:
                     available_views = connector.get_available_views(
-                        workspace_id,
-                        _sanitize_id(current_config['model_id']),
-                        token=token
+                        workspace_id, _sanitize_id(current_config['model_id']), token=token
                     )
                     constraints['view_id'] = strlist_to_enum(
                         'view_id', [_format_name_and_id(v) for v in available_views]
@@ -127,11 +120,12 @@ class AnaplanConnector(ToucanConnector):
 
         try:
             # Columns can have several levels, we flatten them with the "/" separator
-            df_columns = ['/'.join(col) for col in data['columnCoordinates']]
+            df_columns = ['index'] + ['/'.join(col) for col in data['columnCoordinates']]
             # No MultiIndex for now
-            idx = ('/'.join(row['rowCoordinates']) for row in data.get('rows', []))
-            data = (row['cells'] for row in data.get('rows', []))
-            return pd.DataFrame(columns=df_columns, index=idx, data=data)
+            data = (
+                ['/'.join(row['rowCoordinates'])] + row['cells'] for row in data.get('rows', [])
+            )
+            return pd.DataFrame(columns=df_columns, data=data)
         except KeyError as exc:
             raise AnaplanError(f'Did not find expected key {exc} in response body')
 

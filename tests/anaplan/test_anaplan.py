@@ -123,7 +123,6 @@ def test_get_form(connector):
         connector, {'model_id': 'm1', 'workspace_id': 'w1 - Workspace One'}
     )
 
-    breakpoint()
     # Ensure we've only requested a token once
     responses.assert_call_count('https://auth.anaplan.com/token/authenticate', 1)
     assert form_schema['definitions']['workspace_id']['enum'] == ['w1 - Workspace One']
@@ -168,8 +167,9 @@ def test_get_df(connector):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert df.index.to_list() == ['Durham', 'Newcastle upon Tyne', 'Sunderland']
+    assert df['index'].to_list() == ['Durham', 'Newcastle upon Tyne', 'Sunderland']
     assert df.columns.to_list() == [
+        'index',
         'Jan 13',
         'Feb 13',
         'Mar 13',
