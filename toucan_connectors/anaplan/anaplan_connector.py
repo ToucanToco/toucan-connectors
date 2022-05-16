@@ -3,6 +3,7 @@ import json
 from typing import Any, Dict, List
 
 import pandas as pd
+import pydantic
 import requests
 from pydantic import Field, constr, create_model
 from pydantic.types import SecretStr
@@ -10,11 +11,26 @@ from pydantic.types import SecretStr
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 
+_ID_SEPARATOR = ' - '
+
+
+def _sanitize_id(id_: str) -> str:
+    return id_.split(_ID_SEPARATOR)[0]
+    # return ''.join(id_.split(_ID_SEPARATOR)[1:]) if _ID_SEPARATOR in id_ else id_
+
+
+def _format_name_and_id(obj: Dict[str, str]) -> str:
+    return f"{obj['id']}{_ID_SEPARATOR}{obj['name']}"
+
 
 class AnaplanDataSource(ToucanDataSource):
     model_id: constr(min_length=1) = Field(..., description='The model you want to query')
     view_id: constr(min_length=1) = Field(..., description='The view you want to query')
     workspace_id: str = Field(..., description='The ID of the workspace you want to query')
+
+    @pydantic.validator('model_id', 'view_id', 'workspace_id')
+    def _sanitize_id(cls, value: str) -> str:
+        return _sanitize_id(value)
 
     @classmethod
     def get_form(
@@ -23,7 +39,7 @@ class AnaplanDataSource(ToucanDataSource):
         current_config: Dict[str, str],
     ) -> Dict[str, Any]:
         """
-        Retrieve a form with suggestions of available Models and Views.
+        Retrieves a form with suggestions of available Models and Views.
 
         Once the connector is configured, we can give suggestions for the `model` field.
         If `model` is set, we can give suggestions for the `view` field.
@@ -35,24 +51,30 @@ class AnaplanDataSource(ToucanDataSource):
             token = connector.fetch_token()
             available_workspaces = connector.get_available_workspaces(token=token)
             constraints['workspace_id'] = strlist_to_enum(
-                'workspace_id', [w['id'] for w in available_workspaces]
+                'workspace_id',
+                [_format_name_and_id(w) for w in available_workspaces]
             )
 
             if 'workspace_id' in current_config:
+                workspace_id = _sanitize_id(current_config['workspace_id'])
                 available_models = connector.get_available_models(
-                    current_config['workspace_id'], token=token
+                    workspace_id,
+                    token=token
                 )
                 constraints['model_id'] = strlist_to_enum(
-                    'model_id', [m['id'] for m in available_models]
+                    'model_id',
+                    [_format_name_and_id(m) for m in available_models],
                 )
 
-            if 'model_id' in current_config:
-                available_views = connector.get_available_views(
-                    current_config['workspace_id'], current_config['model_id'], token=token
-                )
-                constraints['view_id'] = strlist_to_enum(
-                    'view_id', [v['id'] for v in available_views]
-                )
+                if 'model_id' in current_config:
+                    available_views = connector.get_available_views(
+                        workspace_id,
+                        _sanitize_id(current_config['model_id']),
+                        token=token
+                    )
+                    constraints['view_id'] = strlist_to_enum(
+                        'view_id', [_format_name_and_id(v) for v in available_views]
+                    )
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 

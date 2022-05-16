@@ -77,7 +77,9 @@ def test_get_form(connector):
         json={
             'meta': {},
             'status': {},
-            'workspaces': [{'id': 'w1', 'active': True, 'name': 'ModelOne', 'sizeAllowance': 1234}],
+            'workspaces': [
+                {'id': 'w1', 'active': True, 'name': 'Workspace One', 'sizeAllowance': 1234}
+            ],
         },
     )
 
@@ -96,7 +98,7 @@ def test_get_form(connector):
                 {
                     'id': 'm1',
                     'activeState': 'UNLOCKED',
-                    'name': 'ModelOne',
+                    'name': 'Model One',
                     'currentWorkspaceId': 'w1',
                     'currentWorkspaceName': 'NiceWorkspace',
                     'categoryValues': [],
@@ -111,19 +113,22 @@ def test_get_form(connector):
         status=200,
         json={
             'views': [
-                {'name': 'ViewOne', 'id': 'm1v1'},
-                {'name': 'ViewTwo', 'id': 'm1v2'},
+                {'name': 'View One', 'id': 'm1v1'},
+                {'name': 'View Two', 'id': 'm1v2'},
             ]
         },
     )
 
-    form_schema = AnaplanDataSource.get_form(connector, {'model_id': 'm1', 'workspace_id': 'w1'})
+    form_schema = AnaplanDataSource.get_form(
+        connector, {'model_id': 'm1', 'workspace_id': 'w1 - Workspace One'}
+    )
 
+    breakpoint()
     # Ensure we've only requested a token once
     responses.assert_call_count('https://auth.anaplan.com/token/authenticate', 1)
-    assert form_schema['definitions']['workspace_id']['enum'] == ['w1']
-    assert form_schema['definitions']['model_id']['enum'] == ['m1']
-    assert form_schema['definitions']['view_id']['enum'] == ['m1v1', 'm1v2']
+    assert form_schema['definitions']['workspace_id']['enum'] == ['w1 - Workspace One']
+    assert form_schema['definitions']['model_id']['enum'] == ['m1 - Model One']
+    assert form_schema['definitions']['view_id']['enum'] == ['m1v1 - View One', 'm1v2 - View Two']
 
 
 @responses.activate
