@@ -16,6 +16,11 @@ CONNECTORS_REGISTRY = {
         'connector': 'aircall.aircall_connector.AircallConnector',
         'logo': 'aircall/Aircall.svg',
     },
+    'Anaplan': {
+        'connector': 'anaplan.anaplan_connector.AnaplanConnector',
+        'label': 'Anaplan',
+        'logo': 'anaplan/anaplan.png',
+    },
     'AWSAthena': {
         'connector': 'awsathena.awsathena_connector.AwsathenaConnector',
         'label': 'Amazon Athena',
