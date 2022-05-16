@@ -6,7 +6,11 @@ import pytest
 import responses
 from responses import matchers
 
-from toucan_connectors.anaplan.anaplan_connector import AnaplanConnector, AnaplanDataSource
+from toucan_connectors.anaplan.anaplan_connector import (
+    AnaplanConnector,
+    AnaplanDataSource,
+    AnaplanError,
+)
 
 
 @pytest.fixture()
@@ -18,6 +22,16 @@ def anaplan_auth_response() -> dict:
 def connector() -> AnaplanConnector:
     return AnaplanConnector(username='JohnDoe', password='s3cr3t', name="John's connector")
 
+
+@pytest.fixture
+def datasource() -> AnaplanDataSource:
+    return AnaplanDataSource(
+        name='anaplan_test_api',
+        domain='data_for_m1v1',
+        model_id='m1',
+        view_id='m1v1',
+        workspace_id='w1',
+    )
 
 @responses.activate
 def test_get_status_expect_auth_ok(connector):
@@ -131,7 +145,7 @@ def test_get_form(connector):
 
 
 @responses.activate
-def test_get_df(connector):
+def test_get_df(connector, datasource):
     responses.add(
         responses.POST,
         'https://auth.anaplan.com/token/authenticate',
@@ -156,15 +170,7 @@ def test_get_df(connector):
             json=json.load(fixture_file),
         )
 
-    df = connector.get_df(
-        AnaplanDataSource(
-            name='anaplan_test_api',
-            domain='data_for_m1v1',
-            model_id='m1',
-            view_id='m1v1',
-            workspace_id='w1',
-        )
-    )
+    df = connector.get_df(datasource)
 
     assert isinstance(df, pd.DataFrame)
     assert df['index'].to_list() == ['Durham', 'Newcastle upon Tyne', 'Sunderland']
@@ -190,3 +196,53 @@ def test_get_df(connector):
         'H2 FY13',
         'FY13',
     ]
+
+
+@responses.activate
+def test_get_df_invalid_json(connector, datasource):
+    responses.add(
+        responses.POST,
+        'https://auth.anaplan.com/token/authenticate',
+        json={'tokenInfo': {'tokenValue': 'youpi'}},
+        status=200,
+    )
+    responses.add(
+        responses.GET,
+        'https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1',
+        status=200,
+        match=[
+            matchers.header_matcher(
+                {'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'}
+            )
+        ],
+        body='notvalidjson',
+    )
+
+    with pytest.raises(AnaplanError):
+        connector.get_df(datasource)
+
+
+@responses.activate
+def test_get_df_keyerror(connector, datasource):
+    responses.add(
+        responses.POST,
+        'https://auth.anaplan.com/token/authenticate',
+        json={'tokenInfo': {'tokenValue': 'youpi'}},
+        status=200,
+    )
+    responses.add(
+        responses.GET,
+        'https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1',
+        status=200,
+        match=[
+            matchers.header_matcher(
+                {'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'}
+            )
+        ],
+        json={},
+    )
+
+    with pytest.raises(
+        AnaplanError, match="Did not find expected key 'columnCoordinates' in response body"
+    ):
+        connector.get_df(datasource)

@@ -1,5 +1,4 @@
 import contextlib
-import json
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -97,10 +96,9 @@ class AnaplanConnector(ToucanConnector):
             )
         try:
             return resp.json()
-        except requests.RequestException as exc:  # pragma: no cover
+        # JSONDecodeError is already managed by requests
+        except requests.RequestException as exc:
             raise AnaplanError(f'Encountered error while executing request: {exc}') from exc
-        except json.JSONDecodeError as exc:
-            raise AnaplanError(f'could not parse response body as json: {resp.text}') from exc
 
     def _http_get(self, url: str, **kwargs) -> requests.Response:
         token = kwargs.pop('token', None) or self.fetch_token()
