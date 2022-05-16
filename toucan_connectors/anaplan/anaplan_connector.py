@@ -31,18 +31,27 @@ class AnaplanDataSource(ToucanDataSource):
 
         constraints = {}
         with contextlib.suppress(AnaplanError, KeyError):
-            available_models = connector.get_available_models(current_config['workspace_id'])
-            # TODO: Make it possible to pick models and views by name at some point
-            constraints['model_id'] = strlist_to_enum(
-                'model_id', [m['id'] for m in available_models]
+
+            token = connector.fetch_token()
+            available_workspaces = connector.get_available_workspaces(token=token)
+            constraints['workspace_id'] = strlist_to_enum(
+                'workspace_id', [w['id'] for w in available_workspaces]
             )
+
+            if 'workspace_id' in current_config:
+                available_models = connector.get_available_models(
+                    current_config['workspace_id'], token=token
+                )
+                constraints['model_id'] = strlist_to_enum(
+                    'model_id', [m['id'] for m in available_models]
+                )
 
             if 'model_id' in current_config:
                 available_views = connector.get_available_views(
-                    current_config['workspace_id'], current_config['model_id']
+                    current_config['workspace_id'], current_config['model_id'], token=token
                 )
                 constraints['view_id'] = strlist_to_enum(
-                    'view_id', [v['id'] for v in available_views], default_value=None
+                    'view_id', [v['id'] for v in available_views]
                 )
 
         return create_model('FormSchema', **constraints, __base__=cls).schema()
@@ -79,7 +88,7 @@ class AnaplanConnector(ToucanConnector):
             raise AnaplanError(f'could not parse response body as json: {resp.text}') from exc
 
     def _http_get(self, url: str, **kwargs) -> requests.Response:
-        token = kwargs.pop('token', None) or self._fetch_token()
+        token = kwargs.pop('token', None) or self.fetch_token()
         headers = {
             **kwargs.pop('headers', {}),
             'Accept': 'application/json',
@@ -104,7 +113,7 @@ class AnaplanConnector(ToucanConnector):
         except KeyError as exc:
             raise AnaplanError(f'Did not find expected key {exc} in response body')
 
-    def _fetch_token(self) -> str:
+    def fetch_token(self) -> str:
         try:
             # FIXME: use a session
             body = self._extract_json(
@@ -121,25 +130,32 @@ class AnaplanConnector(ToucanConnector):
 
     def get_status(self) -> ConnectorStatus:
         try:
-            self._fetch_token()
+            self.fetch_token()
             return ConnectorStatus(status=True, message=f'connected as {self.username}')
         except AnaplanAuthError as exc:
             return ConnectorStatus(status=False, error=f'could not retrieve token: {exc}')
 
-    def get_available_workspaces(self) -> List[Dict[str, str]]:
-        body = self._extract_json(self._http_get(f'{_ANAPLAN_API_BASEROUTE}/models'))
+    def get_available_workspaces(self, token: str) -> List[Dict[str, str]]:
+        body = self._extract_json(
+            self._http_get(f'{_ANAPLAN_API_BASEROUTE}/workspaces', token=token)
+        )
         return body.get('workspaces', [])
 
-    def get_available_models(self, workspace_id: str) -> List[Dict[str, str]]:
+    def get_available_models(self, workspace_id: str, *, token: str) -> List[Dict[str, str]]:
         body = self._extract_json(
-            self._http_get(f'{_ANAPLAN_API_BASEROUTE}/workspaces/{workspace_id}/models')
+            self._http_get(
+                f'{_ANAPLAN_API_BASEROUTE}/workspaces/{workspace_id}/models', token=token
+            )
         )
         return body.get('models', [])
 
-    def get_available_views(self, workspace_id: str, model_id: str) -> List[Dict[str, str]]:
+    def get_available_views(
+        self, workspace_id: str, model_id: str, *, token: str
+    ) -> List[Dict[str, str]]:
         body = self._extract_json(
             self._http_get(
-                f'{_ANAPLAN_API_BASEROUTE}/workspaces/{workspace_id}/models/{model_id}/views'
+                f'{_ANAPLAN_API_BASEROUTE}/workspaces/{workspace_id}/models/{model_id}/views',
+                token=token,
             )
         )
         return body.get('views', [])

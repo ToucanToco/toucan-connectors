@@ -72,6 +72,17 @@ def test_get_form(connector):
 
     responses.add(
         responses.GET,
+        'https://api.anaplan.com/2/0/workspaces',
+        status=200,
+        json={
+            'meta': {},
+            'status': {},
+            'workspaces': [{'id': 'w1', 'active': True, 'name': 'ModelOne', 'sizeAllowance': 1234}],
+        },
+    )
+
+    responses.add(
+        responses.GET,
         'https://api.anaplan.com/2/0/workspaces/w1/models',
         status=200,
         json={
@@ -108,6 +119,9 @@ def test_get_form(connector):
 
     form_schema = AnaplanDataSource.get_form(connector, {'model_id': 'm1', 'workspace_id': 'w1'})
 
+    # Ensure we've only requested a token once
+    responses.assert_call_count('https://auth.anaplan.com/token/authenticate', 1)
+    assert form_schema['definitions']['workspace_id']['enum'] == ['w1']
     assert form_schema['definitions']['model_id']['enum'] == ['m1']
     assert form_schema['definitions']['view_id']['enum'] == ['m1v1', 'm1v2']
 
@@ -149,6 +163,7 @@ def test_get_df(connector):
     )
 
     assert isinstance(df, pd.DataFrame)
+    assert df.index.to_list() == ['Durham', 'Newcastle upon Tyne', 'Sunderland']
     assert df.columns.to_list() == [
         'Jan 13',
         'Feb 13',
