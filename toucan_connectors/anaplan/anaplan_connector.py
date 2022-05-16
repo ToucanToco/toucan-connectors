@@ -1,6 +1,6 @@
 import contextlib
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import pydantic
@@ -88,7 +88,7 @@ _ANAPLAN_API_BASEROUTE = 'https://api.anaplan.com/2/0'
 class AnaplanConnector(ToucanConnector):
     data_source_model: AnaplanDataSource
     username: str
-    password: SecretStr
+    password: Optional[SecretStr]
 
     def _extract_json(self, resp: requests.Response) -> dict:
         if resp.status_code in (401, 403):
@@ -134,7 +134,8 @@ class AnaplanConnector(ToucanConnector):
             # FIXME: use a session
             body = self._extract_json(
                 requests.post(
-                    _ANAPLAN_AUTH_ROUTE, auth=(self.username, self.password.get_secret_value())
+                    _ANAPLAN_AUTH_ROUTE,
+                    auth=(self.username, self.password.get_secret_value() if self.password else ''),
                 )
             )
         except AnaplanError as exc:
