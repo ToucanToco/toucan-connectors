@@ -65,21 +65,6 @@ class AnaplanConnector(ToucanConnector):
     username: str
     password: str
 
-    def _retrieve_data(self, data_source: AnaplanDataSource) -> pd.DataFrame:
-        response = requests.get(
-            f'{_ANAPLAN_API_BASEROUTE}/models/{data_source.model_id}/views/{data_source.view_id}/data?format=v1',
-            headers={
-                'Accept': 'application/json',
-                'Authorization': f'AnaplanAuthToken {self._fetch_token()}',
-            },
-        )
-        data = response.json()
-
-        # TODO handle row index
-        # TODO handle row data
-        # Columns can have several levels, we flatten them with the "/" separator
-        return pd.DataFrame(columns=['/'.join(col) for col in data['columnCoordinates']])
-
     def _extract_json(self, resp: requests.Response) -> dict:
         if resp.status_code in (401, 403):
             raise AnaplanAuthError(
@@ -92,15 +77,42 @@ class AnaplanConnector(ToucanConnector):
         except json.JSONDecodeError as exc:
             raise AnaplanError(f'could not parse response body as json: {resp.text}') from exc
 
+    def _http_get(self, url: str, **kwargs) -> requests.Response:
+        token = kwargs.pop('token', None) or self._fetch_token()
+        headers = {
+            **kwargs.pop('headers', {}),
+            'Accept': 'application/json',
+            'Authorization': f'AnaplanAuthToken {token}',
+        }
+        return requests.get(url, headers=headers, **kwargs)
+
+    def _retrieve_data(self, data_source: AnaplanDataSource) -> pd.DataFrame:
+        data = self._extract_json(
+            self._http_get(
+                f'{_ANAPLAN_API_BASEROUTE}/models/{data_source.model_id}/views/{data_source.view_id}/data?format=v1'
+            )
+        )
+
+        try:
+            # Columns can have several levels, we flatten them with the "/" separator
+            df_columns = ['/'.join(col) for col in data['columnCoordinates']]
+            # No MultiIndex for now
+            idx = ('/'.join(row['rowCoordinates']) for row in data.get('rows', []))
+            data = (row['cells'] for row in data.get('rows', []))
+            return pd.DataFrame(columns=df_columns, index=idx, data=data)
+        except KeyError as exc:
+            raise AnaplanError(f'Did not find expected key {exc} in response body')
+
     def _fetch_token(self) -> str:
         try:
             # FIXME: use a session
             body = self._extract_json(
                 requests.post(_ANAPLAN_AUTH_ROUTE, auth=(self.username, self.password))
             )
-            return body['tokenInfo']['tokenValue']
         except AnaplanError as exc:
             raise AnaplanAuthError(f'encountered error while retrieving auth token: {exc}') from exc
+        try:
+            return body['tokenInfo']['tokenValue']
         except KeyError as key:
             raise AnaplanAuthError(f'did not find expected key {key} in response body: {body}')
 
@@ -111,32 +123,20 @@ class AnaplanConnector(ToucanConnector):
         except AnaplanAuthError as exc:
             return ConnectorStatus(status=False, error=f'could not retrieve token: {exc}')
 
-    def get_available_models(self) -> List[Dict[str, str]]:
-        token = self._fetch_token()
+    def get_available_workspaces(self) -> List[Dict[str, str]]:
+        body = self._extract_json(self._http_get(f'{_ANAPLAN_API_BASEROUTE}/models'))
+        return body.get('workspaces', [])
+
+    def get_available_models(self, workspace_id: str) -> List[Dict[str, str]]:
         body = self._extract_json(
-            requests.get(
-                f'{_ANAPLAN_API_BASEROUTE}/models',
-                headers={
-                    'Accept': 'application/json',
-                    'Authorization': f'AnaplanAuthToken {token}',
-                },
-            )
+            self._http_get(f'{_ANAPLAN_API_BASEROUTE}/workspaces/{workspace_id}/models')
         )
-        # TODO: We should also check the pagination here to see if the
-        # key is expected to be missing
         return body.get('models', [])
 
-    def get_available_views(self, model_id: str) -> List[Dict[str, str]]:
-        token = self._fetch_token()
+    def get_available_views(self, workspace_id: str, model_id: str) -> List[Dict[str, str]]:
         body = self._extract_json(
-            requests.get(
-                f'{_ANAPLAN_API_BASEROUTE}/models/{model_id}/views',
-                headers={
-                    'Accept': 'application/json',
-                    'Authorization': f'AnaplanAuthToken {token}',
-                },
+            self._http_get(
+                f'{_ANAPLAN_API_BASEROUTE}/workspaces/{workspace_id}/models/{model_id}/views'
             )
         )
-        # TODO: We should also check the pagination here to see if the
-        # key is expected to be missing
         return body.get('views', [])
