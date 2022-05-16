@@ -13,6 +13,7 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 class AnaplanDataSource(ToucanDataSource):
     model_id: constr(min_length=1) = Field(..., description='The model you want to query')
     view_id: constr(min_length=1) = Field(..., description='The view you want to query')
+    workspace_id: str = Field(..., description='The ID of the workspace you want to query')
 
     @classmethod
     def get_form(
@@ -28,15 +29,17 @@ class AnaplanDataSource(ToucanDataSource):
         """
 
         constraints = {}
-        with contextlib.suppress(Exception):  # should we catch AnaplanErrors here instead ?
-            available_models = connector.get_available_models()
+        with contextlib.suppress(AnaplanError, KeyError):
+            available_models = connector.get_available_models(current_config['workspace_id'])
             # TODO: Make it possible to pick models and views by name at some point
             constraints['model_id'] = strlist_to_enum(
                 'model_id', [m['id'] for m in available_models]
             )
 
             if 'model_id' in current_config:
-                available_views = connector.get_available_views(current_config['model_id'])
+                available_views = connector.get_available_views(
+                    current_config['workspace_id'], current_config['model_id']
+                )
                 constraints['view_id'] = strlist_to_enum(
                     'view_id', [v['id'] for v in available_views], default_value=None
                 )
@@ -61,8 +64,6 @@ class AnaplanConnector(ToucanConnector):
     data_source_model: AnaplanDataSource
     username: str
     password: str
-
-    workspace_id: str = Field(..., description='The ID of the workspace you want to query')
 
     def _retrieve_data(self, data_source: AnaplanDataSource) -> pd.DataFrame:
         response = requests.get(

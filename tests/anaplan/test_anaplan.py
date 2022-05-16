@@ -16,9 +16,7 @@ def anaplan_auth_response() -> dict:
 
 @pytest.fixture()
 def connector() -> AnaplanConnector:
-    return AnaplanConnector(
-        username='JohnDoe', password='s3cr3t', name="John's connector", workspace_id='w1'
-    )
+    return AnaplanConnector(username='JohnDoe', password='s3cr3t', name="John's connector")
 
 
 @responses.activate
@@ -74,7 +72,7 @@ def test_get_form(connector):
 
     responses.add(
         responses.GET,
-        'https://api.anaplan.com/2/0/models',
+        'https://api.anaplan.com/2/0/workspaces/w1/models',
         status=200,
         json={
             # NOTE: There's paging information in here, we
@@ -98,7 +96,7 @@ def test_get_form(connector):
 
     responses.add(
         responses.GET,
-        'https://api.anaplan.com/2/0/models/m1/views',
+        'https://api.anaplan.com/2/0/workspaces/w1/models/m1/views',
         status=200,
         json={
             'views': [
@@ -108,7 +106,7 @@ def test_get_form(connector):
         },
     )
 
-    form_schema = AnaplanDataSource.get_form(connector, {'model_id': 'm1'})
+    form_schema = AnaplanDataSource.get_form(connector, {'model_id': 'm1', 'workspace_id': 'w1'})
 
     assert form_schema['definitions']['model_id']['enum'] == ['m1']
     assert form_schema['definitions']['view_id']['enum'] == ['m1v1', 'm1v2']
@@ -146,6 +144,7 @@ def test_get_df(connector):
             domain='data_for_m1v1',
             model_id='m1',
             view_id='m1v1',
+            workspace_id='w1',
         )
     )
 
