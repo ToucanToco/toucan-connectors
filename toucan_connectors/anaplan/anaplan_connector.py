@@ -75,6 +75,10 @@ class AnaplanError(Exception):
     """Base exception for Anaplan connector errors"""
 
 
+class AnaplanUnexpectedStatus(AnaplanError):
+    """Exception raised when an unexpected HTTP status is returned by Anaplan"""
+
+
 class AnaplanAuthError(AnaplanError):
     """Exception raised when auth fails"""
 
@@ -96,8 +100,11 @@ class AnaplanConnector(ToucanConnector):
             )
         try:
             return resp.json()
-        # JSONDecodeError is already managed by requests
-        except requests.RequestException as exc:
+        except requests.JSONDecodeError as exc:
+            raise AnaplanError(
+                f'Anaplan response appears to be invalid JSON: {resp.content} {exc!r}'
+            ) from exc
+        except requests.RequestException as exc:  # pragma: no cover
             raise AnaplanError(f'Encountered error while executing request: {exc}') from exc
 
     def _http_get(self, url: str, **kwargs) -> requests.Response:
