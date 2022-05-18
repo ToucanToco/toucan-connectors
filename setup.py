@@ -2,7 +2,7 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
-auth_deps = ['oauthlib==3.1.0', 'requests-oauthlib==1.3.0']
+auth_deps = ['oauthlib==3.2.0', 'requests-oauthlib==1.3.1']
 bearer_deps = ['bearer==3.1.0']
 
 extras_require = {
@@ -80,7 +80,7 @@ def get_static_file_paths():
 
 setup(
     name='toucan_connectors',
-    version='3.5.1',
+    version='3.5.2',
     description='Toucan Toco Connectors',
     long_description=(HERE / 'README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',

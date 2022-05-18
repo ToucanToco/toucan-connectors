@@ -48,8 +48,12 @@ new_connector:  # $ make new_connector type=Magento
 
 .PHONY: build
 build:
+	# /!\ Discovered that sometimes, this is missing !
+	python -m pip install wheel
 	python setup.py sdist bdist_wheel
 
 .PHONY: upload
 upload:
+	# /!\ Discovered that sometimes, this is missing !
+	python -m pip install twine
 	twine upload dist/*
