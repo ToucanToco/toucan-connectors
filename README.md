@@ -188,7 +188,8 @@ If you need to add testing dependencies, add them to the `requirements-testing.t
 You can now generate and edit the documentation page for your connector:
 
 ```shell
-PYTHONPATH=. python doc/generate.py MyTypeConnector > doc/mytypeconnector.md
+# Example: PYTHONPATH=. python doc/generate.py github > doc/connectors/github.md
+PYTHONPATH=. python doc/generate.py myconnectormodule > doc/connectors/mytypeconnector.md
 ```
 
 ### Step 4 : Create a pull request
