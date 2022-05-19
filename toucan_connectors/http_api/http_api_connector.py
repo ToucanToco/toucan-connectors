@@ -159,7 +159,6 @@ class HttpAPIConnector(ToucanConnector):
             except ValueError:
                 HttpAPIConnector.logger.error('Could not decode content using response.json()')
                 try:
-                    HttpAPIConnector.logger.error('Trying with json.loads(res.content)')
                     # sometimes when the content is too big res.json() fails but json.loads works
                     data = json.loads(res.content)
                 except ValueError:
