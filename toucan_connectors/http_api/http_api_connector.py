@@ -1,3 +1,4 @@
+import json
 from enum import Enum
 from typing import Any, Dict, List, Type, Union
 from xml.etree.ElementTree import ParseError, fromstring, tostring
@@ -156,9 +157,14 @@ class HttpAPIConnector(ToucanConnector):
             try:
                 data = res.json()
             except ValueError:
-                HttpAPIConnector.logger.error(f'Could not decode {res.content!r}')
-                raise
-
+                HttpAPIConnector.logger.error('Could not decode content using response.json()')
+                try:
+                    HttpAPIConnector.logger.error('Trying with json.loads(res.content)')
+                    # sometimes when the content is too big res.json() fails but json.loads works
+                    data = json.loads(res.content)
+                except ValueError:
+                    HttpAPIConnector.logger.error('Cannot decode response content')
+                    raise
         try:
             return transform_with_jq(data, jq_filter)
         except ValueError:

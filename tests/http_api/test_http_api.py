@@ -3,6 +3,7 @@ from xml.etree.ElementTree import ParseError
 import pytest
 import requests
 import responses
+from pytest_mock import MockFixture
 
 from toucan_connectors.common import transform_with_jq
 from toucan_connectors.http_api.http_api_connector import Auth, HttpAPIConnector, HttpAPIDataSource
@@ -496,3 +497,22 @@ def test_get_cache_key(connector, auth, data_source):
     another_connector = connector.copy(update={'auth': auth})
 
     assert connector.get_cache_key(data_source) != another_connector.get_cache_key(data_source)
+
+
+def test_response_json_fails(
+    connector: HttpAPIConnector, mocker: MockFixture, data_source: HttpAPIDataSource
+) -> None:
+    mocked_request = mocker.MagicMock(name='mocked_request')
+    mocked_response = mocker.MagicMock(name='mocked_response')
+    mocked_request.request.return_value = mocked_response
+    mocked_response.json.side_effect = ValueError
+    mocked_request.return_value = mocked_response
+    mocker.patch(
+        'toucan_connectors.http_api.http_api_connector.Session', return_value=mocked_request
+    )
+    mocked_loads = mocker.patch('toucan_connectors.http_api.http_api_connector.json.loads')
+    mocker.patch(
+        'toucan_connectors.http_api.http_api_connector.transform_with_jq', return_value=[{'a': 1}]
+    )
+    connector.get_df(data_source)
+    mocked_loads.assert_called_once()
