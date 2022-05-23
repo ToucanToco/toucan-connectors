@@ -10,7 +10,13 @@ from googleapiclient.errors import Error as GoogleApiClientError
 from pydantic import Field, PrivateAttr, SecretStr, create_model
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    DataSlice,
+    DataStats,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 
 class GoogleSheetsDataSource(ToucanDataSource):
@@ -28,7 +34,7 @@ class GoogleSheetsDataSource(ToucanDataSource):
         None, title='Sheet title', description='Title of the desired sheet'
     )
     header_row: int = Field(
-        0, title='Header row', description='Row of the header of the spreadsheet'
+        1, title='Header row', description='Row of the header of the spreadsheet'
     )
 
     class Config:
@@ -136,6 +142,87 @@ class GoogleSheetsConnector(ToucanConnector):
         except GoogleApiClientError:
             return ConnectorStatus(status=False, error="Couldn't retrieve user infos")
 
+    def get_slice(
+        self,
+        data_source: GoogleSheetsDataSource,
+        permissions: Optional[str] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
+        get_row_count: Optional[bool] = False,
+    ) -> DataSlice:
+        if data_source.sheet is None:
+            # Select the first sheet by default
+            sheet_names = self.list_sheets(data_source.spreadsheet_id)
+            data_source.sheet = sheet_names[0]
+
+        with self.build_sheets_api() as sheets_api:
+            # Fetch metadata of sheet (see ./__fixtures__/spreadsheet_metadata.json for an example)
+            spreadsheet_metadata = (
+                sheets_api.spreadsheets()
+                .get(
+                    spreadsheetId=data_source.spreadsheet_id,
+                    # use `repr()` to add single quotes around the name and escape correctly
+                    ranges=[repr(data_source.sheet)],
+                )
+                .execute(**self._google_client_request_kwargs())
+            )
+            sheet_props = spreadsheet_metadata['sheets'][0]['properties']['gridProperties']
+            total_rows = sheet_props['rowCount']
+
+            header_data = (
+                sheets_api.spreadsheets()
+                .values()
+                .get(
+                    spreadsheetId=data_source.spreadsheet_id,
+                    range=f"{repr(data_source.sheet)}!{data_source.header_row}:{data_source.header_row}",
+                    dateTimeRenderOption='SERIAL_NUMBER',
+                    majorDimension='ROWS',
+                    valueRenderOption='UNFORMATTED_VALUE',
+                )
+                .execute(**self._google_client_request_kwargs())
+            )
+
+            start_index = data_source.header_row + 1 + offset
+
+            if limit is None:
+                end_index = total_rows
+            else:
+                end_index = start_index + limit
+                if end_index > total_rows:
+                    end_index = total_rows
+
+            slice_data = (
+                sheets_api.spreadsheets()
+                .values()
+                .get(
+                    spreadsheetId=data_source.spreadsheet_id,
+                    range=f"{repr(data_source.sheet)}!{start_index}:{end_index}",
+                    dateTimeRenderOption='SERIAL_NUMBER',
+                    majorDimension='ROWS',
+                    valueRenderOption='UNFORMATTED_VALUE',
+                )
+                .execute(**self._google_client_request_kwargs())
+            )
+
+        # header can have more columns than the slice if columns are empty
+        slice_values = slice_data['values']
+        header_cols = header_data['values'][0]
+        len_header_cols = len(header_cols)
+
+        for slice_row in slice_values:
+            slice_row.extend([None] * (len_header_cols - len(slice_row)))
+
+        df = pd.DataFrame(columns=header_cols, data=slice_values)
+
+        return DataSlice(
+            df=df,
+            stats=DataStats(
+                total_returned_rows=len(df),
+                total_rows=total_rows,
+                df_memory_size=df.memory_usage().sum(),
+            ),
+        )
+
     def _retrieve_data(self, data_source: GoogleSheetsDataSource) -> pd.DataFrame:
 
         if data_source.sheet is None:
@@ -144,25 +231,26 @@ class GoogleSheetsConnector(ToucanConnector):
             data_source.sheet = sheet_names[0]
 
         with self.build_sheets_api() as sheets_api:
-            sheet_values = (
+            sheet_data = (
                 sheets_api.spreadsheets()
                 .values()
                 .get(
                     spreadsheetId=data_source.spreadsheet_id,
-                    range=f"'{data_source.sheet}'",  # FIXME what will happen is the sheet name contains a single quote?
+                    range=repr(data_source.sheet),
                     dateTimeRenderOption='SERIAL_NUMBER',
                     majorDimension='ROWS',
                     valueRenderOption='UNFORMATTED_VALUE',
                 )
                 .execute(**self._google_client_request_kwargs())
             )
+
             # Fetch metadata associated with values
             sheet_cell_formats = (
                 sheets_api.spreadsheets()
                 .get(
                     spreadsheetId=data_source.spreadsheet_id,
                     fields='sheets.data.rowData.values.effectiveFormat.numberFormat',
-                    ranges=[sheet_values['range']],
+                    ranges=[sheet_data['range']],
                 )
                 .execute(**self._google_client_request_kwargs())
             )
@@ -180,12 +268,11 @@ class GoogleSheetsConnector(ToucanConnector):
                 parse_cell_value(cell_value, cell_format(row_index, column_index))
                 for column_index, cell_value in enumerate(row_values)
             ]
-            for row_index, row_values in enumerate(sheet_values['values'])
+            for row_index, row_values in enumerate(sheet_data['values'])
         ]
 
-        df = pd.DataFrame(
-            columns=values[data_source.header_row], data=values[data_source.header_row + 1 :]
-        )
+        header_row_index = data_source.header_row - 1
+        df = pd.DataFrame(columns=values[header_row_index], data=values[header_row_index + 1 :])
 
         # TODO Columns must be uniquely named (raise an error or suffix some of them) - otherwise, .to_json will fail
         return df
