@@ -312,8 +312,12 @@ def test_get_slice_max_count(mongo_connector, mongo_datasource, mocker):
 
 def test_get_slice_with_regex(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    slice = mongo_connector.get_slice_with_regex(datasource, fields=['country', 'language'], regex=re.compile('g'))
-    pd.testing.assert_series_equal(slice.df['country'], pd.Series(['England', 'Germany', 'USA'], name='country'))
+    slice = mongo_connector.get_slice_with_regex(
+        datasource, fields=['country', 'language'], regex=re.compile('g')
+    )
+    pd.testing.assert_series_equal(
+        slice.df['country'], pd.Series(['England', 'Germany', 'USA'], name='country')
+    )
 
 
 def test_get_df_with_regex(mongo_connector, mongo_datasource):
