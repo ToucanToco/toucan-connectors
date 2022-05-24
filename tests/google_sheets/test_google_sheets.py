@@ -30,16 +30,23 @@ def test_retrieve_data_with_dates(mocker: MockFixture):
     mocker.patch(
         'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
         side_effect=[
-            {
-                # First call with sheet values
+            {  # First call with cell formats
                 'http': HttpMock(
-                    path.join(path.dirname(__file__), './sheet-values-sample-data.json'),
+                    path.join(path.dirname(__file__), './sample-data-meta.json'),
                     {'status': '200'},
                 )
             },
-            {  # Second call with cell formats
+            {
+                # Second call for header
                 'http': HttpMock(
-                    path.join(path.dirname(__file__), './sheet-formats-sample-data.json'),
+                    path.join(path.dirname(__file__), './sample-data-header.json'),
+                    {'status': '200'},
+                )
+            },
+            {
+                # Third call for slice values
+                'http': HttpMock(
+                    path.join(path.dirname(__file__), './sample-data-values.json'),
                     {'status': '200'},
                 )
             },
@@ -94,13 +101,13 @@ def test_retrieve_data_no_sheet(mocker: MockFixture):
             },
             {
                 'http': HttpMock(
-                    path.join(path.dirname(__file__), './sheet-values-sample-data.json'),
+                    path.join(path.dirname(__file__), './sheet-formats-sample-data.json'),
                     {'status': '200'},
                 )
             },
             {
                 'http': HttpMock(
-                    path.join(path.dirname(__file__), './sheet-formats-sample-data.json'),
+                    path.join(path.dirname(__file__), './sheet-values-sample-data.json'),
                     {'status': '200'},
                 )
             },
@@ -135,16 +142,16 @@ def test_retrieve_data_header_row(mocker: MockFixture):
     mocker.patch(
         'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
         side_effect=[
-            {
-                # First call with sheet values
+            {  # First call with cell formats
                 'http': HttpMock(
-                    path.join(path.dirname(__file__), './sheet-values-animals.json'),
+                    path.join(path.dirname(__file__), './sheet-formats-animals.json'),
                     {'status': '200'},
                 )
             },
-            {  # Second call with cell formats
+            {
+                # Second call with sheet values
                 'http': HttpMock(
-                    path.join(path.dirname(__file__), './sheet-formats-animals.json'),
+                    path.join(path.dirname(__file__), './sheet-values-animals.json'),
                     {'status': '200'},
                 )
             },

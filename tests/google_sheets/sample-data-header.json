@@ -1,0 +1,11 @@
+{
+  "range": "'sample data'!1:1",
+  "majorDimension": "ROWS",
+  "values": [
+    [
+      "label",
+      "value",
+      "date"
+    ]
+  ]
+}

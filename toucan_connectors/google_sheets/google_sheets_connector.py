@@ -19,7 +19,7 @@ from dateutil.relativedelta import relativedelta
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import Error as GoogleApiClientError
-from pydantic import Field, PrivateAttr, SecretStr, constr, create_model
+from pydantic import Field, PrivateAttr, SecretStr, constr, create_model, root_validator
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import (
@@ -149,6 +149,15 @@ class GoogleSheetsDataSource(ToucanDataSource):
         title='Header range',
         description='Range of the header of the spreadsheet (e.g. B1:E1)',
     )
+
+    @root_validator(pre=True)
+    def handle_legacy_header_row(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if 'header_row' in values:
+            # we used to have 'header_row' as parameter with index 0 by default
+            header_row = values.pop('header_row')
+            values['header_range'] = f'{header_row + 1}:{header_row + 1}'
+
+        return values
 
     class Config:
         @staticmethod

@@ -1,6 +1,14 @@
 {
   "sheets": [
     {
+      "properties": {
+        "gridProperties": {
+          "rowCount": 1000,
+          "columnCount": 10,
+          "rowGroupControlAfter": true,
+          "columnGroupControlAfter": true
+        }
+      },
       "data": [
         {
           "rowData": [
