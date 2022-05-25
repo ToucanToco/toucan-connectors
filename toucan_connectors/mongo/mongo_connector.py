@@ -250,7 +250,7 @@ class MongoConnector(ToucanConnector):
         permissions: Optional[str] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> pd.DataFrame:
+    ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
