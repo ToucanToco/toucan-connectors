@@ -115,7 +115,7 @@ def test_get_df_no_query(mongo_connector, mongo_datasource):
     """It should return the whole collection by default"""
     ds = mongo_datasource(collection='test_col')
     df = mongo_connector.get_df(ds)
-    assert df.shape == (3, 5)
+    assert df.shape == (4, 5)
 
 
 def test_get_df(mocker):
@@ -180,12 +180,12 @@ def test_get_df_live(mongo_connector, mongo_datasource):
     df = mongo_connector.get_df(datasource)
     expected = pd.DataFrame(
         {
-            'country': ['France', 'England', 'Germany'],
-            'language': ['French', 'English', 'German'],
-            'value': [20, 14, 17],
+            'country': ['France', 'England', 'Germany', 'USA'],
+            'language': ['French', 'English', 'German', 'English'],
+            'value': [20, 14, 17, 28],
         }
     )
-    assert df.shape == (3, 5)
+    assert df.shape == (4, 5)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
     assert df[['country', 'language', 'value']].equals(expected)
 
@@ -225,30 +225,30 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
 def test_get_slice(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.get_slice(datasource)
-    assert res.stats.total_returned_rows == 3
-    assert res.stats.total_rows == 3
-    assert res.df.shape == (3, 5)
-    assert res.df['country'].tolist() == ['France', 'England', 'Germany']
+    assert res.stats.total_returned_rows == 4
+    assert res.stats.total_rows == 4
+    assert res.df.shape == (4, 5)
+    assert res.df['country'].tolist() == ['France', 'England', 'Germany', 'USA']
 
     # With a limit
     res = mongo_connector.get_slice(datasource, limit=1)
     expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
-    assert res.stats.total_returned_rows == 3
-    assert res.stats.total_rows == 3
+    assert res.stats.total_returned_rows == 4
+    assert res.stats.total_rows == 4
     assert res.df.shape == (1, 5)
     assert res.df[['country', 'language', 'value']].equals(expected)
 
     # With a offset
     res = mongo_connector.get_slice(datasource, offset=1)
-    assert res.stats.total_returned_rows == 3
-    assert res.stats.total_rows == 3
-    assert res.df.shape == (2, 5)
-    assert res.df['country'].tolist() == ['England', 'Germany']
+    assert res.stats.total_returned_rows == 4
+    assert res.stats.total_rows == 4
+    assert res.df.shape == (3, 5)
+    assert res.df['country'].tolist() == ['England', 'Germany', 'USA']
 
     # With both
     res = mongo_connector.get_slice(datasource, offset=1, limit=1)
-    assert res.stats.total_returned_rows == 3
-    assert res.stats.total_rows == 3
+    assert res.stats.total_returned_rows == 4
+    assert res.stats.total_rows == 4
     assert res.df.shape == (1, 5)
     assert res.df.loc[0, 'country'] == 'England'
 
@@ -264,8 +264,8 @@ def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
         ],
     )
     dataslice = mongo_connector.get_slice(datasource, limit=1)
-    assert dataslice.stats.total_returned_rows == 3
-    assert dataslice.stats.total_rows == 3
+    assert dataslice.stats.total_returned_rows == 4
+    assert dataslice.stats.total_rows == 4
     assert dataslice.df.shape == (1, 1)
     assert dataslice.df.iloc[0].pays in ['France', 'England', 'Germany']
 
@@ -273,15 +273,15 @@ def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
 def test_get_slice_no_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     ds = mongo_connector.get_slice(datasource, limit=None)
-    assert ds.stats.total_returned_rows == 3
+    assert ds.stats.total_returned_rows == 4
     expected = pd.DataFrame(
         {
-            'country': ['France', 'England', 'Germany'],
-            'language': ['French', 'English', 'German'],
-            'value': [20, 14, 17],
+            'country': ['France', 'England', 'Germany', 'USA'],
+            'language': ['French', 'English', 'German', 'English'],
+            'value': [20, 14, 17, 28],
         }
     )
-    assert ds.df.shape == (3, 5)
+    assert ds.df.shape == (4, 5)
     assert ds.df[['country', 'language', 'value']].equals(expected)
 
 
@@ -308,6 +308,16 @@ def test_get_slice_max_count(mongo_connector, mongo_datasource, mocker):
     # count facet must be limited
     assert '$limit' in aggregate.call_args[0][1][1]['$facet']['count'][0]
     assert aggregate.call_args[0][1][1]['$facet']['count'][0]['$limit'] > 0
+
+
+def test_get_slice_with_regex(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
+    slice = mongo_connector.get_slice_with_regex(
+        datasource, fields=['country', 'language'], regex=re.compile('g')
+    )
+    pd.testing.assert_series_equal(
+        slice.df['country'], pd.Series(['England', 'Germany', 'USA'], name='country')
+    )
 
 
 def test_get_df_with_regex(mongo_connector, mongo_datasource):
@@ -357,6 +367,14 @@ def test_get_df_with_regex_with_limit(mongo_connector, mongo_datasource):
         datasource, field='country', regex=re.compile('r.*a'), limit=1
     )
     pd.testing.assert_series_equal(df['country'], pd.Series(['France'], name='country'))
+
+
+def test_get_df_with_regex_with_offset_and_limit(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
+    df = mongo_connector.get_df_with_regex(
+        datasource, field='country', regex=re.compile('r.*a'), limit=1, offset=1
+    )
+    pd.testing.assert_series_equal(df['country'], pd.Series(['Germany'], name='country'))
 
 
 def test_explain(mongo_connector, mongo_datasource):
