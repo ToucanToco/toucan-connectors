@@ -8,9 +8,7 @@ bearer_deps = ['bearer==3.1.0']
 extras_require = {
     'adobe': ['adobe_analytics'],
     'aircall': bearer_deps,
-    # awswrangler>=2.15.1 requires pyarrow>=7.0, which might be
-    # incompatible with other requirements
-    'awsathena': ['awswrangler>=2.14,<2.15'],
+    'awsathena': ['awswrangler>=2.15'],
     'azure_mssql': ['pyodbc>=3'],
     'clickhouse': ['clickhouse_driver'],
     'dataiku': ['dataiku-api-client'],
@@ -42,7 +40,10 @@ extras_require = {
     'ROK': ['requests', 'pyjwt', 'simplejson'],
     'sap_hana': ['pyhdb>=0.3.4'],
     'soap': ['zeep', 'lxml==4.6.5'],
-    'snowflake': ['snowflake-connector-python>=2.5', 'pyjwt'],
+    # snowflake requires pyarrow<7
+    # (cf. https://github.com/snowflakedb/snowflake-connector-python/issues/1144),
+    # so let's enforce it here:
+    'snowflake': ['snowflake-connector-python>=2.5', 'pyjwt', 'pyarrow<7'],
     'toucan_toco': ['toucan_client'],
 }
 extras_require['all'] = sorted(set(sum(extras_require.values(), [])))
