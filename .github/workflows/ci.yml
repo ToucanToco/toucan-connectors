@@ -33,6 +33,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install freetds-dev libsasl2-dev libpq-dev
         pip install poetry
+        poetry config virtualenvs.create false
 
     - name: Install oracle dependencies
       run: sudo bash toucan_connectors/install_scripts/oracle.sh
