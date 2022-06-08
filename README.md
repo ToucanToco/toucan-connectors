@@ -21,6 +21,13 @@ The Toucan Toco platform instantiates these classes using values provided by Tou
 - `Connector.get_slice` returning an instance of `DataSlice`, method used to return data to a Toucan Toco application designer when building a query.
 - `Connector.get_status` returning an instance of `ConnectorStatus`, method used to inform an admin or Toucan Toco application designer of the status of its connection to a third party data service. Is it reachable from our servers? Are the authentication details and method working? etc...
 
+## Installing for development
+
+We use `poetry` for packaging and development. Use the following command to install the project for development:
+
+```
+poetry install -E all
+```
 
 ## Dependencies
 
