@@ -27,7 +27,7 @@ jq = "^1.2.2"
 pydantic = "^1.9.1"
 requests = "^2.27.1"
 tenacity = "^8.0.1"
-toucan-data-sdk = "^7.5.0"
+toucan-data-sdk = "^7.4.2"
 
 # Dependencies for extras
 adobe-analytics = {version = "^1.2.3", optional = true}
