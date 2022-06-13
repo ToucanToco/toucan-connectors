@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 100
-target-version = ["py38"]
+target-version = ["py10"]
 skip-string-normalization = true
 
 [tool.isort]
@@ -18,7 +18,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 # <3.11 required by awswrangler
-python = ">=3.8,<3.11"
+python = ">=3.10,<3.11"
 Authlib = "^1.0.1"
 aiohttp = "^3.8.1"
 cached-property = "^1.5.2"
