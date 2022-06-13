@@ -63,6 +63,7 @@ def test_connector(mocker):
                 'url_prefix': '/lu',
                 'port': 443,
                 'use_ssl': True,
+                'scheme': 'https',
                 'http_auth': 'test:pikapika',
                 'headers': {'truc': ''},
             }

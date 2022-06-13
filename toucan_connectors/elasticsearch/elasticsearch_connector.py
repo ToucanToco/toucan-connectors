@@ -132,8 +132,10 @@ class ElasticsearchConnector(ToucanConnector):
             if parsed_url.scheme == 'https':
                 h['port'] = host.port or 443
                 h['use_ssl'] = True
+                h['scheme'] = parsed_url.scheme
             elif host.port:
                 h['port'] = host.port
+                h['scheme'] = parsed_url.scheme
 
             if host.username or host.password:
                 h['http_auth'] = f'{host.username}:{host.password.get_secret_value()}'
