@@ -67,7 +67,6 @@ def test_connector(mocker):
                 'headers': {'truc': ''},
             }
         ],
-        send_get_body_as=None,
     )
 
 

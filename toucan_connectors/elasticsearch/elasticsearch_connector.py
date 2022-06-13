@@ -119,7 +119,6 @@ class ElasticsearchDataSource(ToucanDataSource):
 class ElasticsearchConnector(ToucanConnector):
     data_source_model: ElasticsearchDataSource
     hosts: List[ElasticsearchHost]
-    send_get_body_as: str = None
 
     def _retrieve_data(self, data_source: ElasticsearchDataSource) -> pd.DataFrame:
         data_source.body = nosql_apply_parameters_to_query(data_source.body, data_source.parameters)
@@ -142,7 +141,7 @@ class ElasticsearchConnector(ToucanConnector):
                 h['headers'] = host.headers
             connection_params.append(h)
 
-        esclient = Elasticsearch(connection_params, send_get_body_as=self.send_get_body_as)
+        esclient = Elasticsearch(connection_params)
         response = getattr(esclient, data_source.search_method)(
             index=data_source.index, body=data_source.body
         )
