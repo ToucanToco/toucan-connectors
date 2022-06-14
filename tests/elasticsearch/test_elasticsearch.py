@@ -46,6 +46,7 @@ def test_connector(mocker):
             {
                 'url': 'https://toto.com/lu',
                 'username': 'test',
+                'scheme': 'https',
                 'password': 'pikapika',
                 'headers': {'truc': ''},
             }

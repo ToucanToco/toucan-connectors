@@ -100,6 +100,7 @@ def _read_response(response):
 class ElasticsearchHost(BaseModel):
     url: str
     port: int = None
+    scheme: str = None
     username: str = None
     password: SecretStr = Field(None, description='Your login password')
     headers: dict = None
