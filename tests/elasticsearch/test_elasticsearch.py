@@ -17,17 +17,16 @@ def elasticsearch(service_container):
         url = f'http://localhost:{host_port}'
         requests.get(url)
         # Feed the database
-        requests.put(url + '/company')
-        requests.post(url + '/company/employees/1', json={'name': 'Toto', 'best_song': 'Africa'})
+        requests.post(url + '/employees/_create/1', json={'name': 'Toto', 'best_song': 'Africa'})
         requests.post(
-            url + '/company/employees/2',
+            url + '/employees/_create/2',
             json={
                 'name': 'BRMC',
                 'best_song': "Beat The Devil's Tattoo",
                 'adress': {'street': 'laaa', 'cedex': 15, 'city': 'looo'},
             },
         )
-        requests.post(url + '/company/_refresh')
+        requests.post(url + '/_refresh')
 
     return service_container('elasticsearch', check_and_feed)
 
