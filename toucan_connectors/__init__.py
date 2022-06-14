@@ -1,10 +1,13 @@
 import base64
+import importlib.metadata as lib_meta
 import mimetypes
 from contextlib import suppress
 from importlib import import_module
 from pathlib import Path
 
 from .toucan_connector import DataSlice, ToucanConnector, ToucanDataSource
+
+__version__ = lib_meta.version(__package__ or __name__)
 
 CONNECTORS_REGISTRY = {
     'AdobeAnalytics': {
