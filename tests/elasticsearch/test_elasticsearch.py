@@ -34,8 +34,8 @@ def elasticsearch(service_container, request):
 # parametrizing all tests depending on elasticsearch to use both elasticsearch7 and elasticsearch8
 # containers
 def pytest_generate_tests(metafunc):
-    if "elasticsearch" in metafunc.fixturenames:
-        metafunc.parametrize("elasticsearch", ["elasticsearch7", "elasticsearch8"], indirect=True)
+    if 'elasticsearch' in metafunc.fixturenames:
+        metafunc.parametrize('elasticsearch', ['elasticsearch7', 'elasticsearch8'], indirect=True)
 
 
 def test_connector(mocker):
