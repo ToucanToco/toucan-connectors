@@ -8,7 +8,7 @@ from toucan_connectors.elasticsearch.elasticsearch_connector import (
 
 
 @pytest.fixture(scope='module')
-def elasticsearch(service_container):
+def elasticsearch(service_container, request):
     def check_and_feed(host_port):
         """
         This method check that the server is on
@@ -28,7 +28,14 @@ def elasticsearch(service_container):
         )
         requests.post(url + '/_refresh')
 
-    return service_container('elasticsearch', check_and_feed)
+    return service_container(request.param, check_and_feed)
+
+
+# parametrizing all tests depending on elasticsearch to use both elasticsearch7 and elasticsearch8
+# containers
+def pytest_generate_tests(metafunc):
+    if "elasticsearch" in metafunc.fixturenames:
+        metafunc.parametrize("elasticsearch", ["elasticsearch7", "elasticsearch8"], indirect=True)
 
 
 def test_connector(mocker):
