@@ -1990,7 +1990,7 @@ toucan_toco = ["toucan-client"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "f1c8732db008e278c922f14b1ecd67a6d4fec9510d7a913bc8de59767a075482"
+content-hash = "27ee24d534bb78e2aee5dcf31c985adf097cea2cf0de5f5db7b1a32d0abf64c5"
 
 [metadata.files]
 adobe-analytics = [
