@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.11.0] 2022-06-17
+
+### Changed
+
+Add support for elasticsearch >= 8 on the ElasticsearchConnector.
+
 ## [3.0.0] 2022-02-03
 
 ### Changed
