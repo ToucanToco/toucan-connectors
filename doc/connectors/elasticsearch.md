@@ -5,7 +5,6 @@
 * `type`: `"elasticsearch"`
 * `name`: str, required
 * `hosts`: list of Host, required
-* `send_get_body_as`: str, (if not GET method)
 
 
 ### Host configuration
@@ -21,7 +20,6 @@ DATA_PROVIDERS: [
   type:    'elasticsearch'
   name:    '<name>'
   hosts:    '<hosts>'
-  send_get_body_as:    '<send_get_body_as>'
 ,
   ...
 ]
