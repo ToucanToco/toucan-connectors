@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := all
-isort = isort toucan_connectors tests setup.py
-black = black toucan_connectors tests setup.py
+isort = isort toucan_connectors tests
+black = black toucan_connectors tests
+flake8 = flake8 toucan_connectors tests
 
 .PHONY: clean
 clean:
@@ -11,9 +12,7 @@ clean:
 .PHONY: install
 install:
 	sudo apt-get install libxml2-dev libxslt-dev unixodbc-dev
-	pip3 install -U setuptools pip
-	pip3 install -r requirements-testing.txt --ignore-installed
-	pip3 install '.[all]'
+	poetry install -E all
 
 .PHONY: format
 format:
@@ -22,7 +21,7 @@ format:
 
 .PHONY: lint
 lint:
-	flake8 toucan_connectors tests setup.py
+	$(flake8)
 	$(isort) --check-only
 	$(black) --check
 
@@ -48,12 +47,8 @@ new_connector:  # $ make new_connector type=Magento
 
 .PHONY: build
 build:
-	# /!\ Discovered that sometimes, this is missing !
-	python -m pip install wheel
-	python setup.py sdist bdist_wheel
+	poetry build
 
 .PHONY: upload
 upload:
-	# /!\ Discovered that sometimes, this is missing !
-	python -m pip install twine
-	twine upload dist/*
+	poetry publish --build

@@ -8,7 +8,7 @@ from toucan_connectors.elasticsearch.elasticsearch_connector import (
 
 
 @pytest.fixture(scope='module')
-def elasticsearch(service_container):
+def elasticsearch(service_container, request):
     def check_and_feed(host_port):
         """
         This method check that the server is on
@@ -17,19 +17,25 @@ def elasticsearch(service_container):
         url = f'http://localhost:{host_port}'
         requests.get(url)
         # Feed the database
-        requests.put(url + '/company')
-        requests.post(url + '/company/employees/1', json={'name': 'Toto', 'best_song': 'Africa'})
+        requests.post(url + '/employees/_create/1', json={'name': 'Toto', 'best_song': 'Africa'})
         requests.post(
-            url + '/company/employees/2',
+            url + '/employees/_create/2',
             json={
                 'name': 'BRMC',
                 'best_song': "Beat The Devil's Tattoo",
                 'adress': {'street': 'laaa', 'cedex': 15, 'city': 'looo'},
             },
         )
-        requests.post(url + '/company/_refresh')
+        requests.post(url + '/_refresh')
 
-    return service_container('elasticsearch', check_and_feed)
+    return service_container(request.param, check_and_feed)
+
+
+# parametrizing all tests depending on elasticsearch to use both elasticsearch7 and elasticsearch8
+# containers
+def pytest_generate_tests(metafunc):
+    if 'elasticsearch' in metafunc.fixturenames:
+        metafunc.parametrize('elasticsearch', ['elasticsearch7', 'elasticsearch8'], indirect=True)
 
 
 def test_connector(mocker):
@@ -47,6 +53,7 @@ def test_connector(mocker):
             {
                 'url': 'https://toto.com/lu',
                 'username': 'test',
+                'scheme': 'https',
                 'password': 'pikapika',
                 'headers': {'truc': ''},
             }
@@ -63,11 +70,11 @@ def test_connector(mocker):
                 'url_prefix': '/lu',
                 'port': 443,
                 'use_ssl': True,
+                'scheme': 'https',
                 'http_auth': 'test:pikapika',
                 'headers': {'truc': ''},
             }
         ],
-        send_get_body_as=None,
     )
 
 

@@ -1,5 +1,5 @@
 from functools import _lru_cache_wrapper, lru_cache
-from typing import Optional, Pattern, Union
+from typing import List, Optional, Pattern, Union
 
 import pandas as pd
 import pymongo
@@ -242,14 +242,15 @@ class MongoConnector(ToucanConnector):
             df, stats=DataStats(total_returned_rows=total_count, total_rows=total_count)
         )
 
-    def get_df_with_regex(
+    def get_slice_with_regex(
         self,
         data_source: MongoDataSource,
-        field: str,
+        fields: List[str],
         regex: Pattern,
         permissions: Optional[str] = None,
         limit: Optional[int] = None,
-    ) -> pd.DataFrame:
+        offset: Optional[int] = None,
+    ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
@@ -259,15 +260,38 @@ class MongoConnector(ToucanConnector):
         # Since Mongo '$regex' operator doesn't work with integer values, we need to check the stringified versions
         regex_step = {
             '$expr': {
-                '$regexMatch': {
-                    'input': {'$toString': f'${field}'},
-                    'regex': regex.pattern,
-                    'options': 'i',  # i -> Case insensitivity
-                }
+                '$or': [
+                    {
+                        '$regexMatch': {
+                            'input': {'$toString': f'${field}'},
+                            'regex': regex.pattern,
+                            'options': 'i',  # i -> Case insensitivity
+                        }
+                    }
+                    for field in fields
+                ]
             }
         }
         data_source.query.append({'$match': regex_step})
-        return self.get_slice(data_source, permissions, limit=limit).df
+        return self.get_slice(data_source, permissions, limit=limit, offset=offset)
+
+    def get_df_with_regex(
+        self,
+        data_source: MongoDataSource,
+        field: str,
+        regex: Pattern,
+        permissions: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> pd.DataFrame:
+        return self.get_slice_with_regex(
+            data_source=data_source,
+            fields=[field],
+            regex=regex,
+            permissions=permissions,
+            limit=limit,
+            offset=offset,
+        ).df
 
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):

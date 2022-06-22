@@ -21,6 +21,13 @@ The Toucan Toco platform instantiates these classes using values provided by Tou
 - `Connector.get_slice` returning an instance of `DataSlice`, method used to return data to a Toucan Toco application designer when building a query.
 - `Connector.get_status` returning an instance of `ConnectorStatus`, method used to inform an admin or Toucan Toco application designer of the status of its connection to a third party data service. Is it reachable from our servers? Are the authentication details and method working? etc...
 
+## Installing for development
+
+We use `poetry` for packaging and development. Use the following command to install the project for development:
+
+```
+poetry install -E all
+```
 
 ## Dependencies
 
@@ -98,7 +105,13 @@ make test
 
 Some connectors are tested using mocks (cf. `trello`), others are tested by making calls to data providers (cf. `elasticsearch`) running on the system in docker containers. The required images are in the `tests/docker-compose.yml` file, they need to be pulled (cf. `pytest --pull`) to run the relevant tests.
 
-## Adding a connector
+## Contributing
+
+This is an open source repository under the [BSD 3-Clause Licence](https://github.com/ToucanToco/toucan-connectors/blob/master/LICENSE). The Toucan Toco tech team are the maintainers of this repository, we welcome contributions. 
+
+At the moment the main use of this code is its integration into Toucan Toco commercially licenced software, as a result our dev and maintenance efforts applied here are mostly driven by Toucan Toco internal priorities.
+
+The starting point of a contribution should be an [Issue](https://github.com/ToucanToco/toucan-connectors/issues), either one you create or an existing one. This allows us (maintainers) to discuss the contribution before it is produced and avoids back and forth in reviews or stalled pull requests.
 
 ### Step 1: Generate base classes and tests files
 
@@ -188,7 +201,8 @@ If you need to add testing dependencies, add them to the `requirements-testing.t
 You can now generate and edit the documentation page for your connector:
 
 ```shell
-PYTHONPATH=. python doc/generate.py MyTypeConnector > doc/mytypeconnector.md
+# Example: PYTHONPATH=. python doc/generate.py github > doc/connectors/github.md
+PYTHONPATH=. python doc/generate.py myconnectormodule > doc/connectors/mytypeconnector.md
 ```
 
 ### Step 4 : Create a pull request

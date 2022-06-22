@@ -100,6 +100,7 @@ def _read_response(response):
 class ElasticsearchHost(BaseModel):
     url: str
     port: int = None
+    scheme: str = None
     username: str = None
     password: SecretStr = Field(None, description='Your login password')
     headers: dict = None
@@ -119,7 +120,6 @@ class ElasticsearchDataSource(ToucanDataSource):
 class ElasticsearchConnector(ToucanConnector):
     data_source_model: ElasticsearchDataSource
     hosts: List[ElasticsearchHost]
-    send_get_body_as: str = None
 
     def _retrieve_data(self, data_source: ElasticsearchDataSource) -> pd.DataFrame:
         data_source.body = nosql_apply_parameters_to_query(data_source.body, data_source.parameters)
@@ -133,8 +133,10 @@ class ElasticsearchConnector(ToucanConnector):
             if parsed_url.scheme == 'https':
                 h['port'] = host.port or 443
                 h['use_ssl'] = True
+                h['scheme'] = parsed_url.scheme
             elif host.port:
                 h['port'] = host.port
+                h['scheme'] = parsed_url.scheme
 
             if host.username or host.password:
                 h['http_auth'] = f'{host.username}:{host.password.get_secret_value()}'
@@ -142,7 +144,7 @@ class ElasticsearchConnector(ToucanConnector):
                 h['headers'] = host.headers
             connection_params.append(h)
 
-        esclient = Elasticsearch(connection_params, send_get_body_as=self.send_get_body_as)
+        esclient = Elasticsearch(connection_params)
         response = getattr(esclient, data_source.search_method)(
             index=data_source.index, body=data_source.body
         )
