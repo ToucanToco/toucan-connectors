@@ -90,12 +90,6 @@ class RedshiftDataSource(ToucanDataSource):
 
     def __init__(self, **data):
         super().__init__(**data)
-        query = data.get('query')
-        table = data.get('table')
-        if query is None and table is None:
-            self.query = TABLE_QUERY
-        elif query is None and table is not None:
-            self.query = f'select * from {table};'
 
 
 class RedshiftConnector(ToucanConnector):
