@@ -100,9 +100,8 @@ def test_config_schema_extra():
 
 
 def test_redshiftdatasource_init_(redshift_datasource):
-    ds = RedshiftDataSource(domain='test', name='redshift', database='test', table='table_test')
+    ds = RedshiftDataSource(domain='test', name='redshift', database='test')
     assert ds.query == 'select * from table_test;'
-    assert ds.table == 'table_test'
     assert ds.language == 'sql'
     assert hasattr(ds, 'query_object')
 
@@ -110,7 +109,6 @@ def test_redshiftdatasource_init_(redshift_datasource):
 def test_redshiftdatasource_init_none_values(redshift_datasource):
     ds = RedshiftDataSource(domain='test', name='redshift', database='test')
     assert ds.query == "SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"
-    assert ds.table is None
 
 
 @patch.object(RedshiftConnector, '_retrieve_tables')
