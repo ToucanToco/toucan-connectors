@@ -1,13 +1,13 @@
 import logging
 import time
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from enum import Enum
 from threading import Thread
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import redshift_connector
-from pydantic import Field, SecretStr, create_model, root_validator
+from pydantic import Field, SecretStr, root_validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
@@ -26,7 +26,6 @@ from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
     ToucanConnector,
     ToucanDataSource,
-    strlist_to_enum,
 )
 
 TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
@@ -87,34 +86,10 @@ class RedshiftDataSource(ToucanDataSource):
         description='An object describing a simple select query, this field is used internally',
         **{'ui.hidden': True},
     )
-    table: constr(min_length=1) = Field(
-        None,
-        description='The name of the data table that you want to '
-        'get (equivalent to "SELECT * FROM '
-        'your_table")',
-    )
     language: str = Field('sql', **{'ui.hidden': True})
 
     def __init__(self, **data):
         super().__init__(**data)
-        query = data.get('query')
-        table = data.get('table')
-        if query is None and table is None:
-            self.query = TABLE_QUERY
-        elif query is None and table is not None:
-            self.query = f'select * from {table};'
-
-    @classmethod
-    def get_form(cls, connector: 'RedshiftConnector', current_config):
-        constraints = {}
-        with suppress(Exception):
-            if 'database' in current_config:
-                ds = RedshiftDataSource(
-                    domain='Redshift', name='redshift', database=current_config['database']
-                )
-                available_tables = connector._retrieve_tables(database=ds.database)
-                constraints['table'] = strlist_to_enum('table', available_tables, None)
-        return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
 class RedshiftConnector(ToucanConnector):
