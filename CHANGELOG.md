@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.12.0] 2022-06-23
+
+### Changed
+
+Remove the table attribute from RedshiftDataBaseConnector
+
 ## [3.11.0] 2022-06-17
 
 ### Changed
