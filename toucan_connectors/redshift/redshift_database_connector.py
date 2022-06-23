@@ -32,6 +32,8 @@ TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 
 
 DESCRIBE_QUERY = """SELECT * FROM ({column}) AS q LIMIT 0;"""
 
+DEFAULT_DATABASE = 'dev'
+
 ORDERED_KEYS = [
     'type',
     'name',
@@ -73,7 +75,7 @@ class AuthenticationMethodError(str, Enum):
 
 
 class RedshiftDataSource(ToucanDataSource):
-    database: str = Field(..., description='The name of the database you want to query')
+    database: str = Field(DEFAULT_DATABASE, description='The name of the database you want to query')
     query: constr(min_length=1) = Field(
         None,
         description='You can write a custom query against your '
@@ -118,6 +120,7 @@ class RedshiftConnector(ToucanConnector):
     secret_access_key: Optional[SecretStr] = Field(
         None, description='The secret access key of your aws account.'
     )
+    default_database: Optional[str] = Field(DEFAULT_DATABASE, description='Your default database')
     session_token: Optional[str] = Field(None, description='Your session token')
     profile: Optional[str] = Field(None, description='AWS profile')
     region: Optional[str] = Field(
