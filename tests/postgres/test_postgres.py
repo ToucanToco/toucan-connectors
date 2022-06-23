@@ -36,6 +36,7 @@ def postgres_connector(postgres_server):
         host='localhost',
         user='ubuntu',
         password='ilovetoucan',
+        default_database='postgres_db',
         port=postgres_server['port'],
     )
 
@@ -48,6 +49,7 @@ def test_get_status_all_good(postgres_connector):
             ('Port opened', True),
             ('Connected to PostgreSQL', True),
             ('Authenticated', True),
+            ('Default Database connection', True),
         ],
     )
 
@@ -61,6 +63,7 @@ def test_get_status_bad_host(postgres_connector):
         ('Port opened', None),
         ('Connected to PostgreSQL', None),
         ('Authenticated', None),
+        ('Default Database connection', None),
     ]
     assert status.error == '[Errno -3] Temporary failure in name resolution'
 
@@ -74,6 +77,7 @@ def test_get_status_bad_port(postgres_connector):
         ('Port opened', False),
         ('Connected to PostgreSQL', None),
         ('Authenticated', None),
+        ('Default Database connection', None),
     ]
     assert status.error == '[Errno 111] Connection refused'
 
@@ -91,6 +95,7 @@ def test_get_status_bad_connection(postgres_connector, unused_port, mocker):
         ('Port opened', True),
         ('Connected to PostgreSQL', False),
         ('Authenticated', None),
+        ('Default Database connection', None),
     ]
     assert 'Connection refused' in status.error
 
@@ -104,8 +109,23 @@ def test_get_status_bad_authentication(postgres_connector):
         ('Port opened', True),
         ('Connected to PostgreSQL', True),
         ('Authenticated', False),
+        ('Default Database connection', None),
     ]
     assert 'password authentication failed for user "pika"' in status.error
+
+
+def test_get_status_bad_default_database_connection(postgres_connector):
+    postgres_connector.default_database = 'zikzik'
+    status = postgres_connector.get_status()
+    assert status.status is False
+    assert status.details == [
+        ('Host resolved', True),
+        ('Port opened', True),
+        ('Connected to PostgreSQL', True),
+        ('Authenticated', True),
+        ('Default Database connection', False),
+    ]
+    assert 'database "zikzik" does not exist' in status.error
 
 
 def test_no_user():

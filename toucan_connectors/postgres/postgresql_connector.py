@@ -180,13 +180,13 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
 
         # Basic db query
         try:
-            self._list_tables_info(database=self.default_database)
+            self._list_tables_info(database_name=self.default_database)
         except (Exception, pgsql.Error) as e:
             return ConnectorStatus(
                 status=False, details=self._get_details(4, False), error=e.args[0]
             )
 
-        return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
+        return ConnectorStatus(status=True, details=self._get_details(4, True), error=None)
 
     def describe(self, data_source: PostgresDataSource):
         connection = pgsql.connect(**self.get_connection_params(database=data_source.database))
