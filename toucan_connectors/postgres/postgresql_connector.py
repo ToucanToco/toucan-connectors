@@ -63,7 +63,7 @@ class PostgresDataSource(ToucanDataSource):
         with suppress(Exception):
             connection = pgsql.connect(
                 **connector.get_connection_params(
-                    database=current_config.get('database', 'postgres')
+                    database=current_config.get('database', DEFAULT_DATABASE)
                 )
             )
             # # Always add the suggestions for the available databases
@@ -208,12 +208,12 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
         return (tables_info, metadata)
 
     def _list_db_names(self) -> List[str]:
-        connection = pgsql.connect(**self.get_connection_params(database='postgres'))
+        connection = pgsql.connect(**self.get_connection_params(database=DEFAULT_DATABASE))
         with connection.cursor() as cursor:
             cursor.execute("""select datname from pg_database where datistemplate = false;""")
             return [db_name for (db_name,) in cursor.fetchall()]
 
-    def _list_tables_info(self, database_name: str) -> List[tuple]:
+    def _list_tables_info(self, database_name: str = DEFAULT_DATABASE) -> List[tuple]:
         connection = pgsql.connect(**self.get_connection_params(database=database_name))
         with connection.cursor() as cursor:
             cursor.execute(build_database_model_extraction_query())
