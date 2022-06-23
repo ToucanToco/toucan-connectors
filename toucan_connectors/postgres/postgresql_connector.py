@@ -135,7 +135,13 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
-        checks = ['Host resolved', 'Port opened', 'Connected to PostgreSQL', 'Authenticated']
+        checks = [
+            'Host resolved',
+            'Port opened',
+            'Connected to PostgreSQL',
+            'Authenticated',
+            'Default Database connection',
+        ]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
@@ -171,6 +177,14 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
                 return ConnectorStatus(
                     status=False, details=self._get_details(3, False), error=e.args[0]
                 )
+
+        # Basic db query
+        try:
+            self._list_tables_info(database=self.default_database)
+        except (Exception, pgsql.Error) as e:
+            return ConnectorStatus(
+                status=False, details=self._get_details(4, False), error=e.args[0]
+            )
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 

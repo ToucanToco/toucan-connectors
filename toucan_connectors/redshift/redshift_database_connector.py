@@ -300,7 +300,12 @@ class RedshiftConnector(ToucanConnector):
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
-        checks = ['Hostname resolved', 'Port opened', 'Authenticated']
+        checks = [
+            'Hostname resolved',
+            'Port opened',
+            'Authenticated',
+            'Default Database connection',
+        ]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(c, False) for i, c in enumerate(checks) if i > index]
@@ -317,6 +322,15 @@ class RedshiftConnector(ToucanConnector):
             self.check_port(self.host, self.port)
         except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
+
+        # Basic db query
+        try:
+            self._retrieve_tables(database=self.default_database)
+        except Exception as e:
+            return ConnectorStatus(
+                status=False, details=self._get_details(3, False), error=e.args[0]
+            )
+
         return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
 
     def describe(self, data_source: RedshiftDataSource) -> Dict:
