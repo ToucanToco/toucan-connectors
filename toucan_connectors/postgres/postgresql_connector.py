@@ -14,9 +14,13 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 
+DEFAULT_DATABASE = 'postgres'
+
 
 class PostgresDataSource(ToucanDataSource):
-    database: str = Field(..., description='The name of the database you want to query')
+    database: str = Field(
+        DEFAULT_DATABASE, description='The name of the database you want to query'
+    )
     query: constr(min_length=1) = Field(
         None,
         description='You can write a custom query against your '
@@ -94,6 +98,8 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
     password: SecretStr = Field(None, description='Your login password')
+    default_database: str = Field(DEFAULT_DATABASE, description='Your default database')
+
     charset: str = Field(None, description='If you need to specify a specific character encoding.')
     connect_timeout: int = Field(
         None,
@@ -102,7 +108,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
         'time you want to wait for the server to respond. None by default',
     )
 
-    def get_connection_params(self, *, database='postgres'):
+    def get_connection_params(self, *, database=DEFAULT_DATABASE):
         con_params = dict(
             user=self.user,
             host=self.host,
