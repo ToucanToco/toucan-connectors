@@ -325,7 +325,9 @@ class RedshiftConnector(ToucanConnector):
 
         # Basic db query
         try:
-            self._retrieve_tables(database=self.default_database)
+            redshift_connector.connect(
+                **self._get_connection_params(database=self.default_database),
+            )
         except Exception as e:
             return ConnectorStatus(
                 status=False, details=self._get_details(3, False), error=e.args[0]

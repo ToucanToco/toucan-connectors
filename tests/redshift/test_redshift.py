@@ -427,13 +427,13 @@ def test_redshiftconnector__get_details(redshift_connector):
 
 @patch.object(RedshiftConnector, 'check_hostname')
 @patch.object(RedshiftConnector, 'check_port')
-@patch.object(RedshiftConnector, '_retrieve_tables')
+@patch('redshift_connector.connect')
 def test_redshiftconnector_get_status_true(
-    mock_check_hostname, mock_check_port, mock_retreive_data, redshift_connector
+    mock_check_hostname, mock_check_port, mock_redshift_connector, redshift_connector
 ):
     mock_check_hostname.return_value = 'hostname_test'
     mock_check_port.return_value = 'port_test'
-    mock_retreive_data.return_value = ['something']
+    mock_redshift_connector.return_value = True
     result = redshift_connector.get_status()
     assert result.status is True
     assert result.error is None
