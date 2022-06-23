@@ -28,6 +28,7 @@ def redshift_connector():
         cluster_identifier=CLUSTER_IDENTIFIER,
         user='user',
         password='sample',
+        default_database='dev',
         connect_timeout=10,
     )
 
@@ -44,6 +45,7 @@ def redshift_connector_aws_creds():
         access_key_id='access_key',
         secret_access_key='secret_access_key',
         session_token='token',
+        default_database='dev',
         region='eu-west-1',
     )
 
@@ -58,6 +60,7 @@ def redshift_connector_aws_profile():
         db_user='db_user_test',
         cluster_identifier=CLUSTER_IDENTIFIER,
         profile='sample',
+        default_database='dev',
         region='eu-west-1',
     )
 
@@ -113,7 +116,7 @@ def test_redshiftdatasource_get_form(redshift_connector, redshift_datasource):
     assert result['properties']['parameters']['title'] == 'Parameters'
     assert result['properties']['domain']['title'] == 'Domain'
     assert result['properties']['validation']['title'] == 'Validation'
-    assert result['required'] == ['domain', 'name', 'database']
+    assert result['required'] == ['domain', 'name']
 
 
 @patch('toucan_connectors.redshift.redshift_database_connector.redshift_connection_manager')
@@ -414,16 +417,23 @@ def test_redshiftconnector_get_slice_df_is_none(
 
 def test_redshiftconnector__get_details(redshift_connector):
     result = redshift_connector._get_details(index=0, status=True)
-    assert result == [('Hostname resolved', True), ('Port opened', False), ('Authenticated', False)]
+    assert result == [
+        ('Hostname resolved', True),
+        ('Port opened', False),
+        ('Authenticated', False),
+        ('Default Database connection', False),
+    ]
 
 
 @patch.object(RedshiftConnector, 'check_hostname')
 @patch.object(RedshiftConnector, 'check_port')
+@patch.object(RedshiftConnector, '_retrieve_tables')
 def test_redshiftconnector_get_status_true(
-    mock_check_hostname, mock_check_port, redshift_connector
+    mock_check_hostname, mock_check_port, mock_retreive_data, redshift_connector
 ):
     mock_check_hostname.return_value = 'hostname_test'
     mock_check_port.return_value = 'port_test'
+    mock_retreive_data.return_value = ['something']
     result = redshift_connector.get_status()
     assert result.status is True
     assert result.error is None
