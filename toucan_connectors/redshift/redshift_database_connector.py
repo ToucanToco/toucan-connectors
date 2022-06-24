@@ -3,7 +3,7 @@ import time
 from contextlib import contextmanager, suppress
 from enum import Enum
 from threading import Thread
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import pandas as pd
 import redshift_connector
@@ -81,15 +81,12 @@ class RedshiftDataSource(ToucanDataSource):
         'the table parameter',
         widget='sql',
     )
-    query_object: Dict = Field(
+    query_object: dict[str, Any] = Field(
         None,
         description='An object describing a simple select query, this field is used internally',
         **{'ui.hidden': True},
     )
     language: str = Field('sql', **{'ui.hidden': True})
-
-    def __init__(self, **data):
-        super().__init__(**data)
 
 
 class RedshiftConnector(ToucanConnector, DiscoverableConnector):
@@ -103,34 +100,32 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     host: str = Field(..., description='IP address or hostname.')
     port: int = Field(..., description='The listening port of your Redshift Database')
     cluster_identifier: str = Field(..., description='The cluster of redshift.')
-    connect_timeout: Optional[int] = Field(
+    connect_timeout: int | None = Field(
         None,
         title='Connection timeout',
         description='You can set a connection timeout in seconds here, i.e. the maximum length of '
         'time you want to wait for the server to respond. None by default',
     )
 
-    user: Optional[str] = Field(None, description='Your login username.')
-    password: Optional[SecretStr] = Field(None, description='Your login password')
+    user: str | None = Field(None, description='Your login username.')
+    password: SecretStr | None = Field(None, description='Your login password')
 
-    db_user: Optional[str] = Field(None, description='The user of the database')
-    access_key_id: Optional[str] = Field(None, description='The access key id of your aws account.')
-    secret_access_key: Optional[SecretStr] = Field(
+    db_user: str | None = Field(None, description='The user of the database')
+    access_key_id: str | None = Field(None, description='The access key id of your aws account.')
+    secret_access_key: SecretStr | None = Field(
         None, description='The secret access key of your aws account.'
     )
-    default_database: Optional[str] = Field(DEFAULT_DATABASE, description='Your default database')
-    session_token: Optional[str] = Field(None, description='Your session token')
-    profile: Optional[str] = Field(None, description='AWS profile')
-    region: Optional[str] = Field(
-        None, description='The region in which there is your aws account.'
-    )
+    default_database: str | None = Field(DEFAULT_DATABASE, description='Your default database')
+    session_token: str | None = Field(None, description='Your session token')
+    profile: str | None = Field(None, description='AWS profile')
+    region: str | None = Field(None, description='The region in which there is your aws account.')
     _is_alive: bool = True
 
     class Config:
         underscore_attrs_are_private = True
 
         @staticmethod
-        def schema_extra(schema: Dict[str, Any]) -> None:
+        def schema_extra(schema: dict[str, Any]) -> None:
             schema['properties'] = {k: schema['properties'][k] for k in ORDERED_KEYS}
 
     @root_validator
@@ -161,7 +156,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     def get_redshift_connection_manager() -> ConnectionManager:
         return redshift_connection_manager
 
-    def _get_connection_params(self, database) -> Dict:
+    def _get_connection_params(self, database) -> dict[str, Any]:
         con_params = dict(
             database=database,
             host=self.host,
@@ -231,7 +226,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         with self._get_connection(database=database) as conn, conn.cursor() as cursor:
             yield cursor
 
-    def _retrieve_tables(self, database) -> List[str]:
+    def _retrieve_tables(self, database) -> list[str]:
         with self._get_cursor(database=database) as cursor:
             cursor.execute(TABLE_QUERY)
             res = cursor.fetchall()
@@ -241,8 +236,8 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         self,
         datasource: RedshiftDataSource,
         get_row_count: bool = False,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
+        offset: int | None = None,
+        limit: int | None = None,
     ) -> pd.DataFrame:
         if get_row_count:
             prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_count_query(
@@ -262,10 +257,10 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     def get_slice(
         self,
         data_source: RedshiftDataSource,
-        permissions: Optional[dict] = None,
+        permissions: dict[str, Any] | None = None,
         offset: int = 0,
-        limit: Optional[int] = None,
-        get_row_count: Optional[bool] = False,
+        limit: int | None = None,
+        get_row_count: bool = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
@@ -295,7 +290,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         )
 
     @staticmethod
-    def _get_details(index: int, status: Optional[bool]):
+    def _get_details(index: int, status: bool):
         checks = [
             'Hostname resolved',
             'Port opened',
@@ -331,7 +326,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
 
         return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
 
-    def describe(self, data_source: RedshiftDataSource) -> Dict:
+    def describe(self, data_source: RedshiftDataSource) -> dict[str, Any]:
         with self._get_cursor(database=data_source.database) as cursor:
             cursor.execute(DESCRIBE_QUERY.format(column=data_source.query.replace(';', '')))
             res = cursor.description
@@ -340,7 +335,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             for col in res
         }
 
-    def get_model(self) -> List[TableInfo]:
+    def get_model(self) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
         available_dbs = self._list_db_names()
         databases_tree = []
@@ -349,7 +344,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
                 databases_tree += self._list_tables_info(db)
         return DiscoverableConnector.format_db_model(databases_tree)
 
-    def get_model_with_info(self) -> Tuple[List[TableInfo], Dict]:
+    def get_model_with_info(self) -> tuple[list[TableInfo], dict]:
         """Retrieves the database tree structure using current connection"""
         available_dbs = self._list_db_names()
         databases_tree = []
@@ -366,7 +361,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             metadata['info'] = {'Could not reach databases': failed_databases}
         return (tables_info, metadata)
 
-    def _list_db_names(self) -> List[str]:
+    def _list_db_names(self) -> list[str]:
         with self._get_cursor(database=self.default_database) as cursor:
             # redshift has a weird system db called padb_harvest duplicating the content of 'dev' database
             # https://bit.ly/3GQJCdy, we have to filter it
@@ -375,7 +370,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             )
             return [db_name for (db_name,) in cursor.fetchall()]
 
-    def _list_tables_info(self, database_name: str = None) -> List[tuple]:
+    def _list_tables_info(self, database_name: str = None) -> list[tuple]:
         connection = redshift_connector.connect(
             **self._get_connection_params(
                 database=self.default_database if not database_name else database_name
