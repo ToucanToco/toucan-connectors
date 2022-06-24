@@ -334,11 +334,9 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
                 **self._get_connection_params(database=self.default_database),
             )
         except (Exception, redshift_connector.OperationalError) as e:
-            return ConnectorStatus(
-                status=False, details=self._get_details(3, False), error=e.args[0]
-            )
+            return ConnectorStatus(status=False, details=self._get_details(3, False), error=str(e))
 
-        return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
+        return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
     def describe(self, data_source: RedshiftDataSource) -> dict[str, Any]:
         with self._get_cursor(database=data_source.database) as cursor:
