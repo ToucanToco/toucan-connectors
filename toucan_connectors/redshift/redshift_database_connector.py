@@ -40,6 +40,7 @@ ORDERED_KEYS = [
     'authentication_method',
     'user',
     'password',
+    'default_database',
     'access_key_id',
     'secret_access_key',
     'session_token',

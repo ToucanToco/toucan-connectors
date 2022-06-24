@@ -87,6 +87,7 @@ def test_config_schema_extra():
             'authentication_method': 'authentication_method_test',
             'user': 'user_test',
             'password': 'password_test',
+            'default_database': 'dev',
             'access_key_id': 'access_key_id_test',
             'secret_access_key': 'secret_access_key_test',
             'session_token': 'session_token_test',
