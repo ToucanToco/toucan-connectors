@@ -1,9 +1,8 @@
 from contextlib import _GeneratorContextManager
 from unittest.mock import Mock, patch
 
-import pandas as pd
 import pytest
-from redshift_connector.error import InterfaceError
+from redshift_connector.error import InterfaceError, OperationalError
 
 from toucan_connectors.redshift.redshift_database_connector import (
     ORDERED_KEYS,
@@ -472,29 +471,22 @@ def test_redshiftconnector_describe(mock_connection, redshift_connector, redshif
 
 
 def test_get_model(mocker, redshift_connector):
-    mock_get_connection = mocker.patch.object(RedshiftConnector, '_get_connection')
-    mock_cols_response = pd.DataFrame(
-        [
-            {'database': 'dev', 'name': 'cool', 'columns': '{"name":"foo", "type":"bar"}'},
-            {'database': 'dev', 'name': 'cool', 'columns': '{"name":"roo", "type":"far"}'},
-        ]
-    )
-    mock_tables_response = pd.DataFrame(
-        [
+    mocker.patch.object(RedshiftConnector, '_list_db_names', return_value=['dev'])
+    mocker.patch.object(
+        RedshiftConnector,
+        '_list_tables_info',
+        return_value=[
             {
                 'database': 'dev',
                 'schema': 'public',
                 'type': 'table',
                 'name': 'cool',
+                'columns': [{'name': 'foo', 'type': 'bar'}, {'name': 'roo', 'type': 'far'}],
             }
-        ]
+        ],
     )
-    mock_get_connection().__enter__().cursor().__enter__().fetchall.return_value = [('dev',)]
-    mock_get_connection().__enter__().cursor().__enter__().fetch_dataframe.side_effect = [
-        mock_cols_response,
-        mock_tables_response,
-    ]
-    assert redshift_connector.get_model(DATABASE_NAME) == [
+
+    assert redshift_connector.get_model() == [
         {
             'database': 'dev',
             'schema': 'public',
@@ -503,3 +495,43 @@ def test_get_model(mocker, redshift_connector):
             'columns': [{'name': 'foo', 'type': 'bar'}, {'name': 'roo', 'type': 'far'}],
         }
     ]
+
+
+def test_get_model_with_info(mocker, redshift_connector):
+    mocker.patch.object(RedshiftConnector, '_list_db_names', return_value=['dev'])
+    mocker.patch.object(
+        RedshiftConnector,
+        '_list_tables_info',
+        return_value=[
+            {
+                'database': 'dev',
+                'schema': 'public',
+                'type': 'table',
+                'name': 'cool',
+                'columns': [{'name': 'foo', 'type': 'bar'}, {'name': 'roo', 'type': 'far'}],
+            }
+        ],
+    )
+
+    assert redshift_connector.get_model_with_info() == (
+        [
+            {
+                'columns': [{'name': 'foo', 'type': 'bar'}, {'name': 'roo', 'type': 'far'}],
+                'database': 'dev',
+                'name': 'cool',
+                'schema': 'public',
+                'type': 'table',
+            }
+        ],
+        {},
+    )
+
+    # on error
+    mocker.patch.object(
+        RedshiftConnector, '_list_tables_info', side_effect=OperationalError('oups')
+    )
+
+    assert redshift_connector.get_model_with_info() == (
+        [],
+        {'info': {'Could not reach databases': ['dev']}},
+    )
