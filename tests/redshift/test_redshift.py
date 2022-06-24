@@ -22,7 +22,7 @@ def redshift_connector():
     return RedshiftConnector(
         authentication_method=AuthenticationMethod.DB_CREDENTIALS.value,
         name='test',
-        host='localhost',
+        host='http://localhost',
         port=0,
         cluster_identifier=CLUSTER_IDENTIFIER,
         user='user',

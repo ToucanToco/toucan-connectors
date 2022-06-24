@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 from contextlib import contextmanager, suppress
 from enum import Enum
@@ -7,7 +8,7 @@ from typing import Any
 
 import pandas as pd
 import redshift_connector
-from pydantic import Field, SecretStr, root_validator
+from pydantic import Field, SecretStr, root_validator, validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
@@ -136,6 +137,10 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         @staticmethod
         def schema_extra(schema: dict[str, Any]) -> None:
             schema['properties'] = {k: schema['properties'][k] for k in ORDERED_KEYS}
+
+    @validator('host')
+    def host_validator(cls, v):
+        return re.sub(r'^https?://', '', v)
 
     @root_validator
     def check_requirements(cls, values):
