@@ -1,5 +1,12 @@
 # Changelog (Pypi package)
 
+## [3.13.0] 2022-06-24
+
+### Changed
+
+- Added default database field for redshift and postgres connectors
+- Added a new status check for request on default databases
+
 ## [3.12.0] 2022-06-23
 
 ### Changed
@@ -40,5 +47,9 @@ Some DataStats properties changed in the naming and some of them was added, see 
 - Added a dev container for developping safely on connectors.
 
 
+[3.13.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.12.0...v3.13.0
+[3.12.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.11.0...v3.12.0
+[3.11.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.0.0...v3.11.0
+[3.0.0]: https://github.com/ToucanToco/toucan-connectors/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/ToucanToco/toucan-connectors/compare/v1.3.40...v2.0.0
 [1.3.43]: https://github.com/ToucanToco/toucan-connectors/compare/v1.3.40...v1.3.44
