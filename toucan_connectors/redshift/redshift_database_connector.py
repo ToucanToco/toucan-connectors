@@ -98,8 +98,22 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         **{'ui': {'checkbox': False}},
     )
     host: str = Field(..., description='IP address or hostname.')
-    port: int = Field(..., description='The listening port of your Redshift Database')
-    cluster_identifier: str = Field(..., description='The cluster of redshift.')
+    port: int = Field(5439, description='The listening port of your Redshift Database')
+    default_database: str = Field(
+        DEFAULT_DATABASE, description='The name of the database instance to connect to'
+    )
+    user: str | None = Field(
+        None, description='The username to use for authentication with the Amazon Redshift cluster'
+    )
+    password: SecretStr | None = Field(
+        None, description='The password to use for authentication with the Amazon Redshift cluster'
+    )
+
+    db_user: str | None = Field(None, description='The user ID to use with Amazon Redshift')
+    cluster_identifier: str | None = Field(
+        None, description='The cluster identifier of the Amazon Redshift cluster'
+    )
+
     connect_timeout: int | None = Field(
         None,
         title='Connection timeout',
@@ -107,15 +121,10 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         'time you want to wait for the server to respond. None by default',
     )
 
-    user: str | None = Field(None, description='Your login username.')
-    password: SecretStr | None = Field(None, description='Your login password')
-
-    db_user: str | None = Field(None, description='The user of the database')
     access_key_id: str | None = Field(None, description='The access key id of your aws account.')
     secret_access_key: SecretStr | None = Field(
         None, description='The secret access key of your aws account.'
     )
-    default_database: str | None = Field(DEFAULT_DATABASE, description='Your default database')
     session_token: str | None = Field(None, description='Your session token')
     profile: str | None = Field(None, description='AWS profile')
     region: str | None = Field(None, description='The region in which there is your aws account.')
