@@ -35,13 +35,13 @@ ORDERED_KEYS = [
     'name',
     'host',
     'port',
-    'cluster_identifier',
-    'db_user',
-    'connect_timeout',
+    'default_database',
     'authentication_method',
     'user',
     'password',
-    'default_database',
+    'cluster_identifier',
+    'db_user',
+    'connect_timeout',
     'access_key_id',
     'secret_access_key',
     'session_token',
@@ -98,7 +98,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         description='The authentication mechanism that will be used to connect to your redshift data source',
         **{'ui': {'checkbox': False}},
     )
-    host: str = Field(..., description='IP address or hostname.')
+    host: str = Field(..., description='The hostname of the Amazon Redshift cluster')
     port: int = Field(5439, description='The listening port of your Redshift Database')
     default_database: str = Field(
         DEFAULT_DATABASE, description='The name of the database instance to connect to'
