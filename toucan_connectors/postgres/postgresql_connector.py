@@ -180,7 +180,9 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
 
         # Basic db query
         try:
-            self._list_tables_info(database_name=self.default_database)
+            connection = pgsql.connect(**self.get_connection_params(database=self.default_database))
+            with connection.cursor() as cursor:
+                cursor.execute("""select 1;""")
         except (Exception, pgsql.Error) as e:
             return ConnectorStatus(
                 status=False, details=self._get_details(4, False), error=e.args[0]
@@ -222,13 +224,17 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
         return (tables_info, metadata)
 
     def _list_db_names(self) -> List[str]:
-        connection = pgsql.connect(**self.get_connection_params(database=DEFAULT_DATABASE))
+        connection = pgsql.connect(**self.get_connection_params(database=self.default_database))
         with connection.cursor() as cursor:
             cursor.execute("""select datname from pg_database where datistemplate = false;""")
             return [db_name for (db_name,) in cursor.fetchall()]
 
-    def _list_tables_info(self, database_name: str = DEFAULT_DATABASE) -> List[tuple]:
-        connection = pgsql.connect(**self.get_connection_params(database=database_name))
+    def _list_tables_info(self, database_name: str = None) -> List[tuple]:
+        connection = pgsql.connect(
+            **self.get_connection_params(
+                database=self.default_database if not database_name else database_name
+            )
+        )
         with connection.cursor() as cursor:
             cursor.execute(build_database_model_extraction_query())
             return cursor.fetchall()
