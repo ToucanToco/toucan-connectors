@@ -347,14 +347,52 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             for col in res
         }
 
+    def _table_infos_rows(self) -> list[tuple[str, str, str, str, str]]:
+        """Get rows of (database, schema, table name, column name, column type)"""
+        with self._get_cursor(database=self.default_database) as cursor:
+            res = cursor.execute(
+                """
+                SELECT
+                    table_catalog,
+                    table_schema,
+                    table_name,
+                    column_name,
+                    data_type
+                FROM
+                    information_schema.columns
+                WHERE
+                    table_schema NOT IN ('information_schema', 'pg_catalog')
+                ORDER BY
+                    table_schema,
+                    table_name,
+                    ordinal_position;
+                """
+            )
+        return res.fetchall()
+
     def get_model(self) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
-        available_dbs = self._list_db_names()
-        databases_tree = []
-        for db in available_dbs:
-            with suppress(redshift_connector.OperationalError):
-                databases_tree += self._list_tables_info(db)
-        return DiscoverableConnector.format_db_model(databases_tree)
+        table_infos = []
+        for database, schema, table_name, column_name, column_type in self._table_infos_rows():
+            for row in table_infos[::-1]:
+                if (
+                    row['database'] == database
+                    and row['schema'] == schema
+                    and row['name'] == table_name
+                ):
+                    row['columns'].append({'name': column_name, 'type': column_type})
+                    break
+            else:
+                table_infos.append(
+                    {
+                        'database': database,
+                        'schema': schema,
+                        'name': table_name,
+                        'type': 'table',
+                        'columns': [{'name': column_name, 'type': column_type}],
+                    }
+                )
+        return table_infos
 
     def get_model_with_info(self) -> tuple[list[TableInfo], dict]:
         """Retrieves the database tree structure using current connection"""

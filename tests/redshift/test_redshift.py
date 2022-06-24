@@ -472,29 +472,59 @@ def test_redshiftconnector_describe(mock_connection, redshift_connector, redshif
 
 
 def test_get_model(mocker, redshift_connector):
-    mocker.patch.object(RedshiftConnector, '_list_db_names', return_value=['dev'])
-    mocker.patch.object(
-        RedshiftConnector,
-        '_list_tables_info',
-        return_value=[
-            {
-                'database': 'dev',
-                'schema': 'public',
-                'type': 'table',
-                'name': 'cool',
-                'columns': [{'name': 'foo', 'type': 'bar'}, {'name': 'roo', 'type': 'far'}],
-            }
-        ],
-    )
-
+    mocker.patch.object(RedshiftConnector, '_table_infos_rows').return_value = [
+        ['dev', 'pg_internal', 'redshift_auto_health_check_436837', 'a', 'integer'],
+        ['dev', 'public', 'table_1', 'label', 'character varying'],
+        ['dev', 'public', 'table_1', 'doum', 'character varying'],
+        ['dev', 'public', 'table_1', 'value1', 'bigint'],
+        ['dev', 'public', 'table_2', 'label', 'character varying'],
+        ['dev', 'public', 'table_2', 'doum', 'character varying'],
+        ['dev', 'public', 'table_2', 'value1', 'bigint'],
+        ['dev', 'public', 'table_2', 'value2', 'bigint'],
+        ['dev', 'public', 'table_3', 'label', 'character varying'],
+        ['dev', 'public', 'table_3', 'group', 'character varying'],
+    ]
     assert redshift_connector.get_model() == [
         {
             'database': 'dev',
-            'schema': 'public',
-            'name': 'cool',
+            'schema': 'pg_internal',
+            'name': 'redshift_auto_health_check_436837',
             'type': 'table',
-            'columns': [{'name': 'foo', 'type': 'bar'}, {'name': 'roo', 'type': 'far'}],
-        }
+            'columns': [{'name': 'a', 'type': 'integer'}],
+        },
+        {
+            'database': 'dev',
+            'schema': 'public',
+            'name': 'table_1',
+            'type': 'table',
+            'columns': [
+                {'name': 'label', 'type': 'character varying'},
+                {'name': 'doum', 'type': 'character varying'},
+                {'name': 'value1', 'type': 'bigint'},
+            ],
+        },
+        {
+            'database': 'dev',
+            'schema': 'public',
+            'name': 'table_2',
+            'type': 'table',
+            'columns': [
+                {'name': 'label', 'type': 'character varying'},
+                {'name': 'doum', 'type': 'character varying'},
+                {'name': 'value1', 'type': 'bigint'},
+                {'name': 'value2', 'type': 'bigint'},
+            ],
+        },
+        {
+            'database': 'dev',
+            'schema': 'public',
+            'name': 'table_3',
+            'type': 'table',
+            'columns': [
+                {'name': 'label', 'type': 'character varying'},
+                {'name': 'group', 'type': 'character varying'},
+            ],
+        },
     ]
 
 
