@@ -1,9 +1,9 @@
 import logging
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from enum import Enum
 from threading import Thread
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 import redshift_connector
@@ -12,18 +12,13 @@ from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.connection_manager import ConnectionManager
-from toucan_connectors.redshift.utils import (
-    aggregate_columns,
-    build_database_model_extraction_query,
-    create_columns_query,
-    merge_columns_and_tables,
-    types_map,
-)
+from toucan_connectors.redshift.utils import build_database_model_extraction_query, types_map
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
     DataStats,
     DiscoverableConnector,
+    TableInfo,
     ToucanConnector,
     ToucanDataSource,
 )
@@ -31,6 +26,8 @@ from toucan_connectors.toucan_connector import (
 TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
 
 DESCRIBE_QUERY = """SELECT * FROM ({column}) AS q LIMIT 0;"""
+
+DEFAULT_DATABASE = 'dev'
 
 ORDERED_KEYS = [
     'type',
@@ -43,6 +40,7 @@ ORDERED_KEYS = [
     'authentication_method',
     'user',
     'password',
+    'default_database',
     'access_key_id',
     'secret_access_key',
     'session_token',
@@ -73,7 +71,9 @@ class AuthenticationMethodError(str, Enum):
 
 
 class RedshiftDataSource(ToucanDataSource):
-    database: str = Field(..., description='The name of the database you want to query')
+    database: str = Field(
+        DEFAULT_DATABASE, description='The name of the database you want to query'
+    )
     query: constr(min_length=1) = Field(
         None,
         description='You can write a custom query against your '
@@ -92,7 +92,7 @@ class RedshiftDataSource(ToucanDataSource):
         super().__init__(**data)
 
 
-class RedshiftConnector(ToucanConnector):
+class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     data_source_model: RedshiftDataSource
     authentication_method: AuthenticationMethod = Field(
         None,
@@ -118,6 +118,7 @@ class RedshiftConnector(ToucanConnector):
     secret_access_key: Optional[SecretStr] = Field(
         None, description='The secret access key of your aws account.'
     )
+    default_database: Optional[str] = Field(DEFAULT_DATABASE, description='Your default database')
     session_token: Optional[str] = Field(None, description='Your session token')
     profile: Optional[str] = Field(None, description='AWS profile')
     region: Optional[str] = Field(
@@ -295,7 +296,12 @@ class RedshiftConnector(ToucanConnector):
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
-        checks = ['Hostname resolved', 'Port opened', 'Authenticated']
+        checks = [
+            'Hostname resolved',
+            'Port opened',
+            'Authenticated',
+            'Default Database connection',
+        ]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(c, False) for i, c in enumerate(checks) if i > index]
@@ -312,6 +318,17 @@ class RedshiftConnector(ToucanConnector):
             self.check_port(self.host, self.port)
         except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
+
+        # Basic db query
+        try:
+            redshift_connector.connect(
+                **self._get_connection_params(database=self.default_database),
+            )
+        except (Exception, redshift_connector.OperationalError) as e:
+            return ConnectorStatus(
+                status=False, details=self._get_details(3, False), error=e.args[0]
+            )
+
         return ConnectorStatus(status=True, details=self._get_details(2, True), error=None)
 
     def describe(self, data_source: RedshiftDataSource) -> Dict:
@@ -323,19 +340,47 @@ class RedshiftConnector(ToucanConnector):
             for col in res
         }
 
-    def get_model(self, db_name: str):
-        with self._get_cursor(database=db_name) as cursor:
+    def get_model(self) -> List[TableInfo]:
+        """Retrieves the database tree structure using current connection"""
+        available_dbs = self._list_db_names()
+        databases_tree = []
+        for db in available_dbs:
+            with suppress(redshift_connector.OperationalError):
+                databases_tree += self._list_tables_info(db)
+        return DiscoverableConnector.format_db_model(databases_tree)
+
+    def get_model_with_info(self) -> Tuple[List[TableInfo], Dict]:
+        """Retrieves the database tree structure using current connection"""
+        available_dbs = self._list_db_names()
+        databases_tree = []
+        failed_databases = []
+        for db in available_dbs:
+            try:
+                databases_tree += self._list_tables_info(db)
+            except redshift_connector.OperationalError:
+                failed_databases.append(db)
+
+        tables_info = DiscoverableConnector.format_db_model(databases_tree)
+        metadata = {}
+        if failed_databases:
+            metadata['info'] = {'Could not reach databases': failed_databases}
+        return (tables_info, metadata)
+
+    def _list_db_names(self) -> List[str]:
+        with self._get_cursor(database=self.default_database) as cursor:
             # redshift has a weird system db called padb_harvest duplicating the content of 'dev' database
             # https://bit.ly/3GQJCdy, we have to filter it
             cursor.execute(
                 """select datname from pg_database where datistemplate = false and datname != 'padb_harvest';"""
             )
-            available_dbs = [db_name for (db_name,) in cursor.fetchall()]
-            databases_tree = []
-        for db in available_dbs:
-            with self._get_cursor(database=db_name) as cursor:
-                cursor.execute(create_columns_query(db))
-                cols = aggregate_columns(cursor.fetch_dataframe())
-                cursor.execute(build_database_model_extraction_query())
-                databases_tree += merge_columns_and_tables(cols, cursor.fetch_dataframe())
-        return DiscoverableConnector.format_db_model(databases_tree)
+            return [db_name for (db_name,) in cursor.fetchall()]
+
+    def _list_tables_info(self, database_name: str = None) -> List[tuple]:
+        connection = redshift_connector.connect(
+            **self._get_connection_params(
+                database=self.default_database if not database_name else database_name
+            )
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(build_database_model_extraction_query())
+            return cursor.fetchall()

@@ -14,9 +14,13 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 
+DEFAULT_DATABASE = 'postgres'
+
 
 class PostgresDataSource(ToucanDataSource):
-    database: str = Field(..., description='The name of the database you want to query')
+    database: str = Field(
+        DEFAULT_DATABASE, description='The name of the database you want to query'
+    )
     query: constr(min_length=1) = Field(
         None,
         description='You can write a custom query against your '
@@ -59,7 +63,7 @@ class PostgresDataSource(ToucanDataSource):
         with suppress(Exception):
             connection = pgsql.connect(
                 **connector.get_connection_params(
-                    database=current_config.get('database', 'postgres')
+                    database=current_config.get('database', DEFAULT_DATABASE)
                 )
             )
             # # Always add the suggestions for the available databases
@@ -94,6 +98,8 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
     password: SecretStr = Field(None, description='Your login password')
+    default_database: str = Field(DEFAULT_DATABASE, description='Your default database')
+
     charset: str = Field(None, description='If you need to specify a specific character encoding.')
     connect_timeout: int = Field(
         None,
@@ -102,7 +108,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
         'time you want to wait for the server to respond. None by default',
     )
 
-    def get_connection_params(self, *, database='postgres'):
+    def get_connection_params(self, *, database=DEFAULT_DATABASE):
         con_params = dict(
             user=self.user,
             host=self.host,
@@ -129,7 +135,13 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
-        checks = ['Host resolved', 'Port opened', 'Connected to PostgreSQL', 'Authenticated']
+        checks = [
+            'Host resolved',
+            'Port opened',
+            'Connected to PostgreSQL',
+            'Authenticated',
+            'Default Database connection',
+        ]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
@@ -166,7 +178,17 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
                     status=False, details=self._get_details(3, False), error=e.args[0]
                 )
 
-        return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
+        # Basic db query
+        try:
+            connection = pgsql.connect(**self.get_connection_params(database=self.default_database))
+            with connection.cursor() as cursor:
+                cursor.execute("""select 1;""")
+        except (Exception, pgsql.Error) as e:
+            return ConnectorStatus(
+                status=False, details=self._get_details(4, False), error=e.args[0]
+            )
+
+        return ConnectorStatus(status=True, details=self._get_details(4, True), error=None)
 
     def describe(self, data_source: PostgresDataSource):
         connection = pgsql.connect(**self.get_connection_params(database=data_source.database))
@@ -202,13 +224,17 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
         return (tables_info, metadata)
 
     def _list_db_names(self) -> List[str]:
-        connection = pgsql.connect(**self.get_connection_params(database='postgres'))
+        connection = pgsql.connect(**self.get_connection_params(database=self.default_database))
         with connection.cursor() as cursor:
             cursor.execute("""select datname from pg_database where datistemplate = false;""")
             return [db_name for (db_name,) in cursor.fetchall()]
 
-    def _list_tables_info(self, database_name: str) -> List[tuple]:
-        connection = pgsql.connect(**self.get_connection_params(database=database_name))
+    def _list_tables_info(self, database_name: str = None) -> List[tuple]:
+        connection = pgsql.connect(
+            **self.get_connection_params(
+                database=self.default_database if not database_name else database_name
+            )
+        )
         with connection.cursor() as cursor:
             cursor.execute(build_database_model_extraction_query())
             return cursor.fetchall()
