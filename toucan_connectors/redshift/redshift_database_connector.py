@@ -1,7 +1,7 @@
 import logging
 import re
 import time
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from enum import Enum
 from threading import Thread
 from typing import Any
