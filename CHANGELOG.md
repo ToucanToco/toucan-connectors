@@ -1,5 +1,15 @@
 # Changelog (Pypi package)
 
+## [3.14.0] 2022-06-25
+
+### Changed
+
+- Improve order and default values of fields of the redshift connector
+
+### Fixed
+
+- Get table information from redshift connector
+
 ## [3.13.0] 2022-06-24
 
 ### Changed
