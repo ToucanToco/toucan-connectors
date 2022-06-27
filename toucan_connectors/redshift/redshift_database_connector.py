@@ -3,6 +3,7 @@ import re
 import time
 from contextlib import contextmanager, suppress
 from enum import Enum
+from functools import cached_property
 from threading import Thread
 from typing import Any
 
@@ -96,18 +97,12 @@ class RedshiftDataSource(ToucanDataSource):
         Method to retrieve the form with a current config
         Once the connector is set, we are able to give suggestions for the `database` field
         """
-        constraints = {}
-
-        if 'database' not in current_config:
-            with connector._get_connection(
-                database=connector.default_database
-            ) as conn, conn.cursor() as cursor:
-                cursor.execute("""select datname from pg_database where datistemplate = false;""")
-                res = cursor.fetchall()
-                available_dbs = [db_name for (db_name,) in res]
-                constraints['database'] = strlist_to_enum('database', available_dbs)
-
-        return create_model('FormSchema', **constraints, __base__=cls).schema()
+        default_db = current_config.get('database', DEFAULT_DATABASE)
+        return create_model(
+            'FormSchema',
+            database=strlist_to_enum('database', connector.available_dbs, default_db),
+            __base__=cls,
+        ).schema()
 
 
 class RedshiftConnector(ToucanConnector, DiscoverableConnector):
@@ -153,10 +148,15 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
 
     class Config:
         underscore_attrs_are_private = True
+        keep_untouched = (cached_property,)
 
         @staticmethod
         def schema_extra(schema: dict[str, Any]) -> None:
             schema['properties'] = {k: schema['properties'][k] for k in ORDERED_KEYS}
+
+    @cached_property
+    def available_dbs(self) -> list[str]:
+        return self._list_db_names()
 
     @validator('host')
     def host_validator(cls, v):
@@ -397,10 +397,8 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
 
     def get_model(self) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
-        available_dbs = self._list_db_names()
-
         tables_info = []
-        for db in available_dbs:
+        for db in self.available_dbs:
             with suppress(redshift_connector.OperationalError):
                 tables_info += self._db_tables_info(db)
 
@@ -408,10 +406,9 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
 
     def get_model_with_info(self) -> tuple[list[TableInfo], dict]:
         """Retrieves the database tree structure using current connection"""
-        available_dbs = self._list_db_names()
         databases_tree = []
         failed_databases = []
-        for db in available_dbs:
+        for db in self.available_dbs:
             try:
                 databases_tree += self._list_tables_info(db)
             except redshift_connector.OperationalError:
