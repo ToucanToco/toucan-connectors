@@ -26,6 +26,12 @@ class GoogleBigQueryDataSource(ToucanDataSource):
         '<a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax">here</a>',
         widget='sql',
     )
+    query_object: Dict = Field(
+        None,
+        description='An object describing a simple select query' 'This field is used internally',
+        **{'ui.hidden': True},
+    )
+    language: str = Field('sql', **{'ui.hidden': True})
 
 
 BigQueryParam = Union[bigquery.ScalarQueryParameter, bigquery.ArrayQueryParameter]
