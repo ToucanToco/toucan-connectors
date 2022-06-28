@@ -371,7 +371,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         with self._get_cursor(database) as cursor:
             """Get rows of (schema, table name, column name, column type)"""
             cursor.execute(
-                r"""SELECT "schemaname", "tablename", "column", "type" FROM PG_TABLE_DEF"""
+                r"""SELECT "schemaname", "tablename", "column", "type" FROM PG_TABLE_DEF WHERE schemaname = 'public';"""
             )
             return cursor.fetchall()
 
@@ -429,12 +429,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             )
             return [db_name for (db_name,) in cursor.fetchall()]
 
-    def _list_tables_info(self, database_name: str = None) -> list[tuple]:
-        connection = redshift_connector.connect(
-            **self._get_connection_params(
-                database=self.default_database if not database_name else database_name
-            )
-        )
-        with connection.cursor() as cursor:
+    def _list_tables_info(self, database: str) -> list[tuple]:
+        with self._get_cursor(database) as cursor:
             cursor.execute(build_database_model_extraction_query())
             return cursor.fetchall()
