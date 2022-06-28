@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.14.1] 2022-06-28
+
+### Changed
+
+- Make exploration faster and add form for redshift connector
+
 ## [3.14.0] 2022-06-25
 
 ### Changed
@@ -57,6 +63,8 @@ Some DataStats properties changed in the naming and some of them was added, see 
 - Added a dev container for developping safely on connectors.
 
 
+[3.14.1]: https://github.com/ToucanToco/toucan-connectors/compare/v3.14.0...v3.14.1
+[3.14.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.13.0...v3.14.0
 [3.13.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.12.0...v3.13.0
 [3.12.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.11.0...v3.12.0
 [3.11.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.0.0...v3.11.0
