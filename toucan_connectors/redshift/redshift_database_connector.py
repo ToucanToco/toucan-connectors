@@ -1,14 +1,15 @@
 import logging
 import re
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from enum import Enum
+from functools import cached_property
 from threading import Thread
 from typing import Any
 
 import pandas as pd
 import redshift_connector
-from pydantic import Field, SecretStr, root_validator, validator
+from pydantic import Field, SecretStr, create_model, root_validator, validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
@@ -22,6 +23,7 @@ from toucan_connectors.toucan_connector import (
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
+    strlist_to_enum,
 )
 
 TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
@@ -89,6 +91,19 @@ class RedshiftDataSource(ToucanDataSource):
     )
     language: str = Field('sql', **{'ui.hidden': True})
 
+    @classmethod
+    def get_form(cls, connector: 'RedshiftConnector', current_config: dict[str, Any]):
+        """
+        Method to retrieve the form with a current config
+        Once the connector is set, we are able to give suggestions for the `database` field
+        """
+        default_db = current_config.get('database', DEFAULT_DATABASE)
+        return create_model(
+            'FormSchema',
+            database=strlist_to_enum('database', connector.available_dbs, default_db),
+            __base__=cls,
+        ).schema()
+
 
 class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     data_source_model: RedshiftDataSource
@@ -133,10 +148,15 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
 
     class Config:
         underscore_attrs_are_private = True
+        keep_untouched = (cached_property,)
 
         @staticmethod
         def schema_extra(schema: dict[str, Any]) -> None:
             schema['properties'] = {k: schema['properties'][k] for k in ORDERED_KEYS}
+
+    @cached_property
+    def available_dbs(self) -> list[str]:
+        return self._list_db_names()
 
     @validator('host')
     def host_validator(cls, v):
@@ -347,39 +367,20 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             for col in res
         }
 
-    def _table_infos_rows(self) -> list[tuple[str, str, str, str, str]]:
-        """Get rows of (database, schema, table name, column name, column type)"""
-        with self._get_cursor(database=self.default_database) as cursor:
-            res = cursor.execute(
-                """
-                SELECT
-                    table_catalog,
-                    table_schema,
-                    table_name,
-                    column_name,
-                    data_type
-                FROM
-                    information_schema.columns
-                WHERE
-                    table_schema NOT IN ('information_schema', 'pg_catalog')
-                ORDER BY
-                    table_schema,
-                    table_name,
-                    ordinal_position;
-                """
+    def _db_table_info_rows(self, database: str) -> list[tuple[str, str, str, str]]:
+        with self._get_cursor(database) as cursor:
+            """Get rows of (schema, table name, column name, column type)"""
+            cursor.execute(
+                r"""SELECT "schemaname", "tablename", "column", "type" FROM PG_TABLE_DEF WHERE schemaname = 'public';"""
             )
-        return res.fetchall()
+            return cursor.fetchall()
 
-    def get_model(self) -> list[TableInfo]:
-        """Retrieves the database tree structure using current connection"""
+    def _db_tables_info(self, database: str) -> list[tuple[str, str, str, str, str]]:
+        """Get rows of (database, schema, table name, column name, column type)"""
         table_infos = []
-        for database, schema, table_name, column_name, column_type in self._table_infos_rows():
+        for schema, table_name, column_name, column_type in self._db_table_info_rows(database):
             for row in table_infos[::-1]:
-                if (
-                    row['database'] == database
-                    and row['schema'] == schema
-                    and row['name'] == table_name
-                ):
+                if row['schema'] == schema and row['name'] == table_name:
                     row['columns'].append({'name': column_name, 'type': column_type})
                     break
             else:
@@ -394,12 +395,20 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
                 )
         return table_infos
 
+    def get_model(self) -> list[TableInfo]:
+        """Retrieves the database tree structure using current connection"""
+        tables_info = []
+        for db in self.available_dbs:
+            with suppress(redshift_connector.OperationalError):
+                tables_info += self._db_tables_info(db)
+
+        return tables_info
+
     def get_model_with_info(self) -> tuple[list[TableInfo], dict]:
         """Retrieves the database tree structure using current connection"""
-        available_dbs = self._list_db_names()
         databases_tree = []
         failed_databases = []
-        for db in available_dbs:
+        for db in self.available_dbs:
             try:
                 databases_tree += self._list_tables_info(db)
             except redshift_connector.OperationalError:
@@ -420,12 +429,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             )
             return [db_name for (db_name,) in cursor.fetchall()]
 
-    def _list_tables_info(self, database_name: str = None) -> list[tuple]:
-        connection = redshift_connector.connect(
-            **self._get_connection_params(
-                database=self.default_database if not database_name else database_name
-            )
-        )
-        with connection.cursor() as cursor:
+    def _list_tables_info(self, database: str) -> list[tuple]:
+        with self._get_cursor(database) as cursor:
             cursor.execute(build_database_model_extraction_query())
             return cursor.fetchall()

@@ -472,17 +472,18 @@ def test_redshiftconnector_describe(mock_connection, redshift_connector, redshif
 
 
 def test_get_model(mocker, redshift_connector):
-    mocker.patch.object(RedshiftConnector, '_table_infos_rows').return_value = [
-        ['dev', 'pg_internal', 'redshift_auto_health_check_436837', 'a', 'integer'],
-        ['dev', 'public', 'table_1', 'label', 'character varying'],
-        ['dev', 'public', 'table_1', 'doum', 'character varying'],
-        ['dev', 'public', 'table_1', 'value1', 'bigint'],
-        ['dev', 'public', 'table_2', 'label', 'character varying'],
-        ['dev', 'public', 'table_2', 'doum', 'character varying'],
-        ['dev', 'public', 'table_2', 'value1', 'bigint'],
-        ['dev', 'public', 'table_2', 'value2', 'bigint'],
-        ['dev', 'public', 'table_3', 'label', 'character varying'],
-        ['dev', 'public', 'table_3', 'group', 'character varying'],
+    mocker.patch.object(RedshiftConnector, '_list_db_names', return_value=['dev'])
+    mocker.patch.object(RedshiftConnector, '_db_table_info_rows').return_value = [
+        ('pg_internal', 'redshift_auto_health_check_436837', 'a', 'integer'),
+        ('public', 'table_1', 'label', 'character varying'),
+        ('public', 'table_1', 'doum', 'character varying'),
+        ('public', 'table_1', 'value1', 'bigint'),
+        ('public', 'table_2', 'label', 'character varying'),
+        ('public', 'table_2', 'doum', 'character varying'),
+        ('public', 'table_2', 'value1', 'bigint'),
+        ('public', 'table_2', 'value2', 'bigint'),
+        ('public', 'table_3', 'label', 'character varying'),
+        ('public', 'table_3', 'group', 'character varying'),
     ]
     assert redshift_connector.get_model() == [
         {
