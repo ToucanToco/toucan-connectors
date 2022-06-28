@@ -1,5 +1,6 @@
 import logging
 from enum import Enum
+from functools import cached_property
 from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional, Union
 
@@ -81,6 +82,10 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         '<a href="https://developers.google.com/identity/protocols/googlescopes" target="_blank" >documentation</a>',
     )
 
+    class Config:
+        underscore_attrs_are_private = True
+        keep_untouched = (cached_property,)
+
     @staticmethod
     def _get_google_credentials(credentials: GoogleCredentials, scopes: List[str]) -> Credentials:
         credentials = get_google_oauth2_credentials(credentials).with_scopes(scopes)
@@ -102,6 +107,10 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
             },
         )
         return client
+
+    @cached_property
+    def project_tree(self) -> list[TableInfo]:
+        return self._get_project_structure()
 
     @staticmethod
     def _execute_query(client: bigquery.Client, query: str, parameters: List) -> pandas.DataFrame:
@@ -162,7 +171,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         return result
 
     @classmethod
-    def format_db_model(cls, unformatted_db_tree: pd.DataFrame) -> List[TableInfo]:
+    def _format_db_model(cls, unformatted_db_tree: pd.DataFrame) -> List[TableInfo]:
         def _format_columns(x: str):
             col = x.split()
             return {'name': col[0], 'type': col[1]}
@@ -184,7 +193,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
             .to_dict(orient='records')
         )
 
-    def get_project_structure(self) -> pd.DataFrame:
+    def _get_project_structure(self) -> List[TableInfo]:
         client = self._connect(
             GoogleBigQueryConnector._get_google_credentials(self.credentials, self.scopes)
         )
@@ -199,8 +208,8 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                 for dataset in datasets
             ]
         )
-        return client.query(query).to_dataframe()
+        return self._format_db_model(client.query(query).to_dataframe())
 
     def get_model(self) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
-        return self.format_db_model(self.get_project_structure())
+        return self.project_tree
