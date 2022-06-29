@@ -1,12 +1,14 @@
 from unittest.mock import patch
 
 import pandas
+import pandas as pd
 import pytest
 from google.cloud.bigquery import ArrayQueryParameter, Client, ScalarQueryParameter
 from google.cloud.bigquery.job.query import QueryJob
 from google.cloud.bigquery.table import RowIterator
 from google.oauth2.service_account import Credentials
 from pandas.util.testing import assert_frame_equal  # <-- for testing dataframes
+from pytest_mock import MockFixture
 
 from toucan_connectors.google_big_query.google_big_query_connector import (
     GoogleBigQueryConnector,
@@ -157,3 +159,152 @@ def test_retrieve_data(execute, connect, credentials, _fixture_credentials):
     )
     result = connector._retrieve_data(datasource)
     assert_frame_equal(pandas.DataFrame({'a': [1, 1], 'b': [2, 2]}), result)
+
+
+def test_get_model(mocker: MockFixture, _fixture_credentials) -> None:
+    class FakeResponse:
+        def __init__(self) -> None:
+            ...
+
+        def to_dataframe(self) -> pd.DataFrame:
+            return pd.DataFrame(
+                [
+                    {
+                        'name': 'coucou',
+                        'schema': 'foooo',
+                        'database': 'myproject',
+                        'type': 'BASE TABLE',
+                        'column_name': 'pingu',
+                        'data_type': 'STR',
+                    },
+                    {
+                        'name': 'coucou',
+                        'schema': 'foooo',
+                        'database': 'myproject',
+                        'type': 'BASE TABLE',
+                        'column_name': 'toto',
+                        'data_type': 'INT64',
+                    },
+                    {
+                        'name': 'coucou',
+                        'schema': 'foooo',
+                        'database': 'myproject',
+                        'type': 'BASE TABLE',
+                        'column_name': 'tante',
+                        'data_type': 'STR',
+                    },
+                    {
+                        'name': 'blabla',
+                        'schema': 'baarrrr',
+                        'database': 'myproject',
+                        'type': 'MATERIALIZED VIEW',
+                        'column_name': 'gogo',
+                        'data_type': 'STR',
+                    },
+                    {
+                        'name': 'blabla',
+                        'schema': 'baarrrr',
+                        'database': 'myproject',
+                        'type': 'MATERIALIZED VIEW',
+                        'column_name': 'gaga',
+                        'data_type': 'INT64',
+                    },
+                    {
+                        'name': 'blabla',
+                        'schema': 'baarrrr',
+                        'database': 'myproject',
+                        'type': 'MATERIALIZED VIEW',
+                        'column_name': 'gg',
+                        'data_type': 'STR',
+                    },
+                    {
+                        'name': 'tortuga',
+                        'schema': 'taar',
+                        'database': 'myproject',
+                        'type': 'VIEW',
+                        'column_name': 'hammer',
+                        'data_type': 'STR',
+                    },
+                    {
+                        'name': 'tortuga',
+                        'schema': 'taar',
+                        'database': 'myproject',
+                        'type': 'VIEW',
+                        'column_name': 'to',
+                        'data_type': 'INT64',
+                    },
+                    {
+                        'name': 'tortuga',
+                        'schema': 'taar',
+                        'database': 'myproject',
+                        'type': 'VIEW',
+                        'column_name': 'fall',
+                        'data_type': 'STR',
+                    },
+                ]
+            )
+
+    datasets = [
+        mocker.MagicMock(dataset_id='foooo'),
+        mocker.MagicMock(dataset_id='baarrrr'),
+        mocker.MagicMock(dataset_id='taar'),
+    ]
+
+    mocker.patch.object(Client, 'list_datasets', return_value=datasets)
+    mocked_query = mocker.patch.object(Client, 'query', return_value=FakeResponse())
+    mocker.patch(
+        'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._connect',
+        return_value=Client,
+    )
+
+    mocker.patch(
+        'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._get_google_credentials',
+        return_value=Credentials,
+    )
+    connector = GoogleBigQueryConnector(
+        name='MyGBQ',
+        credentials=_fixture_credentials,
+        scopes=[
+            'https://www.googleapis.com/auth/bigquery',
+            'https://www.googleapis.com/auth/drive',
+        ],
+    )
+    assert connector.get_model() == [
+        {
+            'name': 'blabla',
+            'schema': 'baarrrr',
+            'database': 'myproject',
+            'type': 'view',
+            'columns': [
+                {'name': 'gogo', 'type': 'str'},
+                {'name': 'gaga', 'type': 'int64'},
+                {'name': 'gg', 'type': 'str'},
+            ],
+        },
+        {
+            'name': 'coucou',
+            'schema': 'foooo',
+            'database': 'myproject',
+            'type': 'table',
+            'columns': [
+                {'name': 'pingu', 'type': 'str'},
+                {'name': 'toto', 'type': 'int64'},
+                {'name': 'tante', 'type': 'str'},
+            ],
+        },
+        {
+            'name': 'tortuga',
+            'schema': 'taar',
+            'database': 'myproject',
+            'type': 'view',
+            'columns': [
+                {'name': 'hammer', 'type': 'str'},
+                {'name': 'to', 'type': 'int64'},
+                {'name': 'fall', 'type': 'str'},
+            ],
+        },
+    ]
+    assert (
+        mocked_query.call_args_list[0][0][0]
+        == "select C.table_name as name, C.table_schema as schema, T.table_catalog as database,\n                T.table_type as type,  C.column_name, C.data_type from foooo.INFORMATION_SCHEMA.COLUMNS C\n                JOIN foooo.INFORMATION_SCHEMA.TABLES T on C.table_name = T.table_name\n                where IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'\nUNION ALL\nselect C.table_name as name, C.table_schema as schema, T.table_catalog as database,\n                T.table_type as type,  C.column_name, C.data_type from baarrrr.INFORMATION_SCHEMA.COLUMNS C\n                JOIN baarrrr.INFORMATION_SCHEMA.TABLES T on C.table_name = T.table_name\n                where IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'\nUNION ALL\nselect C.table_name as name, C.table_schema as schema, T.table_catalog as database,\n                T.table_type as type,  C.column_name, C.data_type from taar.INFORMATION_SCHEMA.COLUMNS C\n                JOIN taar.INFORMATION_SCHEMA.TABLES T on C.table_name = T.table_name\n                where IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"
+    )

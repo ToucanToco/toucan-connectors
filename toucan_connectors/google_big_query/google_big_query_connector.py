@@ -1,5 +1,6 @@
 import logging
 from enum import Enum
+from functools import cached_property
 from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional, Union
 
@@ -11,7 +12,12 @@ from google.oauth2.service_account import Credentials
 from pydantic import Field
 
 from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import (
+    DiscoverableConnector,
+    TableInfo,
+    ToucanConnector,
+    ToucanDataSource,
+)
 
 
 class Dialect(str, Enum):
@@ -26,6 +32,12 @@ class GoogleBigQueryDataSource(ToucanDataSource):
         '<a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax">here</a>',
         widget='sql',
     )
+    query_object: Dict = Field(
+        None,
+        description='An object describing a simple select query This field is used internally',
+        **{'ui.hidden': True},
+    )
+    language: str = Field('sql', **{'ui.hidden': True})
 
 
 BigQueryParam = Union[bigquery.ScalarQueryParameter, bigquery.ArrayQueryParameter]
@@ -43,7 +55,7 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
         return bigquery_helpers.scalar_to_query_parameter(value=value, name=name)
 
 
-class GoogleBigQueryConnector(ToucanConnector):
+class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     data_source_model: GoogleBigQueryDataSource
 
     credentials: GoogleCredentials = Field(
@@ -70,6 +82,10 @@ class GoogleBigQueryConnector(ToucanConnector):
         '<a href="https://developers.google.com/identity/protocols/googlescopes" target="_blank" >documentation</a>',
     )
 
+    class Config:
+        underscore_attrs_are_private = True
+        keep_untouched = (cached_property,)
+
     @staticmethod
     def _get_google_credentials(credentials: GoogleCredentials, scopes: List[str]) -> Credentials:
         credentials = get_google_oauth2_credentials(credentials).with_scopes(scopes)
@@ -91,6 +107,10 @@ class GoogleBigQueryConnector(ToucanConnector):
             },
         )
         return client
+
+    @cached_property
+    def project_tree(self) -> list[TableInfo]:
+        return self._get_project_structure()
 
     @staticmethod
     def _execute_query(client: bigquery.Client, query: str, parameters: List) -> pandas.DataFrame:
@@ -149,3 +169,46 @@ class GoogleBigQueryConnector(ToucanConnector):
         result = GoogleBigQueryConnector._execute_query(client, query, parameters)
 
         return result
+
+    @classmethod
+    def _format_db_model(cls, unformatted_db_tree: pd.DataFrame) -> List[TableInfo]:
+        def _format_columns(x: str):
+            col = x.split()
+            return {'name': col[0], 'type': col[1]}
+
+        unformatted_db_tree['type'] = unformatted_db_tree['type'].apply(
+            lambda x: 'view' if 'VIEW' in x else 'table'
+        )
+        unformatted_db_tree['columns'] = (
+            unformatted_db_tree['column_name']
+            + ' '
+            + unformatted_db_tree['data_type'].apply(lambda x: x.lower())
+        )
+
+        unformatted_db_tree['columns'] = unformatted_db_tree['columns'].apply(_format_columns)
+        return (
+            unformatted_db_tree.groupby(['name', 'schema', 'database', 'type'])['columns']
+            .apply(list)
+            .reset_index()
+            .to_dict(orient='records')
+        )
+
+    def _get_project_structure(self) -> List[TableInfo]:
+        client = self._connect(
+            GoogleBigQueryConnector._get_google_credentials(self.credentials, self.scopes)
+        )
+        datasets = list(client.list_datasets())
+        query = '\nUNION ALL\n'.join(
+            [
+                f"""select C.table_name as name, C.table_schema as schema, T.table_catalog as database,
+                T.table_type as type,  C.column_name, C.data_type from {dataset.dataset_id}.INFORMATION_SCHEMA.COLUMNS C
+                JOIN {dataset.dataset_id}.INFORMATION_SCHEMA.TABLES T on C.table_name = T.table_name
+                where IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"""
+                for dataset in datasets
+            ]
+        )
+        return self._format_db_model(client.query(query).to_dataframe())
+
+    def get_model(self) -> list[TableInfo]:
+        """Retrieves the database tree structure using current connection"""
+        return self.project_tree
