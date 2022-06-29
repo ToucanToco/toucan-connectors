@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.15.0] 2022-06-29
+
+### Changed
+
+- Implement exploration in google big query connector
+
 ## [3.14.1] 2022-06-28
 
 ### Changed
