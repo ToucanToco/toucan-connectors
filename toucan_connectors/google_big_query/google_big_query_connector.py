@@ -34,7 +34,7 @@ class GoogleBigQueryDataSource(ToucanDataSource):
     )
     query_object: Dict = Field(
         None,
-        description='An object describing a simple select query' 'This field is used internally',
+        description='An object describing a simple select query This field is used internally',
         **{'ui.hidden': True},
     )
     language: str = Field('sql', **{'ui.hidden': True})
@@ -203,8 +203,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                 f"""select C.table_name as name, C.table_schema as schema, T.table_catalog as database,
                 T.table_type as type,  C.column_name, C.data_type from {dataset.dataset_id}.INFORMATION_SCHEMA.COLUMNS C
                 JOIN {dataset.dataset_id}.INFORMATION_SCHEMA.TABLES T on C.table_name = T.table_name
-                where IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
-            """
+                where IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"""
                 for dataset in datasets
             ]
         )
