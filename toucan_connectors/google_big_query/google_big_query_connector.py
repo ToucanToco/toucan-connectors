@@ -38,6 +38,7 @@ class GoogleBigQueryDataSource(ToucanDataSource):
         **{'ui.hidden': True},
     )
     language: str = Field('sql', **{'ui.hidden': True})
+    database: str = Field('__default__')  # Needed for graphical selection in frontend but not used
 
 
 BigQueryParam = Union[bigquery.ScalarQueryParameter, bigquery.ArrayQueryParameter]
