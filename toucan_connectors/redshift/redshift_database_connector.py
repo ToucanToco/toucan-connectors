@@ -1,10 +1,8 @@
 import logging
 import re
-import time
-from contextlib import contextmanager, suppress
+from contextlib import suppress
 from enum import Enum
 from functools import cached_property
-from threading import Thread
 from typing import Any
 
 import pandas as pd
@@ -13,7 +11,6 @@ from pydantic import Field, SecretStr, create_model, root_validator, validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.redshift.utils import build_database_model_extraction_query, types_map
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
@@ -52,6 +49,7 @@ ORDERED_KEYS = [
 ]
 
 logger = logging.getLogger(__name__)
+
 
 class AuthenticationMethod(str, Enum):
     DB_CREDENTIALS: str = 'db_credentials'
@@ -137,7 +135,6 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     session_token: str | None = Field(None, description='Your session token')
     profile: str | None = Field(None, description='AWS profile')
     region: str | None = Field(None, description='The region in which there is your aws account.')
-    _is_alive: bool = True
 
     class Config:
         underscore_attrs_are_private = True
@@ -216,10 +213,6 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         con.autocommit = True  # see https://stackoverflow.com/q/22019154
         con.paramstyle = 'pyformat'
         return con
-
-    def sleeper(self):
-        time.sleep(self.connect_timeout)
-        self._is_alive = False
 
     def _retrieve_tables(self, database) -> list[str]:
         with self._get_connection(database=database).cursor() as cursor:
