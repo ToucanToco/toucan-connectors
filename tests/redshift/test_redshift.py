@@ -1,4 +1,3 @@
-from contextlib import _GeneratorContextManager
 from unittest.mock import Mock, patch
 
 import pytest
@@ -117,13 +116,6 @@ def test_redshiftdatasource_get_form(redshift_connector, redshift_datasource):
     assert result['properties']['domain']['title'] == 'Domain'
     assert result['properties']['validation']['title'] == 'Validation'
     assert result['required'] == ['domain', 'name']
-
-
-@patch('toucan_connectors.redshift.redshift_database_connector.redshift_connection_manager')
-def test_redshiftconnector_get_redshift_connection_manager(
-    mock_connection_manager, redshift_connector
-):
-    assert redshift_connector.get_redshift_connection_manager() == mock_connection_manager
 
 
 def test_redshiftconnector_get_connection_params_missing_authentication_mode():
@@ -274,56 +266,11 @@ def test_redshiftconnector_get_connection_params_aws_profile_mode(redshift_conne
     )
 
 
-@patch('toucan_connectors.ToucanConnector.get_identifier')
-@patch('toucan_connectors.redshift.redshift_database_connector.redshift_connection_manager')
-def test_redshiftconnector_get_connection(
-    mock_connection_manager, mock_get_identifier, redshift_connector, redshift_datasource
-):
-    mock_get_identifier.return_value = 'id_test'
-    redshift_connector.connect_timeout = 1
-    result = redshift_connector._get_connection(database=redshift_datasource)
-    assert result == mock_connection_manager.get()
-
-
-@patch('toucan_connectors.ToucanConnector.get_identifier')
-@patch('toucan_connectors.redshift.redshift_database_connector.redshift_connector')
-def test_redshiftconnector_get_connection_alive_close(
-    mock_get_identifier, mock_redshift_connector, redshift_connector, redshift_datasource
-):
-    redshift_connector._is_alive = False
-    mock_redshift_connector.return_value = 'id_test'
-
-    redshift_connector.connect_timeout = 1
-    result = redshift_connector._get_connection(database=redshift_datasource)
-    assert isinstance(result, _GeneratorContextManager)
-
-
-@pytest.mark.skip(reason='flaky test')
-@patch('toucan_connectors.ToucanConnector.get_identifier')
-def test_redshiftconnector_close(mock_get_identifier, redshift_connector):
-    mock_get_identifier().return_value = 'id_test'
-    cm = redshift_connector.get_redshift_connection_manager()
-    assert cm.connection_list[f'id_test{DATABASE_NAME}{CLUSTER_IDENTIFIER}'].exec_alive() is False
-    cm.force_clean()
-    assert len(cm.connection_list) == 0
-
-
-def test_redshiftconnector_sleeper(redshift_connector):
-    redshift_connector.connect_timeout = 0.01
-    redshift_connector.sleeper()
-    assert redshift_connector._is_alive is False
-
-
-def test_redshiftconnector_get_cursor(redshift_connector, redshift_datasource):
-    result = redshift_connector._get_cursor(database=redshift_datasource.database)
-    assert isinstance(result, _GeneratorContextManager)
-
-
 @patch.object(RedshiftConnector, '_get_connection')
 def test_redshiftconnector_retrieve_tables(
     mock_connection, redshift_connector, redshift_datasource
 ):
-    mock_connection().__enter__().cursor().__enter__().fetchall.return_value = (
+    mock_connection().cursor().__enter__().fetchall.return_value = (
         ['table1'],
         ['table2'],
         ['table3'],
@@ -341,9 +288,7 @@ def test_redshiftconnector_retrieve_data(
     mock_SqlQueryHelper.count_query_needed.return_value = True
     mock_SqlQueryHelper.prepare_limit_query.return_value = Mock(), Mock()
     mock_SqlQueryHelper.prepare_count_query.return_value = Mock(), Mock()
-    mock_get_connection().__enter__().cursor().__enter__().fetch_dataframe.return_value = (
-        mock_response
-    )
+    mock_get_connection().cursor().__enter__().fetch_dataframe.return_value = mock_response
     result = redshift_connector._retrieve_data(datasource=redshift_datasource, get_row_count=True)
     assert result == mock_response
 
@@ -356,7 +301,7 @@ def test_redshiftconnector_retrieve_data_empty_result(
     mock_SqlQueryHelper.count_query_needed.return_value = True
     mock_SqlQueryHelper.prepare_limit_query.return_value = Mock(), Mock()
     mock_SqlQueryHelper.prepare_count_query.return_value = Mock(), Mock()
-    mock_get_connection().__enter__().cursor().__enter__().fetch_dataframe.return_value = None
+    mock_get_connection().cursor().__enter__().fetch_dataframe.return_value = None
     result = redshift_connector._retrieve_data(datasource=redshift_datasource, get_row_count=True)
     assert result.empty is True
 
@@ -368,9 +313,7 @@ def test_redshiftconnector_retrieve_data_without_count(
 ):
     mock_response = Mock()
     mock_SqlQueryHelper.prepare_limit_query.return_value = Mock(), Mock()
-    mock_get_connection().__enter__().cursor().__enter__().fetch_dataframe.return_value = (
-        mock_response
-    )
+    mock_get_connection().cursor().__enter__().fetch_dataframe.return_value = mock_response
     result = redshift_connector._retrieve_data(datasource=redshift_datasource, limit=10)
     assert result == mock_response
 
@@ -465,7 +408,7 @@ def test_redshiftconnector_describe(mock_connection, redshift_connector, redshif
         (b'listid', 23, None, None, None),
         (b'pricepaid', 1700, None, None, None),
     ]
-    mock_connection().__enter__().cursor().__enter__.return_value = mock_description
+    mock_connection().cursor().__enter__.return_value = mock_description
     result = redshift_connector.describe(data_source=redshift_datasource)
     expected = {'salesid': 'INTEGER', 'listid': 'INTEGER', 'pricepaid': 'DECIMAL'}
     assert result == expected
