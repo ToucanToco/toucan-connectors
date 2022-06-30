@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.15.1] 2022-06-30
+
+### Changed
+
+- Add attributes & methods to big query connector for graphical selection
+
 ## [3.15.0] 2022-06-29
 
 ### Changed
