@@ -1,5 +1,12 @@
 # Changelog (Pypi package)
 
+## [3.15.2] 2022-06-30
+
+### Changed
+
+- Ignore extra attributes in BigQueryDataSource for graphical selection
+
+
 ## [3.15.1] 2022-06-30
 
 ### Changed
