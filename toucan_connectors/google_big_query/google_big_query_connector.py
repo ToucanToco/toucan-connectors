@@ -40,6 +40,9 @@ class GoogleBigQueryDataSource(ToucanDataSource):
     language: str = Field('sql', **{'ui.hidden': True})
     database: str = Field(None)  # Needed for graphical selection in frontend but not used
 
+    class Config:
+        extra = 'ignore'
+
     @classmethod
     def get_form(cls, connector: 'GoogleBigQueryConnector', current_config: dict[str, Any]):
         schema = create_model('FormSchema', __base__=cls).schema()
