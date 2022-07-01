@@ -1,10 +1,8 @@
 import logging
 import re
-import time
-from contextlib import contextmanager, suppress
+from contextlib import suppress
 from enum import Enum
 from functools import cached_property
-from threading import Thread
 from typing import Any
 
 import pandas as pd
@@ -13,7 +11,6 @@ from pydantic import Field, SecretStr, create_model, root_validator, validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.redshift.utils import build_database_model_extraction_query, types_map
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
@@ -52,12 +49,6 @@ ORDERED_KEYS = [
 ]
 
 logger = logging.getLogger(__name__)
-
-redshift_connection_manager = None
-if not redshift_connection_manager:
-    redshift_connection_manager = ConnectionManager(
-        name='redshift', timeout=25, wait=0.2, time_between_clean=10, time_keep_alive=60
-    )
 
 
 class AuthenticationMethod(str, Enum):
@@ -144,7 +135,6 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     session_token: str | None = Field(None, description='Your session token')
     profile: str | None = Field(None, description='AWS profile')
     region: str | None = Field(None, description='The region in which there is your aws account.')
-    _is_alive: bool = True
 
     class Config:
         underscore_attrs_are_private = True
@@ -186,10 +176,6 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             raise ValueError(AuthenticationMethodError.UNKNOWN.value)
         return values
 
-    @staticmethod
-    def get_redshift_connection_manager() -> ConnectionManager:
-        return redshift_connection_manager
-
     def _get_connection_params(self, database) -> dict[str, Any]:
         con_params = dict(
             database=database,
@@ -219,49 +205,17 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
 
     def _get_connection(self, database) -> redshift_connector.Connection:
         """Establish a connection to an Amazon Redshift cluster."""
-
-        def connect_function() -> redshift_connector.Connection:
-            con = redshift_connector.connect(
-                **self._get_connection_params(
-                    database=database if database else None,
-                ),
-            )
-            con.autocommit = True  # see https://stackoverflow.com/q/22019154
-            con.paramstyle = 'pyformat'
-            return con
-
-        def alive_function(connection) -> bool:
-            logger.info(f'Alive Redshift connection: {connection}')
-            return self._is_alive
-
-        def close_function(connection) -> None:
-            logger.info('Close Redshift connection')
-            if not self._is_alive:
-                return connection.close()
-
-        connection: redshift_connector.Connection = redshift_connection_manager.get(
-            identifier=f'{self.get_identifier()}{database}{self.cluster_identifier}',
-            connect_method=connect_function,
-            alive_method=alive_function,
-            close_method=close_function,
-            save=True if database else False,
+        con = redshift_connector.connect(
+            **self._get_connection_params(
+                database=database if database else None,
+            ),
         )
-        if self.connect_timeout is not None:
-            t = Thread(target=self.sleeper)
-            t.start()
-        return connection
-
-    def sleeper(self):
-        time.sleep(self.connect_timeout)
-        self._is_alive = False
-
-    @contextmanager
-    def _get_cursor(self, database) -> redshift_connector.Cursor:
-        with self._get_connection(database=database) as conn, conn.cursor() as cursor:
-            yield cursor
+        con.autocommit = True  # see https://stackoverflow.com/q/22019154
+        con.paramstyle = 'pyformat'
+        return con
 
     def _retrieve_tables(self, database) -> list[str]:
-        with self._get_cursor(database=database) as cursor:
+        with self._get_connection(database=database).cursor() as cursor:
             cursor.execute(TABLE_QUERY)
             res = cursor.fetchall()
         return [table_name for (table_name,) in res]
@@ -281,7 +235,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_limit_query(
                 datasource.query, datasource.parameters, offset, limit
             )
-        with self._get_cursor(database=datasource.database) as cursor:
+        with self._get_connection(database=datasource.database).cursor() as cursor:
             cursor.execute(prepared_query, prepared_query_parameters)
             result: pd.DataFrame = cursor.fetch_dataframe()
             if result is None:
@@ -359,7 +313,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
     def describe(self, data_source: RedshiftDataSource) -> dict[str, Any]:
-        with self._get_cursor(database=data_source.database) as cursor:
+        with self._get_connection(database=data_source.database).cursor() as cursor:
             cursor.execute(DESCRIBE_QUERY.format(column=data_source.query.replace(';', '')))
             res = cursor.description
         return {
@@ -368,7 +322,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         }
 
     def _db_table_info_rows(self, database: str) -> list[tuple[str, str, str, str]]:
-        with self._get_cursor(database) as cursor:
+        with self._get_connection(database).cursor() as cursor:
             """Get rows of (schema, table name, column name, column type)"""
             cursor.execute(
                 r"""SELECT "schemaname", "tablename", "column", "type" FROM PG_TABLE_DEF WHERE schemaname = 'public';"""
@@ -421,7 +375,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         return (tables_info, metadata)
 
     def _list_db_names(self) -> list[str]:
-        with self._get_cursor(database=self.default_database) as cursor:
+        with self._get_database_connection(database=self.default_database).cursor() as cursor:
             # redshift has a weird system db called padb_harvest duplicating the content of 'dev' database
             # https://bit.ly/3GQJCdy, we have to filter it
             cursor.execute(
