@@ -375,7 +375,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         return (tables_info, metadata)
 
     def _list_db_names(self) -> list[str]:
-        with self._get_database_connection(database=self.default_database).cursor() as cursor:
+        with self._get_connection(database=self.default_database).cursor() as cursor:
             # redshift has a weird system db called padb_harvest duplicating the content of 'dev' database
             # https://bit.ly/3GQJCdy, we have to filter it
             cursor.execute(
