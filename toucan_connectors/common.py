@@ -111,7 +111,7 @@ def nosql_apply_parameters_to_query(query, parameters, handle_errors=False):
             rendered_query = _flatten_rendered_nested_list(query, rendered_query)
             return rendered_query
         elif isinstance(query, tuple):
-            return tuple([_render_query(value, parameters) for value in deepcopy(query)])
+            return tuple(_render_query(value, parameters) for value in deepcopy(query))
         elif isinstance(query, str):
             if not _has_parameters(query):
                 return query
