@@ -1,5 +1,12 @@
 # Changelog (Pypi package)
 
+## [3.15.3] 2022-06-30
+
+### Changed
+
+- Fix redshift connector: Removing pooling due to table locks
+- Feature nosql_apply_parameters_to_query: add tuple render capabilities
+
 ## [3.15.2] 2022-06-30
 
 ### Changed
