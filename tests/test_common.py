@@ -189,6 +189,12 @@ def test_apply_parameter_to_query_do_nothing():
             {'entity_id': 1, 'entity_array': [True]},
             {'mixed': [1, True]},
         ),
+        # tuple should be rendered tests below:
+        (
+            {'array': ('{{ one }}', '{{ two }}')},
+            {'one': '1', 'two': '2'},
+            {'array': ('1', '2')},
+        ),
         # 'data' should remain a string in these cases:
         (
             {'data': '["{{ my_var }}", "bar"]'},
@@ -219,6 +225,11 @@ def test_apply_parameter_to_query_do_nothing():
             {'data': '{%if obj %}{{ obj }}{%else%}Nothing{%endif%}'},
             {'obj': 0},
             {'data': 'Nothing'},
+        ),
+        (
+            {'data': '{%if obj %}{{ obj }}{%else%}Nothing{%endif%}'},
+            {'obj': 1},
+            {'data': 1},
         ),
         (
             {'data': '{%if obj %}{{ obj }}{%else%}Nothing{%endif%}'},
