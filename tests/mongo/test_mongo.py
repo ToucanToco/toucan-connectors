@@ -320,7 +320,7 @@ def test_get_slice_with_regex(mongo_connector, mongo_datasource):
                 {'country': regex},
                 {'language': regex},
             ]
-        }
+        },
     )
     pd.testing.assert_series_equal(
         slice.df['country'], pd.Series(['England', 'Germany', 'USA'], name='country')
@@ -329,11 +329,7 @@ def test_get_slice_with_regex(mongo_connector, mongo_datasource):
 
 def test_get_df_with_regex(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    df = mongo_connector.get_df_with_regex(
-        datasource,
-        {
-            'and': [{'country': re.compile('r.*a')}]
-        })
+    df = mongo_connector.get_df_with_regex(datasource, {'and': [{'country': re.compile('r.*a')}]})
     pd.testing.assert_series_equal(df['country'], pd.Series(['France', 'Germany'], name='country'))
 
 
@@ -355,8 +351,7 @@ def test_get_df_with_regex_with_integers(mongo_connector, mongo_datasource):
         collection='test_col',
         query=[{'$match': {'domain': 'domain1'}}],
     )
-    df = mongo_connector.get_df_with_regex(datasource,
-    {'and': [{'value': re.compile('^20$')}]})
+    df = mongo_connector.get_df_with_regex(datasource, {'and': [{'value': re.compile('^20$')}]})
     assert df.drop(columns='_id').to_dict(orient='records') == [
         {'domain': 'domain1', 'country': 'France', 'language': 'French', 'value': 20}
     ]
@@ -367,7 +362,9 @@ def test_get_df_with_regex_case_sensitiveness(mongo_connector, mongo_datasource)
         collection='test_col',
         query=[{'$match': {'domain': 'domain1'}}],
     )
-    df = mongo_connector.get_df_with_regex(datasource,{'and': [{'country': re.compile('^FrAn.*')}]})
+    df = mongo_connector.get_df_with_regex(
+        datasource, {'and': [{'country': re.compile('^FrAn.*')}]}
+    )
     assert df.drop(columns='_id').to_dict(orient='records') == [
         {'domain': 'domain1', 'country': 'France', 'language': 'French', 'value': 20}
     ]
@@ -376,8 +373,7 @@ def test_get_df_with_regex_case_sensitiveness(mongo_connector, mongo_datasource)
 def test_get_df_with_regex_with_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df_with_regex(
-        datasource,
-        {'and': [{'country': re.compile('r.*a')}]}, limit=1
+        datasource, {'and': [{'country': re.compile('r.*a')}]}, limit=1
     )
     pd.testing.assert_series_equal(df['country'], pd.Series(['France'], name='country'))
 
@@ -385,7 +381,7 @@ def test_get_df_with_regex_with_limit(mongo_connector, mongo_datasource):
 def test_get_df_with_regex_with_offset_and_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df_with_regex(
-        datasource,{'and': [{'country': re.compile('r.*a')}]}, limit=1, offset=1
+        datasource, {'and': [{'country': re.compile('r.*a')}]}, limit=1, offset=1
     )
     pd.testing.assert_series_equal(df['country'], pd.Series(['Germany'], name='country'))
 
