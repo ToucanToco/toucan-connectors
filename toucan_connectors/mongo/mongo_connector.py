@@ -245,8 +245,7 @@ class MongoConnector(ToucanConnector):
     def get_slice_with_regex(
         self,
         data_source: MongoDataSource,
-        fields: List[str],
-        regex: Pattern,
+        search: dict[str, List[dict[str, Pattern]]],
         permissions: Optional[str] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
@@ -258,36 +257,34 @@ class MongoConnector(ToucanConnector):
         # Mongo will then optimize the pipeline to move the match regex to its most convenient position
         # (c.f https://docs.mongodb.com/manual/core/aggregation-pipeline-optimization/#pipeline-sequence-optimization)
         # Since Mongo '$regex' operator doesn't work with integer values, we need to check the stringified versions
-        regex_step = {
-            '$expr': {
-                '$or': [
-                    {
-                        '$regexMatch': {
-                            'input': {'$toString': f'${field}'},
-                            'regex': regex.pattern,
-                            'options': 'i',  # i -> Case insensitivity
+        search_steps = {}
+        for condition in search:
+            search_steps[f'${condition}'] = []  # convert "and"/"or" to "$and"/"$or"
+            for column in search[condition]:
+                for col, regex in column.items():
+                    search_steps[f'${condition}'].append(
+                        {
+                            '$regexMatch': {
+                                'input': {'$toString': f'${col}'},
+                                'regex': regex.pattern,
+                                'options': 'i',  # i -> Case insensitivity
+                            }
                         }
-                    }
-                    for field in fields
-                ]
-            }
-        }
-        data_source.query.append({'$match': regex_step})
+                    )
+        data_source.query.append({'$match': {'$expr': search_steps}})
         return self.get_slice(data_source, permissions, limit=limit, offset=offset)
 
     def get_df_with_regex(
         self,
         data_source: MongoDataSource,
-        field: str,
-        regex: Pattern,
+        search: dict[str, List[dict[str, Pattern]]],
         permissions: Optional[str] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
     ) -> pd.DataFrame:
         return self.get_slice_with_regex(
             data_source=data_source,
-            fields=[field],
-            regex=regex,
+            search=search,
             permissions=permissions,
             limit=limit,
             offset=offset,
