@@ -1,5 +1,12 @@
 # Changelog (Pypi package)
 
+## [3.16.0] 2022-07-18
+
+### Changed
+
+- Feat: Mongo connector's `get_slice_with_regex` method now supports a dict of lists of regex patterns to match for
+  in the different columns
+
 ## [3.15.3] 2022-06-30
 
 ### Changed
