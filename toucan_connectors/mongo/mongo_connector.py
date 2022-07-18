@@ -277,7 +277,7 @@ class MongoConnector(ToucanConnector):
     def get_df_with_regex(
         self,
         data_source: MongoDataSource,
-        search: dict[List[dict[str, Pattern]]],
+        search: dict[str, List[dict[str, Pattern]]],
         permissions: Optional[str] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
