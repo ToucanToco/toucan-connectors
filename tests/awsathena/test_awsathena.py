@@ -1,9 +1,11 @@
 import os
 from typing import List, Optional
+from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
 from pydantic import SecretStr
+from pytest_mock import MockFixture
 
 from toucan_connectors.awsathena.awsathena_connector import AwsathenaConnector, AwsathenaDataSource
 from toucan_connectors.common import ConnectorStatus
@@ -184,3 +186,84 @@ def test_add_pagination_to_query(
     athena_connector, query: str, offset: int, limit: Optional[int], expected: str
 ):
     assert athena_connector._add_pagination_to_query(query, offset=offset, limit=limit) == expected
+
+
+def test_athenadatasource_get_form(
+    mocker: MockFixture,
+    athena_connector: AwsathenaConnector,
+    data_source: AwsathenaDataSource,
+    mocked_boto_session: MagicMock,
+):
+    current_config = {'database': 'dev'}
+    mocker.patch.object(AwsathenaConnector, 'get_session')
+    mocker.patch(
+        'toucan_connectors.awsathena.awsathena_connector.wr.catalog.databases',
+        return_value=pd.DataFrame({'Database': ['db1', 'db2']}),
+    )
+
+    result = data_source.get_form(athena_connector, current_config)
+    assert result['properties']['parameters']['title'] == 'Parameters'
+    assert result['properties']['domain']['title'] == 'Domain'
+    assert result['properties']['validation']['title'] == 'Validation'
+    assert result['required'] == ['domain', 'name', 'database']
+    assert result['definitions']['database']['enum'] == ['db1', 'db2']
+
+
+def test_athenaconnector_get_model(
+    mocker: MockFixture,
+    athena_connector: AwsathenaConnector,
+    data_source: AwsathenaDataSource,
+    mocked_boto_session: MagicMock,
+):
+    mocker.patch.object(AwsathenaConnector, 'get_session')
+    mocker.patch(
+        'toucan_connectors.awsathena.awsathena_connector.wr.catalog.databases',
+        return_value=pd.DataFrame({'Database': ['db1', 'db2']}),
+    )
+    mocker.patch(
+        'toucan_connectors.awsathena.awsathena_connector.wr.catalog.tables',
+        return_value=pd.DataFrame(
+            {'Table': ['table1', 'table2'], 'TableType': ['EXTERNAL_TABLE', 'EXTERNAL_TABLE']}
+        ),
+    )
+    mocker.patch(
+        'toucan_connectors.awsathena.awsathena_connector.wr.catalog.get_table_types',
+        side_effect=[
+            {'foo': 'string', 'bar': 'string'},
+            {'roo': 'integer', 'far': 'datetime'},
+            {'loo': 'string', 'rab': 'string'},
+            {'broo': 'integer', 'farf': 'datetime'},
+        ],
+    )
+
+    result = athena_connector.get_model()
+    assert result == [
+        {
+            'name': 'table1',
+            'database': 'db1',
+            'schema': 'default',
+            'type': 'table',
+            'columns': [{'name': 'foo', 'type': 'string'}, {'name': 'bar', 'type': 'string'}],
+        },
+        {
+            'name': 'table2',
+            'database': 'db1',
+            'schema': 'default',
+            'type': 'table',
+            'columns': [{'name': 'roo', 'type': 'integer'}, {'name': 'far', 'type': 'datetime'}],
+        },
+        {
+            'name': 'table1',
+            'database': 'db2',
+            'schema': 'default',
+            'type': 'table',
+            'columns': [{'name': 'loo', 'type': 'string'}, {'name': 'rab', 'type': 'string'}],
+        },
+        {
+            'name': 'table2',
+            'database': 'db2',
+            'schema': 'default',
+            'type': 'table',
+            'columns': [{'name': 'broo', 'type': 'integer'}, {'name': 'farf', 'type': 'datetime'}],
+        },
+    ]

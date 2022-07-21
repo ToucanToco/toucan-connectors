@@ -1,17 +1,20 @@
-from typing import Optional
+from functools import cached_property
+from typing import Any, Optional
 
 import awswrangler as wr
 import boto3
 import pandas as pd
-from pydantic import Field, SecretStr, constr
+from pydantic import Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
     DataStats,
+    TableInfo,
     ToucanConnector,
     ToucanDataSource,
+    strlist_to_enum,
 )
 
 
@@ -46,6 +49,14 @@ class AwsathenaDataSource(ToucanDataSource):
         # + this is not our usual format, it could be better to use our old school method to apply query parameters [jinja]
         self.query = apply_query_parameters(self.query, self.parameters or {})
 
+    @classmethod
+    def get_form(cls, connector: 'AwsathenaConnector', current_config: dict[str, Any]):
+        return create_model(
+            'FormSchema',
+            database=strlist_to_enum('database', connector.available_dbs),
+            __base__=cls,
+        ).schema()
+
 
 class AwsathenaConnector(ToucanConnector):
     data_source_model: AwsathenaDataSource
@@ -58,6 +69,10 @@ class AwsathenaConnector(ToucanConnector):
     aws_access_key_id: str = Field(..., description='Your AWS access key ID')
     aws_secret_access_key: SecretStr = Field(None, description='Your AWS secret key')
     region_name: str = Field(..., description='Your AWS region name')
+
+    class Config:
+        underscore_attrs_are_private = True
+        keep_untouched = (cached_property,)
 
     def get_session(self) -> boto3.Session:
         return boto3.Session(
@@ -83,6 +98,14 @@ class AwsathenaConnector(ToucanConnector):
             return f'SELECT * FROM ({cls._strip_trailing_semicolumn(query)}) LIMIT {limit};'
         return query
 
+    @cached_property
+    def available_dbs(self) -> list[str]:
+        return self._list_db_names()
+
+    @cached_property
+    def project_tree(self) -> list[TableInfo]:
+        return self._get_project_structure()
+
     def _retrieve_data(
         self,
         data_source: AwsathenaDataSource,
@@ -96,6 +119,34 @@ class AwsathenaConnector(ToucanConnector):
             s3_output=self.s3_output_bucket,
         )
         return df
+
+    def _list_db_names(self) -> list[str]:
+        return wr.catalog.databases(
+            boto3_session=self.get_session(),
+        )['Database'].values
+
+    def _get_project_structure(self) -> list[TableInfo]:
+        table_list: list[TableInfo] = []
+        session = self.get_session()
+        for db in self.available_dbs:
+            tables = wr.catalog.tables(boto3_session=session, database=db)[
+                ['Table', 'TableType']
+            ].to_dict(orient='records')
+            for table_object in tables:
+                if 'temp_table' not in table_object['Table']:
+                    columns = wr.catalog.get_table_types(
+                        boto3_session=session, database=db, table=table_object['Table']
+                    )
+                    table_list.append(
+                        {
+                            'name': table_object['Table'],
+                            'database': db,
+                            'schema': 'default',
+                            'type': 'table' if 'TABLE' in table_object['TableType'] else 'view',
+                            'columns': [{'name': k, 'type': v} for k, v in columns.items()],
+                        }
+                    )
+        return table_list
 
     def get_slice(
         self,
@@ -155,3 +206,7 @@ class AwsathenaConnector(ToucanConnector):
                     details=[(c, False) for c in checks],
                     error=f'Cannot verify connection to Athena: {exc}, {sts_exc}',
                 )
+
+    def get_model(self) -> list[TableInfo]:
+        """Retrieves the database tree structure using current session"""
+        return self.project_tree
