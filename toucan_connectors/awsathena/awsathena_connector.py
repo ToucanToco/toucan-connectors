@@ -35,20 +35,6 @@ class AwsathenaDataSource(ToucanDataSource):
         **{'ui.hidden': True},
     )
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        query = data.get('query')
-        table = data.get('table')
-        if query is None and table is None:
-            raise ValueError("'table' or 'query' must be specified")
-        elif query is None and table is not None:
-            self.query = f'SELECT * FROM {table};'
-
-        # Because wrangler manage it's own way to format extras variables Ex: :param;
-        # and because we don't want our clients to learn a new way to write extras-variables,
-        # + this is not our usual format, it could be better to use our old school method to apply query parameters [jinja]
-        self.query = apply_query_parameters(self.query, self.parameters or {})
-
     @classmethod
     def get_form(cls, connector: 'AwsathenaConnector', current_config: dict[str, Any]):
         return create_model(
@@ -113,7 +99,11 @@ class AwsathenaConnector(ToucanConnector):
         limit: Optional[int] = None,
     ) -> pd.DataFrame:
         df = wr.athena.read_sql_query(
-            self._add_pagination_to_query(data_source.query, offset=offset, limit=limit),
+            self._add_pagination_to_query(
+                apply_query_parameters(data_source.query, data_source.parameters or {}),
+                offset=offset,
+                limit=limit,
+            ),
             database=data_source.database,
             boto3_session=self.get_session(),
             s3_output=self.s3_output_bucket,
@@ -141,7 +131,7 @@ class AwsathenaConnector(ToucanConnector):
                         {
                             'name': table_object['Table'],
                             'database': db,
-                            'schema': 'default',
+                            'schema': 'AWSAthenaDefaultSchema',
                             'type': 'table' if 'TABLE' in table_object['TableType'] else 'view',
                             'columns': [{'name': k, 'type': v} for k, v in columns.items()],
                         }

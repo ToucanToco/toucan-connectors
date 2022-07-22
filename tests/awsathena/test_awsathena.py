@@ -25,10 +25,7 @@ def athena_connector():
 @pytest.fixture
 def data_source():
     return AwsathenaDataSource(
-        name='test',
-        domain='toto',
-        database='mydatabase',
-        table='beers',
+        name='test', domain='toto', database='mydatabase', query='SELECT * FROM beers;'
     )
 
 
@@ -60,30 +57,6 @@ def status_checks() -> List[str]:
         'Authenticated',
         'Can list databases',
     ]
-
-
-def test_AwsathenaDataSource():
-    s1 = AwsathenaDataSource(domain='d', name='source_one', database='db', table='coucou')
-    assert s1.query == 'SELECT * FROM coucou;'
-
-    s2 = AwsathenaDataSource(
-        domain='d', name='source_two', database='db', query='SELECT * FROM coucou;'
-    )
-    assert s2.query == 'SELECT * FROM coucou;'
-    assert s2.table is None
-
-    # with parameters
-    s3 = AwsathenaDataSource(
-        domain='d',
-        name='source_three',
-        database='db',
-        query='SELECT * FROM coucou WHERE toto > {{tata}}',
-        parameters={'tata': 12345},
-    )
-    assert s3.query == 'SELECT * FROM coucou WHERE toto > 12345'
-
-    with pytest.raises(ValueError, match="'table' or 'query' must be specified"):
-        AwsathenaDataSource(domain='d', name='source_three', database='db')
 
 
 def test_get_df(
@@ -241,28 +214,28 @@ def test_athenaconnector_get_model(
         {
             'name': 'table1',
             'database': 'db1',
-            'schema': 'default',
+            'schema': 'AWSAthenaDefaultSchema',
             'type': 'table',
             'columns': [{'name': 'foo', 'type': 'string'}, {'name': 'bar', 'type': 'string'}],
         },
         {
             'name': 'table2',
             'database': 'db1',
-            'schema': 'default',
+            'schema': 'AWSAthenaDefaultSchema',
             'type': 'table',
             'columns': [{'name': 'roo', 'type': 'integer'}, {'name': 'far', 'type': 'datetime'}],
         },
         {
             'name': 'table1',
             'database': 'db2',
-            'schema': 'default',
+            'schema': 'AWSAthenaDefaultSchema',
             'type': 'table',
             'columns': [{'name': 'loo', 'type': 'string'}, {'name': 'rab', 'type': 'string'}],
         },
         {
             'name': 'table2',
             'database': 'db2',
-            'schema': 'default',
+            'schema': 'AWSAthenaDefaultSchema',
             'type': 'table',
             'columns': [{'name': 'broo', 'type': 'integer'}, {'name': 'farf', 'type': 'datetime'}],
         },
