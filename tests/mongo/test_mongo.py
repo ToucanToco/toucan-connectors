@@ -497,6 +497,23 @@ def test_status_bad_username(mongo_connector):
     assert 'Authentication failed' in status.error
 
 
+def test_status_password_required(mocker, mongo_connector):
+    mocker.patch(
+        'pymongo.MongoClient',
+        side_effect=pymongo.errors.ConfigurationError('qwe'),
+    )
+    assert mongo_connector.get_status() == ConnectorStatus(
+        status=False,
+        details=[
+            ('Hostname resolved', True),
+            ('Port opened', True),
+            ('Host connection', True),
+            ('Authenticated', False),
+        ],
+        error='qwe',
+    )
+
+
 def test_get_form_empty_query(mongo_connector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {}
