@@ -23,16 +23,16 @@ class AwsathenaDataSource(ToucanDataSource):
     database: constr(min_length=1) = Field(
         ..., description='The name of the database you want to query.'
     )
+    language: str = Field('sql', **{'ui.hidden': True})
     query: constr(min_length=1) = Field(
         None,
         description='The SQL query to execute.',
         widget='sql',
     )
-    table: constr(min_length=1) = Field(
+    query_object: dict = Field(
         None,
-        description='The name of the data table that you want to '
-        'get (equivalent to "SELECT * FROM '
-        'your_table")',
+        description='An object describing a simple select query This field is used internally',
+        **{'ui.hidden': True},
     )
 
     def __init__(self, **data):
