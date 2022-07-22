@@ -110,6 +110,15 @@ def test_get_session(athena_connector):
     assert creds.secret_key == 'test_secret_access_key'
 
 
+def test_get_session_error(mocker, athena_connector):
+    mocker.patch(
+        'toucan_connectors.awsathena.awsathena_connector.AwsathenaConnector.get_session',
+        side_effect=AttributeError('qwe'),
+    )
+    with pytest.raises(AttributeError):
+        athena_connector.get_session()
+
+
 def test_get_slice(
     mocker, athena_connector, data_source, mocked_read_sql_query, mocked_boto_session
 ):

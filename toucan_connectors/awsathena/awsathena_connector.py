@@ -60,13 +60,19 @@ class AwsathenaConnector(ToucanConnector):
     region_name: str = Field(..., description='Your AWS region name')
 
     def get_session(self) -> boto3.Session:
-        return boto3.Session(
-            aws_access_key_id=self.aws_access_key_id,
-            # This is required because this gets appended by boto3
-            # internally, and a SecretStr can't be appended to an str
-            aws_secret_access_key=self.aws_secret_access_key.get_secret_value(),
-            region_name=self.region_name,
-        )
+        try:
+            aws_secret_access_key = self.aws_secret_access_key.get_secret_value()
+        except AttributeError as excp:
+            raise AttributeError(f'Error: failed to get your aws_secret_access_key, {excp}')
+        else:
+            boto_session = boto3.Session(
+                aws_access_key_id=self.aws_access_key_id,
+                # This is required because this gets appended by boto3
+                # internally, and a SecretStr can't be appended to an str
+                aws_secret_access_key=aws_secret_access_key,
+                region_name=self.region_name,
+            )
+            return boto_session
 
     @staticmethod
     def _strip_trailing_semicolumn(query: str) -> str:
