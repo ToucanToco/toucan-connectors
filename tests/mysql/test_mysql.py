@@ -261,18 +261,21 @@ def test_handle_date_0():
 
 def test_get_model(mysql_connector: Any) -> None:
     """Check that it returns the db tree structure"""
-    assert mysql_connector.get_model() == [
+    res = mysql_connector.get_model()
+    for r in res:
+        r['columns'] = sorted(r['columns'], key=lambda c: c['name'])
+    assert res == [
         {
             'schema': 'mysql_db',
             'database': 'mysql_db',
             'type': 'table',
             'name': 'City',
             'columns': [
+                {'name': 'CountryCode', 'type': 'char'},
                 {'name': 'District', 'type': 'char'},
                 {'name': 'ID', 'type': 'int'},
                 {'name': 'Name', 'type': 'char'},
                 {'name': 'Population', 'type': 'int'},
-                {'name': 'CountryCode', 'type': 'char'},
             ],
         },
         {
@@ -281,21 +284,21 @@ def test_get_model(mysql_connector: Any) -> None:
             'type': 'table',
             'name': 'Country',
             'columns': [
-                {'name': 'HeadOfState', 'type': 'char'},
-                {'name': 'SurfaceArea', 'type': 'float'},
-                {'name': 'Region', 'type': 'char'},
-                {'name': 'Population', 'type': 'int'},
-                {'name': 'Name', 'type': 'char'},
-                {'name': 'LocalName', 'type': 'char'},
-                {'name': 'LifeExpectancy', 'type': 'float'},
-                {'name': 'IndepYear', 'type': 'smallint'},
-                {'name': 'GovernmentForm', 'type': 'char'},
-                {'name': 'GNPOld', 'type': 'float'},
-                {'name': 'GNP', 'type': 'float'},
-                {'name': 'Continent', 'type': 'enum'},
-                {'name': 'Code2', 'type': 'char'},
-                {'name': 'Code', 'type': 'char'},
                 {'name': 'Capital', 'type': 'int'},
+                {'name': 'Code', 'type': 'char'},
+                {'name': 'Code2', 'type': 'char'},
+                {'name': 'Continent', 'type': 'enum'},
+                {'name': 'GNP', 'type': 'float'},
+                {'name': 'GNPOld', 'type': 'float'},
+                {'name': 'GovernmentForm', 'type': 'char'},
+                {'name': 'HeadOfState', 'type': 'char'},
+                {'name': 'IndepYear', 'type': 'smallint'},
+                {'name': 'LifeExpectancy', 'type': 'float'},
+                {'name': 'LocalName', 'type': 'char'},
+                {'name': 'Name', 'type': 'char'},
+                {'name': 'Population', 'type': 'int'},
+                {'name': 'Region', 'type': 'char'},
+                {'name': 'SurfaceArea', 'type': 'float'},
             ],
         },
         {
