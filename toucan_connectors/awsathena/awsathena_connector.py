@@ -1,9 +1,9 @@
-from cached_property import cached_property_with_ttl
 from typing import Any, Optional
 
 import awswrangler as wr
 import boto3
 import pandas as pd
+from cached_property import cached_property_with_ttl
 from pydantic import Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters
@@ -11,10 +11,11 @@ from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
     DataStats,
+    DiscoverableConnector,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
-    strlist_to_enum, DiscoverableConnector,
+    strlist_to_enum,
 )
 
 
