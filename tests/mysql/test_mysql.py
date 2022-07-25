@@ -1,3 +1,5 @@
+from typing import Any
+
 import pandas as pd
 import pymysql
 import pytest
@@ -240,14 +242,7 @@ def test_get_form_query_with_good_database(mysql_connector):
         'title': 'database',
         'description': 'An enumeration.',
         'type': 'string',
-        'enum': ['information_schema', 'mysql_db'],
-    }
-    assert form['properties']['table'] == {'$ref': '#/definitions/table'}
-    assert form['definitions']['table'] == {
-        'title': 'table',
-        'description': 'An enumeration.',
-        'type': 'string',
-        'enum': ['City', 'Country', 'CountryLanguage'],
+        'enum': ['information_schema', 'mysql', 'mysql_db'],
     }
     assert form['required'] == ['domain', 'name', 'database']
 
@@ -262,3 +257,57 @@ def test_handle_date_0():
     df = handle_date_0(df)
     assert df.dtypes.astype(str)['DATE'] == 'datetime64[ns]'
     assert list(df['DATE']) == [pd.Timestamp('2021-06-23 12:34:56'), pd.NaT]
+
+
+def test_get_model(mysql_connector: Any) -> None:
+    """Check that it returns the db tree structure"""
+    assert mysql_connector.get_model() == [
+        {
+            'schema': 'mysql_db',
+            'database': 'def',
+            'type': 'table',
+            'name': 'City',
+            'columns': [
+                {'name': 'District', 'type': 'char'},
+                {'name': 'ID', 'type': 'int'},
+                {'name': 'Name', 'type': 'char'},
+                {'name': 'Population', 'type': 'int'},
+                {'name': 'CountryCode', 'type': 'char'},
+            ],
+        },
+        {
+            'schema': 'mysql_db',
+            'database': 'def',
+            'type': 'table',
+            'name': 'Country',
+            'columns': [
+                {'name': 'HeadOfState', 'type': 'char'},
+                {'name': 'SurfaceArea', 'type': 'float'},
+                {'name': 'Region', 'type': 'char'},
+                {'name': 'Population', 'type': 'int'},
+                {'name': 'Name', 'type': 'char'},
+                {'name': 'LocalName', 'type': 'char'},
+                {'name': 'LifeExpectancy', 'type': 'float'},
+                {'name': 'IndepYear', 'type': 'smallint'},
+                {'name': 'GovernmentForm', 'type': 'char'},
+                {'name': 'GNPOld', 'type': 'float'},
+                {'name': 'GNP', 'type': 'float'},
+                {'name': 'Continent', 'type': 'enum'},
+                {'name': 'Code2', 'type': 'char'},
+                {'name': 'Code', 'type': 'char'},
+                {'name': 'Capital', 'type': 'int'},
+            ],
+        },
+        {
+            'schema': 'mysql_db',
+            'database': 'def',
+            'type': 'table',
+            'name': 'CountryLanguage',
+            'columns': [
+                {'name': 'CountryCode', 'type': 'char'},
+                {'name': 'IsOfficial', 'type': 'enum'},
+                {'name': 'Language', 'type': 'char'},
+                {'name': 'Percentage', 'type': 'float'},
+            ],
+        },
+    ]
