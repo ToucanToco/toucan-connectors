@@ -264,7 +264,7 @@ def test_get_model(mysql_connector: Any) -> None:
     assert mysql_connector.get_model() == [
         {
             'schema': 'mysql_db',
-            'database': 'def',
+            'database': 'mysql_db',
             'type': 'table',
             'name': 'City',
             'columns': [
@@ -277,7 +277,7 @@ def test_get_model(mysql_connector: Any) -> None:
         },
         {
             'schema': 'mysql_db',
-            'database': 'def',
+            'database': 'mysql_db',
             'type': 'table',
             'name': 'Country',
             'columns': [
@@ -300,7 +300,7 @@ def test_get_model(mysql_connector: Any) -> None:
         },
         {
             'schema': 'mysql_db',
-            'database': 'def',
+            'database': 'mysql_db',
             'type': 'table',
             'name': 'CountryLanguage',
             'columns': [

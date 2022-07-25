@@ -218,7 +218,12 @@ class InvalidQuery(Exception):
 
 
 def build_database_model_extraction_query() -> str:
-    return """select t.table_catalog AS "database", t.table_schema as "schema",
+    """
+    table_schema is selected 2x because the frontend components need it but
+    mysql provide it only for SQL-92 standard's compliance see:
+    https://dba.stackexchange.com/questions/3774/what-is-the-point-of-the-table-catalog-column-in-information-schema-tables
+    """
+    return """select t.table_schema AS "database", t.table_schema as "schema",
     CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) end as "type",
     t.table_name as "name", json_arrayagg(json_object('name', c.column_name, 'type', c.data_type))
     as columns from information_schema.tables t
