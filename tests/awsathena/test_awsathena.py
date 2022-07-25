@@ -1,9 +1,11 @@
 import os
 from typing import List, Optional
+from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
 from pydantic import SecretStr
+from pytest_mock import MockFixture
 
 from toucan_connectors.awsathena.awsathena_connector import AwsathenaConnector, AwsathenaDataSource
 from toucan_connectors.common import ConnectorStatus
@@ -23,10 +25,7 @@ def athena_connector():
 @pytest.fixture
 def data_source():
     return AwsathenaDataSource(
-        name='test',
-        domain='toto',
-        database='mydatabase',
-        table='beers',
+        name='test', domain='toto', database='mydatabase', query='SELECT * FROM beers;'
     )
 
 
@@ -58,30 +57,6 @@ def status_checks() -> List[str]:
         'Authenticated',
         'Can list databases',
     ]
-
-
-def test_AwsathenaDataSource():
-    s1 = AwsathenaDataSource(domain='d', name='source_one', database='db', table='coucou')
-    assert s1.query == 'SELECT * FROM coucou;'
-
-    s2 = AwsathenaDataSource(
-        domain='d', name='source_two', database='db', query='SELECT * FROM coucou;'
-    )
-    assert s2.query == 'SELECT * FROM coucou;'
-    assert s2.table is None
-
-    # with parameters
-    s3 = AwsathenaDataSource(
-        domain='d',
-        name='source_three',
-        database='db',
-        query='SELECT * FROM coucou WHERE toto > {{tata}}',
-        parameters={'tata': 12345},
-    )
-    assert s3.query == 'SELECT * FROM coucou WHERE toto > 12345'
-
-    with pytest.raises(ValueError, match="'table' or 'query' must be specified"):
-        AwsathenaDataSource(domain='d', name='source_three', database='db')
 
 
 def test_get_df(
@@ -184,3 +159,84 @@ def test_add_pagination_to_query(
     athena_connector, query: str, offset: int, limit: Optional[int], expected: str
 ):
     assert athena_connector._add_pagination_to_query(query, offset=offset, limit=limit) == expected
+
+
+def test_athenadatasource_get_form(
+    mocker: MockFixture,
+    athena_connector: AwsathenaConnector,
+    data_source: AwsathenaDataSource,
+    mocked_boto_session: MagicMock,
+):
+    current_config = {'database': 'dev'}
+    mocker.patch.object(AwsathenaConnector, 'get_session')
+    mocker.patch(
+        'toucan_connectors.awsathena.awsathena_connector.wr.catalog.databases',
+        return_value=pd.DataFrame({'Database': ['db1', 'db2']}),
+    )
+
+    result = data_source.get_form(athena_connector, current_config)
+    assert result['properties']['parameters']['title'] == 'Parameters'
+    assert result['properties']['domain']['title'] == 'Domain'
+    assert result['properties']['validation']['title'] == 'Validation'
+    assert result['required'] == ['domain', 'name', 'database']
+    assert result['definitions']['database']['enum'] == ['db1', 'db2']
+
+
+def test_athenaconnector_get_model(
+    mocker: MockFixture,
+    athena_connector: AwsathenaConnector,
+    data_source: AwsathenaDataSource,
+    mocked_boto_session: MagicMock,
+):
+    mocker.patch.object(AwsathenaConnector, 'get_session')
+    mocker.patch(
+        'toucan_connectors.awsathena.awsathena_connector.wr.catalog.databases',
+        return_value=pd.DataFrame({'Database': ['db1', 'db2']}),
+    )
+    mocker.patch(
+        'toucan_connectors.awsathena.awsathena_connector.wr.catalog.tables',
+        return_value=pd.DataFrame(
+            {'Table': ['table1', 'table2'], 'TableType': ['EXTERNAL_TABLE', 'EXTERNAL_TABLE']}
+        ),
+    )
+    mocker.patch(
+        'toucan_connectors.awsathena.awsathena_connector.wr.catalog.get_table_types',
+        side_effect=[
+            {'foo': 'string', 'bar': 'string'},
+            {'roo': 'integer', 'far': 'datetime'},
+            {'loo': 'string', 'rab': 'string'},
+            {'broo': 'integer', 'farf': 'datetime'},
+        ],
+    )
+
+    result = athena_connector.get_model()
+    assert result == [
+        {
+            'name': 'table1',
+            'database': 'db1',
+            'schema': 'AWSAthenaDefaultSchema',
+            'type': 'table',
+            'columns': [{'name': 'foo', 'type': 'string'}, {'name': 'bar', 'type': 'string'}],
+        },
+        {
+            'name': 'table2',
+            'database': 'db1',
+            'schema': 'AWSAthenaDefaultSchema',
+            'type': 'table',
+            'columns': [{'name': 'roo', 'type': 'integer'}, {'name': 'far', 'type': 'datetime'}],
+        },
+        {
+            'name': 'table1',
+            'database': 'db2',
+            'schema': 'AWSAthenaDefaultSchema',
+            'type': 'table',
+            'columns': [{'name': 'loo', 'type': 'string'}, {'name': 'rab', 'type': 'string'}],
+        },
+        {
+            'name': 'table2',
+            'database': 'db2',
+            'schema': 'AWSAthenaDefaultSchema',
+            'type': 'table',
+            'columns': [{'name': 'broo', 'type': 'integer'}, {'name': 'farf', 'type': 'datetime'}],
+        },
+    ]
