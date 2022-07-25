@@ -1,9 +1,9 @@
-from functools import cached_property
 from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
 import pymysql
+from cached_property import cached_property_with_ttl
 from pydantic import Field, SecretStr, constr, create_model
 from pymysql.constants import CR, ER
 
@@ -53,7 +53,7 @@ class MySQLDataSource(ToucanDataSource):
         ).schema()
 
 
-class MySQLConnector(ToucanConnector):
+class MySQLConnector(ToucanConnector, DiscoverableConnector):
     """
     Import data from MySQL database.
     """
@@ -83,7 +83,7 @@ class MySQLConnector(ToucanConnector):
 
     class Config:
         underscore_attrs_are_private = True
-        keep_untouched = (cached_property,)
+        keep_untouched = (cached_property_with_ttl,)
 
     def _list_db_names(self) -> list[str]:
         connection = pymysql.connect(
@@ -104,11 +104,11 @@ class MySQLConnector(ToucanConnector):
             cursor.execute(build_database_model_extraction_query())
             return cursor.fetchall()
 
-    @cached_property
+    @cached_property_with_ttl(ttl=10)
     def available_dbs(self) -> list[str]:
         return self._list_db_names()
 
-    @cached_property
+    @cached_property_with_ttl(ttl=60)
     def project_tree(self) -> list[TableInfo]:
         return self._get_project_structure()
 
