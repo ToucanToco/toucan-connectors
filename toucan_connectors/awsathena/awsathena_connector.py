@@ -1,4 +1,4 @@
-from functools import cached_property
+from cached_property import cached_property_with_ttl
 from typing import Any, Optional
 
 import awswrangler as wr
@@ -14,7 +14,7 @@ from toucan_connectors.toucan_connector import (
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
-    strlist_to_enum,
+    strlist_to_enum, DiscoverableConnector,
 )
 
 
@@ -44,7 +44,7 @@ class AwsathenaDataSource(ToucanDataSource):
         ).schema()
 
 
-class AwsathenaConnector(ToucanConnector):
+class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
     data_source_model: AwsathenaDataSource
 
     name: str = Field(..., description='Your AWS Athena connector name')
@@ -58,7 +58,7 @@ class AwsathenaConnector(ToucanConnector):
 
     class Config:
         underscore_attrs_are_private = True
-        keep_untouched = (cached_property,)
+        keep_untouched = (cached_property_with_ttl,)
 
     def get_session(self) -> boto3.Session:
         return boto3.Session(
@@ -84,11 +84,11 @@ class AwsathenaConnector(ToucanConnector):
             return f'SELECT * FROM ({cls._strip_trailing_semicolumn(query)}) LIMIT {limit};'
         return query
 
-    @cached_property
+    @cached_property_with_ttl(ttl=10)
     def available_dbs(self) -> list[str]:
         return self._list_db_names()
 
-    @cached_property
+    @cached_property_with_ttl(ttl=60)
     def project_tree(self) -> list[TableInfo]:
         return self._get_project_structure()
 
