@@ -228,7 +228,7 @@ def test_get_form_empty_query(mysql_connector):
     assert form['definitions']['database'] == {
         'title': 'database',
         'description': 'An enumeration.',
-        'enum': ['information_schema', 'mysql', 'mysql_db'],
+        'enum': ['mysql_db'],
         'type': 'string',
     }
 
@@ -242,7 +242,7 @@ def test_get_form_query_with_good_database(mysql_connector):
         'title': 'database',
         'description': 'An enumeration.',
         'type': 'string',
-        'enum': ['information_schema', 'mysql', 'mysql_db'],
+        'enum': ['mysql_db'],
     }
     assert form['required'] == ['domain', 'name', 'database']
 

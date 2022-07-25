@@ -45,7 +45,7 @@ class MySQLDataSource(ToucanDataSource):
     language: str = Field('sql', **{'ui.hidden': True})
 
     @classmethod
-    def get_form(cls, connector: 'MySQLConnector', current_config: dict[str, Any]):
+    def get_form(cls, connector: 'MySQLConnector', current_config: dict[str, Any]) -> dict:
         return create_model(
             'FormSchema',
             database=strlist_to_enum('database', connector.available_dbs),
@@ -93,7 +93,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
         with connection.cursor() as cursor:
             cursor.execute('SHOW DATABASES;')
             res = cursor.fetchall()
-            return [db_name for (db_name,) in res]
+            return [db_name for (db_name,) in res if db_name not in ('information_schema', 'mysql')]
 
     def _get_project_structure(self) -> list[TableInfo]:
         connection = pymysql.connect(
