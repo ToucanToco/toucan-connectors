@@ -1,10 +1,8 @@
-import collections
+from typing import Any
 
-import numpy as np
 import pandas as pd
 import pymysql
 import pytest
-from pydantic import ValidationError
 from pytest_mock import MockerFixture
 
 from toucan_connectors.common import ConnectorStatus
@@ -37,18 +35,8 @@ def mysql_connector(mysql_server):
 
 
 def test_datasource():
-    with pytest.raises(ValidationError):
-        MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db', query='')
-
-    with pytest.raises(ValueError) as exc_info:
-        MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db')
-    assert "'query' or 'table' must be set" in str(exc_info.value)
-
-    MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db', table='mytable')
+    MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db')
     MySQLDataSource(name='mycon', domain='mydomain', database='mysql_db', query='myquery')
-    MySQLDataSource(
-        name='mycon', domain='mydomain', database='mysql_db', query='myquery', table='ignored'
-    )
 
 
 def test_get_connection_params():
@@ -156,40 +144,9 @@ def test_get_df(mocker: MockerFixture):
     """It should call the sql extractor"""
     snock = mocker.patch('pymysql.connect')
     reasq = mocker.patch('pandas.read_sql')
-    mocker.patch(
-        'toucan_connectors.mysql.mysql_connector.MySQLConnector.get_foreign_key_info'
-    ).return_value = []
-
     mysql_connector = MySQLConnector(
         name='mycon', host='localhost', port=22, user='ubuntu', password='ilovetoucan'
     )
-
-    # With table
-    data_source = MySQLDataSource(
-        **{
-            'domain': 'MySQL test',
-            'type': 'external_database',
-            'name': 'Some MySQL provider',
-            'database': 'mysql_db',
-            'table': 'City',
-        }
-    )
-    mysql_connector.get_df(data_source)
-
-    conv = pymysql.converters.conversions.copy()
-    conv[246] = float
-    snock.assert_called_once_with(
-        host='localhost',
-        user='ubuntu',
-        database='mysql_db',
-        password='ilovetoucan',
-        port=22,
-        charset='utf8mb4',
-        conv=conv,
-        cursorclass=pymysql.cursors.DictCursor,
-    )
-
-    reasq.assert_called_once_with('select * from City', con=snock(), params={})
 
     # With query
     reasq.reset_mock()
@@ -204,68 +161,6 @@ def test_get_df(mocker: MockerFixture):
     )
     mysql_connector.get_df(data_source)
     reasq.assert_called_once_with('select * from Country', con=snock(), params={})
-
-    # With both: query should take precedence over table
-    reasq.reset_mock()
-    data_source = MySQLDataSource(
-        **{
-            'domain': 'MySQL test',
-            'type': 'external_database',
-            'name': 'Some MySQL provider',
-            'database': 'mysql_db',
-            'table': 'City',
-            'query': 'select * from Country',
-        }
-    )
-    mysql_connector.get_df(data_source)
-    reasq.assert_called_once_with('select * from Country', con=snock(), params={})
-
-
-def test_get_df_db_follow(mysql_connector):
-    """ " It should extract the table City and make some merge with some foreign key"""
-    data_sources_spec = [
-        {
-            'domain': 'MySQL test',
-            'type': 'external_database',
-            'name': 'Some MySQL provider',
-            'database': 'mysql_db',
-            'table': 'City',
-            'follow_relations': True,
-        }
-    ]
-
-    expected_columns = [
-        'ID',
-        'Name_City',
-        'CountryCode',
-        'District',
-        'Population_City',
-        'Name_Country',
-        'Continent',
-        'Region',
-        'SurfaceArea',
-        'IndepYear',
-        'Population_Country',
-        'LifeExpectancy',
-        'GNP',
-        'GNPOld',
-        'LocalName',
-        'GovernmentForm',
-        'HeadOfState',
-        'Capital',
-        'Code2',
-    ]
-
-    data_source = MySQLDataSource(**data_sources_spec[0])
-    df = mysql_connector.get_df(data_source)
-
-    assert not df.empty
-    assert len(df.columns) == 19
-
-    assert collections.Counter(df.columns) == collections.Counter(expected_columns)
-    assert len(df.columns) == len(expected_columns)
-
-    assert len(df[df['Population_City'] > 5000000]) == 24
 
 
 def test_get_df_db(mysql_connector):
@@ -304,16 +199,6 @@ def test_get_df_forbidden_table_interpolation(mysql_connector):
     assert 'interpolating table name is forbidden' in str(e.value)
 
 
-def test_clean_response():
-    """It should replace None by np.nan and decode bytes data"""
-    response = [{'name': 'fway', 'age': 13}, {'name': b'zbruh', 'age': None}]
-    res = MySQLConnector.clean_response(response)
-
-    assert len(res) == 2
-    assert res[1]['name'] == 'zbruh'
-    assert np.isnan(res[1]['age'])
-
-
 def test_decode_df():
     """It should decode the bytes columns"""
     df = pd.DataFrame(
@@ -343,8 +228,8 @@ def test_get_form_empty_query(mysql_connector):
     assert form['definitions']['database'] == {
         'title': 'database',
         'description': 'An enumeration.',
+        'enum': ['mysql_db'],
         'type': 'string',
-        'enum': ['information_schema', 'mysql_db'],
     }
 
 
@@ -357,14 +242,7 @@ def test_get_form_query_with_good_database(mysql_connector):
         'title': 'database',
         'description': 'An enumeration.',
         'type': 'string',
-        'enum': ['information_schema', 'mysql_db'],
-    }
-    assert form['properties']['table'] == {'$ref': '#/definitions/table'}
-    assert form['definitions']['table'] == {
-        'title': 'table',
-        'description': 'An enumeration.',
-        'type': 'string',
-        'enum': ['City', 'Country', 'CountryLanguage'],
+        'enum': ['mysql_db'],
     }
     assert form['required'] == ['domain', 'name', 'database']
 
@@ -379,3 +257,60 @@ def test_handle_date_0():
     df = handle_date_0(df)
     assert df.dtypes.astype(str)['DATE'] == 'datetime64[ns]'
     assert list(df['DATE']) == [pd.Timestamp('2021-06-23 12:34:56'), pd.NaT]
+
+
+def test_get_model(mysql_connector: Any) -> None:
+    """Check that it returns the db tree structure"""
+    res = mysql_connector.get_model()
+    for r in res:
+        r['columns'] = sorted(r['columns'], key=lambda c: c['name'])
+    assert res == [
+        {
+            'schema': 'mysql_db',
+            'database': 'mysql_db',
+            'type': 'table',
+            'name': 'City',
+            'columns': [
+                {'name': 'CountryCode', 'type': 'char'},
+                {'name': 'District', 'type': 'char'},
+                {'name': 'ID', 'type': 'int'},
+                {'name': 'Name', 'type': 'char'},
+                {'name': 'Population', 'type': 'int'},
+            ],
+        },
+        {
+            'schema': 'mysql_db',
+            'database': 'mysql_db',
+            'type': 'table',
+            'name': 'Country',
+            'columns': [
+                {'name': 'Capital', 'type': 'int'},
+                {'name': 'Code', 'type': 'char'},
+                {'name': 'Code2', 'type': 'char'},
+                {'name': 'Continent', 'type': 'enum'},
+                {'name': 'GNP', 'type': 'float'},
+                {'name': 'GNPOld', 'type': 'float'},
+                {'name': 'GovernmentForm', 'type': 'char'},
+                {'name': 'HeadOfState', 'type': 'char'},
+                {'name': 'IndepYear', 'type': 'smallint'},
+                {'name': 'LifeExpectancy', 'type': 'float'},
+                {'name': 'LocalName', 'type': 'char'},
+                {'name': 'Name', 'type': 'char'},
+                {'name': 'Population', 'type': 'int'},
+                {'name': 'Region', 'type': 'char'},
+                {'name': 'SurfaceArea', 'type': 'float'},
+            ],
+        },
+        {
+            'schema': 'mysql_db',
+            'database': 'mysql_db',
+            'type': 'table',
+            'name': 'CountryLanguage',
+            'columns': [
+                {'name': 'CountryCode', 'type': 'char'},
+                {'name': 'IsOfficial', 'type': 'enum'},
+                {'name': 'Language', 'type': 'char'},
+                {'name': 'Percentage', 'type': 'float'},
+            ],
+        },
+    ]

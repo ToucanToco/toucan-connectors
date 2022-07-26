@@ -23,6 +23,7 @@
 --
 -- Table structure for table `City`
 --
+GRANT ALL PRIVILEGES ON mysql.* TO 'ubuntu'@'%' WITH GRANT OPTION;
 DROP TABLE IF EXISTS `City`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
