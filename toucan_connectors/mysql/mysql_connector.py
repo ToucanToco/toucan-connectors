@@ -30,6 +30,9 @@ class MySQLDataSource(ToucanDataSource):
     """
 
     database: str = Field(..., description='The name of the database you want to query')
+    table: str = Field(
+        None, **{'ui.hidden': True}
+    )  # To avoid previous config migrations, won't be used
     query: constr(min_length=1) = Field(
         None,
         description='You can write a custom query against your '
