@@ -206,7 +206,8 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
         connection = pymysql.connect(**self.get_connection_params(database=datasource.database))
 
         # ----- Prepare -----
-        query = datasource.query
+        # As long as frontend is build queries with '"' we need to replace them
+        query = datasource.query.replace('"', '`')
         MySQLConnector.logger.debug(f'Executing query : {datasource.query}')
         query_params = datasource.parameters or {}
 

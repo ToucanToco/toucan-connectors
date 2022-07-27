@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.17.1] 2022-07-27
+
+### Changed
+
+- Fix: Mysql replace quoting character
+
 ## [3.17.0] 2022-07-27
 
 ### Changed
