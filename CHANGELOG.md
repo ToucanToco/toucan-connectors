@@ -1,5 +1,10 @@
 # Changelog (Pypi package)
 
+## [3.17.1] 2022-07-27
+
+### Changed
+
+- Fix: Mysql, Athena add hidden table attribute to avoid old datasources configs to break
 
 ## [3.17.1] 2022-07-27
 
