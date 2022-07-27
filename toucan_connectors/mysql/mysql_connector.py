@@ -93,7 +93,11 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
         with connection.cursor() as cursor:
             cursor.execute('SHOW DATABASES;')
             res = cursor.fetchall()
-            return [db_name for (db_name,) in res if db_name not in ('information_schema', 'mysql')]
+            return [
+                db_name
+                for (db_name,) in res
+                if db_name not in ('information_schema', 'mysql', 'performance_schema')
+            ]
 
     def _get_project_structure(self) -> list[TableInfo]:
         connection = pymysql.connect(

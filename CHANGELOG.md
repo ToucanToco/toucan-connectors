@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.17.0] 2022-07-27
+
+### Changed
+
+- Feat: Mysql & Athena graphical selection interface
+
 ## [3.16.0] 2022-07-18
 
 ### Changed
