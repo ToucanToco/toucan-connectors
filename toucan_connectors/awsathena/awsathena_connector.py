@@ -24,6 +24,9 @@ class AwsathenaDataSource(ToucanDataSource):
     database: constr(min_length=1) = Field(
         ..., description='The name of the database you want to query.'
     )
+    table: str = Field(
+        None, **{'ui.hidden': True}
+    )  # To avoid previous config migrations, won't be used
     language: str = Field('sql', **{'ui.hidden': True})
     query: constr(min_length=1) = Field(
         None,
