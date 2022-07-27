@@ -15,6 +15,7 @@ from toucan_connectors.one_drive.one_drive_connector import (
     OneDriveDataSource,
 )
 
+pytestmark = pytest.mark.serial
 import_path = 'toucan_connectors.one_drive.one_drive_connector'
 
 

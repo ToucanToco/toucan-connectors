@@ -31,7 +31,7 @@ test-serial:
 
 .PHONY: test
 test:
-	python -m pytest -n 8 -m "not serial" --junitxml=test-report-parallel.xml --cov=toucan_connectors --cov-report xml -s
+	python -m pytest -n 4 -m "not serial" --junitxml=test-report-parallel.xml --cov=toucan_connectors --cov-report xml -s
 
 
 .PHONY: all
