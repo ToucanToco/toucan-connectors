@@ -20,6 +20,7 @@ from toucan_connectors.common import (
 )
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.pandas_translator import PandasConditionTranslator
+from toucan_connectors.utils.datetime import sanitize_df_dates
 
 try:
     from bearer import Bearer
@@ -342,6 +343,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         res = self._retrieve_data(data_source)
         res.columns = res.columns.astype(str)
+        res = sanitize_df_dates(res)
 
         if permissions is not None:
             permissions_query = PandasConditionTranslator.translate(permissions)
