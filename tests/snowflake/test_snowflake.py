@@ -20,6 +20,8 @@ from toucan_connectors.snowflake import (
     SnowflakeDataSource,
 )
 
+pytestmark = pytest.mark.serial
+
 OAUTH_TOKEN_ENDPOINT = 'http://example.com/endpoint'
 OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE = 'application/x-www-form-urlencoded'
 OAUTH_ACCESS_TOKEN = str(jwt.encode({'exp': 42, 'sub': 'snowflake_user'}, key='clef'))

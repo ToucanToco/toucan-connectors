@@ -14,6 +14,8 @@ from toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector import (
     SnowflakeoAuth2DataSource,
 )
 
+pytestmark = pytest.mark.serial
+
 
 @pytest.fixture
 def snowflake_oauth2_connector():
