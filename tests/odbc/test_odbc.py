@@ -6,6 +6,8 @@ from pydantic import ValidationError
 
 from toucan_connectors.odbc.odbc_connector import OdbcConnector, OdbcDataSource
 
+pytestmark = pytest.mark.serial
+
 
 def test_postgres_driver_installed():
     """

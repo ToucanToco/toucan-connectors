@@ -19,6 +19,8 @@ from toucan_connectors.mongo.mongo_connector import (
     normalize_query,
 )
 
+pytestmark = pytest.mark.serial
+
 
 @pytest.fixture(scope='module')
 def mongo_server(service_container):

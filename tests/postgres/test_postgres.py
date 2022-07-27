@@ -10,6 +10,8 @@ from toucan_connectors.postgres.postgresql_connector import (
     pgsql,
 )
 
+pytestmark = pytest.mark.serial
+
 
 @pytest.fixture(scope='module')
 def postgres_server(service_container):

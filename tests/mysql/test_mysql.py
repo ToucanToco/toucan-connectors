@@ -8,6 +8,8 @@ from pytest_mock import MockerFixture
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.mysql.mysql_connector import MySQLConnector, MySQLDataSource, handle_date_0
 
+pytestmark = pytest.mark.serial
+
 
 @pytest.fixture(scope='module')
 def mysql_server(service_container):

@@ -8,6 +8,8 @@ from toucan_connectors.clickhouse.clickhouse_connector import (
     ClickhouseDataSource,
 )
 
+pytestmark = pytest.mark.serial
+
 
 @pytest.fixture(scope='module')
 def clickhouse_server(service_container):

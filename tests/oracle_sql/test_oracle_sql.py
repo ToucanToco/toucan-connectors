@@ -7,6 +7,7 @@ from toucan_connectors.oracle_sql.oracle_sql_connector import (
     OracleSQLDataSource,
 )
 
+pytestmark = pytest.mark.serial
 missing_oracle_lib = False
 try:
     cx_Oracle.connect()

@@ -6,6 +6,8 @@ from toucan_connectors.elasticsearch.elasticsearch_connector import (
     ElasticsearchDataSource,
 )
 
+pytestmark = pytest.mark.serial
+
 
 @pytest.fixture(scope='module')
 def elasticsearch(service_container, request):

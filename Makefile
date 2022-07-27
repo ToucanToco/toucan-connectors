@@ -25,9 +25,14 @@ lint:
 	$(isort) --check-only
 	$(black) --check
 
+.PHONY: test-serial
+test-serial:
+	pytest -m serial --junitxml=test-report-serial.xml --cov=toucan_connectors --cov-report xml
+
 .PHONY: test
 test:
-	pytest --junitxml=test-report.xml --cov=toucan_connectors --cov-report xml
+	python -m pytest -n 8 -m "not serial" --junitxml=test-report-parallel.xml --cov=toucan_connectors --cov-report xml -s
+
 
 .PHONY: all
 all: test lint

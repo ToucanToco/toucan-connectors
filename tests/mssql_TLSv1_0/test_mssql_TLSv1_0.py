@@ -7,6 +7,8 @@ import pytest
 
 from toucan_connectors.mssql_TLSv1_0.mssql_connector import MSSQLConnector, MSSQLDataSource
 
+pytestmark = pytest.mark.serial
+
 
 @pytest.fixture(scope='module')
 def mssql_server(service_container):
