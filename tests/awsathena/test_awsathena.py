@@ -214,28 +214,24 @@ def test_athenaconnector_get_model(
         {
             'name': 'table1',
             'database': 'db1',
-            'schema': 'AWSAthenaDefaultSchema',
             'type': 'table',
             'columns': [{'name': 'foo', 'type': 'string'}, {'name': 'bar', 'type': 'string'}],
         },
         {
             'name': 'table2',
             'database': 'db1',
-            'schema': 'AWSAthenaDefaultSchema',
             'type': 'table',
             'columns': [{'name': 'roo', 'type': 'integer'}, {'name': 'far', 'type': 'datetime'}],
         },
         {
             'name': 'table1',
             'database': 'db2',
-            'schema': 'AWSAthenaDefaultSchema',
             'type': 'table',
             'columns': [{'name': 'loo', 'type': 'string'}, {'name': 'rab', 'type': 'string'}],
         },
         {
             'name': 'table2',
             'database': 'db2',
-            'schema': 'AWSAthenaDefaultSchema',
             'type': 'table',
             'columns': [{'name': 'broo', 'type': 'integer'}, {'name': 'farf', 'type': 'datetime'}],
         },

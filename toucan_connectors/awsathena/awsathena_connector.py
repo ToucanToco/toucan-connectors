@@ -135,7 +135,6 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
                         {
                             'name': table_object['Table'],
                             'database': db,
-                            'schema': 'AWSAthenaDefaultSchema',
                             'type': 'table' if 'TABLE' in table_object['TableType'] else 'view',
                             'columns': [{'name': k, 'type': v} for k, v in columns.items()],
                         }
