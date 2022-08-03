@@ -258,10 +258,12 @@ class MongoConnector(ToucanConnector):
         # (c.f https://docs.mongodb.com/manual/core/aggregation-pipeline-optimization/#pipeline-sequence-optimization)
         # Since Mongo '$regex' operator doesn't work with integer values, we need to check the stringified versions
         search_steps = {}
-        for condition in search: 
-            search_steps[f'${condition}'] = [] # convert "and"/"or" to "$and"/"$or"
+        for condition in search:
+            search_steps[f'${condition}'] = []  # convert "and"/"or" to "$and"/"$or"
             for column in search[condition]:
-                search_steps[f'${condition}'].append({'$and': []}) # makes an "and" of all columns searches
+                search_steps[f'${condition}'].append(
+                    {'$and': []}
+                )  # makes an "and" of all columns searches
                 for col, regex in column.items():
                     search_steps[f'${condition}'][-1]['$and'].append(
                         {

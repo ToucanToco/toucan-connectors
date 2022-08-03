@@ -439,11 +439,11 @@ def test_get_df_with_regex_and(mongo_connector, mongo_datasource):
         datasource, {'and': [{'country': re.compile('France'), 'name': re.compile('Marie')}]}
     ).drop(columns='_id').to_dict(orient='records') == [
         {
-            "domain": "domain1",
-            "country": "France",
-            "language": "French",
-            "value": 20,
-            "name": "Marie",
+            'domain': 'domain1',
+            'country': 'France',
+            'language': 'French',
+            'value': 20,
+            'name': 'Marie',
         }
     ]
 
@@ -457,29 +457,29 @@ def test_get_df_with_regex_or(mongo_connector, mongo_datasource):
         datasource, {'or': [{'country': re.compile('France'), 'name': re.compile('Marie')}]}
     ).drop(columns='_id').to_dict(orient='records') == [
         {
-            "domain": "domain1",
-            "country": "France",
-            "language": "French",
-            "value": 20,
-            "name": "Marie",
+            'domain': 'domain1',
+            'country': 'France',
+            'language': 'French',
+            'value': 20,
+            'name': 'Marie',
         }
     ]
     assert mongo_connector.get_df_with_regex(
         datasource, {'or': [{'country': re.compile('France')}, {'name': re.compile('Marie')}]}
     ).drop(columns='_id').to_dict(orient='records') == [
         {
-            "domain": "domain1",
-            "country": "France",
-            "language": "French",
-            "value": 20,
-            "name": "François",
+            'domain': 'domain1',
+            'country': 'France',
+            'language': 'French',
+            'value': 20,
+            'name': 'François',
         },
         {
-            "domain": "domain1",
-            "country": "France",
-            "language": "French",
-            "value": 20,
-            "name": "Marie",
+            'domain': 'domain1',
+            'country': 'France',
+            'language': 'French',
+            'value': 20,
+            'name': 'Marie',
         },
     ]
 
