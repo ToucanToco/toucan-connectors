@@ -430,6 +430,60 @@ def test_get_df_with_regex_with_offset_and_limit(mongo_connector, mongo_datasour
     pd.testing.assert_series_equal(df['country'], pd.Series(['Germany'], name='country'))
 
 
+def test_get_df_with_regex_and(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(
+        collection='test_col',
+        query=[{'$match': {'domain': 'domain1'}}],
+    )
+    assert mongo_connector.get_df_with_regex(
+        datasource, {'and': [{'country': re.compile('France'), 'name': re.compile('Marie')}]}
+    ).drop(columns='_id').to_dict(orient='records') == [
+        {
+            "domain": "domain1",
+            "country": "France",
+            "language": "French",
+            "value": 20,
+            "name": "Marie",
+        }
+    ]
+
+
+def test_get_df_with_regex_or(mongo_connector, mongo_datasource):
+    datasource = mongo_datasource(
+        collection='test_col',
+        query=[{'$match': {'domain': 'domain1'}}],
+    )
+    assert mongo_connector.get_df_with_regex(
+        datasource, {'or': [{'country': re.compile('France'), 'name': re.compile('Marie')}]}
+    ).drop(columns='_id').to_dict(orient='records') == [
+        {
+            "domain": "domain1",
+            "country": "France",
+            "language": "French",
+            "value": 20,
+            "name": "Marie",
+        }
+    ]
+    assert mongo_connector.get_df_with_regex(
+        datasource, {'or': [{'country': re.compile('France')}, {'name': re.compile('Marie')}]}
+    ).drop(columns='_id').to_dict(orient='records') == [
+        {
+            "domain": "domain1",
+            "country": "France",
+            "language": "French",
+            "value": 20,
+            "name": "François",
+        },
+        {
+            "domain": "domain1",
+            "country": "France",
+            "language": "French",
+            "value": 20,
+            "name": "Marie",
+        },
+    ]
+
+
 def test_explain(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.explain(datasource)
