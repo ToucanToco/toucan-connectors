@@ -115,7 +115,7 @@ def test_get_df_no_query(mongo_connector, mongo_datasource):
     """It should return the whole collection by default"""
     ds = mongo_datasource(collection='test_col')
     df = mongo_connector.get_df(ds)
-    assert df.shape == (4, 5)
+    assert df.shape == (5, 6)
 
 
 def test_get_df(mocker):
@@ -180,14 +180,15 @@ def test_get_df_live(mongo_connector, mongo_datasource):
     df = mongo_connector.get_df(datasource)
     expected = pd.DataFrame(
         {
-            'country': ['France', 'England', 'Germany', 'USA'],
-            'language': ['French', 'English', 'German', 'English'],
-            'value': [20, 14, 17, 28],
+            'country': ['France', 'France', 'England', 'Germany', 'USA'],
+            'language': ['French', 'French', 'English', 'German', 'English'],
+            'value': [20, 20, 14, 17, 28],
+            'name': ['François', 'Marie', 'Evelyn', 'Hans', 'Scarlett'],
         }
     )
-    assert df.shape == (4, 5)
-    assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
-    assert df[['country', 'language', 'value']].equals(expected)
+    assert df.shape == (5, 6)
+    assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value', 'name'}
+    assert df[['country', 'language', 'value', 'name']].equals(expected)
 
     datasource = mongo_datasource(
         collection='test_col', query=[{'$match': {'domain': 'domain1'}}, {'$sort': [{'pays': 1}]}]
@@ -201,56 +202,70 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     df = mongo_connector.get_df(
         datasource, permissions={'column': 'country', 'operator': 'eq', 'value': 'France'}
     )
-    expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
+    expected = pd.DataFrame(
+        {
+            'country': ['France', 'France'],
+            'language': ['French', 'French'],
+            'value': [20, 20],
+            'name': ['François', 'Marie'],
+        }
+    )
     assert datasource.query == [
         {'$match': {'$and': [{'domain': 'domain1'}, {'country': {'$eq': 'France'}}]}}
     ]
-    assert df.shape == (1, 5)
-    assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
-    assert df[['country', 'language', 'value']].equals(expected)
+    assert df.shape == (2, 6)
+    assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value', 'name'}
+    assert df[['country', 'language', 'value', 'name']].equals(expected)
 
     datasource = mongo_datasource(collection='test_col', query=[{'$match': {'domain': 'domain1'}}])
     df = mongo_connector.get_df(
         datasource, permissions={'column': 'country', 'operator': 'eq', 'value': 'France'}
     )
-    expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
+    expected = pd.DataFrame(
+        {
+            'country': ['France', 'France'],
+            'language': ['French', 'French'],
+            'value': [20, 20],
+            'name': ['François', 'Marie'],
+        }
+    )
     assert datasource.query == [
         {'$match': {'$and': [{'domain': 'domain1'}, {'country': {'$eq': 'France'}}]}}
     ]
-    assert df.shape == (1, 5)
-    assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value'}
-    assert df[['country', 'language', 'value']].equals(expected)
+    assert df.shape == (2, 6)
+    assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value', 'name'}
+    assert df[['country', 'language', 'value', 'name']].equals(expected)
 
 
 def test_get_slice(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.get_slice(datasource)
-    assert res.stats.total_returned_rows == 4
-    assert res.stats.total_rows == 4
-    assert res.df.shape == (4, 5)
-    assert res.df['country'].tolist() == ['France', 'England', 'Germany', 'USA']
+    assert res.stats.total_returned_rows == 5
+    assert res.stats.total_rows == 5
+    assert res.df.shape == (5, 6)
+    assert res.df['country'].tolist() == ['France', 'France', 'England', 'Germany', 'USA']
 
     # With a limit
     res = mongo_connector.get_slice(datasource, limit=1)
     expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
-    assert res.stats.total_returned_rows == 4
-    assert res.stats.total_rows == 4
-    assert res.df.shape == (1, 5)
+    assert res.stats.total_returned_rows == 5
+    assert res.stats.total_rows == 5
+    assert res.df.shape == (1, 6)
     assert res.df[['country', 'language', 'value']].equals(expected)
 
     # With a offset
     res = mongo_connector.get_slice(datasource, offset=1)
-    assert res.stats.total_returned_rows == 4
-    assert res.stats.total_rows == 4
-    assert res.df.shape == (3, 5)
-    assert res.df['country'].tolist() == ['England', 'Germany', 'USA']
+    assert res.stats.total_returned_rows == 5
+    assert res.stats.total_rows == 5
+    assert res.df.shape == (4, 6)
+    assert res.df['country'].tolist() == ['France', 'England', 'Germany', 'USA']
 
     # With both
     res = mongo_connector.get_slice(datasource, offset=1, limit=1)
-    assert res.stats.total_returned_rows == 4
-    assert res.stats.total_rows == 4
-    assert res.df.shape == (1, 5)
-    assert res.df.loc[0, 'country'] == 'England'
+    assert res.stats.total_returned_rows == 5
+    assert res.stats.total_rows == 5
+    assert res.df.shape == (1, 6)
+    assert res.df.loc[0, 'country'] == 'France'
 
 
 def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
@@ -273,16 +288,17 @@ def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
 def test_get_slice_no_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     ds = mongo_connector.get_slice(datasource, limit=None)
-    assert ds.stats.total_returned_rows == 4
+    assert ds.stats.total_returned_rows == 5
     expected = pd.DataFrame(
         {
-            'country': ['France', 'England', 'Germany', 'USA'],
-            'language': ['French', 'English', 'German', 'English'],
-            'value': [20, 14, 17, 28],
+            'country': ['France', 'France', 'England', 'Germany', 'USA'],
+            'language': ['French', 'French', 'English', 'German', 'English'],
+            'value': [20, 20, 14, 17, 28],
+            'name': ['François', 'Marie', 'Evelyn', 'Hans', 'Scarlett'],
         }
     )
-    assert ds.df.shape == (4, 5)
-    assert ds.df[['country', 'language', 'value']].equals(expected)
+    assert ds.df.shape == (5, 6)
+    assert ds.df[['country', 'language', 'value', 'name']].equals(expected)
 
 
 def test_get_slice_empty(mongo_connector, mongo_datasource):
@@ -330,7 +346,9 @@ def test_get_slice_with_regex(mongo_connector, mongo_datasource):
 def test_get_df_with_regex(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df_with_regex(datasource, {'and': [{'country': re.compile('r.*a')}]})
-    pd.testing.assert_series_equal(df['country'], pd.Series(['France', 'Germany'], name='country'))
+    pd.testing.assert_series_equal(
+        df['country'], pd.Series(['France', 'France', 'Germany'], name='country')
+    )
 
 
 def test_get_df_with_regex_with_projection_stage(mongo_connector, mongo_datasource):
@@ -342,7 +360,7 @@ def test_get_df_with_regex_with_projection_stage(mongo_connector, mongo_datasour
         datasource, {'and': [{'new_country_col': re.compile('r.*a')}]}
     )
     pd.testing.assert_series_equal(
-        df['new_country_col'], pd.Series(['France', 'Germany'], name='new_country_col')
+        df['new_country_col'], pd.Series(['France', 'France', 'Germany'], name='new_country_col')
     )
 
 
@@ -353,7 +371,20 @@ def test_get_df_with_regex_with_integers(mongo_connector, mongo_datasource):
     )
     df = mongo_connector.get_df_with_regex(datasource, {'and': [{'value': re.compile('^20$')}]})
     assert df.drop(columns='_id').to_dict(orient='records') == [
-        {'domain': 'domain1', 'country': 'France', 'language': 'French', 'value': 20}
+        {
+            'domain': 'domain1',
+            'country': 'France',
+            'language': 'French',
+            'value': 20,
+            'name': 'François',
+        },
+        {
+            'domain': 'domain1',
+            'country': 'France',
+            'language': 'French',
+            'value': 20,
+            'name': 'Marie',
+        },
     ]
 
 
@@ -366,7 +397,20 @@ def test_get_df_with_regex_case_sensitiveness(mongo_connector, mongo_datasource)
         datasource, {'and': [{'country': re.compile('^FrAn.*')}]}
     )
     assert df.drop(columns='_id').to_dict(orient='records') == [
-        {'domain': 'domain1', 'country': 'France', 'language': 'French', 'value': 20}
+        {
+            'domain': 'domain1',
+            'country': 'France',
+            'language': 'French',
+            'value': 20,
+            'name': 'François',
+        },
+        {
+            'domain': 'domain1',
+            'country': 'France',
+            'language': 'French',
+            'value': 20,
+            'name': 'Marie',
+        },
     ]
 
 
@@ -381,7 +425,7 @@ def test_get_df_with_regex_with_limit(mongo_connector, mongo_datasource):
 def test_get_df_with_regex_with_offset_and_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df_with_regex(
-        datasource, {'and': [{'country': re.compile('r.*a')}]}, limit=1, offset=1
+        datasource, {'and': [{'country': re.compile('r.*a')}]}, limit=1, offset=2
     )
     pd.testing.assert_series_equal(df['country'], pd.Series(['Germany'], name='country'))
 
