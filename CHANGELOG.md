@@ -1,6 +1,12 @@
 # Changelog (Pypi package)
 
-## [3.17.1] 2022-07-27
+## [3.17.3] 2022-07-28
+
+### Changed
+
+- Fix: Mysql, remove sys table from available dbs listing
+
+## [3.17.2] 2022-07-27
 
 ### Changed
 

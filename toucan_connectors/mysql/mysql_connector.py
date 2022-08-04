@@ -99,7 +99,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
             return [
                 db_name
                 for (db_name,) in res
-                if db_name not in ('information_schema', 'mysql', 'performance_schema')
+                if db_name not in ('information_schema', 'mysql', 'performance_schema', 'sys')
             ]
 
     def _get_project_structure(self) -> list[TableInfo]:
