@@ -3,24 +3,35 @@
     "domain": "domain1",
     "country": "France",
     "language": "French",
-    "value": 20
+    "value": 20,
+    "name": "François"
+  },
+  {
+    "domain": "domain1",
+    "country": "France",
+    "language": "French",
+    "value": 20,
+    "name": "Marie"
   },
   {
     "domain": "domain1",
     "country": "England",
     "language": "English",
-    "value": 14
+    "value": 14,
+    "name": "Evelyn"
   },
   {
     "domain": "domain1",
     "country": "Germany",
     "language": "German",
-    "value": 17
-  }, 
+    "value": 17,
+    "name": "Hans"
+  },
   {
     "domain": "domain1",
     "country": "USA",
-    "language":"English",
-    "value": 28
+    "language": "English",
+    "value": 28,
+    "name": "Scarlett"
   }
 ]

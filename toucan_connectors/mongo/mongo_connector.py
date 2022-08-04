@@ -261,8 +261,11 @@ class MongoConnector(ToucanConnector):
         for condition in search:
             search_steps[f'${condition}'] = []  # convert "and"/"or" to "$and"/"$or"
             for column in search[condition]:
+                search_steps[f'${condition}'].append(
+                    {'$and': []}
+                )  # makes an "and" of all columns searches
                 for col, regex in column.items():
-                    search_steps[f'${condition}'].append(
+                    search_steps[f'${condition}'][-1]['$and'].append(
                         {
                             '$regexMatch': {
                                 'input': {'$toString': f'${col}'},
