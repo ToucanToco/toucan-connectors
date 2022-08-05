@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## Unreleased
+
+### Changed
+
+- Athena: Add an option allowing to toggle CTAS (disabled by default)
+
 ## [3.17.1] 2022-07-27
 
 ### Changed

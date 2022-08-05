@@ -59,9 +59,16 @@ def status_checks() -> List[str]:
     ]
 
 
+@pytest.mark.parametrize('use_ctas', (True, False))
 def test_get_df(
-    mocker, athena_connector, data_source, sample_data, mocked_read_sql_query, mocked_boto_session
+    athena_connector,
+    data_source,
+    sample_data,
+    mocked_read_sql_query,
+    mocked_boto_session,
+    use_ctas: bool,
 ):
+    data_source.use_ctas = use_ctas
     # The actual data request
     df = athena_connector.get_df(data_source=data_source)
 
@@ -72,6 +79,7 @@ def test_get_df(
         database='mydatabase',
         boto3_session={'a': 'b'},
         s3_output='s3://test/results/',
+        ctas_approach=use_ctas,
     )
 
     mocked_boto_session.assert_called_once()
@@ -97,6 +105,7 @@ def test_get_slice(
         database='mydatabase',
         boto3_session={'a': 'b'},
         s3_output='s3://test/results/',
+        ctas_approach=False,
     )
 
 

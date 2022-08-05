@@ -38,6 +38,10 @@ class AwsathenaDataSource(ToucanDataSource):
         description='An object describing a simple select query This field is used internally',
         **{'ui.hidden': True},
     )
+    use_ctas: bool = Field(
+        False,
+        description='Set to true if you want to use CTAS (recommended for big queries only)',
+    )
 
     @classmethod
     def get_form(cls, connector: 'AwsathenaConnector', current_config: dict[str, Any]):
@@ -111,6 +115,7 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
             database=data_source.database,
             boto3_session=self.get_session(),
             s3_output=self.s3_output_bucket,
+            ctas_approach=data_source.use_ctas,
         )
         return df
 

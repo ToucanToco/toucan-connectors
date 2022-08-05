@@ -12,6 +12,8 @@
 
 * [ClickhouseConnector](connectors/clickhouse.md)
 
+* [DatabricksConnector](connectors/databricks.md)
+
 * [DataikuConnector](connectors/dataiku.md)
 
 * [ElasticsearchConnector](connectors/elasticsearch.md)
