@@ -30,6 +30,11 @@ class MySQLDataSource(ToucanDataSource):
     """
 
     database: str = Field(..., description='The name of the database you want to query')
+    follow_relations: bool | None = Field(
+        None,
+        **{'ui.hidden': True},
+        description='Deprecated, kept for compatibility purpose with old data sources configs',
+    )  # Deprecated
     table: str = Field(
         None, **{'ui.hidden': True}
     )  # To avoid previous config migrations, won't be used
