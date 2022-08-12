@@ -24,6 +24,11 @@ def handle_date_0(df: pd.DataFrame) -> pd.DataFrame:
     return df.replace({'0000-00-00 00:00:00': pd.NaT}).infer_objects()
 
 
+class NoQuerySpecified(Exception):
+    def __init__(self) -> None:
+        super().__init__('no query was specified')
+
+
 class MySQLDataSource(ToucanDataSource):
     """
     Either `query` or `table` are required, both at the same time are not supported.
@@ -211,10 +216,13 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
         Returns: DataFrames from config['table'].
         """
 
+        if not datasource.query or not datasource.query.strip():
+            raise NoQuerySpecified
+
         connection = pymysql.connect(**self.get_connection_params(database=datasource.database))
 
         # ----- Prepare -----
-        # As long as frontend is build queries with '"' we need to replace them
+        # As long as frontend builds queries with '"' we need to replace them
         query = datasource.query.replace('"', '`')
         MySQLConnector.logger.debug(f'Executing query : {datasource.query}')
         query_params = datasource.parameters or {}

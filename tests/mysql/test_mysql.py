@@ -6,7 +6,12 @@ import pytest
 from pytest_mock import MockerFixture
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.mysql.mysql_connector import MySQLConnector, MySQLDataSource, handle_date_0
+from toucan_connectors.mysql.mysql_connector import (
+    MySQLConnector,
+    MySQLDataSource,
+    NoQuerySpecified,
+    handle_date_0,
+)
 
 
 @pytest.fixture(scope='module')
@@ -314,3 +319,25 @@ def test_get_model(mysql_connector: Any) -> None:
             ],
         },
     ]
+
+
+@pytest.mark.parametrize('query', ('   ', None))
+def test_get_df_no_query(query: str, mocker: MockerFixture):
+    mocker.patch('pymysql.connect')
+    mocker.patch('pandas.read_sql')
+    mysql_connector = MySQLConnector(
+        name='mycon', host='localhost', port=22, user='ubuntu', password='ilovetoucan'
+    )
+
+    with pytest.raises(NoQuerySpecified):
+        mysql_connector.get_df(
+            MySQLDataSource(
+                **{
+                    'domain': 'MySQL test',
+                    'type': 'external_database',
+                    'name': 'Some MySQL provider',
+                    'database': 'mysql_db',
+                    'query': query,
+                }
+            )
+        )
