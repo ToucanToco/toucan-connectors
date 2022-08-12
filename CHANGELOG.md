@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+### [3.18.0] 2022-08-12
+
 ### Changed
 
+- Mysql: Revert the `following_relations` attribute as deprecated
 - Athena: Add an option allowing to toggle CTAS (disabled by default)
 
 ## [3.17.1] 2022-07-27
