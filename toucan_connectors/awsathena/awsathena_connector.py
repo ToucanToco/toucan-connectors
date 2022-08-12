@@ -56,7 +56,7 @@ class AwsathenaConnector(ToucanConnector):
         ..., description='Your S3 Output bucket (where query results are stored.)'
     )
     aws_access_key_id: str = Field(..., description='Your AWS access key ID')
-    aws_secret_access_key: SecretStr = Field(None, description='Your AWS secret key')
+    aws_secret_access_key: SecretStr = Field(..., description='Your AWS secret key')
     region_name: str = Field(..., description='Your AWS region name')
 
     def get_session(self) -> boto3.Session:

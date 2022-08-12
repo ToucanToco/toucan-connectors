@@ -164,17 +164,14 @@ class MongoConnector(ToucanConnector):
         mongo_client_kwargs['serverSelectionTimeoutMS'] = 500
         try:
             client = pymongo.MongoClient(**mongo_client_kwargs)
-            try:
-                client.server_info()
-            except pymongo.errors.ServerSelectionTimeoutError as e:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(2, False), error=str(e)
-                )
-            except pymongo.errors.OperationFailure as e:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(3, False), error=str(e)
-                )
         except pymongo.errors.ConfigurationError as e:
+            return ConnectorStatus(status=False, details=self._get_details(3, False), error=str(e))
+
+        try:
+            client.server_info()
+        except pymongo.errors.ServerSelectionTimeoutError as e:
+            return ConnectorStatus(status=False, details=self._get_details(2, False), error=str(e))
+        except pymongo.errors.OperationFailure as e:
             return ConnectorStatus(status=False, details=self._get_details(3, False), error=str(e))
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
