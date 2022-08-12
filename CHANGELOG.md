@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.18.1] 2022-08-12
+
+### Changed
+
+- MySQL: Return a more explicit error message in case no query is specified
+
 ### [3.18.0] 2022-08-12
 
 ### Changed
@@ -9,7 +15,7 @@
 - Mysql: Revert the `following_relations` attribute as deprecated
 - Athena: Add an option allowing to toggle CTAS (disabled by default)
 
-## [3.17.1] 2022-07-27
+## [3.17.2] 2022-07-27
 
 ### Changed
 
