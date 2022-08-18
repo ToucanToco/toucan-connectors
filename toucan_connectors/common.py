@@ -6,7 +6,7 @@ import logging
 import re
 from contextlib import suppress
 from copy import deepcopy
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 import jq
 import pandas as pd
@@ -281,10 +281,10 @@ class HttpError(Exception):
 
 @dataclasses.dataclass()
 class ConnectorStatus:
-    status: Optional[bool] = None
-    message: Optional[str] = None
-    error: Optional[str] = None
-    details: Optional[List[Tuple[str, Optional[bool]]]] = dataclasses.field(default_factory=list)
+    status: bool | None = None
+    message: str | None = None
+    error: str | None = None
+    details: list[tuple[str, bool | None]] | None = dataclasses.field(default_factory=list)
 
     def to_dict(self):
         return dataclasses.asdict(self)
@@ -298,9 +298,7 @@ def get_param_name(printf_style_argument: str) -> str:
     return printf_style_argument[2:-2]
 
 
-def convert_to_qmark_paramstyle(
-    query_string: str, params_values: dict
-) -> Tuple[str, List[Optional[Any]]]:
+def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> tuple[str, list[Any]]:
     """Takes a query in pyformat paramstyle and transforms it in qmark
        by replacing placeholders by ? and returning values in right order
     ex :
