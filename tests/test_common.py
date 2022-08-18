@@ -20,6 +20,7 @@ from toucan_connectors.common import (
     is_interpolating_table_name,
     nosql_apply_parameters_to_query,
     pandas_read_sql,
+    sanitize_query,
 )
 
 
@@ -451,3 +452,46 @@ def test_convert_to_qmark():
     assert convert_to_qmark_paramstyle(
         "SELECT * FROM foobar WHERE x = '%(value)s'", {'value': 42}
     ) == ('SELECT * FROM foobar WHERE x = ?', [42])
+
+
+@pytest.mark.parametrize(
+    'query,init_params,transformer,expected_query,expected_params',
+    [
+        (
+            'SELECT * FROM foobar WHERE x = {{ value }}',
+            {'value': 42},
+            lambda x: f'%({x})s',
+            'SELECT * FROM foobar WHERE x = %(__QUERY_PARAM_0__)s',
+            {'value': 42, '__QUERY_PARAM_0__': 42},
+        ),
+        (
+            'SELECT * FROM foobar WHERE x = {{ value }}',
+            {'value': 42},
+            lambda x: f':{x}',
+            'SELECT * FROM foobar WHERE x = :__QUERY_PARAM_0__',
+            {'value': 42, '__QUERY_PARAM_0__': 42},
+        ),
+        (
+            'SELECT * FROM foobar WHERE x = {{ values[0] }}',
+            {'values': [17, 42]},
+            lambda x: f'%({x})s',
+            'SELECT * FROM foobar WHERE x = %(__QUERY_PARAM_0__)s',
+            {'values': [17, 42], '__QUERY_PARAM_0__': 17},
+        ),
+        (
+            'SELECT * FROM {{ tables["tableb"] }} WHERE x = {{ values["x"] }} AND y = {{ values["ys"][1] }} ORDER BY id',
+            {'tables': {'a': 'theTableA', 'tableb': 'theTableB'}, 'values': {'x': 1, 'ys': [2, 3]}},
+            lambda x: f'%({x})s',
+            'SELECT * FROM %(__QUERY_PARAM_0__)s WHERE x = %(__QUERY_PARAM_1__)s AND y = %(__QUERY_PARAM_2__)s ORDER BY id',
+            {
+                'tables': {'a': 'theTableA', 'tableb': 'theTableB'},
+                'values': {'x': 1, 'ys': [2, 3]},
+                '__QUERY_PARAM_0__': 'theTableB',
+                '__QUERY_PARAM_1__': 1,
+                '__QUERY_PARAM_2__': 3,
+            },
+        ),
+    ],
+)
+def test_sanitize_query(query, init_params, transformer, expected_query, expected_params):
+    assert sanitize_query(query, init_params, transformer) == (expected_query, expected_params)

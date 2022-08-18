@@ -6,7 +6,7 @@ import logging
 import re
 from contextlib import suppress
 from copy import deepcopy
-from typing import Any
+from typing import Any, Callable
 
 import jq
 import pandas as pd
@@ -407,3 +407,22 @@ def pandas_read_sql(
 
     infer_datetime_dtype(df)
     return df
+
+
+def sanitize_query(
+    query: str, params: dict[str, object], transformer: Callable[[str], str]
+) -> tuple[str, dict[str, object]]:
+    """
+    We allow jinja templates in queries but we don't want to interpolate them directly to avoid SQL injections
+    So we extract the jinja templates and replace them with placeholders and interpolate the placeholders separately.
+    We then send the query with placeholders and the interpolated values
+    to the SQL driver that will reject or not the query!
+    """
+    import re
+
+    all_query_params = re.findall(r'{{.*?}}', query)
+    for i, query_param in enumerate(all_query_params):
+        params[f'__QUERY_PARAM_{i}__'] = nosql_apply_parameters_to_query(query_param, params)
+        query = query.replace(query_param, transformer(f'__QUERY_PARAM_{i}__'))
+
+    return query, params
