@@ -6,7 +6,7 @@ import pandas as pd
 from cached_property import cached_property_with_ttl
 from pydantic import Field, SecretStr, constr, create_model
 
-from toucan_connectors.common import ConnectorStatus, apply_query_parameters
+from toucan_connectors.common import ConnectorStatus, apply_query_parameters, sanitize_query
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
@@ -50,6 +50,12 @@ class AwsathenaDataSource(ToucanDataSource):
             database=strlist_to_enum('database', connector.available_dbs),
             __base__=cls,
         ).schema()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        # Named parameters need to be passed as `:name`
+        # (see https://aws-data-wrangler.readthedocs.io/en/stable/stubs/awswrangler.athena.read_sql_query.html)
+        self.query, self.parameters = sanitize_query(self.query, self.parameters, lambda x: f':{x}')
 
 
 class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
@@ -108,10 +114,11 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
     ) -> pd.DataFrame:
         df = wr.athena.read_sql_query(
             self._add_pagination_to_query(
-                apply_query_parameters(data_source.query, data_source.parameters or {}),
+                data_source.query,
                 offset=offset,
                 limit=limit,
             ),
+            params=data_source.parameters,
             database=data_source.database,
             boto3_session=self.get_session(),
             s3_output=self.s3_output_bucket,
