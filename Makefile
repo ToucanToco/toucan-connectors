@@ -52,3 +52,16 @@ build:
 .PHONY: upload
 upload:
 	poetry publish --build
+
+.PHONY: container-build
+container-build:
+	docker build \
+		-t dev-container-connector \
+		-f ./.devcontainer/Dockerfile . 
+
+.PHONY: container-run
+container-run:
+	docker run  --rm -it \
+		-v ${PWD}:/src --privileged \
+		--name dev-container-connector \
+		dev-container-connector

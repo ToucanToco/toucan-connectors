@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+
+  dev-container:
+    build:
+      context: .
+      dockerfile: ./.devcontainer/Dockerfile
+    privileged: true
+    container_name: dev-container-connector
+    volumes:
+      - ${PWD}:/src
+    depends_on:
+      - mongo
+      - postgres
+      - mysql

@@ -1,0 +1,16 @@
+alias ll='ls -lh'
+
+function _debug-tools {
+    apt update
+    apt --fix-broken -y install
+    apt install -y vim telnet curl iputils-ping
+    pip install ipython
+}
+
+function _tcshell {
+    which ipython > /dev/null 2>&1
+    if [ $? -eq 1 ]; then
+        pip install ipython
+    fi
+    ipython -i ~/ipython_startup.py
+}

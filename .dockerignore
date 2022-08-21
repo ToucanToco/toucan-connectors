@@ -1,0 +1,16 @@
+.git
+.benchmarks
+.coverage
+.coveragerc
+.flake8
+.github/
+.gitignore
+.ipynb_checkpoints/
+.mypy_cache/
+.pre-commit-config.yaml
+.pytest_cache/
+.venv/
+build/
+dist/
+env/
+toucan_connectors.egg-info/

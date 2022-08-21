@@ -1,43 +1,41 @@
-ARG VARIANT=3.8
-FROM --platform=linux/amd64 mcr.microsoft.com/vscode/devcontainers/python:${VARIANT}
+FROM python:3.10.6
 
-# System update/upgrade
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update -qq &&\
+    apt-get install -y apt-transport-https curl libxmlsec1-openssl locales &&\
+    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - &&\
+    curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list
 
-# Install dependencies
-RUN apt-get install -y libxml2-dev libxslt-dev libxslt1-dev unixodbc-dev libpq-dev libssl-dev libffi-dev libcurl4-openssl-dev libblas-dev libatlas-base-dev libsasl2-dev
-RUN apt-get install -y make python3-dev python3-pip
+# We install binaries needed by python libs
+RUN apt-get update -qq &&\
+    ACCEPT_EULA=Y apt-get install -fyq\
+    libxmlsec1-dev freetds-dev \
+    libxml2-dev libxslt-dev \
+    libpq-dev libsasl2-dev \
+    libsnappy-dev unixodbc-dev\
+    msodbcsql17 libsnappy1v5 \
+    libsasl2-modules libmagic1 \
+    mime-support
 
-# Docker
-RUN apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release \
-    && curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
-    && echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
-        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y docker-ce docker-ce-cli containerd.io
+# Generate locales:
+RUN printf "en_US.UTF-8 UTF-8\nfr_FR.UTF-8 UTF-8\n" \
+    > /etc/locale.gen && locale-gen
 
-# Install Docker Compose
-RUN LATEST_COMPOSE_VERSION=$(curl -sSL "https://api.github.com/repos/docker/compose/releases/latest" | grep -o -P '(?<="tag_name": ").+(?=")') \
-    && curl -sSL "https://github.com/docker/compose/releases/download/${LATEST_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
-    && chmod +x /usr/local/bin/docker-compose
+# langs configs
+ENV LANG   en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+ENV TZ     UTC
+ENV SLUGIFY_USES_TEXT_UNIDECODE="yes"
 
-# Setup Docker exchange
-ARG NONROOT_USER=vscode
+WORKDIR /src
+COPY ./pyproject.toml ./poetry.lock ./
 
-# Default to root only access to the Docker socket, set up non-root init script
-RUN touch /var/run/docker-host.sock \
-    && ln -s /var/run/docker-host.sock /var/run/docker.sock \
-    && apt-get -y install socat
+# pip and poetry setups
+RUN pip install --upgrade pip poetry &&\
+    poetry config virtualenvs.create false &&\
+	poetry install -E all
 
-# Create docker-init.sh to spin up socat
-RUN echo "#!/bin/sh\n\
-    sudoIf() { if [ \"\$(id -u)\" -ne 0 ]; then sudo \"\$@\"; else \"\$@\"; fi }\n\
-    sudoIf rm -rf /var/run/docker.sock\n\
-    ((sudoIf socat UNIX-LISTEN:/var/run/docker.sock,fork,mode=660,user=${NONROOT_USER} UNIX-CONNECT:/var/run/docker-host.sock) 2>&1 >> /tmp/vscr-docker-from-docker.log) & > /dev/null\n\
-    \"\$@\"" >> /usr/local/share/docker-init.sh \
-    && chmod +x /usr/local/share/docker-init.sh
+# Add Tini
+ADD ./.devcontainer/docker_configs/bashrc /root/.bashrc
+ADD ./.devcontainer/docker_configs/ipython_startup.py /root/ipython_startup.py
 
-# Entrypoint
-ENTRYPOINT [ "/usr/local/share/docker-init.sh" ]
-CMD [ "sleep", "infinity" ]
+ENTRYPOINT ["/bin/bash"]
