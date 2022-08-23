@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### [3.18.2] 2022-08-23
+
+### Changed
+
+- Athena: Parameters are now passed as SQL parameters rather than interpolated by us in order to prevent SQL injection.
+- Conditions: Strings are now unquoted for conditions applying only to numbers (`lt`, `lte`, `gt`, `gte`).
+
 ### [3.18.1] 2022-08-12
 
 ### Changed
