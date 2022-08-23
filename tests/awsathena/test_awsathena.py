@@ -76,6 +76,7 @@ def test_get_df(
 
     mocked_read_sql_query.assert_called_once_with(
         'SELECT * FROM beers;',
+        params=None,
         database='mydatabase',
         boto3_session={'a': 'b'},
         s3_output='s3://test/results/',
@@ -102,6 +103,7 @@ def test_get_slice(
     assert sorted(result.df['style'].unique().tolist()) == ['Blonde', 'Triple']
     mocked_read_sql_query.assert_called_once_with(
         'SELECT * FROM (SELECT * FROM beers) LIMIT 110 OFFSET 10;',
+        params=None,
         database='mydatabase',
         boto3_session={'a': 'b'},
         s3_output='s3://test/results/',
@@ -245,3 +247,27 @@ def test_athenaconnector_get_model(
             'columns': [{'name': 'broo', 'type': 'integer'}, {'name': 'farf', 'type': 'datetime'}],
         },
     ]
+
+
+def test_no_sql_injection(athena_connector, mocker):
+    read_sql_mock: MagicMock = mocker.patch('awswrangler.athena.read_sql_query')
+
+    ds = AwsathenaDataSource(
+        name='test',
+        domain='users',
+        database='db',
+        query='SELECT * FROM Users WHERE UserId = {{ user_id }}',
+        parameters={'user_id': '105 OR 1=1'},
+    )
+    assert ds.query == 'SELECT * FROM Users WHERE UserId = :__QUERY_PARAM_0__'
+    assert ds.parameters == {'user_id': '105 OR 1=1', '__QUERY_PARAM_0__': '105 OR 1=1'}
+
+    athena_connector.get_df(ds)
+    read_sql_mock.assert_called_once_with(
+        'SELECT * FROM Users WHERE UserId = :__QUERY_PARAM_0__',
+        params={'user_id': '105 OR 1=1', '__QUERY_PARAM_0__': '105 OR 1=1'},
+        database='db',
+        boto3_session=mocker.ANY,
+        s3_output=mocker.ANY,
+        ctas_approach=mocker.ANY,
+    )
