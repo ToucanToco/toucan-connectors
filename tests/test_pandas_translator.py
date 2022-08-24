@@ -73,3 +73,14 @@ def test_PandasConditionTranslator_operators_with_quoted_strings():
     assert PandasConditionTranslator.LOWER_THAN_EQUAL('col', "'''-42.1'''") == 'col <= -42.1'
     assert PandasConditionTranslator.IN('col', ['val']) == "col in ['val']"
     assert PandasConditionTranslator.NOT_IN('col', ['val']) == "col not in ['val']"
+
+
+def test_PandasConditionTranslator_operators_with_numbers():
+    assert PandasConditionTranslator.EQUAL('col', 42) == 'col == 42'
+    assert PandasConditionTranslator.NOT_EQUAL('col', 42.12) == 'col != 42.12'
+    assert PandasConditionTranslator.GREATER_THAN('col', -42) == 'col > -42'
+    assert PandasConditionTranslator.GREATER_THAN_EQUAL('col', -42.12) == 'col >= -42.12'
+    assert PandasConditionTranslator.LOWER_THAN('col', 42) == 'col < 42'
+    assert PandasConditionTranslator.LOWER_THAN_EQUAL('col', 42.12) == 'col <= 42.12'
+    assert PandasConditionTranslator.IN('col', [-42]) == 'col in [-42]'
+    assert PandasConditionTranslator.NOT_IN('col', [-42.12]) == 'col not in [-42.12]'
