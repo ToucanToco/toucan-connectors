@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.18.3] 2022-08-24
+
+### Changed
+
+- Conditions: The unquoting logic is now only applied when the passed parameter is a string
+
 ### [3.18.2] 2022-08-23
 
 ### Changed
