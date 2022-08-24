@@ -12,7 +12,9 @@ def requires_number(fn: Callable[[type, str, Number | str], str]) -> FnTakingNum
     def wrapper(cls, column, value) -> str:
         # NOTE: We're only literal-evaling here (unquoting) rather than casting to a float because
         # we might want to apply these to dates
-        return fn(cls, column, literal_eval(value) if "'" in value or '"' in value else value)
+        if isinstance(value, str) and ("'" in value or '"' in value):
+            value = literal_eval(value)
+        return fn(cls, column, value)
 
     return wrapper
 
