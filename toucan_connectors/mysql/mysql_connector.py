@@ -99,9 +99,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
         keep_untouched = (cached_property_with_ttl,)
 
     def _list_db_names(self) -> list[str]:
-        connection = pymysql.connect(
-            **self.get_connection_params(cursorclass=None, database='mysql')
-        )
+        connection = pymysql.connect(**self.get_connection_params(cursorclass=None, database=None))
         # Always add the suggestions for the available databases
         with connection.cursor() as cursor:
             cursor.execute('SHOW DATABASES;')
@@ -113,9 +111,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
             ]
 
     def _get_project_structure(self) -> list[TableInfo]:
-        connection = pymysql.connect(
-            **self.get_connection_params(cursorclass=None, database='mysql')
-        )
+        connection = pymysql.connect(**self.get_connection_params(cursorclass=None, database=None))
         # Always add the suggestions for the available databases
         with connection.cursor() as cursor:
             cursor.execute(build_database_model_extraction_query())

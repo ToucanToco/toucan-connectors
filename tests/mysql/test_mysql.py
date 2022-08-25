@@ -341,3 +341,21 @@ def test_get_df_no_query(query: str, mocker: MockerFixture):
                 }
             )
         )
+
+
+def test_list_db_names_ensure_no_db_specified(
+    mysql_connector: MySQLConnector, mocker: MockerFixture
+):
+    connect_mock = mocker.patch('pymysql.connect')
+    mysql_connector._list_db_names()
+    assert connect_mock.call_count == 1
+    assert 'database' not in connect_mock.call_args.kwargs
+
+
+def test_get_project_structure_ensure_no_db_specified(
+    mysql_connector: MySQLConnector, mocker: MockerFixture
+):
+    connect_mock = mocker.patch('pymysql.connect')
+    mysql_connector._get_project_structure()
+    assert connect_mock.call_count == 1
+    assert 'database' not in connect_mock.call_args.kwargs
