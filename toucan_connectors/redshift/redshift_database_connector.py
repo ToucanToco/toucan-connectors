@@ -46,6 +46,7 @@ ORDERED_KEYS = [
     'session_token',
     'profile',
     'region',
+    'enable_tcp_keepalive',
 ]
 
 logger = logging.getLogger(__name__)
@@ -127,6 +128,13 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         description='You can set a connection timeout in seconds here, i.e. the maximum length of '
         'time you want to wait for the server to respond. None by default',
     )
+    # True by default to match redshift_connector kwargs syntax
+    enable_tcp_keepalive: bool = Field(
+        True,
+        title='Enable TCP keep-alive',
+        description='You may disable TCP keep-alive by unticking this option. Disabling might be '
+        'required for long-running queries or if you are behind a firewall',
+    )
 
     access_key_id: str | None = Field(None, description='The access key id of your aws account.')
     secret_access_key: SecretStr | None = Field(
@@ -183,6 +191,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             port=self.port,
             timeout=self.connect_timeout,
             cluster_identifier=self.cluster_identifier,
+            tcp_keepalive=self.enable_tcp_keepalive,
         )
         if self.authentication_method == AuthenticationMethod.DB_CREDENTIALS.value:
             con_params['user'] = self.user
