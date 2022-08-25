@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.18.4] 2022-08-26
+
+### Changed
+
+- MySQL: Do not specify a database on discoverability-related functions (listing databases and describing table schemas).
+
 ### [3.18.3] 2022-08-24
 
 ### Changed
