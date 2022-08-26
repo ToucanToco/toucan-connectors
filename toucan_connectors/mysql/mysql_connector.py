@@ -183,7 +183,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
-    def get_model(self) -> list[Any]:
+    def get_model(self, db_name: str | None = None) -> list[Any]:
         """Retrieves the database tree structure using current connection"""
         return DiscoverableConnector.format_db_model(self.project_tree)
 
