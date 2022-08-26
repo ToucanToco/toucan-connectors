@@ -478,12 +478,13 @@ TableInfo = Dict[str, Union[str, List[Dict[str, str]]]]
 
 class DiscoverableConnector(ABC):
     @abstractmethod
-    def get_model(self) -> List[TableInfo]:
+    def get_model(self, db_name: str | None = None) -> List[TableInfo]:
         """Tries to get all tables that are available for the connector"""
 
-    def get_model_with_info(self) -> Tuple[List[TableInfo], Dict]:
-        """Tries to get all tables that are available for the connector and gives back some infos about what happenned"""
-        return (self.get_model(), {})
+    def get_model_with_info(self, db_name: str | None = None) -> Tuple[List[TableInfo], Dict]:
+        """Tries to get all tables that are available for the connector
+        and gives back some infos about what happened"""
+        return (self.get_model(db_name=db_name), {})
 
     @staticmethod
     def format_db_model(

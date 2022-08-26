@@ -349,7 +349,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
                 )
         return table_infos
 
-    def get_model(self) -> list[TableInfo]:
+    def get_model(self, db_name: str | None = None) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
         tables_info = []
         for db in self.available_dbs:
@@ -358,7 +358,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
 
         return tables_info
 
-    def get_model_with_info(self) -> tuple[list[TableInfo], dict]:
+    def get_model_with_info(self, db_name: str | None = None) -> tuple[list[TableInfo], dict]:
         """Retrieves the database tree structure using current connection"""
         databases_tree = []
         failed_databases = []

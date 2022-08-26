@@ -225,6 +225,6 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         )
         return self._format_db_model(client.query(query).to_dataframe())
 
-    def get_model(self) -> list[TableInfo]:
+    def get_model(self, db_name: str | None = None) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
         return self.project_tree

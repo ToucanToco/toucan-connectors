@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import psycopg2 as pgsql
 from pydantic import Field, SecretStr, constr, create_model
@@ -197,7 +197,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
             res = cursor.description
         return {r.name: types.get(r.type_code) for r in res}
 
-    def get_model(self) -> List[TableInfo]:
+    def get_model(self, db_name: str | None = None) -> List[TableInfo]:
         """Retrieves the database tree structure using current connection"""
         available_dbs = self._list_db_names()
         databases_tree = []
@@ -206,7 +206,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
                 databases_tree += self._list_tables_info(db)
         return DiscoverableConnector.format_db_model(databases_tree)
 
-    def get_model_with_info(self) -> Tuple[List[TableInfo], Dict]:
+    def get_model_with_info(self, db_name: str | None = None) -> tuple[list[TableInfo], dict]:
         """Retrieves the database tree structure using current connection"""
         available_dbs = self._list_db_names()
         databases_tree = []

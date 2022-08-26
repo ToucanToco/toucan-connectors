@@ -110,8 +110,10 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
                 if db_name not in ('information_schema', 'mysql', 'performance_schema')
             ]
 
-    def _get_project_structure(self) -> list[TableInfo]:
-        connection = pymysql.connect(**self.get_connection_params(cursorclass=None, database=None))
+    def _get_project_structure(self, db_name: str | None = None) -> list[TableInfo]:
+        connection = pymysql.connect(
+            **self.get_connection_params(cursorclass=None, database=db_name)
+        )
         # Always add the suggestions for the available databases
         with connection.cursor() as cursor:
             cursor.execute(build_database_model_extraction_query())
@@ -121,9 +123,8 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
     def available_dbs(self) -> list[str]:
         return self._list_db_names()
 
-    @cached_property_with_ttl(ttl=60)
-    def project_tree(self) -> list[TableInfo]:
-        return self._get_project_structure()
+    def project_tree(self, db_name: str | None = None) -> list[TableInfo]:
+        return self._get_project_structure(db_name=db_name)
 
     def get_connection_params(self, *, database=None, cursorclass=pymysql.cursors.DictCursor):
         conv = pymysql.converters.conversions.copy()
@@ -183,9 +184,9 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
-    def get_model(self) -> list[Any]:
+    def get_model(self, db_name: str | None = None) -> list[Any]:
         """Retrieves the database tree structure using current connection"""
-        return DiscoverableConnector.format_db_model(self.project_tree)
+        return DiscoverableConnector.format_db_model(self.project_tree(db_name=db_name))
 
     @staticmethod
     def decode_df(df):

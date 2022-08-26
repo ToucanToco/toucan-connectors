@@ -296,7 +296,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         ) as connection:
             db_contents += SnowflakeCommon().get_db_content(connection).to_dict('records')
 
-    def get_model(self):
+    def get_model(self, db_name: str | None = None):
         with self._get_connection() as connection:
             databases = SnowflakeCommon().get_databases(connection=connection)
         content_queries = []
