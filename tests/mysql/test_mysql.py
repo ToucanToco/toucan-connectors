@@ -264,9 +264,10 @@ def test_handle_date_0():
     assert list(df['DATE']) == [pd.Timestamp('2021-06-23 12:34:56'), pd.NaT]
 
 
-def test_get_model(mysql_connector: Any) -> None:
+@pytest.mark.parametrize('db_name', (None, 'mysql_db'))
+def test_get_model(mysql_connector: Any, db_name: str | None) -> None:
     """Check that it returns the db tree structure"""
-    res = mysql_connector.get_model()
+    res = mysql_connector.get_model(db_name=db_name)
     for r in res:
         r['columns'] = sorted(r['columns'], key=lambda c: c['name'])
     assert res == [
@@ -321,6 +322,11 @@ def test_get_model(mysql_connector: Any) -> None:
     ]
 
 
+def test_get_model_non_existing_db(mysql_connector: Any) -> None:
+    with pytest.raises(pymysql.err.OperationalError):
+        mysql_connector.get_model(db_name='nope')
+
+
 @pytest.mark.parametrize('query', ('   ', None))
 def test_get_df_no_query(query: str, mocker: MockerFixture):
     mocker.patch('pymysql.connect')
@@ -352,10 +358,19 @@ def test_list_db_names_ensure_no_db_specified(
     assert 'database' not in connect_mock.call_args.kwargs
 
 
-def test_get_project_structure_ensure_no_db_specified(
+def test_get_project_structure_no_parameter_ensure_no_db_name_specified(
     mysql_connector: MySQLConnector, mocker: MockerFixture
 ):
     connect_mock = mocker.patch('pymysql.connect')
     mysql_connector._get_project_structure()
     assert connect_mock.call_count == 1
     assert 'database' not in connect_mock.call_args.kwargs
+
+
+def test_get_project_structure_no_parameter_with_db_name(
+    mysql_connector: MySQLConnector, mocker: MockerFixture
+):
+    connect_mock = mocker.patch('pymysql.connect')
+    mysql_connector._get_project_structure(db_name='something')
+    assert connect_mock.call_count == 1
+    assert connect_mock.call_args.kwargs['database'] == 'something'
