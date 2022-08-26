@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### [3.19.0] 2022-08-26
+
+### Changed
+
+- All connectors: Add support for an optional `db_name` parameter in the `get_model` method.
+- MySQL: Use the provided `db_name` for discoverability when possible in `get_model`.
+- MySQL: Simplify query for schema construction in order to be compatible with older versions
+- Redshift: Add an option to disable TCP keep-alive (enabled by default).
+
 ### [3.18.4] 2022-08-26
 
 ### Changed
