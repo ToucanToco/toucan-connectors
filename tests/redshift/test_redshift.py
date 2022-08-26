@@ -92,6 +92,7 @@ def test_config_schema_extra():
             'session_token': 'session_token_test',
             'profile': 'profile_test',
             'region': 'region_test',
+            'enable_tcp_keepalive': True,
         }
     }
     RedshiftConnector.Config().schema_extra(schema)
@@ -164,6 +165,7 @@ def test_redshiftconnector_get_connection_params_db_cred_mode(redshift_connector
         timeout=10,
         user='user',
         password='sample',
+        tcp_keepalive=True,
     )
 
 
@@ -223,6 +225,7 @@ def test_redshiftconnector_get_connection_params_aws_creds_mode(redshift_connect
         secret_access_key='secret_access_key',
         session_token='token',
         region='eu-west-1',
+        tcp_keepalive=True,
     )
 
 
@@ -263,6 +266,23 @@ def test_redshiftconnector_get_connection_params_aws_profile_mode(redshift_conne
         cluster_identifier='toucan_test',
         region='eu-west-1',
         profile='sample',
+        tcp_keepalive=True,
+    )
+
+
+@pytest.mark.parametrize('opt', (True, False))
+def test_redshiftconnector_get_connection_tcp_keepalive(redshift_connector, opt: bool):
+    redshift_connector.enable_tcp_keepalive = opt
+    result = redshift_connector._get_connection_params(database='test')
+    assert result == dict(
+        host='localhost',
+        database='test',
+        cluster_identifier='toucan_test',
+        port=0,
+        timeout=10,
+        user='user',
+        password='sample',
+        tcp_keepalive=opt,
     )
 
 
