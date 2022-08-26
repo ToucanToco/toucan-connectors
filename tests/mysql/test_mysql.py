@@ -362,7 +362,8 @@ def test_get_project_structure_no_parameter_ensure_no_db_name_specified(
     mysql_connector: MySQLConnector, mocker: MockerFixture
 ):
     connect_mock = mocker.patch('pymysql.connect')
-    mysql_connector._get_project_structure()
+    # Calling list to actually execute the function body
+    list(mysql_connector._get_project_structure())
     assert connect_mock.call_count == 1
     assert 'database' not in connect_mock.call_args.kwargs
 
@@ -371,6 +372,7 @@ def test_get_project_structure_no_parameter_with_db_name(
     mysql_connector: MySQLConnector, mocker: MockerFixture
 ):
     connect_mock = mocker.patch('pymysql.connect')
-    mysql_connector._get_project_structure(db_name='something')
+    # Calling list to actually execute the function body
+    list(mysql_connector._get_project_structure(db_name='something'))
     assert connect_mock.call_count == 1
     assert connect_mock.call_args.kwargs['database'] == 'something'

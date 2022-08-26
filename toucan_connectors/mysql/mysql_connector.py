@@ -1,4 +1,5 @@
-from typing import Any, Optional
+from itertools import groupby as groupby
+from typing import Any, Generator, Optional
 
 import numpy as np
 import pandas as pd
@@ -66,6 +67,22 @@ class MySQLDataSource(ToucanDataSource):
         ).schema()
 
 
+_DATABASE_MODEL_EXTRACTION_QUERY = (
+    # table_schema is selected twice because the frontend components needs it but
+    # mysql provides it only for compliance with the SQL-92 standard.
+    # https://dba.stackexchange.com/questions/3774/what-is-the-point-of-the-table-catalog-column-in-information-schema-tables
+    "SELECT t.table_schema AS 'database', t.table_schema AS 'schema', "
+    # Table type and name
+    "CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE LOWER(t.table_type) END AS table_type, t.table_name, "
+    # Columns from the columns table
+    'c.column_name, c.data_type FROM information_schema.tables t INNER JOIN information_schema.columns c '
+    # Inner join on table name
+    'ON t.table_name = c.table_name '
+    # Filtering on concrete tables/views
+    "WHERE t.table_type in ('BASE TABLE', 'VIEW') AND t.table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys');"
+)
+
+
 class MySQLConnector(ToucanConnector, DiscoverableConnector):
     """
     Import data from MySQL database.
@@ -110,21 +127,29 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
                 if db_name not in ('information_schema', 'mysql', 'performance_schema')
             ]
 
-    def _get_project_structure(self, db_name: str | None = None) -> list[TableInfo]:
+    def _get_project_structure(
+        self, db_name: str | None = None
+    ) -> Generator[TableInfo, None, None]:
         connection = pymysql.connect(
             **self.get_connection_params(cursorclass=None, database=db_name)
         )
         # Always add the suggestions for the available databases
         with connection.cursor() as cursor:
-            cursor.execute(build_database_model_extraction_query())
-            return cursor.fetchall()
+            cursor.execute(_DATABASE_MODEL_EXTRACTION_QUERY)
+            results = cursor.fetchall()
+
+        column_names = ('database', 'schema', 'table_type', 'table_name', 'columns')
+        # Grouping by DB name, schema name, Table type, Table name
+        for group, grouper in groupby(sorted(results), key=lambda x: x[:4]):
+            col_info = [{'name': x[4], 'type': x[5]} for x in grouper]
+            yield dict(zip(column_names, group + (col_info,)))
 
     @cached_property_with_ttl(ttl=10)
     def available_dbs(self) -> list[str]:
         return self._list_db_names()
 
     def project_tree(self, db_name: str | None = None) -> list[TableInfo]:
-        return self._get_project_structure(db_name=db_name)
+        return list(self._get_project_structure(db_name=db_name))
 
     def get_connection_params(self, *, database=None, cursorclass=pymysql.cursors.DictCursor):
         conv = pymysql.converters.conversions.copy()
@@ -233,19 +258,3 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
 
 class InvalidQuery(Exception):
     """raised when a query is invalid"""
-
-
-def build_database_model_extraction_query() -> str:
-    """
-    table_schema is selected 2x because the frontend components need it but
-    mysql provide it only for SQL-92 standard's compliance see:
-    https://dba.stackexchange.com/questions/3774/what-is-the-point-of-the-table-catalog-column-in-information-schema-tables
-    """
-    return """select t.table_schema AS "database", t.table_schema as "schema",
-    CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) end as "type",
-    t.table_name as "name", json_arrayagg(json_object('name', c.column_name, 'type', c.data_type))
-    as columns from information_schema.tables t
-    inner join information_schema.columns c on t.table_name = c.table_name
-    where t.table_type in ('BASE TABLE', 'VIEW') and
-    t.table_schema not in ('mysql', 'information_schema', 'performance_schema', 'sys')
-    group by t.table_schema, t.table_catalog, t.table_name, t.table_type;"""
