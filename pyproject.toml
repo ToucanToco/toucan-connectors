@@ -90,7 +90,6 @@ python-graphql-client = ">=0.4.3,<1"
 clickhouse-driver = ">=0.2.3,<1"
 lxml = "4.6.5"
 zeep = "^4.1.0"
-Werkzeug = "^2.2.1"
 
 [tool.poetry.extras]
 adobe = ["adobe-analytics"]
