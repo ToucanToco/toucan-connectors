@@ -36,6 +36,10 @@ class NonValidVariable(Exception):
     """Error thrown for a non valid variable in endpoint"""
 
 
+class ClusterStartException(Exception):
+    """Raised when start cluster fails"""
+
+
 def is_jinja_alone(s: str) -> bool:
     """
     Return True if the given string is a jinja template alone.

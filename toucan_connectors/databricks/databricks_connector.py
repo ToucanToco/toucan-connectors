@@ -7,14 +7,10 @@ import requests
 from pydantic import Field, SecretStr, constr
 from requests.auth import HTTPBasicAuth
 
-from toucan_connectors.common import ConnectorStatus, pandas_read_sql
+from toucan_connectors.common import ClusterStartException, ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 logger = logging.getLogger(__name__)
-
-
-class DatabricksClusterException(Exception):
-    """Raised when start cluster fails"""
 
 
 class DatabricksDataSource(ToucanDataSource):
@@ -108,7 +104,7 @@ class DatabricksConnector(ToucanConnector):
         else:
             message = resp.json().get('message', 'Failed to start Databricks cluster')
             logger.error(f'Error while starting cluster: {message}')
-            raise DatabricksClusterException(f'failed to start cluster: {message}')
+            raise ClusterStartException(f'failed to start cluster: {message}')
 
     def _retrieve_data(self, data_source: DatabricksDataSource) -> pd.DataFrame:
         """
