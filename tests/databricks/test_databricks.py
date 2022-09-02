@@ -5,9 +5,8 @@ import pytest
 import responses
 from pydantic import ValidationError
 from pytest_mock import MockFixture
-from werkzeug.exceptions import BadRequest
 
-from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.common import ClusterStartException, ConnectorStatus
 from toucan_connectors.databricks.databricks_connector import (
     DatabricksConnector,
     DatabricksDataSource,
@@ -214,7 +213,7 @@ def test_cluster_start_failed(
         status=400,
     )
     mockedlog = mocker.patch('toucan_connectors.databricks.databricks_connector.logger.error')
-    with pytest.raises(BadRequest):
+    with pytest.raises(ClusterStartException):
         databricks_connector.start_cluster()
     mockedlog.assert_called_once_with(
         'Error while starting cluster: Failed to start Databricks cluster'
