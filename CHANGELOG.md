@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.20.0] 2022-09-02
+
+### Changed
+
+- All connectors: removed werkzeug dependency.
+
 ### [3.19.0] 2022-08-26
 
 ### Changed
