@@ -223,10 +223,17 @@ class MongoConnector(ToucanConnector):
                 df_facet.append({'$skip': offset})
             if limit is not None:
                 df_facet.append({'$limit': limit})
+
+            df_facet.append({'$unset': ['_id']})
+
             facet = {
                 '$facet': {
                     # counting more than 1M values can be really slow, and the exact number is not that much relevant
-                    'count': [{'$limit': MAX_COUNTED_ROWS}, {'$count': 'value'}],
+                    'count': [
+                        {'$limit': MAX_COUNTED_ROWS},
+                        {'$count': 'value'},
+                        {'$unset': ['_id']},
+                    ],
                     'df': df_facet,  # df_facet is never empty
                 }
             }
@@ -238,6 +245,12 @@ class MongoConnector(ToucanConnector):
         else:
             df = self.get_df(data_source, permissions)
             total_count = len(df)
+            # We try to remove the _id from this DataFrame if there is one
+            # ugly for now but we need to handle that in this else case
+            try:
+                df.pop('_id')
+            except Exception:
+                pass
         return DataSlice(
             df, stats=DataStats(total_returned_rows=total_count, total_rows=total_count)
         )
@@ -275,6 +288,8 @@ class MongoConnector(ToucanConnector):
                         }
                     )
         data_source.query.append({'$match': {'$expr': search_steps}})
+        data_source.query.append({'$unset': ['_id']})
+
         return self.get_slice(data_source, permissions, limit=limit, offset=offset)
 
     def get_df_with_regex(
