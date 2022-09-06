@@ -2,7 +2,13 @@
 
 ## Unreleased
 
-### [3.20.0] 2022-09-02
+### [3.20.2] 2022-09-05
+
+### Changed
+
+- Mongo: removed `_id` column in response DataFrame.
+
+### [3.20.1] 2022-09-02
 
 ### Changed
 
