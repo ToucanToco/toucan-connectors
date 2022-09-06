@@ -376,8 +376,8 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         return DataSlice(
             truncated_df,
             stats=DataStats(
-                total_returned_rows=len(df),
                 total_rows=len(df),
+                total_returned_rows=len(truncated_df),
                 df_memory_size=df.memory_usage().sum(),
             ),
         )
