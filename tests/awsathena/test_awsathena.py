@@ -99,7 +99,9 @@ def test_get_slice(
 ):
     permissions = {'column': 'style', 'operator': 'in', 'value': ['Blonde', 'Triple']}
     result = athena_connector.get_slice(data_source, permissions=permissions, offset=10, limit=110)
-    assert len(result.df) == result.stats.total_returned_rows == result.stats.total_rows == 4
+    assert len(result.df) == result.stats.total_returned_rows == 4
+    # 4 rows + offset of 10 + 1
+    assert result.stats.total_rows == 15
     assert sorted(result.df['style'].unique().tolist()) == ['Blonde', 'Triple']
     mocked_read_sql_query.assert_called_once_with(
         'SELECT * FROM (SELECT * FROM beers) LIMIT 110 OFFSET 10;',

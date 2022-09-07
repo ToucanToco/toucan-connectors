@@ -169,11 +169,21 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
             permissions_query = apply_query_parameters(permissions_query, data_source.parameters)
             df = df.query(permissions_query)
 
+        fetched_row_count = len(df)
         return DataSlice(
             df,
             stats=DataStats(
-                total_returned_rows=len(df),
-                total_rows=len(df),
+                total_returned_rows=fetched_row_count,
+                # FIXME: Dirty hack to make pagination work in previews. Currently, the FE considers
+                # that there are 0 rows if total_rows is null. At some point, we should probably
+                # implement cursor-based pagination.
+                #
+                # This is buggy if the total row count is actually equal to
+                # offset + fetched_row_count, because we will display a "next page" when there isn't
+                # one
+                total_rows=offset + fetched_row_count
+                if limit is None
+                else offset + fetched_row_count + 1,
                 df_memory_size=df.memory_usage().sum(),
             ),
         )
