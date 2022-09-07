@@ -261,12 +261,12 @@ def test_no_sql_injection(athena_connector, mocker):
         query='SELECT * FROM Users WHERE UserId = {{ user_id }}',
         parameters={'user_id': '105 OR 1=1'},
     )
-    assert ds.query == 'SELECT * FROM Users WHERE UserId = :__QUERY_PARAM_0__'
+    assert ds.query == 'SELECT * FROM Users WHERE UserId = :__QUERY_PARAM_0__;'
     assert ds.parameters == {'user_id': '105 OR 1=1', '__QUERY_PARAM_0__': '105 OR 1=1'}
 
     athena_connector.get_df(ds)
     read_sql_mock.assert_called_once_with(
-        'SELECT * FROM Users WHERE UserId = :__QUERY_PARAM_0__',
+        'SELECT * FROM Users WHERE UserId = :__QUERY_PARAM_0__;',
         params={'user_id': '105 OR 1=1', '__QUERY_PARAM_0__': '105 OR 1=1'},
         database='db',
         boto3_session=mocker.ANY,
