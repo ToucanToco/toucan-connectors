@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### [3.20.3] 2022-09-07
+
+### Changed
+
+- Base connector: Fixed pagination values (`total_rows` and `total_returned_rows`)
+- Athena: Hacked pagination values in case not all results were fetched
+
 ### [3.20.2] 2022-09-05
 
 ### Changed
