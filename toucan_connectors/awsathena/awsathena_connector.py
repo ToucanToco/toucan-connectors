@@ -56,9 +56,11 @@ class AwsathenaDataSource(ToucanDataSource):
         # Named parameters need to be passed as `:name`
         # (see https://aws-data-wrangler.readthedocs.io/en/stable/stubs/awswrangler.athena.read_sql_query.html)
         self.query, self.parameters = sanitize_query(
-            self.query, self.parameters, lambda x: f':{x};'
+            self.query, self.parameters, athena_variable_transformer
         )
 
+def athena_variable_transformer(variable: str):
+    return f':{variable};'
 
 class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
     data_source_model: AwsathenaDataSource
