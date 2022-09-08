@@ -59,8 +59,10 @@ class AwsathenaDataSource(ToucanDataSource):
             self.query, self.parameters, athena_variable_transformer
         )
 
+
 def athena_variable_transformer(variable: str):
     return f':{variable};'
+
 
 class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
     data_source_model: AwsathenaDataSource
