@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+
+### [3.20.4] 2022-09-07
+
+### Changed
+
+- Athena: fix the parameter injection
+
+
 ### [3.20.3] 2022-09-07
 
 ### Changed
