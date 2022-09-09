@@ -100,7 +100,7 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
         cls, query: str, offset: int = 0, limit: Optional[int] = None
     ) -> str:
         if offset and limit:
-            return f'SELECT * FROM ({cls._strip_trailing_semicolumn(query)}) LIMIT {limit} OFFSET {offset};'
+            return f'SELECT * FROM ({cls._strip_trailing_semicolumn(query)}) OFFSET {offset} LIMIT {limit};'
         if limit:
             return f'SELECT * FROM ({cls._strip_trailing_semicolumn(query)}) LIMIT {limit};'
         return query
