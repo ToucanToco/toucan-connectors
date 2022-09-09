@@ -104,7 +104,7 @@ def test_get_slice(
     assert result.stats.total_rows == 15
     assert sorted(result.df['style'].unique().tolist()) == ['Blonde', 'Triple']
     mocked_read_sql_query.assert_called_once_with(
-        'SELECT * FROM (SELECT * FROM beers) LIMIT 110 OFFSET 10;',
+        'SELECT * FROM (SELECT * FROM beers) OFFSET 10 LIMIT 110;',
         params=None,
         database='mydatabase',
         boto3_session={'a': 'b'},
@@ -163,9 +163,9 @@ def test_get_status_ko(mocker, athena_connector, status_checks):
         # limit only, whitespace, with trailing ;
         ('  SELECT * FROM toto; ', 0, 100, 'SELECT * FROM (SELECT * FROM toto) LIMIT 100;'),
         # offset + limit, whitespace, no trailing ;
-        ('  SELECT * FROM toto ', 5, 100, 'SELECT * FROM (SELECT * FROM toto) LIMIT 100 OFFSET 5;'),
+        ('  SELECT * FROM toto ', 5, 100, 'SELECT * FROM (SELECT * FROM toto) OFFSET 5 LIMIT 100;'),
         # offset + limit, whitespace, trailing ;
-        (' SELECT * FROM toto; ', 5, 100, 'SELECT * FROM (SELECT * FROM toto) LIMIT 100 OFFSET 5;'),
+        (' SELECT * FROM toto; ', 5, 100, 'SELECT * FROM (SELECT * FROM toto) OFFSET 5 LIMIT 100;'),
     ],
 )
 def test_add_pagination_to_query(
