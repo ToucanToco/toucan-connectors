@@ -169,7 +169,10 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     @staticmethod
     def _prepare_query(query: str) -> str:
         """replace ToucanToco variable definition by Google Big Query variable definition"""
-        new_query = query.replace('{{', '@').replace('}}', '')
+        new_query = (
+            query.replace('{{ ', '{{').replace('{{', '@').replace(' }}', '}}').replace('}}', '')
+        )
+        new_query = new_query
         return new_query
 
     def _retrieve_data(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:

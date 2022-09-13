@@ -70,6 +70,13 @@ def test_prepare_query():
         == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @test_str AND test2 = @test_float LIMIT 10'
     )
 
+    query = 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = {{ test_str }} AND test2 = {{ test_float }} LIMIT 10'
+    result = GoogleBigQueryConnector._prepare_query(query)
+    assert (
+        result
+        == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @test_str AND test2 = @test_float LIMIT 10'
+    )
+
 
 def test_prepare_parameters():
     query = 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = {{test_str}} AND test2 = {{test_float}} LIMIT 10'
