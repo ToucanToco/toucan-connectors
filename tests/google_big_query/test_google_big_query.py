@@ -73,6 +73,10 @@ def test_prepare_query_parameters():
             'test_bool': True,
         },
     )
+    assert (
+        new_query
+        == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @__QUERY_PARAM_0__ AND test2 = @__QUERY_PARAM_1__ LIMIT 10'
+    )
     assert len(parameters) == 2
     assert parameters[0] == ScalarQueryParameter('__QUERY_PARAM_0__', 'STRING', 'tortank')
     assert parameters[1] == ScalarQueryParameter('__QUERY_PARAM_1__', 'FLOAT64', 0.0)
@@ -88,6 +92,10 @@ def test_prepare_parameters_spaces():
             'test_float': float(0.0),
             'test_bool': True,
         },
+    )
+    assert (
+        new_query
+        == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @__QUERY_PARAM_0__ AND test2 = @__QUERY_PARAM_1__ LIMIT 10'
     )
     assert len(parameters) == 2
     assert parameters[0] == ScalarQueryParameter('__QUERY_PARAM_0__', 'STRING', 'tortank')
