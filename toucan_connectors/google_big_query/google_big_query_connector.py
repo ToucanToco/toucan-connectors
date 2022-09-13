@@ -2,7 +2,7 @@ import logging
 from enum import Enum
 from functools import cached_property
 from timeit import default_timer as timer
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 import pandas
 import pandas as pd
@@ -11,6 +11,7 @@ from google.cloud.bigquery.dbapi import _helpers as bigquery_helpers
 from google.oauth2.service_account import Credentials
 from pydantic import Field, create_model
 
+from toucan_connectors.common import sanitize_query
 from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
@@ -157,22 +158,27 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
             raise e
 
     @staticmethod
-    def _prepare_parameters(query: str, parameters: Optional[Dict]) -> List:
-        """replace ToucanToco variable definitions by Google Big Query variable definition"""
+    def _prepare_query_and_parameters(
+        query: str, parameters: dict[str, object] | None
+    ) -> tuple[str, list]:
+        """Replace ToucanToco variable definitions by Google Big Query variable
+        definition and sanitize the query"""
+        query, params = sanitize_query(
+            query,
+            parameters,  # type: ignore
+            GoogleBigQueryConnector._bigquery_variable_transformer,
+        )
         query_parameters = []
         for param_name, param_value in (parameters or {}).items():
             if query.find('@' + param_name) > -1:
                 # set all parameters with a type defined and necessary for Big Query
                 query_parameters.append(_define_query_param(param_name, param_value))
-        return query_parameters
+        return query, query_parameters
 
     @staticmethod
-    def _prepare_query(query: str) -> str:
-        """replace ToucanToco variable definition by Google Big Query variable definition"""
-        new_query = (
-            query.replace('{{ ', '{{').replace('{{', '@').replace(' }}', '}}').replace('}}', '')
-        )
-        return new_query
+    def _bigquery_variable_transformer(variable: str):
+        """Add surrounding for parameters injection"""
+        return f'@{variable}'
 
     def _retrieve_data(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:
         logging.getLogger(__name__).debug(
@@ -180,9 +186,9 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         )
 
         credentials = GoogleBigQueryConnector._get_google_credentials(self.credentials, self.scopes)
-        query = GoogleBigQueryConnector._prepare_query(data_source.query)
-        parameters = GoogleBigQueryConnector._prepare_parameters(query, data_source.parameters)
-
+        query, parameters = GoogleBigQueryConnector._prepare_query_and_parameters(
+            data_source.query, data_source.parameters
+        )
         client = GoogleBigQueryConnector._connect(credentials)
         result = GoogleBigQueryConnector._execute_query(client, query, parameters)
 
