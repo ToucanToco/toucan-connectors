@@ -172,7 +172,6 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         new_query = (
             query.replace('{{ ', '{{').replace('{{', '@').replace(' }}', '}}').replace('}}', '')
         )
-        new_query = new_query
         return new_query
 
     def _retrieve_data(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:
