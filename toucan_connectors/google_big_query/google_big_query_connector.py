@@ -124,7 +124,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         return self._get_project_structure()
 
     @staticmethod
-    def _execute_query(client: bigquery.Client, query: str, parameters: List) -> pandas.DataFrame:
+    def _execute_query(client: bigquery.Client, query: str, parameters: list) -> pandas.DataFrame:
         try:
             start = timer()
 
@@ -169,7 +169,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
             GoogleBigQueryConnector._bigquery_variable_transformer,
         )
         query_parameters = []
-        for param_name, param_value in (parameters or {}).items():
+        for param_name, param_value in (params or {}).items():
             if query.find('@' + param_name) > -1:
                 # set all parameters with a type defined and necessary for Big Query
                 query_parameters.append(_define_query_param(param_name, param_value))
