@@ -62,20 +62,10 @@ def test__define_query_param(input_value, expected_output):
     assert _define_query_param('test_param', input_value) == expected_output
 
 
-def test_prepare_query():
+def test_prepare_query_parameters():
     query = 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = {{test_str}} AND test2 = {{test_float}} LIMIT 10'
-    result = GoogleBigQueryConnector._prepare_query(query)
-    assert (
-        result
-        == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @test_str AND test2 = @test_float LIMIT 10'
-    )
-
-
-def test_prepare_parameters():
-    query = 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = {{test_str}} AND test2 = {{test_float}} LIMIT 10'
-    new_query = GoogleBigQueryConnector._prepare_query(query)
-    parameters = GoogleBigQueryConnector._prepare_parameters(
-        new_query,
+    new_query, parameters = GoogleBigQueryConnector._prepare_query_and_parameters(
+        query,
         {
             'test_str': str('tortank'),
             'test_int': int(1),
@@ -83,15 +73,38 @@ def test_prepare_parameters():
             'test_bool': True,
         },
     )
+    assert (
+        new_query
+        == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @__QUERY_PARAM_0__ AND test2 = @__QUERY_PARAM_1__ LIMIT 10'
+    )
     assert len(parameters) == 2
-    assert parameters[0] == ScalarQueryParameter('test_str', 'STRING', 'tortank')
-    assert parameters[1] == ScalarQueryParameter('test_float', 'FLOAT64', 0.0)
+    assert parameters[0] == ScalarQueryParameter('__QUERY_PARAM_0__', 'STRING', 'tortank')
+    assert parameters[1] == ScalarQueryParameter('__QUERY_PARAM_1__', 'FLOAT64', 0.0)
+
+
+def test_prepare_parameters_spaces():
+    query = 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = {{ test_str }} AND test2 = {{ test_float }} LIMIT 10'
+    new_query, parameters = GoogleBigQueryConnector._prepare_query_and_parameters(
+        query,
+        {
+            'test_str': str('tortank'),
+            'test_int': int(1),
+            'test_float': float(0.0),
+            'test_bool': True,
+        },
+    )
+    assert (
+        new_query
+        == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @__QUERY_PARAM_0__ AND test2 = @__QUERY_PARAM_1__ LIMIT 10'
+    )
+    assert len(parameters) == 2
+    assert parameters[0] == ScalarQueryParameter('__QUERY_PARAM_0__', 'STRING', 'tortank')
+    assert parameters[1] == ScalarQueryParameter('__QUERY_PARAM_1__', 'FLOAT64', 0.0)
 
 
 def test_prepare_parameters_empty():
     query = 'SELECT stuff FROM `useful-citizen-322414.test.test`'
-    new_query = GoogleBigQueryConnector._prepare_query(query)
-    parameters = GoogleBigQueryConnector._prepare_parameters(new_query, None)
+    new_query, parameters = GoogleBigQueryConnector._prepare_query_and_parameters(query, None)
     assert len(parameters) == 0
 
 
