@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### [3.20.6] 2022-09-14
+
+### Changed
+
+- Google Big Query: fix variables interpolation.
 
 ### [3.20.5] 2022-09-09
 
