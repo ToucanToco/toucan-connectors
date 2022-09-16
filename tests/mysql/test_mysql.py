@@ -376,3 +376,58 @@ def test_get_project_structure_no_parameter_with_db_name(
     list(mysql_connector._get_project_structure(db_name='something'))
     assert connect_mock.call_count == 1
     assert connect_mock.call_args.kwargs['database'] == 'something'
+
+
+@pytest.fixture
+def mysql_connector_with_ssl():
+    return MySQLConnector(
+        name='mycon',
+        host='localhost',
+        port=3306,
+        user='ubuntu',
+        password='ilovetoucan',
+        ssl_ca='-----BEGIN CERTIFICATE-----\nsomething\n-----END CERTIFICATE-----',
+        ssl_cert='-----BEGIN CERTIFICATE-----\nsomething else\n-----END CERTIFICATE-----',
+        ssl_key='-----BEGIN PRIVATE KEY-----\nand something else-----END PRIVATE KEY-----',
+        ssl_mode='VERIFY_CA',
+    )
+
+
+def test_ssl_parameters_verify_ca(mysql_connector_with_ssl: MySQLConnector, mocker: MockerFixture):
+    connect_mock = mocker.patch('pymysql.connect')
+    mysql_connector_with_ssl._connect()
+    assert connect_mock.call_count == 1
+    kwargs = connect_mock.call_args.kwargs
+    assert kwargs['ssl_disabled'] is False
+    assert kwargs['ssl_ca'] is not None
+    assert kwargs['ssl_cert'] is not None
+    assert kwargs['ssl_key'] is not None
+    assert kwargs['ssl_verify_cert'] is True
+    assert kwargs['ssl_verify_identity'] is False
+
+
+def test_ssl_parameters_verify_identity(
+    mysql_connector_with_ssl: MySQLConnector, mocker: MockerFixture
+):
+    connect_mock = mocker.patch('pymysql.connect')
+    mysql_connector_with_ssl.ssl_mode = 'VERIFY_IDENTITY'
+    mysql_connector_with_ssl._connect()
+    assert connect_mock.call_count == 1
+    kwargs = connect_mock.call_args.kwargs
+    assert kwargs['ssl_disabled'] is False
+    assert kwargs['ssl_ca'] is not None
+    assert kwargs['ssl_cert'] is not None
+    assert kwargs['ssl_key'] is not None
+    assert kwargs['ssl_verify_cert'] is True
+    assert kwargs['ssl_verify_identity'] is True
+
+
+@pytest.mark.parametrize('missing_param', ('ssl_ca', 'ssl_cert', 'ssl_key'))
+def test_ssl_parameters_missing_param(
+    mysql_connector_with_ssl: MySQLConnector, mocker: MockerFixture, missing_param: str
+):
+    connect_mock = mocker.patch('pymysql.connect')
+    setattr(mysql_connector_with_ssl, missing_param, None)
+    with pytest.raises(AssertionError):
+        mysql_connector_with_ssl._connect()
+    assert connect_mock.call_count == 0
