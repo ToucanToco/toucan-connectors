@@ -2,7 +2,7 @@ from os.path import dirname, join
 
 import pytest
 
-from toucan_connectors.utils.pem import sanitize_spaces_pem
+from toucan_connectors.utils.pem import InvalidPEMFormat, sanitize_spaces_pem
 
 
 @pytest.fixture
@@ -23,3 +23,8 @@ def test_sanitize_spaces_pem(pem_key_with_spaces: str, sanitized_pem_key: str):
 
 def test_sanitize_spaces_pem_on_valid_data(sanitized_pem_key: str):
     assert sanitize_spaces_pem(sanitized_pem_key) == sanitized_pem_key
+
+
+def test_sanitize_spaces_pem_failure(pem_key_with_spaces: str):
+    with pytest.raises(InvalidPEMFormat):
+        sanitize_spaces_pem(pem_key_with_spaces[:50])

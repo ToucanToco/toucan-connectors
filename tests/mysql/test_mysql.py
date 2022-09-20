@@ -3,6 +3,7 @@ from typing import Any
 import pandas as pd
 import pymysql
 import pytest
+from pydantic.types import SecretStr
 from pytest_mock import MockerFixture
 
 from toucan_connectors.common import ConnectorStatus
@@ -431,3 +432,11 @@ def test_ssl_parameters_missing_param(
     with pytest.raises(AssertionError):
         mysql_connector_with_ssl._connect()
     assert connect_mock.call_count == 0
+
+
+def test_sanitize_ssl_params_invalid_pem(mysql_connector_with_ssl: MySQLConnector):
+    mysql_connector_with_ssl.ssl_key = SecretStr(
+        mysql_connector_with_ssl.ssl_key.get_secret_value()[:40]
+    )
+    with pytest.raises(ValueError):
+        mysql_connector_with_ssl._sanitize_ssl_params()
