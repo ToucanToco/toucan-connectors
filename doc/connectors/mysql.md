@@ -6,23 +6,42 @@ Import data from MySQL database.
 
 * `type`: `"MySQL"`
 * `name`: str, required
+* `type`: str
+* `cache_ttl`: int
+* `identifier`: str
+* `secrets_storage_version`: str, defaults to 1
 * `host`: str, required
-* `user`: str, required
-* `password`: str
 * `port`: int
-* `charset`: str, default to utf8mb4
+* `user`: str, required
+* `password`: SecretStr
+* `charset`: str, defaults to utf8mb4
 * `connect_timeout`: int
+* `ssl_ca`: SecretStr. The CA certificate content in PEM format to use to connect to the MySQL
+  server. Equivalent of the --ssl-ca option of the MySQL client
+* `ssl_cert`: SecretStr. The X509 certificate content in PEM format to use to connect to the MySQL
+  server. Equivalent of the --ssl-cert option of the MySQL client
+* `ssl_key`: SecretStr. The X509 certificate key content in PEM format to use to connect to the MySQL server. Equivalent of the --ssl-key option of the MySQL client
+* `ssl_mode`: SSLMode. SSL Mode to use to connect to the MySQL server. Equivalent of
+  the --ssl-mode option of the MySQL client. **Must be set in order to use SSL**. If
+  set, must be one of `VERIFY_CA` or `VERIFY_IDENTITY`.
 
 ```coffee
 DATA_PROVIDERS: [
-  type:    'MySQL'
+  type:    '<type>'
   name:    '<name>'
+  cache_ttl:    '<cache_ttl>'
+  identifier:    '<identifier>'
+  secrets_storage_version:    '<secrets_storage_version>'
   host:    '<host>'
+  port:    '<port>'
   user:    '<user>'
   password:    '<password>'
-  port:    <port>
   charset:    '<charset>'
-  connect_timeout:    <connect_timeout>
+  connect_timeout:    '<connect_timeout>'
+  ssl_ca:    '<ssl_ca>'
+  ssl_cert:    '<ssl_cert>'
+  ssl_key:    '<ssl_key>'
+  ssl_mode:    '<ssl_mode>'
 ,
   ...
 ]
@@ -35,20 +54,25 @@ Either `query` or `table` are required, both at the same time are not supported.
 
 * `domain`: str, required
 * `name`: str, required
+* `cache_ttl`: int
 * `database`: str, required
-* `query`: str (not empty), required if `table` is not provided.
-* `table`: str (not empty), required if `query` is not provided, will read the whole table.
-* `follow_relations`: bool, default to false. Merges data from foreign key relations.
-* `parameters` dict, optional. Allow to parameterize the query.
+* `follow_relations`: bool
+* `table`: str
+* `query`: str (not empty)
+* `query_object`: dict
+* `language`: str, defaults to sql
 
 ```coffee
 DATA_SOURCES: [
   domain:    '<domain>'
   name:    '<name>'
+  cache_ttl:    '<cache_ttl>'
   database:    '<database>'
-  query:    'SELECT * FROM city WHERE country = %(country)s'
-  parameters:
-    country: '<value>'
+  follow_relations:    '<follow_relations>'
+  table:    '<table>'
+  query:    '<query>'
+  query_object:    '<query_object>'
+  language:    '<language>'
 ,
   ...
 ]

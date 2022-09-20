@@ -1,4 +1,6 @@
+from enum import Enum
 from itertools import groupby as groupby
+from tempfile import NamedTemporaryFile
 from typing import Any, Generator, Optional
 
 import numpy as np
@@ -16,6 +18,7 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
     strlist_to_enum,
 )
+from toucan_connectors.utils.pem import InvalidPEMFormat, sanitize_spaces_pem
 
 
 def handle_date_0(df: pd.DataFrame) -> pd.DataFrame:
@@ -83,6 +86,11 @@ _DATABASE_MODEL_EXTRACTION_QUERY = (
 )
 
 
+class SSLMode(str, Enum):
+    VERIFY_IDENTITY = 'VERIFY_IDENTITY'
+    VERIFY_CA = 'VERIFY_CA'
+
+
 class MySQLConnector(ToucanConnector, DiscoverableConnector):
     """
     Import data from MySQL database.
@@ -110,13 +118,48 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
         'i.e. the maximum length of time you want to wait '
         'for the server to respond. None by default',
     )
+    # SSL options
+    ssl_ca: SecretStr = Field(
+        None,
+        description='The CA certificate content in PEM format to use to connect to the MySQL '
+        'server. Equivalent of the --ssl-ca option of the MySQL client',
+    )
+    ssl_cert: SecretStr = Field(
+        None,
+        description='The X509 certificate content in PEM format to use to connect to the MySQL '
+        'server. Equivalent of the --ssl-cert option of the MySQL client',
+    )
+    ssl_key: SecretStr = Field(
+        None,
+        description='The X509 certificate key content in PEM format to use to connect to the MySQL '
+        'server. Equivalent of the --ssl-key option of the MySQL client',
+    )
+    ssl_mode: SSLMode = Field(
+        None,
+        description='SSL Mode to use to connect to the MySQL server. '
+        'Equivalent of the --ssl-mode option of the MySQL client. Must be set in order to use SSL',
+    )
 
     class Config:
         underscore_attrs_are_private = True
         keep_untouched = (cached_property_with_ttl,)
 
+    def _sanitize_ssl_params(self) -> dict[str, Any]:
+        params = {}
+        if self.ssl_mode is not None:
+            for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
+                assert (
+                    opt := getattr(self, ssl_opt)
+                ) is not None, f'{ssl_opt} must be specified if ssl_mode is set'
+                try:
+                    params[ssl_opt] = sanitize_spaces_pem(opt.get_secret_value())
+
+                except InvalidPEMFormat as exc:
+                    raise ValueError(f"SSL option '{ssl_opt}' has an invalid PEM format") from exc
+        return params
+
     def _list_db_names(self) -> list[str]:
-        connection = pymysql.connect(**self.get_connection_params(cursorclass=None, database=None))
+        connection = self._connect(cursorclass=None, database=None)
         # Always add the suggestions for the available databases
         with connection.cursor() as cursor:
             cursor.execute('SHOW DATABASES;')
@@ -130,9 +173,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
     def _get_project_structure(
         self, db_name: str | None = None
     ) -> Generator[TableInfo, None, None]:
-        connection = pymysql.connect(
-            **self.get_connection_params(cursorclass=None, database=db_name)
-        )
+        connection = self._connect(cursorclass=None, database=db_name)
         # Always add the suggestions for the available databases
         with connection.cursor() as cursor:
             cursor.execute(_DATABASE_MODEL_EXTRACTION_QUERY)
@@ -151,7 +192,9 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
     def project_tree(self, db_name: str | None = None) -> list[TableInfo]:
         return list(self._get_project_structure(db_name=db_name))
 
-    def get_connection_params(self, *, database=None, cursorclass=pymysql.cursors.DictCursor):
+    def get_connection_params(
+        self, *, database: str | None = None, cursorclass=pymysql.cursors.DictCursor
+    ):
         conv = pymysql.converters.conversions.copy()
         conv[246] = float
         con_params = {
@@ -167,6 +210,39 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
         }
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
+
+    def _connect(
+        self, *, database: str | None = None, cursorclass=pymysql.cursors.DictCursor
+    ) -> pymysql.Connection:
+        connection_params = self.get_connection_params(database=database, cursorclass=cursorclass)
+        if self.ssl_mode is not None:
+            ssl_params = self._sanitize_ssl_params()
+            with (
+                NamedTemporaryFile(prefix='ssl_ca') as ssl_ca,
+                NamedTemporaryFile(prefix='ssl_cert') as ssl_cert,
+                NamedTemporaryFile(prefix='ssl_key') as ssl_key,
+            ):
+                # Writing cert contents to temporary files. They're opened in wb+ mode
+                ssl_ca.write(ssl_params['ssl_ca'].encode())
+                ssl_ca.seek(0)
+                ssl_cert.write(ssl_params['ssl_cert'].encode())
+                ssl_cert.seek(0)
+                ssl_key.write(ssl_params['ssl_key'].encode())
+                ssl_key.seek(0)
+
+                connection_params |= {
+                    'ssl_ca': ssl_ca.name,
+                    'ssl_cert': ssl_cert.name,
+                    'ssl_key': ssl_key.name,
+                    'ssl_disabled': False,
+                    # Verify the server's certificate
+                    'ssl_verify_cert': True,
+                    # Verify that the server's hostname matches the CA
+                    'ssl_verify_identity': self.ssl_mode == SSLMode.VERIFY_IDENTITY,
+                }
+
+                return pymysql.connect(**connection_params)
+        return pymysql.connect(**connection_params)
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
@@ -191,7 +267,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
 
         # Check basic access
         try:
-            pymysql.connect(**self.get_connection_params())
+            self._connect()
         except pymysql.err.OperationalError as e:
             error_code = e.args[0]
 
@@ -241,7 +317,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
         if not datasource.query or not datasource.query.strip():
             raise NoQuerySpecified
 
-        connection = pymysql.connect(**self.get_connection_params(database=datasource.database))
+        connection = self._connect(database=datasource.database)
 
         # ----- Prepare -----
         # As long as frontend builds queries with '"' we need to replace them
