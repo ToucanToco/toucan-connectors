@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.21.0] 2022-09-20
+
+### Changed
+
+- MySQL: Add support for SSL-based authentication
+
 ### [3.20.6] 2022-09-14
 
 ### Changed
