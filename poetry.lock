@@ -106,7 +106,7 @@ cryptography = ">=3.2"
 
 [[package]]
 name = "awswrangler"
-version = "2.16.1"
+version = "2.17.0"
 description = "Pandas on AWS."
 category = "main"
 optional = true
@@ -114,24 +114,24 @@ python-versions = ">=3.7.1,<3.11"
 
 [package.dependencies]
 backoff = ">=1.11.1,<3.0.0"
-boto3 = ">=1.20.17,<2.0.0"
-botocore = ">=1.23.17,<2.0.0"
+boto3 = ">=1.24.11,<2.0.0"
+botocore = ">=1.27.11,<2.0.0"
 gremlinpython = ">=3.5.2,<4.0.0"
 jsonpath-ng = ">=1.5.3,<2.0.0"
 numpy = ">=1.21.0,<2.0.0"
 openpyxl = ">=3.0.0,<3.1.0"
-opensearch-py = ">=1.0.0,<2.0.0"
+opensearch-py = ">=1,<3"
 pandas = ">=1.2.0,<2.0.0"
 pg8000 = ">=1.20.0,<2.0.0"
 progressbar2 = ">=4.0.0,<5.0.0"
-pyarrow = ">=2.0.0,<7.1.0"
+pyarrow = ">=2.0.0,<8.1.0"
 pymysql = ">=1.0.0,<2.0.0"
 redshift-connector = ">=2.0.889,<2.1.0"
 requests-aws4auth = ">=1.1.1,<2.0.0"
 
 [package.extras]
 oracle = ["oracledb (>=1.0.0,<1.1.0)"]
-sparql = ["SPARQLWrapper (>=1.8.5,<2.0.0)"]
+sparql = ["SPARQLWrapper (>=1.8.5,<3.0.0)"]
 sqlserver = ["pyodbc (>=4.0.32,<4.1.0)"]
 
 [[package]]
@@ -2131,8 +2131,8 @@ authlib = [
     {file = "Authlib-1.0.1.tar.gz", hash = "sha256:6e74a4846ac36dfc882b3cc2fbd3d9eb410a627f2f2dc11771276655345223b1"},
 ]
 awswrangler = [
-    {file = "awswrangler-2.16.1-py3-none-any.whl", hash = "sha256:42dbef60234faf862cfaa4213ab15087f167e13efec8d272a63006e4bd70575f"},
-    {file = "awswrangler-2.16.1.tar.gz", hash = "sha256:19cad43e8b12c69e26750f964833b7b3ee99026170dcea9664de030711fc24c6"},
+    {file = "awswrangler-2.17.0-py3-none-any.whl", hash = "sha256:e8806dce7b42140feb0317a19318dbf55a3a8011e73b7f3815833761b029af79"},
+    {file = "awswrangler-2.17.0.tar.gz", hash = "sha256:c130d451659a5539266374198643c214efd056b64d376e0ee399a69292887c44"},
 ]
 backoff = [
     {file = "backoff-2.1.2-py3-none-any.whl", hash = "sha256:b135e6d7c7513ba2bfd6895bc32bc8c66c6f3b0279b4c6cd866053cfd7d3126b"},
