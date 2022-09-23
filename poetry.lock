@@ -677,7 +677,7 @@ requests = ["requests (>=2.18.0,<3.0.0dev)"]
 
 [[package]]
 name = "googleads"
-version = "32.0.0"
+version = "33.0.0"
 description = "Google Ads Python Client Library"
 category = "main"
 optional = true
@@ -2021,7 +2021,7 @@ toucan_toco = ["toucan-client"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "8421561c87c834964e5be13036d6d0c8841636f1c87a225b693d4afe3cc569a5"
+content-hash = "6b039592766d95613fb9ea7a6c0574eb36e44766e10a25b996d355e81a301b0c"
 
 [metadata.files]
 adobe-analytics = [
@@ -2647,7 +2647,7 @@ google-resumable-media = [
     {file = "google_resumable_media-2.3.3-py2.py3-none-any.whl", hash = "sha256:5b52774ea7a829a8cdaa8bd2d4c3d4bc660c91b30857ab2668d0eb830f4ea8c5"},
 ]
 googleads = [
-    {file = "googleads-32.0.0.tar.gz", hash = "sha256:9448c92e199a14ff5461c9b6b81113662cff8a6d6d6d9ba604764a02902e4533"},
+    {file = "googleads-33.0.0.tar.gz", hash = "sha256:7e6dbfa48be321c43ad30f092e6e66fc93786ae0b1f15f4aa11832ebedd0870a"},
 ]
 googleapis-common-protos = [
     {file = "googleapis-common-protos-1.56.4.tar.gz", hash = "sha256:c25873c47279387cfdcbdafa36149887901d36202cb645a0e4f29686bf6e4417"},
