@@ -698,10 +698,6 @@ def test_get_connection_connect_oauth(
     print(connect.call_args_list)
     assert rt.call_count == 1
     assert connect.call_args_list[0][1]['account'] == 'test_account'
-    assert (
-        connect.call_args_list[0][1]['token']
-        == 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjQyLCJzdWIiOiJzbm93Zmxha2VfdXNlciJ9.NJDbR-tAepC_ANrg9m5PozycbcuWDgGi4o9sN9Pl27k'
-    )
     assert connect.call_args_list[0][1]['database'] == 'test_database'
     assert connect.call_args_list[0][1]['warehouse'] == 'test_warehouse'
     cm.force_clean()
