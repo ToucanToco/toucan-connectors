@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.21.1] 2022-09-27
+
+### Changed
+
+- Automate PyPI artifact publication
+
 ### [3.21.0] 2022-09-20
 
 ### Changed
