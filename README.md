@@ -209,17 +209,22 @@ PYTHONPATH=. python doc/generate.py myconnectormodule > doc/connectors/mytypecon
 
 Make sure your new code is properly formatted by running `make lint`. If it's not, please use `make format`. You can now create a pull request.
 
-## Publish
+## Publishing a release
 
-Install the `wheel` package:
+1. Create a pull request updating **only** the [changelog](CHANGELOG.md) and the `version`
+   attribute of the `[tool.poetry]` section in the `pyproject.toml` file.
 
-```shell
-pip install wheel
-```
+2. Once the pull request is approved, merge it using the **squash and merge** strategy.
 
-To publish the `toucan-connectors` package on pypi, use:
+3. Create an annotated tag for the release commit. it should be in the `vX.Y.Z` format, where `X.Y.Z` is the semver
+   version defined in `pyproject.toml`. Example:
+   ```
+   git tag -a v1.23.45 -m v1.23.45 ea3768a
+   git push origin v1.23.45
+   ```
 
-```shell
-make build
-make upload
-```
+4. In the project's *Releases* page, click on the *Draft a new release* button. Pick the tag you just pushed,
+   and click on *Generate release notes*. Adapt the releases notes if needed, and click on *Publish release*.
+
+5. A GitHub action in charge of publishing the required artifacts to PyPI should now be running. Make sure
+   the action is successful.
