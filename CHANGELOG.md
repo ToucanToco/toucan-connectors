@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.22.1] 2022-09-28
+
+### Changed
+
+- The contraint of the `lxml` dependency has been loosened from `4.9.1` to `^4.6.5`.
+
 ### [3.22.0] 2022-09-28
 
 ### Changed
