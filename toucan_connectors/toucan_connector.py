@@ -2,6 +2,7 @@ import json
 import logging
 import operator
 import os
+import re
 import socket
 import uuid
 from abc import ABC, ABCMeta, abstractmethod
@@ -504,3 +505,68 @@ class DiscoverableConnector(ABC):
             .reset_index()
             .to_dict('records')
         )
+
+
+class MalformattedVersion(Exception):
+    """raise when the given version of the engine is not well formated"""
+
+
+class UnavailableVersion(Exception):
+    """raise when the version of the engine is not available"""
+
+
+class VersionableEngineConnector(ABC):
+    """
+    This class is responsable for formating and rendering the version engine
+    from which the connector is fetching data from !
+
+    We suppose all versions should fit the semver format and for that, we
+    build a regex match that can be describe in 6 points :
+    - Major version is required, minor and patch version, and the meta version are supported but optional.
+    - Major, minor, and/or patch can be 0 but cannot be a non-zero value with a leading 0.
+    - The meta version can contain any Unicode letter (not restricted to Latin characters), _, ., and - characters.
+    - Minor version values must suffix to a major version.
+    - Patch version values must suffix to a minor version.
+    - Meta version values can suffix to a minor or patch version.
+
+    Match Groups:
+
+    1- Major
+    2- Minor (optional - requires major to match)
+    3- Patch (optional - requires minor to match)
+    4- Meta/pre-release (optional - requires minor to match)
+    You can add the ^ prefix and $suffix to do match enforcement.
+    """
+
+    # The output of these rules :
+    semver_regex = (
+        r'(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*)))?(?:\-([\w][\w\.\-_]*))?)?'
+    )
+
+    def _validate(self, engine_version: str | float | None) -> bool:
+        """
+        A small validation function for incoming version format
+        """
+        if engine_version is None:
+            raise UnavailableVersion('This engine has an unavailable version')
+
+        return re.match(self.semver_regex, str(engine_version)) is not None
+
+    @abstractmethod
+    def get_engine_version(self) -> tuple:
+        """This method will return the version of the target engine"""
+
+    def _format_version(self, input_version: str | float | None = None) -> tuple:
+        """
+        We get the input version from the engine and convert it in tuple
+        Either :
+            - 1.45 -> (1, 45)
+            - "0.9.3" -> (0, 9, 3)
+            - "3.4.57 Debian+only" -> (3, 4, 57)
+        """
+        if self._validate(input_version):
+            return tuple(
+                [int(x) for x in re.findall(self.semver_regex, str(input_version))[0] if len(x)]
+            )
+
+        raise MalformattedVersion(f'"{input_version}" is not a valid semver version')
