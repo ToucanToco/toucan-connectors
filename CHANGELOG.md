@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### [3.22.0] 2022-09-28
+
+### Changed
+
+- The package now exposes a `__version__` attribute.
+- The contraint of the `pyarrow` dependency has been loosened from `<7` to `<9`.
+
 ### [3.21.1] 2022-09-27
 
 ### Changed
