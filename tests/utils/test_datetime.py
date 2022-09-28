@@ -1,8 +1,12 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import pytest
+from dateutil import tz
 from numpy import dtype
+from pandas.core.dtypes.dtypes import DatetimeTZDtype
+from pytz import utc
 
 from toucan_connectors.utils.datetime import is_datetime_col, sanitize_df_dates
 
@@ -46,7 +50,7 @@ def test_sanitize_df_dates_with_dates():
     assert sanitize_df_dates(df).dtypes.to_list() == [
         dtype('int64'),
         dtype('object'),
-        dtype('datetime64[ns]'),
+        DatetimeTZDtype(tz=utc),
     ]
 
 
@@ -62,5 +66,25 @@ def test_sanitize_df_dates_with_datetimes():
     assert sanitize_df_dates(df).dtypes.to_list() == [
         dtype('int64'),
         dtype('object'),
-        dtype('datetime64[ns]'),
+        DatetimeTZDtype(tz=utc),
+    ]
+
+
+def test_sanitize_df_dates_with_tz_aware_datetimes():
+    df = pd.DataFrame(
+        {
+            'a': [1, 2, 3],
+            'b': ['a', 'b', 'c'],
+            'c': [
+                datetime(2022, 7, 21, tzinfo=ZoneInfo('Europe/Paris')),
+                datetime(2022, 7, 22, tzinfo=tz.tzoffset('Europe/Paris', 3600)),
+                datetime(2022, 7, 22, tzinfo=timezone.utc),
+            ],
+        }
+    )
+    assert df.dtypes.to_list() == [dtype('int64'), dtype('object'), dtype('object')]
+    assert sanitize_df_dates(df).dtypes.to_list() == [
+        dtype('int64'),
+        dtype('object'),
+        DatetimeTZDtype(tz=utc),
     ]

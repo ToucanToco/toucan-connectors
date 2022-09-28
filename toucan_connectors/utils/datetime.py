@@ -12,6 +12,6 @@ def sanitize_df_dates(df: pd.DataFrame) -> pd.DataFrame:
     """Converts all datetime columns to pd.datetime64"""
     for col in df.columns:
         if is_datetime_col(df[col]):
-            df[col] = pd.to_datetime(df[col])
+            df[col] = pd.to_datetime(df[col], utc=True)
 
     return df
