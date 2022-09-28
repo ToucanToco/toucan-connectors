@@ -11,6 +11,8 @@ from toucan_connectors.toucan_connector import (
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
+    UnavailableVersion,
+    VersionableEngineConnector,
     strlist_to_enum,
 )
 
@@ -85,7 +87,7 @@ class PostgresDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class PostgresConnector(ToucanConnector, DiscoverableConnector):
+class PostgresConnector(ToucanConnector, DiscoverableConnector, VersionableEngineConnector):
     """
     Import data from PostgreSQL.
     """
@@ -238,3 +240,17 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector):
         with connection.cursor() as cursor:
             cursor.execute(build_database_model_extraction_query())
             return cursor.fetchall()
+
+    def get_engine_version(self) -> tuple:
+        """
+        We try to get the PostgreSQL version by running a query with our connection
+        """
+        connection = pgsql.connect(**self.get_connection_params(database=self.default_database))
+
+        with connection.cursor() as cursor:
+            cursor.execute("select current_setting('server_version');")
+            version = cursor.fetchone()
+            try:
+                return super()._format_version(str(version[0]))
+            except (TypeError, IndexError) as exc:
+                raise UnavailableVersion from exc
