@@ -56,26 +56,27 @@ def test_get_status_all_good(postgres_connector):
 
 
 def test_get_engine_version(mocker, postgres_connector):
-    # "in" and not "==", because sometimes, we can have "14.5.-Debiaan xxx" as version
     mocked_connect = mocker.MagicMock()
     mocked_cursor = mocker.MagicMock()
+
+    # Should be a valide semver version converted to tuple
     mocked_cursor.__enter__().fetchone.return_value = ['3.4.5']
     mocked_connect.cursor.return_value = mocked_cursor
     mocker.patch(
         'toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect
     )
-
     assert postgres_connector.get_engine_version() == (3, 4, 5)
 
+    # Should raise a MalformattedVersion error
     mocked_cursor.__enter__().fetchone.return_value = ['--bad-version-format-']
     mocked_connect.cursor.return_value = mocked_cursor
     mocker.patch(
         'toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect
     )
-
     with pytest.raises(MalformattedVersion):
         assert postgres_connector.get_engine_version()
 
+    # Should raise an UnavailableVersion error
     mocked_cursor.__enter__().fetchone.return_value = None
     mocked_connect.cursor.return_value = mocked_cursor
     mocker.patch(

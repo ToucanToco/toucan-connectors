@@ -584,16 +584,18 @@ def test_status_unreachable(mongo_connector, mocker):
 
 
 def test_get_engine_version(mocker, mongo_connector):
+    # Should be a valide semver version converted to tuple
     mocker.patch('pymongo.MongoClient.server_info', return_value={'version': '3.4.5'})
-
     assert mongo_connector.get_engine_version() == (3, 4, 5)
 
+    # Should raise a MalformattedVersion error
     mocker.patch(
         'pymongo.MongoClient.server_info', return_value={'version': '--bad-version-format-'}
     )
     with pytest.raises(MalformattedVersion):
         assert mongo_connector.get_engine_version()
 
+    # Should raise an UnavailableVersion error
     mocker.patch('pymongo.MongoClient.server_info', return_value=None)
     with pytest.raises(UnavailableVersion):
         assert mongo_connector.get_engine_version()

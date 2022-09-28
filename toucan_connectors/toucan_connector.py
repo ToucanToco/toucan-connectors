@@ -548,7 +548,7 @@ class VersionableEngineConnector(ABC):
         A small validation function for incoming version format
         """
         if engine_version is None:
-            raise UnavailableVersion('This engine has an unavailable version')
+            raise UnavailableVersion  # pragma: no cover
 
         return re.match(self.semver_regex, str(engine_version)) is not None
 

@@ -347,5 +347,6 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
             except (TypeError, KeyError) as exc:
                 raise UnavailableVersion from exc
 
+
 class InvalidQuery(Exception):
     """raised when a query is invalid"""
