@@ -13,6 +13,7 @@ from toucan_connectors.mysql.mysql_connector import (
     NoQuerySpecified,
     handle_date_0,
 )
+from toucan_connectors.toucan_connector import MalformattedVersion, UnavailableVersion
 
 
 @pytest.fixture(scope='module')
@@ -88,6 +89,36 @@ def test_get_status_all_good(mysql_connector):
             ('Authenticated', True),
         ],
     )
+
+
+def test_get_engine_version(mocker, mysql_connector):
+    # "in" and not "==", because sometimes, we can have "14.5.-Debiaan xxx" as version
+    mocked_connect = mocker.MagicMock()
+    mocked_cursor = mocker.MagicMock()
+    mocked_cursor.__enter__().fetchone.return_value = {'VERSION()': '3.4.5'}
+    mocked_connect.cursor.return_value = mocked_cursor
+    mocker.patch(
+        'toucan_connectors.mysql.mysql_connector.pymysql.connect', return_value=mocked_connect
+    )
+
+    assert mysql_connector.get_engine_version() == (3, 4, 5)
+
+    mocked_cursor.__enter__().fetchone.return_value = {'VERSION()': '--bad-version-format-'}
+    mocked_connect.cursor.return_value = mocked_cursor
+    mocker.patch(
+        'toucan_connectors.mysql.mysql_connector.pymysql.connect', return_value=mocked_connect
+    )
+
+    with pytest.raises(MalformattedVersion):
+        assert mysql_connector.get_engine_version()
+
+    mocked_cursor.__enter__().fetchone.return_value = None
+    mocked_connect.cursor.return_value = mocked_cursor
+    mocker.patch(
+        'toucan_connectors.mysql.mysql_connector.pymysql.connect', return_value=mocked_connect
+    )
+    with pytest.raises(UnavailableVersion):
+        assert mysql_connector.get_engine_version()
 
 
 def test_get_status_bad_host(mysql_connector):
