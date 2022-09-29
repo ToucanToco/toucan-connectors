@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.22.2] 2022-09-29
+
+### Changed
+
+- Fix: Ensure timezone-aware timestamp column are converted to UTC
+
 ### [3.22.1] 2022-09-28
 
 ### Changed
