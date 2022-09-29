@@ -542,14 +542,14 @@ class VersionableEngineConnector(ABC):
         r'(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*)))?(?:\-([\w][\w\.\-_]*))?)?'
     )
 
-    def _validate(self, engine_version: str | float | None) -> bool:
+    def _validate(self, engine_version: str | float | None) -> re.Match | None:
         """
         A small validation function for incoming version format
         """
         if engine_version is None:
-            raise UnavailableVersion  # pragma: no cover
+            return None
 
-        return self.semver_regex.match(str(engine_version)) is not None
+        return self.semver_regex.match(str(engine_version))
 
     @abstractmethod
     def get_engine_version(self) -> tuple:
@@ -563,9 +563,8 @@ class VersionableEngineConnector(ABC):
             - "0.9.3" -> (0, 9, 3)
             - "3.4.57 Debian+only" -> (3, 4, 57)
         """
-        if self._validate(input_version):
-            return tuple(
-                [int(x) for x in self.semver_regex.findall(str(input_version))[0] if len(x)]
-            )
+        input_version_validated: re.Match | None = self._validate(input_version)
+        if input_version_validated is not None:
+            return tuple(map(int, input_version_validated.string.split('.')))
 
-        raise MalformedVersion(f'"{input_version}" is not a valid version')
+        raise MalformedVersion(f'"{input_version}" is not understood')
