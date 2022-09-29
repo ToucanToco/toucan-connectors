@@ -547,7 +547,7 @@ class VersionableEngineConnector(ABC):
         A small validation function for incoming version format
         """
         if engine_version is None:
-            return None
+            raise UnavailableVersion
 
         return self.semver_regex.match(str(engine_version))
 
@@ -565,6 +565,6 @@ class VersionableEngineConnector(ABC):
         """
         input_version_validated: re.Match | None = self._validate(input_version)
         if input_version_validated is not None:
-            return tuple(map(int, input_version_validated.string.split('.')))
+            return tuple(map(int, input_version_validated.group(0).split('.')))
 
         raise MalformedVersion(f'"{input_version}" is not understood')
