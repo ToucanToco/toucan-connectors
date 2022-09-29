@@ -388,8 +388,8 @@ def test_sheets_with_dates(mocker, con, ds_with_dates):
         1.1,
         1,
         44197,
-        pd.Timestamp('2021-01-02 00:00:00'),
-        pd.Timestamp('2021-01-02 12:02:31'),
+        pd.Timestamp('2021-01-02 00:00:00', tz='UTC'),
+        pd.Timestamp('2021-01-02 12:02:31', tz='UTC'),
         'toto',
     ]
 
