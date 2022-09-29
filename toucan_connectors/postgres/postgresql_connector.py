@@ -248,7 +248,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector, VersionableEngin
         connection = pgsql.connect(**self.get_connection_params(database=self.default_database))
 
         with connection.cursor() as cursor:
-            cursor.execute("select current_setting('server_version');")
+            cursor.execute("SELECT CURRENT_SETTING('server_version');")
             version = cursor.fetchone()
             try:
                 return super()._format_version(str(version[0]))

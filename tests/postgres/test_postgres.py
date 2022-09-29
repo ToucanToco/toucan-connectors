@@ -9,7 +9,7 @@ from toucan_connectors.postgres.postgresql_connector import (
     PostgresDataSource,
     pgsql,
 )
-from toucan_connectors.toucan_connector import MalformattedVersion, UnavailableVersion
+from toucan_connectors.toucan_connector import MalformedVersion, UnavailableVersion
 
 
 @pytest.fixture(scope='module')
@@ -67,13 +67,13 @@ def test_get_engine_version(mocker, postgres_connector):
     )
     assert postgres_connector.get_engine_version() == (3, 4, 5)
 
-    # Should raise a MalformattedVersion error
+    # Should raise a MalformedVersion error
     mocked_cursor.__enter__().fetchone.return_value = ['--bad-version-format-']
     mocked_connect.cursor.return_value = mocked_cursor
     mocker.patch(
         'toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect
     )
-    with pytest.raises(MalformattedVersion):
+    with pytest.raises(MalformedVersion):
         assert postgres_connector.get_engine_version()
 
     # Should raise an UnavailableVersion error

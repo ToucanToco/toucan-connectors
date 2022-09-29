@@ -18,7 +18,7 @@ from toucan_connectors.mongo.mongo_connector import (
     _format_explain_result,
     normalize_query,
 )
-from toucan_connectors.toucan_connector import MalformattedVersion, UnavailableVersion
+from toucan_connectors.toucan_connector import MalformedVersion, UnavailableVersion
 
 
 @pytest.fixture(scope='module')
@@ -588,11 +588,11 @@ def test_get_engine_version(mocker, mongo_connector):
     mocker.patch('pymongo.MongoClient.server_info', return_value={'version': '3.4.5'})
     assert mongo_connector.get_engine_version() == (3, 4, 5)
 
-    # Should raise a MalformattedVersion error
+    # Should raise a MalformedVersion error
     mocker.patch(
         'pymongo.MongoClient.server_info', return_value={'version': '--bad-version-format-'}
     )
-    with pytest.raises(MalformattedVersion):
+    with pytest.raises(MalformedVersion):
         assert mongo_connector.get_engine_version()
 
     # Should raise an UnavailableVersion error

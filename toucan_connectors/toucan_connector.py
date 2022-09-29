@@ -507,21 +507,20 @@ class DiscoverableConnector(ABC):
         )
 
 
-class MalformattedVersion(Exception):
-    """raise when the given version of the engine is not well formated"""
+class MalformedVersion(Exception):
+    """raised when the given version of the engine is not well formated"""
 
 
 class UnavailableVersion(Exception):
-    """raise when the version of the engine is not available"""
+    """raised when the version of the engine is not available"""
 
 
 class VersionableEngineConnector(ABC):
     """
-    This class is responsable for formating and rendering the version engine
+    This class is responsible for formating and rendering the version engine
     from which the connector is fetching data from !
 
-    We suppose all versions should fit the semver format and for that, we
-    build a regex match that can be describe in 6 points :
+    We built a regex match for all common version structure that can be describe in 6 points :
     - Major version is required, minor and patch version, and the meta version are supported but optional.
     - Major, minor, and/or patch can be 0 but cannot be a non-zero value with a leading 0.
     - The meta version can contain any Unicode letter (not restricted to Latin characters), _, ., and - characters.
@@ -539,7 +538,7 @@ class VersionableEngineConnector(ABC):
     """
 
     # The output of these rules :
-    semver_regex = (
+    semver_regex = re.compile(
         r'(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*)))?(?:\-([\w][\w\.\-_]*))?)?'
     )
 
@@ -550,7 +549,7 @@ class VersionableEngineConnector(ABC):
         if engine_version is None:
             raise UnavailableVersion  # pragma: no cover
 
-        return re.match(self.semver_regex, str(engine_version)) is not None
+        return self.semver_regex.match(str(engine_version)) is not None
 
     @abstractmethod
     def get_engine_version(self) -> tuple:
@@ -566,7 +565,7 @@ class VersionableEngineConnector(ABC):
         """
         if self._validate(input_version):
             return tuple(
-                [int(x) for x in re.findall(self.semver_regex, str(input_version))[0] if len(x)]
+                [int(x) for x in self.semver_regex.findall(str(input_version))[0] if len(x)]
             )
 
-        raise MalformattedVersion(f'"{input_version}" is not a valid semver version')
+        raise MalformedVersion(f'"{input_version}" is not a valid version')

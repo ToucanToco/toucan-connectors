@@ -13,7 +13,7 @@ from toucan_connectors.mysql.mysql_connector import (
     NoQuerySpecified,
     handle_date_0,
 )
-from toucan_connectors.toucan_connector import MalformattedVersion, UnavailableVersion
+from toucan_connectors.toucan_connector import MalformedVersion, UnavailableVersion
 
 
 @pytest.fixture(scope='module')
@@ -103,13 +103,13 @@ def test_get_engine_version(mocker, mysql_connector):
     )
     assert mysql_connector.get_engine_version() == (3, 4, 5)
 
-    # Should raise a MalformattedVersion error
+    # Should raise a MalformedVersion error
     mocked_cursor.__enter__().fetchone.return_value = {'VERSION()': '--bad-version-format-'}
     mocked_connect.cursor.return_value = mocked_cursor
     mocker.patch(
         'toucan_connectors.mysql.mysql_connector.pymysql.connect', return_value=mocked_connect
     )
-    with pytest.raises(MalformattedVersion):
+    with pytest.raises(MalformedVersion):
         assert mysql_connector.get_engine_version()
 
     # Should raise an UnavailableVersion error
