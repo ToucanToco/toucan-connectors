@@ -12,9 +12,12 @@ from toucan_connectors.mongo.mongo_connector import MongoConnector
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2ConnectorConfig
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
+    MalformedVersion,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
+    UnavailableVersion,
+    VersionableEngineConnector,
     get_connector_secrets_form,
     strlist_to_enum,
 )
@@ -67,6 +70,31 @@ def test_type():
 def test_validate():
     dc = DataConnector(name='my_name')
     dc.data_source_model.validate({'query': '', 'name': 'my_name', 'domain': 'my_domain'})
+
+
+def test_formated_engine_version():
+    class DataConnector(ToucanConnector, VersionableEngineConnector):
+        type = 'MyDB'
+        data_source_model: DataSource
+
+        def get_engine_version(self) -> tuple:
+            return super().get_engine_version()
+
+        def _retrieve_data(self, datasource):
+            return pd.DataFrame({'A': [1, 2]})
+
+    dc = DataConnector(name='test')
+    assert dc._format_version(1) == (1,)
+    assert dc._format_version('1') == (1,)
+    assert dc._format_version(1.2) == (1, 2)
+    assert dc._format_version('1.2') == (1, 2)
+    assert dc._format_version('14.3 (Debian 14.3-1.pgdg110+1)') == (14, 3)
+
+    with pytest.raises(MalformedVersion):
+        assert dc._format_version('this is a bad version form !!!')
+
+    with pytest.raises(UnavailableVersion):
+        assert dc._format_version(None)
 
 
 def test_get_df_with_permissions():

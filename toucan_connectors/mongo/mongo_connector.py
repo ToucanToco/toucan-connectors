@@ -15,6 +15,8 @@ from toucan_connectors.toucan_connector import (
     DataStats,
     ToucanConnector,
     ToucanDataSource,
+    UnavailableVersion,
+    VersionableEngineConnector,
     decorate_func_with_retry,
     strlist_to_enum,
 )
@@ -89,7 +91,7 @@ class MongoDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class MongoConnector(ToucanConnector):
+class MongoConnector(ToucanConnector, VersionableEngineConnector):
     """Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
 
     data_source_model: MongoDataSource
@@ -338,6 +340,14 @@ class MongoConnector(ToucanConnector):
         data_source_rendered.query = normalize_query(data_source.query, data_source.parameters)
         del data_source_rendered.parameters
         return data_source_rendered.dict()
+
+    def get_engine_version(self) -> tuple:
+        client = pymongo.MongoClient(**self._get_mongo_client_kwargs())
+        try:
+            version = client.server_info()['version']
+            return super()._format_version(version)
+        except (TypeError, KeyError) as exc:
+            raise UnavailableVersion from exc
 
 
 def _format_explain_result(explain_result):

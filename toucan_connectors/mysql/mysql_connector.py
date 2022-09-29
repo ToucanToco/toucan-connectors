@@ -16,6 +16,8 @@ from toucan_connectors.toucan_connector import (
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
+    UnavailableVersion,
+    VersionableEngineConnector,
     strlist_to_enum,
 )
 from toucan_connectors.utils.pem import InvalidPEMFormat, sanitize_spaces_pem
@@ -91,7 +93,7 @@ class SSLMode(str, Enum):
     VERIFY_CA = 'VERIFY_CA'
 
 
-class MySQLConnector(ToucanConnector, DiscoverableConnector):
+class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineConnector):
     """
     Import data from MySQL database.
     """
@@ -330,6 +332,20 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector):
         df = handle_date_0(df)
         connection.close()
         return df
+
+    def get_engine_version(self) -> tuple:
+        """
+        We try to get the MySQL version by running a query with our connection
+        """
+        connection = pymysql.connect(**self.get_connection_params())
+
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT VERSION()')
+            version = cursor.fetchone()
+            try:
+                return super()._format_version(version['VERSION()'])
+            except (TypeError, KeyError) as exc:
+                raise UnavailableVersion from exc
 
 
 class InvalidQuery(Exception):

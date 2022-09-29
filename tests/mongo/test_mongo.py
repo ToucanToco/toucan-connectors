@@ -18,6 +18,7 @@ from toucan_connectors.mongo.mongo_connector import (
     _format_explain_result,
     normalize_query,
 )
+from toucan_connectors.toucan_connector import MalformedVersion, UnavailableVersion
 
 
 @pytest.fixture(scope='module')
@@ -580,6 +581,24 @@ def test_status_unreachable(mongo_connector, mocker):
         ],
         error='qwe',
     )
+
+
+def test_get_engine_version(mocker, mongo_connector):
+    # Should be a valide semver version converted to tuple
+    mocker.patch('pymongo.MongoClient.server_info', return_value={'version': '3.4.5'})
+    assert mongo_connector.get_engine_version() == (3, 4, 5)
+
+    # Should raise a MalformedVersion error
+    mocker.patch(
+        'pymongo.MongoClient.server_info', return_value={'version': '--bad-version-format-'}
+    )
+    with pytest.raises(MalformedVersion):
+        assert mongo_connector.get_engine_version()
+
+    # Should raise an UnavailableVersion error
+    mocker.patch('pymongo.MongoClient.server_info', return_value=None)
+    with pytest.raises(UnavailableVersion):
+        assert mongo_connector.get_engine_version()
 
 
 def test_status_bad_username(mongo_connector):
