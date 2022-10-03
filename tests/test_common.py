@@ -467,8 +467,8 @@ def test_convert_to_qmark():
         (
             'SELECT * FROM foobar WHERE x = {{ value }}',
             {'value': 42},
-            lambda x: f':{x}',
-            'SELECT * FROM foobar WHERE x = :__QUERY_PARAM_0__',
+            lambda x: f':{x};',
+            'SELECT * FROM foobar WHERE x = :__QUERY_PARAM_0__;',
             {'value': 42, '__QUERY_PARAM_0__': 42},
         ),
         (
