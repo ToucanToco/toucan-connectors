@@ -134,9 +134,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector, VersionableEngin
             transformer=lambda v: '{{' + v + '}}',
         )
 
-        df = pandas_read_sql(
-            query, con=connection, params=params
-        )
+        df = pandas_read_sql(query, con=connection, params=params)
 
         connection.close()
 
