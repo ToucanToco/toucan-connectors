@@ -524,7 +524,7 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2,<1.0dev)"]
 
 [[package]]
 name = "google-api-python-client"
-version = "2.63.0"
+version = "2.64.0"
 description = "Google API Client Library for Python"
 category = "main"
 optional = true
@@ -2546,8 +2546,8 @@ google-api-core = [
     {file = "google_api_core-2.10.0-py3-none-any.whl", hash = "sha256:325529859836a479244b0882c1a77320fd35cb108df2ec1232e3e908ea56eda4"},
 ]
 google-api-python-client = [
-    {file = "google-api-python-client-2.63.0.tar.gz", hash = "sha256:5cc828499a2cfec5845e095d32f68265c344eb32969f07a8e3774564153178bd"},
-    {file = "google_api_python_client-2.63.0-py2.py3-none-any.whl", hash = "sha256:ccb198e11a60324693f8eaff4bee09502e5f35a6c829a7a1ef41a654c8fc2561"},
+    {file = "google-api-python-client-2.64.0.tar.gz", hash = "sha256:0dc4c967a5c795e981af01340f1bd22173a986534de968b5456cb208ed6775a6"},
+    {file = "google_api_python_client-2.64.0-py2.py3-none-any.whl", hash = "sha256:90545cd71969f8bcf15a6362c2a8c44c38b94ec35a88cfd60cf2c0df68a5eb74"},
 ]
 google-auth = [
     {file = "google-auth-1.35.0.tar.gz", hash = "sha256:b7033be9028c188ee30200b204ea00ed82ea1162e8ac1df4aa6ded19a191d88e"},
@@ -3109,7 +3109,6 @@ proto-plus = [
     {file = "proto_plus-1.22.1-py3-none-any.whl", hash = "sha256:ea8982669a23c379f74495bc48e3dcb47c822c484ce8ee1d1d7beb339d4e34c5"},
 ]
 protobuf = [
-    {file = "protobuf-3.20.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:9f876a69ca55aed879b43c295a328970306e8e80a263ec91cf6e9189243c613b"},
     {file = "protobuf-3.20.2-cp310-cp310-manylinux2014_aarch64.whl", hash = "sha256:09e25909c4297d71d97612f04f41cea8fa8510096864f2835ad2f3b3df5a5559"},
     {file = "protobuf-3.20.2-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:e8fbc522303e09036c752a0afcc5c0603e917222d8bedc02813fd73b4b4ed804"},
     {file = "protobuf-3.20.2-cp310-cp310-win32.whl", hash = "sha256:84a1544252a933ef07bb0b5ef13afe7c36232a774affa673fc3636f7cee1db6c"},
