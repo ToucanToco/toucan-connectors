@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### [3.22.3] 2022-10-04
+
+### Changed
+
+- Fix: Replace % character by %% on `pandas_read_sql` to prevent "dict is not a
+  sequence" error when passing a matches/not-matches query.
+
 ### [3.22.2] 2022-09-29
 
 ### Changed
