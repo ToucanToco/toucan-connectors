@@ -23,7 +23,7 @@ Import data from MySQL database.
 * `ssl_key`: SecretStr. The X509 certificate key content in PEM format to use to connect to the MySQL server. Equivalent of the --ssl-key option of the MySQL client
 * `ssl_mode`: SSLMode. SSL Mode to use to connect to the MySQL server. Equivalent of
   the --ssl-mode option of the MySQL client. **Must be set in order to use SSL**. If
-  set, must be one of `VERIFY_CA` or `VERIFY_IDENTITY`.
+  set, must be one of `REQUIRED`, `VERIFY_CA` or `VERIFY_IDENTITY`.
 
 ```coffee
 DATA_PROVIDERS: [

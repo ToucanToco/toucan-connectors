@@ -91,6 +91,7 @@ _DATABASE_MODEL_EXTRACTION_QUERY = (
 class SSLMode(str, Enum):
     VERIFY_IDENTITY = 'VERIFY_IDENTITY'
     VERIFY_CA = 'VERIFY_CA'
+    REQUIRED = 'REQUIRED'
 
 
 class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineConnector):
@@ -148,11 +149,13 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
 
     def _sanitize_ssl_params(self) -> dict[str, Any]:
         params = {}
-        if self.ssl_mode is not None:
+        if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
             for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
                 assert (
                     opt := getattr(self, ssl_opt)
-                ) is not None, f'{ssl_opt} must be specified if ssl_mode is set'
+                ) is not None, (
+                    f'{ssl_opt} must be specified if ssl_mode is VERIFY_CA or VERIFY_IDENTITY'
+                )
                 try:
                     params[ssl_opt] = sanitize_spaces_pem(opt.get_secret_value())
 
@@ -218,6 +221,15 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
     ) -> pymysql.Connection:
         connection_params = self.get_connection_params(database=database, cursorclass=cursorclass)
         if self.ssl_mode is not None:
+            connection_params |= {
+                'ssl_disabled': False,
+                # Verify the server's certificate. This one is actually required by pymysql, as no
+                # SSL context will be created otherwise:
+                # https://github.com/PyMySQL/PyMySQL/blob/main/pymysql/connections.py#L266
+                'ssl_verify_cert': True,
+            }
+
+        if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
             ssl_params = self._sanitize_ssl_params()
             with (
                 NamedTemporaryFile(prefix='ssl_ca') as ssl_ca,
@@ -236,13 +248,9 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
                     'ssl_ca': ssl_ca.name,
                     'ssl_cert': ssl_cert.name,
                     'ssl_key': ssl_key.name,
-                    'ssl_disabled': False,
-                    # Verify the server's certificate
-                    'ssl_verify_cert': True,
                     # Verify that the server's hostname matches the CA
                     'ssl_verify_identity': self.ssl_mode == SSLMode.VERIFY_IDENTITY,
                 }
-
                 return pymysql.connect(**connection_params)
         return pymysql.connect(**connection_params)
 
