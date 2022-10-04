@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.22.3] 2022-10-04
+
+### Changed
+
+- Fix: Replace % character by %% in `pandas_read_sql` to prevent pandas from interpreting `%` as the interpolation of an SQL parameter
+
 ### [3.22.2] 2022-09-29
 
 ### Changed
