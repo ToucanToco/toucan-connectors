@@ -401,7 +401,11 @@ def pandas_read_sql(
         params = adapt_param_type(params)
 
     try:
-        df = pd.read_sql(query, con=con, params=params, **kwargs)
+        # FIXME: We should use here the sqlalchemy.text module to
+        # escape characters like % but as a quick fix, we left replace
+        df = pd.read_sql(
+            query.replace("'%", "'%%").replace("%'", "%%'"), con=con, params=params, **kwargs
+        )
     except pd.io.sql.DatabaseError:
         if is_interpolating_table_name(query):
             errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
