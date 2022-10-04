@@ -200,7 +200,7 @@ def test_get_df(mocker: MockerFixture):
     mysql_connector.get_df(data_source)
     reasq.assert_called_once_with('select * from Country', con=snock(), params={})
 
-    # With query havinf %
+    # With query having %
     reasq.reset_mock()
     data_source = MySQLDataSource(
         **{
