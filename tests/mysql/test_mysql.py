@@ -200,6 +200,22 @@ def test_get_df(mocker: MockerFixture):
     mysql_connector.get_df(data_source)
     reasq.assert_called_once_with('select * from Country', con=snock(), params={})
 
+    # With query having %
+    reasq.reset_mock()
+    data_source = MySQLDataSource(
+        **{
+            'domain': 'MySQL test',
+            'type': 'external_database',
+            'name': 'Some MySQL provider',
+            'database': 'mysql_db',
+            'query': "select * from Country where test LIKE '%test%'",
+        }
+    )
+    mysql_connector.get_df(data_source)
+    reasq.assert_called_once_with(
+        "select * from Country where test LIKE '%%test%%'", con=snock(), params={}
+    )
+
 
 def test_get_df_db(mysql_connector):
     """ " It should extract the table City without merges"""

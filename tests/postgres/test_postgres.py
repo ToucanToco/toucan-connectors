@@ -206,7 +206,7 @@ def test_postgress_get_df(mocker):
         domain='test',
         name='test',
         database='postgres_db',
-        query='SELECT Name, CountryCode, Population FROM City LIMIT 2;',
+        query="SELECT Name, CountryCode, Population FROM City Where Name Like '%test%' LIMIT 2;",
     )
     postgres_connector.get_df(ds)
 
@@ -215,7 +215,9 @@ def test_postgress_get_df(mocker):
     )
 
     reasq.assert_called_once_with(
-        'SELECT Name, CountryCode, Population FROM City LIMIT 2;', con=snock(), params={}
+        "SELECT Name, CountryCode, Population FROM City Where Name Like '%%test%%' LIMIT 2;",
+        con=snock(),
+        params={},
     )
 
 
