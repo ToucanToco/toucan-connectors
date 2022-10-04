@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.23.0] 2022-10-04
+
+### Changed
+
+- MySQL: Added support for REQUIRED ssl_mode
+
 ### [3.22.3] 2022-10-04
 
 ### Changed
