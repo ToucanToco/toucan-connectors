@@ -6,8 +6,7 @@
 
 ### Changed
 
-- Fix: Replace % character by %% on `pandas_read_sql` to prevent "dict is not a
-  sequence" error when passing a matches/not-matches query.
+- Fix: Replace % character by %% in `pandas_read_sql` to prevent pandas from interpreting `%` as the interpolation of an SQL parameter
 
 ### [3.22.2] 2022-09-29
 
