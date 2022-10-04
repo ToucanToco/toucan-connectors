@@ -488,3 +488,22 @@ def test_sanitize_ssl_params_invalid_pem(mysql_connector_with_ssl: MySQLConnecto
     )
     with pytest.raises(ValueError):
         mysql_connector_with_ssl._sanitize_ssl_params()
+
+
+def test_ssl_parameters_required_mode(mocker: MockerFixture):
+    connect_mock = mocker.patch('pymysql.connect')
+    conn = MySQLConnector(
+        name='mycon',
+        host='localhost',
+        port=3306,
+        user='ubuntu',
+        password='ilovetoucan',
+        ssl_mode='REQUIRED',
+    )
+    conn._connect()
+    assert connect_mock.call_count == 1
+    kwargs = connect_mock.call_args.kwargs
+    assert kwargs['ssl_disabled'] is False
+    assert kwargs['ssl_verify_cert'] is True
+    for arg in ('ssl_ca', 'ssl_cert', 'ssl_key'):
+        assert arg not in kwargs
