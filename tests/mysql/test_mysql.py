@@ -200,22 +200,6 @@ def test_get_df(mocker: MockerFixture):
     mysql_connector.get_df(data_source)
     reasq.assert_called_once_with('select * from Country', con=snock(), params={})
 
-    # With query having %
-    reasq.reset_mock()
-    data_source = MySQLDataSource(
-        **{
-            'domain': 'MySQL test',
-            'type': 'external_database',
-            'name': 'Some MySQL provider',
-            'database': 'mysql_db',
-            'query': "select * from Country where test LIKE '%test%'",
-        }
-    )
-    mysql_connector.get_df(data_source)
-    reasq.assert_called_once_with(
-        "select * from Country where test LIKE '%%test%%'", con=snock(), params={}
-    )
-
     # With query having % and variables %(var)s
     reasq.reset_mock()
     data_source = MySQLDataSource(
@@ -224,12 +208,14 @@ def test_get_df(mocker: MockerFixture):
             'type': 'external_database',
             'name': 'Some MySQL provider',
             'database': 'mysql_db',
-            'query': "select * from Country where test LIKE '%test%' and %(var)s",
+            'query': "select * from Country where test LIKE '%test example%' AND test '%ok22%' AND test LIKE '%(var)s'",
         }
     )
     mysql_connector.get_df(data_source)
     reasq.assert_called_once_with(
-        "select * from Country where test LIKE '%%test%%' and %(var)s", con=snock(), params={}
+        "select * from Country where test LIKE '%%test example%%' AND test '%%ok22%%' AND test LIKE '%(var)s'",
+        con=snock(),
+        params={},
     )
 
 
