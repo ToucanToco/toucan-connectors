@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.23.1] 2022-10-07
+
+### Changed
+
+- Fix: Fixed the % character replacement on edges cases for `pandas_read_sql`.
+
 ### [3.23.0] 2022-10-04
 
 ### Changed
