@@ -404,7 +404,7 @@ def pandas_read_sql(
         # FIXME: We should use here the sqlalchemy.text module to
         # escape characters like % but as a quick fix, we left replace
         query = query.replace('%%', '%')
-        query = re.sub(r'%[A-Za-z0-9]+%', r'%\g<0>%', query)
+        query = re.sub(r'%[^%()]+%', r'%\g<0>%', query)
         df = pd.read_sql(query, con=con, params=params, **kwargs)
     except pd.io.sql.DatabaseError:
         if is_interpolating_table_name(query):
