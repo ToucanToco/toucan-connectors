@@ -1892,9 +1892,122 @@ tabulate = ">=0.8.9,<0.9.0"
 toucan-client = ">=1.1.0,<2.0.0"
 
 [[package]]
+name = "types-chardet"
+version = "5.0.4"
+description = "Typing stubs for chardet"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-cryptography"
+version = "3.3.23"
+description = "Typing stubs for cryptography"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-protobuf"
+version = "3.20.4"
+description = "Typing stubs for protobuf"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-PyMySQL"
+version = "1.0.19"
+description = "Typing stubs for PyMySQL"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-pyOpenSSL"
+version = "22.1.0.0"
+description = "Typing stubs for pyOpenSSL"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+types-cryptography = "*"
+
+[[package]]
+name = "types-python-dateutil"
+version = "2.8.19"
+description = "Typing stubs for python-dateutil"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-python-slugify"
+version = "6.1.0"
+description = "Typing stubs for python-slugify"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-pytz"
+version = "2022.4.0.0"
+description = "Typing stubs for pytz"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-requests"
+version = "2.28.11.2"
+description = "Typing stubs for requests"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+types-urllib3 = "<1.27"
+
+[[package]]
+name = "types-setuptools"
+version = "65.4.0.0"
+description = "Typing stubs for setuptools"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-simplejson"
+version = "3.17.7"
+description = "Typing stubs for simplejson"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "types-toml"
 version = "0.10.8"
 description = "Typing stubs for toml"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-tzlocal"
+version = "4.2.2"
+description = "Typing stubs for tzlocal"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+types-pytz = "*"
+
+[[package]]
+name = "types-urllib3"
+version = "1.26.25"
+description = "Typing stubs for urllib3"
 category = "dev"
 optional = false
 python-versions = "*"
@@ -2058,7 +2171,7 @@ toucan_toco = ["toucan-client"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "2c45aed4e66af0be766b2a6ad8453b5a92d185da38fc7959ab1f0b384db28723"
+content-hash = "756aa0d50e962bffb89a9ff6c0190f9d43e69bb5c946e4c72cff94f8f84967ce"
 
 [metadata.files]
 adobe-analytics = [
@@ -3720,9 +3833,61 @@ toucan-data-sdk = [
     {file = "toucan_data_sdk-7.5.0-py3-none-any.whl", hash = "sha256:1035b72ab94cafd4c45a0c0724cff73fe7d62fbb310f799c1afd4ced2ade8041"},
     {file = "toucan_data_sdk-7.5.0.tar.gz", hash = "sha256:29a2d4288ed403aba328561cad1d748077e22ead64edf1c40866ccf146125714"},
 ]
+types-chardet = [
+    {file = "types-chardet-5.0.4.tar.gz", hash = "sha256:449a98338fa264ddee88dd3a8141989f0ae920bcc720460c54b9f4374a6c1bb3"},
+    {file = "types_chardet-5.0.4-py3-none-any.whl", hash = "sha256:6946e22f32789a473852570810b4afe632172fae03c04bdbffe670606cc4ac11"},
+]
+types-cryptography = [
+    {file = "types-cryptography-3.3.23.tar.gz", hash = "sha256:b85c45fd4d3d92e8b18e9a5ee2da84517e8fff658e3ef5755c885b1c2a27c1fe"},
+    {file = "types_cryptography-3.3.23-py3-none-any.whl", hash = "sha256:913b3e66a502edbf4bfc3bb45e33ab476040c56942164a7ff37bd1f0ef8ef783"},
+]
+types-protobuf = [
+    {file = "types-protobuf-3.20.4.tar.gz", hash = "sha256:0dad3a5009895c985a56e2837f61902bad9594151265ac0ee907bb16d0b01eb7"},
+    {file = "types_protobuf-3.20.4-py3-none-any.whl", hash = "sha256:5082437afe64ce3b31c8db109eae86e02fda11e4d5f9ac59cb8578a8a138aa70"},
+]
+types-PyMySQL = [
+    {file = "types-PyMySQL-1.0.19.tar.gz", hash = "sha256:f79a1f4d9df4a65db999537f9a47de419be162dfeab3b2c91bcba8bb1a362a65"},
+    {file = "types_PyMySQL-1.0.19-py3-none-any.whl", hash = "sha256:fc43dceda3f3fc4ac388db7dd57b157c13d94cb84e30cca4848df590c314bf68"},
+]
+types-pyOpenSSL = [
+    {file = "types-pyOpenSSL-22.1.0.0.tar.gz", hash = "sha256:3d8c8e0e81aa4ed51aa3f5ab4a9ee274e3252012818b74ebf38c0a289e6810a5"},
+    {file = "types_pyOpenSSL-22.1.0.0-py3-none-any.whl", hash = "sha256:af3521dea39aca57febd2d3bf65fe3bdf17afb23e023eb56ac25c1237462eeb1"},
+]
+types-python-dateutil = [
+    {file = "types-python-dateutil-2.8.19.tar.gz", hash = "sha256:bfd3eb39c7253aea4ba23b10f69b017d30b013662bb4be4ab48b20bbd763f309"},
+    {file = "types_python_dateutil-2.8.19-py3-none-any.whl", hash = "sha256:6284df1e4783d8fc6e587f0317a81333856b872a6669a282f8a325342bce7fa8"},
+]
+types-python-slugify = [
+    {file = "types-python-slugify-6.1.0.tar.gz", hash = "sha256:556d9b387ef632e588445b9e0edbb0e57e939ab387e53a05ad9c5a6d1321b2a3"},
+    {file = "types_python_slugify-6.1.0-py3-none-any.whl", hash = "sha256:663de4a7ce61c5448e838ffd2e34748df6631d4588dc0ed9a7c2bf973c0314ed"},
+]
+types-pytz = [
+    {file = "types-pytz-2022.4.0.0.tar.gz", hash = "sha256:17d66e4b16e80ceae0787726f3a22288df7d3f9fdebeb091dc64b92c0e4ea09d"},
+    {file = "types_pytz-2022.4.0.0-py3-none-any.whl", hash = "sha256:950b0f3d64ed5b03a3e29c1e38fe2be8371c933c8e97922d0352345336eb8af4"},
+]
+types-requests = [
+    {file = "types-requests-2.28.11.2.tar.gz", hash = "sha256:fdcd7bd148139fb8eef72cf4a41ac7273872cad9e6ada14b11ff5dfdeee60ed3"},
+    {file = "types_requests-2.28.11.2-py3-none-any.whl", hash = "sha256:14941f8023a80b16441b3b46caffcbfce5265fd14555844d6029697824b5a2ef"},
+]
+types-setuptools = [
+    {file = "types-setuptools-65.4.0.0.tar.gz", hash = "sha256:d9021d6a70690b34e7bd2947e7ab10167c646fbf062508cb56581be2e2a1615e"},
+    {file = "types_setuptools-65.4.0.0-py3-none-any.whl", hash = "sha256:ce178b3f7dbd6c0e67f8eee7ae29c1be280ade7e5188bdd9e620843de4060d85"},
+]
+types-simplejson = [
+    {file = "types-simplejson-3.17.7.tar.gz", hash = "sha256:801cfa251ef54b707f16256546f84f4e29156177875838c8f33e2c1527f62b47"},
+    {file = "types_simplejson-3.17.7-py3-none-any.whl", hash = "sha256:d0efa5696274973030c39a336674a21e16cf2838a85aef3181d4d9f511b2eeef"},
+]
 types-toml = [
     {file = "types-toml-0.10.8.tar.gz", hash = "sha256:b7e7ea572308b1030dc86c3ba825c5210814c2825612ec679eb7814f8dd9295a"},
     {file = "types_toml-0.10.8-py3-none-any.whl", hash = "sha256:8300fd093e5829eb9c1fba69cee38130347d4b74ddf32d0a7df650ae55c2b599"},
+]
+types-tzlocal = [
+    {file = "types-tzlocal-4.2.2.tar.gz", hash = "sha256:51e9a39e2acae2a03325923dc04804ad9749aeb6037c6d67792ab3374ded5976"},
+    {file = "types_tzlocal-4.2.2-py3-none-any.whl", hash = "sha256:d07ff80f0f839982e867a1b2ebd561b04a74e730ecb77a22eff93177cd892d5a"},
+]
+types-urllib3 = [
+    {file = "types-urllib3-1.26.25.tar.gz", hash = "sha256:5aef0e663724eef924afa8b320b62ffef2c1736c1fa6caecfc9bc6c8ae2c3def"},
+    {file = "types_urllib3-1.26.25-py3-none-any.whl", hash = "sha256:c1d78cef7bd581e162e46c20a57b2e1aa6ebecdcf01fd0713bb90978ff3e3427"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
