@@ -587,7 +587,7 @@ tool = ["click (>=6.0.0)"]
 
 [[package]]
 name = "google-cloud-bigquery"
-version = "3.3.3"
+version = "3.3.5"
 description = "Google BigQuery API client library"
 category = "main"
 optional = true
@@ -603,7 +603,7 @@ grpcio = ">=1.47.0,<2.0dev"
 packaging = ">=14.3,<22.0.0dev"
 pandas = {version = ">=1.0.0", optional = true, markers = "extra == \"pandas\""}
 proto-plus = ">=1.22.0,<2.0.0dev"
-protobuf = ">=3.19.0,<5.0.0dev"
+protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<5.0.0dev"
 pyarrow = ">=3.0.0,<10.0dev"
 python-dateutil = ">=2.7.2,<3.0dev"
 requests = ">=2.18.0,<3.0.0dev"
@@ -2560,8 +2560,8 @@ google-auth-oauthlib = [
     {file = "google_auth_oauthlib-0.5.2-py2.py3-none-any.whl", hash = "sha256:6d6161d0ec0a62e2abf2207c6071c117ec5897b300823c4bb2d963ee86e20e4f"},
 ]
 google-cloud-bigquery = [
-    {file = "google-cloud-bigquery-3.3.3.tar.gz", hash = "sha256:afbb59c816fcb7d4facba1033c639f4c2d49ef148bfeaff42f5de0cf4e506bf9"},
-    {file = "google_cloud_bigquery-3.3.3-py2.py3-none-any.whl", hash = "sha256:8a86c15a0049764d0520232c45e34320ee6e6a4ce7421f45794b19f26d869710"},
+    {file = "google-cloud-bigquery-3.3.5.tar.gz", hash = "sha256:fbb65799c02754ddcaed981f4a8b6b021b69cc00d4cd9c35ca1d6cc272ead9d1"},
+    {file = "google_cloud_bigquery-3.3.5-py2.py3-none-any.whl", hash = "sha256:0cdffb8e888fd36152b4eed147e93e388ab55b8cfb78ec2b333c7b42d3264903"},
 ]
 google-cloud-bigquery-storage = [
     {file = "google-cloud-bigquery-storage-2.14.2.tar.gz", hash = "sha256:5540904a9ca42eec18af3833dd82263837ac44b76bd4db92ade192857dbea04c"},
