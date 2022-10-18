@@ -58,120 +58,128 @@ def is_jinja_alone(s: str) -> bool:
     return re.match(RE_JINJA_ALONE, s) or (s.startswith('{%') and s.endswith('%}'))
 
 
-def nosql_apply_parameters_to_query(query, parameters, handle_errors=False):
+def _has_parameters(query: dict | list[dict] | tuple | str) -> bool:
+    t = Environment().parse(query)
+    return bool(meta.find_undeclared_variables(t) or re.search(RE_PARAM, query))
+
+
+def _prepare_parameters(p: dict | list[dict] | tuple | str) -> dict | list[dict] | tuple | str:
+    if isinstance(p, str):
+        return repr(p)
+    elif isinstance(p, list):
+        return [_prepare_parameters(e) for e in p]
+    elif isinstance(p, dict):
+        return {k: _prepare_parameters(v) for k, v in p.items()}
+    else:
+        return p
+
+
+def _prepare_result(res: dict | list[dict] | tuple | str) -> dict | list[dict] | tuple | str:
+    if isinstance(res, str):
+        return ast.literal_eval(res)
+    elif isinstance(res, list):
+        return [_prepare_result(e) for e in res]
+    elif isinstance(res, dict):
+        return {k: _prepare_result(v) for k, v in res.items()}
+    else:
+        return res
+
+
+def _flatten_rendered_nested_list(origin: list, rendered: list) -> list:
+    """
+    Flatten rendered lists in the parent list, so we have the same render logic
+    as in toucan frontend's templates.
+    """
+    result = []
+    for elem, rendered_elem in zip(origin, rendered):
+        if isinstance(elem, str) and isinstance(rendered_elem, list):
+            # a list has been rendered: flatten the result
+            result += rendered_elem
+        else:
+            result.append(rendered_elem)
+    return result
+
+
+def _render_query(query: dict | list[dict] | tuple | str, parameters: dict):
+    """
+    Render both jinja or %()s templates in query
+    while keeping type of parameters
+    """
+    if isinstance(query, dict):
+        return {key: _render_query(value, parameters) for key, value in deepcopy(query).items()}
+    elif isinstance(query, list):
+        rendered_query = [_render_query(elt, parameters) for elt in deepcopy(query)]
+        rendered_query = _flatten_rendered_nested_list(query, rendered_query)
+        return rendered_query
+    elif isinstance(query, tuple):
+        return tuple(_render_query(value, parameters) for value in deepcopy(query))
+    elif isinstance(query, str):
+        if not _has_parameters(query):
+            return query
+
+        # Replace param templating with jinja templating:
+        query = re.sub(RE_PARAM, r'{{ \g<1> }}', query)
+
+        # Add quotes to string parameters to keep type if not complex
+        clean_p = deepcopy(parameters)
+        if re.match(RE_JINJA_ALONE, query):
+            clean_p = _prepare_parameters(clean_p)
+
+        if is_jinja_alone(query):
+            env = NativeEnvironment()
+        else:
+            env = Environment()
+
+        res = env.from_string(query).render(clean_p)
+        # NativeEnvironment's render() isn't recursive, so we need to
+        # apply recursively the literal_eval by hand for lists and dicts:
+        if isinstance(res, (list, dict)):
+            return _prepare_result(res)
+        return res
+    else:
+        return query
+
+
+def _handle_missing_params(elt: dict | list[dict] | tuple | str, params: dict, handle_errors: bool):
+    """
+    Remove a dictionary key if its value has a missing parameter.
+    This is used to support the __VOID__ syntax, specific at Toucan Toco :
+        cf. https://bit.ly/2Ln6rcf
+    """
+    if isinstance(elt, dict):
+        e = {}
+        for k, v in elt.items():
+            if isinstance(v, str):
+                matches = re.findall(RE_PARAM, v) + re.findall(RE_JINJA, v)
+                missing_params = []
+                for m in matches:
+                    try:
+                        Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
+                    except Exception:
+                        if handle_errors:
+                            raise NonValidVariable(f'Non valid variable {m}')
+                        missing_params.append(m)
+                if any(missing_params):
+                    continue
+                else:
+                    e[k] = v
+            else:
+                e[k] = _handle_missing_params(v, params, handle_errors)
+        return e
+    elif isinstance(elt, list):
+        return [_handle_missing_params(e, params, handle_errors) for e in elt]
+    else:
+        return elt
+
+
+def nosql_apply_parameters_to_query(
+    query: dict | list[dict] | tuple | str, parameters: dict | None, handle_errors: bool = False
+):
     """
     WARNING : DO NOT USE THIS WITH VARIANTS OF SQL
     Instead use your client library parameter substitution method.
     https://www.owasp.org/index.php/Query_Parameterization_Cheat_Sheet
     """
-
-    def _has_parameters(query):
-        t = Environment().parse(query)
-        return meta.find_undeclared_variables(t) or re.search(RE_PARAM, query)
-
-    def _prepare_parameters(p):
-        if isinstance(p, str):
-            return repr(p)
-        elif isinstance(p, list):
-            return [_prepare_parameters(e) for e in p]
-        elif isinstance(p, dict):
-            return {k: _prepare_parameters(v) for k, v in p.items()}
-        else:
-            return p
-
-    def _prepare_result(res):
-        if isinstance(res, str):
-            return ast.literal_eval(res)
-        elif isinstance(res, list):
-            return [_prepare_result(e) for e in res]
-        elif isinstance(res, dict):
-            return {k: _prepare_result(v) for k, v in res.items()}
-        else:
-            return res
-
-    def _flatten_rendered_nested_list(origin: list, rendered: list) -> list:
-        """
-        Flatten rendered lists in the parent list, so we have the same render logic
-        as in toucan frontend's templates.
-        """
-        result = []
-        for elem, rendered_elem in zip(origin, rendered):
-            if isinstance(elem, str) and isinstance(rendered_elem, list):
-                # a list has been rendered: flatten the result
-                result += rendered_elem
-            else:
-                result.append(rendered_elem)
-        return result
-
-    def _render_query(query, parameters):
-        """
-        Render both jinja or %()s templates in query
-        while keeping type of parameters
-        """
-        if isinstance(query, dict):
-            return {key: _render_query(value, parameters) for key, value in deepcopy(query).items()}
-        elif isinstance(query, list):
-            rendered_query = [_render_query(elt, parameters) for elt in deepcopy(query)]
-            rendered_query = _flatten_rendered_nested_list(query, rendered_query)
-            return rendered_query
-        elif isinstance(query, tuple):
-            return tuple(_render_query(value, parameters) for value in deepcopy(query))
-        elif isinstance(query, str):
-            if not _has_parameters(query):
-                return query
-
-            # Replace param templating with jinja templating:
-            query = re.sub(RE_PARAM, r'{{ \g<1> }}', query)
-
-            # Add quotes to string parameters to keep type if not complex
-            clean_p = deepcopy(parameters)
-            if re.match(RE_JINJA_ALONE, query):
-                clean_p = _prepare_parameters(clean_p)
-
-            if is_jinja_alone(query):
-                env = NativeEnvironment()
-            else:
-                env = Environment()
-
-            res = env.from_string(query).render(clean_p)
-            # NativeEnvironment's render() isn't recursive, so we need to
-            # apply recursively the literal_eval by hand for lists and dicts:
-            if isinstance(res, (list, dict)):
-                return _prepare_result(res)
-            return res
-        else:
-            return query
-
-    def _handle_missing_params(elt, params, handle_errors):
-        """
-        Remove a dictionary key if its value has a missing parameter.
-        This is used to support the __VOID__ syntax, specific at Toucan Toco :
-            cf. https://bit.ly/2Ln6rcf
-        """
-        if isinstance(elt, dict):
-            e = {}
-            for k, v in elt.items():
-                if isinstance(v, str):
-                    matches = re.findall(RE_PARAM, v) + re.findall(RE_JINJA, v)
-                    missing_params = []
-                    for m in matches:
-                        try:
-                            Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
-                        except Exception:
-                            if handle_errors:
-                                raise NonValidVariable(f'Non valid variable {m}')
-                            missing_params.append(m)
-                    if any(missing_params):
-                        continue
-                    else:
-                        e[k] = v
-                else:
-                    e[k] = _handle_missing_params(v, params, handle_errors)
-            return e
-        elif isinstance(elt, list):
-            return [_handle_missing_params(e, params, handle_errors) for e in elt]
-        else:
-            return elt
 
     query = _handle_missing_params(query, parameters, handle_errors)
 
