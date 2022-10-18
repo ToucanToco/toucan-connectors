@@ -140,6 +140,11 @@ def test_apply_parameter_to_query_do_nothing():
             {'domain': 'blah', 'country': {}, 'city': 'Paris'},
         ),
         (
+            {'domain': 'blah', 'country': {'$eq': '{{country}}'}, 'city': '{{city}}'},
+            {'city': 'Paris', 'country': '__VOID__'},
+            {'domain': 'blah', 'country': {}, 'city': 'Paris'},
+        ),
+        (
             [{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}}, {'$match': {'b': 1}}],
             {'city': 'Paris'},
             [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}],
@@ -495,3 +500,17 @@ def test_convert_to_qmark():
 )
 def test_sanitize_query(query, init_params, transformer, expected_query, expected_params):
     assert sanitize_query(query, init_params, transformer) == (expected_query, expected_params)
+
+
+def test_nosql_apply_parameters_to_query_with__VOID__():
+    query = [{'$match': {'STORE_TYPE': {'$eq': '{{ __front_var_0__ }}'}}}]
+    with_applied_params = nosql_apply_parameters_to_query(
+        query=query, parameters={'__front_var_0__': '__VOID__'}
+    )
+    # Yes, this is cursed but filtering out empty values has MANY side effects, among which:
+    # * For Elasticsearch, empty values are meaningful when using msearch
+    #   ([{},{"a": "b"}] != [{"a":"b"}])
+    # * For HTTP API, we use this directly on the datasource converted to a dict.
+    # * For MongoDB, every document in the pipeline must contain exactly one root field
+    #   (So what happens in case the root field is templatized and does not match anything ?)
+    assert with_applied_params == [{'$match': {'STORE_TYPE': {}}}]

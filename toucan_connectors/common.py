@@ -31,6 +31,9 @@ RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
 RE_NAMED_PARAM = r'\'?%\([a-zA-Z0-9_]*\)s\'?'
 
+# If a parameter has one of these values, it'll be removed from a query
+_PARAMETER_VALUES_TO_ELIMINATE = ('__VOID__',)
+
 
 class NonValidVariable(Exception):
     """Error thrown for a non valid variable in endpoint"""
@@ -154,7 +157,11 @@ def _handle_missing_params(elt: dict | list[dict] | tuple | str, params: dict, h
                 missing_params = []
                 for m in matches:
                     try:
-                        Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
+                        rendered = Template('{{ %s }}' % m, undefined=StrictUndefined).render(
+                            params
+                        )
+                        if rendered in _PARAMETER_VALUES_TO_ELIMINATE:
+                            missing_params.append(m)
                     except Exception:
                         if handle_errors:
                             raise NonValidVariable(f'Non valid variable {m}')
@@ -167,6 +174,7 @@ def _handle_missing_params(elt: dict | list[dict] | tuple | str, params: dict, h
                 e[k] = _handle_missing_params(v, params, handle_errors)
         return e
     elif isinstance(elt, list):
+        # Not filtering out empty dicts here because they may have a meaning in some backends
         return [_handle_missing_params(e, params, handle_errors) for e in elt]
     else:
         return elt
