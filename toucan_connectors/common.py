@@ -153,8 +153,12 @@ def _handle_missing_params(elt: dict | list[dict] | tuple | str, params: dict, h
         e = {}
         for k, v in elt.items():
             if isinstance(v, str):
-                matches = re.findall(RE_PARAM, v) + re.findall(RE_JINJA, v)
                 missing_params = []
+                # In case the query was interpolated before being passed to the connector
+                if v.strip() in _PARAMETER_VALUES_TO_ELIMINATE:
+                    continue
+                matches = re.findall(RE_PARAM, v) + re.findall(RE_JINJA, v)
+
                 for m in matches:
                     try:
                         rendered = Template('{{ %s }}' % m, undefined=StrictUndefined).render(

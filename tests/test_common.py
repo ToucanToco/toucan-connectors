@@ -145,6 +145,11 @@ def test_apply_parameter_to_query_do_nothing():
             {'domain': 'blah', 'country': {}, 'city': 'Paris'},
         ),
         (
+            {'domain': 'blah', 'country': {'$eq': '__VOID__'}, 'city': '{{city}}'},
+            {'city': 'Paris'},
+            {'domain': 'blah', 'country': {}, 'city': 'Paris'},
+        ),
+        (
             [{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}}, {'$match': {'b': 1}}],
             {'city': 'Paris'},
             [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}],
