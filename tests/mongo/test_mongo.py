@@ -521,6 +521,9 @@ def test_normalize_query():
     expected = [
         {'$match': {'domain': 'fifa23_players'}},
         {'$project': {'Name': 1, 'Height': 1, 'Nationality': 1}},
+        # Here, we want a match that passes everything, we don't want to remove the step, as a
+        # [{'$match': {}}], would result in an empty list, which would be invalid.
+        {'$match': {}},
         {'$sort': {'Height': -1}},
     ]
 
