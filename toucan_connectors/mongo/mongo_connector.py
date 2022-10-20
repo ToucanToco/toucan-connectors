@@ -1,5 +1,5 @@
 from functools import _lru_cache_wrapper, lru_cache
-from typing import List, Optional, Pattern, Union
+from typing import Any, List, Optional, Pattern, Union
 
 import pandas as pd
 import pymongo
@@ -24,8 +24,42 @@ from toucan_connectors.toucan_connector import (
 MAX_COUNTED_ROWS = 1000001
 
 
+def _is_match_empty(match_: dict) -> bool:
+    def is_empty(elem: Any):
+        if elem == {} or elem is None:
+            return True
+        if isinstance(elem, dict):
+            return _is_match_empty(elem)
+        return False
+
+    return all(is_empty(v) for v in match_.values())
+
+
+def _is_match_statement(d: Any) -> bool:
+    return isinstance(d, dict) and list(d.keys()) == ['$match']
+
+
+def _sanitize_query_matches(query: dict | list[dict]) -> Any:
+    """Transforms match operations matching nothing into match-alls.
+
+    If a $match would match nothing (for example, {'$match': {'field': {}}}), transform into a
+    passthrough. It cannot be removed from the query to prevent having an empty query.
+    """
+    if isinstance(query, list):
+        return [
+            {'$match': {}} if (_is_match_statement(q) and _is_match_empty(q)) else q for q in query
+        ]
+    return query
+
+
 def normalize_query(query, parameters):
     query = nosql_apply_parameters_to_query(query, parameters)
+
+    # FIXME: This removes empty $match operations that could have been created while removing
+    # missing parameters from the query in nosql_apply_parameters to query. However, this way of
+    # handling __VOID__ filters is hacky and should be implemented earlier, when translating the VQB
+    # pipeline
+    query = _sanitize_query_matches(query)
 
     if isinstance(query, dict):
         query = [{'$match': query}]

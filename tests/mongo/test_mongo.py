@@ -512,6 +512,23 @@ def test_normalize_query():
     query = {'city': 'Test'}
     assert normalize_query(query, {}) == [{'$match': {'city': 'Test'}}]
 
+    query = [
+        {'$match': {'domain': 'fifa23_players'}},
+        {'$project': {'Name': 1, 'Height': 1, 'Nationality': 1}},
+        {'$match': {'Nationality': {}}},
+        {'$sort': {'Height': -1}},
+    ]
+    expected = [
+        {'$match': {'domain': 'fifa23_players'}},
+        {'$project': {'Name': 1, 'Height': 1, 'Nationality': 1}},
+        # Here, we want a match that passes everything, we don't want to remove the step, as a
+        # [{'$match': {}}], would result in an empty list, which would be invalid.
+        {'$match': {}},
+        {'$sort': {'Height': -1}},
+    ]
+
+    assert normalize_query(query, {}) == expected
+
 
 def test_status_all_good(mongo_connector):
     assert mongo_connector.get_status() == ConnectorStatus(
