@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [3.23.2] 2022-10-20
+
 ### Changed
 
 - Fix: Add support for `__VOID__` syntax to `nosql_apply_parameters_to_query`
