@@ -397,21 +397,33 @@ websocket-client = ">=0.32.0"
 ssh = ["paramiko (>=2.4.3)"]
 
 [[package]]
-name = "elasticsearch"
-version = "7.17.6"
-description = "Python client for Elasticsearch"
+name = "elastic-transport"
+version = "8.4.0"
+description = "Transport classes and utilities shared among Python Elastic client libraries"
 category = "main"
 optional = true
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4"
+python-versions = ">=3.6"
 
 [package.dependencies]
 certifi = "*"
-urllib3 = ">=1.21.1,<2"
+urllib3 = ">=1.26.2,<2"
+
+[package.extras]
+develop = ["aiohttp", "mock", "pytest", "pytest-asyncio", "pytest-cov", "pytest-httpserver", "pytest-mock", "requests", "trustme"]
+
+[[package]]
+name = "elasticsearch"
+version = "8.4.3"
+description = "Python client for Elasticsearch"
+category = "main"
+optional = true
+python-versions = ">=3.6, <4"
+
+[package.dependencies]
+elastic-transport = ">=8,<9"
 
 [package.extras]
 async = ["aiohttp (>=3,<4)"]
-develop = ["black", "coverage", "jinja2", "mock", "pytest", "pytest-cov", "pyyaml", "requests (>=2.0.0,<3.0.0)", "sphinx (<1.7)", "sphinx-rtd-theme"]
-docs = ["sphinx (<1.7)", "sphinx-rtd-theme"]
 requests = ["requests (>=2.4.0,<3.0.0)"]
 
 [[package]]
@@ -2040,7 +2052,7 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "fa2eb4539700713cdf5f5fa7ea26affb4ec367d63e459e53f19bc95ab4c24a4e"
+content-hash = "b60dbc9eafdb425a5d8ffb12a1f337f61194af60b76a969df2da888745cd9202"
 
 [metadata.files]
 adobe-analytics = [
@@ -2466,9 +2478,13 @@ docker = [
     {file = "docker-6.0.0-py3-none-any.whl", hash = "sha256:6e06ee8eca46cd88733df09b6b80c24a1a556bc5cb1e1ae54b2c239886d245cf"},
     {file = "docker-6.0.0.tar.gz", hash = "sha256:19e330470af40167d293b0352578c1fa22d74b34d3edf5d4ff90ebc203bbb2f1"},
 ]
+elastic-transport = [
+    {file = "elastic-transport-8.4.0.tar.gz", hash = "sha256:b9ad708ceb7fcdbc6b30a96f886609a109f042c0b9d9f2e44403b3133ba7ff10"},
+    {file = "elastic_transport-8.4.0-py3-none-any.whl", hash = "sha256:19db271ab79c9f70f8c43f8f5b5111408781a6176b54ab2e54d713b6d9ceb815"},
+]
 elasticsearch = [
-    {file = "elasticsearch-7.17.6-py2.py3-none-any.whl", hash = "sha256:2c3400c9e9c7fee46c4732fb32b933577aebb07b5e94df025f6ff1a30d2397d0"},
-    {file = "elasticsearch-7.17.6.tar.gz", hash = "sha256:f4b779fc2a035904b97bef0542110372efd94aa7ab2c13749af73158c08be110"},
+    {file = "elasticsearch-8.4.3-py3-none-any.whl", hash = "sha256:14c68a96b7bbbf150dd9fca5ff65da9c50e791c0fdba474a328e43828fdd7f42"},
+    {file = "elasticsearch-8.4.3.tar.gz", hash = "sha256:d34d43a6c349d15c9d91840f791eeba80fc50ee070caf6695130f56b7f41a02d"},
 ]
 engarde = [
     {file = "engarde-0.4.0-py2.py3-none-any.whl", hash = "sha256:a5aac1b991801df4484b35a53f911ecd341667dadeabe87ecde34001391b1c93"},
