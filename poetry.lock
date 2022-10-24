@@ -769,7 +769,7 @@ protobuf = ">=3.12.0"
 
 [[package]]
 name = "gspread"
-version = "5.6.0"
+version = "5.6.2"
 description = "Google Spreadsheets Python API"
 category = "main"
 optional = true
@@ -2749,8 +2749,8 @@ grpcio-status = [
     {file = "grpcio_status-1.48.1-py3-none-any.whl", hash = "sha256:e04f8c2daa580a8f0f9929c10dc9d696857473f21469a5f2a990a15bafc21a86"},
 ]
 gspread = [
-    {file = "gspread-5.6.0-py3-none-any.whl", hash = "sha256:0fe52bec73cc232abadfbc2a999e30201bc5cb0c2728ec00fcfdf38f6f669375"},
-    {file = "gspread-5.6.0.tar.gz", hash = "sha256:9fca855173fdb2e648b3da9e7bbffb83601bfd7c7131d44fa781df84c689e7fc"},
+    {file = "gspread-5.6.2-py3-none-any.whl", hash = "sha256:41f7a416425f1ec5a1b677f49b8fbf599102766c27ed7be6601a58c9a1550ebc"},
+    {file = "gspread-5.6.2.tar.gz", hash = "sha256:d3bbff4b7aad0fc2c986458e148537a02fe7b46e7162f41f3a42392bfa2adb89"},
 ]
 httplib2 = [
     {file = "httplib2-0.20.4-py3-none-any.whl", hash = "sha256:8b6a905cb1c79eefd03f8669fd993c36dc341f7c558f056cb5a33b5c2f458543"},
