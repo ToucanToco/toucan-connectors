@@ -528,6 +528,17 @@ def test_normalize_query():
     ]
 
     assert normalize_query(query, {}) == expected
+    query_with_nulls_in_match = [
+        {'$match': {}},
+        {
+            '$match': {
+                'one': {'$eq': None},
+                'two': {'$eq': None},
+                'three': {'$ne': None},
+            }
+        },
+    ]
+    assert normalize_query(query_with_nulls_in_match, {}) == query_with_nulls_in_match
 
 
 def test_status_all_good(mongo_connector):
