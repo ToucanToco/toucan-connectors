@@ -26,7 +26,9 @@ MAX_COUNTED_ROWS = 1000001
 
 def _is_match_empty(match_: dict) -> bool:
     def is_empty(elem: Any):
-        if elem == {} or elem is None:
+        # Not matching None here, because we don't want to consider {'$match': {'col': None}} to be
+        # empty
+        if elem == {}:
             return True
         if isinstance(elem, dict):
             return _is_match_empty(elem)
