@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Fix regression introduced in the mongo connector in 3.23.2 where `$match` statements containing only matches on
+  nulls were considered empty.
+
 ### [3.23.2] 2022-10-20
 
 ### Changed
