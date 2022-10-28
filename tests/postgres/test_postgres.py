@@ -155,8 +155,9 @@ def test_get_status_bad_default_database_connection(postgres_connector):
         ('Host resolved', True),
         ('Port opened', True),
         ('Connected to PostgreSQL', True),
-        ('Authenticated', True),
-        ('Default Database connection', False),
+        # Auth should NOT work, as we should us the provided default database, not 'postgres'
+        ('Authenticated', False),
+        ('Default Database connection', None),
     ]
     assert 'database "zikzik" does not exist' in status.error
 
