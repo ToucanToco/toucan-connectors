@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [3.23.4] 2022-10-28
+
 ### Changed
 
 - Fix: Ensure Postgres always uses the default database for connection, rather than 'postgres'.
