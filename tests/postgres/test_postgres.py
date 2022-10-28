@@ -2,6 +2,7 @@ import pandas as pd
 import psycopg2
 import pytest
 from pydantic import ValidationError
+from pytest_mock import MockFixture
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.postgres.postgresql_connector import (
@@ -154,8 +155,9 @@ def test_get_status_bad_default_database_connection(postgres_connector):
         ('Host resolved', True),
         ('Port opened', True),
         ('Connected to PostgreSQL', True),
-        ('Authenticated', True),
-        ('Default Database connection', False),
+        # Auth should NOT work, as we should us the provided default database, not 'postgres'
+        ('Authenticated', False),
+        ('Default Database connection', None),
     ]
     assert 'database "zikzik" does not exist' in status.error
 
@@ -506,3 +508,14 @@ def test_raised_error_for_get_model_with_info(mocker, postgres_connector):
             [],
             {'info': {'Could not reach databases': ['postgres', 'postgres_db']}},
         )
+
+
+def test_connection_is_established_with_right_default_database(
+    mocker: MockFixture, postgres_connector: PostgresConnector
+):
+    postgres_connector.default_database = 'd3f4ult'
+    connect_mock = mocker.patch.object(pgsql, 'connect')
+    postgres_connector.get_status()
+    assert connect_mock.call_count == 2
+    for call_args in connect_mock.call_args_list:
+        assert call_args.kwargs['dbname'] == 'd3f4ult'
