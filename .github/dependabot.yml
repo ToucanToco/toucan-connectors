@@ -11,3 +11,14 @@ updates:
     schedule:
       interval: "weekly"
     target-branch: "release/v3.23"
+  # GH actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+  # GH actions LTS
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "release/v3.23"
