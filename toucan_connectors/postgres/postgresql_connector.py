@@ -110,12 +110,12 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector, VersionableEngin
         'time you want to wait for the server to respond. None by default',
     )
 
-    def get_connection_params(self, *, database=DEFAULT_DATABASE):
+    def get_connection_params(self, *, database: str | None = None):
         con_params = dict(
             user=self.user,
             host=self.host,
             client_encoding=self.charset,
-            dbname=database,
+            dbname=database if database is not None else self.default_database,
             password=self.password.get_secret_value() if self.password else None,
             port=self.port,
             connect_timeout=self.connect_timeout,
