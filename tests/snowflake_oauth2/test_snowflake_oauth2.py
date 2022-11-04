@@ -232,7 +232,7 @@ def test_retrieve_data_slice(
     )
     assert eq.call_count == 3  # +1 select database and warehouse
     assert 11 == len(df_result.df)
-    assert 11 == df_result.stats.total_returned_rows
+    assert df_result.pagination_info.pagination_info.type == 'unknown_size'
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
@@ -258,7 +258,7 @@ def test_retrieve_data_slice_with_limit(
     )
     assert eq.call_count == 3  # +1 select database and warehouse
     assert 11 == len(df_result.df)
-    assert 11 == df_result.stats.total_returned_rows
+    assert df_result.pagination_info.pagination_info.type == 'unknown_size'
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
@@ -284,7 +284,7 @@ def test_retrieve_data_slice_too_much(
     )
     assert eq.call_count == 3  # +1 select database and warehouse
     assert 11 == len(df_result.df)
-    assert 11 == df_result.stats.total_returned_rows
+    assert 21 == df_result.pagination_info.pagination_info.total_rows
     SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 

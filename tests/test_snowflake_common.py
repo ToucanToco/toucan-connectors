@@ -7,6 +7,7 @@ from mock import patch
 
 from toucan_connectors import DataSlice
 from toucan_connectors.json_wrapper import JsonWrapper
+from toucan_connectors.pagination import OffsetLimitInfo
 from toucan_connectors.snowflake import SnowflakeDataSource
 from toucan_connectors.snowflake_common import SnowflakeCommon
 
@@ -157,7 +158,7 @@ def test_get_slice_without_limit_without_offset(
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
     assert result.call_count == 3
     assert len(ds.df) == 14
-    assert ds.stats.total_returned_rows == 14
+    assert ds.pagination_info.pagination_info.total_rows == 14
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
@@ -170,7 +171,7 @@ def test_get_slice_with_limit_without_offset(result, execute_query, connect, sno
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
     assert result.call_count == 3
     assert len(ds.df) == 5
-    assert ds.stats.total_returned_rows == 5
+    assert ds.pagination_info.pagination_info.type == 'unknown_size'
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
@@ -185,7 +186,7 @@ def test_get_slice_with_limit_without_offset_no_data(
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
     assert result.call_count == 3
     assert len(ds.df) == 0
-    assert ds.stats.total_returned_rows == 0
+    assert ds.pagination_info.pagination_info.total_rows == 0
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
@@ -200,7 +201,7 @@ def test_get_slice_with_limit_without_offset_not_enough_data(
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
     assert result.call_count == 3
     assert len(ds.df) == 1
-    assert ds.stats.total_returned_rows == 1
+    assert ds.pagination_info.pagination_info.total_rows == 1
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
@@ -212,8 +213,9 @@ def test_get_slice_with_limit_without_offset_not_enough_data(
 def test_get_slice_with_limit_with_offset(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 3
+    # FIXME: What ?? There should be only 5 rows
     assert len(ds.df) == 14
-    assert ds.stats.total_returned_rows == 14
+    assert ds.pagination_info.pagination_info.type == 'unknown_size'
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
@@ -228,7 +230,9 @@ def test_get_slice_with_limit_with_offset_no_data(
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 3
     assert len(ds.df) == 0
-    assert ds.stats.total_returned_rows == 0
+    assert ds.pagination_info.pagination_info.total_rows == 5
+    assert ds.pagination_info.next_page is None
+    assert ds.pagination_info.previous_page == OffsetLimitInfo(offset=0, limit=5)
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
@@ -243,7 +247,7 @@ def test_get_slice_with_limit_with_offset_not_enough_data(
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 3
     assert len(ds.df) == 1
-    assert ds.stats.total_returned_rows == 1
+    assert ds.pagination_info.pagination_info.total_rows == 6
 
 
 @patch('snowflake.connector.connect', return_value=snowflake.connector.SnowflakeConnection)
@@ -256,7 +260,7 @@ def test_get_slice_without_limit_with_offset(result, execute_query, connect, sno
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5)
     assert result.call_count == 3
     assert len(ds.df) == 14
-    assert ds.stats.total_returned_rows == 14
+    assert ds.pagination_info.pagination_info.total_rows == 19
 
 
 @patch(
@@ -270,7 +274,7 @@ def test_get_slice_metadata(snowflake_datasource, mocker):
     connect.cursor().execute().fetchall.return_value = [{'c1': 2}]
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
     assert ds.stats.df_memory_size == 1360
-    assert ds.stats.total_returned_rows == 14
+    assert ds.pagination_info.pagination_info.total_rows == 14
 
 
 @patch(
