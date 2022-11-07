@@ -208,13 +208,12 @@ def test_get_slice_with_limit_without_offset_not_enough_data(
 @patch('snowflake.connector.cursor.SnowflakeCursor.execute')
 @patch(
     'pandas.DataFrame.from_dict',
-    return_value=pd.DataFrame(data_result_all),
+    return_value=pd.DataFrame(data_result_5),
 )
 def test_get_slice_with_limit_with_offset(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 3
-    # FIXME: What ?? There should be only 5 rows
-    assert len(ds.df) == 14
+    assert len(ds.df) == 5
     assert ds.pagination_info.pagination_info.type == 'unknown_size'
 
 
