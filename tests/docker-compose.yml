@@ -1,84 +1,86 @@
-elasticsearch7:
-  image: docker.elastic.co/elasticsearch/elasticsearch:7.16.0
-  environment:
-    - discovery.type=single-node
-    - ES_JAVA_OPTS=-Xms1g -Xmx1g
-    - xpack.security.enabled=false
-  ports:
-    - 9200:9200
+version: '3'
+services:
+  elasticsearch7:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.0
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
+    ports:
+      - 9200:9200
 
-elasticsearch8:
-  image: docker.elastic.co/elasticsearch/elasticsearch:8.2.3
-  environment:
-    - discovery.type=single-node
-    - ES_JAVA_OPTS=-Xms1g -Xmx1g
-    - xpack.security.enabled=false
-  ports:
-    - 9200:9200
+  elasticsearch8:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.2.3
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
+    ports:
+      - 9200:9200
 
-mongo:
-  image: mongo
-  environment:
-    - MONGO_INITDB_ROOT_USERNAME=ubuntu
-    - MONGO_INITDB_ROOT_PASSWORD=ilovetoucan
-    - MONGO_INITDB_DATABASE=toucan
-  ports:
-    - 27017:27017
+  mongo:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=ubuntu
+      - MONGO_INITDB_ROOT_PASSWORD=ilovetoucan
+      - MONGO_INITDB_DATABASE=toucan
+    ports:
+      - 27017:27017
 
-mssql:
-  image: mcr.microsoft.com/mssql/server:2019-latest
-  environment:
-    - ACCEPT_EULA=Y
-    - SA_PASSWORD=Il0veT0uc@n!
-  ports:
-    - 1433:1433
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Il0veT0uc@n!
+    ports:
+      - 1433:1433
 
-mysql:
-  image: mysql
-  environment:
-    - MYSQL_DATABASE=mysql_db
-    - MYSQL_RANDOM_ROOT_PASSWORD=yes
-    - MYSQL_USER=ubuntu
-    - MYSQL_PASSWORD=ilovetoucan
-  ports:
-    - 3306:3306
-  volumes:
-    - ./mysql/fixtures/world.sql:/docker-entrypoint-initdb.d/world.sql
+  mysql:
+    image: mysql
+    environment:
+      - MYSQL_DATABASE=mysql_db
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_USER=ubuntu
+      - MYSQL_PASSWORD=ilovetoucan
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql/fixtures/world.sql:/docker-entrypoint-initdb.d/world.sql
 
-postgres:
-  image: postgres
-  environment:
-    - POSTGRES_DB=postgres_db
-    - POSTGRES_USER=ubuntu
-    - POSTGRES_PASSWORD=ilovetoucan
-  ports:
-    - 5432:5432
-  volumes:
-    - ./postgres/fixtures/world_postgres.sql:/docker-entrypoint-initdb.d/world.sql
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_DB=postgres_db
+      - POSTGRES_USER=ubuntu
+      - POSTGRES_PASSWORD=ilovetoucan
+    ports:
+      - 5432:5432
+    volumes:
+      - ./postgres/fixtures/world_postgres.sql:/docker-entrypoint-initdb.d/world.sql
 
-oraclesql:
-  image: datagrip/oracle:11.2
-  ports:
-    - 1521:1521
-  volumes:
-    - ./oracle_sql/fixtures/world.sql:/world.sql:ro
-    - ./oracle_sql/fixtures/toucan_entrypoint.sh:/toucan_entrypoint.sh:ro
-  command: ["/toucan_entrypoint.sh"]
+  oraclesql:
+    image: datagrip/oracle:11.2
+    ports:
+      - 1521:1521
+    volumes:
+      - ./oracle_sql/fixtures/world.sql:/world.sql:ro
+      - ./oracle_sql/fixtures/toucan_entrypoint.sh:/toucan_entrypoint.sh:ro
+    command: ["/toucan_entrypoint.sh"]
 
-hive:
-  image: gillax/hive
-  ports:
-    - 10000:10000
-  command: ["/bin/bash", "-c", "/etc/bootstrap.sh && hiveserver2"]
+  hive:
+    image: gillax/hive
+    ports:
+      - 10000:10000
+    command: ["/bin/bash", "-c", "/etc/bootstrap.sh && hiveserver2"]
 
-clickhouse:
-  image: yandex/clickhouse-server
-  ports:
-    - 9000:9000
-  environment:
-    CLICKHOUSE_DB: clickhouse_db
-    CLICKHOUSE_USER: ubuntu
-    CLICKHOUSE_PASSWORD: ilovetoucan
-    newtork: host
-  volumes:
-    - ./clickhouse/fixtures/toucan_entrypoint.sh:/docker-entrypoint-initdb.d/toucan_entrypoint.sh
+  clickhouse:
+    image: yandex/clickhouse-server
+    ports:
+      - 9000:9000
+    environment:
+      CLICKHOUSE_DB: clickhouse_db
+      CLICKHOUSE_USER: ubuntu
+      CLICKHOUSE_PASSWORD: ilovetoucan
+      newtork: host
+    volumes:
+      - ./clickhouse/fixtures/toucan_entrypoint.sh:/docker-entrypoint-initdb.d/toucan_entrypoint.sh
