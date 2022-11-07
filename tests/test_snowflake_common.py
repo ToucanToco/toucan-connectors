@@ -246,6 +246,7 @@ def test_get_slice_with_limit_with_offset_not_enough_data(
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 3
     assert len(ds.df) == 1
+    # offset of 5 + 1 actually retrieved row
     assert ds.pagination_info.pagination_info.total_rows == 6
 
 
@@ -259,6 +260,7 @@ def test_get_slice_without_limit_with_offset(result, execute_query, connect, sno
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5)
     assert result.call_count == 3
     assert len(ds.df) == 14
+    # Offset of 5 + 14 actually retrieved rows
     assert ds.pagination_info.pagination_info.total_rows == 19
 
 
