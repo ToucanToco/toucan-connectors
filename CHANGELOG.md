@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [3.23.5] 2022-11-07
+
 ### Changed
 
 - Fix: Pinned google-cloud-bigquery dependency >=2,<3 to ensure argument compatibility
