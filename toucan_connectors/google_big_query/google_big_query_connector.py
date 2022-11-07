@@ -141,12 +141,9 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                 client.query(
                     query,
                     job_config=bigquery.QueryJobConfig(query_parameters=parameters),
-                )
-                .result()
-                .to_dataframe(
-                    create_bqstorage_client=True,
-                    date_as_object=False,  # so date columns get dtype 'datetime64[ns]' instead of 'object'
-                )  # Use to generate directly a dataframe pandas
+                ).result()
+                # Use to directly generate a pandas DataFrame
+                .to_dataframe(create_bqstorage_client=True)
             )
             end = timer()
             logging.getLogger(__name__).info(
