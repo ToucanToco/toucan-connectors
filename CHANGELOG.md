@@ -4,6 +4,12 @@
 
 ### Changed
 
+- Fix: drop `date_as_object` argument since we moved on to for google bigquery 3.
+
+### [3.23.4] 2022-10-28
+
+### Changed
+
 - Fix: Ensure Postgres always uses the default database for connection, rather than 'postgres'.
 
 ### [3.23.3] 2022-10-26
