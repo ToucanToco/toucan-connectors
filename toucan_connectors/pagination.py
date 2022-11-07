@@ -4,35 +4,51 @@ from pydantic import BaseModel
 
 
 class OffsetLimitInfo(BaseModel):
-    # Both of these must be positive integers
+    """Represents offset and limit information for pagination.
+
+    Both `offset` and `limit` must be positive integers.
+    """
+
     offset: int
-    # Limit can be None because charts need to be able to retrieve all data
     limit: int | None
 
 
 class UnknownSizeDatasetPaginationInfo(BaseModel):
+    """Represents pagination information about a dataset of unknown size.
+
+    :param is_last_page: indicates wether the last page has been reached.
+    """
+
     type: Literal['unknown_size'] = 'unknown_size'
-    # Will be true if there is no more information to fetch
     is_last_page: bool
 
 
 class KnownSizeDatasetPaginationInfo(BaseModel):
+    """Represents pagination information about a dataset of unknown size.
+
+    :param is_last_page: Indicates wether the last page has been reached.
+    :param total_rows: The total number of rows in the dataset.
+    """
+
     type: Literal['known_size'] = 'known_size'
-    # Will be true if there is no more information to fetch
     is_last_page: bool
-    # the total size of the dataset
     total_rows: int
 
 
 class PaginationInfo(BaseModel):
-    # A recap of the provided parameters
+    """Represents pagination information for a given dataset.
+
+    :param parameters: A recap of the provided parameters.
+    :param pagination_info: Contains information about where we're at.
+    :param next_page: Contains the parameters to provide to the API in order to retrieve the next
+                      page. If None, there is no data left to retrieve.
+    :param previous_page: Contains the parameters to provide to the API in order to retrieve the
+                          previous page. If None, there is no previous data to retrieve.
+    """
+
     parameters: OffsetLimitInfo
     pagination_info: UnknownSizeDatasetPaginationInfo | KnownSizeDatasetPaginationInfo
-    # The parameters to provide to the API in order to retrieve the next page.
-    # If None, there is no more data left to retrieve
     next_page: OffsetLimitInfo | None
-    # The parameters to provide to the API in order to retrieve the previous page.
-    # If None, there is no previous data to retrieve
     previous_page: OffsetLimitInfo | None
 
 
@@ -43,9 +59,17 @@ def build_pagination_info(
     retrieved_rows: int,
     total_rows: int | None,
 ) -> PaginationInfo:
+    """Builds a `PaginationInfo` object based on the provided parameters.
+
+    :param offset: The offset that was provided.
+    :param limit: The limit that was provided.
+    :param retrieved_rows: The number of rows that were retrieved from the backend for the
+                           provided offset and limit.
+    :param total_rows: The total number of rows in the dataset, if known.
+    """
     # We're on the last page if:
     # * No limit was specified
-    # * The total dataset size is known AND limit+offset it greater or equal to the total size
+    # * The total dataset size is known AND limit+offset is greater or equal to the total size
     # * We retrieved less rows than limit (meaning we've reached the end)
     is_last_page = (
         limit is None
@@ -72,13 +96,10 @@ def build_pagination_info(
         else None
     )
     # In case limit is None, we don't know how many rows back we need to go, so previous_page is None
-    if limit is None:
-        previous_page = None
+    if offset > 0 and limit is not None:
+        previous_page = OffsetLimitInfo(offset=max(offset - limit or 0, 0), limit=limit)
     else:
-        if offset > 0:
-            previous_page = OffsetLimitInfo(offset=max(offset - limit or 0, 0), limit=limit)
-        else:
-            previous_page = None
+        previous_page = None
 
     return PaginationInfo(
         parameters=OffsetLimitInfo(offset=offset, limit=limit),
