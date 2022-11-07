@@ -1,4 +1,5 @@
 import json
+from ast import literal_eval
 from enum import Enum
 from typing import Any, Dict, List, Type, Union
 from xml.etree.ElementTree import ParseError, fromstring, tostring
@@ -55,6 +56,94 @@ class Template(BaseModel):
     )
 
 
+class CustomPagination(BaseModel):
+    """
+    For example :
+        {
+            "keys_values": ["page=20", "limit=100"],
+        }
+    """
+
+    keys_values: list[str] = Field(
+        None,
+        description='List of keys/values for the custom pagination in order',
+        examples=['[offset = 10, limit = 200, filter = created:gt:2020]'],
+    )
+
+
+class RestApiLevel4(BaseModel):
+    """
+    For example, from each request,
+    get the key:chain to access the next future page:
+        {
+            "_limits": {
+                "next": {
+                    "href": "http://127.0.0.1:3000/api/v1?page=2&limit=12"
+                }
+            }
+        }
+
+    next_page -> _limits.next.href
+    """
+
+    JQ_FILTER: str = Field(
+        None,
+        description='The jq filter that represent the path to access the value of the next page',
+        examples=['_limits.next.href'],
+    )
+
+
+class GraphQL(BaseModel):
+    """
+    On a GraphQL pagination
+    """
+
+    QL_FILTER: str = Field(
+        None,
+        description='The QL filter that represent the filter for the graphQl',
+        examples=['pageInfo{ page { value: 10 } }'],
+    )
+
+
+class PaginationType(BaseModel):
+    """
+    We can have 3 type of supported pagination
+    The custom one that will be defined by the AB him(her)self
+    as page/limit, offset/limit or start_id|after_id/limit
+
+    or
+    The rest_api_level4 pagination where we just have the link of the next_page
+    we need to access
+
+    or
+    The graphQl pagination, for this one, no need of a model since the JQ will
+    be sent as a string to the target
+    """
+
+    custom: CustomPagination = Field(
+        None,
+        title='Custom Pagination',
+        description='For the custom pagination, you can have : '
+        '- "offset" if the base API is an offset/limit pagination, '
+        '- "page" if the base API is a Page Offset pagination, '
+        '- "filter" or "where" if the base API is a KeySet pagination, '
+        '- "after_id" or "start_id" if the base API is an Seek pagination, ',
+    )
+
+    rest_api_level4: RestApiLevel4 = Field(
+        None,
+        title='Rest API LEVEL 4 Pagination',
+        description='For the rest API LEVEL 4, you can specify the next_page'
+        'jq key to access future pages',
+    )
+
+    graph_ql: GraphQL = Field(
+        None,
+        title='GraphQL pagination like',
+        description='For the GraphQL pagination, you can specify the JQ as string',
+    )
+
+
 class HttpAPIDataSource(ToucanDataSource):
     url: str = Field(
         ...,
@@ -69,19 +158,24 @@ class HttpAPIDataSource(ToucanDataSource):
         'https://docs.toucantoco.com/concepteur/tutorials/connectors/3-http-connector.html#template',
         examples=['{ "content-type": "application/xml" }'],
     )
+    pagination_type: PaginationType = Field(
+        ...,
+        title='Pagination Type',
+        description='',
+    )
     params: dict = Field(
         None,
         title='URL params',
         description='JSON object of parameters to send in the query string of this HTTP request '
-        '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
-        examples=['{ "offset": 100, "limit": 50 }'],
+        '(e.g. "valueOf" in https://www/api-baseroute/data&valueOf=test)',
+        examples=['{"valueOf": "test"}'],
     )
     json_: dict = Field(
         None,
         alias='json',
         title='Body',
         description='JSON object of parameters to send in the body of every HTTP request',
-        examples=['{ "offset": 100, "limit": 50 }'],
+        examples=['{ "payload": [], "body": {} }'],
     )
     proxies: dict = Field(
         None,
@@ -124,6 +218,33 @@ class HttpAPIConnector(ToucanConnector):
         description='You can provide a custom template that will be used for every HTTP request',
     )
 
+    # def _extract_pagination_values(self, query: dict) -> dict:
+    #     """
+    #     This method just formalize the pagination keys/value depending on the
+    #     type of the pagination style
+    #     """
+
+    #     query['params'] = {} if query['params'] is None else query['params']
+    #     if query.get('pagination_type', None) is not None:
+    #         if (custom_keys_values := query['pagination_type'].dict().get('custom', None)) is not None:
+    #             for k_v in custom_keys_values:
+    #                 key = k_v.split("=")[0]
+    #                 value = literal_eval(k_v.split("=")[1])
+
+    #                 query['params'] = {**query['params'], **{key: value}}
+
+    #         if (graphQl_str := query['pagination_type'].dict().get('graphQl', None)) is not None:
+    #             query['params'] = {**query['params'], **{'': value}}
+
+    #         if (custom_keys_values := query['pagination_type'].dict().get('rest_api_level4', None)) is not None:
+    #         query.pop('pagination_type', None)
+
+    #     if query.get('limit', None) is not None:
+    #         query['params'] = {**query.get('params', {}), **{'limit': query['limit']}}
+    #         query.pop('limit', None)
+
+    #     return query
+
     def do_request(self, query, session):
         """
         Get some json data with an HTTP request and run a jq filter on it.
@@ -135,13 +256,44 @@ class HttpAPIConnector(ToucanConnector):
         """
         jq_filter = query['filter']
         xpath = query['xpath']
-        available_params = ['url', 'method', 'params', 'data', 'json', 'headers', 'proxies']
+        available_params = [
+            'url',
+            'method',
+            'params',
+            'data',
+            'json',
+            'headers',
+            'proxies',
+            'pagination_type',
+        ]
         query = {k: v for k, v in query.items() if k in available_params}
         query['url'] = '/'.join([self.baseroute.rstrip('/'), query['url'].lstrip('/')])
 
         if self.cert:
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates
             query['cert'] = [str(c) for c in self.cert]
+
+        # We extract and parse pagination keys/values
+        # query = self._extract_pagination_values(query)  # type: ignore
+
+        query['params'] = {} if query['params'] is None else query['params']
+        if query.get('pagination_type', None) is not None:
+            if (
+                custom_keys_values := query['pagination_type'].dict().get('custom', None)
+            ) is not None:
+                for k_v in custom_keys_values:
+                    key = k_v.split('=')[0]
+                    value = literal_eval(k_v.split('=')[1])
+
+                    query['params'] = {**query['params'], **{key: value}}
+
+            if (graphQl_str := query['pagination_type'].dict().get('graphQl', None)) is not None:
+                query['method'] = Method.POST
+                query['data'] += graphQl_str
+
+            # we need to handle this only after the first request... do we need
+            # to handle it here or further on laputa ?
+            # if (custom_keys_values := query['pagination_type'].dict().get('rest_api_level4', None)) is not None:
 
         res = session.request(**query)
 
