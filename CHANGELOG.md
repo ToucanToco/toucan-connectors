@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [3.24.0] 2022-11-07
+
 ### Changed
 
 - Fix: drop `date_as_object` argument since we moved on to for google bigquery 3.
