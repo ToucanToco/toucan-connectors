@@ -16,7 +16,6 @@ from toucan_connectors.redshift.utils import build_database_model_extraction_que
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
-    DataStats,
     DiscoverableConnector,
     TableInfo,
     ToucanConnector,

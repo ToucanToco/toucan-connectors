@@ -15,7 +15,7 @@ from toucan_connectors.redshift.redshift_database_connector import (
     RedshiftConnector,
     RedshiftDataSource,
 )
-from toucan_connectors.toucan_connector import DataSlice, DataStats
+from toucan_connectors.toucan_connector import DataSlice
 
 CLUSTER_IDENTIFIER: str = 'toucan_test'
 DATABASE_NAME: str = 'toucan'
