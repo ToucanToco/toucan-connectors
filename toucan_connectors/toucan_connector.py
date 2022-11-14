@@ -8,7 +8,7 @@ import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple, Type, Union
+from typing import Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
 
 import pandas as pd
 import tenacity as tny
@@ -24,7 +24,7 @@ from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.utils.datetime import sanitize_df_dates
 
 try:
-    from bearer import Bearer
+    from bearer import Bearer  # type: ignore[import]
 except ImportError:
     pass
 
@@ -32,21 +32,20 @@ LOGGER = logging.getLogger(__name__)
 
 
 class DataStats(BaseModel):
-    total_rows: Optional[int] = None
-    total_returned_rows: Optional[int] = None
-    query_generation_time: Optional[float] = None
-    data_extraction_time: Optional[float] = None
-    data_conversion_time: Optional[float] = None
-    compute_stats_time: Optional[float] = None
-    conversion_time: Optional[float] = None
-    compute_stats_time: Optional[float] = None
-    data_filtered_from_permission_time: Optional[float] = None
-    df_memory_size: Optional[int] = None
-    others: Optional[Dict[str, Any]] = None
+    total_rows: int | None = None
+    total_returned_rows: int | None = None
+    query_generation_time: float | None = None
+    data_extraction_time: float | None = None
+    data_conversion_time: float | None = None
+    compute_stats_time: float | None = None
+    conversion_time: float | None = None
+    data_filtered_from_permission_time: float | None = None
+    df_memory_size: int | None = None
+    others: dict[str, Any] | None = None
 
 
 class QueryMetadata(NamedTuple):
-    columns: Optional[Dict[str, str]] = None  # Stores column names and types
+    columns: dict[str, str] | None = None  # Stores column names and types
 
 
 class Category(str, Enum):
@@ -61,36 +60,40 @@ class DataSlice(NamedTuple):
 
     df: pd.DataFrame  # the dataframe of the slice
     # TODO total_count field should be removed
-    total_count: Optional[int] = None  # the length of the raw dataframe (without slicing)
-    input_parameters: Optional[dict] = None
-    stats: Optional[DataStats] = None
+    total_count: int | None = None  # the length of the raw dataframe (without slicing)
+    input_parameters: dict | None = None
+    stats: DataStats | None = None
     # TODO: name is kinda misleading. what others information than `columns` will it contain ?
-    query_metadata: Optional[QueryMetadata] = None
+    query_metadata: QueryMetadata | None = None
 
 
 class StrEnum(str, Enum):
     """Class to easily make schemas with enum values and type string"""
 
 
-def strlist_to_enum(field: str, strlist: List[str], default_value=...) -> tuple:
+def strlist_to_enum(field: str, strlist: list[str], default_value=...) -> tuple[type[StrEnum], Any]:
     """
     Convert a list of strings to a pydantic schema enum
     the value is either <default value> or a tuple ( <type>, <default value> )
     If the field is required, the <default value> has to be '...' (cf pydantic doc)
     By default, the field is considered required.
     """
-    return StrEnum(field, {v: v for v in strlist}), default_value
+    return StrEnum(field, {v: v for v in strlist}), default_value  # type: ignore[call-overload]
 
 
-class ToucanDataSource(BaseModel):
+# Binding C to ToucanConnector causes mypy to crash (last checked with mypy 0.991)
+C = TypeVar('C')
+
+
+class ToucanDataSource(BaseModel, Generic[C]):
     domain: str
     name: str
-    type: str = None
+    type: str | None = None
     load: bool = True
     live_data: bool = False
-    validation: dict = None
-    parameters: dict = None
-    cache_ttl: Optional[int] = Field(
+    validation: dict | None = None
+    parameters: dict | None = None
+    cache_ttl: int | None = Field(
         None,
         title="Slow Queries' Cache Expiration Time",
         description='In seconds. Will override the 5min instance default and/or the connector value',
@@ -101,7 +104,8 @@ class ToucanDataSource(BaseModel):
         validate_assignment = True
 
     @classmethod
-    def get_form(cls, connector: 'ToucanConnector', current_config):
+    # def get_form(cls, connector: Type['ToucanConnector'], current_config):
+    def get_form(cls, connector: C, current_config):
         """
         Method to retrieve the form with a current config
         Once the connector is set, we are often able to enforce some values depending
@@ -133,9 +137,9 @@ class RetryPolicy(BaseModel):
     """
 
     # retry_on: Iterable[BaseException] = ()
-    max_attempts: Optional[int] = 1
-    max_delay: Optional[float] = 0.0
-    wait_time: Optional[float] = 0.0
+    max_attempts: int | None = 1
+    max_delay: float | None = 0.0
+    wait_time: float | None = 0.0
 
     def __init__(self, retry_on=(), logger=None, **data):
         super().__init__(**data)
@@ -240,7 +244,7 @@ class ConnectorSecretsForm(BaseModel):
     secrets_schema: dict = Field(description='The schema for the configuration form')
 
 
-def get_connector_secrets_form(cls) -> Optional[ConnectorSecretsForm]:
+def get_connector_secrets_form(cls) -> ConnectorSecretsForm | None:
     """
     Some connectors requires 2 steps of configuration.
     First one by an administrator
@@ -252,9 +256,15 @@ def get_connector_secrets_form(cls) -> Optional[ConnectorSecretsForm]:
     """
     if hasattr(cls, 'get_connector_secrets_form'):
         return getattr(cls, 'get_connector_secrets_form')()
+    return None
 
 
-class ToucanConnector(BaseModel, metaclass=ABCMeta):
+_UI_HIDDEN: dict[str, Any] = {'ui.hidden': True}
+
+DS = TypeVar('DS', bound=ToucanDataSource)
+
+
+class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     """Abstract base class for all toucan connectors.
 
     Each concrete connector should implement the `get_df` method that accepts a
@@ -275,21 +285,21 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     """
 
     name: str = Field(...)
-    retry_policy: Optional[RetryPolicy] = RetryPolicy()
+    retry_policy: RetryPolicy | None = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
-    type: str = Field(None)
-    secrets_storage_version = Field('1', **{'ui.hidden': True})
+    type: str | None
+    secrets_storage_version: str = Field('1', **_UI_HIDDEN)  # type:ignore[pydantic-field]
 
     # Default ttl for all connector's queries (overridable at the data_source level)
     # /!\ cache ttl is used by the caching system which is not implemented in toucan_connectors.
-    cache_ttl: Optional[int] = Field(
+    cache_ttl: int | None = Field(
         None,
         title="Slow Queries' Cache Expiration Time",
         description='In seconds. Will override the 5min instance default. Can also be overridden at the query level',
     )
 
     # Used to defined the connection
-    identifier: str = Field(None, **{'ui.hidden': True})
+    identifier: str = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
 
     class Config:
         extra = 'forbid'
@@ -312,13 +322,13 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
     def bearer_oauth_get_endpoint(
         self,
         endpoint: str,
-        query: Optional[dict] = None,
+        query: dict | None = None,
     ):
         """Generic method to get an endpoint for an OAuth API integrated with Bearer"""
         return (
             Bearer(os.environ.get('BEARER_API_KEY'))
-            .integration(self.bearer_integration)
-            .auth(self.bearer_auth_id)
+            .integration(self.bearer_integration)  # type: ignore[attr-defined]
+            .auth(self.bearer_auth_id)  # type: ignore[attr-defined]
             .get(endpoint, query=query)
             .json()
         )
@@ -329,15 +339,11 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         return RetryPolicy(**kwargs)
 
     @abstractmethod
-    def _retrieve_data(self, data_source: ToucanDataSource):
+    def _retrieve_data(self, data_source: DS):
         """Main method to retrieve a pandas dataframe"""
 
     @decorate_func_with_retry
-    def get_df(
-        self,
-        data_source: ToucanDataSource,
-        permissions: Optional[dict] = None,
-    ) -> pd.DataFrame:
+    def get_df(self, data_source: DS, permissions: dict | None = None) -> pd.DataFrame:
         """
         Method to retrieve the data as a pandas dataframe
         filtered by permissions
@@ -348,17 +354,19 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
         if permissions is not None:
             permissions_query = PandasConditionTranslator.translate(permissions)
-            permissions_query = apply_query_parameters(permissions_query, data_source.parameters)
+            permissions_query = apply_query_parameters(
+                permissions_query, data_source.parameters or {}
+            )
             res = res.query(permissions_query)
         return res
 
     def get_slice(
         self,
-        data_source: ToucanDataSource,
-        permissions: Optional[dict] = None,
+        data_source: DS,
+        permissions: dict | None = None,
         offset: int = 0,
-        limit: Optional[int] = None,
-        get_row_count: Optional[bool] = False,
+        limit: int | None = None,
+        get_row_count: bool | None = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe
@@ -383,7 +391,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
             ),
         )
 
-    def explain(self, data_source: ToucanDataSource, permissions: Optional[dict] = None):
+    def explain(self, data_source: DS, permissions: dict | None = None):
         """Method to give metrics about the query"""
         return None
 
@@ -430,7 +438,7 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         return self.json()
 
-    def _get_unique_datasource_identifier(self, data_source: ToucanDataSource) -> dict:
+    def _get_unique_datasource_identifier(self, data_source: DS) -> dict:
         # By default we don't know which variable syntax is be supported by the inheriting connector,
         # so calling `nosql_apply_parameters_to_query` is wrong and will produce the same cache key
         # for different queries when using custom variable syntax !
@@ -439,10 +447,10 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
 
     def get_cache_key(
         self,
-        data_source: Optional[ToucanDataSource] = None,
-        permissions: Optional[dict] = None,
+        data_source: DS | None = None,
+        permissions: dict | None = None,
         offset: int = 0,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> str:
         """
         Generate a unique identifier (str) for a given connector's configuration
@@ -452,7 +460,9 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         """
         unique_identifier = {
             'connector': self.get_unique_identifier(),
-            'permissions': nosql_apply_parameters_to_query(permissions, data_source.parameters)
+            'permissions': nosql_apply_parameters_to_query(
+                permissions or {}, data_source.parameters
+            )
             if data_source
             else permissions,
             'offset': offset,
@@ -470,37 +480,38 @@ class ToucanConnector(BaseModel, metaclass=ABCMeta):
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
         return string_uid
 
-    def describe(self, data_source: ToucanDataSource):
+    def describe(self, data_source: DS):
         """ """
 
 
-TableInfo = Dict[str, Union[str, List[Dict[str, str]]]]
+TableInfo = dict[str, Union[str, list[dict[str, str]]]]
 
 
 class DiscoverableConnector(ABC):
     @abstractmethod
-    def get_model(self, db_name: str | None = None) -> List[TableInfo]:
+    def get_model(self, db_name: str | None = None) -> list[TableInfo]:
         """Tries to get all tables that are available for the connector"""
 
-    def get_model_with_info(self, db_name: str | None = None) -> Tuple[List[TableInfo], Dict]:
+    def get_model_with_info(self, db_name: str | None = None) -> tuple[list[TableInfo], dict]:
         """Tries to get all tables that are available for the connector
         and gives back some infos about what happened"""
         return (self.get_model(db_name=db_name), {})
 
     @staticmethod
     def format_db_model(
-        unformatted_db_tree: List[Tuple[str, str, str, str, List[Dict[str, str]]]]
-    ) -> List[TableInfo]:
+        # db, schema, type, name, columns as dict or json string
+        unformatted_db_tree: list[tuple[str, str, str, str, list[dict[str, str]] | str]]
+    ) -> list[TableInfo]:
         if not unformatted_db_tree:
             return []
         df = pd.DataFrame(unformatted_db_tree)
-        df.columns = ['database', 'schema', 'type', 'name', 'columns']
+        df.columns = ['database', 'schema', 'type', 'name', 'columns']  # type:ignore[assignment]
         try:  # if columns is a string
             df['columns'] = df['columns'].apply(json.loads)
         except TypeError:  # else ignore
             pass
         return (
-            df.groupby(by=['schema', 'database', 'type', 'name'])['columns']
+            df.groupby(by=['schema', 'database', 'type', 'name'])['columns']  # type: ignore[return-value]
             .apply(sum)
             .reset_index()
             .to_dict('records')
