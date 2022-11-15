@@ -511,7 +511,7 @@ def test_describe(
 ):
     cm = SnowflakeoAuth2Connector.get_connection_manager()
     mocked_common_describe = mocker.patch(
-        'toucan_connectors.snowflake.snowflake_connector.SnowflakeCommon.describe',
+        'toucan_connectors.snowflake_common.SnowflakeCommon.describe',
         return_value={'toto': 'int', 'tata': 'str'},
     )
     snowflake_oauth2_connector.describe(snowflake_oauth2_datasource)
