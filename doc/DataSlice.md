@@ -13,10 +13,11 @@ Below is the metadata list and a note explaining how they are calculated.
     * `limit` extracted from the query itself
     * `offset` extracted from the query itself
 
+* `pagination_info`: A `PaginationInfo` instances, containing information about pagination.
+  See [`PaginationInfo.md`](PaginationInfo.md) for reference.
+
 * `stats` (`DataStats`), it contains various statistics computed from the query execution for example:
 
-    * `total_rows` (`int`): total rows returned by a user query.
-    * `total_returned_rows` (`int`): total of rows returned in a slice of results.
     * `query_generation_time` (`float`): in seconds, the time to modify/create a query to get just the slice and start the process to request external data.
     * `data_extraction_time` (`float`): in seconds, the time to request the result of the modified query from external service.
     * `data_conversion_time` (`float`): in seconds, the time to convert results in a `pandas.DataFrame`.
@@ -31,10 +32,6 @@ Below is the metadata list and a note explaining how they are calculated.
 
 * `stats`: this object collects various stats such as execution times, sizes, row numbers etc..
 
-    * `total_rows`:
-        * Check if the input “data” query is a select query
-        * build a “count” query from the datasource’s “data” query. The method wraps the initial query as such → `select count(*) from (<original-query>);`
-        * Execute both queries (“data” & “count”) in parallel and store the result.
     * `total_returned_rows`: this metric is retrieved using cursor.execute().rowcount
     * `df_memory_size`: computed using pandas.DataFrame().memory_usage().sum()
     * `query_generation_time`:

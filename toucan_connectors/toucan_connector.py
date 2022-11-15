@@ -52,18 +52,16 @@ class Category(str, Enum):
 
 
 class DataSlice(NamedTuple):
-    """
-    A detailed doc is available here: https://toucantoco.atlassian.net/wiki/spaces/TTA/pages/3018784933/Snowflake+-+Query+execution+metadata
-    for explanations about metadata available in the DataSlice object.
+    """Extracted data enriched with additional metadata.
+
+    See the documentation (DataSlice.md) for details.
     """
 
     df: pd.DataFrame  # the dataframe of the slice
-    # Information about pagination
-    pagination_info: PaginationInfo
+    pagination_info: PaginationInfo  # Information about pagination
     input_parameters: dict | None = None
     stats: DataStats | None = None
-    # TODO: name is kinda misleading. what others information than
-    # `columns` will it contain ?
+    # TODO: name is kinda misleading. what others information than `columns` will it contain ?
     query_metadata: QueryMetadata | None = None
 
 
