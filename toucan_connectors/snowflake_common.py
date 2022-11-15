@@ -58,18 +58,18 @@ class SfDataSource(ToucanDataSource):
 
 
 def build_database_model_extraction_query() -> str:
-    return """select t.table_catalog as database, t.table_schema as schema,
-    CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END as type,
-    t.table_name as name,
-    ARRAY_AGG(object_construct('name', c.column_name, 'type', c.data_type)) as columns
-    from
+    return """SELECT t.table_catalog AS database, t.table_schema AS schema,
+    CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END AS type,
+    t.table_name AS name,
+    ARRAY_AGG(object_construct('name', c.column_name, 'type', c.data_type)) AS columns
+    FROM
         information_schema.tables t
-    inner join information_schema.columns c on
-        t.table_name = c.table_name and t.table_schema = c.table_schema
-    where t.table_type in ('BASE TABLE', 'VIEW')
-    and t.table_schema not in  ('PG_CATALOG', 'INFORMATION_SCHEMA', 'PG_INTERNAL')
-    and t.table_name not in ('LOAD_HISTORY')
-    group by t.table_catalog, t.table_schema, t.table_name, t.table_type;"""
+    INNER JOIN information_schema.columns c ON
+        t.table_name = c.table_name AND t.table_schema = c.table_schema
+    WHERE t.table_type IN ('BASE TABLE', 'VIEW')
+    AND t.table_schema NOT IN  ('PG_CATALOG', 'INFORMATION_SCHEMA', 'PG_INTERNAL')
+    AND t.table_name NOT IN ('LOAD_HISTORY')
+    GROUP BY t.table_catalog, t.table_schema, t.table_name, t.table_type;"""
 
 
 class SnowflakeCommon:
