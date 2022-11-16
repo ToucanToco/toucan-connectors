@@ -335,7 +335,7 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
         database: str | None = None,
         as_df: Literal[True] = ...,
     ) -> pd.DataFrame:
-        ...
+        ...  # pragma: no cover
 
     @overload
     def _execute_query(
@@ -347,7 +347,7 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
         database: str | None = None,
         as_df: Literal[False],
     ) -> list[dict]:
-        ...
+        ...  # pragma: no cover
 
     def _execute_query(
         self,
@@ -374,7 +374,7 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
     def _get_warehouses(self, warehouse_name: str | None = None) -> list[str]:
         query = 'SHOW WAREHOUSES'
         if warehouse_name:
-            query += f"LIKE '{warehouse_name}'"
+            query += f" LIKE '{warehouse_name}'"
 
         result = self._execute_query(query, warehouse=warehouse_name)
         return result['name'].to_list() if 'name' in result.columns else []
@@ -382,7 +382,7 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
     def _get_databases(self, database_name: str | None = None) -> list[str]:
         query = 'SHOW DATABASES'
         if database_name:
-            query += f"LIKE '{database_name}'"
+            query += f" LIKE '{database_name}'"
 
         result = self._execute_query(query, database=database_name)
         return result['name'].to_list() if 'name' in result.columns else []
@@ -411,7 +411,7 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
         limit: int | None = None,
         get_row_count: bool | None = False,
     ) -> DataSlice:
-        # FIXME: are permissions ignored for the snowflake connector ?
+        # We assume permissions have been applied earlier
         df = self._fetch_data(data_source, offset=offset, limit=limit)
         return DataSlice(df=df, stats=DataStats(total_returned_rows=len(df)))
 
