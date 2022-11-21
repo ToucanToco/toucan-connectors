@@ -104,7 +104,6 @@ class ToucanDataSource(BaseModel, Generic[C]):
         validate_assignment = True
 
     @classmethod
-    # def get_form(cls, connector: Type['ToucanConnector'], current_config):
     def get_form(cls, connector: C, current_config):
         """
         Method to retrieve the form with a current config
