@@ -537,54 +537,69 @@ def test_get_unique_datasource_identifier():
     ) != another_snowflake_connector.get_cache_key(datasource3)
 
 
-def test_get_model_single_db(
-    snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor, mocker: MockerFixture
-):
-    snowflake_cursor.set_return_value(
+_EXPECTED_MODEL = {
+    'name': 'REGION',
+    'schema': 'TPCH_SF1000',
+    'type': 'table',
+    'columns': [
+        {'name': 'R_COMMENT', 'type': 'TEXT'},
+        {'name': 'R_COMMENT', 'type': 'TEXT'},
+        {'name': 'R_NAME', 'type': 'TEXT'},
+        {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+        {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+        {'name': 'R_NAME', 'type': 'TEXT'},
+        {'name': 'R_COMMENT', 'type': 'TEXT'},
+        {'name': 'R_NAME', 'type': 'TEXT'},
+        {'name': 'R_NAME', 'type': 'TEXT'},
+        {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+        {'name': 'R_COMMENT', 'type': 'TEXT'},
+        {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
+    ],
+}
+
+
+@pytest.fixture
+def dbs() -> list[str]:
+    return ['OTHER_DB', 'SNOWFLAKE_SAMPLE_DATA']
+
+
+@pytest.fixture
+def mocked_get_model(snowflake_cursor: _SFCursor, mocker: MockerFixture, dbs: list[str]):
+    snowflake_cursor.set_side_effect(
         [
-            {
-                'DATABASE': 'SNOWFLAKE_SAMPLE_DATA',
-                'SCHEMA': 'TPCH_SF1000',
-                'TYPE': 'table',
-                'NAME': 'REGION',
-                'COLUMNS': '[\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": '
-                '"R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": '
-                '"TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    '
-                '"name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_NAME",'
-                '\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },'
-                '\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",'
-                '\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  '
-                '},\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": '
-                '"R_REGIONKEY",\n    "type": "NUMBER"\n  }\n]',
-            }
+            [
+                {
+                    'DATABASE': db,
+                    'SCHEMA': 'TPCH_SF1000',
+                    'TYPE': 'table',
+                    'NAME': 'REGION',
+                    'COLUMNS': '[\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": '
+                    '"R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": '
+                    '"TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    '
+                    '"name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_NAME",'
+                    '\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },'
+                    '\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",'
+                    '\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  '
+                    '},\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": '
+                    '"R_REGIONKEY",\n    "type": "NUMBER"\n  }\n]',
+                }
+            ]
+            for db in dbs
         ]
     )
-    mocker.patch.object(
-        SnowflakeConnector, '_get_databases', return_value=['SNOWFLAKE_SAMPLE_DATA']
-    )
+    mocker.patch.object(SnowflakeConnector, '_get_databases', return_value=dbs)
+
+
+@pytest.mark.usefixtures('mocked_get_model')
+def test_get_model_single_db(snowflake_connector: SnowflakeConnector):
+    res = snowflake_connector.get_model('OTHER_DB')
+    assert res == [{**_EXPECTED_MODEL, 'database': 'OTHER_DB'}]
+
+
+@pytest.mark.usefixtures('mocked_get_model')
+def test_get_model_all_dbs(snowflake_connector: SnowflakeConnector, dbs: list[str]):
     res = snowflake_connector.get_model()
-    assert res == [
-        {
-            'name': 'REGION',
-            'schema': 'TPCH_SF1000',
-            'database': 'SNOWFLAKE_SAMPLE_DATA',
-            'type': 'table',
-            'columns': [
-                {'name': 'R_COMMENT', 'type': 'TEXT'},
-                {'name': 'R_COMMENT', 'type': 'TEXT'},
-                {'name': 'R_NAME', 'type': 'TEXT'},
-                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
-                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
-                {'name': 'R_NAME', 'type': 'TEXT'},
-                {'name': 'R_COMMENT', 'type': 'TEXT'},
-                {'name': 'R_NAME', 'type': 'TEXT'},
-                {'name': 'R_NAME', 'type': 'TEXT'},
-                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
-                {'name': 'R_COMMENT', 'type': 'TEXT'},
-                {'name': 'R_REGIONKEY', 'type': 'NUMBER'},
-            ],
-        }
-    ]
+    assert res == [{**_EXPECTED_MODEL, 'database': db} for db in dbs]
 
 
 def test_get_model_exception(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
