@@ -334,6 +334,7 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
         warehouse: str | None = None,
         database: str | None = None,
         as_df: Literal[True] = ...,
+        snowflake_connection: SnowflakeConnection | None = None,
     ) -> pd.DataFrame:
         ...  # pragma: no cover
 
@@ -346,6 +347,7 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
         warehouse: str | None = None,
         database: str | None = None,
         as_df: Literal[False],
+        snowflake_connection: SnowflakeConnection | None = None,
     ) -> list[dict]:
         ...  # pragma: no cover
 
@@ -357,14 +359,20 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
         warehouse: str | None = None,
         database: str | None = None,
         as_df: bool = True,
+        snowflake_connection: SnowflakeConnection | None = None,
     ) -> pd.DataFrame | list[dict]:
-        with self._get_connection(database=database, warehouse=warehouse) as conn:
+        def _execute(conn: SnowflakeConnection) -> pd.DataFrame | list[dict]:
             curs = conn.cursor(SfDictCursor)
             query_result = curs.execute(query, parameters)
             assert query_result is not None
             # snowflake typing is incomplete for DictCursor
             results: list[dict] = query_result.fetchall()  # type:ignore[assignment]
             return pd.DataFrame(results) if as_df else results
+
+        if snowflake_connection is not None:
+            return _execute(snowflake_connection)
+        with self._get_connection(database=database, warehouse=warehouse) as conn:
+            return _execute(conn)
 
     def _describe_query(self, query: str) -> dict[str, str]:
         with self._get_connection() as conn:
@@ -398,7 +406,12 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
         prepared_query, prepared_params = SqlQueryHelper.prepare_limit_query(
             data_source.query, data_source.parameters, offset=offset, limit=limit
         )
-        return self._execute_query(prepared_query, prepared_params)
+        return self._execute_query(
+            prepared_query,
+            prepared_params,
+            database=data_source.database,
+            warehouse=data_source.warehouse,
+        )
 
     def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         return self._fetch_data(data_source)
@@ -430,10 +443,25 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
         }
 
     def get_model(self, db_name: str | None = None) -> list[TableInfo]:
-        values: list[tuple] = [
-            tuple(elem.values())
-            for elem in self._execute_query(
-                _DB_MODEL_EXTRACTION_QUERY, database=db_name, as_df=False
-            )
-        ]
+        if db_name is None:
+            databases = self._get_databases()
+        else:
+            databases = [db_name]
+
+        # We need to execute the query for every database in case None is specified
+        values: list[tuple] = []
+        for db in databases:
+            with self._get_connection(database=db) as conn:
+                values.extend(
+                    [
+                        tuple(elem.values())
+                        for elem in self._execute_query(
+                            _DB_MODEL_EXTRACTION_QUERY,
+                            database=db_name,
+                            as_df=False,
+                            snowflake_connection=conn,
+                        )
+                    ]
+                )
+
         return self.format_db_model(values)  # type: ignore[arg-type]

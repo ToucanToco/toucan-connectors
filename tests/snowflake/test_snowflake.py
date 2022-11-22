@@ -537,7 +537,9 @@ def test_get_unique_datasource_identifier():
     ) != another_snowflake_connector.get_cache_key(datasource3)
 
 
-def test_get_model(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
+def test_get_model_single_db(
+    snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor, mocker: MockerFixture
+):
     snowflake_cursor.set_return_value(
         [
             {
@@ -556,6 +558,9 @@ def test_get_model(snowflake_connector: SnowflakeConnector, snowflake_cursor: _S
                 '"R_REGIONKEY",\n    "type": "NUMBER"\n  }\n]',
             }
         ]
+    )
+    mocker.patch.object(
+        SnowflakeConnector, '_get_databases', return_value=['SNOWFLAKE_SAMPLE_DATA']
     )
     res = snowflake_connector.get_model()
     assert res == [
