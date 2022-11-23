@@ -2,6 +2,7 @@
 isort = isort toucan_connectors tests
 black = black toucan_connectors tests
 flake8 = flake8 toucan_connectors tests
+mypy = mypy
 
 .PHONY: clean
 clean:
@@ -24,6 +25,7 @@ lint:
 	$(flake8)
 	$(isort) --check-only
 	$(black) --check
+	$(mypy)
 
 .PHONY: test
 test:

@@ -16,11 +16,9 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
 )
-from toucan_connectors.snowflake.snowflake_connector import (
-    AuthenticationMethod,
-    SnowflakeDataSource,
-)
+from toucan_connectors.snowflake.snowflake_connector import AuthenticationMethod
 from toucan_connectors.snowflake_common import (
+    SfDataSource,
     SnowflakeCommon,
     build_database_model_extraction_query,
 )
@@ -41,7 +39,7 @@ if not connection_manager:
     )
 
 
-class SnowflakeoAuth2DataSource(SnowflakeDataSource):
+class SnowflakeoAuth2DataSource(SfDataSource):
     @classmethod
     def _get_databases(cls, connector: 'SnowflakeoAuth2Connector'):
         return connector._get_databases()
@@ -231,7 +229,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
         return string_uid
 
-    def _get_unique_datasource_identifier(self, data_source: SnowflakeDataSource) -> dict:
+    def _get_unique_datasource_identifier(self, data_source: SnowflakeoAuth2DataSource) -> dict:
         return SnowflakeCommon().render_datasource(data_source)
 
     def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
@@ -239,7 +237,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             result = SnowflakeCommon().get_warehouses(connection, warehouse_name)
         return result
 
-    def _set_warehouse(self, data_source: SnowflakeDataSource):
+    def _set_warehouse(self, data_source: SnowflakeoAuth2DataSource):
         warehouse = data_source.warehouse
         if self.default_warehouse and not warehouse:
             data_source.warehouse = self.default_warehouse
@@ -259,7 +257,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
 
     def get_slice(
         self,
-        data_source: SnowflakeDataSource,
+        data_source: SnowflakeoAuth2DataSource,
         permissions: Optional[dict] = None,
         offset: int = 0,
         limit: Optional[int] = None,
@@ -277,10 +275,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
             )
         return result
 
-    def describe(
-        self,
-        data_source: SnowflakeDataSource,
-    ) -> Dict[str, str]:
+    def describe(self, data_source: SnowflakeoAuth2DataSource) -> Dict[str, str]:
         data_source = self._set_warehouse(data_source)
         with self._get_connection(data_source.database, data_source.warehouse) as connection:
             result = SnowflakeCommon().describe(connection, data_source.query)

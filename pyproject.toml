@@ -90,6 +90,12 @@ python-graphql-client = ">=0.4.3,<1"
 clickhouse-driver = ">=0.2.3,<1"
 lxml = "4.9.1"
 zeep = "^4.1.0"
+mypy = "^0.991"
+pandas-stubs = "^1.5.1.221024"
+types-requests = "^2.28.11.4"
+types-simplejson = "^3.18.0.0"
+types-python-slugify = "^7.0.0.1"
+types-pyopenssl = "^22.1.0.2"
 
 [tool.poetry.extras]
 adobe = ["adobe-analytics"]
@@ -167,3 +173,16 @@ all = [
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+python_version = "3.10"
+plugins = "pydantic.mypy"
+follow_imports = "silent"
+show_error_codes = true
+warn_no_return = true
+warn_unused_configs = true
+warn_unused_ignores = true
+files = [
+      "toucan_connectors/toucan_connector.py",
+      "toucan_connectors/snowflake/snowflake_connector.py"
+]
