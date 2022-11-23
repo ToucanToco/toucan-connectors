@@ -15,6 +15,7 @@ from snowflake.connector import SnowflakeConnection
 from snowflake.connector.cursor import DictCursor as SfDictCursor
 
 from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.snowflake_common import (
     build_database_model_extraction_query,
     type_code_mapping,
@@ -23,7 +24,6 @@ from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     Category,
     DataSlice,
-    DataStats,
     DiscoverableConnector,
     TableInfo,
     ToucanConnector,
@@ -426,7 +426,12 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
     ) -> DataSlice:
         # We assume permissions have been applied earlier
         df = self._fetch_data(data_source, offset=offset, limit=limit)
-        return DataSlice(df=df, stats=DataStats(total_returned_rows=len(df)))
+        return DataSlice(
+            df=df,
+            pagination_info=build_pagination_info(
+                offset=0, limit=limit, total_rows=None, retrieved_rows=len(df)
+            ),
+        )
 
     def describe(self, data_source: SnowflakeDataSource) -> dict[str, str]:
         return self._describe_query(data_source.query)

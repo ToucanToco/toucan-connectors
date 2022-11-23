@@ -18,6 +18,7 @@ from toucan_connectors.mongo.mongo_connector import (
     _format_explain_result,
     normalize_query,
 )
+from toucan_connectors.pagination import OffsetLimitInfo
 from toucan_connectors.toucan_connector import MalformedVersion, UnavailableVersion
 
 
@@ -241,30 +242,30 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
 def test_get_slice(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.get_slice(datasource)
-    assert res.stats.total_returned_rows == 5
-    assert res.stats.total_rows == 5
+    assert res.pagination_info.pagination_info.total_rows == 5
+    assert res.pagination_info.parameters == OffsetLimitInfo(offset=0, limit=None)
     assert res.df.shape == (5, 5)
     assert res.df['country'].tolist() == ['France', 'France', 'England', 'Germany', 'USA']
 
     # With a limit
     res = mongo_connector.get_slice(datasource, limit=1)
     expected = pd.DataFrame({'country': ['France'], 'language': ['French'], 'value': [20]})
-    assert res.stats.total_returned_rows == 5
-    assert res.stats.total_rows == 5
+    assert res.pagination_info.pagination_info.total_rows == 5
+    assert res.pagination_info.parameters == OffsetLimitInfo(offset=0, limit=1)
     assert res.df.shape == (1, 5)
     assert res.df[['country', 'language', 'value']].equals(expected)
 
-    # With a offset
+    # With an offset
     res = mongo_connector.get_slice(datasource, offset=1)
-    assert res.stats.total_returned_rows == 5
-    assert res.stats.total_rows == 5
+    assert res.pagination_info.pagination_info.total_rows == 5
+    assert res.pagination_info.parameters == OffsetLimitInfo(offset=1, limit=None)
     assert res.df.shape == (4, 5)
     assert res.df['country'].tolist() == ['France', 'England', 'Germany', 'USA']
 
     # With both
     res = mongo_connector.get_slice(datasource, offset=1, limit=1)
-    assert res.stats.total_returned_rows == 5
-    assert res.stats.total_rows == 5
+    assert res.pagination_info.pagination_info.total_rows == 5
+    assert res.pagination_info.parameters == OffsetLimitInfo(offset=1, limit=1)
     assert res.df.shape == (1, 5)
     assert res.df.loc[0, 'country'] == 'France'
 
@@ -280,8 +281,8 @@ def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
         ],
     )
     dataslice = mongo_connector.get_slice(datasource, limit=1)
-    assert dataslice.stats.total_returned_rows == 4
-    assert dataslice.stats.total_rows == 4
+    assert dataslice.pagination_info.pagination_info.total_rows == 4
+    assert dataslice.pagination_info.parameters == OffsetLimitInfo(offset=0, limit=1)
     assert dataslice.df.shape == (1, 1)
     assert dataslice.df.iloc[0].pays in ['France', 'England', 'Germany']
 
@@ -289,7 +290,8 @@ def test_get_slice_with_group_agg(mongo_connector, mongo_datasource):
 def test_get_slice_no_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     ds = mongo_connector.get_slice(datasource, limit=None)
-    assert ds.stats.total_returned_rows == 5
+    assert ds.pagination_info.pagination_info.total_rows == 5
+    assert ds.pagination_info.parameters == OffsetLimitInfo(offset=0, limit=None)
     expected = pd.DataFrame(
         {
             'country': ['France', 'France', 'England', 'Germany', 'USA'],
@@ -305,7 +307,8 @@ def test_get_slice_no_limit(mongo_connector, mongo_datasource):
 def test_get_slice_empty(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'unknown'})
     dataslice = mongo_connector.get_slice(datasource, limit=1)
-    assert dataslice.stats.total_returned_rows == 0
+    assert dataslice.pagination_info.pagination_info.total_rows == 0
+    assert dataslice.pagination_info.parameters == OffsetLimitInfo(offset=0, limit=1)
     assert dataslice.df.shape == (0, 0)
 
 

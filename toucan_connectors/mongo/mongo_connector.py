@@ -10,9 +10,9 @@ from pydantic import Field, SecretStr, create_model, validator
 from toucan_connectors.common import ConnectorStatus, nosql_apply_parameters_to_query
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
+from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.toucan_connector import (
     DataSlice,
-    DataStats,
     ToucanConnector,
     ToucanDataSource,
     UnavailableVersion,
@@ -290,7 +290,10 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
             except Exception:
                 pass
         return DataSlice(
-            df, stats=DataStats(total_returned_rows=total_count, total_rows=total_count)
+            df,
+            pagination_info=build_pagination_info(
+                offset=offset, limit=limit, retrieved_rows=len(df), total_rows=total_count
+            ),
         )
 
     def get_slice_with_regex(
@@ -328,7 +331,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         data_source.query.append({'$match': {'$expr': search_steps}})
         data_source.query.append({'$unset': ['_id']})
 
-        return self.get_slice(data_source, permissions, limit=limit, offset=offset)
+        return self.get_slice(data_source, permissions, limit=limit, offset=offset or 0)
 
     def get_df_with_regex(
         self,

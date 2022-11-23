@@ -20,6 +20,7 @@ from toucan_connectors.common import (
     nosql_apply_parameters_to_query,
 )
 from toucan_connectors.json_wrapper import JsonWrapper
+from toucan_connectors.pagination import PaginationInfo, build_pagination_info
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.utils.datetime import sanitize_df_dates
 
@@ -32,8 +33,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 class DataStats(BaseModel):
-    total_rows: int | None = None
-    total_returned_rows: int | None = None
     query_generation_time: float | None = None
     data_extraction_time: float | None = None
     data_conversion_time: float | None = None
@@ -53,14 +52,13 @@ class Category(str, Enum):
 
 
 class DataSlice(NamedTuple):
-    """
-    A detailed doc is available here: https://toucantoco.atlassian.net/wiki/spaces/TTA/pages/3018784933/Snowflake+-+Query+execution+metadata
-    for explanations about metadata available in the DataSlice object.
+    """Extracted data enriched with additional metadata.
+
+    See the documentation (DataSlice.md) for details.
     """
 
     df: pd.DataFrame  # the dataframe of the slice
-    # TODO total_count field should be removed
-    total_count: int | None = None  # the length of the raw dataframe (without slicing)
+    pagination_info: PaginationInfo  # Information about pagination
     input_parameters: dict | None = None
     stats: DataStats | None = None
     # TODO: name is kinda misleading. what others information than `columns` will it contain ?
@@ -381,13 +379,15 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         """
         df = self.get_df(data_source, permissions)
         truncated_df = df[offset : offset + limit] if limit is not None else df[offset:]
+
+        pagination_info = build_pagination_info(
+            offset=offset, limit=limit, retrieved_rows=len(truncated_df), total_rows=len(df)
+        )
+
         return DataSlice(
             truncated_df,
-            stats=DataStats(
-                total_rows=len(df),
-                total_returned_rows=len(truncated_df),
-                df_memory_size=df.memory_usage().sum(),
-            ),
+            pagination_info=pagination_info,
+            stats=DataStats(df_memory_size=df.memory_usage().sum()),
         )
 
     def explain(self, data_source: DS, permissions: dict | None = None):

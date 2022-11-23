@@ -248,7 +248,7 @@ def test_retrieve_data_slice_offset_limit(
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=5, limit=3)
     assert 11 == len(df_result.df)
-    assert 11 == df_result.stats.total_returned_rows
+    assert df_result.pagination_info.pagination_info.type == 'unknown_size'
 
 
 @pytest.mark.usefixtures('snowflake_retrieve_data')

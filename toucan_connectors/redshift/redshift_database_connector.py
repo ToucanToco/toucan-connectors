@@ -11,11 +11,11 @@ from pydantic import Field, SecretStr, create_model, root_validator, validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.redshift.utils import build_database_model_extraction_query, types_map
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
-    DataStats,
     DiscoverableConnector,
     TableInfo,
     ToucanConnector,
@@ -283,7 +283,12 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
 
         return DataSlice(
             df,
-            stats=DataStats(total_returned_rows=total_returned_rows, total_rows=total_rows),
+            pagination_info=build_pagination_info(
+                offset=offset,
+                limit=limit,
+                total_rows=total_rows,
+                retrieved_rows=total_returned_rows,
+            ),
         )
 
     @staticmethod

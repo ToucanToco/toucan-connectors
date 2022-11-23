@@ -3,6 +3,11 @@ from unittest.mock import Mock, patch
 import pytest
 from redshift_connector.error import InterfaceError, OperationalError
 
+from toucan_connectors.pagination import (
+    KnownSizeDatasetPaginationInfo,
+    OffsetLimitInfo,
+    PaginationInfo,
+)
 from toucan_connectors.redshift.redshift_database_connector import (
     ORDERED_KEYS,
     AuthenticationMethod,
@@ -10,7 +15,7 @@ from toucan_connectors.redshift.redshift_database_connector import (
     RedshiftConnector,
     RedshiftDataSource,
 )
-from toucan_connectors.toucan_connector import DataSlice, DataStats
+from toucan_connectors.toucan_connector import DataSlice
 
 CLUSTER_IDENTIFIER: str = 'toucan_test'
 DATABASE_NAME: str = 'toucan'
@@ -349,7 +354,12 @@ def test_redshiftconnector_get_slice(mock_retreive_data, redshift_datasource, re
         data_source=redshift_datasource, permissions=None, offset=0, limit=1, get_row_count=True
     )
     assert result == DataSlice(
-        df=mock_df, total_count=None, stats=DataStats(total_rows=10, total_returned_rows=1)
+        df=mock_df,
+        pagination_info=PaginationInfo(
+            parameters=OffsetLimitInfo(offset=0, limit=1),
+            pagination_info=KnownSizeDatasetPaginationInfo(total_rows=10, is_last_page=False),
+            next_page=OffsetLimitInfo(offset=1, limit=1),
+        ),
     )
 
 
@@ -363,7 +373,11 @@ def test_redshiftconnector_get_slice_without_count(
     mock_retreive_data.return_value = mock_df
     result = redshift_connector.get_slice(data_source=redshift_datasource)
     assert result == DataSlice(
-        df=mock_df, total_count=None, stats=DataStats(total_rows=10, total_returned_rows=10)
+        df=mock_df,
+        pagination_info=PaginationInfo(
+            parameters=OffsetLimitInfo(offset=0, limit=None),
+            pagination_info=KnownSizeDatasetPaginationInfo(total_rows=10, is_last_page=True),
+        ),
     )
 
 
@@ -374,7 +388,11 @@ def test_redshiftconnector_get_slice_df_is_none(
     mock_retreive_data.return_value = None
     result = redshift_connector.get_slice(data_source=redshift_datasource)
     assert result == DataSlice(
-        df=None, total_count=None, stats=DataStats(total_rows=0, total_returned_rows=0)
+        df=None,
+        pagination_info=PaginationInfo(
+            parameters=OffsetLimitInfo(offset=0, limit=None),
+            pagination_info=KnownSizeDatasetPaginationInfo(total_rows=0, is_last_page=True),
+        ),
     )
 
 

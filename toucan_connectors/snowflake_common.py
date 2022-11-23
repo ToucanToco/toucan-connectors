@@ -8,6 +8,7 @@ import pandas as pd
 from pydantic import Field, constr
 from snowflake.connector import DictCursor, SnowflakeConnection
 
+from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import DataSlice, DataStats, QueryMetadata, ToucanDataSource
@@ -207,7 +208,24 @@ class SnowflakeCommon:
                     raise future.exception()
                 else:
                     self.logger.info('query finish')
-        return DataSlice(self.data)
+
+        if run_count_request:
+            total_rows = self.total_rows_count
+        # FIXME: Buggy in case the length of the dataset is a multiple of offset
+        elif limit is None or (limit and len(self.data)) < limit:
+            total_rows = (offset or 0) + len(self.data)
+        else:
+            total_rows = None
+
+        return DataSlice(
+            self.data,
+            pagination_info=build_pagination_info(
+                offset=offset or 0,
+                limit=limit,
+                retrieved_rows=len(self.data),
+                total_rows=total_rows,
+            ),
+        )
 
     def fetch_data(
         self,
@@ -216,7 +234,7 @@ class SnowflakeCommon:
         offset: Optional[int] = None,
         limit: Optional[int] = None,
         get_row_count: bool = False,
-    ) -> pd.DataFrame:
+    ) -> DataSlice:
         extraction_start = timer()
         if data_source.database != connection.database:
             self.logger.info(f'Connection changed to use database {connection.database}')
@@ -230,12 +248,12 @@ class SnowflakeCommon:
         )
         self.data_extraction_time = timer() - extraction_start
 
-        return ds.df
+        return ds
 
     def retrieve_data(
         self, connection: SnowflakeConnection, data_source: SfDataSource, get_row_count: bool = None
     ) -> pd.DataFrame:
-        return self.fetch_data(connection, data_source, get_row_count=get_row_count)
+        return self.fetch_data(connection, data_source, get_row_count=get_row_count).df
 
     def get_slice(
         self,
@@ -251,12 +269,10 @@ class SnowflakeCommon:
             query_generation_time=self.query_generation_time,
             data_extraction_time=self.data_extraction_time,
             data_conversion_time=self.data_conversion_time,
-            total_returned_rows=len(result),
-            df_memory_size=result.memory_usage().sum(),
-            total_rows=self.total_rows_count,
+            df_memory_size=result.df.memory_usage().sum(),
         )
         return DataSlice(
-            df=result,
+            df=result.df,
             query_metadata=QueryMetadata(columns=self.column_names_and_types),
             # In the case of user defined limit/offset, get the info
             # Not used for now
@@ -265,6 +281,7 @@ class SnowflakeCommon:
             #     'offset': SqlQueryHelper.extract_offset(data_source.query),
             # },
             stats=stats,
+            pagination_info=result.pagination_info,
         )
 
     def get_warehouses(

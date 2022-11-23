@@ -7,6 +7,7 @@ from cached_property import cached_property_with_ttl
 from pydantic import Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters, sanitize_query
+from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.toucan_connector import (
     DataSlice,
@@ -176,22 +177,11 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
             permissions_query = apply_query_parameters(permissions_query, data_source.parameters)
             df = df.query(permissions_query)
 
-        fetched_row_count = len(df)
         return DataSlice(
             df,
-            stats=DataStats(
-                total_returned_rows=fetched_row_count,
-                # FIXME: Dirty hack to make pagination work in previews. Currently, the FE considers
-                # that there are 0 rows if total_rows is null. At some point, we should probably
-                # implement cursor-based pagination.
-                #
-                # This is buggy if the total row count is actually equal to
-                # offset + fetched_row_count, because we will display a "next page" when there isn't
-                # one
-                total_rows=offset + fetched_row_count
-                if limit is None
-                else offset + fetched_row_count + 1,
-                df_memory_size=df.memory_usage().sum(),
+            stats=DataStats(df_memory_size=df.memory_usage().sum()),
+            pagination_info=build_pagination_info(
+                offset=offset, limit=limit, retrieved_rows=len(df), total_rows=None
             ),
         )
 
