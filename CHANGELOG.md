@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### [4.0.0] 2022-11-23
+
+### Breaking changes
+
+Pagination information has been refactored. The `DataSlice` and `DataStats` interfaces have been changed:
+
+* `DataStats` no longer has `total_rows` and `total_returned_rows` fields.
+* `DataSlice` now has a `pagination_info` field in its root. This field is required and contains a `PaginationInfo` model.
+
+For information about the `PaginationInfo` model and how to interpret its contents, see the [documentation](doc/PaginationInfo.md).
+
 ### [3.25.0] 2022-11-23
 
 ### Changed
