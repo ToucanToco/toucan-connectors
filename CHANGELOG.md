@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### [3.25.0] 2022-11-23
+
+### Changed
+
+- Deps: Upper constraint on cryptography has been loosened from <37 -> <39
+- Snowflake: The snowflake connector has been refactored in order to prevent spawning threads
+  and connection pooling.
+
 ### [3.24.0] 2022-11-07
 
 ### Changed
