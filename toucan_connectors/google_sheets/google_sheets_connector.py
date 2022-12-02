@@ -30,6 +30,9 @@ class GoogleSheetsDataSource(ToucanDataSource):
     header_row: int = Field(
         0, title='Header row', description='Row of the header of the spreadsheet'
     )
+    dates_as_float: bool = Field(
+        False, title='Dates as floats', description='Render Date as Floats or String from the sheet'
+    )
 
     class Config:
         @staticmethod
@@ -136,6 +139,14 @@ class GoogleSheetsConnector(ToucanConnector):
         except GoogleApiClientError:
             return ConnectorStatus(status=False, error="Couldn't retrieve user infos")
 
+    def _render_date_time_option_from_sheet(self, data_source: GoogleSheetsDataSource) -> str:
+        """
+        Following the documentation, to prevent loading dates as double :
+        https://developers.google.com/sheets/api/reference/rest/v4/DateTimeRenderOption
+        We use FORMATTED_STRING to load as simple strings
+        """
+        return 'SERIAL_NUMBER' if data_source.dates_as_float else 'FORMATTED_STRING'
+
     def _retrieve_data(self, data_source: GoogleSheetsDataSource) -> pd.DataFrame:
 
         if data_source.sheet is None:
@@ -150,7 +161,9 @@ class GoogleSheetsConnector(ToucanConnector):
                 .get(
                     spreadsheetId=data_source.spreadsheet_id,
                     range=f"'{data_source.sheet}'",  # FIXME what will happen is the sheet name contains a single quote?
-                    dateTimeRenderOption='SERIAL_NUMBER',
+                    dateTimeRenderOption=self._render_date_time_option_from_sheet(
+                        data_source=data_source
+                    ),
                     majorDimension='ROWS',
                     valueRenderOption='UNFORMATTED_VALUE',
                 )

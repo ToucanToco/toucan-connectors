@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Feat: The connector `GoogleSheets` datasource now has an option called `Dates as Floats`, to see date time columns as strings or float when reading the sheet.
+
 ### [3.23.5] 2022-11-07
 
 ### Changed
