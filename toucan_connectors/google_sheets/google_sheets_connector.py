@@ -30,8 +30,8 @@ class GoogleSheetsDataSource(ToucanDataSource):
     header_row: int = Field(
         0, title='Header row', description='Row of the header of the spreadsheet'
     )
-    render_date_time: bool = Field(
-        False, title='Render DateTime', description='Render DateTime columns from the sheet'
+    dates_as_float: bool = Field(
+        False, title='Dates as floats', description='Render Date as Floats or String from the sheet'
     )
 
     class Config:
@@ -145,7 +145,7 @@ class GoogleSheetsConnector(ToucanConnector):
         https://developers.google.com/sheets/api/reference/rest/v4/DateTimeRenderOption
         We use FORMATTED_STRING to load as simple strings
         """
-        return 'SERIAL_NUMBER' if data_source.render_date_time else 'FORMATTED_STRING'
+        return 'SERIAL_NUMBER' if data_source.dates_as_float else 'FORMATTED_STRING'
 
     def _retrieve_data(self, data_source: GoogleSheetsDataSource) -> pd.DataFrame:
 

@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Feat: The connector `GoogleSheets` datasource now has an option called `Render DateTime`, to trigger date time rendering when reading a sheet dataset.
+- Feat: The connector `GoogleSheets` datasource now has an option called `Dates as Floats`, to see date time columns as strings or float when reading the sheet.
 
 ### [3.23.5] 2022-11-07
 
