@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Feat: The connector `GoogleSheets` datasource now has an option called `Render DateTime`, to trigger date time rendering when reading a sheet dataset.
+
 ### [3.23.5] 2022-11-07
 
 ### Changed
