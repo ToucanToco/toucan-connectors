@@ -150,7 +150,9 @@ class GoogleSheetsConnector(ToucanConnector):
                 .get(
                     spreadsheetId=data_source.spreadsheet_id,
                     range=f"'{data_source.sheet}'",  # FIXME what will happen is the sheet name contains a single quote?
-                    dateTimeRenderOption='SERIAL_NUMBER',
+                    # Following the documentation, to prevent loading dates as double :
+                    # https://developers.google.com/sheets/api/reference/rest/v4/DateTimeRenderOption
+                    dateTimeRenderOption='FORMATTED_STRING',
                     majorDimension='ROWS',
                     valueRenderOption='UNFORMATTED_VALUE',
                 )
