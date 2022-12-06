@@ -884,3 +884,76 @@ def test_get_cache_key_with_dates(mongo_connector, mongo_datasource):
     cache_key_str = mongo_connector.get_cache_key(datasource_with_str)
 
     assert cache_key_str != cache_key_date
+
+
+def test_add_default_null_on_switch_cases(mongo_connector):
+    """
+    We just test that this function add a 'default' key field when there is not
+    and leave it as it when there is one
+    """
+
+    query = [{'$match': {'something': 'else'}}]
+    assert mongo_connector.add_default_null_on_switch_cases_if_not_present(query) == query
+
+    query = [{'$match': {'$switch': {'branches': [], 'default': 'immortal'}}}]
+    assert mongo_connector.add_default_null_on_switch_cases_if_not_present(query) == query
+
+    query = [{'$match': {'$switch': {'branches': [{'ok': 'ko'}]}}}]
+    assert mongo_connector.add_default_null_on_switch_cases_if_not_present(query) == [
+        {'$match': {'$switch': {'branches': [{'ok': 'ko'}], 'default': None}}}
+    ]
+
+    query = [
+        {'$match': {'$switch': {'branches': [], 'default': 'alive'}}},
+        {
+            '$addFields': {
+                '_vqbTempMonth': {
+                    '$arrayElemAt': ['$_vqbTempArray', 1],
+                    '$switch': {
+                        'branches': [
+                            {'case': {'$eq': ['$_vqbTempMonth', '12']}, 'then': 'Dec'},
+                        ]
+                    },
+                },
+            }
+        },
+        {
+            '$addFields': {
+                '_vqbTempMonth': {
+                    '$switch': {
+                        'branches': [
+                            {'case': {'$eq': ['$_vqbTempMonth', '02']}, 'then': 'Feb'},
+                            {'case': {'$eq': ['$_vqbTempMonth', '12']}, 'then': 'Dec'},
+                        ]
+                    }
+                }
+            }
+        },
+    ]
+    assert mongo_connector.add_default_null_on_switch_cases_if_not_present(query) == [
+        {'$match': {'$switch': {'branches': [], 'default': 'alive'}}},  # <- still alive
+        {
+            '$addFields': {
+                '_vqbTempMonth': {
+                    '$arrayElemAt': ['$_vqbTempArray', 1],
+                    '$switch': {
+                        'branches': [{'case': {'$eq': ['$_vqbTempMonth', '12']}, 'then': 'Dec'}],
+                        'default': None,  # <- coucou
+                    },
+                }
+            }
+        },
+        {
+            '$addFields': {
+                '_vqbTempMonth': {
+                    '$switch': {
+                        'branches': [
+                            {'case': {'$eq': ['$_vqbTempMonth', '02']}, 'then': 'Feb'},
+                            {'case': {'$eq': ['$_vqbTempMonth', '12']}, 'then': 'Dec'},
+                        ],
+                        'default': None,  # <- re coucou
+                    }
+                }
+            }
+        },
+    ]
