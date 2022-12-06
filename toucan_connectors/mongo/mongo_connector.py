@@ -226,10 +226,34 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         self.validate_database(database)
         self.validate_collection(database, collection)
 
+    def add_default_null_on_switch_cases_if_not_present(self, query: list) -> list:
+        """
+        This method will just add a default key/value as None/null if there is
+        not a defined one from the given query
+        """
+
+        def _finditem(obj, key):
+            if key in obj:
+                return obj[key]
+            for k, v in obj.items():
+                if isinstance(v, dict):
+                    item = _finditem(v, key)
+                    if item is not None:
+                        return item
+
+        for q in query:
+            if sub_q := _finditem(q, '$switch'):
+                if isinstance(sub_q, dict) and 'default' not in sub_q.keys():
+                    sub_q['default'] = None
+
+        return query
+
     def _execute_query(self, data_source: MongoDataSource):
         self.validate_database_and_collection(data_source.database, data_source.collection)
         col = self.client[data_source.database][data_source.collection]
-        return col.aggregate(data_source.query)
+        return col.aggregate(
+            self.add_default_null_on_switch_cases_if_not_present(data_source.query)
+        )
 
     def _retrieve_data(self, data_source):
         data_source.query = normalize_query(data_source.query, data_source.parameters)
