@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Fix: On MongoConnector, we make sure the `$switch` aggregation should always have a `default` key
+  field set from the mongo query to prevent "PlanExecutor error".
+
 ### [3.23.6] 2022-12-02
 
 ### Changed
