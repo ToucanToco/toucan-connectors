@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [3.23.7] 2022-12-06
+
 ### Changed
 
 - Feat: The connector `GoogleSheets` datasource `Dates as Floats` attribute will be Selected as default.
