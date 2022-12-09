@@ -6,7 +6,8 @@
 * `name`: str, required
 * `auth_id`: str, required
 
-Note: this connector needs a `retrieve_token` function that will be given the `auth_id` and should return a valid token.
+Note: this connector needs a `retrieve_token` function that will be given the `auth_id`. It may either return an access
+token as a string, or a dict containing an access token and a refresh token:
 
 
 ```python
@@ -14,6 +15,11 @@ GoogleSheetsConnector(
     name='<name>',
     auth_id='<auth_id>',
     retrieve_token=lambda auth_id: '<valid_access_token>',
+    # OR
+    retrieve_token=lambda auth_id: {
+        'token': '<valid_access_token>',
+        'refresh_token': '<valid_refresh_token',
+    },
 )
 ```
 

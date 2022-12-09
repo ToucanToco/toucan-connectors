@@ -9,7 +9,7 @@ import pandas as pd
 from googleapiclient.http import HttpMock
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
-from pytest_mock import MockFixture
+from pytest_mock import MockerFixture, MockFixture
 from pytz import utc
 
 from toucan_connectors.google_sheets.google_sheets_connector import (
@@ -298,3 +298,28 @@ def test_get_form(mocker):
     )
     expected_results = ['sample data', 'animals']
     assert schema['definitions']['sheet']['enum'] == expected_results
+
+
+def test__google_client_build_kwargs(mocker: MockerFixture):
+    retrieve_token = mocker.MagicMock()
+    retrieve_token.return_value = 'coucou'
+    gsheet_connector = GoogleSheetsConnector(
+        name='test_connector',
+        retrieve_token=retrieve_token,
+        auth_id='test_auth_id',
+    )
+
+    kwargs = gsheet_connector._google_client_build_kwargs()
+    retrieve_token.assert_called_once_with('google-sheets', 'test_auth_id')
+    assert list(kwargs.keys()) == ['credentials']
+    assert kwargs['credentials'].token == 'coucou'
+    assert kwargs['credentials'].refresh_token is None
+
+    retrieve_token.reset_mock()
+    retrieve_token.return_value = {'token': 'coucou', 'refresh_token': 'salut'}
+
+    kwargs = gsheet_connector._google_client_build_kwargs()
+    retrieve_token.assert_called_once_with('google-sheets', 'test_auth_id')
+    assert list(kwargs.keys()) == ['credentials']
+    assert kwargs['credentials'].token == 'coucou'
+    assert kwargs['credentials'].refresh_token == 'salut'
