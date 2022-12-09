@@ -67,7 +67,7 @@ class GoogleSheetsConnector(ToucanConnector):
     _auth_flow = 'managed_oauth2'
     _managed_oauth_service_id = 'google-sheets'
     _oauth_trigger = 'retrieve_token'
-    _retrieve_token: Callable[[str, str], str] = PrivateAttr()
+    _retrieve_token: Callable[[str, str], str | dict[str, str]] = PrivateAttr()
 
     auth_id: SecretStr = None
 
@@ -77,10 +77,17 @@ class GoogleSheetsConnector(ToucanConnector):
 
     def _google_client_build_kwargs(self):  # pragma: no cover
         # Override it for testing purposes
-        access_token = self._retrieve_token(
+        token_info = self._retrieve_token(
             self._managed_oauth_service_id, self.auth_id.get_secret_value()
         )
-        return {'credentials': Credentials(token=access_token)}
+        if isinstance(token_info, str):
+            return {'credentials': Credentials(token=token_info)}
+        else:
+            return {
+                'credentials': Credentials(
+                    token=token_info['token'], refresh_token=token_info.get('refresh_token')
+                )
+            }
 
     def _google_client_request_kwargs(self):  # pragma: no cover
         # Override it for testing purposes
