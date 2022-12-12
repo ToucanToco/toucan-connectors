@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Feat: The connector `GoogleSheets` datasource `Dates as Floats` attribute will be Selected as default.
+
 ### [4.1.0] 2022-12-02
 
 ### Changed

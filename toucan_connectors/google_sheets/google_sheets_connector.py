@@ -31,7 +31,7 @@ class GoogleSheetsDataSource(ToucanDataSource):
         0, title='Header row', description='Row of the header of the spreadsheet'
     )
     dates_as_float: bool = Field(
-        False, title='Dates as floats', description='Render Date as Floats or String from the sheet'
+        True, title='Dates as floats', description='Render Date as Floats or String from the sheet'
     )
 
     class Config:
