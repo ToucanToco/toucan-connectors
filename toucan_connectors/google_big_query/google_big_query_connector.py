@@ -253,20 +253,20 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                 'Falling back on listing by location...'
             )
 
-        # In case the previous query failed, we need to get information for every dataset in the
-        # list, in order to retrieve their location (it's not returned by list_datasets).
-        _LOGGER.info('Retrieving location information for every dataset...')
-        dataset_info = [client.get_dataset(ds.dataset_id) for ds in datasets]
-        _LOGGER.info('Done retrieving location information for every dataset.')
-        dataset_info.sort(key=lambda x: x.location)
-        dfs = []
-        # We then build and execute a query for every distinct location
-        for location, datasets_for_region in groupby(dataset_info, key=lambda x: x.location):
-            _LOGGER.info(f'Retrieving dataset structure for datasets located in {location}')
-            query = self._build_dataset_info_query(ds.dataset_id for ds in datasets_for_region)
-            dfs.append(client.query(query, location=location).to_dataframe())
+            # In case the previous query failed, we need to get information for every dataset in the
+            # list, in order to retrieve their location (it's not returned by list_datasets).
+            _LOGGER.info('Retrieving location information for every dataset...')
+            dataset_info = [client.get_dataset(ds.dataset_id) for ds in datasets]
+            _LOGGER.info('Done retrieving location information for every dataset.')
+            dataset_info.sort(key=lambda x: x.location)
+            dfs = []
+            # We then build and execute a query for every distinct location
+            for location, datasets_for_region in groupby(dataset_info, key=lambda x: x.location):
+                _LOGGER.info(f'Retrieving dataset structure for datasets located in {location}')
+                query = self._build_dataset_info_query(ds.dataset_id for ds in datasets_for_region)
+                dfs.append(client.query(query, location=location).to_dataframe())
 
-        return self._format_db_model(pd.concat(dfs))
+            return self._format_db_model(pd.concat(dfs))
 
     def get_model(self, db_name: str | None = None) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
