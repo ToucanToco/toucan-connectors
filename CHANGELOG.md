@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Fix: Google Big Query no longer crashes when trying to retrieve the table list for datasets in different locations.
+
 ### [3.23.7] 2022-12-06
 
 ### Changed
