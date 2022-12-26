@@ -236,6 +236,39 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
             for dataset_id in dataset_ids
         )
 
+    def _get_project_structure_fast(
+        self, client: bigquery.Client, dataset_ids: Iterable[str]
+    ) -> pd.DataFrame:
+        """Retrieves the project's structure in a single query.
+
+        Only works if all datasets are in the same location.
+        """
+        query = self._build_dataset_info_query(dataset_ids)
+        return client.query(query).to_dataframe()
+
+    def _get_project_structure_slow(
+        self, client: bigquery.Client, dataset_ids: Iterable[str]
+    ) -> pd.DataFrame:
+        """Retrieves the project's structure in a multiple query.
+
+        Works even if the project's datasets are in different locations.
+        """
+        # In case the previous query failed, we need to get information for every dataset in the
+        # list, in order to retrieve their location (it's not returned by list_datasets).
+        _LOGGER.info('Retrieving location information for every dataset...')
+        dataset_info = [client.get_dataset(dataset_id) for dataset_id in dataset_ids]
+        _LOGGER.info('Done retrieving location information for every dataset.')
+        dataset_info.sort(key=lambda x: x.location)
+        dfs = []
+        # We then build and execute a query for every distinct location
+        for location, datasets_for_region in groupby(dataset_info, key=lambda x: x.location):
+            _LOGGER.info(f'Retrieving dataset structure for datasets located in {location}')
+            query = self._build_dataset_info_query(ds.dataset_id for ds in datasets_for_region)
+            dfs.append(client.query(query, location=location).to_dataframe())
+
+        # Then, we returning a single dataframe containing all results
+        return pd.concat(dfs)
+
     def _get_project_structure(self) -> List[TableInfo]:
         creds = self._get_google_credentials(self.credentials, self.scopes)
         client = self._connect(creds)
@@ -245,28 +278,15 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         # only work if all datasets are in same location. Unfortunately, there is no way to
         # retrieve the location along with the dataset list, so we're optimistic here.
         try:
-            query = self._build_dataset_info_query(ds.dataset_id for ds in datasets)
-            return self._format_db_model(client.query(query).to_dataframe())
+            df = self._get_project_structure_fast(client, (ds.dataset_id for ds in datasets))
         except GoogleAPIError as exc:
             _LOGGER.info(
                 f'Got an exception when trying to retrieve domains for project: {exc}. '
                 'Falling back on listing by location...'
             )
+            df = self._get_project_structure_slow(client, (ds.dataset_id for ds in datasets))
 
-            # In case the previous query failed, we need to get information for every dataset in the
-            # list, in order to retrieve their location (it's not returned by list_datasets).
-            _LOGGER.info('Retrieving location information for every dataset...')
-            dataset_info = [client.get_dataset(ds.dataset_id) for ds in datasets]
-            _LOGGER.info('Done retrieving location information for every dataset.')
-            dataset_info.sort(key=lambda x: x.location)
-            dfs = []
-            # We then build and execute a query for every distinct location
-            for location, datasets_for_region in groupby(dataset_info, key=lambda x: x.location):
-                _LOGGER.info(f'Retrieving dataset structure for datasets located in {location}')
-                query = self._build_dataset_info_query(ds.dataset_id for ds in datasets_for_region)
-                dfs.append(client.query(query, location=location).to_dataframe())
-
-            return self._format_db_model(pd.concat(dfs))
+        return self._format_db_model(df)
 
     def get_model(self, db_name: str | None = None) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
