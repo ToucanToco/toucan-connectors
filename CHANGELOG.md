@@ -2,9 +2,13 @@
 
 ## Unreleased
 
+### Fixed
+
+- Google Big Query no longer crashes when trying to retrieve the table list for datasets in different locations.
+
 ### Changed
 
-- Feat: The connector `GoogleSheets` datasource `Dates as Floats` attribute will be Selected as default.
+- `Dates as float` is now selected by default in Google Sheets data sources.
 
 ### [4.1.0] 2022-12-02
 
