@@ -239,7 +239,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     def _get_project_structure_fast(
         self, client: bigquery.Client, dataset_ids: Iterable[str]
     ) -> pd.DataFrame:
-        """Retrieves the project's structure in a single query.
+        """Retrieves the project structure in a single query.
 
         Only works if all datasets are in the same location.
         """
