@@ -249,11 +249,11 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     def _get_project_structure_slow(
         self, client: bigquery.Client, dataset_ids: Iterable[str]
     ) -> pd.DataFrame:
-        """Retrieves the project's structure in a multiple query.
+        """Retrieves the project structure in a multiple query.
 
         Works even if the project's datasets are in different locations.
         """
-        # In case the previous query failed, we need to get information for every dataset in the
+        # In case datasets are not in the same location, we need to get information for every dataset in the
         # list, in order to retrieve their location (it's not returned by list_datasets).
         _LOGGER.info('Retrieving location information for every dataset...')
         dataset_info = [client.get_dataset(dataset_id) for dataset_id in dataset_ids]
