@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pandas
 import pandas as pd
 import pytest
+from google.api_core.exceptions import NotFound
 from google.cloud.bigquery import ArrayQueryParameter, Client, ScalarQueryParameter
 from google.cloud.bigquery.job.query import QueryJob
 from google.cloud.bigquery.table import RowIterator
@@ -319,8 +320,136 @@ def test_get_model(mocker: MockFixture, _fixture_credentials) -> None:
     ]
     assert (
         mocked_query.call_args_list[0][0][0]
-        == "select C.table_name as name, C.table_schema as schema, T.table_catalog as database,\n                T.table_type as type,  C.column_name, C.data_type from foooo.INFORMATION_SCHEMA.COLUMNS C\n                JOIN foooo.INFORMATION_SCHEMA.TABLES T on C.table_name = T.table_name\n                where IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'\nUNION ALL\nselect C.table_name as name, C.table_schema as schema, T.table_catalog as database,\n                T.table_type as type,  C.column_name, C.data_type from baarrrr.INFORMATION_SCHEMA.COLUMNS C\n                JOIN baarrrr.INFORMATION_SCHEMA.TABLES T on C.table_name = T.table_name\n                where IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'\nUNION ALL\nselect C.table_name as name, C.table_schema as schema, T.table_catalog as database,\n                T.table_type as type,  C.column_name, C.data_type from taar.INFORMATION_SCHEMA.COLUMNS C\n                JOIN taar.INFORMATION_SCHEMA.TABLES T on C.table_name = T.table_name\n                where IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"
+        == "SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,\n                T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C\n                JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name\n                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'\nUNION ALL\nSELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,\n                T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C\n                JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name\n                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'\nUNION ALL\nSELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,\n                T.table_type AS type, C.column_name, C.data_type FROM taar.INFORMATION_SCHEMA.COLUMNS C\n                JOIN taar.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name\n                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"
     )
+
+
+def test_get_model_multi_location(mocker: MockFixture, _fixture_credentials) -> None:
+    fake_resp_1 = mocker.MagicMock()
+    fake_resp_1.to_dataframe.return_value = pd.DataFrame(
+        [
+            {
+                'name': 'coucou',
+                'schema': 'foooo',
+                'database': 'myproject',
+                'type': 'BASE TABLE',
+                'column_name': 'pingu',
+                'data_type': 'STR',
+            },
+            {
+                'name': 'coucou',
+                'schema': 'foooo',
+                'database': 'myproject',
+                'type': 'BASE TABLE',
+                'column_name': 'toto',
+                'data_type': 'INT64',
+            },
+            {
+                'name': 'coucou',
+                'schema': 'foooo',
+                'database': 'myproject',
+                'type': 'BASE TABLE',
+                'column_name': 'tante',
+                'data_type': 'STR',
+            },
+        ]
+    )
+    fake_resp_2 = mocker.MagicMock()
+    fake_resp_2.to_dataframe.return_value = pd.DataFrame(
+        [
+            {
+                'name': 'blabla',
+                'schema': 'baarrrr',
+                'database': 'myproject',
+                'type': 'MATERIALIZED VIEW',
+                'column_name': 'gogo',
+                'data_type': 'STR',
+            },
+        ]
+    )
+    datasets = [
+        mocker.MagicMock(dataset_id='foooo'),
+        mocker.MagicMock(dataset_id='baarrrr'),
+    ]
+    datasets_info = [
+        mocker.MagicMock(dataset_id='foooo', location='Paris'),
+        mocker.MagicMock(dataset_id='baarrrr', location='Toulouse'),
+    ]
+
+    mocker.patch.object(Client, 'list_datasets', return_value=datasets)
+    mocker.patch.object(Client, 'get_dataset', side_effect=datasets_info)
+    mocked_query = mocker.patch.object(
+        Client, 'query', side_effect=[NotFound('Oh no'), fake_resp_1, fake_resp_2]
+    )
+    mocker.patch(
+        'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._connect',
+        return_value=Client,
+    )
+
+    mocker.patch(
+        'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._get_google_credentials',
+        return_value=Credentials,
+    )
+    connector = GoogleBigQueryConnector(
+        name='MyGBQ',
+        credentials=_fixture_credentials,
+        scopes=[
+            'https://www.googleapis.com/auth/bigquery',
+            'https://www.googleapis.com/auth/drive',
+        ],
+    )
+    assert connector.get_model() == [
+        {
+            'name': 'blabla',
+            'schema': 'baarrrr',
+            'database': 'myproject',
+            'type': 'view',
+            'columns': [{'name': 'gogo', 'type': 'str'}],
+        },
+        {
+            'name': 'coucou',
+            'schema': 'foooo',
+            'database': 'myproject',
+            'type': 'table',
+            'columns': [
+                {'name': 'pingu', 'type': 'str'},
+                {'name': 'toto', 'type': 'int64'},
+                {'name': 'tante', 'type': 'str'},
+            ],
+        },
+    ]
+    assert (
+        mocked_query.call_args_list[0][0][0]
+        == """SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+                T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C
+                JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+UNION ALL
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+                T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C
+                JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"""
+    )
+    # No location should be specified in the happy path
+    assert mocked_query.call_args_list[0][1] == {}
+    assert (
+        mocked_query.call_args_list[1][0][0]
+        == """SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+                T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C
+                JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"""
+    )
+    # Next calls should specify the location
+    assert mocked_query.call_args_list[1][1] == {'location': 'Paris'}
+    assert (
+        mocked_query.call_args_list[2][0][0]
+        == """SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+                T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C
+                JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"""
+    )
+    # Next calls should specify the location
+    assert mocked_query.call_args_list[2][1] == {'location': 'Toulouse'}
 
 
 def test_get_form(_fixture_credentials: MockFixture) -> None:
