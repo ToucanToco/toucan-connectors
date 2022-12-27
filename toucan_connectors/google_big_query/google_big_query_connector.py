@@ -249,7 +249,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     def _get_project_structure_slow(
         self, client: bigquery.Client, dataset_ids: Iterable[str]
     ) -> pd.DataFrame:
-        """Retrieves the project structure in a multiple query.
+        """Retrieves the project structure in multiple queries.
 
         Works even if the project's datasets are in different locations.
         """
