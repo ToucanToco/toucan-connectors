@@ -11,7 +11,7 @@ class PeakinaDataSource(DataSource):
         extra = 'allow'
 
     def __init__(self, **data: Any) -> None:
-        super().__init__(**{k: v for k, v in data.items()})
+        super().__init__(**data)
 
 
 class PeakinaConnector(ToucanConnector):
