@@ -2502,7 +2502,7 @@ xmlsec = ["xmlsec (>=0.6.1)"]
 [extras]
 adobe = ["adobe-analytics"]
 aircall = ["bearer"]
-all = ["adobe-analytics", "awswrangler", "bearer", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "facebook-sdk", "google-api-python-client", "google-cloud-bigquery", "googleads", "gspread", "lxml", "oauth2client", "oauthlib", "openpyxl", "peakina", "psycopg2", "pyarrow", "pyhdb", "PyHive", "PyJWT", "pymongo", "PyMySQL", "pyodbc", "peakina", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "toucan-client", "xmltodict", "zeep"]
+all = ["adobe-analytics", "awswrangler", "bearer", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "facebook-sdk", "google-api-python-client", "google-cloud-bigquery", "googleads", "gspread", "lxml", "oauth2client", "oauthlib", "openpyxl", "peakina", "psycopg2", "pyarrow", "pyhdb", "PyHive", "PyJWT", "pymongo", "PyMySQL", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "toucan-client", "xmltodict", "zeep"]
 awsathena = ["awswrangler"]
 azure-mssql = ["pyodbc"]
 clickhouse = ["clickhouse-driver"]
@@ -2539,7 +2539,7 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "7f4a9135ba575fb840e9eb172e469d247c341dbe92e5d7759b0f5b47234797fe"
+content-hash = "c103a8c2cc0fd1229769eb5c10b522375634125a0355b6564dd78511aeb46f1d"
 
 [metadata.files]
 adobe-analytics = [
