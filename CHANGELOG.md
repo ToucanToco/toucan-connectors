@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [4.2.0] 2023-01-01
+
+### Changed
+
+- Added a new Connector: [Peakina](https://github.com/ToucanToco/peakina) for files.
+
 ### [4.1.1] 2022-12-27
 
 ### Fixed
