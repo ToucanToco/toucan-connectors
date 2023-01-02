@@ -64,7 +64,7 @@ zeep = {version = "^4.1.0", optional = true}
 snowflake-connector-python = {version = "^2.7.12", optional = true}
 pyarrow = {version = "<9", optional = true}
 toucan-client = {version = "^1.0.1", optional = true}
-peakina = {version = "^0.9.1", extras = ["all"], optional = true}
+peakina = {version = "^0.9.1", optional = true}
 
 [tool.poetry.dev-dependencies]
 Authlib = "^1.0.1"
@@ -94,7 +94,6 @@ lxml = "4.9.1"
 zeep = "^4.1.0"
 mypy = "^0.991"
 pandas-stubs = "^1.5.2.221213"
-peakina = "^0.9.1"
 types-requests = "^2.28.11.7"
 types-simplejson = "^3.18.0.0"
 types-python-slugify = "^7.0.0.1"
@@ -154,6 +153,7 @@ all = [
     "oauth2client",
     "oauthlib",
     "openpyxl",
+    "peakina",
     "psycopg2",
     "pyarrow",
     "pyhdb",
@@ -162,7 +162,6 @@ all = [
     "pymongo",
     "PyMySQL",
     "pyodbc",
-    "peakina",
     "python-graphql-client",
     "redshift-connector",
     "requests-oauthlib",

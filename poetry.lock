@@ -26,7 +26,7 @@ name = "aiobotocore"
 version = "2.4.2"
 description = "Async client for aws services using botocore and aiohttp"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -64,7 +64,7 @@ name = "aioitertools"
 version = "0.11.0"
 description = "itertools and builtins for AsyncIO and mixed iterables"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [[package]]
@@ -173,7 +173,7 @@ name = "bcrypt"
 version = "4.0.1"
 description = "Modern password hashing for your software and your servers"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.extras]
@@ -232,7 +232,7 @@ name = "blosc2"
 version = "2.0.0"
 description = "Python wrapper for the C-Blosc2 library."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8, <4"
 
 [package.dependencies]
@@ -259,7 +259,7 @@ name = "botocore"
 version = "1.27.59"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
-optional = false
+optional = true
 python-versions = ">= 3.7"
 
 [package.dependencies]
@@ -310,7 +310,7 @@ name = "chardet"
 version = "5.1.0"
 description = "Universal encoding detector for Python 3"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [[package]]
@@ -340,7 +340,7 @@ name = "click-plugins"
 version = "1.1.1"
 description = "An extension module for click to enable registering CLI commands via setuptools entry-points."
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -371,7 +371,7 @@ name = "cligj"
 version = "0.7.2"
 description = "Click params for commmand line interfaces to GeoJSON"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4"
 
 [package.dependencies]
@@ -407,7 +407,7 @@ name = "cramjam"
 version = "2.6.2"
 description = "Thin Python bindings to de/compression algorithms in Rust"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [[package]]
@@ -442,7 +442,7 @@ name = "cython"
 version = "0.29.32"
 description = "The Cython compiler for writing C extensions for the Python language."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
@@ -552,7 +552,7 @@ name = "et-xmlfile"
 version = "1.1.0"
 description = "An implementation of lxml.xmlfile for the standard library"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [[package]]
@@ -582,7 +582,7 @@ name = "fastparquet"
 version = "0.8.3"
 description = "Python support for Parquet file format"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 
 [package.dependencies]
@@ -612,7 +612,7 @@ name = "fiona"
 version = "1.8.22"
 description = "Fiona reads and writes spatial data files"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -668,7 +668,7 @@ name = "fsspec"
 version = "2022.11.0"
 description = "File-system specification"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [package.extras]
@@ -707,7 +707,7 @@ name = "geopandas"
 version = "0.12.2"
 description = "Geographic pandas extensions"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 
 [package.dependencies]
@@ -1052,7 +1052,7 @@ name = "jmespath"
 version = "1.0.1"
 description = "JSON Matching Expressions"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [[package]]
@@ -1140,7 +1140,7 @@ name = "msgpack"
 version = "1.0.4"
 description = "MessagePack serializer"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [[package]]
@@ -1156,7 +1156,7 @@ name = "munch"
 version = "2.5.0"
 description = "A dot-accessible dictionary (a la JavaScript objects)"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -1206,7 +1206,7 @@ name = "numexpr"
 version = "2.8.4"
 description = "Fast numerical expression evaluator for NumPy"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -1253,7 +1253,7 @@ name = "openpyxl"
 version = "3.0.10"
 description = "A Python library to read/write Excel 2010 xlsx/xlsm files"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -1331,7 +1331,7 @@ name = "paramiko"
 version = "2.12.0"
 description = "SSH2 protocol library"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -1359,7 +1359,7 @@ name = "peakina"
 version = "0.9.1"
 description = "pandas readers on steroids (remote files, glob patterns, cache, etc.)"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8,<4.0"
 
 [package.dependencies]
@@ -1484,7 +1484,7 @@ name = "py-cpuinfo"
 version = "9.0.0"
 description = "Get CPU info with pure Python"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [[package]]
@@ -1644,7 +1644,7 @@ name = "pynacl"
 version = "1.5.0"
 description = "Python binding to the Networking and Cryptography (NaCl) library"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -1693,7 +1693,7 @@ name = "pyproj"
 version = "3.4.1"
 description = "Python interface to PROJ (cartographic projections and coordinate transformations library)"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 
 [package.dependencies]
@@ -1837,7 +1837,7 @@ name = "python-snappy"
 version = "0.6.1"
 description = "Python library for the snappy compression library from Google"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [[package]]
@@ -2025,7 +2025,7 @@ name = "s3fs"
 version = "2022.11.0"
 description = "Convenient Filesystem interface over S3"
 category = "main"
-optional = false
+optional = true
 python-versions = ">= 3.7"
 
 [package.dependencies]
@@ -2078,7 +2078,7 @@ name = "setuptools"
 version = "65.5.1"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [package.extras]
@@ -2091,7 +2091,7 @@ name = "shapely"
 version = "2.0.0"
 description = "Manipulation and analysis of geometric objects"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -2161,7 +2161,7 @@ name = "tables"
 version = "3.8.0"
 description = "Hierarchical datasets for Python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 
 [package.dependencies]
@@ -2438,7 +2438,7 @@ name = "wrapt"
 version = "1.14.1"
 description = "Module for decorators, wrappers and monkey patching."
 category = "main"
-optional = false
+optional = true
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 
 [[package]]
@@ -2446,7 +2446,7 @@ name = "xlrd"
 version = "2.0.1"
 description = "Library for developers to extract data from Microsoft Excel (tm) .xls spreadsheet files"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 
 [package.extras]
@@ -2502,7 +2502,7 @@ xmlsec = ["xmlsec (>=0.6.1)"]
 [extras]
 adobe = ["adobe-analytics"]
 aircall = ["bearer"]
-all = ["adobe-analytics", "awswrangler", "bearer", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "facebook-sdk", "google-api-python-client", "google-cloud-bigquery", "googleads", "gspread", "lxml", "oauth2client", "oauthlib", "openpyxl", "psycopg2", "pyarrow", "pyhdb", "PyHive", "PyJWT", "pymongo", "PyMySQL", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "toucan-client", "xmltodict", "zeep"]
+all = ["adobe-analytics", "awswrangler", "bearer", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "facebook-sdk", "google-api-python-client", "google-cloud-bigquery", "googleads", "gspread", "lxml", "oauth2client", "oauthlib", "openpyxl", "peakina", "psycopg2", "pyarrow", "pyhdb", "PyHive", "PyJWT", "pymongo", "PyMySQL", "pyodbc", "peakina", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "toucan-client", "xmltodict", "zeep"]
 awsathena = ["awswrangler"]
 azure-mssql = ["pyodbc"]
 clickhouse = ["clickhouse-driver"]
@@ -2539,7 +2539,7 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "630c48b87d043a66835a796f1bee9da74dbdfe7db8f7e0d98563d209ad18bb55"
+content-hash = "7f4a9135ba575fb840e9eb172e469d247c341dbe92e5d7759b0f5b47234797fe"
 
 [metadata.files]
 adobe-analytics = [
