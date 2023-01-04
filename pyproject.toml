@@ -97,7 +97,7 @@ pandas-stubs = "^1.5.2.221213"
 types-requests = "^2.28.11.7"
 types-simplejson = "^3.18.0.0"
 types-python-slugify = "^7.0.0.1"
-types-pyopenssl = "^22.1.0.2"
+types-pyopenssl = "^23.0.0.0"
 
 [tool.poetry.extras]
 adobe = ["adobe-analytics"]
