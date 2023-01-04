@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [4.2.1] 2023-01-04
+
 ### Fixed
 
 - Export of the peakina Connector through `CONNECTOR_REGISTRY`.
