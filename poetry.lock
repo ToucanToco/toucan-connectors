@@ -2299,7 +2299,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-pyopenssl"
-version = "22.1.0.2"
+version = "23.0.0.0"
 description = "Typing stubs for pyOpenSSL"
 category = "dev"
 optional = false
@@ -2539,7 +2539,7 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "c103a8c2cc0fd1229769eb5c10b522375634125a0355b6564dd78511aeb46f1d"
+content-hash = "a0430143a2dde8c169f9f9157c9464c151972d8ecd716eda5abd81dbdf9d7d20"
 
 [metadata.files]
 adobe-analytics = [
@@ -4766,8 +4766,8 @@ types-cryptography = [
     {file = "types_cryptography-3.3.23.2-py3-none-any.whl", hash = "sha256:b965d548f148f8e87f353ccf2b7bd92719fdf6c845ff7cedf2abb393a0643e4f"},
 ]
 types-pyopenssl = [
-    {file = "types-pyOpenSSL-22.1.0.2.tar.gz", hash = "sha256:7a350e29e55bc3ee4571f996b4b1c18c4e4098947db45f7485b016eaa35b44bc"},
-    {file = "types_pyOpenSSL-22.1.0.2-py3-none-any.whl", hash = "sha256:54606a6afb203eb261e0fca9b7f75fa6c24d5ff71e13903c162ffb951c2c64c6"},
+    {file = "types-pyOpenSSL-23.0.0.0.tar.gz", hash = "sha256:16932c73ff4afe0daa5c7fb6c6ad93f342a7f1cbbdb87bd75ddd97c33dba3a9e"},
+    {file = "types_pyOpenSSL-23.0.0.0-py3-none-any.whl", hash = "sha256:c621d70ea3c0392b3c225afffb21277b65eef578388f88d543600b412cc703c3"},
 ]
 types-python-slugify = [
     {file = "types-python-slugify-7.0.0.1.tar.gz", hash = "sha256:6b2d16e1465896df0e3685bd38eab7b8f945a3a7c18c4a2c2ef391b0e48dfce8"},
