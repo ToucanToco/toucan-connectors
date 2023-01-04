@@ -193,6 +193,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Oracle SQL',
         'logo': 'oracle_sql/oracle-sql.png',
     },
+    'Peakina': {
+        'connector': 'peakina.peakina_connector.PeakinaConnector',
+        'label': 'Peakina',
+        'logo': 'peakina/peakina.png',
+    },
     'Postgres': {
         'connector': 'postgres.postgresql_connector.PostgresConnector',
         'label': 'PostgreSQL',
