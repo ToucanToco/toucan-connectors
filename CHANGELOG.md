@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [4.2.2] 2023-01-05
+
 ### Fixed
 
 - Export of the peakina DataSource schema.
