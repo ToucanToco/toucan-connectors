@@ -13,6 +13,12 @@ class PeakinaDataSource(DataSource):
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
 
+    @staticmethod
+    def schema():
+        schema = DataSource.__pydantic_model__.schema()
+        schema['title'] = 'Peakina'
+        return schema
+
 
 class PeakinaConnector(ToucanConnector):
     data_source_model: PeakinaDataSource

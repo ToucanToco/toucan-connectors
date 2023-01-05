@@ -3,6 +3,13 @@ import pandas as pd
 from toucan_connectors.peakina.peakina_connector import PeakinaConnector, PeakinaDataSource
 
 
+def test_get_schema():
+    """Should extract the schema of the datasource"""
+    pds = PeakinaDataSource(uri='xxx', type='csv')
+    assert isinstance(pds.schema(), dict)
+    assert pds.schema()['title'] == 'Peakina'
+
+
 def test_get_df():
     """Should use peakina connector to get a file for a given uri"""
     file_uri = 'tests/peakina/fixtures/test.csv'
