@@ -1317,7 +1317,7 @@ test = ["hypothesis (>=5.5.3)", "pytest (>=6.0)", "pytest-xdist (>=1.31)"]
 
 [[package]]
 name = "pandas-stubs"
-version = "1.5.2.221213"
+version = "1.5.2.230105"
 description = "Type annotations for pandas"
 category = "dev"
 optional = false
@@ -2539,7 +2539,7 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "a0430143a2dde8c169f9f9157c9464c151972d8ecd716eda5abd81dbdf9d7d20"
+content-hash = "d80ac60a0540e42d0104e7c2a945494e524832794815a6eb60da5f80b8345edf"
 
 [metadata.files]
 adobe-analytics = [
@@ -3972,8 +3972,8 @@ pandas = [
     {file = "pandas-1.4.4.tar.gz", hash = "sha256:ab6c0d738617b675183e5f28db32b5148b694ad9bba0a40c3ea26d96b431db67"},
 ]
 pandas-stubs = [
-    {file = "pandas_stubs-1.5.2.221213-py3-none-any.whl", hash = "sha256:3551177a44eec5945b4e47131b6a545a564b3d41dfd4e50e06ba1a736e7d695d"},
-    {file = "pandas_stubs-1.5.2.221213.tar.gz", hash = "sha256:0cbc1dbdf5dddb4d67ebc851b9cfb265bf62fe317b043bd37ee5a4a2659421f2"},
+    {file = "pandas_stubs-1.5.2.230105-py3-none-any.whl", hash = "sha256:b2874d26eabcaecb83aa8435d47e41f1b5f90ad04f3e1e70c3c8604027490225"},
+    {file = "pandas_stubs-1.5.2.230105.tar.gz", hash = "sha256:c78e433aca82577ce4a9fefc0d78cd26828dd95f8b1612416babff1b6957a22a"},
 ]
 paramiko = [
     {file = "paramiko-2.12.0-py2.py3-none-any.whl", hash = "sha256:b2df1a6325f6996ef55a8789d0462f5b502ea83b3c990cbb5bbe57345c6812c4"},
