@@ -1132,25 +1132,41 @@ websocket-client = ">=0.32.0"
 ssh = ["paramiko (>=2.4.3)"]
 
 [[package]]
-name = "elasticsearch"
-version = "7.17.6"
-description = "Python client for Elasticsearch"
+name = "elastic-transport"
+version = "8.4.0"
+description = "Transport classes and utilities shared among Python Elastic client libraries"
 category = "main"
 optional = true
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4"
+python-versions = ">=3.6"
 files = [
-    {file = "elasticsearch-7.17.6-py2.py3-none-any.whl", hash = "sha256:2c3400c9e9c7fee46c4732fb32b933577aebb07b5e94df025f6ff1a30d2397d0"},
-    {file = "elasticsearch-7.17.6.tar.gz", hash = "sha256:f4b779fc2a035904b97bef0542110372efd94aa7ab2c13749af73158c08be110"},
+    {file = "elastic-transport-8.4.0.tar.gz", hash = "sha256:b9ad708ceb7fcdbc6b30a96f886609a109f042c0b9d9f2e44403b3133ba7ff10"},
+    {file = "elastic_transport-8.4.0-py3-none-any.whl", hash = "sha256:19db271ab79c9f70f8c43f8f5b5111408781a6176b54ab2e54d713b6d9ceb815"},
 ]
 
 [package.dependencies]
 certifi = "*"
-urllib3 = ">=1.21.1,<2"
+urllib3 = ">=1.26.2,<2"
+
+[package.extras]
+develop = ["aiohttp", "mock", "pytest", "pytest-asyncio", "pytest-cov", "pytest-httpserver", "pytest-mock", "requests", "trustme"]
+
+[[package]]
+name = "elasticsearch"
+version = "8.6.0"
+description = "Python client for Elasticsearch"
+category = "main"
+optional = true
+python-versions = ">=3.6, <4"
+files = [
+    {file = "elasticsearch-8.6.0-py3-none-any.whl", hash = "sha256:9d2c1010bda4699c202be82cb960aee3fb9359ca98bb83dfa7db06679212e9a7"},
+    {file = "elasticsearch-8.6.0.tar.gz", hash = "sha256:70f6da78878c5df28cd4a4b902a57192a86b0306e69bc08177a14dac9759db59"},
+]
+
+[package.dependencies]
+elastic-transport = ">=8,<9"
 
 [package.extras]
 async = ["aiohttp (>=3,<4)"]
-develop = ["black", "coverage", "jinja2", "mock", "pytest", "pytest-cov", "pyyaml", "requests (>=2.0.0,<3.0.0)", "sphinx (<1.7)", "sphinx-rtd-theme"]
-docs = ["sphinx (<1.7)", "sphinx-rtd-theme"]
 requests = ["requests (>=2.4.0,<3.0.0)"]
 
 [[package]]
@@ -5005,4 +5021,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "937215a15478711c0c73c2dd09929e5a8ad5cf03b0bdbc8789829c3f489a09da"
+content-hash = "0d0173a81af34ad1717aa1cec99f527b6417d5e1944bcf522189990a73c44205"
