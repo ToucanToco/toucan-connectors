@@ -4511,31 +4511,19 @@ tabulate = ">=0.8.9,<0.9.0"
 toucan-client = ">=1.1.0,<2.0.0"
 
 [[package]]
-name = "types-cryptography"
-version = "3.3.23.2"
-description = "Typing stubs for cryptography"
-category = "dev"
-optional = false
-python-versions = "*"
-files = [
-    {file = "types-cryptography-3.3.23.2.tar.gz", hash = "sha256:09cc53f273dd4d8c29fa7ad11fefd9b734126d467960162397bc5e3e604dea75"},
-    {file = "types_cryptography-3.3.23.2-py3-none-any.whl", hash = "sha256:b965d548f148f8e87f353ccf2b7bd92719fdf6c845ff7cedf2abb393a0643e4f"},
-]
-
-[[package]]
 name = "types-pyopenssl"
-version = "23.0.0.0"
+version = "23.0.0.1"
 description = "Typing stubs for pyOpenSSL"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-pyOpenSSL-23.0.0.0.tar.gz", hash = "sha256:16932c73ff4afe0daa5c7fb6c6ad93f342a7f1cbbdb87bd75ddd97c33dba3a9e"},
-    {file = "types_pyOpenSSL-23.0.0.0-py3-none-any.whl", hash = "sha256:c621d70ea3c0392b3c225afffb21277b65eef578388f88d543600b412cc703c3"},
+    {file = "types-pyOpenSSL-23.0.0.1.tar.gz", hash = "sha256:cb317e92f75e8b01d1ad4e89cac92062e8eed563205b9762c1ddd82603a056c4"},
+    {file = "types_pyOpenSSL-23.0.0.1-py3-none-any.whl", hash = "sha256:09c2dbbfb743282ba3d71c24a4e90f8b5f2c90f21771ff43ca46de6c4896bf77"},
 ]
 
 [package.dependencies]
-types-cryptography = "*"
+cryptography = ">=35.0.0"
 
 [[package]]
 name = "types-python-slugify"
@@ -5005,4 +4993,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "937215a15478711c0c73c2dd09929e5a8ad5cf03b0bdbc8789829c3f489a09da"
+content-hash = "34e229d8d9f65d2d925c6bc98ef547e49d4b838954a91f7c65b61a202b05d301"
