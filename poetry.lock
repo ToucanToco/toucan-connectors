@@ -1462,7 +1462,7 @@ name = "future"
 version = "0.18.3"
 description = "Clean single-source support for Python 3 and 2"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 files = [
     {file = "future-0.18.3.tar.gz", hash = "sha256:34a17436ed1e96697a86f9de3d15a3b0be01d8bc8de9c1dffd59fb8234ed5307"},
@@ -4512,14 +4512,14 @@ toucan-client = ">=1.1.0,<2.0.0"
 
 [[package]]
 name = "types-pyopenssl"
-version = "23.0.0.1"
+version = "23.0.0.2"
 description = "Typing stubs for pyOpenSSL"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-pyOpenSSL-23.0.0.1.tar.gz", hash = "sha256:cb317e92f75e8b01d1ad4e89cac92062e8eed563205b9762c1ddd82603a056c4"},
-    {file = "types_pyOpenSSL-23.0.0.1-py3-none-any.whl", hash = "sha256:09c2dbbfb743282ba3d71c24a4e90f8b5f2c90f21771ff43ca46de6c4896bf77"},
+    {file = "types-pyOpenSSL-23.0.0.2.tar.gz", hash = "sha256:2e95f9a667d5eeb0af699196f857f7d23d5b4d642437bd37355bc13a87e9f4ae"},
+    {file = "types_pyOpenSSL-23.0.0.2-py3-none-any.whl", hash = "sha256:ea7e5d06f9190a1cb013ad4b13d48896e5cd1e785c04491f38b206d1bc4b8dc1"},
 ]
 
 [package.dependencies]
@@ -4993,4 +4993,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "8c7b72839463931a8647073fdd6b5b2c66acb0599604a0ff95d19af141e6211f"
+content-hash = "df78c77c72868c7d259d7620170ca854c59352564f33ee5bc6bf0e476984471e"
