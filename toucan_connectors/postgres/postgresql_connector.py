@@ -23,6 +23,7 @@ class PostgresDataSource(ToucanDataSource):
     database: str = Field(
         DEFAULT_DATABASE, description='The name of the database you want to query'
     )
+    initial_statements: list[str] | None = None
     query: constr(min_length=1) = Field(
         None,
         description='You can write a custom query against your '
@@ -123,13 +124,16 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector, VersionableEngin
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _retrieve_data(self, data_source):
+    def _retrieve_data(self, data_source: PostgresDataSource):
         connection = pgsql.connect(**self.get_connection_params(database=data_source.database))
 
         query_params = data_source.parameters or {}
-        df = pandas_read_sql(
-            data_source.query, con=connection, params=query_params, adapt_params=True
-        )
+
+        raw_query = f"""SELECT * FROM ({data_source.query.replace(';','')}) AS q LIMIT 0;"""
+        if stmts := data_source.initial_statements:
+            raw_query = f"{';'.join(stmts)}; {raw_query}"
+
+        df = pandas_read_sql(raw_query, con=connection, params=query_params, adapt_params=True)
 
         connection.close()
 
