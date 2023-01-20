@@ -24,7 +24,8 @@ class PostgresDataSource(ToucanDataSource):
         DEFAULT_DATABASE, description='The name of the database you want to query'
     )
     initial_statements: list[str] | None = Field(
-        ..., description='The name of the database you want to query'
+        ["SET TIME ZONE 'Europe/Paris';"],
+        description='You can set all your configurations here as initial statements queries',
     )
     query: constr(min_length=1) = Field(
         None,
@@ -133,7 +134,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector, VersionableEngin
 
         raw_query = f"""SELECT * FROM ({data_source.query.replace(';','')}) AS q LIMIT 0;"""
         if stmts := data_source.initial_statements:
-            raw_query = f"{';'.join(stmts)}; {raw_query}"
+            raw_query = f"{';'.join(s.strip(';') for s in stmts)}; {raw_query}"
 
         df = pandas_read_sql(raw_query, con=connection, params=query_params, adapt_params=True)
 
