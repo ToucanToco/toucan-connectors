@@ -23,7 +23,9 @@ class PostgresDataSource(ToucanDataSource):
     database: str = Field(
         DEFAULT_DATABASE, description='The name of the database you want to query'
     )
-    initial_statements: list[str] | None = None
+    initial_statements: list[str] | None = Field(
+        ..., description='The name of the database you want to query'
+    )
     query: constr(min_length=1) = Field(
         None,
         description='You can write a custom query against your '
