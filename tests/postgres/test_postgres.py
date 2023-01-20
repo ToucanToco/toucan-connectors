@@ -217,7 +217,10 @@ def test_postgress_get_df(mocker):
     )
 
     reasq.assert_called_once_with(
-        "SELECT Name, CountryCode, Population FROM City Where Name Like '%%test%%' LIMIT 2;",
+        (
+            "SET TIME ZONE 'Europe/Paris'; SELECT * FROM (SELECT Name, CountryCode, "
+            "Population FROM City Where Name Like '%%test%%' LIMIT 2) AS q LIMIT 0;"
+        ),
         con=snock(),
         params={},
     )
