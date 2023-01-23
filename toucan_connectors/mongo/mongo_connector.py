@@ -34,12 +34,14 @@ def _is_empty_match_column(elem: Any):
 
     return False
 
+
 def _is_match_empty(match_: dict) -> bool:
     return all(_is_empty_match_column(v) for v in match_.values())
 
 
 def _is_match_statement(d: Any) -> bool:
     return isinstance(d, dict) and list(d.keys()) == ['$match']
+
 
 def _sanitize_match(query: dict) -> dict:
     if _is_match_empty(query):
@@ -48,7 +50,8 @@ def _sanitize_match(query: dict) -> dict:
         and_condition = query['$and']
         if isinstance(and_condition, list):
             query['$and'] = [elem for elem in and_condition if not _is_empty_match_column(elem)]
-    return query; 
+    return query
+
 
 def _sanitize_query_matches(query: dict | list[dict]) -> Any:
     """Transforms match operations matching nothing into match-alls.
@@ -58,7 +61,7 @@ def _sanitize_query_matches(query: dict | list[dict]) -> Any:
     """
     if isinstance(query, list):
         return [
-            {'$match': _sanitize_match(q['$match']) } if _is_match_statement(q) else q for q in query
+            {'$match': _sanitize_match(q['$match'])} if _is_match_statement(q) else q for q in query
         ]
     return query
 

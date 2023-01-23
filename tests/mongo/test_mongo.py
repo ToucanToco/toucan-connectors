@@ -558,7 +558,6 @@ def test_normalize_query():
     assert normalize_query(query_with_and_condition, {}) == expected
 
 
-
 def test_status_all_good(mongo_connector):
     assert mongo_connector.get_status() == ConnectorStatus(
         status=True,
