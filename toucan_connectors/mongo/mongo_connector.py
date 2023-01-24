@@ -24,21 +24,33 @@ from toucan_connectors.toucan_connector import (
 MAX_COUNTED_ROWS = 1000001
 
 
-def _is_match_empty(match_: dict) -> bool:
-    def is_empty(elem: Any):
-        # Not matching None here, because we don't want to consider {'$match': {'col': None}} to be
-        # empty
-        if elem == {}:
-            return True
-        if isinstance(elem, dict):
-            return _is_match_empty(elem)
-        return False
+def _is_empty_match_column(elem: Any):
+    # Not matching None here, because we don't want to consider {'$match': {'col': None}} to be
+    # empty
+    if elem == {}:
+        return True
+    if isinstance(elem, dict):
+        return _is_match_empty(elem)
 
-    return all(is_empty(v) for v in match_.values())
+    return False
+
+
+def _is_match_empty(match_: dict) -> bool:
+    return all(_is_empty_match_column(v) for v in match_.values())
 
 
 def _is_match_statement(d: Any) -> bool:
     return isinstance(d, dict) and list(d.keys()) == ['$match']
+
+
+def _sanitize_match(query: dict) -> dict:
+    if _is_match_empty(query):
+        return {}
+    if '$and' in query:
+        and_condition = query['$and']
+        if isinstance(and_condition, list):
+            query['$and'] = [elem for elem in and_condition if not _is_empty_match_column(elem)]
+    return query
 
 
 def _sanitize_query_matches(query: dict | list[dict]) -> Any:
@@ -49,7 +61,7 @@ def _sanitize_query_matches(query: dict | list[dict]) -> Any:
     """
     if isinstance(query, list):
         return [
-            {'$match': {}} if (_is_match_statement(q) and _is_match_empty(q)) else q for q in query
+            {'$match': _sanitize_match(q['$match'])} if _is_match_statement(q) else q for q in query
         ]
     return query
 
