@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### [4.2.2] 2023-01-24
+
+### Fixed
+
+- MongoConnector: Now handle "__VOID__" in $and match conditions.
 ### [4.2.1] 2023-01-04
 
 ### Fixed
