@@ -6,7 +6,7 @@
 
 ### Fixed
 
-- handle "__VOID__" in $and match conditions.
+- MongoConnector: Now handle "__VOID__" in $and match conditions.
 ### [4.2.1] 2023-01-04
 
 ### Fixed
