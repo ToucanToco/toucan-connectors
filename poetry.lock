@@ -3856,13 +3856,13 @@ files = [
 
 [[package]]
 name = "redshift-connector"
-version = "2.0.909"
+version = "2.0.910"
 description = "Redshift interface library"
 category = "main"
 optional = true
 python-versions = ">=3.6"
 files = [
-    {file = "redshift_connector-2.0.909-py3-none-any.whl", hash = "sha256:9fb0e25c2af961d268189c0718c4f48e842cf09070e05ba7343b9a8d491df443"},
+    {file = "redshift_connector-2.0.910-py3-none-any.whl", hash = "sha256:8f5ca07f2bec4a97e7a601ac7f0de9b47495298973c8e4d7f219f995b5682e23"},
 ]
 
 [package.dependencies]
