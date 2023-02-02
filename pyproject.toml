@@ -69,7 +69,7 @@ peakina = {version = "^0.9.1", optional = true}
 [tool.poetry.dev-dependencies]
 Authlib = "^1.0.1"
 aioresponses = ">=0.7.3,<1.0"
-black = "^22.12.0"
+black = "^23.1.0"
 click = "^8.1.3"
 cryptography = "<39"
 docker = "^6.0.1"
