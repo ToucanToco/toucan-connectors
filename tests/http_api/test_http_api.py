@@ -225,7 +225,6 @@ def test_get_df_with_template_overide(data_source, mocker):
 
 @pytest.mark.skip(reason='This uses an real api')
 def test_get_df_oauth2_backend():
-
     data_provider = {
         'name': 'test',
         'type': 'HttpAPI',
@@ -249,7 +248,6 @@ def test_get_df_oauth2_backend():
 
 @responses.activate
 def test_get_df_oauth2_backend_mocked():
-
     data_provider = {
         'name': 'test',
         'type': 'HttpAPI',

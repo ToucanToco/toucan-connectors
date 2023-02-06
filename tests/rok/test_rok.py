@@ -233,7 +233,6 @@ def test_error_message_from_rok(rok_ds_jwt, rok_connector_with_secret):
 
 @pytest.mark.skip(reason='Requires live instance wih username/password Authentication')
 def test_live_instance():
-
     live_rds = RokDataSource(
         name='RokConnector',
         domain='RokData',

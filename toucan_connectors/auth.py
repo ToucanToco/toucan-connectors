@@ -72,7 +72,6 @@ class CustomTokenServer(AuthBase):
         self.filter = filter
 
     def __call__(self, r):
-
         if self.auth:
             session = Auth(**self.auth).get_session()
         else:
