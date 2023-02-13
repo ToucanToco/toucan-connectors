@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.23.9] 2023-02-13
+
+### Changed
+
+- Feat: Logs have been added to the Redshift connector in order to get timing insights for query execution
+
 ### [3.23.8] 2022-12-27
 
 ### Changed
