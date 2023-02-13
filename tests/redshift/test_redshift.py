@@ -1,6 +1,8 @@
+from unittest import mock
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_mock import MockerFixture
 from redshift_connector.error import InterfaceError, OperationalError
 
 from toucan_connectors.redshift.redshift_database_connector import (
@@ -530,3 +532,24 @@ def test_get_model_with_info(mocker, redshift_connector):
         [],
         {'info': {'Could not reach databases': ['dev']}},
     )
+
+
+def test_retrieve_data_logging(
+    mocker: MockerFixture,
+    redshift_connector: RedshiftConnector,
+    redshift_datasource: RedshiftDataSource,
+):
+    from toucan_connectors.redshift.redshift_database_connector import _LOGGER
+
+    mocker.patch('time.time', side_effect=[1.337, 1.337 + 2.4242, 1.337 + 2.8484, 1.337 + 3.7575])
+    mocker.patch.object(RedshiftConnector, '_get_connection')
+    logger_spy = mocker.spy(_LOGGER, 'info')
+
+    redshift_connector._retrieve_data(datasource=redshift_datasource)
+
+    assert logger_spy.call_count == 3
+    assert logger_spy.call_args_list == [
+        mock.call('Opening a connection to Redshift took 2.42s'),
+        mock.call('Executing the Redshift query took 0.42s'),
+        mock.call('Reading the query result from Redshift query took 0.91s'),
+    ]

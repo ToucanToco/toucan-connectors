@@ -1,5 +1,6 @@
 import logging
 import re
+import time
 from contextlib import suppress
 from enum import Enum
 from functools import cached_property
@@ -49,7 +50,7 @@ ORDERED_KEYS = [
     'enable_tcp_keepalive',
 ]
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class AuthenticationMethod(str, Enum):
@@ -244,9 +245,20 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
             prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_limit_query(
                 datasource.query, datasource.parameters, offset, limit
             )
+        start = time.time()
         with self._get_connection(database=datasource.database).cursor() as cursor:
+            connection_opening_delta = time.time() - start
+            _LOGGER.info(f'Opening a connection to Redshift took {connection_opening_delta:.2f}s')
             cursor.execute(prepared_query, prepared_query_parameters)
+            query_execution_delta = time.time() - connection_opening_delta - start
+            _LOGGER.info(f'Executing the Redshift query took {query_execution_delta:.2f}s')
             result: pd.DataFrame = cursor.fetch_dataframe()
+            data_retrieval_delta = (
+                time.time() - query_execution_delta - connection_opening_delta - start
+            )
+            _LOGGER.info(
+                f'Reading the query result from Redshift query took {data_retrieval_delta:.2f}s'
+            )
             if result is None:
                 result = pd.DataFrame()
         return result
