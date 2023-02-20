@@ -461,8 +461,6 @@ def test_ssl_parameters_verify_ca(mysql_connector_with_ssl: MySQLConnector, mock
     kwargs = connect_mock.call_args.kwargs
     assert kwargs['ssl_disabled'] is False
     assert kwargs['ssl_ca'] is not None
-    assert kwargs['ssl_cert'] is not None
-    assert kwargs['ssl_key'] is not None
     assert kwargs['ssl_verify_cert'] is True
     assert kwargs['ssl_verify_identity'] is False
 
@@ -477,13 +475,11 @@ def test_ssl_parameters_verify_identity(
     kwargs = connect_mock.call_args.kwargs
     assert kwargs['ssl_disabled'] is False
     assert kwargs['ssl_ca'] is not None
-    assert kwargs['ssl_cert'] is not None
-    assert kwargs['ssl_key'] is not None
     assert kwargs['ssl_verify_cert'] is True
     assert kwargs['ssl_verify_identity'] is True
 
 
-@pytest.mark.parametrize('missing_param', ('ssl_ca', 'ssl_cert', 'ssl_key'))
+@pytest.mark.parametrize('missing_param', ('ssl_cert', 'ssl_key'))
 def test_ssl_parameters_missing_param(
     mysql_connector_with_ssl: MySQLConnector, mocker: MockerFixture, missing_param: str
 ):

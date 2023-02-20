@@ -150,15 +150,19 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
     def _sanitize_ssl_params(self) -> dict[str, Any]:
         params = {}
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
-            for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
-                assert (
-                    opt := getattr(self, ssl_opt)
-                ) is not None, (
-                    f'{ssl_opt} must be specified if ssl_mode is VERIFY_CA or VERIFY_IDENTITY'
-                )
-                try:
-                    params[ssl_opt] = sanitize_spaces_pem(opt.get_secret_value())
 
+            # if one is present, the other one should be available (should be
+            # better in a validator ?)
+            for k, p in (('ssl_key', 'ssl_cert'), ('ssl_cert', 'ssl_key')):
+                if getattr(self, k) is not None:
+                    assert (
+                        getattr(self, p) is not None
+                    ), f'SSL option {k} should be available if {p} is provided !'
+
+            for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
+                try:
+                    if (opt := getattr(self, ssl_opt)) is not None:
+                        params[ssl_opt] = sanitize_spaces_pem(opt.get_secret_value())
                 except InvalidPEMFormat as exc:
                     raise ValueError(f"SSL option '{ssl_opt}' has an invalid PEM format") from exc
         return params
@@ -231,25 +235,21 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
 
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
             ssl_params = self._sanitize_ssl_params()
-            with (
-                NamedTemporaryFile(prefix='ssl_ca') as ssl_ca,
-                NamedTemporaryFile(prefix='ssl_cert') as ssl_cert,
-                NamedTemporaryFile(prefix='ssl_key') as ssl_key,
-            ):
-                # Writing cert contents to temporary files. They're opened in wb+ mode
-                ssl_ca.write(ssl_params['ssl_ca'].encode())
-                ssl_ca.seek(0)
-                ssl_cert.write(ssl_params['ssl_cert'].encode())
-                ssl_cert.seek(0)
-                ssl_key.write(ssl_params['ssl_key'].encode())
-                ssl_key.seek(0)
+            for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
+                ssl_opt_type = NamedTemporaryFile(prefix=ssl_opt)
+                if ssl_opt in ssl_params:
+                    ssl_opt_type.write(ssl_params[ssl_opt].encode())
+                    ssl_opt_type.seek(0)
+
+                    connection_params |= {**connection_params, **{ssl_opt: ssl_opt_type.name}}
 
                 connection_params |= {
-                    'ssl_ca': ssl_ca.name,
-                    'ssl_cert': ssl_cert.name,
-                    'ssl_key': ssl_key.name,
+                    **connection_params,
                     # Verify that the server's hostname matches the CA
-                    'ssl_verify_identity': self.ssl_mode == SSLMode.VERIFY_IDENTITY,
+                    **{
+                        'ssl_verify_identity': self.ssl_mode == SSLMode.VERIFY_IDENTITY
+                        or (getattr(self, 'ssl_key') is None or getattr(self, 'ssl_cert') is None)
+                    },
                 }
                 return pymysql.connect(**connection_params)
         return pymysql.connect(**connection_params)
