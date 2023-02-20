@@ -242,12 +242,9 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
 
                     connection_params[ssl_opt] = ssl_opt_file.name
 
-                connection_params |= {
-                    **connection_params,
-                    # Verify that the server's hostname matches the CA
-                    **{'ssl_verify_identity': self.ssl_mode == SSLMode.VERIFY_IDENTITY},
-                }
-                return pymysql.connect(**connection_params)
+            connection_params['ssl_verify_identity'] = self.ssl_mode == SSLMode.VERIFY_IDENTITY
+
+            return pymysql.connect(**connection_params)
         return pymysql.connect(**connection_params)
 
     @staticmethod
