@@ -3,6 +3,7 @@ from typing import Any
 import pandas as pd
 import pymysql
 import pytest
+from pydantic.error_wrappers import ValidationError
 from pydantic.types import SecretStr
 from pytest_mock import MockerFixture
 
@@ -454,6 +455,32 @@ def mysql_connector_with_ssl():
     )
 
 
+def test_ssl_parameters_verify_identity_errors():
+    with pytest.raises(ValidationError):
+        MySQLConnector(
+            name='mycon',
+            host='localhost',
+            port=3306,
+            user='ubuntu',
+            password='ilovetoucan',
+            ssl_cert='-----BEGIN CERTIFICATE-----\nsomething else\n-----END CERTIFICATE-----',
+            ssl_key=None,
+            ssl_mode='VERIFY_IDENTITY',
+        )
+
+    with pytest.raises(ValidationError):
+        MySQLConnector(
+            name='mycon',
+            host='localhost',
+            port=3306,
+            user='ubuntu',
+            password='ilovetoucan',
+            ssl_cert=None,
+            ssl_key='-----BEGIN PRIVATE KEY-----\nand something else-----END PRIVATE KEY-----',
+            ssl_mode='VERIFY_IDENTITY',
+        )
+
+
 def test_ssl_parameters_verify_ca(mysql_connector_with_ssl: MySQLConnector, mocker: MockerFixture):
     connect_mock = mocker.patch('pymysql.connect')
     mysql_connector_with_ssl._connect()
@@ -481,17 +508,6 @@ def test_ssl_parameters_verify_identity(
     assert kwargs['ssl_key'] is not None
     assert kwargs['ssl_verify_cert'] is True
     assert kwargs['ssl_verify_identity'] is True
-
-
-@pytest.mark.parametrize('missing_param', ('ssl_cert', 'ssl_key'))
-def test_ssl_parameters_missing_param(
-    mysql_connector_with_ssl: MySQLConnector, mocker: MockerFixture, missing_param: str
-):
-    connect_mock = mocker.patch('pymysql.connect')
-    setattr(mysql_connector_with_ssl, missing_param, None)
-    with pytest.raises(AssertionError):
-        mysql_connector_with_ssl._connect()
-    assert connect_mock.call_count == 0
 
 
 def test_sanitize_ssl_params_invalid_pem(mysql_connector_with_ssl: MySQLConnector):
