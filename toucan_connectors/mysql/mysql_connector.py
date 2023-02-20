@@ -151,13 +151,12 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         params = {}
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
 
-            # if one is present, the other one should be available (should be
-            # better in a validator ?)
+            # if one is present, the other one should be specified
             for k, p in (('ssl_key', 'ssl_cert'), ('ssl_cert', 'ssl_key')):
                 if getattr(self, k) is not None:
                     assert (
                         getattr(self, p) is not None
-                    ), f'SSL option {k} should be available if {p} is provided !'
+                    ), f'SSL option {k} should be specified if {p} is provided !'
 
             for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
                 try:
@@ -236,20 +235,17 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
             ssl_params = self._sanitize_ssl_params()
             for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
-                ssl_opt_type = NamedTemporaryFile(prefix=ssl_opt)
                 if ssl_opt in ssl_params:
-                    ssl_opt_type.write(ssl_params[ssl_opt].encode())
-                    ssl_opt_type.seek(0)
+                    ssl_opt_file = NamedTemporaryFile(prefix=ssl_opt)
+                    ssl_opt_file.write(ssl_params[ssl_opt].encode())
+                    ssl_opt_file.seek(0)
 
-                    connection_params |= {**connection_params, **{ssl_opt: ssl_opt_type.name}}
+                    connection_params[ssl_opt] = ssl_opt_file.name
 
                 connection_params |= {
                     **connection_params,
                     # Verify that the server's hostname matches the CA
-                    **{
-                        'ssl_verify_identity': self.ssl_mode == SSLMode.VERIFY_IDENTITY
-                        or (getattr(self, 'ssl_key') is None or getattr(self, 'ssl_cert') is None)
-                    },
+                    **{'ssl_verify_identity': self.ssl_mode == SSLMode.VERIFY_IDENTITY},
                 }
                 return pymysql.connect(**connection_params)
         return pymysql.connect(**connection_params)
