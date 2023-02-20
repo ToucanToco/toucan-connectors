@@ -483,17 +483,6 @@ def test_ssl_parameters_verify_identity(
     assert kwargs['ssl_verify_identity'] is True
 
 
-@pytest.mark.parametrize('missing_param', ('ssl_ca', 'ssl_cert', 'ssl_key'))
-def test_ssl_parameters_missing_param(
-    mysql_connector_with_ssl: MySQLConnector, mocker: MockerFixture, missing_param: str
-):
-    connect_mock = mocker.patch('pymysql.connect')
-    setattr(mysql_connector_with_ssl, missing_param, None)
-    with pytest.raises(AssertionError):
-        mysql_connector_with_ssl._connect()
-    assert connect_mock.call_count == 0
-
-
 def test_sanitize_ssl_params_invalid_pem(mysql_connector_with_ssl: MySQLConnector):
     mysql_connector_with_ssl.ssl_key = SecretStr(
         mysql_connector_with_ssl.ssl_key.get_secret_value()[:40]

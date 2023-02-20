@@ -126,21 +126,25 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         None,
         description='The CA certificate content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-ca option of the MySQL client',
+        required=False,
     )
     ssl_cert: SecretStr = Field(
         None,
         description='The X509 certificate content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-cert option of the MySQL client',
+        required=False,
     )
     ssl_key: SecretStr = Field(
         None,
         description='The X509 certificate key content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-key option of the MySQL client',
+        required=False,
     )
     ssl_mode: SSLMode = Field(
         None,
         description='SSL Mode to use to connect to the MySQL server. '
         'Equivalent of the --ssl-mode option of the MySQL client. Must be set in order to use SSL',
+        required=False,
     )
 
     class Config:
@@ -151,16 +155,12 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         params = {}
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
             for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
-                assert (
-                    opt := getattr(self, ssl_opt)
-                ) is not None, (
-                    f'{ssl_opt} must be specified if ssl_mode is VERIFY_CA or VERIFY_IDENTITY'
-                )
                 try:
-                    params[ssl_opt] = sanitize_spaces_pem(opt.get_secret_value())
-
+                    if (opt := getattr(self, ssl_opt)) is not None:
+                        params[ssl_opt] = sanitize_spaces_pem(opt.get_secret_value())
                 except InvalidPEMFormat as exc:
                     raise ValueError(f"SSL option '{ssl_opt}' has an invalid PEM format") from exc
+
         return params
 
     def _list_db_names(self) -> list[str]:
@@ -237,17 +237,20 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
                 NamedTemporaryFile(prefix='ssl_key') as ssl_key,
             ):
                 # Writing cert contents to temporary files. They're opened in wb+ mode
-                ssl_ca.write(ssl_params['ssl_ca'].encode())
-                ssl_ca.seek(0)
-                ssl_cert.write(ssl_params['ssl_cert'].encode())
-                ssl_cert.seek(0)
-                ssl_key.write(ssl_params['ssl_key'].encode())
-                ssl_key.seek(0)
+                if 'ssl_ca' in ssl_params:
+                    ssl_ca.write(ssl_params['ssl_ca'].encode())
+                    ssl_ca.seek(0)
+                if 'ssl_cert' in ssl_params:
+                    ssl_cert.write(ssl_params['ssl_cert'].encode())
+                    ssl_cert.seek(0)
+                if 'ssl_key' in ssl_params:
+                    ssl_key.write(ssl_params['ssl_key'].encode())
+                    ssl_key.seek(0)
 
                 connection_params |= {
-                    'ssl_ca': ssl_ca.name,
-                    'ssl_cert': ssl_cert.name,
-                    'ssl_key': ssl_key.name,
+                    'ssl_ca': ssl_ca.name or None,
+                    'ssl_cert': ssl_cert.name or None,
+                    'ssl_key': ssl_key.name or None,
                     # Verify that the server's hostname matches the CA
                     'ssl_verify_identity': self.ssl_mode == SSLMode.VERIFY_IDENTITY,
                 }
