@@ -436,8 +436,12 @@ class SnowflakeConnector(ToucanConnector):
             db_contents += SnowflakeCommon().get_db_content(connection).to_dict('records')
 
     def get_model(self, db_name: str | None = None):
-        with self._get_connection() as connection:
-            databases = SnowflakeCommon().get_databases(connection=connection)
+        if db_name:
+            databases = [db_name]
+        else:
+            with self._get_connection() as connection:
+                databases = SnowflakeCommon().get_databases(connection=connection)
+
         content_queries = []
         for db in databases:
             content_queries.append(build_database_model_extraction_query())
