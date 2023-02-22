@@ -9,6 +9,7 @@ from pytest_mock import MockFixture
 
 from toucan_connectors.hubspot_private_app.hubspot_connector import (
     HubspotConnector,
+    HubspotDataset,
     HubspotDataSource,
 )
 
@@ -129,7 +130,7 @@ def hubspot_connector() -> HubspotConnector:
 
 @pytest.fixture
 def hubspot_data_source() -> HubspotDataSource:
-    return HubspotDataSource(name='hubspot', domain='coucou')
+    return HubspotDataSource(name='hubspot', domain='coucou', dataset=HubspotDataset.contacts)
 
 
 def test_get_df(

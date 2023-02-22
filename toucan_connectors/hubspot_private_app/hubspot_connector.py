@@ -19,7 +19,7 @@ class HubspotDataset(str, Enum):
 
 
 class HubspotDataSource(ToucanDataSource):
-    dataset: HubspotDataset = HubspotDataset.contacts
+    dataset: HubspotDataset
 
 
 class _HubSpotPagingNext(BaseModel):
