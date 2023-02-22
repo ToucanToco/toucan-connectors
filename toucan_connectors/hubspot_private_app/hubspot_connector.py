@@ -6,7 +6,6 @@ import pandas as pd
 from hubspot import HubSpot  # type:ignore[import]
 from pydantic import BaseModel, Field, SecretStr
 
-from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.toucan_connector import DataSlice, ToucanConnector, ToucanDataSource
 
 
@@ -142,9 +141,4 @@ class HubspotConnector(ToucanConnector):
                 pass
             df = pd.DataFrame([r.to_dict() for r in results])
 
-        return DataSlice(
-            df=df,
-            pagination_info=build_pagination_info(
-                offset=offset, limit=limit, retrieved_rows=len(df), total_rows=None
-            ),
-        )
+        return DataSlice(df, len(df))
