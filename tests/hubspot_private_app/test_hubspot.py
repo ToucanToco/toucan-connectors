@@ -220,7 +220,6 @@ def test_get_slice_with_offset_out_of_bounds(
     hubspot_data_source: HubspotDataSource,
     hubspot_client: MagicMock,
     hubspot_second_page: _DictableDict,
-    expected_df: pd.DataFrame,
 ):
     hubspot_client.basic_api.get_page.side_effect = [hubspot_second_page]
 
@@ -230,3 +229,20 @@ def test_get_slice_with_offset_out_of_bounds(
     hubspot_client.get_all.assert_not_called()
     # Limit should have been truncated to 100 results
     assert hubspot_client.basic_api.get_page.call_args_list == [call(after=None, limit=100)]
+
+
+def test_get_slice_has_the_right_behaviour_even_when_too_many_results_are_returned(
+    hubspot_connector: HubspotConnector,
+    hubspot_data_source: HubspotDataSource,
+    hubspot_client: MagicMock,
+    hubspot_full_page: _DictableDict,
+    expected_df: pd.DataFrame,
+):
+    hubspot_client.basic_api.get_page.return_value = hubspot_full_page
+
+    result = hubspot_connector.get_slice(hubspot_data_source, offset=0, limit=1)
+    assert_frame_equal(result.df, expected_df[:1])
+
+    hubspot_client.get_all.assert_not_called()
+    # Limit should have been truncated to 100 results
+    assert hubspot_client.basic_api.get_page.call_args_list == [call(after=None, limit=1)]
