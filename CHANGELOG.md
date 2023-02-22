@@ -2,6 +2,8 @@
 
 ## Unreleased
  
+### [3.23.10] 2023-02-22
+
 ### Changed
 
 - MySQL: Allow Optional parameters on ssl_mode
