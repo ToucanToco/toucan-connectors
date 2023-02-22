@@ -122,12 +122,11 @@ class HubspotConnector(ToucanConnector):
         limit: int | None = None,
         get_row_count: bool | None = False,
     ) -> DataSlice:
-        api = self._api_for_dataset(data_source.dataset)
-
         if limit is None:
-            df = pd.DataFrame(self._fetch_all(api)[offset:])
+            df = self._retrieve_data(data_source)[offset:].reset_index(drop=True)
 
         else:
+            api = self._api_for_dataset(data_source.dataset)
             results = []
             result_iterator = self._result_iterator(
                 api, max_results=offset + (limit or 0), limit=limit
