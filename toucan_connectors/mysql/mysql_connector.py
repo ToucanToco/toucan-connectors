@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pymysql
 from cached_property import cached_property_with_ttl
-from pydantic import Field, SecretStr, constr, create_model
+from pydantic import Field, SecretStr, constr, create_model, validator
 from pymysql.constants import CR, ER
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
@@ -147,18 +147,26 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         underscore_attrs_are_private = True
         keep_untouched = (cached_property_with_ttl,)
 
+    @validator('ssl_key')
+    @classmethod
+    def ssl_key_validator(cls, ssl_key: str, values: dict) -> str:
+        ssl_cert = values.get('ssl_cert', None)
+        # if one is present, the other one should be specified
+        if ssl_cert is not None and ssl_key is None:
+            raise ValueError('SSL option "ssl_key" should be specified if "ssl_cert" is provided !')
+        elif ssl_key is not None and ssl_cert is None:
+            raise ValueError('SSL option "ssl_cert" should be specified if "ssl_key" is provided !')
+
+        return ssl_key
+
     def _sanitize_ssl_params(self) -> dict[str, Any]:
         params = {}
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
-            for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
-                assert (
-                    opt := getattr(self, ssl_opt)
-                ) is not None, (
-                    f'{ssl_opt} must be specified if ssl_mode is VERIFY_CA or VERIFY_IDENTITY'
-                )
-                try:
-                    params[ssl_opt] = sanitize_spaces_pem(opt.get_secret_value())
 
+            for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
+                try:
+                    if (opt := getattr(self, ssl_opt)) is not None:
+                        params[ssl_opt] = sanitize_spaces_pem(opt.get_secret_value())
                 except InvalidPEMFormat as exc:
                     raise ValueError(f"SSL option '{ssl_opt}' has an invalid PEM format") from exc
         return params
@@ -231,27 +239,17 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
 
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
             ssl_params = self._sanitize_ssl_params()
-            with (
-                NamedTemporaryFile(prefix='ssl_ca') as ssl_ca,
-                NamedTemporaryFile(prefix='ssl_cert') as ssl_cert,
-                NamedTemporaryFile(prefix='ssl_key') as ssl_key,
-            ):
-                # Writing cert contents to temporary files. They're opened in wb+ mode
-                ssl_ca.write(ssl_params['ssl_ca'].encode())
-                ssl_ca.seek(0)
-                ssl_cert.write(ssl_params['ssl_cert'].encode())
-                ssl_cert.seek(0)
-                ssl_key.write(ssl_params['ssl_key'].encode())
-                ssl_key.seek(0)
+            for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
+                if ssl_opt in ssl_params:
+                    ssl_opt_file = NamedTemporaryFile(prefix=ssl_opt)
+                    ssl_opt_file.write(ssl_params[ssl_opt].encode())
+                    ssl_opt_file.seek(0)
 
-                connection_params |= {
-                    'ssl_ca': ssl_ca.name,
-                    'ssl_cert': ssl_cert.name,
-                    'ssl_key': ssl_key.name,
-                    # Verify that the server's hostname matches the CA
-                    'ssl_verify_identity': self.ssl_mode == SSLMode.VERIFY_IDENTITY,
-                }
-                return pymysql.connect(**connection_params)
+                    connection_params[ssl_opt] = ssl_opt_file.name
+
+            connection_params['ssl_verify_identity'] = self.ssl_mode == SSLMode.VERIFY_IDENTITY
+
+            return pymysql.connect(**connection_params)
         return pymysql.connect(**connection_params)
 
     @staticmethod
