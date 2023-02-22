@@ -103,6 +103,9 @@ class HubspotConnector(ToucanConnector):
     ) -> Generator[_HubSpotResult, None, None]:
         after = None
         count = 0
+        # HubSpot returns a 400 HTTP error when trying to fetch 100 results
+        if limit is not None:
+            limit = min(limit, 100)
         while True:
             page = self._fetch_page(api, after=after, limit=limit)
             for result in page.results:
