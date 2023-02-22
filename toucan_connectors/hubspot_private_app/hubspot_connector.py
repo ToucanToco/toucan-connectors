@@ -57,17 +57,17 @@ class _HubSpotResponse(BaseModel):
 _RawHubSpotResult: TypeAlias = dict[str, str | None | list[Any]]
 
 
-class _HubSpotObject(Protocol):
+class _HubSpotObject(Protocol):  # pragma: no cover
     def to_dict(self) -> _RawHubSpotResult:
         ...
 
 
-class _BasicApi(Protocol):
+class _BasicApi(Protocol):  # pragma: no cover
     def get_page(self, after: str | None, limit: int | None) -> _HubSpotObject:
         ...
 
 
-class _Api(Protocol):
+class _Api(Protocol):  # pragma: no cover
     @property
     def basic_api(self) -> _BasicApi:
         ...
@@ -90,7 +90,7 @@ class HubspotConnector(ToucanConnector):
         results = api.get_all()
         return [_HubSpotResult(**elem.to_dict()) for elem in results]
 
-    def _api_for_dataset(self, object_type: HubspotDataset) -> _Api:
+    def _api_for_dataset(self, object_type: HubspotDataset) -> _Api:  # pragma: no cover
         client = HubSpot(access_token=self.access_token.get_secret_value())
         return getattr(client.crm, object_type.value)
 
