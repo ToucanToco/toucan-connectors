@@ -1,6 +1,8 @@
 # Changelog (Pypi package)
 
 ## Unreleased
+
+### [4.2.3] 2023-02-22
  
 ### Changed
 
