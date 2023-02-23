@@ -1,11 +1,12 @@
 # Changelog (Pypi package)
 
 ## Unreleased
- 
-### [3.23.10] 2023-02-22
+
+### [3.23.10] 2023-02-23
 
 ### Changed
 
+- HubSpot: Added a new connector based on HubSpot private apps
 - MySQL: Allow Optional parameters on ssl_mode
 
 ### [3.23.9] 2023-02-13
