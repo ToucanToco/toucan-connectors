@@ -1,6 +1,10 @@
 # Changelog (Pypi package)
 
 ## Unreleased
+ 
+### Changed
+
+- MySQL: Allow Optional parameters on ssl_mode
 
 ### [4.3.0] 2023-02-22
  

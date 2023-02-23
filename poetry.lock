@@ -1593,21 +1593,21 @@ tool = ["click (>=6.0.0)"]
 
 [[package]]
 name = "google-cloud-bigquery"
-version = "3.5.0"
+version = "3.6.0"
 description = "Google BigQuery API client library"
 category = "main"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "google-cloud-bigquery-3.5.0.tar.gz", hash = "sha256:dd3ca84e5be6fa9e0570fb21665a902cc5651cbd045842fb714164c99a2639c4"},
-    {file = "google_cloud_bigquery-3.5.0-py2.py3-none-any.whl", hash = "sha256:358f54c473938b2d022335118b4e56cdcdaf22a5a112fa0cfeb888fd8814ba62"},
+    {file = "google-cloud-bigquery-3.6.0.tar.gz", hash = "sha256:5886c14f29097158d59afa74a6732dbdd583e6ef30dc9934a56ad532906de356"},
+    {file = "google_cloud_bigquery-3.6.0-py2.py3-none-any.whl", hash = "sha256:ed875c3a52050d140660850f04aaa59c1ec03b420a31fa7cc643a1726fc784d1"},
 ]
 
 [package.dependencies]
 db-dtypes = {version = ">=0.3.0,<2.0.0dev", optional = true, markers = "extra == \"pandas\""}
 google-api-core = {version = ">=1.31.5,<2.0.0 || >2.3.0,<3.0.0dev", extras = ["grpc"]}
 google-cloud-bigquery-storage = {version = ">=2.0.0,<3.0.0dev", optional = true, markers = "extra == \"bqstorage\""}
-google-cloud-core = ">=1.4.1,<3.0.0dev"
+google-cloud-core = ">=1.6.0,<3.0.0dev"
 google-resumable-media = ">=0.6.0,<3.0dev"
 grpcio = ">=1.47.0,<2.0dev"
 packaging = ">=20.0.0"
@@ -1619,11 +1619,11 @@ python-dateutil = ">=2.7.2,<3.0dev"
 requests = ">=2.21.0,<3.0.0dev"
 
 [package.extras]
-all = ["Shapely (>=1.8.4,<2.0dev)", "db-dtypes (>=0.3.0,<2.0.0dev)", "geopandas (>=0.9.0,<1.0dev)", "google-cloud-bigquery-storage (>=2.0.0,<3.0.0dev)", "grpcio (>=1.47.0,<2.0dev)", "grpcio (>=1.49.1,<2.0dev)", "ipython (>=7.0.1,!=8.1.0)", "ipywidgets (==7.7.1)", "opentelemetry-api (>=1.1.0)", "opentelemetry-instrumentation (>=0.20b0)", "opentelemetry-sdk (>=1.1.0)", "pandas (>=1.1.0)", "pyarrow (>=3.0.0)", "tqdm (>=4.7.4,<5.0.0dev)"]
+all = ["Shapely (>=1.8.4,<2.0dev)", "db-dtypes (>=0.3.0,<2.0.0dev)", "geopandas (>=0.9.0,<1.0dev)", "google-cloud-bigquery-storage (>=2.0.0,<3.0.0dev)", "grpcio (>=1.47.0,<2.0dev)", "grpcio (>=1.49.1,<2.0dev)", "ipython (>=7.0.1,!=8.1.0)", "ipywidgets (>=7.7.0,<8.0.1)", "opentelemetry-api (>=1.1.0)", "opentelemetry-instrumentation (>=0.20b0)", "opentelemetry-sdk (>=1.1.0)", "pandas (>=1.1.0)", "pyarrow (>=3.0.0)", "tqdm (>=4.7.4,<5.0.0dev)"]
 bqstorage = ["google-cloud-bigquery-storage (>=2.0.0,<3.0.0dev)", "grpcio (>=1.47.0,<2.0dev)", "grpcio (>=1.49.1,<2.0dev)", "pyarrow (>=3.0.0)"]
 geopandas = ["Shapely (>=1.8.4,<2.0dev)", "geopandas (>=0.9.0,<1.0dev)"]
 ipython = ["ipython (>=7.0.1,!=8.1.0)"]
-ipywidgets = ["ipywidgets (==7.7.1)"]
+ipywidgets = ["ipywidgets (>=7.7.0,<8.0.1)"]
 opentelemetry = ["opentelemetry-api (>=1.1.0)", "opentelemetry-instrumentation (>=0.20b0)", "opentelemetry-sdk (>=1.1.0)"]
 pandas = ["db-dtypes (>=0.3.0,<2.0.0dev)", "pandas (>=1.1.0)", "pyarrow (>=3.0.0)"]
 tqdm = ["tqdm (>=4.7.4,<5.0.0dev)"]
@@ -1938,6 +1938,27 @@ files = [
 
 [package.dependencies]
 pyparsing = {version = ">=2.4.2,<3.0.0 || >3.0.0,<3.0.1 || >3.0.1,<3.0.2 || >3.0.2,<3.0.3 || >3.0.3,<4", markers = "python_version > \"3.0\""}
+
+[[package]]
+name = "hubspot-api-client"
+version = "7.4.0"
+description = "HubSpot API client"
+category = "main"
+optional = true
+python-versions = ">=3.7"
+files = [
+    {file = "hubspot-api-client-7.4.0.tar.gz", hash = "sha256:69420a9f720fc5f1abbae078c162f0b9ddaab72670df42c3515c436d352358c6"},
+    {file = "hubspot_api_client-7.4.0-py3-none-any.whl", hash = "sha256:ad9ba3b10bbefa83be1d14145892d70c4a34c8cad1ce43cf4477a36476777017"},
+]
+
+[package.dependencies]
+certifi = "*"
+python-dateutil = "*"
+six = ">=1.10"
+urllib3 = ">=1.15"
+
+[package.extras]
+dev = ["black", "pytest"]
 
 [[package]]
 name = "idna"
@@ -4514,14 +4535,14 @@ toucan-client = ">=1.1.0,<2.0.0"
 
 [[package]]
 name = "types-pyopenssl"
-version = "23.0.0.3"
+version = "23.0.0.4"
 description = "Typing stubs for pyOpenSSL"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-pyOpenSSL-23.0.0.3.tar.gz", hash = "sha256:6ca54d593f8b946f9570f9ed7457c41da3b518feff5e344851941a6209bea62b"},
-    {file = "types_pyOpenSSL-23.0.0.3-py3-none-any.whl", hash = "sha256:847ab17a16475a882dc29898648a6a35ad0d3e11a5bba5aa8ab2f3435a8647cb"},
+    {file = "types-pyOpenSSL-23.0.0.4.tar.gz", hash = "sha256:8b3550b6e19d51ce78aabd724b0d8ebd962081a5fce95e7f85a592dfcdbc16bf"},
+    {file = "types_pyOpenSSL-23.0.0.4-py3-none-any.whl", hash = "sha256:ad49e15bb8bb2f251b8fc24776f414d877629e44b1b049240063ab013b5a6a7d"},
 ]
 
 [package.dependencies]
@@ -4529,14 +4550,14 @@ cryptography = ">=35.0.0"
 
 [[package]]
 name = "types-python-slugify"
-version = "8.0.0.0"
+version = "8.0.0.1"
 description = "Typing stubs for python-slugify"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-python-slugify-8.0.0.0.tar.gz", hash = "sha256:3a12e806cbd9dd7be2425781078a5186c7393b309eae02a9eef2bafd54941e83"},
-    {file = "types_python_slugify-8.0.0.0-py3-none-any.whl", hash = "sha256:0e81e016ee34ab1b772d2475d939e1a06519cd371dfd3319c4b2c2c99e6367f9"},
+    {file = "types-python-slugify-8.0.0.1.tar.gz", hash = "sha256:f2177d2e65ecf2eca742d28fbf236a8d919a72e68272d1d748c3fe965e5ea3ab"},
+    {file = "types_python_slugify-8.0.0.1-py3-none-any.whl", hash = "sha256:1de288ce45c85627ef632c2b5098dedccfc7ebedb241d181ba69402f03704449"},
 ]
 
 [[package]]
@@ -4958,7 +4979,7 @@ xmlsec = ["xmlsec (>=0.6.1)"]
 [extras]
 adobe = ["adobe-analytics"]
 aircall = ["bearer"]
-all = ["adobe-analytics", "awswrangler", "bearer", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "facebook-sdk", "google-api-python-client", "google-cloud-bigquery", "googleads", "gspread", "lxml", "oauth2client", "oauthlib", "openpyxl", "peakina", "psycopg2", "pyarrow", "pyhdb", "PyHive", "PyJWT", "pymongo", "PyMySQL", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "toucan-client", "xmltodict", "zeep"]
+all = ["adobe-analytics", "awswrangler", "bearer", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "facebook-sdk", "google-api-python-client", "google-cloud-bigquery", "googleads", "gspread", "hubspot-api-client", "lxml", "oauth2client", "oauthlib", "openpyxl", "peakina", "psycopg2", "pyarrow", "pyhdb", "PyHive", "PyJWT", "pymongo", "PyMySQL", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "toucan-client", "xmltodict", "zeep"]
 awsathena = ["awswrangler"]
 azure-mssql = ["pyodbc"]
 clickhouse = ["clickhouse-driver"]
@@ -4975,6 +4996,7 @@ google-sheets = ["google-api-python-client"]
 google-spreadsheet = ["gspread", "oauth2client"]
 hive = ["PyHive"]
 http-api = ["oauthlib", "requests-oauthlib", "xmltodict"]
+hubspot = ["hubspot-api-client"]
 lightspeed = ["bearer"]
 mongo = ["pymongo"]
 mssql = ["pyodbc"]
@@ -4995,4 +5017,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "036383e91a9c65b90f50e1766a29c760a88ac49a5fd461894c9ccdc23dc2f964"
+content-hash = "9c1513a2576edd116ab599aef4e62afabc2d75344b2f0c3d56c8e0f077b65d1f"
