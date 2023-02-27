@@ -62,18 +62,29 @@ class _HubSpotObject(Protocol):  # pragma: no cover
         ...
 
 
-class _BasicApi(Protocol):  # pragma: no cover
+class _PageApi(Protocol):  # pragma: no cover
     def get_page(self, after: str | None, limit: int | None) -> _HubSpotObject:
         ...
 
 
 class _Api(Protocol):  # pragma: no cover
     @property
-    def basic_api(self) -> _BasicApi:
+    def basic_api(self) -> _PageApi:
         ...
 
     def get_all(self) -> list[_HubSpotObject]:
         ...
+
+
+def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:
+    """Some clients have a '{name}_api' attribute.
+
+    basic_api seems to be the default fallback
+    """
+    page_api_name = dataset.value + '_api'
+    if hasattr(api, page_api_name):
+        return getattr(api, page_api_name)
+    return api.basic_api
 
 
 class HubspotConnector(ToucanConnector):
@@ -81,9 +92,9 @@ class HubspotConnector(ToucanConnector):
     access_token: SecretStr = Field(..., description='An API key for the target private app')
 
     def _fetch_page(
-        self, api: _Api, after: str | None = None, limit: int | None = None
+        self, api: _PageApi, after: str | None = None, limit: int | None = None
     ) -> _HubSpotResponse:
-        page = api.basic_api.get_page(after=after, limit=limit)
+        page = api.get_page(after=after, limit=limit)
         return _HubSpotResponse(**page.to_dict())
 
     def _fetch_all(self, api: _Api) -> list[_HubSpotResult]:
@@ -99,7 +110,7 @@ class HubspotConnector(ToucanConnector):
         return pd.DataFrame(r.to_dict() for r in self._fetch_all(api))
 
     def _result_iterator(
-        self, api: _Api, max_results: int | None, limit: int | None
+        self, api: _PageApi, max_results: int | None, limit: int | None
     ) -> Generator[_HubSpotResult, None, None]:
         after = None
         count = 0
@@ -130,9 +141,10 @@ class HubspotConnector(ToucanConnector):
 
         else:
             api = self._api_for_dataset(data_source.dataset)
+            page_api = _page_api_for(api, data_source.dataset)
             results = []
             result_iterator = self._result_iterator(
-                api, max_results=offset + (limit or 0), limit=limit
+                page_api, max_results=offset + (limit or 0), limit=limit
             )
             try:
                 for _ in range(offset):
