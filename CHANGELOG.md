@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [3.23.11] 2023-02-27
+
 ### Fixed
 
 - HubSpot: it is now possible to retrieve a data slice for owners
