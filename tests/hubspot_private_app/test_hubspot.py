@@ -96,6 +96,10 @@ def hubspot_client(mocker: MockFixture) -> MagicMock:
     api.basic_api = basic_api
 
     mocker.patch.object(HubspotConnector, '_api_for_dataset', return_value=api)
+    mocker.patch(
+        'toucan_connectors.hubspot_private_app.hubspot_connector._page_api_for',
+        return_value=basic_api,
+    )
 
     return api
 
