@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, call
 
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 from pytest_mock import MockFixture
 
 from toucan_connectors.hubspot_private_app.hubspot_connector import (
@@ -12,6 +12,13 @@ from toucan_connectors.hubspot_private_app.hubspot_connector import (
     HubspotDataset,
     HubspotDataSource,
 )
+
+
+def assert_frame_equal(left: pd.DataFrame, right: pd.DataFrame) -> bool:
+    return pd_assert_frame_equal(
+        left.reindex(columns=sorted(left.columns.to_list())),
+        right.reindex(columns=sorted(right.columns.to_list())),
+    )
 
 
 class _DictableDict(dict):
@@ -48,14 +55,12 @@ def hubspot_full_page() -> _DictableDict:
                     'associations': None,
                     'created_at': datetime(2023, 2, 21, 9, 50, 48, 490000, tzinfo=timezone.utc),
                     'id': '51',
-                    'properties': {
-                        'createdate': '2023-02-21T09:50:48.490Z',
-                        'email': 'bh@hubspot.com',
-                        'firstname': 'Brian',
-                        'hs_object_id': '51',
-                        'lastmodifieddate': '2023-02-21T09:50:55.765Z',
-                        'lastname': 'Halligan (Sample Contact)',
-                    },
+                    'createdate': '2023-02-21T09:50:48.490Z',
+                    'email': 'bh@hubspot.com',
+                    'firstname': 'Brian',
+                    'hs_object_id': '51',
+                    'lastmodifieddate': '2023-02-21T09:50:55.765Z',
+                    'lastname': 'Halligan (Sample Contact)',
                     'properties_with_history': None,
                     'updated_at': datetime(2023, 2, 21, 9, 50, 55, 765000, tzinfo=timezone.utc),
                 },
@@ -106,7 +111,7 @@ def hubspot_client(mocker: MockFixture) -> MagicMock:
 
 @pytest.fixture
 def expected_df() -> pd.DataFrame:
-    return pd.DataFrame(
+    df = pd.DataFrame(
         {
             'created_at': [
                 pd.Timestamp('2023-02-21 09:50:48.148000+0000', tz='UTC'),
@@ -117,6 +122,10 @@ def expected_df() -> pd.DataFrame:
                 pd.Timestamp('2023-02-21 09:50:55.765000+0000', tz='UTC'),
             ],
             'id': ['1', '51'],
+            'properties_with_history': [None, None],
+            'archived': [False, False],
+            'archived_at': [None, None],
+            'associations': [None, None],
             'createdate': ['2023-02-21T09:50:48.148Z', '2023-02-21T09:50:48.490Z'],
             'email': ['emailmaria@hubspot.com', 'bh@hubspot.com'],
             'firstname': ['Maria', 'Brian'],
@@ -125,6 +134,7 @@ def expected_df() -> pd.DataFrame:
             'lastname': ['Johnson (Sample Contact)', 'Halligan (Sample Contact)'],
         }
     )
+    return df.reindex(columns=sorted(df.columns.to_list()))
 
 
 @pytest.fixture
