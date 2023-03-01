@@ -36,13 +36,16 @@ class _HubSpotResult(BaseModel):
     id_: str = Field(..., alias='id')
     properties: dict[str, Any] = Field(default_factory=dict)
 
+    # For basic_api objects, properties are in a 'properties' object. For specialized APIs, such as
+    # owners, they're keys of the root object
+    class Config:
+        extra = 'allow'
+
     def to_dict(self) -> dict[str, Any]:
-        return {
-            'created_at': self.created_at,
-            'updated_at': self.updated_at,
-            'id': self.id_,
-            **self.properties,
-        }
+        dict_ = self.dict(by_alias=True)
+        properties = dict_.pop('properties', None)
+
+        return {**dict_, **(properties or {})}
 
 
 class _HubSpotResponse(BaseModel):
