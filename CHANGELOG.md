@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- HubSpot: root-level properties are now also returned along with proeprties in the "properties" object
+
 ### [4.3.1] 2023-02-27
 
 ### Fixed
