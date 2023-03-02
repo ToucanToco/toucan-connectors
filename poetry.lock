@@ -214,14 +214,14 @@ cryptography = ">=3.2"
 
 [[package]]
 name = "awswrangler"
-version = "2.17.0"
+version = "2.20.0"
 description = "Pandas on AWS."
 category = "main"
 optional = true
-python-versions = ">=3.7.1,<3.11"
+python-versions = ">=3.7.1,<4.0"
 files = [
-    {file = "awswrangler-2.17.0-py3-none-any.whl", hash = "sha256:e8806dce7b42140feb0317a19318dbf55a3a8011e73b7f3815833761b029af79"},
-    {file = "awswrangler-2.17.0.tar.gz", hash = "sha256:c130d451659a5539266374198643c214efd056b64d376e0ee399a69292887c44"},
+    {file = "awswrangler-2.20.0-py3-none-any.whl", hash = "sha256:186b0482a7520a3f2e7720e74137a0a7460487d2e1e9b473d73e2868d520d2e1"},
+    {file = "awswrangler-2.20.0.tar.gz", hash = "sha256:764a2c153230b8f6722a01d541b7340f32b6e52f1940a29a8d106f00ffab7f67"},
 ]
 
 [package.dependencies]
@@ -230,18 +230,19 @@ boto3 = ">=1.24.11,<2.0.0"
 botocore = ">=1.27.11,<2.0.0"
 gremlinpython = ">=3.5.2,<4.0.0"
 jsonpath-ng = ">=1.5.3,<2.0.0"
-numpy = ">=1.21.0,<2.0.0"
+numpy = {version = ">=1.21.0,<=1.23.4", markers = "python_full_version >= \"3.7.1\" and python_full_version < \"3.11.0\""}
 openpyxl = ">=3.0.0,<3.1.0"
 opensearch-py = ">=1,<3"
-pandas = ">=1.2.0,<2.0.0"
+pandas = ">=1.2.0,<1.5.0 || >1.5.0,<=1.5.1"
 pg8000 = ">=1.20.0,<2.0.0"
 progressbar2 = ">=4.0.0,<5.0.0"
-pyarrow = ">=2.0.0,<8.1.0"
+pyarrow = ">=2.0.0,<10.1.0"
 pymysql = ">=1.0.0,<2.0.0"
 redshift-connector = ">=2.0.889,<2.1.0"
 requests-aws4auth = ">=1.1.1,<2.0.0"
 
 [package.extras]
+deltalake = ["deltalake (>=0.6.4,<0.8.0)"]
 oracle = ["oracledb (>=1.0.0,<1.1.0)"]
 sparql = ["SPARQLWrapper (>=1.8.5,<3.0.0)"]
 sqlserver = ["pyodbc (>=4.0.32,<4.1.0)"]
