@@ -160,13 +160,17 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
 
         return ssl_key
 
+    # - fix le parsing des PEM
+    # - _sanitize_ssl_params -> check si la string est pas None au lieu de vide
+
     def _sanitize_ssl_params(self) -> dict[str, Any]:
         params = {}
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
 
             for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
                 try:
-                    if (opt := getattr(self, ssl_opt)) is not None:
+                    opt: str = getattr(self, ssl_opt)
+                    if opt is not None and opt.strip() != '':
                         params[ssl_opt] = sanitize_spaces_pem(opt.get_secret_value())
                 except InvalidPEMFormat as exc:
                     raise ValueError(f"SSL option '{ssl_opt}' has an invalid PEM format") from exc

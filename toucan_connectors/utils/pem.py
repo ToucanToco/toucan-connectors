@@ -4,28 +4,13 @@ class InvalidPEMFormat(Exception):
 
 
 def _sanitize_spaces_pem(pem_data: str) -> str:
-    it = enumerate(pem_data)
-    # Can't use tuples in walrus assignments :-(
-    # Skipping the header between --- and letting it untouched
-    while next(it)[1] == '-':
-        continue
-    while next(it)[1] != '-':
-        continue
-    while (tup := next(it))[1] == '-':
-        continue
+    pem_data = pem_data.replace('-----BEGIN CERTIFICATE-----', '-----BEGIN_CERTIFICATE-----')
+    pem_data = pem_data.replace('-----END CERTIFICATE-----', '-----END_CERTIFICATE-----')
+    pem_data = pem_data.replace(' ', '\n')
+    pem_data = pem_data.replace('-----BEGIN_CERTIFICATE-----', '-----BEGIN CERTIFICATE-----')
+    pem_data = pem_data.replace('-----END_CERTIFICATE-----', '-----END CERTIFICATE-----')
 
-    data_start = tup[0]
-    # Gathering data between header and footers
-    while (tup := next(it))[1] != '-':
-        continue
-
-    data_end = tup[0]
-    # Raw header + data with ' ' replaced with '\n' + raw footer
-    return (
-        pem_data[:data_start]
-        + pem_data[data_start:data_end].replace(' ', '\n')
-        + pem_data[data_end:]
-    )
+    return pem_data
 
 
 def sanitize_spaces_pem(pem_data: str) -> str:
