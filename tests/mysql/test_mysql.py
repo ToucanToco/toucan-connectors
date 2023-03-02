@@ -4,7 +4,6 @@ import pandas as pd
 import pymysql
 import pytest
 from pydantic.error_wrappers import ValidationError
-from pydantic.types import SecretStr
 from pytest_mock import MockerFixture
 
 from toucan_connectors.common import ConnectorStatus
@@ -455,6 +454,19 @@ def mysql_connector_with_ssl():
     )
 
 
+@pytest.fixture
+def mysql_connector_with_ssl_bundle():
+    return MySQLConnector(
+        name='mycon',
+        host='localhost',
+        port=3306,
+        user='ubuntu',
+        password='ilovetoucan',
+        ssl_ca='-----BEGIN CERTIFICATE----- something -----END CERTIFICATE----- -----BEGIN CERTIFICATE----- something -----END CERTIFICATE-----',
+        ssl_mode='VERIFY_CA',
+    )
+
+
 def test_ssl_parameters_verify_identity_errors():
     with pytest.raises(ValidationError):
         MySQLConnector(
@@ -510,12 +522,20 @@ def test_ssl_parameters_verify_identity(
     assert kwargs['ssl_verify_identity'] is True
 
 
-def test_sanitize_ssl_params_invalid_pem(mysql_connector_with_ssl: MySQLConnector):
-    mysql_connector_with_ssl.ssl_key = SecretStr(
-        mysql_connector_with_ssl.ssl_key.get_secret_value()[:40]
-    )
-    with pytest.raises(ValueError):
-        mysql_connector_with_ssl._sanitize_ssl_params()
+def test_ssl_parameters_verify_identity_with_pem_bundle(
+    mysql_connector_with_ssl_bundle: MySQLConnector, mocker: MockerFixture
+):
+    connect_mock = mocker.patch('pymysql.connect')
+    mysql_connector_with_ssl_bundle.ssl_mode = 'VERIFY_IDENTITY'
+    mysql_connector_with_ssl_bundle._connect()
+    assert connect_mock.call_count == 1
+    kwargs = connect_mock.call_args.kwargs
+    assert kwargs['ssl_disabled'] is False
+    assert kwargs['ssl_ca'] is not None
+    assert 'ssl_cert' not in kwargs
+    assert 'ssl_key' not in kwargs
+    assert kwargs['ssl_verify_cert'] is True
+    assert kwargs['ssl_verify_identity'] is True
 
 
 def test_ssl_parameters_required_mode(mocker: MockerFixture):
