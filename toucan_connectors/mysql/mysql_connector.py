@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 from itertools import groupby as groupby
 from tempfile import NamedTemporaryFile
@@ -239,17 +240,25 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
 
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
             ssl_params = self._sanitize_ssl_params()
+            ssl_files = []
             for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
                 if ssl_opt in ssl_params:
-                    ssl_opt_file = NamedTemporaryFile(prefix=ssl_opt)
+                    ssl_opt_file = NamedTemporaryFile(prefix=ssl_opt, delete=False)
                     ssl_opt_file.write(ssl_params[ssl_opt].encode())
                     ssl_opt_file.seek(0)
 
                     connection_params[ssl_opt] = ssl_opt_file.name
+                    ssl_files.append(ssl_opt_file)
 
             connection_params['ssl_verify_identity'] = self.ssl_mode == SSLMode.VERIFY_IDENTITY
 
-            return pymysql.connect(**connection_params)
+            try:
+                connection = pymysql.connect(**connection_params)
+            finally:
+                for ssl_file in ssl_files:
+                    ssl_file.close()
+                    os.unlink(ssl_file.name)  # needed otherwise file is not closed.
+            return connection
         return pymysql.connect(**connection_params)
 
     @staticmethod
