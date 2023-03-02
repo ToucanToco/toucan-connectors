@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 from itertools import groupby as groupby
 from tempfile import NamedTemporaryFile
@@ -20,7 +21,7 @@ from toucan_connectors.toucan_connector import (
     VersionableEngineConnector,
     strlist_to_enum,
 )
-from toucan_connectors.utils.pem import InvalidPEMFormat, sanitize_spaces_pem
+from toucan_connectors.utils.pem import sanitize_spaces_pem
 
 
 def handle_date_0(df: pd.DataFrame) -> pd.DataFrame:
@@ -164,11 +165,12 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
 
             for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
-                try:
-                    if (opt := getattr(self, ssl_opt)) is not None:
-                        params[ssl_opt] = sanitize_spaces_pem(opt.get_secret_value())
-                except InvalidPEMFormat as exc:
-                    raise ValueError(f"SSL option '{ssl_opt}' has an invalid PEM format") from exc
+                opt = getattr(self, ssl_opt)
+                if opt is None:
+                    continue
+                secret = opt.get_secret_value()
+                if secret.strip() != '':
+                    params[ssl_opt] = sanitize_spaces_pem(secret)
         return params
 
     def _list_db_names(self) -> list[str]:
@@ -239,17 +241,25 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
 
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
             ssl_params = self._sanitize_ssl_params()
+            ssl_files = []
             for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
                 if ssl_opt in ssl_params:
-                    ssl_opt_file = NamedTemporaryFile(prefix=ssl_opt)
+                    ssl_opt_file = NamedTemporaryFile(prefix=ssl_opt, delete=False)
                     ssl_opt_file.write(ssl_params[ssl_opt].encode())
                     ssl_opt_file.seek(0)
 
                     connection_params[ssl_opt] = ssl_opt_file.name
+                    ssl_files.append(ssl_opt_file)
 
             connection_params['ssl_verify_identity'] = self.ssl_mode == SSLMode.VERIFY_IDENTITY
 
-            return pymysql.connect(**connection_params)
+            try:
+                connection = pymysql.connect(**connection_params)
+            finally:
+                for ssl_file in ssl_files:
+                    ssl_file.close()
+                    os.unlink(ssl_file.name)  # needed otherwise file is not closed.
+            return connection
         return pymysql.connect(**connection_params)
 
     @staticmethod
