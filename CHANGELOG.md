@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [4.3.3] 2023-03-03
+
+### Fixed
+
+- MySQL: It is now possible to use the MySQL connector with a CA bundle in VERIFY_IDENTITY mode
+
 ### [4.3.2] 2023-03-01
 
 ### Fixed
