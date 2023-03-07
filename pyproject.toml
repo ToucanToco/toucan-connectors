@@ -19,8 +19,11 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 # <3.11 required by awswrangler < 3.0
+# https://github.com/aws/aws-sdk-pandas/issues/1714
+# https://github.com/aws/aws-sdk-pandas/pull/1992
 python = ">=3.10,<3.12"
 Authlib = "^1.0.1"
+# FIXME: Bump to ^3.8.4 and remove the marker once we have awswrangler >=3.0
 aiohttp = { version = "^3.8.1", python = "<3.11" }
 cached-property = "^1.5.2"
 Jinja2 = "^3.0.3"
