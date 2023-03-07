@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [4.4.0] 2023-03-07
+
+### Changed
+
+- The upper constraint on python < 3.11 has been lifted. **This does not mean that Python 3.11 is officially supported yet**.
+
 ### [4.3.3] 2023-03-03
 
 ### Fixed
