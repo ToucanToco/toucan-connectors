@@ -3382,32 +3382,37 @@ files = [
 
 [[package]]
 name = "snowflake-connector-python"
-version = "2.8.3"
+version = "3.0.2"
 description = "Snowflake Connector for Python"
 category = "main"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "snowflake-connector-python-2.8.3.tar.gz", hash = "sha256:8888e852270410c5bafb3f813d6d2abe779418ca7c4b56cfe542e3a65b98e9cb"},
-    {file = "snowflake_connector_python-2.8.3-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:ff5c4e675f5896b61b1e9e3597bd652e3880b8ce34fa5fb73e0211c8ebe4b673"},
-    {file = "snowflake_connector_python-2.8.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:1dde9972606358ad91838848995f5d86291579fc1c98b1eb31c269e6f15b9a40"},
-    {file = "snowflake_connector_python-2.8.3-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8fab7c44b60c7b551d20d1e0aea8649123db14e57e4246a93a1c053aedd81f2e"},
-    {file = "snowflake_connector_python-2.8.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:13d6062f1c76373998035145a2f21a03d1c33cbad2de4d5676f6436ff1277c02"},
-    {file = "snowflake_connector_python-2.8.3-cp310-cp310-win_amd64.whl", hash = "sha256:ccf305753d465902053bd65eb2e2f62b2dd5b85d6749bfef64b474d2e0617e3e"},
-    {file = "snowflake_connector_python-2.8.3-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:8a42f8d5f23c4fc3485d2692568c2942e71339031f447bc446f5ed7c99fd0088"},
-    {file = "snowflake_connector_python-2.8.3-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7b7314eddfc460c625c585abc5e282f68c76df9429e7d0e10c2dc371728eb8f8"},
-    {file = "snowflake_connector_python-2.8.3-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:56b4801c1becc94bd17bd55a8ab2a50e85bb4987a5d3b86b0678871bfd0db24c"},
-    {file = "snowflake_connector_python-2.8.3-cp37-cp37m-win_amd64.whl", hash = "sha256:1e4957b4cea93a2135a420d900dadd959b33429309781982b7fdff0452c45b6a"},
-    {file = "snowflake_connector_python-2.8.3-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:d61f9e9f68d6a723e22c7279cb9d5b439954f7c90774a5a5d59a17c065997f64"},
-    {file = "snowflake_connector_python-2.8.3-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:084c5880d6708bcca6762f3b14347e936a94cb76e96e4850da2a4ffd5e605fb0"},
-    {file = "snowflake_connector_python-2.8.3-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:af994f773fb49bc62339db15174e693dd2ea2841cea4e536fb37fa147c1285ea"},
-    {file = "snowflake_connector_python-2.8.3-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6b38504a48c01342a826b492bdefe032f2ec51826ad67ae379b4b65e0f42ce71"},
-    {file = "snowflake_connector_python-2.8.3-cp38-cp38-win_amd64.whl", hash = "sha256:445f453f8a49f4907bd096f58aeefbe2a51912627527d7a49258b76c2c30ca0d"},
-    {file = "snowflake_connector_python-2.8.3-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:a1c4e335d5acfea4b9afc1b6fd0a0d9523123df925be593e0b6309fc75bee882"},
-    {file = "snowflake_connector_python-2.8.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:0adcea84ba163b2ddf4c0fc32c021eba65c2ff1319a48d491e66bfa9cfea5e5e"},
-    {file = "snowflake_connector_python-2.8.3-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:198a78aa8b6a86b108e16de13bb7eb64b37e4d2c4e8f85acc64e842a21bdd466"},
-    {file = "snowflake_connector_python-2.8.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ef120391abfd72ec459ee52106a892ae673e2bad4088b960028c990f81007c77"},
-    {file = "snowflake_connector_python-2.8.3-cp39-cp39-win_amd64.whl", hash = "sha256:b6c1f14d08d055a578231571c5d2c6554499bd2b06c2cf7d0a7e7b7ffe92a2e7"},
+    {file = "snowflake-connector-python-3.0.2.tar.gz", hash = "sha256:c0c2e7ecf31c9e6691ce7fd56dc2d5c3ad1d3b3240593a64130e4716b0a770b6"},
+    {file = "snowflake_connector_python-3.0.2-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:caa31899646d551971a1a73900273e903db53b5e7c06c4763b3aba72e04eca93"},
+    {file = "snowflake_connector_python-3.0.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:48b22aaa00ee38dd27ad41fe0226eba46ea9eeee3c088163c3aa74933556dc10"},
+    {file = "snowflake_connector_python-3.0.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8ac544bcc99faf5211363d9dcabc1c5bb34348c25cf6fc46d43525dac341db4e"},
+    {file = "snowflake_connector_python-3.0.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3d765b292dbd3e5740352546245bf5381498855af5b949aeb4f319e2aec16f64"},
+    {file = "snowflake_connector_python-3.0.2-cp310-cp310-win_amd64.whl", hash = "sha256:56451264570f4bf93f0c0b71cf233794120eea204a244c3d23f0a54f38f587a1"},
+    {file = "snowflake_connector_python-3.0.2-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:df0ffcac17595977df9ac98cd941ff5dd699dc23e66e168c4a361e7c623f5355"},
+    {file = "snowflake_connector_python-3.0.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:ff12cca2e13cbc93e14ae969a32eae56fd6e0d6a1313243d31f41952170db2b8"},
+    {file = "snowflake_connector_python-3.0.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e12f990b46670ba1eb95f92fddd08b63bd02435a2aa19da5ab478c0c037305cc"},
+    {file = "snowflake_connector_python-3.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5b1d24251744cd65c1f7e4e017e28ad455f497e2cabd2fa0b69654b6152203f2"},
+    {file = "snowflake_connector_python-3.0.2-cp311-cp311-win_amd64.whl", hash = "sha256:09f0239f83a6d510495cc96a48b63a88baf3fbb3ada35eef29cf61de8aeffe39"},
+    {file = "snowflake_connector_python-3.0.2-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:54151f359046c29e4b913cb88553ad8e8ea3848500c50faef3890469e86939c8"},
+    {file = "snowflake_connector_python-3.0.2-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:58b490f0b062a926c28c7d3cf3a6b46ef709b0af7397b9d3d4e9108df24ac2d4"},
+    {file = "snowflake_connector_python-3.0.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:aa2ffad914028897cc134fcc7315212933bc6198ebd18bf8a550da6dfc0b286c"},
+    {file = "snowflake_connector_python-3.0.2-cp37-cp37m-win_amd64.whl", hash = "sha256:f3f08a992225945de1c294fb50bbbfc93baf41cafcae8d4cba305a03281b7235"},
+    {file = "snowflake_connector_python-3.0.2-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:160fac07000a7b52337391504df952c78fd42be08634f0128e345c4bca32fce8"},
+    {file = "snowflake_connector_python-3.0.2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:7c646f52d53e22f2ba5e02284dc80ee439f427e40829dd5190c25011ffc1d5f2"},
+    {file = "snowflake_connector_python-3.0.2-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d9dc16508040492323eec37d581874fe8b8da0a5aa10fb06837405e0289388da"},
+    {file = "snowflake_connector_python-3.0.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9e3dd895796a3b81c5f0f1e63410609bae8e7946a36968ce96cdc9438d56ea63"},
+    {file = "snowflake_connector_python-3.0.2-cp38-cp38-win_amd64.whl", hash = "sha256:6277f5f14bbc349ff26294fc886e2229d8ba8ecf1924cf45536c8b30c9de9830"},
+    {file = "snowflake_connector_python-3.0.2-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:59c9fdf8ad39b7b2456096a1d2c4b1d26bc6a950b4b544ce850e5853b3a87623"},
+    {file = "snowflake_connector_python-3.0.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:6cb65705b4f64aed03addddfc3d00272b2f86e1531987eb6c821766f1ff0607e"},
+    {file = "snowflake_connector_python-3.0.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9ecd3e66de7d52c14ff9c22519c10f7c282308704e418595707d73c5179c7f5b"},
+    {file = "snowflake_connector_python-3.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b3f784a2cc496141281380fd5c6b212ea933d16eaf8faea3e4630d3edd1b6759"},
+    {file = "snowflake_connector_python-3.0.2-cp39-cp39-win_amd64.whl", hash = "sha256:1be2ae2b711296629763339e154ba0adb4bfba49b1d88cd4f0d66c104d4f00ee"},
 ]
 
 [package.dependencies]
@@ -3419,18 +3424,18 @@ cryptography = ">=3.1.0,<41.0.0"
 filelock = ">=3.5,<4"
 idna = ">=2.5,<4"
 oscrypto = "<2.0.0"
+packaging = "*"
 pycryptodomex = ">=3.2,<3.5.0 || >3.5.0,<4.0.0"
 pyjwt = "<3.0.0"
-pyOpenSSL = ">=16.2.0,<23.0.0"
+pyOpenSSL = ">=16.2.0,<24.0.0"
 pytz = "*"
 requests = "<3.0.0"
-setuptools = ">34.0.0"
 typing-extensions = ">=4.3,<5"
 urllib3 = ">=1.21.1,<1.27"
 
 [package.extras]
-development = ["Cython", "coverage", "more-itertools", "numpy (<1.24.0)", "pendulum (!=2.1.1)", "pexpect", "pytest (<7.3.0)", "pytest-cov", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist", "pytzdata"]
-pandas = ["pandas (>=1.0.0,<1.6.0)", "pyarrow (>=8.0.0,<8.1.0)"]
+development = ["Cython", "coverage", "more-itertools", "numpy (<1.25.0)", "pendulum (!=2.1.1)", "pexpect", "pytest (<7.3.0)", "pytest-cov", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist", "pytzdata"]
+pandas = ["pandas (>=1.0.0,<1.6.0)", "pyarrow (>=10.0.1,<10.1.0)"]
 secure-local-storage = ["keyring (!=16.1.0,<24.0.0)"]
 
 [[package]]
@@ -3913,4 +3918,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "db0a3f91df5fb22a7d3e6077966089ce53628e0cd5e23a9cd8de1ce6ba3ed5c0"
+content-hash = "58a49116f004005eab82bf05022a9fe6f16d92b7c8feedf907613a8945f099e3"
