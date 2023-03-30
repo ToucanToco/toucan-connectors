@@ -2854,27 +2854,27 @@ files = [
 
 [[package]]
 name = "peakina"
-version = "0.9.1"
+version = "0.10.0"
 description = "pandas readers on steroids (remote files, glob patterns, cache, etc.)"
 category = "main"
 optional = true
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "peakina-0.9.1-py3-none-any.whl", hash = "sha256:4d953bc19afdab43d563ace9716ac1ab5bdeb709aed718314ab3027a219c639d"},
-    {file = "peakina-0.9.1.tar.gz", hash = "sha256:d479ebbb3dcde3e6962d7d4747da270d963b64db70c5b0e8eb2804db02db0044"},
+    {file = "peakina-0.10.0-py3-none-any.whl", hash = "sha256:34a11f84a930b677b382fa026b4bcf5e32d3c5f0c73ede1fd45e536062e507c6"},
+    {file = "peakina-0.10.0.tar.gz", hash = "sha256:8013d9c552aba3be5c88c2ff78b39512985dcf6111293829516113fb4a670404"},
 ]
 
 [package.dependencies]
 certifi = ">=2022.5.18,<2023.0.0"
 chardet = ">=4,<6"
-fastparquet = ">=0.8.0,<1"
+fastparquet = ">=0.8.0,<2024"
 geopandas = ">=0.11.1,<1"
 jq = ">=1.2.1,<2.0.0"
 openpyxl = ">=3.0.9,<4.0.0"
 pandas = ">=1.4.2,<2.0.0"
-paramiko = ">=2.9.2,<3.0.0"
+paramiko = ">=2.9.2,<4.0.0"
 pydantic = ">=1.9.0,<2.0.0"
-python-slugify = ">=5.0.2,<7.0.0"
+python-slugify = ">=5.0.2,<9.0.0"
 python-snappy = ">=0.6.0,<1"
 s3fs = ">=2022.1.0,<2023.0.0"
 tables = ">=3.7.0,<4.0.0"
@@ -3444,7 +3444,7 @@ files = [
 cffi = ">=1.4.1"
 
 [package.extras]
-docs = ["sphinx (>=1.6.5)", "sphinx-rtd-theme"]
+docs = ["sphinx (>=1.6.5)", "sphinx_rtd_theme"]
 tests = ["hypothesis (>=3.27.0)", "pytest (>=3.2.1,!=3.3.0)"]
 
 [[package]]
@@ -5054,4 +5054,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "44fab93c7acea216e9984a90cf546b70ba04fd74a34e0014255e29fd5903026d"
+content-hash = "c99d7e54fd067796a1e25c38e21fa0ecd76f7a7cfdbe3db013ce4886c848b17c"
