@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [4.4.1] 2023-03-30
+
+### Changed
+
+- Bump Peakina from 0.9.x to 0.10.x
+
 ### [4.4.0] 2023-03-07
 
 ### Changed
