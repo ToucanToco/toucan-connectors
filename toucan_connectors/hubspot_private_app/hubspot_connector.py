@@ -98,11 +98,11 @@ class HubspotConnector(ToucanConnector):
         self, api: _PageApi, after: str | None = None, limit: int | None = None
     ) -> _HubSpotResponse:
         page = api.get_page(after=after, limit=limit)
-        return _HubSpotResponse(**page.to_dict())
+        return _HubSpotResponse(**page.to_dict())  # type:ignore[arg-type]
 
     def _fetch_all(self, api: _Api) -> list[_HubSpotResult]:
         results = api.get_all()
-        return [_HubSpotResult(**elem.to_dict()) for elem in results]
+        return [_HubSpotResult(**elem.to_dict()) for elem in results]  # type:ignore[arg-type]
 
     def _api_for_dataset(self, object_type: HubspotDataset) -> _Api:  # pragma: no cover
         client = HubSpot(access_token=self.access_token.get_secret_value())
