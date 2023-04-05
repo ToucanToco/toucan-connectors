@@ -50,7 +50,7 @@ class SnowflakeDataSource(ToucanDataSource['SnowflakeConnector']):
     )
 
     # Pydantic sees **_UI_HIDDEN as the third argument (the default factory) and raises an error
-    query_object: dict | None = Field(  # type: ignore[pydantic-field]
+    query_object: dict | None = Field(  # type: ignore[pydantic-field,misc]
         None,
         description='An object describing a simple select query'
         'For example '
@@ -58,7 +58,7 @@ class SnowflakeDataSource(ToucanDataSource['SnowflakeConnector']):
         'This field is used internally',
         **_UI_HIDDEN,
     )
-    language: str = Field('sql', **_UI_HIDDEN)  # type: ignore[pydantic-field]
+    language: str = Field('sql', **_UI_HIDDEN)  # type: ignore[pydantic-field,misc]
 
     @classmethod
     def _get_databases(cls, connector: 'SnowflakeConnector'):
