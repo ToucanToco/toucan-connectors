@@ -248,14 +248,14 @@ cryptography = ">=3.2"
 
 [[package]]
 name = "awswrangler"
-version = "2.20.0"
+version = "2.20.1"
 description = "Pandas on AWS."
 category = "main"
 optional = true
 python-versions = ">=3.7.1,<4.0"
 files = [
-    {file = "awswrangler-2.20.0-py3-none-any.whl", hash = "sha256:186b0482a7520a3f2e7720e74137a0a7460487d2e1e9b473d73e2868d520d2e1"},
-    {file = "awswrangler-2.20.0.tar.gz", hash = "sha256:764a2c153230b8f6722a01d541b7340f32b6e52f1940a29a8d106f00ffab7f67"},
+    {file = "awswrangler-2.20.1-py3-none-any.whl", hash = "sha256:0c9a868efacf87bcd7ff9efcb6035d2c1aed30e71d183827c50128b2d7866ac0"},
+    {file = "awswrangler-2.20.1.tar.gz", hash = "sha256:110ae666206f3e1611c81d3a5886ce2cff1f2a874f35612ee5047f2aa19a607d"},
 ]
 
 [package.dependencies]
@@ -276,7 +276,7 @@ redshift-connector = ">=2.0.889,<2.1.0"
 requests-aws4auth = ">=1.1.1,<2.0.0"
 
 [package.extras]
-deltalake = ["deltalake (>=0.6.4,<0.8.0)"]
+deltalake = ["deltalake (>=0.6.4,<0.9.0)"]
 oracle = ["oracledb (>=1.0.0,<1.1.0)"]
 sparql = ["SPARQLWrapper (>=1.8.5,<3.0.0)"]
 sqlserver = ["pyodbc (>=4.0.32,<4.1.0)"]
