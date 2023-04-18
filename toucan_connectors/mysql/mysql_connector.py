@@ -4,7 +4,6 @@ from itertools import groupby as groupby
 from tempfile import NamedTemporaryFile
 from typing import Any, Generator, Optional
 
-import numpy as np
 import pandas as pd
 import pymysql
 from cached_property import cached_property_with_ttl
@@ -316,7 +315,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         The string columns become nan columns so we remove them from the result,
         we keep the rest and insert it back to the dataframe
         """
-        str_df = df.select_dtypes([np.object])
+        str_df = df.select_dtypes([object])
         if str_df.empty:
             return df
 
