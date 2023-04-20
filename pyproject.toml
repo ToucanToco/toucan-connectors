@@ -99,7 +99,6 @@ types-pyopenssl = "^23.1.0.2"
 
 [tool.poetry.extras]
 adobe = ["adobe-analytics"]
-aircall = ["bearer"]
 awsathena = ["awswrangler"]
 azure_mssql = ["pyodbc"]
 clickhouse = ["clickhouse-driver"]

@@ -15,10 +15,6 @@ CONNECTORS_REGISTRY = {
         'label': 'Adobe Analytics',
         'logo': 'adobe_analytics/adobe-analytics.png',
     },
-    'Aircall': {
-        'connector': 'aircall.aircall_connector.AircallConnector',
-        'logo': 'aircall/Aircall.svg',
-    },
     'Anaplan': {
         'connector': 'anaplan.anaplan_connector.AnaplanConnector',
         'label': 'Anaplan',

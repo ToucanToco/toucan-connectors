@@ -2,8 +2,6 @@
 
 * [AdobeAnalyticsConnector](connectors/adobe_analytics.md)
 
-* [AircallConnector](connectors/aircall.md)
-
 * [AnaplanConnector](connectors/anaplan.md)
 
 * [AwsathenaConnector](connectors/awsathena.md)
