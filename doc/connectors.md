@@ -60,8 +60,6 @@
 
 * [OracleSQLConnector](connectors/oracle_sql.md)
 
-* [RevinateConnector](connectors/revinate.md)
-
 * [SalesforceConnector](connectors/salesforce.md)
 
 * [SapHanaConnector](connectors/sap_hana.md)

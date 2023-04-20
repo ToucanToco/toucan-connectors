@@ -8,6 +8,7 @@
 - The `Indexima` connector has been deleted
 - The `Rok` connector has been deleted
 - The `Lightspeed` connector has been deleted
+- The `Revinate` connector has been deleted
 
 ### [4.4.1] 2023-03-30
 

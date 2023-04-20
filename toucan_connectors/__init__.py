@@ -201,11 +201,6 @@ CONNECTORS_REGISTRY = {
         'label': 'Redshift',
         'logo': 'redshift/redshift.png',
     },
-    'Revinate': {
-        'connector': 'revinate.revinate_connector.RevinateConnector',
-        'label': 'Revinate',
-        'logo': 'revinate/revinate.png',
-    },
     'Salesforce': {
         'connector': 'salesforce.salesforce_connector.SalesforceConnector',
         'label': 'Salesforce Service Cloud (SFSC)',
