@@ -138,10 +138,6 @@ CONNECTORS_REGISTRY = {
         'label': 'Hubspot (Private App)',
         'logo': 'hubspot/hubspot.png',
     },
-    'Indexima': {
-        'connector': 'hive.hive_connector.HiveConnector',
-        'logo': 'hive/indexima.png',
-    },
     'Lightspeed': {
         'connector': 'lightspeed.lightspeed_connector.LightspeedConnector',
         'logo': 'lightspeed/lightspeed.png',
