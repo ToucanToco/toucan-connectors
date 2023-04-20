@@ -65,12 +65,6 @@ oraclesql:
     - ./oracle_sql/fixtures/toucan_entrypoint.sh:/toucan_entrypoint.sh:ro
   command: ["/toucan_entrypoint.sh"]
 
-hive:
-  image: gillax/hive
-  ports:
-    - 10000:10000
-  command: ["/bin/bash", "-c", "/etc/bootstrap.sh && hiveserver2"]
-
 clickhouse:
   image: yandex/clickhouse-server
   ports:

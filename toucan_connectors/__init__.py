@@ -123,10 +123,6 @@ CONNECTORS_REGISTRY = {
         'label': 'Google Spreadsheet',
         'logo': 'google_spreadsheet/google-spreadsheet.png',
     },
-    'Hive': {
-        'connector': 'hive.hive_connector.HiveConnector',
-        'logo': 'hive/hive.png',
-    },
     'HttpAPI': {
         'connector': 'http_api.http_api_connector.HttpAPIConnector',
         'label': 'Http API',
@@ -217,10 +213,6 @@ CONNECTORS_REGISTRY = {
         'connector': 'revinate.revinate_connector.RevinateConnector',
         'label': 'Revinate',
         'logo': 'revinate/revinate.png',
-    },
-    'ROK': {
-        'connector': 'rok.rok_connector.RokConnector',
-        'logo': 'rok/rok.png',
     },
     'Salesforce': {
         'connector': 'salesforce.salesforce_connector.SalesforceConnector',

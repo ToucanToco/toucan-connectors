@@ -40,8 +40,6 @@
 
 * [GoogleSpreadsheetConnector](connectors/google_spreadsheet.md)
 
-* [HiveConnector](connectors/hive.md)
-
 * [HubspotConnector](connectors/hubspot.md)
 
 * [LightspeedConnector](connectors/lightspeed.md)
@@ -65,8 +63,6 @@
 * [OracleSQLConnector](connectors/oracle_sql.md)
 
 * [RevinateConnector](connectors/revinate.md)
-
-* [RokConnector](connectors/rok.md)
 
 * [SalesforceConnector](connectors/salesforce.md)
 
