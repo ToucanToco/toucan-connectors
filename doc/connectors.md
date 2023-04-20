@@ -42,8 +42,6 @@
 
 * [HubspotConnector](connectors/hubspot.md)
 
-* [LightspeedConnector](connectors/lightspeed.md)
-
 * [LinkedinadsConnector](connectors/linkedinads.md)
 
 * [MSSQLConnector](connectors/mssql.md)

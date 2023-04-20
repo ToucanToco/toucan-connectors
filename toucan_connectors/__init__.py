@@ -138,10 +138,6 @@ CONNECTORS_REGISTRY = {
         'label': 'Hubspot (Private App)',
         'logo': 'hubspot/hubspot.png',
     },
-    'Lightspeed': {
-        'connector': 'lightspeed.lightspeed_connector.LightspeedConnector',
-        'logo': 'lightspeed/lightspeed.png',
-    },
     'LinkedinAds': {
         'connector': 'linkedinads.linkedinads_connector.LinkedinadsConnector',
         'logo': 'linkedinads/linkedinads.png',

@@ -4712,7 +4712,6 @@ google-sheets = ["google-api-python-client"]
 google-spreadsheet = ["gspread", "oauth2client"]
 http-api = ["oauthlib", "requests-oauthlib", "xmltodict"]
 hubspot = ["hubspot-api-client"]
-lightspeed = ["bearer"]
 mongo = ["pymongo"]
 mssql = ["pyodbc"]
 mssql-tlsv1-0 = ["pyodbc"]
@@ -4731,4 +4730,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "a31e9c1e00e547214f06b3224566a950f4e3a0e5d2f2e2eb73756c59e32f4fe0"
+content-hash = "7e6d5ca60a14c1cf9837594223d80a523362c1305c26769342e77deb27dae6b6"
