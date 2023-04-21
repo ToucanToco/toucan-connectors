@@ -123,7 +123,6 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         )
         return client
 
-    @cached_property
     def project_tree(self) -> list[TableInfo]:
         return self._get_project_structure()
 
@@ -162,7 +161,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
             )
             return result
         except TypeError as e:
-            _LOGGER.error(f'Error to execute request {query} - {e}')
+            _LOGGER.error(f'Failed to execute request {query} - {e}')
             raise e
 
     @staticmethod
@@ -217,34 +216,43 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
 
         unformatted_db_tree['columns'] = unformatted_db_tree['columns'].apply(_format_columns)
         return (
-            unformatted_db_tree.groupby(['name', 'schema', 'database', 'type'])['columns']
+            unformatted_db_tree.groupby(['name', 'schema', 'database', 'type'], group_keys=False)[
+                'columns'
+            ]
             .apply(list)
             .reset_index()
             .to_dict(orient='records')
         )
 
     @staticmethod
-    def _build_dataset_info_query(dataset_ids: Iterable[str]) -> str:
+    def _build_dataset_info_query_for_ds(dataset_id: str, db_name: str | None) -> str:
+        output = f"""
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+T.table_type AS type, C.column_name, C.data_type FROM {dataset_id}.INFORMATION_SCHEMA.COLUMNS C
+JOIN {dataset_id}.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+"""
+        if db_name is not None:
+            output += f"AND T.table_catalog = '{db_name}'\n"
+        return output
+
+    def _build_dataset_info_query(self, dataset_ids: Iterable[str], db_name: str | None) -> str:
         return '\nUNION ALL\n'.join(
-            f"""SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-                T.table_type AS type, C.column_name, C.data_type FROM {dataset_id}.INFORMATION_SCHEMA.COLUMNS C
-                JOIN {dataset_id}.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"""
-            for dataset_id in dataset_ids
+            self._build_dataset_info_query_for_ds(dataset_id, db_name) for dataset_id in dataset_ids
         )
 
     def _get_project_structure_fast(
-        self, client: bigquery.Client, dataset_ids: Iterable[str]
+        self, client: bigquery.Client, db_name: str | None, dataset_ids: Iterable[str]
     ) -> pd.DataFrame:
         """Retrieves the project structure in a single query.
 
         Only works if all datasets are in the same location.
         """
-        query = self._build_dataset_info_query(dataset_ids)
+        query = self._build_dataset_info_query(dataset_ids, db_name)
         return client.query(query).to_dataframe()
 
     def _get_project_structure_slow(
-        self, client: bigquery.Client, dataset_ids: Iterable[str]
+        self, client: bigquery.Client, db_name: str | None, dataset_ids: Iterable[str]
     ) -> pd.DataFrame:
         """Retrieves the project structure in multiple queries.
 
@@ -260,31 +268,36 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         # We then build and execute a query for every distinct location
         for location, datasets_for_region in groupby(dataset_info, key=lambda x: x.location):
             _LOGGER.info(f'Retrieving dataset structure for datasets located in {location}')
-            query = self._build_dataset_info_query(ds.dataset_id for ds in datasets_for_region)
+            query = self._build_dataset_info_query(
+                (ds.dataset_id for ds in datasets_for_region), db_name
+            )
             dfs.append(client.query(query, location=location).to_dataframe())
 
         # Then, we returning a single dataframe containing all results
         return pd.concat(dfs)
 
-    def _get_project_structure(self) -> List[TableInfo]:
+    def _get_project_structure(self, db_name: str | None = None) -> List[TableInfo]:
         creds = self._get_google_credentials(self.credentials, self.scopes)
         client = self._connect(creds)
         datasets = list(client.list_datasets())
-
         # Here, we're trying to retrieve table info for all datasets at once. However, this will
         # only work if all datasets are in same location. Unfortunately, there is no way to
         # retrieve the location along with the dataset list, so we're optimistic here.
         try:
-            df = self._get_project_structure_fast(client, (ds.dataset_id for ds in datasets))
+            df = self._get_project_structure_fast(
+                client, db_name, (ds.dataset_id for ds in datasets)
+            )
         except GoogleAPIError as exc:
             _LOGGER.info(
                 f'Got an exception when trying to retrieve domains for project: {exc}. '
                 'Falling back on listing by location...'
             )
-            df = self._get_project_structure_slow(client, (ds.dataset_id for ds in datasets))
+            df = self._get_project_structure_slow(
+                client, db_name, (ds.dataset_id for ds in datasets)
+            )
 
         return self._format_db_model(df)
 
     def get_model(self, db_name: str | None = None) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
-        return self.project_tree
+        return self._get_project_structure(db_name)

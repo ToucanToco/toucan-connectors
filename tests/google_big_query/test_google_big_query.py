@@ -320,7 +320,54 @@ def test_get_model(mocker: MockFixture, _fixture_credentials) -> None:
     ]
     assert (
         mocked_query.call_args_list[0][0][0]
-        == "SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,\n                T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C\n                JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name\n                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'\nUNION ALL\nSELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,\n                T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C\n                JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name\n                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'\nUNION ALL\nSELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,\n                T.table_type AS type, C.column_name, C.data_type FROM taar.INFORMATION_SCHEMA.COLUMNS C\n                JOIN taar.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name\n                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"
+        == """
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C
+JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+
+UNION ALL
+
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C
+JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+
+UNION ALL
+
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+T.table_type AS type, C.column_name, C.data_type FROM taar.INFORMATION_SCHEMA.COLUMNS C
+JOIN taar.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+"""
+    )
+    mocked_query.reset_mock()
+    connector.get_model('some-db')
+    assert (
+        mocked_query.call_args_list[0][0][0]
+        == """
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C
+JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+AND T.table_catalog = 'some-db'
+
+UNION ALL
+
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C
+JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+AND T.table_catalog = 'some-db'
+
+UNION ALL
+
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+T.table_type AS type, C.column_name, C.data_type FROM taar.INFORMATION_SCHEMA.COLUMNS C
+JOIN taar.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+AND T.table_catalog = 'some-db'
+"""
     )
 
 
@@ -420,33 +467,41 @@ def test_get_model_multi_location(mocker: MockFixture, _fixture_credentials) -> 
     ]
     assert (
         mocked_query.call_args_list[0][0][0]
-        == """SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-                T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C
-                JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
-UNION ALL
+        == """
 SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-                T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C
-                JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"""
+T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C
+JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+
+UNION ALL
+
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C
+JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+"""
     )
     # No location should be specified in the happy path
     assert mocked_query.call_args_list[0][1] == {}
     assert (
         mocked_query.call_args_list[1][0][0]
-        == """SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-                T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C
-                JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"""
+        == """
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C
+JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+"""
     )
     # Next calls should specify the location
     assert mocked_query.call_args_list[1][1] == {'location': 'Paris'}
     assert (
         mocked_query.call_args_list[2][0][0]
-        == """SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-                T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C
-                JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-                WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'"""
+        == """
+SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
+T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C
+JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
+WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+"""
     )
     # Next calls should specify the location
     assert mocked_query.call_args_list[2][1] == {'location': 'Toulouse'}
