@@ -201,7 +201,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector, VersionableEngin
 
     def get_model(self, db_name: str | None = None) -> List[TableInfo]:
         """Retrieves the database tree structure using current connection"""
-        available_dbs = self._list_db_names()
+        available_dbs = self._list_db_names() if db_name is None else [db_name]
         databases_tree = []
         for db in available_dbs:
             with suppress(pgsql.OperationalError):
@@ -210,7 +210,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector, VersionableEngin
 
     def get_model_with_info(self, db_name: str | None = None) -> tuple[list[TableInfo], dict]:
         """Retrieves the database tree structure using current connection"""
-        available_dbs = self._list_db_names()
+        available_dbs = self._list_db_names() if db_name is None else [db_name]
         databases_tree = []
         failed_databases = []
         for db in available_dbs:
