@@ -196,35 +196,31 @@ def test_athenadatasource_get_form(
     assert result['definitions']['database']['enum'] == ['db1', 'db2']
 
 
-def test_athenaconnector_get_model(
-    mocker: MockFixture,
-    athena_connector: AwsathenaConnector,
-    data_source: AwsathenaDataSource,
-    mocked_boto_session: MagicMock,
-):
+@pytest.mark.usefixtures('data_source', 'mocked_boto_session')
+def test_athenaconnector_get_model(mocker: MockFixture, athena_connector: AwsathenaConnector):
     mocker.patch.object(AwsathenaConnector, 'get_session')
-    mocker.patch(
+    dbs_mock = mocker.patch(
         'toucan_connectors.awsathena.awsathena_connector.wr.catalog.databases',
         return_value=pd.DataFrame({'Database': ['db1', 'db2']}),
     )
-    mocker.patch(
+    tables_mock = mocker.patch(
         'toucan_connectors.awsathena.awsathena_connector.wr.catalog.tables',
         return_value=pd.DataFrame(
             {'Table': ['table1', 'table2'], 'TableType': ['EXTERNAL_TABLE', 'EXTERNAL_TABLE']}
         ),
     )
-    mocker.patch(
+    table_types = [
+        {'foo': 'string', 'bar': 'string'},
+        {'roo': 'integer', 'far': 'datetime'},
+        {'loo': 'string', 'rab': 'string'},
+        {'broo': 'integer', 'farf': 'datetime'},
+    ]
+    table_types_mock = mocker.patch(
         'toucan_connectors.awsathena.awsathena_connector.wr.catalog.get_table_types',
-        side_effect=[
-            {'foo': 'string', 'bar': 'string'},
-            {'roo': 'integer', 'far': 'datetime'},
-            {'loo': 'string', 'rab': 'string'},
-            {'broo': 'integer', 'farf': 'datetime'},
-        ],
+        side_effect=table_types,
     )
 
-    result = athena_connector.get_model()
-    assert result == [
+    expected_model = [
         {
             'name': 'table1',
             'database': 'db1',
@@ -250,6 +246,28 @@ def test_athenaconnector_get_model(
             'columns': [{'name': 'broo', 'type': 'integer'}, {'name': 'farf', 'type': 'datetime'}],
         },
     ]
+    assert athena_connector.get_model() == expected_model
+    assert dbs_mock.call_count == 1
+    assert tables_mock.call_count == 2
+    assert table_types_mock.call_count == 4
+    dbs_mock.reset_mock()
+    tables_mock.reset_mock()
+    table_types_mock.reset_mock()
+    table_types_mock.side_effect = table_types
+
+    assert athena_connector.get_model('db1') == expected_model[:2]
+    dbs_mock.assert_not_called()
+    assert tables_mock.call_count == 1
+    assert table_types_mock.call_count == 2
+    dbs_mock.reset_mock()
+    tables_mock.reset_mock()
+    table_types_mock.reset_mock()
+    table_types_mock.side_effect = table_types[2:]
+
+    assert athena_connector.get_model('db2') == expected_model[2:]
+    dbs_mock.assert_not_called()
+    assert tables_mock.call_count == 1
+    assert table_types_mock.call_count == 2
 
 
 def test_no_sql_injection(athena_connector, mocker):
