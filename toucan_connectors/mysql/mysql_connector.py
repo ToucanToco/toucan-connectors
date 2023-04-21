@@ -84,7 +84,7 @@ _DATABASE_MODEL_EXTRACTION_QUERY = (
     # Inner join on table name
     'ON t.table_name = c.table_name '
     # Filtering on concrete tables/views
-    "WHERE t.table_type in ('BASE TABLE', 'VIEW') AND t.table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys');"
+    "WHERE t.table_type in ('BASE TABLE', 'VIEW') AND t.table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys') "
 )
 
 
@@ -188,9 +188,15 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         self, db_name: str | None = None
     ) -> Generator[TableInfo, None, None]:
         connection = self._connect(cursorclass=None, database=db_name)
-        # Always add the suggestions for the available databases
+
+        extraction_query = _DATABASE_MODEL_EXTRACTION_QUERY
+        if db_name:
+            # If the db name is specified, filter on it
+            extraction_query += f"AND t.table_schema = '{db_name}'"
+        extraction_query += ';'
+
         with connection.cursor() as cursor:
-            cursor.execute(_DATABASE_MODEL_EXTRACTION_QUERY)
+            cursor.execute(extraction_query)
             results = cursor.fetchall()
 
         column_names = ('database', 'schema', 'table_type', 'table_name', 'columns')

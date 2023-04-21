@@ -23,6 +23,8 @@
 --
 -- Table structure for table `City`
 --
+CREATE database other_db;
+GRANT ALL PRIVILEGES ON other_db.* TO 'ubuntu'@'%' WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON mysql.* TO 'ubuntu'@'%' WITH GRANT OPTION;
 DROP TABLE IF EXISTS `City`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
