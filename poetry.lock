@@ -1736,14 +1736,14 @@ protobuf = ">=3.12.0"
 
 [[package]]
 name = "gspread"
-version = "5.7.2"
+version = "5.8.0"
 description = "Google Spreadsheets Python API"
 category = "main"
 optional = true
 python-versions = ">=3.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 files = [
-    {file = "gspread-5.7.2-py3-none-any.whl", hash = "sha256:dbeedd08c6a7f7b0bfc1a54e17c29205362250c77bf98e11125c5d99fd7f4ba7"},
-    {file = "gspread-5.7.2.tar.gz", hash = "sha256:ce76f9c16b88ccb792350142224a59afa8e69f7463f3d3417148cbe892efc7cb"},
+    {file = "gspread-5.8.0-py3-none-any.whl", hash = "sha256:b6125120049fd92a3e1e7544ac395f336cec3ff8be04550cf737d90af007685d"},
+    {file = "gspread-5.8.0.tar.gz", hash = "sha256:f9739e2b839d7fa1f8a5f0cf0d4ee68c776e2fbf4bfe3167ad2e910bd588fb44"},
 ]
 
 [package.dependencies]
@@ -3066,14 +3066,14 @@ zstd = ["zstandard"]
 
 [[package]]
 name = "pymysql"
-version = "1.0.2"
+version = "1.0.3"
 description = "Pure Python MySQL Driver"
 category = "main"
 optional = true
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "PyMySQL-1.0.2-py3-none-any.whl", hash = "sha256:41fc3a0c5013d5f039639442321185532e3e2c8924687abe6537de157d403641"},
-    {file = "PyMySQL-1.0.2.tar.gz", hash = "sha256:816927a350f38d56072aeca5dfb10221fe1dc653745853d30a216637f5d7ad36"},
+    {file = "PyMySQL-1.0.3-py3-none-any.whl", hash = "sha256:89fc6ae41c0aeb6e1f7710cdd623702ea2c54d040565767a78b00a5ebb12f4e5"},
+    {file = "PyMySQL-1.0.3.tar.gz", hash = "sha256:3dda943ef3694068a75d69d071755dbecacee1adf9a1fc5b206830d2b67d25e8"},
 ]
 
 [package.extras]
@@ -4103,14 +4103,14 @@ cryptography = ">=35.0.0"
 
 [[package]]
 name = "types-python-slugify"
-version = "8.0.0.1"
+version = "8.0.0.2"
 description = "Typing stubs for python-slugify"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-python-slugify-8.0.0.1.tar.gz", hash = "sha256:f2177d2e65ecf2eca742d28fbf236a8d919a72e68272d1d748c3fe965e5ea3ab"},
-    {file = "types_python_slugify-8.0.0.1-py3-none-any.whl", hash = "sha256:1de288ce45c85627ef632c2b5098dedccfc7ebedb241d181ba69402f03704449"},
+    {file = "types-python-slugify-8.0.0.2.tar.gz", hash = "sha256:de237b01c69ad3a57ae36a0e8a6a0c65b47bac529483007c1cae2d424cb07cc8"},
+    {file = "types_python_slugify-8.0.0.2-py3-none-any.whl", hash = "sha256:9e81f49eac8c805f924695de559fb8dc123ccbd15adb47d40ceaec51c739f044"},
 ]
 
 [[package]]
@@ -4566,4 +4566,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "59c9832bd98ea50f3350e6077ef042201ed7c6da2a68c437a1750424140db75d"
+content-hash = "db46e61dc3418b73583264a5c0c8e5e27b1b6d2329f607a5b09eaea416c06225"
