@@ -453,8 +453,9 @@ def test_redshiftconnector_describe(mock_connection, redshift_connector, redshif
 
 
 def test_get_model(mocker, redshift_connector):
-    mocker.patch.object(RedshiftConnector, '_list_db_names', return_value=['dev'])
-    mocker.patch.object(RedshiftConnector, '_db_table_info_rows').return_value = [
+    db_names_mock = mocker.patch.object(RedshiftConnector, '_list_db_names', return_value=['dev'])
+    table_info_mock = mocker.patch.object(RedshiftConnector, '_db_table_info_rows')
+    table_info_mock.return_value = [
         ('pg_internal', 'redshift_auto_health_check_436837', 'a', 'integer'),
         ('public', 'table_1', 'label', 'character varying'),
         ('public', 'table_1', 'doum', 'character varying'),
@@ -508,11 +509,19 @@ def test_get_model(mocker, redshift_connector):
             ],
         },
     ]
+    db_names_mock.assert_called_once()
+    table_info_mock.assert_called_once_with('dev')
+    db_names_mock.reset_mock()
+    table_info_mock.reset_mock()
+
+    redshift_connector.get_model('other-db')
+    db_names_mock.assert_not_called()
+    table_info_mock.assert_called_once_with('other-db')
 
 
 def test_get_model_with_info(mocker, redshift_connector):
-    mocker.patch.object(RedshiftConnector, '_list_db_names', return_value=['dev'])
-    mocker.patch.object(
+    db_names_mock = mocker.patch.object(RedshiftConnector, '_list_db_names', return_value=['dev'])
+    list_table_info_mock = mocker.patch.object(
         RedshiftConnector,
         '_list_tables_info',
         return_value=[
@@ -538,6 +547,14 @@ def test_get_model_with_info(mocker, redshift_connector):
         ],
         {},
     )
+    db_names_mock.assert_called_once()
+    list_table_info_mock.assert_called_once_with('dev')
+    db_names_mock.reset_mock()
+    list_table_info_mock.reset_mock()
+
+    redshift_connector.get_model_with_info('other-db')
+    db_names_mock.assert_not_called()
+    list_table_info_mock.assert_called_once_with('other-db')
 
     # on error
     mocker.patch.object(
