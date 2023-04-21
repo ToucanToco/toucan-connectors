@@ -380,9 +380,9 @@ def test_describe_error(mocker, postgres_connector):
         postgres_connector.describe(ds)
 
 
-def test_get_model(postgres_connector):
+def test_get_model(postgres_connector: PostgresConnector):
     """Check that it returns the db tree structure"""
-    assert postgres_connector.get_model() == [
+    postgres_db_model = [
         {
             'name': 'city',
             'schema': 'public',
@@ -432,6 +432,7 @@ def test_get_model(postgres_connector):
             ],
         },
     ]
+    assert postgres_connector.get_model() == postgres_db_model
 
 
 def test_raised_error_for_get_model(mocker, postgres_connector):

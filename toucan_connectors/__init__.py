@@ -15,10 +15,6 @@ CONNECTORS_REGISTRY = {
         'label': 'Adobe Analytics',
         'logo': 'adobe_analytics/adobe-analytics.png',
     },
-    'Aircall': {
-        'connector': 'aircall.aircall_connector.AircallConnector',
-        'logo': 'aircall/Aircall.svg',
-    },
     'Anaplan': {
         'connector': 'anaplan.anaplan_connector.AnaplanConnector',
         'label': 'Anaplan',
@@ -123,10 +119,6 @@ CONNECTORS_REGISTRY = {
         'label': 'Google Spreadsheet',
         'logo': 'google_spreadsheet/google-spreadsheet.png',
     },
-    'Hive': {
-        'connector': 'hive.hive_connector.HiveConnector',
-        'logo': 'hive/hive.png',
-    },
     'HttpAPI': {
         'connector': 'http_api.http_api_connector.HttpAPIConnector',
         'label': 'Http API',
@@ -141,14 +133,6 @@ CONNECTORS_REGISTRY = {
         'connector': 'hubspot_private_app.hubspot_connector.HubspotConnector',
         'label': 'Hubspot (Private App)',
         'logo': 'hubspot/hubspot.png',
-    },
-    'Indexima': {
-        'connector': 'hive.hive_connector.HiveConnector',
-        'logo': 'hive/indexima.png',
-    },
-    'Lightspeed': {
-        'connector': 'lightspeed.lightspeed_connector.LightspeedConnector',
-        'logo': 'lightspeed/lightspeed.png',
     },
     'LinkedinAds': {
         'connector': 'linkedinads.linkedinads_connector.LinkedinadsConnector',
@@ -212,15 +196,6 @@ CONNECTORS_REGISTRY = {
         'connector': 'redshift.redshift_database_connector.RedshiftConnector',
         'label': 'Redshift',
         'logo': 'redshift/redshift.png',
-    },
-    'Revinate': {
-        'connector': 'revinate.revinate_connector.RevinateConnector',
-        'label': 'Revinate',
-        'logo': 'revinate/revinate.png',
-    },
-    'ROK': {
-        'connector': 'rok.rok_connector.RokConnector',
-        'logo': 'rok/rok.png',
     },
     'Salesforce': {
         'connector': 'salesforce.salesforce_connector.SalesforceConnector',

@@ -2,8 +2,6 @@
 
 * [AdobeAnalyticsConnector](connectors/adobe_analytics.md)
 
-* [AircallConnector](connectors/aircall.md)
-
 * [AnaplanConnector](connectors/anaplan.md)
 
 * [AwsathenaConnector](connectors/awsathena.md)
@@ -40,11 +38,7 @@
 
 * [GoogleSpreadsheetConnector](connectors/google_spreadsheet.md)
 
-* [HiveConnector](connectors/hive.md)
-
 * [HubspotConnector](connectors/hubspot.md)
-
-* [LightspeedConnector](connectors/lightspeed.md)
 
 * [LinkedinadsConnector](connectors/linkedinads.md)
 
@@ -63,10 +57,6 @@
 * [OneDriveConnector](connectors/one_drive.md)
 
 * [OracleSQLConnector](connectors/oracle_sql.md)
-
-* [RevinateConnector](connectors/revinate.md)
-
-* [RokConnector](connectors/rok.md)
 
 * [SalesforceConnector](connectors/salesforce.md)
 

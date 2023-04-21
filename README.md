@@ -107,7 +107,7 @@ Some connectors are tested using mocks (cf. `trello`), others are tested by maki
 
 ## Contributing
 
-This is an open source repository under the [BSD 3-Clause Licence](https://github.com/ToucanToco/toucan-connectors/blob/master/LICENSE). The Toucan Toco tech team are the maintainers of this repository, we welcome contributions. 
+This is an open source repository under the [BSD 3-Clause Licence](https://github.com/ToucanToco/toucan-connectors/blob/master/LICENSE). The Toucan Toco tech team are the maintainers of this repository, we welcome contributions.
 
 At the moment the main use of this code is its integration into Toucan Toco commercially licenced software, as a result our dev and maintenance efforts applied here are mostly driven by Toucan Toco internal priorities.
 
@@ -122,7 +122,7 @@ make new_connector type=mytype
 ```
 
 `mytype` should be the name of a system we would like to build a connector for,
-such as `MySQL` or `Hive` or `Magento`.
+such as `MySQL` or `Magento`.
 
 Open the folder in `tests` for the new connector. You can start writing your tests before implementing it.
 

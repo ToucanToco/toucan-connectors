@@ -152,22 +152,6 @@ def service_container(unused_port, container_starter):
 
 
 @pytest.fixture
-def bearer_api_key():
-    bearer_api_key = getenv('BEARER_API_KEY')
-    if not bearer_api_key:
-        pytest.skip("'BEARER_API_KEY' is not set")
-    return bearer_api_key
-
-
-@pytest.fixture
-def bearer_aircall_auth_id(bearer_api_key):
-    bearer_aircall_auth_id = getenv('BEARER_AIRCALL_AUTH_ID')
-    if not bearer_aircall_auth_id:
-        pytest.skip("'BEARER_AIRCALL_AUTH_ID' is not set")
-    return bearer_aircall_auth_id
-
-
-@pytest.fixture
 def secrets_keeper():
     class SimpleSecretsKeeper(SecretsKeeper):
         def __init__(self):
