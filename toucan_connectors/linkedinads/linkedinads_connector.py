@@ -162,7 +162,7 @@ class LinkedinadsConnector(ToucanConnector):
         # Build the query, 1 mandatory parameters
         query = (
             f'dateRange.start.day={splitted_start.day}&dateRange.start.month={splitted_start.month}'
-            f'&dateRange.start.year={splitted_start.year}&timeGranularity={data_source.time_granularity}'
+            f'&dateRange.start.year={splitted_start.year}&timeGranularity={data_source.time_granularity.value}'
         )
 
         if data_source.end_date:
@@ -179,7 +179,9 @@ class LinkedinadsConnector(ToucanConnector):
 
         # Get the data
         res = requests.get(
-            url=f'{self._baseroute}{data_source.finder_methods}', params=query, headers=headers
+            url=f'{self._baseroute}{data_source.finder_methods.value}',
+            params=query,
+            headers=headers,
         )
 
         try:

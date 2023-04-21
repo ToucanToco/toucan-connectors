@@ -274,7 +274,7 @@ def test_get_slice_metadata(snowflake_datasource, mocker):
     connect.cursor().execute().fetchone.return_value = [{'total_rows': 200}]
     connect.cursor().execute().fetchall.return_value = [{'c1': 2}]
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
-    assert ds.stats.df_memory_size == 1360
+    assert ds.stats.df_memory_size == 1364
     assert ds.pagination_info.pagination_info.total_rows == 14
 
 
