@@ -2,8 +2,12 @@
 
 ## Unreleased
 
+### [4.5.0] 2023-04-24
+
 ### Changed
 
+- This release officially adds support for Python 3.11
+- The `awswrangler` dependency has been bumped to `^3.0.0`
 - For SQL connectors, `get_model()` 's output is now filtered on the passed db name, if it is specified
 
 ### Removed
