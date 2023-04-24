@@ -4154,14 +4154,14 @@ types-urllib3 = "<1.27"
 
 [[package]]
 name = "types-simplejson"
-version = "3.18.0.1"
+version = "3.19.0.0"
 description = "Typing stubs for simplejson"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-simplejson-3.18.0.1.tar.gz", hash = "sha256:6e0dc74dc7aaecbf94665dd187ab713a1d83bb3cc2dcdbc321e455a15b828db0"},
-    {file = "types_simplejson-3.18.0.1-py3-none-any.whl", hash = "sha256:9219d128def4b0488409a4fa6eed96c2208da25bfbd65ee67bb2f81e76ba63f3"},
+    {file = "types-simplejson-3.19.0.0.tar.gz", hash = "sha256:64aff3d151104e0458bfc9d64ffb78efd0157ff740a9f00904a30a5465f7c013"},
+    {file = "types_simplejson-3.19.0.0-py3-none-any.whl", hash = "sha256:38982991785db84c78f9012f5b9a03069ec3be020f468fb8fcd950b23e3a3341"},
 ]
 
 [[package]]
@@ -4566,4 +4566,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "e3453fca69f2515ddb1d9a66d99d2e918315e4df8f40757b0422e15164b1ce79"
+content-hash = "f143d06c7bf298974ec5cd4c04a44cf214037be12c953574cb9a264483be278d"
