@@ -433,6 +433,8 @@ def test_get_model(postgres_connector: PostgresConnector):
         },
     ]
     assert postgres_connector.get_model() == postgres_db_model
+    assert postgres_connector.get_model(db_name='postgres_db') == postgres_db_model
+    assert postgres_connector.get_model(db_name='another_db') == []
 
 
 def test_raised_error_for_get_model(mocker, postgres_connector):
@@ -445,7 +447,7 @@ def test_raised_error_for_get_model(mocker, postgres_connector):
 
 def test_get_model_with_info(postgres_connector):
     """Check that it returns the db tree structure"""
-    assert postgres_connector.get_model_with_info() == (
+    postgres_db_model = (
         [
             {
                 'name': 'city',
@@ -497,6 +499,12 @@ def test_get_model_with_info(postgres_connector):
             },
         ],
         {},
+    )
+    assert postgres_connector.get_model_with_info() == postgres_db_model
+    assert postgres_connector.get_model_with_info(db_name='postgres_db') == postgres_db_model
+    assert postgres_connector.get_model_with_info(db_name='another_db') == (
+        [],
+        {'info': {'Could not reach databases': ['another_db']}},
     )
 
 

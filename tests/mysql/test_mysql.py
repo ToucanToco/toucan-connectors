@@ -294,7 +294,7 @@ def test_get_form_empty_query(mysql_connector):
     assert form['definitions']['database'] == {
         'title': 'database',
         'description': 'An enumeration.',
-        'enum': ['mysql_db'],
+        'enum': ['mysql_db', 'other_db'],
         'type': 'string',
     }
 
@@ -308,7 +308,7 @@ def test_get_form_query_with_good_database(mysql_connector):
         'title': 'database',
         'description': 'An enumeration.',
         'type': 'string',
-        'enum': ['mysql_db'],
+        'enum': ['mysql_db', 'other_db'],
     }
     assert form['required'] == ['domain', 'name', 'database']
 
@@ -381,6 +381,11 @@ def test_get_model(mysql_connector: Any, db_name: str | None) -> None:
             ],
         },
     ]
+
+
+def test_get_model_other_db(mysql_connector: Any) -> None:
+    """Check that it returns the db tree structure"""
+    assert mysql_connector.get_model(db_name='other_db') == []
 
 
 def test_get_model_non_existing_db(mysql_connector: Any) -> None:

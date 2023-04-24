@@ -110,10 +110,6 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
     def available_dbs(self) -> list[str]:
         return self._list_db_names()
 
-    @cached_property_with_ttl(ttl=60)
-    def project_tree(self) -> list[TableInfo]:
-        return self._get_project_structure()
-
     def _retrieve_data(
         self,
         data_source: AwsathenaDataSource,
@@ -139,10 +135,11 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
             boto3_session=self.get_session(),
         )['Database'].values
 
-    def _get_project_structure(self) -> list[TableInfo]:
+    def _get_project_structure(self, db_name: str | None = None) -> list[TableInfo]:
         table_list: list[TableInfo] = []
+        available_dbs = self.available_dbs if db_name is None else [db_name]
         session = self.get_session()
-        for db in self.available_dbs:
+        for db in available_dbs:
             tables = wr.catalog.tables(boto3_session=session, database=db)[
                 ['Table', 'TableType']
             ].to_dict(orient='records')
@@ -221,4 +218,4 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
 
     def get_model(self, db_name: str | None = None) -> list[TableInfo]:
         """Retrieves the database tree structure using current session"""
-        return self.project_tree
+        return self._get_project_structure(db_name)

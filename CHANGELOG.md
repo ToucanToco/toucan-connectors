@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- For SQL connectors, `get_model()` 's output is now filtered on the passed db name, if it is specified
+
 ### Removed
 
 - The `Hive` connector has been deleted
