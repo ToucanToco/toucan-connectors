@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [4.5.1] 2023-04-27
+
+### Fixed
+
+- Added a missing dependency on `aiohttp`
+
 ### [4.5.0] 2023-04-24
 
 ### Changed

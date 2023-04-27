@@ -11,7 +11,7 @@ multi_line_output = 3
 
 [tool.poetry]
 name = "toucan-connectors"
-version = "4.5.0"
+version = "4.5.1"
 description = "Toucan Toco Connectors"
 authors = ["Toucan Toco <dev@toucantoco.com>"]
 license = "BSD"
@@ -63,6 +63,7 @@ pyarrow = {version = "<12", optional = true}
 toucan-client = {version = "^1.0.1", optional = true}
 peakina = {version = "^0.11.0", optional = true}
 hubspot-api-client = {version = "^7.4.0", optional = true}
+aiohttp = "^3.8.4"
 
 [tool.poetry.dev-dependencies]
 Authlib = "^1.0.1"
