@@ -162,7 +162,6 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
     def _sanitize_ssl_params(self) -> dict[str, Any]:
         params = {}
         if self.ssl_mode in (SSLMode.VERIFY_CA, SSLMode.VERIFY_IDENTITY):
-
             for ssl_opt in ('ssl_ca', 'ssl_key', 'ssl_cert'):
                 opt = getattr(self, ssl_opt)
                 if opt is None:

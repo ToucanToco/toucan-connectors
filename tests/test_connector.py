@@ -236,7 +236,6 @@ class CustomPolicyDataConnector(ToucanConnector):
     data_source_model: DataSource
 
     def _retrieve_data(self, data_source, logbook=[]):
-
         if len(logbook) < 3:
             logbook.append(time())
             raise RuntimeError('try again!')
