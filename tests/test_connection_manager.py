@@ -6,6 +6,7 @@ from mock import patch
 
 from toucan_connectors.connection_manager import ConnectionBO, ConnectionManager
 
+# FIXME: Whenever possible, completely delete this module and the code tested by it
 pytest.skip(allow_module_level=True, reason='flaky')
 
 
