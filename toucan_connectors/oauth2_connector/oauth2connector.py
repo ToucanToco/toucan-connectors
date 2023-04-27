@@ -104,7 +104,6 @@ class OAuth2Connector:
         token = self.secrets_keeper.load(self.auth_flow_id)
 
         if 'expires_at' in token:
-
             expires_at = token['expires_at']
             if isinstance(expires_at, bool):
                 is_expired = expires_at

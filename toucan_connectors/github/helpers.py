@@ -187,7 +187,6 @@ def format_pr_row(pr_row: dict):
     current_record['PR Additions'] = pr_row.get('additions')
     current_record['PR Deletions'] = pr_row.get('deletions')
     try:
-
         current_record['PR Type'] = [
             label['node'].get('name') for label in pr_row['labels'].get('edges')
         ]

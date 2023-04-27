@@ -107,7 +107,6 @@ def validate_collection(client, database: str, collection: str):
 
 
 class MongoDataSource(ToucanDataSource):
-
     database: str = Field(..., description='The name of the database you want to query')
     collection: str = Field(..., description='The name of the collection you want to query')
     query: Union[dict, list] = Field(

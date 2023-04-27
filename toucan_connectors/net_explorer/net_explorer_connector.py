@@ -47,7 +47,6 @@ class NetExplorerConnector(ToucanConnector):
         return resp.json()
 
     def _retrieve_file_id(self, folders, data_source):
-
         basedir = data_source.file.split('/')[0]
         path = data_source.file.split('/')[1:]
 

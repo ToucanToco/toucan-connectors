@@ -34,7 +34,6 @@ class OdbcConnector(ToucanConnector):
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _retrieve_data(self, datasource: OdbcDataSource) -> pd.DataFrame:
-
         connection = pyodbc.connect(self.connection_string, **self.get_connection_params())
         df = pandas_read_sql(
             datasource.query, con=connection, params=datasource.parameters, convert_to_qmark=True

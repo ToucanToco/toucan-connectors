@@ -43,7 +43,6 @@ class ODataConnector(ToucanConnector):
     auth: Auth = Field(None, title='Authentication type')
 
     def _retrieve_data(self, data_source: ODataDataSource) -> pd.DataFrame:
-
         if self.auth:
             session = self.auth.get_session()
         else:

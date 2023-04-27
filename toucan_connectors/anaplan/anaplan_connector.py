@@ -45,7 +45,6 @@ class AnaplanDataSource(ToucanDataSource):
 
         constraints = {}
         with contextlib.suppress(AnaplanError, KeyError):
-
             token = connector.fetch_token()
             available_workspaces = connector.get_available_workspaces(token=token)
             constraints['workspace_id'] = strlist_to_enum(

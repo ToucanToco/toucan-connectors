@@ -148,7 +148,6 @@ class GoogleSheetsConnector(ToucanConnector):
         return 'SERIAL_NUMBER' if data_source.dates_as_float else 'FORMATTED_STRING'
 
     def _retrieve_data(self, data_source: GoogleSheetsDataSource) -> pd.DataFrame:
-
         if data_source.sheet is None:
             # Select the first sheet by default
             sheet_names = self.list_sheets(data_source.spreadsheet_id)
