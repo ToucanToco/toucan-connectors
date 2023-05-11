@@ -94,7 +94,7 @@ zeep = "^4.1.0"
 mypy = "^1.2"
 pandas-stubs = "^2.0.1.230501"
 types-requests = "^2.30.0.0"
-types-simplejson = "^3.19.0.0"
+types-simplejson = "^3.19.0.1"
 types-python-slugify = "^8.0.0.2"
 types-pyopenssl = "^23.1.0.2"
 
