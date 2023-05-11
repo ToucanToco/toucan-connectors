@@ -450,7 +450,7 @@ def test_get_connection_connect_oauth(
     assert call_args['account'] == 'test_account'
     assert (
         call_args['token']
-        == 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjQyLCJzdWIiOiJzbm93Zmxha2VfdXNlciJ9.NJDbR-tAepC_ANrg9m5PozycbcuWDgGi4o9sN9Pl27k'
+        == 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQyLCJzdWIiOiJzbm93Zmxha2VfdXNlciJ9.WIi6tM3WAGh7gSyxcNHl8fFyDDXymyeBIVG55MFufvw'
     )
     assert call_args['database'] == 'test_database'
     assert call_args['warehouse'] == 'test_warehouse'
