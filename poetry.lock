@@ -250,28 +250,29 @@ cryptography = ">=3.2"
 
 [[package]]
 name = "awswrangler"
-version = "3.0.0"
+version = "3.1.1"
 description = "Pandas on AWS."
 category = "main"
 optional = true
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "awswrangler-3.0.0-py3-none-any.whl", hash = "sha256:cccab37dc37dfe0f4a19e00e836ba734601ccb73a114fabdff53cb60e70f8c2c"},
-    {file = "awswrangler-3.0.0.tar.gz", hash = "sha256:9a2384ec4dbfd83ac8cef859d127924f89b3b3f1b6242da89606a296af3d68ec"},
+    {file = "awswrangler-3.1.1-py3-none-any.whl", hash = "sha256:237041c856a29524bd1b58f48a95a88b4c5433c673d82bc193f13fbdea3abdcb"},
+    {file = "awswrangler-3.1.1.tar.gz", hash = "sha256:e19fda35f16313ec11b990823ece989d71977f0ea51a3ae5cbf61e1417a6349e"},
 ]
 
 [package.dependencies]
 boto3 = ">=1.20.32,<2.0.0"
 botocore = ">=1.23.32,<2.0.0"
 numpy = ">=1.18,<2.0"
-pandas = ">=1.2.0,<1.5.0 || >1.5.0,<2.0.0"
+packaging = ">=23.1,<24.0"
+pandas = ">=1.2.0,<1.5.0 || >1.5.0,<3.0.0"
 pyarrow = ">=7.0.0"
 typing-extensions = ">=4.4.0,<5.0.0"
 
 [package.extras]
-deltalake = ["deltalake (>=0.6.4,<0.9.0)"]
+deltalake = ["deltalake (>=0.6.4,<0.10.0)"]
 gremlin = ["gremlinpython (>=3.6.2,<4.0.0)", "requests (>=2.0.0,<3.0.0)"]
-modin = ["modin (>=0.16.0,<0.20.0)"]
+modin = ["modin (>=0.20.1,<0.21.0)"]
 mysql = ["pymysql (>=1.0.0,<2.0.0)"]
 opencypher = ["requests (>=2.0.0,<3.0.0)"]
 openpyxl = ["openpyxl (>=3.0.0,<4.0.0)"]
@@ -279,7 +280,7 @@ opensearch = ["jsonpath-ng (>=1.5.3,<2.0.0)", "opensearch-py (>=2.0.0,<3.0.0)", 
 oracle = ["oracledb (>=1.0.0,<2.0.0)"]
 postgres = ["pg8000 (>=1.29.0,<2.0.0)"]
 progressbar = ["progressbar2 (>=4.0.0,<5.0.0)"]
-ray = ["ray[data,default] (>=2.0.0,<2.4.0)"]
+ray = ["ray[data,default] (>=2.0.0,<2.5.0)"]
 redshift = ["redshift-connector (>=2.0.0,<3.0.0)"]
 sparql = ["SPARQLWrapper (>=2.0.0,<3.0.0)", "requests (>=2.0.0,<3.0.0)"]
 sqlserver = ["pyodbc (>=4.0.0,<5.0.0)"]
