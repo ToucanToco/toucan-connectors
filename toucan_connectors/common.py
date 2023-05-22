@@ -424,15 +424,17 @@ def pandas_read_sql(
         # FIXME: We should use here the sqlalchemy.text() module to
         # escape characters like % but as a quick fix,
         # we added regex replace that will exclude %(.*) compositions
-        query = query.replace('%%', '%')
-        query = re.sub(r'%[^(%]', r'%\g<0>', query)
+        #
+        # we didn't used it because we can not have a whole lib just
+        # for a single function.
+        query = re.sub(pattern=r'%[^(%]', repl=r'%\g<0>', string=query.replace('%%', '%'))
         df = pd.read_sql(query, con=con, params=params, **kwargs)
-    except pd.io.sql.DatabaseError:
+    except pd.errors.DatabaseError as excp:
+        errmsg = f"Execution failed on sql '{query}'"
         if is_interpolating_table_name(query):
-            errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
-            raise pd.io.sql.DatabaseError(errmsg)
-        else:
-            raise
+            errmsg += " interpolating table name is forbidden"
+            raise pd.errors.DatabaseError(errmsg) from excp
+        raise
 
     infer_datetime_dtype(df)
     return df
