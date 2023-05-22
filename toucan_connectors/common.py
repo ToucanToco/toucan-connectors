@@ -430,9 +430,9 @@ def pandas_read_sql(
         query = re.sub(pattern=r'%[^(%]', repl=r'%\g<0>', string=query.replace('%%', '%'))
         df = pd.read_sql(query, con=con, params=params, **kwargs)
     except pd.errors.DatabaseError as excp:
-        errmsg = f"Execution failed on sql '{query}'"
+        errmsg = f"Execution failed on sql \'{query}\'"
         if is_interpolating_table_name(query):
-            errmsg += " interpolating table name is forbidden"
+            errmsg += ' interpolating table name is forbidden'
             raise pd.errors.DatabaseError(errmsg) from excp
         raise
 
