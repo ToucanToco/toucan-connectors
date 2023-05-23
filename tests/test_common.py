@@ -142,12 +142,12 @@ def test_apply_parameter_to_query_do_nothing():
         (
             {'domain': 'blah', 'country': {'$eq': '{{country}}'}, 'city': '{{city}}'},
             {'city': 'Paris', 'country': '__VOID__'},
-            {'domain': 'blah', 'country': {}, 'city': 'Paris'},
+            {'domain': 'blah', 'country': {'$eq': '__VOID__'}, 'city': 'Paris'},
         ),
         (
             {'domain': 'blah', 'country': {'$eq': '__VOID__'}, 'city': '{{city}}'},
             {'city': 'Paris'},
-            {'domain': 'blah', 'country': {}, 'city': 'Paris'},
+            {'domain': 'blah', 'country': {'$eq': '__VOID__'}, 'city': 'Paris'},
         ),
         (
             [{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}}, {'$match': {'b': 1}}],
@@ -518,4 +518,4 @@ def test_nosql_apply_parameters_to_query_with__VOID__():
     # * For HTTP API, we use this directly on the datasource converted to a dict.
     # * For MongoDB, every document in the pipeline must contain exactly one root field
     #   (So what happens in case the root field is templatized and does not match anything ?)
-    assert with_applied_params == [{'$match': {'STORE_TYPE': {}}}]
+    assert with_applied_params == [{'$match': {'STORE_TYPE': {'$eq': '__VOID__'}}}]

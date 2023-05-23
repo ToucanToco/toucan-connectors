@@ -31,9 +31,6 @@ RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
 RE_NAMED_PARAM = r'\'?%\([a-zA-Z0-9_]*\)s\'?'
 
-# If a parameter has one of these values, it'll be removed from a query
-_PARAMETER_VALUES_TO_ELIMINATE = ('__VOID__',)
-
 
 class NonValidVariable(Exception):
     """Error thrown for a non valid variable in endpoint"""
@@ -154,18 +151,11 @@ def _handle_missing_params(elt: dict | list[dict] | tuple | str, params: dict, h
         for k, v in elt.items():
             if isinstance(v, str):
                 missing_params = []
-                # In case the query was interpolated before being passed to the connector
-                if v.strip() in _PARAMETER_VALUES_TO_ELIMINATE:
-                    continue
                 matches = re.findall(RE_PARAM, v) + re.findall(RE_JINJA, v)
 
                 for m in matches:
                     try:
-                        rendered = Template('{{ %s }}' % m, undefined=StrictUndefined).render(
-                            params
-                        )
-                        if rendered in _PARAMETER_VALUES_TO_ELIMINATE:
-                            missing_params.append(m)
+                        _ = Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
                     except Exception:
                         if handle_errors:
                             raise NonValidVariable(f'Non valid variable {m}')
