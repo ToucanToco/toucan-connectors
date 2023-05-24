@@ -100,11 +100,54 @@ def _flatten_rendered_nested_list(origin: list, rendered: list) -> list:
     return result
 
 
-def _render_query(query: dict | list[dict] | tuple | str, parameters: dict):
+def _render_query(
+    query: dict | list[dict] | tuple | str, parameters: dict | None, handle_errors: bool = False
+):
     """
     Render both jinja or %()s templates in query
     while keeping type of parameters
     """
+
+    def _handle_missing_params(
+        elt: dict | list[dict] | tuple | str, params: dict, handle_errors: bool
+    ):
+        """
+        Remove a dictionary key if its value has a missing parameter.
+        cf. https://bit.ly/2Ln6rcf
+        """
+
+        if isinstance(elt, dict):
+            e = {}
+            for k, v in elt.items():
+                if isinstance(v, str):
+                    missing_params = []
+                    matches = re.findall(RE_PARAM, v) + re.findall(RE_JINJA, v)
+
+                    for m in matches:
+                        try:
+                            _ = Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
+                        except Exception:
+                            if handle_errors:
+                                raise NonValidVariable(f'Non valid variable {m}')
+                            missing_params.append(m)
+                    if any(missing_params):
+                        continue
+                    else:
+                        e[k] = v
+                else:
+                    e[k] = _handle_missing_params(v, params, handle_errors)
+            return e
+        elif isinstance(elt, list):
+            # Not filtering out empty dicts here because they may have a meaning in some backends
+            return [_handle_missing_params(e, params, handle_errors) for e in elt]
+        else:
+            return elt
+
+    query = _handle_missing_params(query, parameters or {}, handle_errors)
+
+    if parameters is None:
+        return query
+
     if isinstance(query, dict):
         return {key: _render_query(value, parameters) for key, value in deepcopy(query).items()}
     elif isinstance(query, list):
@@ -140,40 +183,6 @@ def _render_query(query: dict | list[dict] | tuple | str, parameters: dict):
         return query
 
 
-def _handle_missing_params(elt: dict | list[dict] | tuple | str, params: dict, handle_errors: bool):
-    """
-    Remove a dictionary key if its value has a missing parameter.
-    This is used to support the __VOID__ syntax, specific at Toucan Toco :
-        cf. https://bit.ly/2Ln6rcf
-    """
-    if isinstance(elt, dict):
-        e = {}
-        for k, v in elt.items():
-            if isinstance(v, str):
-                missing_params = []
-                matches = re.findall(RE_PARAM, v) + re.findall(RE_JINJA, v)
-
-                for m in matches:
-                    try:
-                        _ = Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
-                    except Exception:
-                        if handle_errors:
-                            raise NonValidVariable(f'Non valid variable {m}')
-                        missing_params.append(m)
-                if any(missing_params):
-                    continue
-                else:
-                    e[k] = v
-            else:
-                e[k] = _handle_missing_params(v, params, handle_errors)
-        return e
-    elif isinstance(elt, list):
-        # Not filtering out empty dicts here because they may have a meaning in some backends
-        return [_handle_missing_params(e, params, handle_errors) for e in elt]
-    else:
-        return elt
-
-
 def nosql_apply_parameters_to_query(
     query: dict | list[dict] | tuple | str, parameters: dict | None, handle_errors: bool = False
 ):
@@ -182,13 +191,7 @@ def nosql_apply_parameters_to_query(
     Instead use your client library parameter substitution method.
     https://www.owasp.org/index.php/Query_Parameterization_Cheat_Sheet
     """
-
-    query = _handle_missing_params(query, parameters, handle_errors)
-
-    if parameters is None:
-        return query
-
-    query = _render_query(query, parameters)
+    query = _render_query(query, parameters, handle_errors)
     return query
 
 
