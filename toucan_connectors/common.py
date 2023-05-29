@@ -109,39 +109,39 @@ def _render_query(
     """
 
     def _handle_missing_params(
-        elt: dict | list[dict] | tuple | str, params: dict, handle_errors: bool
+        query: dict | list[dict] | tuple | str, params: dict, handle_errors: bool
     ):
         """
         Remove a dictionary key if its value has a missing parameter.
         cf. https://bit.ly/2Ln6rcf
         """
 
-        if isinstance(elt, dict):
-            e = {}
-            for k, v in elt.items():
-                if isinstance(v, str):
+        if isinstance(query, dict):
+            filtered_dict = {}
+            for key, value in query.items():
+                if isinstance(value, str):
+                    matches = re.findall(RE_PARAM, value) + re.findall(RE_JINJA, value)
                     missing_params = []
-                    matches = re.findall(RE_PARAM, v) + re.findall(RE_JINJA, v)
-
-                    for m in matches:
+                    for match in matches:
                         try:
-                            _ = Template('{{ %s }}' % m, undefined=StrictUndefined).render(params)
+                            Template('{{ %s }}' % match, undefined=StrictUndefined).render(params)
                         except Exception:
                             if handle_errors:
-                                raise NonValidVariable(f'Non valid variable {m}')
-                            missing_params.append(m)
-                    if any(missing_params):
+                                raise NonValidVariable(f'Non valid variable {match}')
+                            missing_params.append(match)
+
+                    if missing_params:
                         continue
-                    else:
-                        e[k] = v
-                else:
-                    e[k] = _handle_missing_params(v, params, handle_errors)
-            return e
-        elif isinstance(elt, list):
-            # Not filtering out empty dicts here because they may have a meaning in some backends
-            return [_handle_missing_params(e, params, handle_errors) for e in elt]
+
+                filtered_dict[key] = _handle_missing_params(value, params, handle_errors)
+            return filtered_dict
+        elif isinstance(query, list):
+            filtered_list = []
+            for item in query:
+                filtered_list.append(_handle_missing_params(item, params, handle_errors))
+            return filtered_list
         else:
-            return elt
+            return query
 
     query = _handle_missing_params(query, parameters or {}, handle_errors)
 
