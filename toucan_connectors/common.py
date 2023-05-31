@@ -108,12 +108,13 @@ def _render_query(
     while keeping type of parameters
     """
 
-    def _handle_missing_params(
+    def _remove_undefined_params_variables(
         query: dict | list[dict] | tuple | str, params: dict, handle_errors: bool
     ):
         """
         Remove a dictionary key if its value has a missing parameter.
-        cf. https://bit.ly/2Ln6rcf
+        In case of missing variables values, we don't want the final query
+        having null/Undefined as values.
         """
 
         if isinstance(query, dict):
@@ -133,17 +134,21 @@ def _render_query(
                     if missing_params:
                         continue
 
-                filtered_dict[key] = _handle_missing_params(value, params, handle_errors)
+                filtered_dict[key] = _remove_undefined_params_variables(
+                    value, params, handle_errors
+                )
             return filtered_dict
         elif isinstance(query, list):
             filtered_list = []
             for item in query:
-                filtered_list.append(_handle_missing_params(item, params, handle_errors))
+                filtered_list.append(
+                    _remove_undefined_params_variables(item, params, handle_errors)
+                )
             return filtered_list
         else:
             return query
 
-    query = _handle_missing_params(query, parameters or {}, handle_errors)
+    query = _remove_undefined_params_variables(query, parameters or {}, handle_errors)
 
     if parameters is None:
         return query
