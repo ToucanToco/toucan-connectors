@@ -4,12 +4,11 @@ import numpy as np
 import pandas as pd
 import pytest
 from aiohttp import web
-from jinja2.exceptions import UndefinedError
-from jinja2.runtime import Undefined
 from pytest_mock import MockFixture
 
 from toucan_connectors.common import (
     ConnectorStatus,
+    UndefinedVariableError,
     adapt_param_type,
     apply_query_parameters,
     convert_to_printf_templating_style,
@@ -122,12 +121,12 @@ def test_apply_parameter_to_query_do_nothing():
         (
             {'domain': 'blah', 'country': {'$ne': '%(country)s'}, 'city': '%(city)s'},
             {'city': 'Paris'},
-            {'domain': 'blah', 'country': {'$ne': Undefined()}, 'city': 'Paris'},
+            {'domain': 'blah', 'country': {}, 'city': 'Paris'},
         ),
         (
             [{'$match': {'country': '%(country)s', 'city': 'Test'}}, {'$match': {'b': 1}}],
             {'city': 'Paris'},
-            [{'$match': {'country': Undefined(), 'city': 'Test'}}, {'$match': {'b': 1}}],
+            [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}],
         ),
         (
             {'code': '%(city)s_%(country)s', 'domain': 'Test'},
@@ -142,7 +141,7 @@ def test_apply_parameter_to_query_do_nothing():
         (
             {'domain': 'blah', 'country': {'$ne': '{{country}}'}, 'city': '{{city}}'},
             {'city': 'Paris'},
-            {'domain': 'blah', 'country': {'$ne': Undefined()}, 'city': 'Paris'},
+            {'domain': 'blah', 'country': {}, 'city': 'Paris'},
         ),
         (
             {'domain': 'blah', 'country': {'$eq': '{{country}}'}, 'city': '{{city}}'},
@@ -246,15 +245,6 @@ def test_apply_parameter_to_query_do_nothing():
             {'obj': 1},
             {'data': 1},
         ),
-    ],
-)
-def test_nosql_apply_parameters_to_query(query, params, expected):
-    assert nosql_apply_parameters_to_query(query, params) == expected
-
-
-@pytest.mark.parametrize(
-    'query,params,expected',
-    [
         (
             [{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}}, {'$match': {'b': 1}}],
             {'city': 'Paris'},
@@ -267,9 +257,24 @@ def test_nosql_apply_parameters_to_query(query, params, expected):
         ),
     ],
 )
-def test_nosql_apply_parameters_to_query_error_on_params(query, params, expected):
-    with pytest.raises(UndefinedError):
-        assert nosql_apply_parameters_to_query(query, params) == expected
+def test_nosql_apply_parameters_to_query(query, params, expected):
+    assert nosql_apply_parameters_to_query(query, params) == expected
+
+
+@pytest.mark.parametrize(
+    'query,params,match_',
+    [
+        (
+            [{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}}, {'$match': {'b': 1}}],
+            {'city': 'Paris'},
+            'country',
+        ),
+        ({'code': '{{city}}_{{country[0]}}', 'domain': 'Test'}, {'city': 'Paris'}, 'country'),
+    ],
+)
+def test_nosql_apply_parameters_to_query_error_on_params(query: dict, params: dict, match_: str):
+    with pytest.raises(UndefinedVariableError):
+        nosql_apply_parameters_to_query(query, params, handle_errors=True)
 
 
 def test_nosql_apply_parameters_to_query_dot():
