@@ -1,11 +1,14 @@
 from datetime import date, datetime, timedelta
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import pytest
 from aiohttp import web
+from jinja2 import Undefined
 from pytest_mock import MockFixture
 
+from toucan_connectors import common as common_mod
 from toucan_connectors.common import (
     ConnectorStatus,
     UndefinedVariableError,
@@ -526,3 +529,16 @@ def test_convert_to_qmark():
 )
 def test_sanitize_query(query, init_params, transformer, expected_query, expected_params):
     assert sanitize_query(query, init_params, transformer) == (expected_query, expected_params)
+
+
+@pytest.mark.parametrize(
+    'query, expected',
+    [('{{nope}}', ''), ({'x': '{{nope}}'}, {}), (('{{nope}}',), ()), ([{'x': '{{nope}}'}], [])],
+)
+def test_nosql_apply_parameters_to_query_root_undefined(
+    query: Any, expected: Any, mocker: MockFixture
+):
+    mocker.patch.object(common_mod, '_render_query', return_value=Undefined())
+    assert (
+        nosql_apply_parameters_to_query(query=query, parameters={}, handle_errors=False) == expected
+    )

@@ -97,19 +97,22 @@ def _flatten_rendered_nested_list(origin: list, rendered: list) -> list:
 
 
 class UndefinedVariableError(Exception):
-    def __init__(self, var_name: str) -> None:
-        super().__init__(f"Variable '{var_name}' is undefined")
+    def __init__(self, message: str | None, var_name: str | None) -> None:
+        self.var_name = var_name
+        super().__init__(message)
 
 
-def _raise_or_return_none(res: Undefined | None, handle_errors: bool) -> None:
+def _raise_or_return_undefined(res: Undefined | None, handle_errors: bool) -> Undefined:
+    var_name = None if res is None or res._undefined_name is None else res._undefined_name
     if not handle_errors:
-        return None
-    undefined_name = (
-        '<UNAVAILABLE>' if res is None or res._undefined_name is None else res._undefined_name
-    )
+        return res or Undefined(name=var_name)
     # This is publicly documented, so we can safely access it:
     # https://jinja.palletsprojects.com/en/3.0.x/api/#jinja2.Undefined._undefined_name
-    raise UndefinedVariableError(undefined_name)
+    raise UndefinedVariableError(var_name=var_name, message=f'Undefined variable: {var_name}')
+
+
+def _is_defined(value: Any) -> bool:
+    return not isinstance(value, Undefined)
 
 
 def _render_query(
@@ -127,13 +130,13 @@ def _render_query(
         return {
             key: rendered
             for key, value in deepcopy(query).items()
-            if (rendered := _render_query(value, parameters, handle_errors)) is not None
+            if _is_defined(rendered := _render_query(value, parameters, handle_errors))
         }
     elif isinstance(query, list):
         rendered_query = [
             rendered
             for value in deepcopy(query)
-            if (rendered := _render_query(value, parameters, handle_errors)) is not None
+            if _is_defined(rendered := _render_query(value, parameters, handle_errors))
         ]
         rendered_query = _flatten_rendered_nested_list(query, rendered_query)
         return rendered_query
@@ -141,7 +144,7 @@ def _render_query(
         return tuple(
             rendered
             for value in deepcopy(query)
-            if (rendered := _render_query(value, parameters, handle_errors)) is not None
+            if _is_defined(rendered := _render_query(value, parameters, handle_errors))
         )
     elif isinstance(query, str):
         if not _has_parameters(query):
@@ -164,10 +167,10 @@ def _render_query(
             res = env.from_string(query).render(clean_p)
         # This happens if we try to access an attribute of an undefined var, i.e nope['nein']
         except UndefinedError:
-            return _raise_or_return_none(None, handle_errors)
+            return _raise_or_return_undefined(None, handle_errors)
 
         if isinstance(res, Undefined):
-            return _raise_or_return_none(res, handle_errors)
+            return _raise_or_return_undefined(res, handle_errors)
         # NativeEnvironment's render() isn't recursive, so we need to
         # apply recursively the literal_eval by hand for lists and dicts:
         if isinstance(res, (list, dict)):
@@ -185,8 +188,9 @@ def nosql_apply_parameters_to_query(
     Instead use your client library parameter substitution method.
     https://www.owasp.org/index.php/Query_Parameterization_Cheat_Sheet
     """
-    query = _render_query(query, parameters, handle_errors)
-    return query
+    rendered = _render_query(query, parameters, handle_errors)
+    # If we have undefined, return the default value for the given type
+    return rendered if _is_defined(rendered) else type(query)()
 
 
 def apply_query_parameters(query: str, parameters: dict) -> str:
