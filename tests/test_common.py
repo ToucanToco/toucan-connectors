@@ -4,11 +4,12 @@ import numpy as np
 import pandas as pd
 import pytest
 from aiohttp import web
+from jinja2.exceptions import UndefinedError
+from jinja2.runtime import Undefined
 from pytest_mock import MockFixture
 
 from toucan_connectors.common import (
     ConnectorStatus,
-    NonValidVariable,
     adapt_param_type,
     apply_query_parameters,
     convert_to_printf_templating_style,
@@ -121,14 +122,18 @@ def test_apply_parameter_to_query_do_nothing():
         (
             {'domain': 'blah', 'country': {'$ne': '%(country)s'}, 'city': '%(city)s'},
             {'city': 'Paris'},
-            {'domain': 'blah', 'country': {}, 'city': 'Paris'},
+            {'domain': 'blah', 'country': {'$ne': Undefined()}, 'city': 'Paris'},
         ),
         (
             [{'$match': {'country': '%(country)s', 'city': 'Test'}}, {'$match': {'b': 1}}],
             {'city': 'Paris'},
-            [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}],
+            [{'$match': {'country': Undefined(), 'city': 'Test'}}, {'$match': {'b': 1}}],
         ),
-        ({'code': '%(city)s_%(country)s', 'domain': 'Test'}, {'city': 'Paris'}, {'domain': 'Test'}),
+        (
+            {'code': '%(city)s_%(country)s', 'domain': 'Test'},
+            {'city': 'Paris'},
+            {'code': 'Paris_', 'domain': 'Test'},
+        ),
         (
             {'code': '%(city)s_%(country)s', 'domain': 'Test'},
             {'city': 'Paris', 'country': 'France'},
@@ -137,7 +142,7 @@ def test_apply_parameter_to_query_do_nothing():
         (
             {'domain': 'blah', 'country': {'$ne': '{{country}}'}, 'city': '{{city}}'},
             {'city': 'Paris'},
-            {'domain': 'blah', 'country': {}, 'city': 'Paris'},
+            {'domain': 'blah', 'country': {'$ne': Undefined()}, 'city': 'Paris'},
         ),
         (
             {'domain': 'blah', 'country': {'$eq': '{{country}}'}, 'city': '{{city}}'},
@@ -150,21 +155,15 @@ def test_apply_parameter_to_query_do_nothing():
             {'domain': 'blah', 'country': {'$eq': '__VOID__'}, 'city': 'Paris'},
         ),
         (
-            [{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}}, {'$match': {'b': 1}}],
-            {'city': 'Paris'},
-            [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}],
-        ),
-        (
-            {'code': '{{city}}_{{country[0]}}', 'domain': 'Test'},
-            {'city': 'Paris'},
-            {'domain': 'Test'},
-        ),
-        (
             {'code': '{{city}}_{{country}}', 'domain': 'Test'},
             {'city': 'Paris', 'country': 'France'},
             {'code': 'Paris_France', 'domain': 'Test'},
         ),
-        ({'code': '{{city}}_{{country}}', 'domain': 'Test'}, None, {'domain': 'Test'}),
+        (
+            {'code': '{{city}}_{{country}}', 'domain': 'Test'},
+            None,
+            {'code': '{{city}}_{{country}}', 'domain': 'Test'},
+        ),
         (
             {'column': 'date', 'operator': 'eq', 'value': '{{ t + delta }}'},
             {'t': datetime(2020, 12, 31), 'delta': timedelta(days=1)},
@@ -253,6 +252,26 @@ def test_nosql_apply_parameters_to_query(query, params, expected):
     assert nosql_apply_parameters_to_query(query, params) == expected
 
 
+@pytest.mark.parametrize(
+    'query,params,expected',
+    [
+        (
+            [{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}}, {'$match': {'b': 1}}],
+            {'city': 'Paris'},
+            [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}],
+        ),
+        (
+            {'code': '{{city}}_{{country[0]}}', 'domain': 'Test'},
+            {'city': 'Paris'},
+            {'domain': 'Test'},
+        ),
+    ],
+)
+def test_nosql_apply_parameters_to_query_error_on_params(query, params, expected):
+    with pytest.raises(UndefinedError):
+        assert nosql_apply_parameters_to_query(query, params) == expected
+
+
 def test_nosql_apply_parameters_to_query_dot():
     """It should handle both `x["y"]` and `x.y`"""
     query1 = {'facet': '{{ facet.value }}', 'sort': '{{ rank[0] }}', 'rows': '{{ bibou[0].value }}'}
@@ -285,13 +304,10 @@ def test_render_raw_permission():
 
 
 def test_bad_variable_in_query():
-    """It should thrown a NonValidEndpointVariable exception if bad variable in endpoint"""
+    """Render empty string if a jinja var is not set"""
     query = {'url': '/stuff/%(thing)s/foo'}
     params = {}
-    nosql_apply_parameters_to_query(query, params)
-    with pytest.raises(NonValidVariable) as err:
-        nosql_apply_parameters_to_query(query, params, handle_errors=True)
-    assert str(err.value) == 'Non valid variable thing'
+    assert nosql_apply_parameters_to_query(query, params) == {'url': '/stuff//foo'}
 
 
 # fetch tests

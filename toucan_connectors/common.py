@@ -11,7 +11,7 @@ from typing import Any, Callable
 import jq
 import pandas as pd
 from aiohttp import ClientSession
-from jinja2 import Environment, StrictUndefined, Template, meta
+from jinja2 import Environment, Template, meta
 from jinja2.nativetypes import NativeEnvironment
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
@@ -30,10 +30,6 @@ RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r'([ )])', RE_JINJA + r'()$']
 RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
 RE_NAMED_PARAM = r'\'?%\([a-zA-Z0-9_]*\)s\'?'
-
-
-class NonValidVariable(Exception):
-    """Error thrown for a non valid variable in endpoint"""
 
 
 class ClusterStartException(Exception):
@@ -107,48 +103,6 @@ def _render_query(
     Render both jinja or %()s templates in query
     while keeping type of parameters
     """
-
-    def _remove_undefined_params_variables(
-        query: dict | list[dict] | tuple | str, params: dict, handle_errors: bool
-    ):
-        """
-        Remove a dictionary key if its value has a missing parameter.
-        In case of missing variables values, we don't want the final query
-        having null/Undefined as values.
-        """
-
-        if isinstance(query, dict):
-            filtered_dict = {}
-            for key, value in query.items():
-                if isinstance(value, str):
-                    matches = re.findall(RE_PARAM, value) + re.findall(RE_JINJA, value)
-                    missing_params = []
-                    for match in matches:
-                        try:
-                            Template('{{ %s }}' % match, undefined=StrictUndefined).render(params)
-                        except Exception:
-                            if handle_errors:
-                                raise NonValidVariable(f'Non valid variable {match}')
-                            missing_params.append(match)
-
-                    if missing_params:
-                        continue
-
-                filtered_dict[key] = _remove_undefined_params_variables(
-                    value, params, handle_errors
-                )
-            return filtered_dict
-        elif isinstance(query, list):
-            filtered_list = []
-            for item in query:
-                filtered_list.append(
-                    _remove_undefined_params_variables(item, params, handle_errors)
-                )
-            return filtered_list
-        else:
-            return query
-
-    query = _remove_undefined_params_variables(query, parameters or {}, handle_errors)
 
     if parameters is None:
         return query
