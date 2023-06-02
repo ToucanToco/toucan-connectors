@@ -6,8 +6,7 @@
 
 ## Changed
 
-- On missing params inside queries with `handle_errors` on **True**, we now
-  raise : `UndefinedVariableError` and not `NonValidVariable`.
+- On missing params inside queries with `handle_errors` on **True**, we now raise : `UndefinedVariableError` and not `NonValidVariable`.
 - `__VOID__` values are no longer removed from queries.
 
 ### [4.5.1] 2023-04-27
