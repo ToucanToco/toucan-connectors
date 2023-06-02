@@ -6,8 +6,7 @@
 
 ## Changed
 
-- For a query, if there is missing params, we now either remove it, or raise an Exception in case `handle_errors` is True.
-- For a given query, we no longer update a pipeline if we found `__VOID__` values in it.
+- `__VOID__` values are no longer removed from queries.
 
 ### [4.5.1] 2023-04-27
 
