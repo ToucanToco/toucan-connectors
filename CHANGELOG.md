@@ -6,7 +6,7 @@
 
 ## Changed
 
-- On missing params inside queries with `handle_errors` on **True**, we now raise : `UndefinedVariableError` and not `NonValidVariable`.
+- The exception raised by `nosql_apply_parameters_to_query` when `handle_errors` is true and an undefined variable is encountered has changed from  `NonValidVariable`  to `UndefinedVariableError`.
 - `__VOID__` values are no longer removed from queries.
 
 ### [4.5.1] 2023-04-27
