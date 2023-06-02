@@ -11,7 +11,7 @@ from typing import Any, Callable
 import jq
 import pandas as pd
 from aiohttp import ClientSession
-from jinja2 import Environment, StrictUndefined, Template, meta
+from jinja2 import Environment, Template, Undefined, UndefinedError, meta
 from jinja2.nativetypes import NativeEnvironment
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
@@ -30,13 +30,6 @@ RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r'([ )])', RE_JINJA + r'()$']
 RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
 RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
 RE_NAMED_PARAM = r'\'?%\([a-zA-Z0-9_]*\)s\'?'
-
-# If a parameter has one of these values, it'll be removed from a query
-_PARAMETER_VALUES_TO_ELIMINATE = ('__VOID__',)
-
-
-class NonValidVariable(Exception):
-    """Error thrown for a non valid variable in endpoint"""
 
 
 class ClusterStartException(Exception):
@@ -103,19 +96,56 @@ def _flatten_rendered_nested_list(origin: list, rendered: list) -> list:
     return result
 
 
-def _render_query(query: dict | list[dict] | tuple | str, parameters: dict):
+class UndefinedVariableError(Exception):
+    def __init__(self, message: str | None, var_name: str | None) -> None:
+        self.var_name = var_name
+        super().__init__(message)
+
+
+def _raise_or_return_undefined(res: Undefined | None, handle_errors: bool) -> Undefined:
+    var_name = None if res is None or res._undefined_name is None else res._undefined_name
+    if not handle_errors:
+        return res or Undefined(name=var_name)
+    # This is publicly documented, so we can safely access it:
+    # https://jinja.palletsprojects.com/en/3.0.x/api/#jinja2.Undefined._undefined_name
+    raise UndefinedVariableError(var_name=var_name, message=f'Undefined variable: {var_name}')
+
+
+def _is_defined(value: Any) -> bool:
+    return not isinstance(value, Undefined)
+
+
+def _render_query(
+    query: dict | list[dict] | tuple | str, parameters: dict | None, handle_errors: bool = False
+):
     """
     Render both jinja or %()s templates in query
     while keeping type of parameters
     """
+
+    if parameters is None:
+        return query
+
     if isinstance(query, dict):
-        return {key: _render_query(value, parameters) for key, value in deepcopy(query).items()}
+        return {
+            key: rendered
+            for key, value in deepcopy(query).items()
+            if _is_defined(rendered := _render_query(value, parameters, handle_errors))
+        }
     elif isinstance(query, list):
-        rendered_query = [_render_query(elt, parameters) for elt in deepcopy(query)]
+        rendered_query = [
+            rendered
+            for value in deepcopy(query)
+            if _is_defined(rendered := _render_query(value, parameters, handle_errors))
+        ]
         rendered_query = _flatten_rendered_nested_list(query, rendered_query)
         return rendered_query
     elif isinstance(query, tuple):
-        return tuple(_render_query(value, parameters) for value in deepcopy(query))
+        return tuple(
+            rendered
+            for value in deepcopy(query)
+            if _is_defined(rendered := _render_query(value, parameters, handle_errors))
+        )
     elif isinstance(query, str):
         if not _has_parameters(query):
             return query
@@ -133,7 +163,14 @@ def _render_query(query: dict | list[dict] | tuple | str, parameters: dict):
         else:
             env = Environment()
 
-        res = env.from_string(query).render(clean_p)
+        try:
+            res = env.from_string(query).render(clean_p)
+        # This happens if we try to access an attribute of an undefined var, i.e nope['nein']
+        except UndefinedError:
+            return _raise_or_return_undefined(None, handle_errors)
+
+        if isinstance(res, Undefined):
+            return _raise_or_return_undefined(res, handle_errors)
         # NativeEnvironment's render() isn't recursive, so we need to
         # apply recursively the literal_eval by hand for lists and dicts:
         if isinstance(res, (list, dict)):
@@ -141,47 +178,6 @@ def _render_query(query: dict | list[dict] | tuple | str, parameters: dict):
         return res
     else:
         return query
-
-
-def _handle_missing_params(elt: dict | list[dict] | tuple | str, params: dict, handle_errors: bool):
-    """
-    Remove a dictionary key if its value has a missing parameter.
-    This is used to support the __VOID__ syntax, specific at Toucan Toco :
-        cf. https://bit.ly/2Ln6rcf
-    """
-    if isinstance(elt, dict):
-        e = {}
-        for k, v in elt.items():
-            if isinstance(v, str):
-                missing_params = []
-                # In case the query was interpolated before being passed to the connector
-                if v.strip() in _PARAMETER_VALUES_TO_ELIMINATE:
-                    continue
-                matches = re.findall(RE_PARAM, v) + re.findall(RE_JINJA, v)
-
-                for m in matches:
-                    try:
-                        rendered = Template('{{ %s }}' % m, undefined=StrictUndefined).render(
-                            params
-                        )
-                        if rendered in _PARAMETER_VALUES_TO_ELIMINATE:
-                            missing_params.append(m)
-                    except Exception:
-                        if handle_errors:
-                            raise NonValidVariable(f'Non valid variable {m}')
-                        missing_params.append(m)
-                if any(missing_params):
-                    continue
-                else:
-                    e[k] = v
-            else:
-                e[k] = _handle_missing_params(v, params, handle_errors)
-        return e
-    elif isinstance(elt, list):
-        # Not filtering out empty dicts here because they may have a meaning in some backends
-        return [_handle_missing_params(e, params, handle_errors) for e in elt]
-    else:
-        return elt
 
 
 def nosql_apply_parameters_to_query(
@@ -192,14 +188,9 @@ def nosql_apply_parameters_to_query(
     Instead use your client library parameter substitution method.
     https://www.owasp.org/index.php/Query_Parameterization_Cheat_Sheet
     """
-
-    query = _handle_missing_params(query, parameters, handle_errors)
-
-    if parameters is None:
-        return query
-
-    query = _render_query(query, parameters)
-    return query
+    rendered = _render_query(query, parameters, handle_errors)
+    # If we have undefined, return the default value for the given type
+    return rendered if _is_defined(rendered) else type(query)()
 
 
 def apply_query_parameters(query: str, parameters: dict) -> str:

@@ -1,14 +1,17 @@
 from datetime import date, datetime, timedelta
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import pytest
 from aiohttp import web
+from jinja2 import Undefined
 from pytest_mock import MockFixture
 
+from toucan_connectors import common as common_mod
 from toucan_connectors.common import (
     ConnectorStatus,
-    NonValidVariable,
+    UndefinedVariableError,
     adapt_param_type,
     apply_query_parameters,
     convert_to_printf_templating_style,
@@ -128,7 +131,11 @@ def test_apply_parameter_to_query_do_nothing():
             {'city': 'Paris'},
             [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}],
         ),
-        ({'code': '%(city)s_%(country)s', 'domain': 'Test'}, {'city': 'Paris'}, {'domain': 'Test'}),
+        (
+            {'code': '%(city)s_%(country)s', 'domain': 'Test'},
+            {'city': 'Paris'},
+            {'code': 'Paris_', 'domain': 'Test'},
+        ),
         (
             {'code': '%(city)s_%(country)s', 'domain': 'Test'},
             {'city': 'Paris', 'country': 'France'},
@@ -142,29 +149,23 @@ def test_apply_parameter_to_query_do_nothing():
         (
             {'domain': 'blah', 'country': {'$eq': '{{country}}'}, 'city': '{{city}}'},
             {'city': 'Paris', 'country': '__VOID__'},
-            {'domain': 'blah', 'country': {}, 'city': 'Paris'},
+            {'domain': 'blah', 'country': {'$eq': '__VOID__'}, 'city': 'Paris'},
         ),
         (
             {'domain': 'blah', 'country': {'$eq': '__VOID__'}, 'city': '{{city}}'},
             {'city': 'Paris'},
-            {'domain': 'blah', 'country': {}, 'city': 'Paris'},
-        ),
-        (
-            [{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}}, {'$match': {'b': 1}}],
-            {'city': 'Paris'},
-            [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}],
-        ),
-        (
-            {'code': '{{city}}_{{country[0]}}', 'domain': 'Test'},
-            {'city': 'Paris'},
-            {'domain': 'Test'},
+            {'domain': 'blah', 'country': {'$eq': '__VOID__'}, 'city': 'Paris'},
         ),
         (
             {'code': '{{city}}_{{country}}', 'domain': 'Test'},
             {'city': 'Paris', 'country': 'France'},
             {'code': 'Paris_France', 'domain': 'Test'},
         ),
-        ({'code': '{{city}}_{{country}}', 'domain': 'Test'}, None, {'domain': 'Test'}),
+        (
+            {'code': '{{city}}_{{country}}', 'domain': 'Test'},
+            None,
+            {'code': '{{city}}_{{country}}', 'domain': 'Test'},
+        ),
         (
             {'column': 'date', 'operator': 'eq', 'value': '{{ t + delta }}'},
             {'t': datetime(2020, 12, 31), 'delta': timedelta(days=1)},
@@ -247,10 +248,36 @@ def test_apply_parameter_to_query_do_nothing():
             {'obj': 1},
             {'data': 1},
         ),
+        (
+            [{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}}, {'$match': {'b': 1}}],
+            {'city': 'Paris'},
+            [{'$match': {'city': 'Test'}}, {'$match': {'b': 1}}],
+        ),
+        (
+            {'code': '{{city}}_{{country[0]}}', 'domain': 'Test'},
+            {'city': 'Paris'},
+            {'domain': 'Test'},
+        ),
     ],
 )
 def test_nosql_apply_parameters_to_query(query, params, expected):
     assert nosql_apply_parameters_to_query(query, params) == expected
+
+
+@pytest.mark.parametrize(
+    'query,params,match_',
+    [
+        (
+            [{'$match': {'country': '{{country["name"]}}', 'city': 'Test'}}, {'$match': {'b': 1}}],
+            {'city': 'Paris'},
+            'country',
+        ),
+        ({'code': '{{city}}_{{country[0]}}', 'domain': 'Test'}, {'city': 'Paris'}, 'country'),
+    ],
+)
+def test_nosql_apply_parameters_to_query_error_on_params(query: dict, params: dict, match_: str):
+    with pytest.raises(UndefinedVariableError):
+        nosql_apply_parameters_to_query(query, params, handle_errors=True)
 
 
 def test_nosql_apply_parameters_to_query_dot():
@@ -285,13 +312,10 @@ def test_render_raw_permission():
 
 
 def test_bad_variable_in_query():
-    """It should thrown a NonValidEndpointVariable exception if bad variable in endpoint"""
+    """Render empty string if a jinja var is not set"""
     query = {'url': '/stuff/%(thing)s/foo'}
     params = {}
-    nosql_apply_parameters_to_query(query, params)
-    with pytest.raises(NonValidVariable) as err:
-        nosql_apply_parameters_to_query(query, params, handle_errors=True)
-    assert str(err.value) == 'Non valid variable thing'
+    assert nosql_apply_parameters_to_query(query, params) == {'url': '/stuff//foo'}
 
 
 # fetch tests
@@ -507,15 +531,14 @@ def test_sanitize_query(query, init_params, transformer, expected_query, expecte
     assert sanitize_query(query, init_params, transformer) == (expected_query, expected_params)
 
 
-def test_nosql_apply_parameters_to_query_with__VOID__():
-    query = [{'$match': {'STORE_TYPE': {'$eq': '{{ __front_var_0__ }}'}}}]
-    with_applied_params = nosql_apply_parameters_to_query(
-        query=query, parameters={'__front_var_0__': '__VOID__'}
+@pytest.mark.parametrize(
+    'query, expected',
+    [('{{nope}}', ''), ({'x': '{{nope}}'}, {}), (('{{nope}}',), ()), ([{'x': '{{nope}}'}], [])],
+)
+def test_nosql_apply_parameters_to_query_root_undefined(
+    query: Any, expected: Any, mocker: MockFixture
+):
+    mocker.patch.object(common_mod, '_render_query', return_value=Undefined())
+    assert (
+        nosql_apply_parameters_to_query(query=query, parameters={}, handle_errors=False) == expected
     )
-    # Yes, this is cursed but filtering out empty values has MANY side effects, among which:
-    # * For Elasticsearch, empty values are meaningful when using msearch
-    #   ([{},{"a": "b"}] != [{"a":"b"}])
-    # * For HTTP API, we use this directly on the datasource converted to a dict.
-    # * For MongoDB, every document in the pipeline must contain exactly one root field
-    #   (So what happens in case the root field is templatized and does not match anything ?)
-    assert with_applied_params == [{'$match': {'STORE_TYPE': {}}}]
