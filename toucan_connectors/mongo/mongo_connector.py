@@ -7,7 +7,7 @@ from bson.son import SON
 from cached_property import cached_property
 from pydantic import Field, SecretStr, create_model, validator
 
-from toucan_connectors.common import ConnectorStatus, nosql_apply_parameters_to_query
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 from toucan_connectors.pagination import build_pagination_info
@@ -67,12 +67,6 @@ def _sanitize_query_matches(query: dict | list[dict]) -> Any:
 
 
 def normalize_query(query, parameters):
-    query = nosql_apply_parameters_to_query(query, parameters)
-
-    # FIXME: This removes empty $match operations that could have been created while removing
-    # missing parameters from the query in nosql_apply_parameters to query. However, this way of
-    # handling __VOID__ filters is hacky and should be implemented earlier, when translating the VQB
-    # pipeline
     query = _sanitize_query_matches(query)
 
     if isinstance(query, dict):
@@ -264,9 +258,6 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
         if offset or limit is not None:
-            data_source.query = apply_condition_filter(data_source.query, permissions)
-            data_source.query = normalize_query(data_source.query, data_source.parameters)
-
             df_facet = []
             if offset:
                 df_facet.append({'$skip': offset})
@@ -364,6 +355,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     def explain(self, data_source, permissions=None):
         client = pymongo.MongoClient(**self._get_mongo_client_kwargs())
         self.validate_database_and_collection(data_source.database, data_source.collection)
+
         data_source.query = apply_condition_filter(data_source.query, permissions)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
 
