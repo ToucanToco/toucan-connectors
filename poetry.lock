@@ -240,13 +240,13 @@ cryptography = ">=3.2"
 
 [[package]]
 name = "awswrangler"
-version = "3.1.1"
+version = "3.2.0"
 description = "Pandas on AWS."
 optional = true
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "awswrangler-3.1.1-py3-none-any.whl", hash = "sha256:237041c856a29524bd1b58f48a95a88b4c5433c673d82bc193f13fbdea3abdcb"},
-    {file = "awswrangler-3.1.1.tar.gz", hash = "sha256:e19fda35f16313ec11b990823ece989d71977f0ea51a3ae5cbf61e1417a6349e"},
+    {file = "awswrangler-3.2.0-py3-none-any.whl", hash = "sha256:20e838eecee1a107f8d2e1039e94c5df286bac0ba454ff2827fe416f1ad4e53e"},
+    {file = "awswrangler-3.2.0.tar.gz", hash = "sha256:96b1bb4c92a9628aad91383a0476ab3476d5c4504cae9546036c2b408501f70b"},
 ]
 
 [package.dependencies]
