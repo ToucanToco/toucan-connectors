@@ -143,7 +143,13 @@ class HttpAPIConnector(ToucanConnector):
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates
             query['cert'] = [str(c) for c in self.cert]
 
+        HttpAPIConnector.logger.debug(
+            f'>> Request:  method={query.get("method")} url={query.get("url")}'
+        )
         res = session.request(**query)
+        HttpAPIConnector.logger.debug(
+            f'<< Response: status_code={res.status_code} reason={res.reason}'
+        )
 
         if self.responsetype == 'xml':
             try:
@@ -162,7 +168,9 @@ class HttpAPIConnector(ToucanConnector):
                     # sometimes when the content is too big res.json() fails but json.loads works
                     data = json.loads(res.content)
                 except ValueError:
-                    HttpAPIConnector.logger.error('Cannot decode response content')
+                    HttpAPIConnector.logger.error(
+                        f'Cannot decode response content from query: method={query.get("method")} url={query.get("url")} response_status_code={res.status_code} response_reason=${res.reason}'
+                    )
                     raise
         try:
             return transform_with_jq(data, jq_filter)
