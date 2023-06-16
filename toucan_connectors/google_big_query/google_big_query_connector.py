@@ -3,13 +3,14 @@ from enum import Enum
 from functools import cached_property
 from itertools import groupby
 from timeit import default_timer as timer
-from typing import Any, Dict, Iterable, List, Union
+from typing import Any, Dict, Generator, Iterable, List, Union
 
 import pandas
 import pandas as pd
 from google.api_core.exceptions import GoogleAPIError
 from google.cloud import bigquery
 from google.cloud.bigquery.dbapi import _helpers as bigquery_helpers
+from google.cloud.bigquery.job import QueryJob
 from google.oauth2.service_account import Credentials
 from pydantic import Field, create_model
 
@@ -23,6 +24,9 @@ from toucan_connectors.toucan_connector import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+_PAGE_SIZE = 50
+_MAXIMUM_RESULTS_FETCHED = 1000
 
 
 class Dialect(str, Enum):
@@ -226,20 +230,44 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
 
     @staticmethod
     def _build_dataset_info_query_for_ds(dataset_id: str, db_name: str | None) -> str:
-        output = f"""
-SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-T.table_type AS type, C.column_name, C.data_type FROM {dataset_id}.INFORMATION_SCHEMA.COLUMNS C
-JOIN {dataset_id}.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
-"""
+        query = f"""
+            SELECT
+                C.table_name AS name,
+                C.table_schema AS schema,
+                T.table_catalog AS database,
+                T.table_type AS type,
+                C.column_name,
+                C.data_type
+            FROM
+                {dataset_id}.INFORMATION_SCHEMA.COLUMNS C
+                JOIN {dataset_id}.INFORMATION_SCHEMA.TABLES T
+                    ON C.table_name = T.table_name
+            WHERE
+                IS_SYSTEM_DEFINED = 'NO'
+                AND IS_PARTITIONING_COLUMN = 'NO'
+                AND IS_HIDDEN = 'NO'
+                AND IS_INDEXABLE = 'YES'
+        """
+
         if db_name is not None:
-            output += f"AND T.table_catalog = '{db_name}'\n"
-        return output
+            query += f"AND T.table_catalog = '{db_name}'\n"
+
+        return query
 
     def _build_dataset_info_query(self, dataset_ids: Iterable[str], db_name: str | None) -> str:
         return '\nUNION ALL\n'.join(
             self._build_dataset_info_query_for_ds(dataset_id, db_name) for dataset_id in dataset_ids
         )
+
+    def _fetch_query_results(self, query_job: QueryJob) -> Generator[Any, Any, Any]:
+        """Fetches query results in a paginated manner using a generator."""
+        row_iterator = query_job.result(page_size=_PAGE_SIZE, max_results=_MAXIMUM_RESULTS_FETCHED)
+
+        while True:
+            rows = next(row_iterator.pages, None)
+            if rows is None:
+                break
+            yield rows.to_dataframe()
 
     def _get_project_structure_fast(
         self, client: bigquery.Client, db_name: str | None, dataset_ids: Iterable[str]
@@ -249,7 +277,15 @@ WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
         Only works if all datasets are in the same location.
         """
         query = self._build_dataset_info_query(dataset_ids, db_name)
-        return client.query(query).to_dataframe()
+
+        try:
+            query_job = client.query(query)
+
+            # Fetch pages of results using the generator
+            # and Concatenate all dataframes into a single one
+            return pd.concat((df for df in self._fetch_query_results(query_job)), ignore_index=True)
+        except Exception as exc:
+            raise GoogleAPIError(f'An error occurred while executing the query: {exc}') from exc
 
     def _get_project_structure_slow(
         self, client: bigquery.Client, db_name: str | None, dataset_ids: Iterable[str]
