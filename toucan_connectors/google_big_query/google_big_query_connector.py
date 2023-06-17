@@ -231,23 +231,22 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     @staticmethod
     def _build_dataset_info_query_for_ds(dataset_id: str, db_name: str | None) -> str:
         query = f"""
-            SELECT
-                C.table_name AS name,
-                C.table_schema AS schema,
-                T.table_catalog AS database,
-                T.table_type AS type,
-                C.column_name,
-                C.data_type
-            FROM
-                {dataset_id}.INFORMATION_SCHEMA.COLUMNS C
-                JOIN {dataset_id}.INFORMATION_SCHEMA.TABLES T
-                    ON C.table_name = T.table_name
-            WHERE
-                IS_SYSTEM_DEFINED = 'NO'
-                AND IS_PARTITIONING_COLUMN = 'NO'
-                AND IS_HIDDEN = 'NO'
-                AND IS_INDEXABLE = 'YES'
-        """
+SELECT
+    C.table_name AS name,
+    C.table_schema AS schema,
+    T.table_catalog AS database,
+    T.table_type AS type,
+    C.column_name,
+    C.data_type
+FROM
+    {dataset_id}.INFORMATION_SCHEMA.COLUMNS C
+    JOIN {dataset_id}.INFORMATION_SCHEMA.TABLES T
+        ON C.table_name = T.table_name
+WHERE
+    IS_SYSTEM_DEFINED = 'NO'
+    AND IS_PARTITIONING_COLUMN = 'NO'
+    AND IS_HIDDEN = 'NO'
+"""
 
         if db_name is not None:
             query += f"AND T.table_catalog = '{db_name}'\n"
@@ -263,10 +262,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         """Fetches query results in a paginated manner using a generator."""
         row_iterator = query_job.result(page_size=_PAGE_SIZE, max_results=_MAXIMUM_RESULTS_FETCHED)
 
-        while True:
-            rows = next(row_iterator.pages, None)
-            if rows is None:
-                break
+        while rows := next(row_iterator.pages, None):
             yield rows.to_dataframe()
 
     def _get_project_structure_fast(
