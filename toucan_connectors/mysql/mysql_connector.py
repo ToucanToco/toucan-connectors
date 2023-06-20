@@ -83,7 +83,7 @@ _DATABASE_MODEL_EXTRACTION_QUERY = (
     # Columns from the columns table
     'c.column_name, c.data_type FROM information_schema.tables t INNER JOIN information_schema.columns c '
     # Inner join on table name
-    'ON t.table_name = c.table_name '
+    'ON t.table_name = c.table_name AND t.table_schema = c.table_schema '
     # Filtering on concrete tables/views
     "WHERE t.table_type in ('BASE TABLE', 'VIEW') AND t.table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys');"
 )
