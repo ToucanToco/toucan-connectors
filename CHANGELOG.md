@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [3.23.14] 2023-06-20
+
+### Fixed
+
+- MySQL: avoid duplicated columns when retrieving table informations
+
 ### [3.23.13] 2023-03-02
 
 ### Fixed
