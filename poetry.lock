@@ -1704,13 +1704,13 @@ pyparsing = {version = ">=2.4.2,<3.0.0 || >3.0.0,<3.0.1 || >3.0.1,<3.0.2 || >3.0
 
 [[package]]
 name = "hubspot-api-client"
-version = "7.5.0"
+version = "8.0.0"
 description = "HubSpot API client"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "hubspot-api-client-7.5.0.tar.gz", hash = "sha256:76996221f34c0e05e2821143480a92737ff499d63d7d8e4cc8b8b159945cb26d"},
-    {file = "hubspot_api_client-7.5.0-py3-none-any.whl", hash = "sha256:096bfd1adb1101429f79b98fc447389dc5106cb5812b0427ed8f9dddb58f8a81"},
+    {file = "hubspot-api-client-8.0.0.tar.gz", hash = "sha256:be3f6ebbaa13691c11298adbb657913fdd27b1f2e713a0177eae29d8557bf0de"},
+    {file = "hubspot_api_client-8.0.0-py3-none-any.whl", hash = "sha256:705255eee980b342f6d0b5fafe8c64a6eb041bb5285fa457d97a785ca3b53388"},
 ]
 
 [package.dependencies]
@@ -4401,4 +4401,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "d374ac56d68efbf72274bc4df0d31001f570eac44357e284b259a7e6c8fcfccc"
+content-hash = "b366540689e1b17e3fd81a1ad6fb0cd174ea8c8d5b63b9117d33d3b169038c0d"
