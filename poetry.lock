@@ -773,6 +773,23 @@ python-dateutil = "*"
 requests = "<3"
 
 [[package]]
+name = "db-dtypes"
+version = "1.1.1"
+description = "Pandas Data Types for SQL systems (BigQuery, Spanner)"
+optional = true
+python-versions = ">=3.7"
+files = [
+    {file = "db-dtypes-1.1.1.tar.gz", hash = "sha256:ab485c85fef2454f3182427def0b0a3ab179b2871542787d33ba519d62078883"},
+    {file = "db_dtypes-1.1.1-py2.py3-none-any.whl", hash = "sha256:23be34ea2bc91065447ecea4d5f107e46d1de223d152e69fa73673a62d5bd27d"},
+]
+
+[package.dependencies]
+numpy = ">=1.16.6"
+packaging = ">=17.0"
+pandas = ">=0.24.2"
+pyarrow = ">=3.0.0"
+
+[[package]]
 name = "decorator"
 version = "5.1.1"
 description = "Decorators for Humans"
@@ -1111,37 +1128,38 @@ tool = ["click (>=6.0.0)"]
 
 [[package]]
 name = "google-cloud-bigquery"
-version = "2.34.4"
+version = "3.11.2"
 description = "Google BigQuery API client library"
 optional = true
-python-versions = ">=3.6, <3.11"
+python-versions = ">=3.7"
 files = [
-    {file = "google-cloud-bigquery-2.34.4.tar.gz", hash = "sha256:14a4f996411556757b5d32f11a0ebf34257d6fc5c60d53fb66e674a63a7bf9ca"},
-    {file = "google_cloud_bigquery-2.34.4-py2.py3-none-any.whl", hash = "sha256:7c6dc11e6bd65a5981a8bc18a472e6132e9aaa1fa5363f1680a9425dd3868660"},
+    {file = "google-cloud-bigquery-3.11.2.tar.gz", hash = "sha256:a0f0d0492fff4c9c911cab27640e690dd14b442eda833319b11190042b2f7469"},
+    {file = "google_cloud_bigquery-3.11.2-py2.py3-none-any.whl", hash = "sha256:72f307c761312784d1a020fbf415ed81975472adde526d6b2d11468539310f7e"},
 ]
 
 [package.dependencies]
+db-dtypes = {version = ">=0.3.0,<2.0.0dev", optional = true, markers = "extra == \"pandas\""}
 google-api-core = {version = ">=1.31.5,<2.0.dev0 || >2.3.0,<3.0.0dev", extras = ["grpc"]}
-google-cloud-bigquery-storage = {version = ">=2.0.0,<3.0.0dev", optional = true, markers = "extra == \"bqstorage\""}
-google-cloud-core = ">=1.4.1,<3.0.0dev"
+google-cloud-bigquery-storage = {version = ">=2.6.0,<3.0.0dev", optional = true, markers = "extra == \"bqstorage\""}
+google-cloud-core = ">=1.6.0,<3.0.0dev"
 google-resumable-media = ">=0.6.0,<3.0dev"
-grpcio = ">=1.38.1,<2.0dev"
-packaging = ">=14.3,<22.0dev"
-pandas = {version = ">=0.24.2", optional = true, markers = "extra == \"pandas\""}
+grpcio = ">=1.47.0,<2.0dev"
+packaging = ">=20.0.0"
+pandas = {version = ">=1.1.0", optional = true, markers = "extra == \"pandas\""}
 proto-plus = ">=1.15.0,<2.0.0dev"
-protobuf = ">=3.12.0,<4.0.0dev"
-pyarrow = {version = ">=3.0.0,<8.0dev", optional = true, markers = "extra == \"bqstorage\" or extra == \"pandas\""}
+protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<5.0.0dev"
+pyarrow = {version = ">=3.0.0", optional = true, markers = "extra == \"bqstorage\" or extra == \"pandas\""}
 python-dateutil = ">=2.7.2,<3.0dev"
-requests = ">=2.18.0,<3.0.0dev"
+requests = ">=2.21.0,<3.0.0dev"
 
 [package.extras]
-all = ["Shapely (>=1.6.0,<2.0dev)", "geopandas (>=0.9.0,<1.0dev)", "google-cloud-bigquery-storage (>=2.0.0,<3.0.0dev)", "grpcio (>=1.38.1,<2.0dev)", "ipython (>=7.0.1,!=8.1.0)", "opentelemetry-api (>=1.1.0)", "opentelemetry-instrumentation (>=0.20b0)", "opentelemetry-sdk (>=1.1.0)", "pandas (>=0.24.2)", "pyarrow (>=3.0.0,<8.0dev)", "tqdm (>=4.7.4,<5.0.0dev)"]
-bignumeric-type = ["pyarrow (>=3.0.0,<8.0dev)"]
-bqstorage = ["google-cloud-bigquery-storage (>=2.0.0,<3.0.0dev)", "grpcio (>=1.38.1,<2.0dev)", "pyarrow (>=3.0.0,<8.0dev)"]
-geopandas = ["Shapely (>=1.6.0,<2.0dev)", "geopandas (>=0.9.0,<1.0dev)"]
-ipython = ["ipython (>=7.0.1,!=8.1.0)"]
+all = ["Shapely (>=1.8.4,<2.0dev)", "db-dtypes (>=0.3.0,<2.0.0dev)", "geopandas (>=0.9.0,<1.0dev)", "google-cloud-bigquery-storage (>=2.6.0,<3.0.0dev)", "grpcio (>=1.47.0,<2.0dev)", "grpcio (>=1.49.1,<2.0dev)", "ipykernel (>=6.0.0)", "ipython (>=7.23.1,!=8.1.0)", "ipywidgets (>=7.7.0)", "opentelemetry-api (>=1.1.0)", "opentelemetry-instrumentation (>=0.20b0)", "opentelemetry-sdk (>=1.1.0)", "pandas (>=1.1.0)", "pyarrow (>=3.0.0)", "tqdm (>=4.7.4,<5.0.0dev)"]
+bqstorage = ["google-cloud-bigquery-storage (>=2.6.0,<3.0.0dev)", "grpcio (>=1.47.0,<2.0dev)", "grpcio (>=1.49.1,<2.0dev)", "pyarrow (>=3.0.0)"]
+geopandas = ["Shapely (>=1.8.4,<2.0dev)", "geopandas (>=0.9.0,<1.0dev)"]
+ipython = ["ipykernel (>=6.0.0)", "ipython (>=7.23.1,!=8.1.0)"]
+ipywidgets = ["ipykernel (>=6.0.0)", "ipywidgets (>=7.7.0)"]
 opentelemetry = ["opentelemetry-api (>=1.1.0)", "opentelemetry-instrumentation (>=0.20b0)", "opentelemetry-sdk (>=1.1.0)"]
-pandas = ["pandas (>=0.24.2)", "pyarrow (>=3.0.0,<8.0dev)"]
+pandas = ["db-dtypes (>=0.3.0,<2.0.0dev)", "pandas (>=1.1.0)", "pyarrow (>=3.0.0)"]
 tqdm = ["tqdm (>=4.7.4,<5.0.0dev)"]
 
 [[package]]
@@ -3773,4 +3791,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "a495835288fe5cb2cb1408e4006fec1b46f7974dd43c92e094f259a582463595"
+content-hash = "49e16f418a9b1a01226f0066f47f75148e58a0a87e31020b31899aedeeba10c1"
