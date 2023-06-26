@@ -21,12 +21,13 @@ from toucan_connectors.toucan_connector import (
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
+    strlist_to_enum,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 _PAGE_SIZE = 50
-_MAXIMUM_RESULTS_FETCHED = 1000
+_MAXIMUM_RESULTS_FETCHED = 2000
 
 
 class Dialect(str, Enum):
@@ -47,16 +48,16 @@ class GoogleBigQueryDataSource(ToucanDataSource):
         **{'ui.hidden': True},
     )
     language: str = Field('sql', **{'ui.hidden': True})
-    database: str = Field(None)  # Needed for graphical selection in frontend but not used
-
-    class Config:
-        extra = 'ignore'
+    database: str = Field(None)
 
     @classmethod
     def get_form(cls, connector: 'GoogleBigQueryConnector', current_config: dict[str, Any]):
-        schema = create_model('FormSchema', __base__=cls).schema()
-        schema['properties']['database']['default'] = connector.credentials.project_id
-        return schema
+        default_db = current_config.get('database', connector.credentials.project_id)
+        return create_model(
+            'FormSchema',
+            database=strlist_to_enum('database', connector.available_dbs, default_db),
+            __base__=cls,
+        ).schema()
 
 
 BigQueryParam = Union[bigquery.ScalarQueryParameter, bigquery.ArrayQueryParameter]
@@ -276,7 +277,6 @@ WHERE
 
         try:
             query_job = client.query(query)
-
             # Fetch pages of results using the generator
             # and Concatenate all dataframes into a single one
             return pd.concat((df for df in self._fetch_query_results(query_job)), ignore_index=True)
@@ -307,6 +307,24 @@ WHERE
 
         # Then, we returning a single dataframe containing all results
         return pd.concat(dfs)
+
+    @cached_property
+    def available_dbs(self) -> list[str]:
+        return self._list_db_names()
+
+    def _list_db_names(self) -> list[str]:
+        credentials = self._get_google_credentials(self.credentials, self.scopes)
+        client = bigquery.Client(location=None, credentials=credentials)
+        db_list = [ds.dataset_id for ds in client.list_datasets()]
+
+        print('\n' * 10)
+        print('-' * 100)
+        print(f'>> {db_list=}')
+        db_as_series = pd.Series(db_list).values
+        print('-' * 100)
+        print(f'>> {db_as_series=}')
+
+        return db_as_series
 
     def _get_project_structure(self, db_name: str | None = None) -> List[TableInfo]:
         creds = self._get_google_credentials(self.credentials, self.scopes)
