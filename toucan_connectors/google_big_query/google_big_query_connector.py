@@ -48,14 +48,13 @@ class GoogleBigQueryDataSource(ToucanDataSource):
         **{'ui.hidden': True},
     )
     language: str = Field('sql', **{'ui.hidden': True})
-    database: str = Field(None)
+    database: str = Field(None, description='The name of the database you want to query.')
 
     @classmethod
     def get_form(cls, connector: 'GoogleBigQueryConnector', current_config: dict[str, Any]):
-        default_db = current_config.get('database', connector.credentials.project_id)
         return create_model(
             'FormSchema',
-            database=strlist_to_enum('database', connector.available_dbs, default_db),
+            database=strlist_to_enum('database', connector.available_dbs),
             __base__=cls,
         ).schema()
 
