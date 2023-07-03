@@ -59,9 +59,19 @@ def test_transform_with_jq():
     ]
 
 
-def test_get_df(connector, data_source):
+@responses.activate
+def test_get_df(connector: HttpAPIConnector, data_source: HttpAPIDataSource) -> None:
+    responses.add(
+        responses.GET,
+        'https://jsonplaceholder.typicode.com/comments',
+        json=[
+            {'comment': 'Hello there', 'id': 1},
+            {'comment': 'Hello there', 'id': 2},
+            {'comment': 'Hello there', 'id': 3},
+        ],
+    )
     df = connector.get_df(data_source)
-    assert df.shape == (500, 5)
+    assert df.shape == (3, 2)
 
 
 @responses.activate

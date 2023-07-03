@@ -5,6 +5,7 @@ import pytest
 import requests.exceptions
 import responses
 from pytest import fixture
+from pytest_mock import MockerFixture
 
 from tests.one_drive.fixtures import FAKE_LIBRARIES, FAKE_SHEET
 from toucan_connectors.common import HttpError
@@ -510,13 +511,15 @@ def test_get_access_token(con, mocker):
     mock_oauth2_connector.get_access_token.assert_called()
 
 
-def test_run_fetch(con, mocker):
+@responses.activate
+def test_run_fetch(con: OneDriveConnector, mocker: MockerFixture):
     """It should run fetch"""
     mock_oauth2_connector = mocker.Mock(spec=OAuth2Connector)
     mock_oauth2_connector.client_id = 'client_id'
     mock_oauth2_connector.client_secret = 'secret'
     con._oauth2_connector = mock_oauth2_connector
 
+    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/posts', json=[])
     con._run_fetch('https://jsonplaceholder.typicode.com/posts')
 
     mock_oauth2_connector.get_access_token.assert_called()
