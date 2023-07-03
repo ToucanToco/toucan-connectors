@@ -2,10 +2,10 @@ import copy
 
 import pandas as pd
 import pytest
-from pytest_mock import MockerFixture
 import requests.exceptions
 import responses
 from pytest import fixture
+from pytest_mock import MockerFixture
 
 from tests.one_drive.fixtures import FAKE_LIBRARIES, FAKE_SHEET
 from toucan_connectors.common import HttpError
@@ -519,10 +519,7 @@ def test_run_fetch(con: OneDriveConnector, mocker: MockerFixture):
     mock_oauth2_connector.client_secret = 'secret'
     con._oauth2_connector = mock_oauth2_connector
 
-    responses.add(
-        responses.GET,
-        'https://jsonplaceholder.typicode.com/posts', json=[]
-    )
+    responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/posts', json=[])
     con._run_fetch('https://jsonplaceholder.typicode.com/posts')
 
     mock_oauth2_connector.get_access_token.assert_called()
