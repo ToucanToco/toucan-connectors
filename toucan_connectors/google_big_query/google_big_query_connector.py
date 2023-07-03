@@ -48,6 +48,7 @@ class GoogleBigQueryDataSource(ToucanDataSource):
         **{'ui.hidden': True},
     )
     language: str = Field('sql', **{'ui.hidden': True})
+    database: str = Field(None)
     db_schema: str = Field(None, description='The name of the db_schema you want to query.')
 
     @classmethod
