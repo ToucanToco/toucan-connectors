@@ -52,11 +52,14 @@ class GoogleBigQueryDataSource(ToucanDataSource):
 
     @classmethod
     def get_form(cls, connector: 'GoogleBigQueryConnector', current_config: dict[str, Any]):
-        return create_model(
+        schema = create_model(
             'FormSchema',
             db_schema=strlist_to_enum('db_schema', connector.available_dbs),
             __base__=cls,
         ).schema()
+        schema['properties']['database']['default'] = connector.credentials.project_id
+
+        return schema
 
 
 BigQueryParam = Union[bigquery.ScalarQueryParameter, bigquery.ArrayQueryParameter]
