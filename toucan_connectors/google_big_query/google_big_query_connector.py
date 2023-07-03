@@ -5,7 +5,6 @@ from itertools import groupby
 from timeit import default_timer as timer
 from typing import Any, Dict, Generator, Iterable, List, Union
 
-import pandas
 import pandas as pd
 from google.api_core.exceptions import GoogleAPIError
 from google.cloud import bigquery
@@ -48,7 +47,7 @@ class GoogleBigQueryDataSource(ToucanDataSource):
         **{'ui.hidden': True},
     )
     language: str = Field('sql', **{'ui.hidden': True})
-    database: str = Field(None)
+    database: str = Field(None, **{'ui.hidden': True})
     db_schema: str = Field(None, description='The name of the db_schema you want to query.')
 
     @classmethod
@@ -132,7 +131,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         return self._get_project_structure()
 
     @staticmethod
-    def _execute_query(client: bigquery.Client, query: str, parameters: list) -> pandas.DataFrame:
+    def _execute_query(client: bigquery.Client, query: str, parameters: list) -> pd.DataFrame:
         try:
             start = timer()
 
