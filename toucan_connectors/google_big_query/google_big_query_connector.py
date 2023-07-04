@@ -319,12 +319,7 @@ WHERE
         client = bigquery.Client(location=None, credentials=credentials)
         db_list = [ds.dataset_id for ds in client.list_datasets()]
 
-        print('\n' * 10)
-        print('-' * 100)
-        print(f'>> {db_list=}')
         db_as_series = pd.Series(db_list).values
-        print('-' * 100)
-        print(f'>> {db_as_series=}')
 
         return db_as_series
 
