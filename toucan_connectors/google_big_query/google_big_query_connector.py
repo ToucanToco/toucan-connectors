@@ -54,7 +54,7 @@ class GoogleBigQueryDataSource(ToucanDataSource):
     def get_form(cls, connector: 'GoogleBigQueryConnector', current_config: dict[str, Any]):
         schema = create_model(
             'FormSchema',
-            db_schema=strlist_to_enum('db_schema', connector.available_dbs),
+            db_schema=strlist_to_enum('db_schema', connector.available_schs),
             __base__=cls,
         ).schema()
         schema['properties']['database']['default'] = connector.credentials.project_id
@@ -311,40 +311,47 @@ WHERE
         return pd.concat(dfs)
 
     @cached_property
-    def available_dbs(self) -> list[str]:
-        return self._list_db_names()
-
-    def _list_db_names(self) -> list[str]:
+    def available_schs(self) -> list[str]:
         credentials = self._get_google_credentials(self.credentials, self.scopes)
         client = bigquery.Client(location=None, credentials=credentials)
-        db_list = [ds.dataset_id for ds in client.list_datasets()]
 
-        db_as_series = pd.Series(db_list).values
+        dataset_list = (ds.dataset_id for ds in client.list_datasets())
 
-        return db_as_series
+        # Starting by None, because we want nothing selected as the first
+        # element from the list.
+        db_names = pd.concat([pd.Series([None]), pd.Series(dataset_list)])
 
-    def _get_project_structure(self, db_name: str | None = None) -> List[TableInfo]:
+        return db_names.values
+
+    def _get_project_structure(
+        self, db_name: str | None = None, schema_name: str | None = None
+    ) -> List[TableInfo]:
         creds = self._get_google_credentials(self.credentials, self.scopes)
         client = self._connect(creds)
-        datasets = list(client.list_datasets())
-        # Here, we're trying to retrieve table info for all datasets at once. However, this will
-        # only work if all datasets are in same location. Unfortunately, there is no way to
-        # retrieve the location along with the dataset list, so we're optimistic here.
+
+        if schema_name is None:
+            # Here, we're trying to retrieve table info for all datasets at once. However, this will
+            # only work if all datasets are in same location. Unfortunately, there is no way to
+            # retrieve the location along with the dataset list, so we're optimistic here.
+            dataset_ids = (ds.dataset_id for ds in list(client.list_datasets()))
+        else:
+            # if we already now the dataset/schema, we should be able to just
+            # fetch it instead of all of them
+            dataset_ids = (schema_name,)
+
         try:
-            df = self._get_project_structure_fast(
-                client, db_name, (ds.dataset_id for ds in datasets)
-            )
+            df = self._get_project_structure_fast(client, db_name, dataset_ids)
         except GoogleAPIError as exc:
             _LOGGER.info(
                 f'Got an exception when trying to retrieve domains for project: {exc}. '
                 'Falling back on listing by location...'
             )
-            df = self._get_project_structure_slow(
-                client, db_name, (ds.dataset_id for ds in datasets)
-            )
+            df = self._get_project_structure_slow(client, db_name, dataset_ids)
 
         return self._format_db_model(df)
 
-    def get_model(self, db_name: str | None = None) -> list[TableInfo]:
+    def get_model(
+        self, db_name: str | None = None, schema_name: str | None = None
+    ) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
-        return self._get_project_structure(db_name)
+        return self._get_project_structure(db_name, schema_name)
