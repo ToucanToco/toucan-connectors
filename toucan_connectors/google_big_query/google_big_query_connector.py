@@ -130,9 +130,6 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         )
         return client
 
-    def project_tree(self) -> list[TableInfo]:
-        return self._get_project_structure()
-
     @staticmethod
     def _execute_query(client: bigquery.Client, query: str, parameters: list) -> pd.DataFrame:
         try:
