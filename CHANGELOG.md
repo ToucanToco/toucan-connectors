@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## Changed
+
+- Feat[Goole Big Query] : We can now get the database model(list of tables) based on a given schema name to speed up the project tree structure.
 - Fix: on mysql, avoid duplicated columns when retrieving table informations
 
 ### [4.6.0] 2023-06-02
