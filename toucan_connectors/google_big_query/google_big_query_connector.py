@@ -314,11 +314,7 @@ WHERE
 
         dataset_list = (ds.dataset_id for ds in client.list_datasets())
 
-        # Starting by None, because we want nothing selected as the first
-        # element from the list.
-        db_names = pd.concat([pd.Series([None]), pd.Series(dataset_list)])
-
-        return db_names.values
+        return pd.Series(dataset_list).values
 
     def _get_project_structure(
         self, db_name: str | None = None, schema_name: str | None = None
@@ -326,17 +322,18 @@ WHERE
         creds = self._get_google_credentials(self.credentials, self.scopes)
         client = self._connect(creds)
 
+        # Either the schema_name is not specified
         if schema_name is None:
-            # Here, we're trying to retrieve table info for all datasets at once. However, this will
-            # only work if all datasets are in same location. Unfortunately, there is no way to
-            # retrieve the location along with the dataset list, so we're optimistic here.
-            dataset_ids = (ds.dataset_id for ds in list(client.list_datasets()))
+            dataset_ids = [ds.dataset_id for ds in list(client.list_datasets())]
         else:
             # if we already now the dataset/schema, we should be able to just
             # fetch it instead of all of them
-            dataset_ids = (schema_name,)
+            dataset_ids = [schema_name]
 
         try:
+            # Here, we're trying to retrieve table info for all datasets at once. However, this will
+            # only work if all datasets are in same location. Unfortunately, there is no way to
+            # retrieve the location along with the dataset list, so we're optimistic here.
             df = self._get_project_structure_fast(client, db_name, dataset_ids)
         except GoogleAPIError as exc:
             _LOGGER.info(
