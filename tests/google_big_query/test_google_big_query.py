@@ -1,3 +1,4 @@
+from typing import Any, Generator
 from unittest.mock import patch
 
 import pandas
@@ -180,8 +181,8 @@ def test_get_model(mocker: MockFixture, _fixture_credentials) -> None:
         def __init__(self) -> None:
             ...
 
-        def to_dataframe(self) -> pd.DataFrame:
-            return pd.DataFrame(
+        def to_dataframe(self) -> Generator[Any, Any, Any]:
+            yield pd.DataFrame(
                 [
                     {
                         'name': 'coucou',
@@ -272,6 +273,11 @@ def test_get_model(mocker: MockFixture, _fixture_credentials) -> None:
     )
 
     mocker.patch(
+        'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._fetch_query_results',
+        return_value=FakeResponse().to_dataframe(),
+    )
+
+    mocker.patch(
         'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._get_google_credentials',
         return_value=Credentials,
     )
@@ -321,55 +327,159 @@ def test_get_model(mocker: MockFixture, _fixture_credentials) -> None:
     assert (
         mocked_query.call_args_list[0][0][0]
         == """
-SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C
-JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+SELECT
+    C.table_name AS name,
+    C.table_schema AS schema,
+    T.table_catalog AS database,
+    T.table_type AS type,
+    C.column_name,
+    C.data_type
+FROM
+    foooo.INFORMATION_SCHEMA.COLUMNS C
+    JOIN foooo.INFORMATION_SCHEMA.TABLES T
+        ON C.table_name = T.table_name
+WHERE
+    IS_SYSTEM_DEFINED = 'NO'
+    AND IS_PARTITIONING_COLUMN = 'NO'
+    AND IS_HIDDEN = 'NO'
 
 UNION ALL
 
-SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C
-JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+SELECT
+    C.table_name AS name,
+    C.table_schema AS schema,
+    T.table_catalog AS database,
+    T.table_type AS type,
+    C.column_name,
+    C.data_type
+FROM
+    baarrrr.INFORMATION_SCHEMA.COLUMNS C
+    JOIN baarrrr.INFORMATION_SCHEMA.TABLES T
+        ON C.table_name = T.table_name
+WHERE
+    IS_SYSTEM_DEFINED = 'NO'
+    AND IS_PARTITIONING_COLUMN = 'NO'
+    AND IS_HIDDEN = 'NO'
 
 UNION ALL
 
-SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-T.table_type AS type, C.column_name, C.data_type FROM taar.INFORMATION_SCHEMA.COLUMNS C
-JOIN taar.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+SELECT
+    C.table_name AS name,
+    C.table_schema AS schema,
+    T.table_catalog AS database,
+    T.table_type AS type,
+    C.column_name,
+    C.data_type
+FROM
+    taar.INFORMATION_SCHEMA.COLUMNS C
+    JOIN taar.INFORMATION_SCHEMA.TABLES T
+        ON C.table_name = T.table_name
+WHERE
+    IS_SYSTEM_DEFINED = 'NO'
+    AND IS_PARTITIONING_COLUMN = 'NO'
+    AND IS_HIDDEN = 'NO'
 """
     )
     mocked_query.reset_mock()
+
+    mocker.patch(
+        'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._fetch_query_results',
+        return_value=FakeResponse().to_dataframe(),
+    )
+
     connector.get_model('some-db')
     assert (
         mocked_query.call_args_list[0][0][0]
         == """
-SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-T.table_type AS type, C.column_name, C.data_type FROM foooo.INFORMATION_SCHEMA.COLUMNS C
-JOIN foooo.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+SELECT
+    C.table_name AS name,
+    C.table_schema AS schema,
+    T.table_catalog AS database,
+    T.table_type AS type,
+    C.column_name,
+    C.data_type
+FROM
+    foooo.INFORMATION_SCHEMA.COLUMNS C
+    JOIN foooo.INFORMATION_SCHEMA.TABLES T
+        ON C.table_name = T.table_name
+WHERE
+    IS_SYSTEM_DEFINED = 'NO'
+    AND IS_PARTITIONING_COLUMN = 'NO'
+    AND IS_HIDDEN = 'NO'
 AND T.table_catalog = 'some-db'
 
 UNION ALL
 
-SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-T.table_type AS type, C.column_name, C.data_type FROM baarrrr.INFORMATION_SCHEMA.COLUMNS C
-JOIN baarrrr.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+SELECT
+    C.table_name AS name,
+    C.table_schema AS schema,
+    T.table_catalog AS database,
+    T.table_type AS type,
+    C.column_name,
+    C.data_type
+FROM
+    baarrrr.INFORMATION_SCHEMA.COLUMNS C
+    JOIN baarrrr.INFORMATION_SCHEMA.TABLES T
+        ON C.table_name = T.table_name
+WHERE
+    IS_SYSTEM_DEFINED = 'NO'
+    AND IS_PARTITIONING_COLUMN = 'NO'
+    AND IS_HIDDEN = 'NO'
 AND T.table_catalog = 'some-db'
 
 UNION ALL
 
-SELECT C.table_name AS name, C.table_schema AS schema, T.table_catalog AS database,
-T.table_type AS type, C.column_name, C.data_type FROM taar.INFORMATION_SCHEMA.COLUMNS C
-JOIN taar.INFORMATION_SCHEMA.TABLES T ON C.table_name = T.table_name
-WHERE IS_SYSTEM_DEFINED='NO' AND IS_PARTITIONING_COLUMN='NO' AND IS_HIDDEN='NO'
+SELECT
+    C.table_name AS name,
+    C.table_schema AS schema,
+    T.table_catalog AS database,
+    T.table_type AS type,
+    C.column_name,
+    C.data_type
+FROM
+    taar.INFORMATION_SCHEMA.COLUMNS C
+    JOIN taar.INFORMATION_SCHEMA.TABLES T
+        ON C.table_name = T.table_name
+WHERE
+    IS_SYSTEM_DEFINED = 'NO'
+    AND IS_PARTITIONING_COLUMN = 'NO'
+    AND IS_HIDDEN = 'NO'
 AND T.table_catalog = 'some-db'
 """
     )
 
+    mocked_query.reset_mock()
+
+    mocker.patch(
+        'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._fetch_query_results',
+        return_value=FakeResponse().to_dataframe(),
+    )
+
+    connector.get_model('some-db', 'foooo')
+
+    # since we specified only the foooo schema we should only get the query for
+    # it
+    assert (
+        mocked_query.call_args_list[0][0][0]
+        == """
+SELECT
+    C.table_name AS name,
+    C.table_schema AS schema,
+    T.table_catalog AS database,
+    T.table_type AS type,
+    C.column_name,
+    C.data_type
+FROM
+    foooo.INFORMATION_SCHEMA.COLUMNS C
+    JOIN foooo.INFORMATION_SCHEMA.TABLES T
+        ON C.table_name = T.table_name
+WHERE
+    IS_SYSTEM_DEFINED = 'NO'
+    AND IS_PARTITIONING_COLUMN = 'NO'
+    AND IS_HIDDEN = 'NO'
+AND T.table_catalog = 'some-db'
+"""
+    )
 
 def test_get_model_multi_location(mocker: MockFixture, _fixture_credentials) -> None:
     fake_resp_1 = mocker.MagicMock()
