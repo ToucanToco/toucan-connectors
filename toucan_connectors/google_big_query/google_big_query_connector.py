@@ -310,7 +310,7 @@ WHERE
         return pd.concat(dfs)
 
     @cached_property
-    def _available_schs(self) -> list[str]:  # prama: no cover
+    def _available_schs(self) -> list[str]:  # pragma: no cover
         credentials = self._get_google_credentials(self.credentials, self.scopes)
         client = bigquery.Client(location=None, credentials=credentials)
 
