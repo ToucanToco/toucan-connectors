@@ -667,7 +667,7 @@ def test_get_form(mocker: MockFixture, _fixture_credentials: MockFixture) -> Non
         return ['ok', 'test']
 
     mocker.patch(
-        'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector.available_schs',
+        'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._available_schs',
         return_value=mock_available_schs,
     )
 

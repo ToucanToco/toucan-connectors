@@ -54,7 +54,7 @@ class GoogleBigQueryDataSource(ToucanDataSource):
     def get_form(cls, connector: 'GoogleBigQueryConnector', current_config: dict[str, Any]):
         schema = create_model(
             'FormSchema',
-            db_schema=strlist_to_enum('db_schema', connector.available_schs),
+            db_schema=strlist_to_enum('db_schema', connector._available_schs),
             __base__=cls,
         ).schema()
         schema['properties']['database']['default'] = connector.credentials.project_id
@@ -258,7 +258,9 @@ WHERE
             self._build_dataset_info_query_for_ds(dataset_id, db_name) for dataset_id in dataset_ids
         )
 
-    def _fetch_query_results(self, query_job: QueryJob) -> Generator[Any, Any, Any]:
+    def _fetch_query_results(
+        self, query_job: QueryJob
+    ) -> Generator[Any, Any, Any]:  # pragma: no cover
         """Fetches query results in a paginated manner using a generator."""
         row_iterator = query_job.result(page_size=_PAGE_SIZE, max_results=_MAXIMUM_RESULTS_FETCHED)
 
@@ -308,13 +310,11 @@ WHERE
         return pd.concat(dfs)
 
     @cached_property
-    def available_schs(self) -> list[str]:
+    def _available_schs(self) -> list[str]:  # prama: no cover
         credentials = self._get_google_credentials(self.credentials, self.scopes)
         client = bigquery.Client(location=None, credentials=credentials)
 
-        dataset_list = (ds.dataset_id for ds in client.list_datasets())
-
-        return pd.Series(dataset_list).values
+        return pd.Series((ds.dataset_id for ds in client.list_datasets())).values
 
     def _get_project_structure(
         self, db_name: str | None = None, schema_name: str | None = None
