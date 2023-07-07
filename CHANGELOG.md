@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Changed
+
+- Feat[Goole Big Query] : We can now get the database model(list of tables) based on a given schema name to speed up the project tree structure.
+
 ### [3.23.15] 2023-07-19
 
 ### Fixed
