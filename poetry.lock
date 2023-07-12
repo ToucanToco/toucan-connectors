@@ -21,7 +21,7 @@ retrying = "*"
 name = "aiobotocore"
 version = "2.4.2"
 description = "Async client for aws services using botocore and aiohttp"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "aiobotocore-2.4.2-py3-none-any.whl", hash = "sha256:4acd1ebe2e44be4b100aa553910bda899f6dc090b3da2bc1cf3d5de2146ed208"},
@@ -150,7 +150,7 @@ speedups = ["Brotli", "aiodns", "cchardet"]
 name = "aioitertools"
 version = "0.11.0"
 description = "itertools and builtins for AsyncIO and mixed iterables"
-optional = true
+optional = false
 python-versions = ">=3.6"
 files = [
     {file = "aioitertools-0.11.0-py3-none-any.whl", hash = "sha256:04b95e3dab25b449def24d7df809411c10e62aab0cbe31a50ca4e68748c43394"},
@@ -278,7 +278,7 @@ sqlserver = ["pyodbc (>=4.0.0,<5.0.0)"]
 name = "bcrypt"
 version = "4.0.1"
 description = "Modern password hashing for your software and your servers"
-optional = true
+optional = false
 python-versions = ">=3.6"
 files = [
     {file = "bcrypt-4.0.1-cp36-abi3-macosx_10_10_universal2.whl", hash = "sha256:b1023030aec778185a6c16cf70f359cbb6e0c289fd564a7cfa29e727a1c38f8f"},
@@ -389,7 +389,7 @@ uvloop = ["uvloop (>=0.15.2)"]
 name = "blosc2"
 version = "2.0.0"
 description = "Python wrapper for the C-Blosc2 library."
-optional = true
+optional = false
 python-versions = ">=3.8, <4"
 files = [
     {file = "blosc2-2.0.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:4085e5c1df186e1747d8a8578b0cc1c8b7668391d635e9f89e17156912fba85a"},
@@ -441,7 +441,7 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 name = "botocore"
 version = "1.27.59"
 description = "Low-level, data-driven core of boto 3."
-optional = true
+optional = false
 python-versions = ">= 3.7"
 files = [
     {file = "botocore-1.27.59-py3-none-any.whl", hash = "sha256:69d756791fc024bda54f6c53f71ae34e695ee41bbbc1743d9179c4837a4929da"},
@@ -569,7 +569,7 @@ pycparser = "*"
 name = "chardet"
 version = "5.1.0"
 description = "Universal encoding detector for Python 3"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "chardet-5.1.0-py3-none-any.whl", hash = "sha256:362777fb014af596ad31334fde1e8c327dfdb076e1960d1694662d46a6917ab9"},
@@ -608,7 +608,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 name = "click-plugins"
 version = "1.1.1"
 description = "An extension module for click to enable registering CLI commands via setuptools entry-points."
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "click-plugins-1.1.1.tar.gz", hash = "sha256:46ab999744a9d831159c3411bb0c79346d94a444df9a3a3742e9ed63645f264b"},
@@ -724,7 +724,7 @@ zstd = ["clickhouse-cityhash (>=1.0.2.1)", "zstd"]
 name = "cligj"
 version = "0.7.2"
 description = "Click params for commmand line interfaces to GeoJSON"
-optional = true
+optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4"
 files = [
     {file = "cligj-0.7.2-py3-none-any.whl", hash = "sha256:c1ca117dbce1fe20a5809dc96f01e1c2840f6dcc939b3ddbb1111bf330ba82df"},
@@ -883,7 +883,7 @@ files = [
 name = "cython"
 version = "0.29.32"
 description = "The Cython compiler for writing C extensions for the Python language."
-optional = true
+optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 files = [
     {file = "Cython-0.29.32-cp27-cp27m-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:39afb4679b8c6bf7ccb15b24025568f4f9b4d7f9bf3cbd981021f542acecd75b"},
@@ -1043,7 +1043,7 @@ test = ["coverage", "ipython", "numpydoc", "pytest", "traitlets"]
 name = "et-xmlfile"
 version = "1.1.0"
 description = "An implementation of lxml.xmlfile for the standard library"
-optional = true
+optional = false
 python-versions = ">=3.6"
 files = [
     {file = "et_xmlfile-1.1.0-py3-none-any.whl", hash = "sha256:a2ba85d1d6a74ef63837eed693bcb89c3f752169b0e3e7ae5b16ca5e1b3deada"},
@@ -1097,7 +1097,7 @@ testing = ["covdefaults (>=2.2)", "coverage (>=6.4.2)", "pytest (>=7.1.2)", "pyt
 name = "fiona"
 version = "1.8.22"
 description = "Fiona reads and writes spatial data files"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "Fiona-1.8.22-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:59a3800bc09ebee3516d64d02a8a6818d07ab1573c6096f3ef3468bf9f8f95f8"},
@@ -1238,7 +1238,7 @@ files = [
 name = "fsspec"
 version = "2022.11.0"
 description = "File-system specification"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "fsspec-2022.11.0-py3-none-any.whl", hash = "sha256:d6e462003e3dcdcb8c7aa84c73a228f8227e72453cd22570e2363e8844edfe7b"},
@@ -1272,7 +1272,7 @@ tqdm = ["tqdm"]
 name = "geopandas"
 version = "0.12.2"
 description = "Geographic pandas extensions"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "geopandas-0.12.2-py3-none-any.whl", hash = "sha256:0a470e4bf6f5367e6fd83ab6b40405e0b805c8174665bbcb7c4077ed90202912"},
@@ -1793,7 +1793,7 @@ i18n = ["Babel (>=2.7)"]
 name = "jmespath"
 version = "1.0.1"
 description = "JSON Matching Expressions"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "jmespath-1.0.1-py3-none-any.whl", hash = "sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980"},
@@ -2051,7 +2051,7 @@ files = [
 name = "msgpack"
 version = "1.0.4"
 description = "MessagePack serializer"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "msgpack-1.0.4-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:4ab251d229d10498e9a2f3b1e68ef64cb393394ec477e3370c457f9430ce9250"},
@@ -2180,7 +2180,7 @@ files = [
 name = "munch"
 version = "2.5.0"
 description = "A dot-accessible dictionary (a la JavaScript objects)"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "munch-2.5.0-py2.py3-none-any.whl", hash = "sha256:6f44af89a2ce4ed04ff8de41f70b226b984db10a91dcc7b9ac2efc1c77022fdd"},
@@ -2255,7 +2255,7 @@ files = [
 name = "numexpr"
 version = "2.8.4"
 description = "Fast numerical expression evaluator for NumPy"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "numexpr-2.8.4-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:a75967d46b6bd56455dd32da6285e5ffabe155d0ee61eef685bbfb8dafb2e484"},
@@ -2368,7 +2368,7 @@ signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 name = "openpyxl"
 version = "3.1.2"
 description = "A Python library to read/write Excel 2010 xlsx/xlsm files"
-optional = true
+optional = false
 python-versions = ">=3.6"
 files = [
     {file = "openpyxl-3.1.2-py2.py3-none-any.whl", hash = "sha256:f91456ead12ab3c6c2e9491cf33ba6d08357d802192379bb482f1033ade496f5"},
@@ -2469,7 +2469,7 @@ types-pytz = ">=2022.1.1"
 name = "paramiko"
 version = "2.12.0"
 description = "SSH2 protocol library"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "paramiko-2.12.0-py2.py3-none-any.whl", hash = "sha256:b2df1a6325f6996ef55a8789d0462f5b502ea83b3c990cbb5bbe57345c6812c4"},
@@ -2503,29 +2503,33 @@ files = [
 name = "peakina"
 version = "0.11.1"
 description = "pandas readers on steroids (remote files, glob patterns, cache, etc.)"
-optional = true
-python-versions = ">=3.10,<4.0"
-files = [
-    {file = "peakina-0.11.1-py3-none-any.whl", hash = "sha256:070fa416ecdb808bc14149d4f7f904ca31b8b7faeec35d74e064ec18608c6750"},
-    {file = "peakina-0.11.1.tar.gz", hash = "sha256:64d371395b4c7ef81fec67e0ad0601d0ef283375e1b562151fae34e2fb229350"},
-]
+optional = false
+python-versions = "^3.10"
+files = []
+develop = false
 
 [package.dependencies]
-certifi = ">=2022.5.18,<2023.0.0"
+certifi = ">=2022.5.18,<2024.0.0"
 chardet = ">=4,<6"
 geopandas = ">=0.11.1,<1"
-jq = ">=1.2.1,<2.0.0"
-openpyxl = ">=3.1.2,<4.0.0"
+jq = "^1.2.1"
+openpyxl = "^3.1.2"
 pandas = ">=1.5.3,<3.0.0"
 paramiko = ">=2.9.2,<4.0.0"
-pyarrow = ">=11.0.0,<12.0.0"
-pydantic = ">=1.9.0,<2.0.0"
+pyarrow = ">=11,<13"
+pydantic = ">=1.9,<3.0"
 python-slugify = ">=5.0.2,<9.0.0"
 s3fs = ">=2022.1,<2024.0"
-tables = ">=3.7.0,<4.0.0"
-urllib3 = ">=1.26.8,<2.0.0"
-xlrd = ">=2.0.1,<3.0.0"
+tables = "^3.7.0"
+urllib3 = "^1.26.8"
+xlrd = "^2.0.1"
 xmltodict = ">=0.12.0,<1"
+
+[package.source]
+type = "git"
+url = "https://github.com/toucantoco/peakina.git"
+reference = "dependabot/pip/pydantic-2.0.2"
+resolved_reference = "e09fe21da5ec015a972933a44a0afdb557960e0c"
 
 [[package]]
 name = "platformdirs"
@@ -2631,7 +2635,7 @@ files = [
 name = "py-cpuinfo"
 version = "9.0.0"
 description = "Get CPU info with pure Python"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "py-cpuinfo-9.0.0.tar.gz", hash = "sha256:3cdbbf3fac90dc6f118bfd64384f309edeadd902d7c8fb17f02ffa1fc3f49690"},
@@ -2642,7 +2646,7 @@ files = [
 name = "pyarrow"
 version = "11.0.0"
 description = "Python library for Apache Arrow"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "pyarrow-11.0.0-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:40bb42afa1053c35c749befbe72f6429b7b5f45710e85059cdd534553ebcf4f2"},
@@ -2967,7 +2971,7 @@ rsa = ["cryptography"]
 name = "pynacl"
 version = "1.5.0"
 description = "Python binding to the Networking and Cryptography (NaCl) library"
-optional = true
+optional = false
 python-versions = ">=3.6"
 files = [
     {file = "PyNaCl-1.5.0-cp36-abi3-macosx_10_10_universal2.whl", hash = "sha256:401002a4aaa07c9414132aaed7f6836ff98f59277a234704ff66878c2ee4a0d1"},
@@ -3069,7 +3073,7 @@ diagrams = ["jinja2", "railroad-diagrams"]
 name = "pyproj"
 version = "3.4.1"
 description = "Python interface to PROJ (cartographic projections and coordinate transformations library)"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "pyproj-3.4.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e463c687007861a9949909211986850cfc2e72930deda0d06449ef2e315db534"},
@@ -3500,7 +3504,7 @@ pyasn1 = ">=0.1.3"
 name = "s3fs"
 version = "2022.11.0"
 description = "Convenient Filesystem interface over S3"
-optional = true
+optional = false
 python-versions = ">= 3.7"
 files = [
     {file = "s3fs-2022.11.0-py3-none-any.whl", hash = "sha256:42d57a3ceedb478b18ee53e34bbe3305a3f07f6381ca1ab76135efe076c6a07d"},
@@ -3551,7 +3555,7 @@ asn1crypto = ">=1.4.0"
 name = "setuptools"
 version = "65.5.1"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "setuptools-65.5.1-py3-none-any.whl", hash = "sha256:d0b9a8433464d5800cbe05094acf5c6d52a91bfac9b52bcfc4d41382be5d5d31"},
@@ -3567,7 +3571,7 @@ testing-integration = ["build[virtualenv]", "filelock (>=3.4.0)", "jaraco.envs (
 name = "shapely"
 version = "2.0.0"
 description = "Manipulation and analysis of geometric objects"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "shapely-2.0.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:7266080d39946395ba4b31fa35b9b7695e0a4e38ccabf0c67e2936caf9f9b054"},
@@ -3806,7 +3810,7 @@ files = [
 name = "tables"
 version = "3.8.0"
 description = "Hierarchical datasets for Python"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "tables-3.8.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:01e82e40f9845f71de137b4472210909e35c440bbcd0858bdd2871715daef4c7"},
@@ -4165,7 +4169,7 @@ files = [
 name = "wrapt"
 version = "1.14.1"
 description = "Module for decorators, wrappers and monkey patching."
-optional = true
+optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 files = [
     {file = "wrapt-1.14.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:1b376b3f4896e7930f1f772ac4b064ac12598d1c38d04907e696cc4d794b43d3"},
@@ -4238,7 +4242,7 @@ files = [
 name = "xlrd"
 version = "2.0.1"
 description = "Library for developers to extract data from Microsoft Excel (tm) .xls spreadsheet files"
-optional = true
+optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 files = [
     {file = "xlrd-2.0.1-py2.py3-none-any.whl", hash = "sha256:6a33ee89877bd9abc1158129f6e94be74e2679636b8a205b43b85206c3f0bbdd"},
@@ -4398,4 +4402,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "57ed8120c96e05dbc4b4baf4b3d07565ef739f60ac26f86a459f952c2cab34cf"
+content-hash = "ed3d306fb480cd71b3e8dd8ae6e3233cc6d0df01948e6eef1fa3b2651c4b92cd"
