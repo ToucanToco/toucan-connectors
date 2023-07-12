@@ -163,7 +163,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     def host_validator(cls, v):
         return re.sub(r'^https?://', '', v)
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_requirements(cls, values):
         mode = values.get('authentication_method')
         if mode == AuthenticationMethod.DB_CREDENTIALS.value:

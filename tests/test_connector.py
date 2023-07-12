@@ -30,8 +30,8 @@ class DataSource(ToucanDataSource):
 
 
 class DataConnector(ToucanConnector):
-    type = 'MyDB'
-    data_source_model: DataSource
+    type: str = 'MyDB'
+    data_source_model: DataSource = DataSource
     a_parameter: str = ''
 
     def _retrieve_data(self, data_source):
@@ -44,7 +44,7 @@ def test_missing_attributes():
     with pytest.raises(TypeError) as exc_info:
 
         class MissingDataConnector2(ToucanConnector):
-            type = 'MyDB'
+            type: str = 'MyDB'
 
             def _retrieve_data(self, data_source):
                 pass
@@ -54,7 +54,7 @@ def test_missing_attributes():
 
 def test_no_get_df():
     class BadDataConnector(ToucanConnector):
-        type = 'MyDB'
+        type: str = 'MyDB'
         data_source_model = 'asd'
 
     with pytest.raises(TypeError):
@@ -75,7 +75,7 @@ def test_validate():
 
 def test_formated_engine_version():
     class DataConnector(ToucanConnector, VersionableEngineConnector):
-        type = 'MyDB'
+        type: str = 'MyDB'
         data_source_model: DataSource
 
         def get_engine_version(self) -> tuple:
@@ -100,7 +100,7 @@ def test_formated_engine_version():
 
 def test_get_df_with_permissions():
     class DataConnector(ToucanConnector):
-        type = 'MyDB'
+        type: str = 'MyDB'
         data_source_model: DataSource
 
         def _retrieve_data(self, datasource):
@@ -114,7 +114,7 @@ def test_get_df_with_permissions():
 
 def test_get_slice():
     class DataConnector(ToucanConnector):
-        type = 'MyDB'
+        type: str = 'MyDB'
         data_source_model = 'asd'
 
         def _retrieve_data(self, datasource):
@@ -145,7 +145,7 @@ def test_get_slice():
 
 def test_explain():
     class DataConnector(ToucanConnector):
-        type = 'MyDB'
+        type: str = 'MyDB'
         data_source_model = 'asd'
 
         def _retrieve_data(self, datasource):
@@ -213,7 +213,7 @@ def test_get_cache_key_should_be_different_with_different_permissions():
 
 
 class UnreliableDataConnector(ToucanConnector):
-    type = 'MyUnreliableDB'
+    type: str = 'MyUnreliableDB'
     data_source_model: DataSource
 
     def _retrieve_data(self, data_source, logbook=[]):
@@ -232,7 +232,7 @@ def test_max_attempt_df():
 
 
 class CustomPolicyDataConnector(ToucanConnector):
-    type = 'MyUnreliableDB'
+    type: str = 'MyUnreliableDB'
     data_source_model: DataSource
 
     def _retrieve_data(self, data_source, logbook=[]):
@@ -254,7 +254,7 @@ def test_custom_max_attempt_df():
 
 
 class CustomRetryOnDataConnector(ToucanConnector):
-    type = 'MyUnreliableDB'
+    type: str = 'MyUnreliableDB'
     data_source_model: DataSource
     _retry_on = (ValueError,)
 
@@ -273,7 +273,7 @@ def test_custom_retry_on_df():
 
 
 class CustomNoRetryOnDataConnector(ToucanConnector):
-    type = 'MyUnreliableDB'
+    type: str = 'MyUnreliableDB'
     data_source_model: DataSource
 
     @property
@@ -345,7 +345,7 @@ def test_get_df_int_column(mocker):
     """The int column should be casted as str"""
 
     class DataConnector(ToucanConnector):
-        type = 'MyDB'
+        type: str = 'MyDB'
         data_source_model: DataSource
 
         def _retrieve_data(self, datasource):
@@ -357,7 +357,7 @@ def test_get_df_int_column(mocker):
 
 def test_default_implementation_of_discoverable_connector():
     class DataConnector(ToucanConnector, DiscoverableConnector):
-        type = 'MyDB'
+        type: str = 'MyDB'
         data_source_model: DataSource
 
         def _retrieve_data(self, datasource):

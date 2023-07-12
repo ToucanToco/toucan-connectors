@@ -76,7 +76,7 @@ class OneDriveConnector(ToucanConnector):
 
     _auth_flow = 'oauth2'
     _oauth_trigger = 'connector'
-    oauth2_version = Field('1', **{'ui.hidden': True})
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
     auth_flow_id: Optional[str] = None
 
     authorization_url: str = Field(None, **{'ui.hidden': True})

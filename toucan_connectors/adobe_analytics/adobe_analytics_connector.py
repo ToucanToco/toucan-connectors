@@ -3,8 +3,13 @@ from typing import List, Union
 
 import pandas as pd
 from adobe_analytics import Client, ReportDefinition
+from pydantic import ConfigDict
 
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import (
+    PYDANTIC_VERSION_ONE,
+    ToucanConnector,
+    ToucanDataSource,
+)
 
 
 class Granularity(str, Enum):
@@ -49,11 +54,21 @@ class AdobeAnalyticsConnector(ToucanConnector):
     It provides a high-level interfaces for reporting queries (including Data Warehouse requests).
     """
 
-    data_source_model: AdobeAnalyticsDataSource
+    data_source_model: AdobeAnalyticsDataSource | None = None
 
     username: str
     password: str
     endpoint: str = Client.DEFAULT_ENDPOINT
+
+    # TODO[pydantic]: This is temporary, in the future we will only support V2
+    # and get rid of this condition + update the CI (link/test)
+    if PYDANTIC_VERSION_ONE:
+
+        class Config:
+            extra = 'allow'
+
+    else:
+        model_config = ConfigDict(extra='allow')
 
     def _retrieve_data(self, data_source: AdobeAnalyticsDataSource) -> pd.DataFrame:
         suites = Client(self.username, self.password, self.endpoint).suites()

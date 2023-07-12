@@ -333,12 +333,14 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         )
 
     @classmethod
-    def __init_subclass__(cls):
-        try:
-            cls.data_source_model = cls.__fields__.pop('data_source_model').type_
-            cls.logger = logging.getLogger(cls.__name__)
-        except KeyError as e:
-            raise TypeError(f'{cls.__name__} has no {e} attribute.')
+    def __init_subclass__(cls, **kwargs: Any):
+        if PYDANTIC_VERSION_ONE:
+            try:
+                cls.data_source_model = cls.__fields__.pop('data_source_model').type_
+                cls.logger = logging.getLogger(cls.__name__)
+            except KeyError as e:
+                raise TypeError(f'{cls.__name__} has no {e} attribute.')
+
         if 'bearer_integration' in cls.__fields__:
             cls.bearer_integration = cls.__fields__['bearer_integration'].default
 

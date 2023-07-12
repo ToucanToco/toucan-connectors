@@ -72,7 +72,7 @@ class HubspotConnector(ToucanConnector):
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[str] = None
     _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
     data_source_model: HubspotDataSource
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 

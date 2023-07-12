@@ -81,7 +81,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     auth_flow_id: str = Field(None, **{'ui.hidden': True})
     _auth_flow = 'oauth2'
     _oauth_trigger = 'connector'
-    oauth2_version = Field('1', **{'ui.hidden': True})
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
     redirect_uri: str = Field(None, **{'ui.hidden': True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
