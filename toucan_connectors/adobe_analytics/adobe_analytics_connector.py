@@ -3,6 +3,7 @@ from typing import List, Union
 
 import pandas as pd
 from adobe_analytics import Client, ReportDefinition
+from pydantic import ConfigDict, __version__ as pydantic_version
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
@@ -42,6 +43,8 @@ class AdobeAnalyticsDataSource(ToucanDataSource):
             source=self.source,
         )
 
+_PYDANTIC_VERSION_ONE = pydantic_version.startswith("1.")
+
 
 class AdobeAnalyticsConnector(ToucanConnector):
     """
@@ -60,3 +63,6 @@ class AdobeAnalyticsConnector(ToucanConnector):
         df = suites[data_source.suite_id].download(data_source.report_definition)
         df['suite_id'] = data_source.suite_id
         return df
+
+    if not _PYDANTIC_VERSION_ONE:
+        model_config = ConfigDict(arbitrary_types_allowed=True)
