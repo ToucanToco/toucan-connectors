@@ -95,6 +95,8 @@ class HttpAPIDataSource(ToucanDataSource):
     filter: str = FilterSchema
     flatten_column: str = Field(None, description='Column containing nested rows')
 
+    # TODO[pydantic]: We need to refactor this class, by creating the `model_config` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     class Config:
         @staticmethod
         def schema_extra(schema: Dict[str, Any], model: Type['HttpAPIDataSource']) -> None:

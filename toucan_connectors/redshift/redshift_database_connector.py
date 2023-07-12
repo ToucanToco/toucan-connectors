@@ -7,7 +7,7 @@ from typing import Any
 
 import pandas as pd
 import redshift_connector
-from pydantic import Field, SecretStr, create_model, root_validator, validator
+from pydantic import Field, SecretStr, create_model, field_validator, root_validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
@@ -144,6 +144,8 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     profile: str | None = Field(None, description='AWS profile')
     region: str | None = Field(None, description='The region in which there is your aws account.')
 
+    # TODO[pydantic]: We need to refactor this class, by creating the `model_config` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     class Config:
         underscore_attrs_are_private = True
         keep_untouched = (cached_property,)
@@ -156,7 +158,8 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     def available_dbs(self) -> list[str]:
         return self._list_db_names()
 
-    @validator('host')
+    @field_validator('host')
+    @classmethod
     def host_validator(cls, v):
         return re.sub(r'^https?://', '', v)
 

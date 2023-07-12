@@ -67,6 +67,8 @@ class GoogleSheets2DataSource(ToucanDataSource):
     parameters: dict = Field(None, description='Additional URL parameters')
     parse_dates: List[str] = Field([], title='Dates column', description='Columns to parse as date')
 
+    # TODO[pydantic]: We need to refactor this class, by creating the `model_config` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     class Config:
         @staticmethod
         def schema_extra(schema: Dict[str, Any], model: Type['GoogleSheets2DataSource']) -> None:
@@ -98,7 +100,7 @@ class GoogleSheets2Connector(ToucanConnector):
     _auth_flow = 'oauth2'
     _oauth_trigger = 'instance'
     oauth2_version = Field('1', **{'ui.hidden': True})
-    auth_flow_id: Optional[str]
+    auth_flow_id: Optional[str] = None
 
     # TODO: turn into a class property
     _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'

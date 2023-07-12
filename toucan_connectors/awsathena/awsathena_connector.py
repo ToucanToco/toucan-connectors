@@ -4,7 +4,7 @@ import awswrangler as wr
 import boto3
 import pandas as pd
 from cached_property import cached_property_with_ttl
-from pydantic import Field, SecretStr, constr, create_model
+from pydantic import ConfigDict, Field, SecretStr, constr, create_model
 
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters, sanitize_query
 from toucan_connectors.pagination import build_pagination_info
@@ -77,10 +77,11 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
     aws_access_key_id: str = Field(..., description='Your AWS access key ID')
     aws_secret_access_key: SecretStr = Field(None, description='Your AWS secret key')
     region_name: str = Field(..., description='Your AWS region name')
-
-    class Config:
-        underscore_attrs_are_private = True
-        keep_untouched = (cached_property_with_ttl,)
+    # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(
+        underscore_attrs_are_private=True, ignored_types=(cached_property_with_ttl,)
+    )
 
     def get_session(self) -> boto3.Session:
         return boto3.Session(

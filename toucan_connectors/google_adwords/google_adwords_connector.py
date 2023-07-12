@@ -59,6 +59,8 @@ class GoogleAdwordsDataSource(ToucanDataSource):
         description='Max number of rows to extract, for service extraction only',
     )
 
+    # TODO[pydantic]: We need to refactor this class, by creating the `model_config` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     class Config:
         @staticmethod
         def schema_extra(schema: Dict[str, Any], model: Type['GoogleAdwordsDataSource']) -> None:
@@ -79,7 +81,7 @@ class GoogleAdwordsDataSource(ToucanDataSource):
 class GoogleAdwordsConnector(ToucanConnector):
     data_source_model: GoogleAdwordsDataSource
     _auth_flow = 'oauth2'
-    auth_flow_id: Optional[str]
+    auth_flow_id: Optional[str] = None
     developer_token: str = None
     client_customer_id: str = None
     _oauth_trigger = 'instance'

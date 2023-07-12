@@ -3,11 +3,15 @@ from typing import List
 import pandas as pd
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.google_credentials import GoogleCredentials
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import (
+    PYDANTIC_VERSION_ONE,
+    ToucanConnector,
+    ToucanDataSource,
+)
 
 API = 'analyticsreporting'
 SCOPE = 'https://www.googleapis.com/auth/analytics.readonly'
@@ -25,9 +29,15 @@ class DimensionFilter(BaseModel):
     expressions: List[str] = None
     caseSensitive: bool = False
 
-    class Config:
-        # TODO `not` param is not implemented
-        extra = 'allow'
+    # TODO[pydantic]: This is temporary, in the future we will only support V2
+    # and get rid of this condition + update the CI (link/test)
+    if PYDANTIC_VERSION_ONE:
+
+        class Config:
+            extra = 'allow'
+
+    else:
+        model_config = ConfigDict(extra='allow')
 
 
 class DimensionFilterClause(BaseModel):
@@ -44,9 +54,15 @@ class Metric(BaseModel):
     expression: str
     alias: str = None
 
-    class Config:
-        # TODO `metricType` param is not implemented
-        extra = 'allow'
+    # TODO[pydantic]: This is temporary, in the future we will only support V2
+    # and get rid of this condition + update the CI (link/test)
+    if PYDANTIC_VERSION_ONE:
+
+        class Config:
+            extra = 'allow'
+
+    else:
+        model_config = ConfigDict(extra='allow')
 
 
 class MetricFilter(BaseModel):
@@ -54,9 +70,15 @@ class MetricFilter(BaseModel):
     operator: str
     comparisonValue: str
 
-    class Config:
-        # TODO `not` param is not implemented
-        extra = 'allow'
+    # TODO[pydantic]: This is temporary, in the future we will only support V2
+    # and get rid of this condition + update the CI (link/test)
+    if PYDANTIC_VERSION_ONE:
+
+        class Config:
+            extra = 'allow'
+
+    else:
+        model_config = ConfigDict(extra='allow')
 
 
 class MetricFilterClause(BaseModel):

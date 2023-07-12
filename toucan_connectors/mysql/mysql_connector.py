@@ -7,11 +7,12 @@ from typing import Any, Generator, Optional
 import pandas as pd
 import pymysql
 from cached_property import cached_property_with_ttl
-from pydantic import Field, SecretStr, constr, create_model, validator
+from pydantic import ConfigDict, Field, SecretStr, constr, create_model, validator
 from pymysql.constants import CR, ER
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import (
+    PYDANTIC_VERSION_ONE,
     DiscoverableConnector,
     TableInfo,
     ToucanConnector,
@@ -142,11 +143,23 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         description='SSL Mode to use to connect to the MySQL server. '
         'Equivalent of the --ssl-mode option of the MySQL client. Must be set in order to use SSL',
     )
+    # TODO[pydantic]: This is temporary, in the future we will only support V2
+    # and get rid of this condition + update the CI (link/test)
+    if PYDANTIC_VERSION_ONE:
 
-    class Config:
-        underscore_attrs_are_private = True
-        keep_untouched = (cached_property_with_ttl,)
+        class Config:
+            underscore_attrs_are_private = True
+            ignored_types = (cached_property_with_ttl,)
 
+    else:
+        # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
+        # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+        model_config = ConfigDict(
+            underscore_attrs_are_private=True, ignored_types=(cached_property_with_ttl,)
+        )
+
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator('ssl_key')
     @classmethod
     def ssl_key_validator(cls, ssl_key: str, values: dict) -> str:

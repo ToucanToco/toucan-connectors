@@ -73,6 +73,8 @@ class LinkedinadsDataSource(ToucanDataSource):
         description='See https://docs.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting for more information',
     )
 
+    # TODO[pydantic]: We need to refactor this class, by creating the `model_config` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     class Config:
         @staticmethod
         def schema_extra(schema: Dict[str, Any], model: Type['LinkedinadsDataSource']) -> None:
@@ -96,7 +98,7 @@ class LinkedinadsConnector(ToucanConnector):
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[
         str
-    ]  # This ID is generated & provided to the data provider during the oauth authentication process
+    ] = None  # This ID is generated & provided to the data provider during the oauth authentication process
     _baseroute = 'https://api.linkedin.com/v2/adAnalyticsV2?q='
     template: Template = Field(
         None,

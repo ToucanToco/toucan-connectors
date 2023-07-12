@@ -36,7 +36,7 @@ HUBSPOT_ENDPOINTS: dict = {
     'deals': {
         'url': 'https://api.hubapi.com/deals/v1/deal/paged',
         # 'url': 'https://api.hubapi.com/crm/v3/objects/deals',
-        'legacy': False,
+        'legacy': False,  # type: ignore [typeddict-item]
     },
     'products': {
         'url': 'https://api.hubapi.com/crm-objects/v1/objects/products/paged',
@@ -70,7 +70,7 @@ class HubspotDataSource(ToucanDataSource):
 
 class HubspotConnector(ToucanConnector):
     _auth_flow = 'oauth2'
-    auth_flow_id: Optional[str]
+    auth_flow_id: Optional[str] = None
     _oauth_trigger = 'instance'
     oauth2_version = Field('1', **{'ui.hidden': True})
     data_source_model: HubspotDataSource

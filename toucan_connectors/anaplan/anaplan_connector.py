@@ -90,7 +90,7 @@ _ANAPLAN_API_BASEROUTE = 'https://api.anaplan.com/2/0'
 class AnaplanConnector(ToucanConnector):
     data_source_model: AnaplanDataSource
     username: str
-    password: Optional[SecretStr]
+    password: Optional[SecretStr] = None
 
     def _extract_json(self, resp: requests.Response) -> dict:
         if resp.status_code in (401, 403):

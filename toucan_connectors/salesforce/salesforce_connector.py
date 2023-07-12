@@ -51,7 +51,7 @@ class SalesforceDataSource(ToucanDataSource):
 
 class SalesforceConnector(ToucanConnector):
     _auth_flow = 'oauth2'
-    auth_flow_id: Optional[str]
+    auth_flow_id: Optional[str] = None
     data_source_model: SalesforceDataSource
     instance_url: str = Field(
         None,
