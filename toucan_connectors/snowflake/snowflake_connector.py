@@ -368,7 +368,7 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
             query_result = curs.execute(query, parameters)
             assert query_result is not None
             # snowflake typing is incomplete for DictCursor
-            results: list[dict] = query_result.fetchall()  # type:ignore[assignment]
+            results: list[Any] = query_result.fetchall()
             return pd.DataFrame(results) if as_df else results
 
         if snowflake_connection is not None:

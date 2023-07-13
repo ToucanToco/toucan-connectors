@@ -16,7 +16,7 @@ class PeakinaDataSource(DataSource):
             extra = 'allow'
 
     else:
-        model_config = ConfigDict(extra='allow')
+        model_config = ConfigDict(extra='allow')  # type: ignore
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)

@@ -109,7 +109,7 @@ class ToucanDataSource(BaseModel, Generic[C]):
             validate_assignment = True
 
     else:
-        model_config = ConfigDict(extra='forbid', validate_assignment=True)
+        model_config = ConfigDict(extra='forbid', validate_assignment=True)  # type: ignore
 
     @classmethod
     def get_form(cls, connector: C, current_config):
@@ -308,6 +308,8 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     # Used to defined the connection
     identifier: str = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
 
+    data_source_model: Any
+
     # TODO[pydantic]: This is temporary, in the future we will only support V2
     # and get rid of this condition + update the CI (link/test)
     if PYDANTIC_VERSION_ONE:
@@ -324,9 +326,9 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         # TODO[pydantic]: The following keys were removed: `json_encoders`.
         # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
         model_config = ConfigDict(
-            extra='forbid',
+            extra='forbid',  # type: ignore
             validate_assignment=True,
-            json_encoders={  # type:ignore [typeddict-unknown-key]
+            json_encoders={
                 SecretStr: lambda v: v.get_secret_value(),
                 SecretBytes: lambda v: v.get_secret_value(),
             },
@@ -337,12 +339,12 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         if PYDANTIC_VERSION_ONE:
             try:
                 cls.data_source_model = cls.__fields__.pop('data_source_model').type_
-                cls.logger = logging.getLogger(cls.__name__)
+                cls.logger = logging.getLogger(cls.__name__)  # type:ignore
             except KeyError as e:
                 raise TypeError(f'{cls.__name__} has no {e} attribute.')
 
         if 'bearer_integration' in cls.__fields__:
-            cls.bearer_integration = cls.__fields__['bearer_integration'].default
+            cls.bearer_integration = cls.__fields__['bearer_integration'].default  # type:ignore
 
     def bearer_oauth_get_endpoint(
         self,

@@ -50,7 +50,7 @@ class _HubSpotResult(BaseModel):
             extra = 'allow'
 
     else:
-        model_config = ConfigDict(extra='allow')
+        model_config = ConfigDict(extra='allow')  # type: ignore
 
     def to_dict(self) -> dict[str, Any]:
         dict_ = self.dict(by_alias=True)
