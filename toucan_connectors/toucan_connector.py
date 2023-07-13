@@ -12,7 +12,7 @@ from typing import Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
 
 import pandas as pd
 import tenacity as tny
-from pydantic import BaseModel, ConfigDict, Field, SecretBytes, SecretStr
+from pydantic import BaseModel, ConfigDict, Extra, Field, SecretBytes, SecretStr
 from pydantic import __version__ as pydantic_version
 
 from toucan_connectors.common import (
@@ -109,7 +109,7 @@ class ToucanDataSource(BaseModel, Generic[C]):
             validate_assignment = True
 
     else:
-        model_config = ConfigDict(extra='forbid', validate_assignment=True)  # type: ignore
+        model_config = ConfigDict(extra=Extra.forbid, validate_assignment=True)
 
     @classmethod
     def get_form(cls, connector: C, current_config):
@@ -308,7 +308,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     # Used to defined the connection
     identifier: str = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
 
-    data_source_model: Any
+    data_source_model: Any = None
 
     # TODO[pydantic]: This is temporary, in the future we will only support V2
     # and get rid of this condition + update the CI (link/test)
@@ -326,7 +326,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         # TODO[pydantic]: The following keys were removed: `json_encoders`.
         # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
         model_config = ConfigDict(
-            extra='forbid',  # type: ignore
+            extra=Extra.forbid,
             validate_assignment=True,
             json_encoders={
                 SecretStr: lambda v: v.get_secret_value(),

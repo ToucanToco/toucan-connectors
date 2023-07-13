@@ -7,7 +7,7 @@ from typing import Any
 
 import pandas as pd
 import redshift_connector
-from pydantic import Field, SecretStr, create_model, field_validator, root_validator
+from pydantic import Field, SecretStr, create_model, field_validator, model_validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
@@ -163,7 +163,8 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     def host_validator(cls, v):
         return re.sub(r'^https?://', '', v)
 
-    @root_validator(skip_on_failure=True)
+    @model_validator(skip_on_failure=True)
+    @classmethod
     def check_requirements(cls, values):
         mode = values.get('authentication_method')
         if mode == AuthenticationMethod.DB_CREDENTIALS.value:

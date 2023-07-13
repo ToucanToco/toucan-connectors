@@ -2,7 +2,7 @@ from typing import Any
 
 import pandas as pd
 from peakina.datasource import DataSource
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Extra
 
 from toucan_connectors.toucan_connector import PYDANTIC_VERSION_ONE, ToucanConnector
 
@@ -16,7 +16,7 @@ class PeakinaDataSource(DataSource):
             extra = 'allow'
 
     else:
-        model_config = ConfigDict(extra='allow')  # type: ignore
+        model_config = ConfigDict(extra=Extra.allow)
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)

@@ -4,7 +4,7 @@ from typing import Any, Generator, Protocol, TypeAlias
 
 import pandas as pd
 from hubspot import HubSpot  # type:ignore[import]
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Extra, Field, SecretStr
 
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.toucan_connector import (
@@ -50,7 +50,7 @@ class _HubSpotResult(BaseModel):
             extra = 'allow'
 
     else:
-        model_config = ConfigDict(extra='allow')  # type: ignore
+        model_config = ConfigDict(extra=Extra.allow)
 
     def to_dict(self) -> dict[str, Any]:
         dict_ = self.dict(by_alias=True)

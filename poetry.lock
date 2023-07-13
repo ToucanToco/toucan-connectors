@@ -4402,4 +4402,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "11f37a0f7ff078f1a80a8685677a16892ca1f7157d3645cf9becea31f43db34e"
+content-hash = "a6ad972a68ba7e8cc91fc3a8707871ac7a505ec53dcb3719528b00c960fb8463"
