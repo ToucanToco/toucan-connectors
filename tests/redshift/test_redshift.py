@@ -1,7 +1,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from redshift_connector.error import InterfaceError, OperationalError
+from redshift_connector.error import InterfaceError, OperationalError, ProgrammingError
 
 from toucan_connectors.pagination import (
     KnownSizeDatasetPaginationInfo,
@@ -518,6 +518,11 @@ def test_get_model(mocker, redshift_connector):
     db_names_mock.assert_not_called()
     table_info_mock.assert_called_once_with('other-db')
 
+    for error in [OperationalError, ProgrammingError]:
+        mocker.patch.object(RedshiftConnector, '_db_tables_info', side_effect=error('oups'))
+
+        assert redshift_connector.get_model() == []
+
 
 def test_get_model_with_info(mocker, redshift_connector):
     db_names_mock = mocker.patch.object(RedshiftConnector, '_list_db_names', return_value=['dev'])
@@ -557,11 +562,10 @@ def test_get_model_with_info(mocker, redshift_connector):
     list_table_info_mock.assert_called_once_with('other-db')
 
     # on error
-    mocker.patch.object(
-        RedshiftConnector, '_list_tables_info', side_effect=OperationalError('oups')
-    )
+    for error in [OperationalError, ProgrammingError]:
+        mocker.patch.object(RedshiftConnector, '_list_tables_info', side_effect=error('oups'))
 
-    assert redshift_connector.get_model_with_info() == (
-        [],
-        {'info': {'Could not reach databases': ['dev']}},
-    )
+        assert redshift_connector.get_model_with_info() == (
+            [],
+            {'info': {'Could not reach databases': ['dev']}},
+        )
