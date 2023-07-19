@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- PyYaml: Fix broken dependency and bump it from 5.4.1 to >=6,<7
+
 ### [3.23.14] 2023-06-20
 
 ### Fixed

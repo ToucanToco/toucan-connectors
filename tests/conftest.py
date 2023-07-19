@@ -129,7 +129,7 @@ def container_starter(request, docker, docker_pull):
 def service_container(unused_port, container_starter):
     def f(service_name, checker_callable=None, skip_exception=None, timeout=60):
         with open(f'{path.dirname(__file__)}/docker-compose.yml') as docker_comppse_yml:
-            docker_conf = yaml.load(docker_comppse_yml)
+            docker_conf = yaml.safe_load(docker_comppse_yml)
         service_conf = docker_conf[service_name]
         volumes = service_conf.get('volumes')
         if volumes is not None:
