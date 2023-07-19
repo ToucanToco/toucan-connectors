@@ -518,7 +518,6 @@ def test_get_model(mocker, redshift_connector):
     db_names_mock.assert_not_called()
     table_info_mock.assert_called_once_with('other-db')
 
-
     for error in [OperationalError, ProgrammingError]:
         mocker.patch.object(RedshiftConnector, '_db_tables_info', side_effect=error('oups'))
 
