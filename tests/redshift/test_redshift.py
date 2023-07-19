@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from pytest_mock import MockerFixture
-from redshift_connector.error import InterfaceError, OperationalError
+from redshift_connector.error import InterfaceError, OperationalError, ProgrammingError
 
 from toucan_connectors.redshift.redshift_database_connector import (
     ORDERED_KEYS,
@@ -493,6 +493,11 @@ def test_get_model(mocker, redshift_connector):
         },
     ]
 
+    for error in [OperationalError, ProgrammingError]:
+        mocker.patch.object(RedshiftConnector, '_db_tables_info', side_effect=error('oups'))
+
+        assert redshift_connector.get_model() == []
+
 
 def test_get_model_with_info(mocker, redshift_connector):
     mocker.patch.object(RedshiftConnector, '_list_db_names', return_value=['dev'])
@@ -524,14 +529,13 @@ def test_get_model_with_info(mocker, redshift_connector):
     )
 
     # on error
-    mocker.patch.object(
-        RedshiftConnector, '_list_tables_info', side_effect=OperationalError('oups')
-    )
+    for error in [OperationalError, ProgrammingError]:
+        mocker.patch.object(RedshiftConnector, '_list_tables_info', side_effect=error('oups'))
 
-    assert redshift_connector.get_model_with_info() == (
-        [],
-        {'info': {'Could not reach databases': ['dev']}},
-    )
+        assert redshift_connector.get_model_with_info() == (
+            [],
+            {'info': {'Could not reach databases': ['dev']}},
+        )
 
 
 def test_retrieve_data_logging(
