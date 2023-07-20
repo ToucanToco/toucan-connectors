@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [4.7.2] 2023-07-19
+
 ### Fixed
 
 - Redshift: Ignore Programming Error when table_infos is empty for a database.
