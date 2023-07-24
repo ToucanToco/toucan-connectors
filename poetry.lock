@@ -3964,13 +3964,13 @@ cryptography = ">=35.0.0"
 
 [[package]]
 name = "types-python-slugify"
-version = "8.0.0.2"
+version = "8.0.0.3"
 description = "Typing stubs for python-slugify"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-python-slugify-8.0.0.2.tar.gz", hash = "sha256:de237b01c69ad3a57ae36a0e8a6a0c65b47bac529483007c1cae2d424cb07cc8"},
-    {file = "types_python_slugify-8.0.0.2-py3-none-any.whl", hash = "sha256:9e81f49eac8c805f924695de559fb8dc123ccbd15adb47d40ceaec51c739f044"},
+    {file = "types-python-slugify-8.0.0.3.tar.gz", hash = "sha256:868e6610ab9a01c01b2ccc1b982363e694d6bbb4fcf32e0d82688c89dceb4e2c"},
+    {file = "types_python_slugify-8.0.0.3-py3-none-any.whl", hash = "sha256:2353c161c79ab6cce955b50720c6cd03586ec297558122236d130e4a19f21209"},
 ]
 
 [[package]]
@@ -4409,4 +4409,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "96ba9d1dca4a176313ac01c095dd75667cc34a549d3964203b2375a5bc76b828"
+content-hash = "ff1b6ff407ad161a8881401ded30afb2afa36945205fa6c9a4af9f910d38e391"
