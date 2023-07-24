@@ -1054,26 +1054,28 @@ uritemplate = ">=3.0.1,<5"
 
 [[package]]
 name = "google-auth"
-version = "1.35.0"
+version = "2.22.0"
 description = "Google Authentication Library"
 optional = true
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*"
+python-versions = ">=3.6"
 files = [
-    {file = "google-auth-1.35.0.tar.gz", hash = "sha256:b7033be9028c188ee30200b204ea00ed82ea1162e8ac1df4aa6ded19a191d88e"},
-    {file = "google_auth-1.35.0-py2.py3-none-any.whl", hash = "sha256:997516b42ecb5b63e8d80f5632c1a61dddf41d2a4c2748057837e06e00014258"},
+    {file = "google-auth-2.22.0.tar.gz", hash = "sha256:164cba9af4e6e4e40c3a4f90a1a6c12ee56f14c0b4868d1ca91b32826ab334ce"},
+    {file = "google_auth-2.22.0-py2.py3-none-any.whl", hash = "sha256:d61d1b40897407b574da67da1a833bdc10d5a11642566e506565d1b1a46ba873"},
 ]
 
 [package.dependencies]
-cachetools = ">=2.0.0,<5.0"
+cachetools = ">=2.0.0,<6.0"
 pyasn1-modules = ">=0.2.1"
-rsa = {version = ">=3.1.4,<5", markers = "python_version >= \"3.6\""}
-setuptools = ">=40.3.0"
+rsa = ">=3.1.4,<5"
 six = ">=1.9.0"
+urllib3 = "<2.0"
 
 [package.extras]
-aiohttp = ["aiohttp (>=3.6.2,<4.0.0dev)", "requests (>=2.20.0,<3.0.0dev)"]
-pyopenssl = ["pyopenssl (>=20.0.0)"]
+aiohttp = ["aiohttp (>=3.6.2,<4.0.0.dev0)", "requests (>=2.20.0,<3.0.0.dev0)"]
+enterprise-cert = ["cryptography (==36.0.2)", "pyopenssl (==22.0.0)"]
+pyopenssl = ["cryptography (>=38.0.3)", "pyopenssl (>=20.0.0)"]
 reauth = ["pyu2f (>=0.1.5)"]
+requests = ["requests (>=2.20.0,<3.0.0.dev0)"]
 
 [[package]]
 name = "google-auth-httplib2"
@@ -1283,16 +1285,16 @@ requests = ["requests (>=2.18.0,<3.0.0dev)"]
 
 [[package]]
 name = "googleads"
-version = "34.0.0"
+version = "38.0.0"
 description = "Google Ads Python Client Library"
 optional = true
 python-versions = "*"
 files = [
-    {file = "googleads-34.0.0.tar.gz", hash = "sha256:ad8207c8215ee6f8cb54c9d20da66ed1dd058abfbb93d149d1215594cc4d90c7"},
+    {file = "googleads-38.0.0.tar.gz", hash = "sha256:2dc2b2e35d4be3c957a6c54bcb289484acf701c60298bd8bed932509f5349fad"},
 ]
 
 [package.dependencies]
-google-auth = ">=1.0.0,<2.0.0"
+google-auth = ">=2.0.0,<3.0.0"
 google-auth-oauthlib = ">=0.0.1,<1.0.0"
 pytz = ">=2015.7"
 PyYAML = ">=6.0,<7.0"
@@ -3784,4 +3786,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "1729447502e6c85a84d81af9f98cd282ea0f9eb073a48fa84a3d2358e38c219b"
+content-hash = "b8b64511cd65d7fac70d7c66319aab8b932d8f0eb95d869e3ba50004f8ac311e"
