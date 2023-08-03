@@ -6,7 +6,8 @@ from typing import Any, Dict, Optional, Type
 
 import pandas as pd
 import requests
-from googleads import AdWordsClient, adwords, oauth2
+from googleads import adwords, oauth2
+from googleads.adwords import AdWordsClient
 from pydantic import Field, PrivateAttr
 from zeep.helpers import serialize_object
 
