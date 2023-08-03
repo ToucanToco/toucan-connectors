@@ -424,7 +424,7 @@ def test_redshiftconnector_get_status_true(
 def test_redshiftconnector_get_status_with_error_host(mock_hostname, redshift_connector):
     mock_hostname.side_effect = InterfaceError('error mock')
     result = redshift_connector.get_status()
-    assert type(result.error) == str
+    assert type(result.error) is str
     assert result.status is False
     assert str(result.error) == 'error mock'
 
@@ -433,7 +433,7 @@ def test_redshiftconnector_get_status_with_error_host(mock_hostname, redshift_co
 def test_redshiftconnector_get_status_with_error_port(mock_port, redshift_connector):
     mock_port.side_effect = InterfaceError('error mock')
     result = redshift_connector.get_status()
-    assert type(result.error) == str
+    assert type(result.error) is str
     assert result.status is False
     assert str(result.error) == 'error mock'
 
