@@ -2,6 +2,7 @@ from contextlib import suppress
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Type
 
+import re
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 from google.oauth2.credentials import Credentials
@@ -154,12 +155,13 @@ class GoogleSheetsConnector(ToucanConnector):
             data_source.sheet = sheet_names[0]
 
         with self.build_sheets_api() as sheets_api:
+            sheet_range = data_source.sheet.replace('\'', '\'\'')
             sheet_values = (
                 sheets_api.spreadsheets()
                 .values()
                 .get(
                     spreadsheetId=data_source.spreadsheet_id,
-                    range=f"'{data_source.sheet}'",  # FIXME what will happen is the sheet name contains a single quote?
+                    range=f"'{sheet_range}'",
                     dateTimeRenderOption=self._render_date_time_option_from_sheet(
                         data_source=data_source
                     ),
@@ -214,17 +216,30 @@ def serial_number_to_date(serial_number: float) -> datetime:
     return SERIAL_REFERENCE_DAY + relativedelta(days=int(serial_number))
 
 
-def parse_cell_value(value, format):
+def is_number_like(s: str) -> bool:
+    # Remove any quotes and whitespace from the input string
+    cleaned_string = re.sub(r"[\"' ]", "", s)
+    try:
+        float(cleaned_string)
+        return True
+    except ValueError:
+        return False
+
+
+def parse_cell_value(value: Any, _format: Any = {}) -> Any :
     """
     Use the format (if provided) to parse the value in its intended type
     """
     if (
-        (type(value) is int or type(value) is float)
-        and format
-        and 'numberFormat' in format
-        and format['numberFormat']['type'] == 'DATE'
+        isinstance(value, (int, float))
+        and _format is not None
+        and _format.get('numberFormat').get('Type') == 'DATE'
     ):
         return serial_number_to_date(value)
+    elif isinstance(value, str) and is_number_like(value):
+        value_as_float = float(value)
+        value = value if value_as_float == int(re.sub(r"[\"' ]", "", value)) else value_as_float
+
     return value
 
 
