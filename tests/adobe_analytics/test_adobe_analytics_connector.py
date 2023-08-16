@@ -51,7 +51,7 @@ js_report = {
 
 
 def test_get_report_definition():
-    assert type(adobe_datasource.report_definition) == ReportDefinition
+    assert type(adobe_datasource.report_definition) is ReportDefinition
 
 
 def test_dimenssions_dict():
@@ -64,7 +64,7 @@ def test_dimenssions_dict():
         date_from='2018-06-07',
         date_to='2018-06-07',
     )
-    assert type(adobe_datasource.report_definition) == ReportDefinition
+    assert type(adobe_datasource.report_definition) is ReportDefinition
 
 
 @responses.activate

@@ -221,7 +221,7 @@ def parse_cell_value(value, format):
     Use the format (if provided) to parse the value in its intended type
     """
     if (
-        (type(value) == int or type(value) == float)
+        (type(value) is int or type(value) is float)
         and format
         and 'numberFormat' in format
         and format['numberFormat']['type'] == 'DATE'

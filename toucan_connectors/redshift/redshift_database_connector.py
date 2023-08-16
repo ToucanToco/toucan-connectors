@@ -372,7 +372,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         tables_info = []
         dbs = self.available_dbs if db_name is None else [db_name]
         for db in dbs:
-            with suppress(redshift_connector.OperationalError):
+            with suppress(redshift_connector.OperationalError, redshift_connector.ProgrammingError):
                 tables_info += self._db_tables_info(db)
 
         return tables_info
@@ -385,7 +385,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
         for db in dbs:
             try:
                 databases_tree += self._list_tables_info(db)
-            except redshift_connector.OperationalError:
+            except (redshift_connector.OperationalError, redshift_connector.ProgrammingError):
                 failed_databases.append(db)
 
         tables_info = DiscoverableConnector.format_db_model(databases_tree)

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### [4.7.2] 2023-07-19
+
+### Fixed
+
+- Redshift: Ignore Programming Error when table_infos is empty for a database.
+
+### [4.7.1] 2023-07-19
+
+### Fixed
+
+- PyYaml: Fix broken dependency and bump it from 5.4.1 to >=6,<7
+
 ### [4.7.0] 2023-07-07
 
 ## Changed

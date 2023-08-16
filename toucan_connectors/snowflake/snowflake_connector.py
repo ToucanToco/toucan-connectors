@@ -91,10 +91,12 @@ class AuthenticationMethodValue(str, Enum):
 
 
 @contextmanager
-def _snowflake_connection(**args: str | int | None) -> Generator[SnowflakeConnection, None, None]:
+def _snowflake_connection(
+    **args: str | int | None,
+) -> Generator[SnowflakeConnection, None, None]:
     """Returns a Snowflake connection and automatically closes it."""
     sf_connector.paramstyle = 'qmark'
-    conn = SnowflakeConnection(**args)
+    conn = SnowflakeConnection(**args)  # type:ignore[arg-type]
     try:
         yield conn
     finally:
