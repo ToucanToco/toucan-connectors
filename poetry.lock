@@ -2455,12 +2455,12 @@ files = [
 
 [[package]]
 name = "pyhive"
-version = "0.6.5"
+version = "0.7.0"
 description = "Python interface to Hive"
 optional = true
 python-versions = "*"
 files = [
-    {file = "PyHive-0.6.5.tar.gz", hash = "sha256:cae07bd177527d04f6a5c7f96cb1849ba8bd9121750b75bbf5e3d4a3be566909"},
+    {file = "PyHive-0.7.0.tar.gz", hash = "sha256:585beff9578a61b99aed47140fec97e26323e8c685a5b5d0c8550a8ebf8a24e0"},
 ]
 
 [package.dependencies]
@@ -2472,6 +2472,7 @@ thrift_sasl = {version = ">=0.1.0", optional = true, markers = "extra == \"hive\
 
 [package.extras]
 hive = ["sasl (>=0.2.1)", "thrift (>=0.10.0)", "thrift_sasl (>=0.1.0)"]
+hive-pure-sasl = ["pure-sasl (>=0.6.2)", "thrift (>=0.10.0)", "thrift_sasl (>=0.1.0)"]
 kerberos = ["requests_kerberos (>=0.12.0)"]
 presto = ["requests (>=1.0.0)"]
 sqlalchemy = ["sqlalchemy (>=1.3.0)"]
