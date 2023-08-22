@@ -155,13 +155,12 @@ class GoogleSheetsConnector(ToucanConnector):
             data_source.sheet = sheet_names[0]
 
         with self.build_sheets_api() as sheets_api:
-            sheet_range = data_source.sheet.replace("\'", "\'\'")
             sheet_values = (
                 sheets_api.spreadsheets()
                 .values()
                 .get(
                     spreadsheetId=data_source.spreadsheet_id,
-                    range=f"'{sheet_range}'",
+                    range=f"'{data_source.sheet}'",  # FIXME what will happen is the sheet name contains a single quote?
                     dateTimeRenderOption=self._render_date_time_option_from_sheet(
                         data_source=data_source
                     ),
