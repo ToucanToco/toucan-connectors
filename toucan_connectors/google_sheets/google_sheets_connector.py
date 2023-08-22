@@ -216,14 +216,14 @@ def serial_number_to_date(serial_number: float) -> datetime:
     return SERIAL_REFERENCE_DAY + relativedelta(days=int(serial_number))
 
 
-def parse_cell_value(value: Any, _format: Any = {}) -> Any:
+def parse_cell_value(value: Any, format_: dict[str, Any] | None = None) -> Any:
     """
     Use the format (if provided) to parse the value in its intended type
     """
     if (
         isinstance(value, (int, float))
-        and _format is not None
-        and _format.get('numberFormat', {}).get('type') == 'DATE'
+        and format_ is not None
+        and format_.get('numberFormat', {}).get('type') == 'DATE'
     ):
         return serial_number_to_date(value)
     elif isinstance(value, str) and value == '':

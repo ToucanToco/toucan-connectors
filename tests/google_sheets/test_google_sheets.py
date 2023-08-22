@@ -303,29 +303,29 @@ def test_get_form(mocker):
     assert schema['definitions']['sheet']['enum'] == expected_results
 
 
-def test_numeric_date_format():
+def test_numeric_dateformat_():
     value = 44303  # Example serial number representing a date
-    _format = {'numberFormat': {'type': 'DATE'}}
-    result = parse_cell_value(value, _format)
+    format_ = {'numberFormat': {'type': 'DATE'}}
+    result = parse_cell_value(value, format_)
     assert result == serial_number_to_date(value)
 
 
 def test_empty_string():
     value = ''
-    _format = {}
-    result = parse_cell_value(value, _format)
+    format_ = {}
+    result = parse_cell_value(value, format_)
     assert np.isnan(result)
 
 
 def test_other_types():
     value = 'hello'
-    _format = {'numberFormat': {'type': 'DATE'}}
-    result = parse_cell_value(value, _format)
+    format_ = {'numberFormat': {'type': 'DATE'}}
+    result = parse_cell_value(value, format_)
     assert result == value
 
     value = 123
-    _format = {}
-    result = parse_cell_value(value, _format)
+    format_ = {}
+    result = parse_cell_value(value, format_)
     assert result == value
 
 
