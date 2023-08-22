@@ -2,6 +2,7 @@ from contextlib import suppress
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Type
 
+import numpy as np
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 from google.oauth2.credentials import Credentials
@@ -214,17 +215,19 @@ def serial_number_to_date(serial_number: float) -> datetime:
     return SERIAL_REFERENCE_DAY + relativedelta(days=int(serial_number))
 
 
-def parse_cell_value(value, format):
+def parse_cell_value(value: Any, format_: dict[str, Any] | None = None) -> Any:
     """
     Use the format (if provided) to parse the value in its intended type
     """
     if (
-        (type(value) is int or type(value) is float)
-        and format
-        and 'numberFormat' in format
-        and format['numberFormat']['type'] == 'DATE'
+        isinstance(value, (int, float))
+        and format_ is not None
+        and format_.get('numberFormat', {}).get('type') == 'DATE'
     ):
         return serial_number_to_date(value)
+    elif isinstance(value, str) and value == '':
+        return np.nan
+
     return value
 
 
