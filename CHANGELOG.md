@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [4.7.3] 2023-08-22
+
+### Fixed
+
+- GoogleSheets: Replace empty string by numpy `null` values when parsing cells values.
+
 ### [4.7.2] 2023-07-19
 
 ### Fixed
