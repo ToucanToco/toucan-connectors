@@ -6,7 +6,7 @@
 
 ### Fixed
 
-- GoogleSheets: Replace empty string by numpy `null` values when parsing cells values.
+- GoogleSheets: Replace empty string values in columns by numpy `null` values when parsing cells.
 
 ### [4.7.2] 2023-07-19
 
