@@ -5,6 +5,7 @@ https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
 from datetime import datetime
 from os import path
 
+import numpy as np
 import pandas as pd
 from googleapiclient.http import HttpMock
 from pandas import DataFrame
@@ -15,6 +16,8 @@ from pytz import utc
 from toucan_connectors.google_sheets.google_sheets_connector import (
     GoogleSheetsConnector,
     GoogleSheetsDataSource,
+    parse_cell_value,
+    serial_number_to_date,
 )
 from toucan_connectors.json_wrapper import JsonWrapper
 
@@ -298,3 +301,35 @@ def test_get_form(mocker):
     )
     expected_results = ['sample data', 'animals']
     assert schema['definitions']['sheet']['enum'] == expected_results
+
+
+def test_numeric_date_format():
+    value = 44303  # Example serial number representing a date
+    _format = {'numberFormat': {'type': 'DATE'}}
+    result = parse_cell_value(value, _format)
+    assert result == serial_number_to_date(value)
+
+
+def test_empty_string():
+    value = ''
+    _format = {}
+    result = parse_cell_value(value, _format)
+    assert np.isnan(result)
+
+
+def test_other_types():
+    value = 'hello'
+    _format = {'numberFormat': {'type': 'DATE'}}
+    result = parse_cell_value(value, _format)
+    assert result == value
+
+    value = 123
+    _format = {}
+    result = parse_cell_value(value, _format)
+    assert result == value
+
+
+def test_default_format():
+    value = 44303  # Example serial number representing a date
+    result = parse_cell_value(value)
+    assert result == value
