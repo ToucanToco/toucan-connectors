@@ -6,7 +6,7 @@
 
 ### Fixed
 
-- GoogleSheets: Replace empty string values in columns by numpy `null` values when parsing cells.
+- GoogleSheets: Replace empty values by numpy `NaN`.
 
 ### [4.7.2] 2023-07-19
 
