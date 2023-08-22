@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [4.7.3] 2023-08-22
+
+### Fixed
+
+- GoogleSheets: Replace empty values by numpy `NaN`.
+
 ### [4.7.2] 2023-07-19
 
 ### Fixed
