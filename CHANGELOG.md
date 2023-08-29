@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Install scripts: fix mssql install scripts by forcing debian/11 deb repo
+
 ### [3.23.16] 2023-08-01
 
 ### Changed
