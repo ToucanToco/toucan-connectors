@@ -2,190 +2,192 @@
 
 ## Unreleased
 
+## [3.23.17] 2023-08-29
+
 ### Fixed
 
 - Install scripts: fix mssql install scripts by forcing debian/11 deb repo
 
-### [3.23.16] 2023-08-01
+## [3.23.16] 2023-08-01
 
 ### Changed
 
 - Feat[Goole Big Query] : We can now get the database model(list of tables) based on a given schema name to speed up the project tree structure.
 
-### [3.23.15] 2023-07-19
+## [3.23.15] 2023-07-19
 
 ### Fixed
 
 - Redshift: Ignore Programming Error when table_infos is empty for a database.
 - PyYaml: Fix broken dependency and bump it from 5.4.1 to >=6,<7
 
-### [3.23.14] 2023-06-20
+## [3.23.14] 2023-06-20
 
 ### Fixed
 
 - MySQL: avoid duplicated columns when retrieving table informations
 
-### [3.23.13] 2023-03-02
+## [3.23.13] 2023-03-02
 
 ### Fixed
 
 - MySQL: It is now possible to use the MySQL connector with a CA bundle in VERIFY_IDENTITY mode
 
-### [3.23.12] 2023-03-01
+## [3.23.12] 2023-03-01
 
 ### Fixed
 
 - HubSpot: root-level properties are now also returned along with proeprties in the "properties" object
 
-### [3.23.11] 2023-02-27
+## [3.23.11] 2023-02-27
 
 ### Fixed
 
 - HubSpot: it is now possible to retrieve a data slice for owners
 
-### [3.23.10] 2023-02-23
+## [3.23.10] 2023-02-23
 
 ### Changed
 
 - HubSpot: Added a new connector based on HubSpot private apps
 - MySQL: Allow Optional parameters on ssl_mode
 
-### [3.23.9] 2023-02-13
+## [3.23.9] 2023-02-13
 
 ### Changed
 
 - Feat: Logs have been added to the Redshift connector in order to get timing insights for query execution
 
-### [3.23.8] 2022-12-27
+## [3.23.8] 2022-12-27
 
 ### Changed
 
 - Fix: Google Big Query no longer crashes when trying to retrieve the table list for datasets in different locations.
 
-### [3.23.7] 2022-12-06
+## [3.23.7] 2022-12-06
 
 ### Changed
 
 - Feat: The connector `GoogleSheets` datasource `Dates as Floats` attribute will be Selected as default.
 
-### [3.23.6] 2022-12-02
+## [3.23.6] 2022-12-02
 
 ### Changed
 
 - Feat: The connector `GoogleSheets` datasource now has an option called `Dates as Floats`, to see date time columns as strings or float when reading the sheet.
 
-### [3.23.5] 2022-11-07
+## [3.23.5] 2022-11-07
 
 ### Changed
 
 - Fix: Pinned google-cloud-bigquery dependency >=2,<3 to ensure argument compatibility
 
-### [3.23.4] 2022-10-28
+## [3.23.4] 2022-10-28
 
 ### Changed
 
 - Fix: Ensure Postgres always uses the default database for connection, rather than 'postgres'.
 
-### [3.23.3] 2022-10-26
+## [3.23.3] 2022-10-26
 
 ### Changed
 
 - Fix regression introduced in the mongo connector in 3.23.2 where `$match` statements containing only matches on
   nulls were considered empty.
 
-### [3.23.2] 2022-10-20
+## [3.23.2] 2022-10-20
 
 ### Changed
 
 - Fix: Add support for `__VOID__` syntax to `nosql_apply_parameters_to_query`
 
-### [3.23.1] 2022-10-07
+## [3.23.1] 2022-10-07
 
 ### Changed
 
 - Fix: Fixed the % character replacement on edges cases for `pandas_read_sql`.
 
-### [3.23.0] 2022-10-04
+## [3.23.0] 2022-10-04
 
 ### Changed
 
 - MySQL: Added support for REQUIRED ssl_mode
 
-### [3.22.3] 2022-10-04
+## [3.22.3] 2022-10-04
 
 ### Changed
 
 - Fix: Replace % character by %% in `pandas_read_sql` to prevent pandas from interpreting `%` as the interpolation of an SQL parameter
 
-### [3.22.2] 2022-09-29
+## [3.22.2] 2022-09-29
 
 ### Changed
 
 - Fix: Ensure timezone-aware timestamp column are converted to UTC
 
-### [3.22.1] 2022-09-28
+## [3.22.1] 2022-09-28
 
 ### Changed
 
 - The contraint of the `lxml` dependency has been loosened from `4.9.1` to `^4.6.5`.
 
-### [3.22.0] 2022-09-28
+## [3.22.0] 2022-09-28
 
 ### Changed
 
 - The package now exposes a `__version__` attribute.
 - The contraint of the `pyarrow` dependency has been loosened from `<7` to `<9`.
 
-### [3.21.1] 2022-09-27
+## [3.21.1] 2022-09-27
 
 ### Changed
 
 - Automate PyPI artifact publication
 
-### [3.21.0] 2022-09-20
+## [3.21.0] 2022-09-20
 
 ### Changed
 
 - MySQL: Add support for SSL-based authentication
 
-### [3.20.6] 2022-09-14
+## [3.20.6] 2022-09-14
 
 ### Changed
 
 - Google Big Query: fix variables interpolation.
 
-### [3.20.5] 2022-09-09
+## [3.20.5] 2022-09-09
 
 ### Changed
 
 - Athena: fix order of OFFSET and LIMIT query parameters
 
-### [3.20.4] 2022-09-07
+## [3.20.4] 2022-09-07
 
 ### Changed
 
 - Athena: fix the parameter injection
 
-### [3.20.3] 2022-09-07
+## [3.20.3] 2022-09-07
 
 ### Changed
 
 - Base connector: Fixed pagination values (`total_rows` and `total_returned_rows`)
 - Athena: Hacked pagination values in case not all results were fetched
 
-### [3.20.2] 2022-09-05
+## [3.20.2] 2022-09-05
 
 ### Changed
 
 - Mongo: removed `_id` column in response DataFrame.
 
-### [3.20.1] 2022-09-02
+## [3.20.1] 2022-09-02
 
 ### Changed
 
 - All connectors: removed werkzeug dependency.
 
-### [3.19.0] 2022-08-26
+## [3.19.0] 2022-08-26
 
 ### Changed
 
@@ -194,32 +196,32 @@
 - MySQL: Simplify query for schema construction in order to be compatible with older versions
 - Redshift: Add an option to disable TCP keep-alive (enabled by default).
 
-### [3.18.4] 2022-08-26
+## [3.18.4] 2022-08-26
 
 ### Changed
 
 - MySQL: Do not specify a database on discoverability-related functions (listing databases and describing table schemas).
 
-### [3.18.3] 2022-08-24
+## [3.18.3] 2022-08-24
 
 ### Changed
 
 - Conditions: The unquoting logic is now only applied when the passed parameter is a string
 
-### [3.18.2] 2022-08-23
+## [3.18.2] 2022-08-23
 
 ### Changed
 
 - Athena: Parameters are now passed as SQL parameters rather than interpolated by us in order to prevent SQL injection.
 - Conditions: Strings are now unquoted for conditions applying only to numbers (`lt`, `lte`, `gt`, `gte`).
 
-### [3.18.1] 2022-08-12
+## [3.18.1] 2022-08-12
 
 ### Changed
 
 - MySQL: Return a more explicit error message in case no query is specified
 
-### [3.18.0] 2022-08-12
+## [3.18.0] 2022-08-12
 
 ### Changed
 
