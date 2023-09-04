@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [3.23.18] 2023-09-04
+
+### Fixed
+
+- Dependencies: Pin numpy<1.24 to ensure `np.object` can be used as a dtype
+
 ## [3.23.17] 2023-08-29
 
 ### Fixed
