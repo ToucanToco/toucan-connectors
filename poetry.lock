@@ -2521,25 +2521,25 @@ files = [
 
 [[package]]
 name = "peakina"
-version = "0.11.1"
+version = "0.12.0"
 description = "pandas readers on steroids (remote files, glob patterns, cache, etc.)"
 optional = true
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "peakina-0.11.1-py3-none-any.whl", hash = "sha256:070fa416ecdb808bc14149d4f7f904ca31b8b7faeec35d74e064ec18608c6750"},
-    {file = "peakina-0.11.1.tar.gz", hash = "sha256:64d371395b4c7ef81fec67e0ad0601d0ef283375e1b562151fae34e2fb229350"},
+    {file = "peakina-0.12.0-py3-none-any.whl", hash = "sha256:f6af81d63a8b4a9164c217b7a5b1d112e8dd5e86858600d5a696e09df1d57905"},
+    {file = "peakina-0.12.0.tar.gz", hash = "sha256:da9c13ebb5d95f7fb1db07e3be6ada7ef20c9e223cda71fc88cffc6d0fd11f11"},
 ]
 
 [package.dependencies]
-certifi = ">=2022.5.18,<2023.0.0"
+certifi = ">=2022.5.18,<2024.0.0"
 chardet = ">=4,<6"
 geopandas = ">=0.11.1,<1"
 jq = ">=1.2.1,<2.0.0"
 openpyxl = ">=3.1.2,<4.0.0"
 pandas = ">=1.5.3,<3.0.0"
 paramiko = ">=2.9.2,<4.0.0"
-pyarrow = ">=11.0.0,<12.0.0"
-pydantic = ">=1.9.0,<2.0.0"
+pyarrow = ">=11,<14"
+pydantic = ">=1.9,<3.0"
 python-slugify = ">=5.0.2,<9.0.0"
 s3fs = ">=2022.1,<2024.0"
 tables = ">=3.7.0,<4.0.0"
@@ -4455,4 +4455,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "502b209f1c4ad8cf7aeb704b35dc9883ee46251cfbb3ff7b1af0709faf253af8"
+content-hash = "8ea6e54bc137cba8555ce2d791cc260f9d68899624cdc5cce0882ee873f865a4"
