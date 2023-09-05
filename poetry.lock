@@ -1676,13 +1676,13 @@ protobuf = ">=3.12.0"
 
 [[package]]
 name = "gspread"
-version = "5.10.0"
+version = "5.11.0"
 description = "Google Spreadsheets Python API"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "gspread-5.10.0-py3-none-any.whl", hash = "sha256:f58b15d950ef5c45c8607edb3687188d5a543f2b66242f9c26fbb0d2cf36169d"},
-    {file = "gspread-5.10.0.tar.gz", hash = "sha256:2b6bba6dc111580170346a9bcd1893e0e8c52f67a9e537caec7b7a1e27c14435"},
+    {file = "gspread-5.11.0-py3-none-any.whl", hash = "sha256:21110370cb5096c6a528806db16ea9329ad1d31203bd529faf7e4a909bb174bc"},
+    {file = "gspread-5.11.0.tar.gz", hash = "sha256:16c0a1eab195318ce56e94325be7d71f061ae6923725928dadf777312fd62370"},
 ]
 
 [package.dependencies]
