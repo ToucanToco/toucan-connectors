@@ -3,7 +3,7 @@ from typing import List
 import pandas as pd
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.google_credentials import GoogleCredentials
@@ -24,10 +24,7 @@ class DimensionFilter(BaseModel):
     operator: str
     expressions: List[str] = None
     caseSensitive: bool = False
-
-    class Config:
-        # TODO `not` param is not implemented
-        extra = 'allow'
+    model_config = ConfigDict(extra='allow')
 
 
 class DimensionFilterClause(BaseModel):
@@ -43,20 +40,14 @@ class DateRange(BaseModel):
 class Metric(BaseModel):
     expression: str
     alias: str = None
-
-    class Config:
-        # TODO `metricType` param is not implemented
-        extra = 'allow'
+    model_config = ConfigDict(extra='allow')
 
 
 class MetricFilter(BaseModel):
     metricName: str
     operator: str
     comparisonValue: str
-
-    class Config:
-        # TODO `not` param is not implemented
-        extra = 'allow'
+    model_config = ConfigDict(extra='allow')
 
 
 class MetricFilterClause(BaseModel):

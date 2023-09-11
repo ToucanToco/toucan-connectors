@@ -7,7 +7,7 @@ from typing import Any, Generator, Optional
 import pandas as pd
 import pymysql
 from cached_property import cached_property_with_ttl
-from pydantic import Field, SecretStr, constr, create_model, validator
+from pydantic import StringConstraints, ConfigDict, Field, SecretStr, create_model, validator
 from pymysql.constants import CR, ER
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
@@ -21,6 +21,7 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 from toucan_connectors.utils.pem import sanitize_spaces_pem
+from typing_extensions import Annotated
 
 
 def handle_date_0(df: pd.DataFrame) -> pd.DataFrame:
@@ -49,7 +50,7 @@ class MySQLDataSource(ToucanDataSource):
     table: str = Field(
         None, **{'ui.hidden': True}
     )  # To avoid previous config migrations, won't be used
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
@@ -142,11 +143,12 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         description='SSL Mode to use to connect to the MySQL server. '
         'Equivalent of the --ssl-mode option of the MySQL client. Must be set in order to use SSL',
     )
+    # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(underscore_attrs_are_private=True, ignored_types=(cached_property_with_ttl,))
 
-    class Config:
-        underscore_attrs_are_private = True
-        keep_untouched = (cached_property_with_ttl,)
-
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator('ssl_key')
     @classmethod
     def ssl_key_validator(cls, ssl_key: str, values: dict) -> str:

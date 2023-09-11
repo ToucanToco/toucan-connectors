@@ -2,7 +2,7 @@ from contextlib import suppress
 from typing import Dict, List, Optional
 
 import psycopg2 as pgsql
-from pydantic import Field, SecretStr, constr, create_model
+from pydantic import StringConstraints, Field, SecretStr, create_model
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.postgres.utils import build_database_model_extraction_query, types
@@ -15,6 +15,7 @@ from toucan_connectors.toucan_connector import (
     VersionableEngineConnector,
     strlist_to_enum,
 )
+from typing_extensions import Annotated
 
 DEFAULT_DATABASE = 'postgres'
 
@@ -23,7 +24,7 @@ class PostgresDataSource(ToucanDataSource):
     database: str = Field(
         DEFAULT_DATABASE, description='The name of the database you want to query'
     )
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
@@ -35,7 +36,7 @@ class PostgresDataSource(ToucanDataSource):
         description='An object describing a simple select query' 'This field is used internally',
         **{'ui.hidden': True},
     )
-    table: constr(min_length=1) = Field(
+    table: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='The name of the data table that you want to '
         'get (equivalent to "SELECT * FROM '

@@ -2,10 +2,11 @@ import logging
 from contextlib import suppress
 
 import pyodbc
-from pydantic import Field, SecretStr, constr, create_model
+from pydantic import StringConstraints, Field, SecretStr, create_model
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from typing_extensions import Annotated
 
 
 class MSSQLDataSource(ToucanDataSource):
@@ -16,13 +17,13 @@ class MSSQLDataSource(ToucanDataSource):
         description='The name of the database you want to query. '
         "By default SQL Server selects the user's default database",
     )
-    table: constr(min_length=1) = Field(
+    table: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='The name of the data table that you want to '
         'get (equivalent to "SELECT * FROM '
         'your_table")',
     )
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '

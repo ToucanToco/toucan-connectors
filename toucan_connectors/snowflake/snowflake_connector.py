@@ -151,6 +151,8 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
     )
     category: Category = Field(Category.SNOWFLAKE, title='category', ui={'checkbox': False})
 
+    # TODO[pydantic]: We couldn't refactor this class, please create the `model_config` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     class Config:
         @staticmethod
         def schema_extra(schema: dict[str, Any], model: Type['SnowflakeConnector']) -> None:

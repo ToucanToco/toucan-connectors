@@ -4,17 +4,18 @@ from typing import List, Optional, Tuple
 import pandas as pd
 import pyodbc
 import requests
-from pydantic import Field, SecretStr, constr
+from pydantic import StringConstraints, Field, SecretStr
 from requests.auth import HTTPBasicAuth
 
 from toucan_connectors.common import ClusterStartException, ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from typing_extensions import Annotated
 
 logger = logging.getLogger(__name__)
 
 
 class DatabricksDataSource(ToucanDataSource):
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         ...,
         description='You can write a query here',
         widget='sql',

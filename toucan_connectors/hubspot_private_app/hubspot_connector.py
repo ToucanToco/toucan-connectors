@@ -4,7 +4,7 @@ from typing import Any, Generator, Protocol, TypeAlias
 
 import pandas as pd
 from hubspot import HubSpot  # type:ignore[import]
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import ConfigDict, BaseModel, Field, SecretStr
 
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.toucan_connector import DataSlice, ToucanConnector, ToucanDataSource
@@ -32,15 +32,11 @@ class _HubSpotPaging(BaseModel):
 
 
 class _HubSpotResult(BaseModel):
-    created_at: datetime | None
-    updated_at: datetime | None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
     id_: str = Field(..., alias='id')
     properties: dict[str, Any] = Field(default_factory=dict)
-
-    # For basic_api objects, properties are in a 'properties' object. For specialized APIs, such as
-    # owners, they're keys of the root object
-    class Config:
-        extra = 'allow'
+    model_config = ConfigDict(extra='allow')
 
     def to_dict(self) -> dict[str, Any]:
         dict_ = self.dict(by_alias=True)

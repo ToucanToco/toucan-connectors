@@ -8,11 +8,11 @@ import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
+from typing import Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
 
 import pandas as pd
 import tenacity as tny
-from pydantic import BaseModel, Field, SecretBytes, SecretStr
+from pydantic import ConfigDict, BaseModel, Field, PlainSerializer, SecretBytes, SecretStr
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -96,10 +96,7 @@ class ToucanDataSource(BaseModel, Generic[C]):
         title="Slow Queries' Cache Expiration Time",
         description='In seconds. Will override the 5min instance default and/or the connector value',
     )
-
-    class Config:
-        extra = 'forbid'
-        validate_assignment = True
+    model_config = ConfigDict(extra='forbid', validate_assignment=True)
 
     @classmethod
     def get_form(cls, connector: C, current_config):
@@ -284,7 +281,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     name: str = Field(...)
     retry_policy: RetryPolicy | None = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
-    type: str | None
+    type: str | None = None
     secrets_storage_version: str = Field('1', **_UI_HIDDEN)  # type:ignore[pydantic-field]
 
     # Default ttl for all connector's queries (overridable at the data_source level)
@@ -297,14 +294,16 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
     # Used to defined the connection
     identifier: str = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
-
-    class Config:
-        extra = 'forbid'
-        validate_assignment = True
-        json_encoders = {
+    # TODO[pydantic]: The following keys were removed: `json_encoders`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(
+        extra='forbid',
+        validate_assignment=True,
+        json_encoders={
             SecretStr: lambda v: v.get_secret_value(),
             SecretBytes: lambda v: v.get_secret_value(),
-        }
+        },
+    )
 
     @classmethod
     def __init_subclass__(cls):

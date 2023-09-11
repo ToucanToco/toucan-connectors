@@ -10,7 +10,7 @@ class OffsetLimitInfo(BaseModel):
     """
 
     offset: int
-    limit: int | None
+    limit: int | None = None
 
 
 class UnknownSizeDatasetPaginationInfo(BaseModel):
@@ -48,8 +48,8 @@ class PaginationInfo(BaseModel):
 
     parameters: OffsetLimitInfo
     pagination_info: UnknownSizeDatasetPaginationInfo | KnownSizeDatasetPaginationInfo
-    next_page: OffsetLimitInfo | None
-    previous_page: OffsetLimitInfo | None
+    next_page: OffsetLimitInfo | None = None
+    previous_page: OffsetLimitInfo | None = None
 
 
 def build_pagination_info(

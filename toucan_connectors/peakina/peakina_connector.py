@@ -4,11 +4,11 @@ import pandas as pd
 from peakina.datasource import DataSource
 
 from toucan_connectors.toucan_connector import ToucanConnector
+from pydantic import ConfigDict
 
 
 class PeakinaDataSource(DataSource):
-    class Config:
-        extra = 'allow'
+    model_config = ConfigDict(extra='allow')
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)

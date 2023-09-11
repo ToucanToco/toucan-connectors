@@ -2,17 +2,18 @@ from contextlib import suppress
 
 import cx_Oracle
 import pandas as pd
-from pydantic import Field, SecretStr, constr, create_model
+from pydantic import StringConstraints, Field, SecretStr, create_model
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from typing_extensions import Annotated
 
 
 class OracleSQLDataSource(ToucanDataSource):
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None, description='You can write your SQL query here', widget='sql'
     )
-    table: constr(min_length=1) = Field(
+    table: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='The name of the data table that you want to '
         'get (equivalent to "SELECT * FROM "your_table")',

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import field_validator, BaseModel, Field, HttpUrl
 
 CREDENTIALS_INFO_MESSAGE = (
     'This information is provided in your '
@@ -42,7 +42,8 @@ class GoogleCredentials(BaseModel):
         description=CREDENTIALS_INFO_MESSAGE,
     )
 
-    @validator('private_key')
+    @field_validator('private_key')
+    @classmethod
     def unescape_break_lines(cls, v):
         """
         `private_key` is a long string like

@@ -4,11 +4,12 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 import pydantic
 import requests
-from pydantic import Field, constr, create_model
+from pydantic import StringConstraints, Field, create_model
 from pydantic.types import SecretStr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from typing_extensions import Annotated
 
 _ID_SEPARATOR = ' - '
 
@@ -22,8 +23,8 @@ def _format_name_and_id(obj: Dict[str, str]) -> str:
 
 
 class AnaplanDataSource(ToucanDataSource):
-    model_id: constr(min_length=1) = Field(..., description='The model you want to query')
-    view_id: constr(min_length=1) = Field(..., description='The view you want to query')
+    model_id: Annotated[str, StringConstraints(min_length=1)] = Field(..., description='The model you want to query')
+    view_id: Annotated[str, StringConstraints(min_length=1)] = Field(..., description='The view you want to query')
     workspace_id: str = Field(..., description='The ID of the workspace you want to query')
 
     @pydantic.validator('model_id', 'view_id', 'workspace_id')
@@ -90,7 +91,7 @@ _ANAPLAN_API_BASEROUTE = 'https://api.anaplan.com/2/0'
 class AnaplanConnector(ToucanConnector):
     data_source_model: AnaplanDataSource
     username: str
-    password: Optional[SecretStr]
+    password: Optional[SecretStr] = None
 
     def _extract_json(self, resp: requests.Response) -> dict:
         if resp.status_code in (401, 403):

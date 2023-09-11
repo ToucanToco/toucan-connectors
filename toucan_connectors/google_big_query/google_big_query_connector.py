@@ -11,7 +11,7 @@ from google.cloud import bigquery
 from google.cloud.bigquery.dbapi import _helpers as bigquery_helpers
 from google.cloud.bigquery.job import QueryJob
 from google.oauth2.service_account import Credentials
-from pydantic import Field, create_model
+from pydantic import ConfigDict, Field, create_model
 
 from toucan_connectors.common import sanitize_query
 from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
@@ -103,10 +103,9 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         'the Google APIs. For more information, see this '
         '<a href="https://developers.google.com/identity/protocols/googlescopes" target="_blank" >documentation</a>',
     )
-
-    class Config:
-        underscore_attrs_are_private = True
-        keep_untouched = (cached_property,)
+    # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(underscore_attrs_are_private=True, ignored_types=(cached_property,))
 
     @staticmethod
     def _get_google_credentials(credentials: GoogleCredentials, scopes: List[str]) -> Credentials:

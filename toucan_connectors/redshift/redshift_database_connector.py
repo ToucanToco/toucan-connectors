@@ -7,7 +7,7 @@ from typing import Any
 
 import pandas as pd
 import redshift_connector
-from pydantic import Field, SecretStr, create_model, root_validator, validator
+from pydantic import field_validator, StringConstraints, Field, SecretStr, create_model, root_validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
@@ -22,6 +22,7 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
     strlist_to_enum,
 )
+from typing_extensions import Annotated
 
 TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
 
@@ -69,7 +70,7 @@ class RedshiftDataSource(ToucanDataSource):
     database: str = Field(
         DEFAULT_DATABASE, description='The name of the database you want to query'
     )
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
@@ -144,6 +145,8 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     profile: str | None = Field(None, description='AWS profile')
     region: str | None = Field(None, description='The region in which there is your aws account.')
 
+    # TODO[pydantic]: We couldn't refactor this class, please create the `model_config` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     class Config:
         underscore_attrs_are_private = True
         keep_untouched = (cached_property,)
@@ -156,7 +159,8 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     def available_dbs(self) -> list[str]:
         return self._list_db_names()
 
-    @validator('host')
+    @field_validator('host')
+    @classmethod
     def host_validator(cls, v):
         return re.sub(r'^https?://', '', v)
 

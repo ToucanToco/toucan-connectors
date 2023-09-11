@@ -1,13 +1,14 @@
 import pandas as pd
 import pyodbc
-from pydantic import Field, constr
+from pydantic import StringConstraints, Field
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from typing_extensions import Annotated
 
 
 class OdbcDataSource(ToucanDataSource):
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         ..., description='You can write your SQL query here', widget='sql'
     )
 

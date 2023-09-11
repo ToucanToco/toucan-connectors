@@ -5,13 +5,14 @@ from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
-from pydantic import Field, constr
+from pydantic import StringConstraints, Field
 from snowflake.connector import DictCursor, SnowflakeConnection
 
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import DataSlice, DataStats, QueryMetadata, ToucanDataSource
+from typing_extensions import Annotated
 
 type_code_mapping = {
     0: 'float',
@@ -43,7 +44,7 @@ class SfDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
     warehouse: str = Field(None, description='The name of the warehouse you want to query')
 
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         ..., description='You can write your SQL query here', widget='sql'
     )
 

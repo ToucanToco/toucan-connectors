@@ -45,7 +45,7 @@ class OneDriveDataSource(ToucanDataSource):
         description='Read one sheet or append multiple sheets',
         placeholder='Enter a sheet or a comma separated list of sheets',
     )
-    range: Optional[str]
+    range: Optional[str] = None
     table: Optional[str] = Field(
         None,
         Title='Tables',
@@ -77,7 +77,7 @@ class OneDriveConnector(ToucanConnector):
     _auth_flow = 'oauth2'
     _oauth_trigger = 'connector'
     oauth2_version = Field('1', **{'ui.hidden': True})
-    auth_flow_id: Optional[str]
+    auth_flow_id: Optional[str] = None
 
     authorization_url: str = Field(None, **{'ui.hidden': True})
     token_url: str = Field(None, **{'ui.hidden': True})
