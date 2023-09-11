@@ -103,9 +103,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         'the Google APIs. For more information, see this '
         '<a href="https://developers.google.com/identity/protocols/googlescopes" target="_blank" >documentation</a>',
     )
-    # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(underscore_attrs_are_private=True, ignored_types=(cached_property,))
+    model_config = ConfigDict(ignored_types=(cached_property,))
 
     @staticmethod
     def _get_google_credentials(credentials: GoogleCredentials, scopes: List[str]) -> Credentials:

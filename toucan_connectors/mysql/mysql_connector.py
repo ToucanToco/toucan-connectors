@@ -144,11 +144,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         description='SSL Mode to use to connect to the MySQL server. '
         'Equivalent of the --ssl-mode option of the MySQL client. Must be set in order to use SSL',
     )
-    # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(
-        underscore_attrs_are_private=True, ignored_types=(cached_property_with_ttl,)
-    )
+    model_config = ConfigDict(ignored_types=(cached_property_with_ttl,))
 
     # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.

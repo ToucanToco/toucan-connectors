@@ -79,11 +79,7 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
     aws_access_key_id: str = Field(..., description='Your AWS access key ID')
     aws_secret_access_key: PlainJsonSecretStr = Field(None, description='Your AWS secret key')
     region_name: str = Field(..., description='Your AWS region name')
-    # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(
-        underscore_attrs_are_private=True, ignored_types=(cached_property_with_ttl,)
-    )
+    model_config = ConfigDict(ignored_types=(cached_property_with_ttl,))
 
     def get_session(self) -> boto3.Session:
         return boto3.Session(
