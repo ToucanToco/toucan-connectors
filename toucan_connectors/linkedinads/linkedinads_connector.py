@@ -3,13 +3,13 @@ import os
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional, Type
+from typing import Any, Optional
 
 import dateutil.parser
 import pandas as pd
-from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 import requests
 from pydantic import Field, PrivateAttr
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 
 from toucan_connectors.common import ConnectorStatus, HttpError

@@ -5,7 +5,7 @@ from pandas.io.json import json_normalize
 from pydantic import Field, HttpUrl
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, PlainJsonSecretStr
+from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
 
 from .client import Client
 from .data import (

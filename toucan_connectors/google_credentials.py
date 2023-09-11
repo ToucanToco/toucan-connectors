@@ -1,4 +1,4 @@
-from pydantic import field_validator, BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 CREDENTIALS_INFO_MESSAGE = (
     'This information is provided in your '

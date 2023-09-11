@@ -7,22 +7,22 @@ from typing import Any, Generator, Optional
 import pandas as pd
 import pymysql
 from cached_property import cached_property_with_ttl
-from pydantic import StringConstraints, ConfigDict, Field, create_model, model_validator, validator
+from pydantic import ConfigDict, Field, StringConstraints, create_model, model_validator
 from pymysql.constants import CR, ER
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
+    PlainJsonSecretStr,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
     UnavailableVersion,
     VersionableEngineConnector,
     strlist_to_enum,
-    PlainJsonSecretStr,
 )
 from toucan_connectors.utils.pem import sanitize_spaces_pem
-from typing_extensions import Annotated
 
 
 def handle_date_0(df: pd.DataFrame) -> pd.DataFrame:

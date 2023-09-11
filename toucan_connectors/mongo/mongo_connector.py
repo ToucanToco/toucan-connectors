@@ -5,15 +5,15 @@ import pandas as pd
 import pymongo
 from bson.son import SON
 from cached_property import cached_property
-from pydantic import ConfigDict, Field, create_model, model_validator, validator
+from pydantic import ConfigDict, Field, create_model, model_validator
 
 from toucan_connectors.common import ConnectorStatus, nosql_apply_parameters_to_query
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.toucan_connector import (
-    PlainJsonSecretStr,
     DataSlice,
+    PlainJsonSecretStr,
     ToucanConnector,
     ToucanDataSource,
     UnavailableVersion,

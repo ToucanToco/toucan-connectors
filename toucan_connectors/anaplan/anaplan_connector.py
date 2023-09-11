@@ -4,16 +4,16 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 import pydantic
 import requests
-from pydantic import StringConstraints, Field, create_model
+from pydantic import Field, StringConstraints, create_model
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import (
+    PlainJsonSecretStr,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
-    PlainJsonSecretStr,
 )
-from typing_extensions import Annotated
 
 _ID_SEPARATOR = ' - '
 

@@ -2,20 +2,15 @@ import logging
 from contextlib import contextmanager, suppress
 from datetime import datetime
 from enum import Enum
-from typing import Any, ContextManager, Generator, Literal, Type, overload
+from typing import Any, ContextManager, Generator, Literal, overload
 
 import jwt
 import pandas as pd
-from pydantic.json_schema import (
-    DEFAULT_REF_TEMPLATE,
-    GenerateJsonSchema,
-    JsonSchemaMode,
-    model_json_schema,
-)
 import requests
 import snowflake
 from jinja2 import Template
 from pydantic import Field, create_model
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from snowflake import connector as sf_connector
 from snowflake.connector import SnowflakeConnection
 from snowflake.connector.cursor import DictCursor as SfDictCursor
@@ -31,11 +26,11 @@ from toucan_connectors.toucan_connector import (
     Category,
     DataSlice,
     DiscoverableConnector,
+    PlainJsonSecretStr,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
-    PlainJsonSecretStr,
 )
 
 logger = logging.getLogger(__name__)
@@ -181,7 +176,8 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
         cls,
         by_alias: bool = True,
         ref_template: str = DEFAULT_REF_TEMPLATE,
-        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        # This confuses mypy because of the type field
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,  # type:ignore[valid-type]
         mode: JsonSchemaMode = 'validation',
     ) -> dict[str, Any]:
         schema = super().model_json_schema(

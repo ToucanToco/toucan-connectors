@@ -2,13 +2,13 @@
 import os
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional
 
 import pandas as pd
-from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 import requests
 from googleads import AdWordsClient, adwords, oauth2
 from pydantic import Field, PrivateAttr
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from zeep.helpers import serialize_object
 
 from toucan_connectors.common import ConnectorStatus, HttpError

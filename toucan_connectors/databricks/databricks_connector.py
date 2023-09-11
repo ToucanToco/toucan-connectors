@@ -4,12 +4,12 @@ from typing import List, Optional, Tuple
 import pandas as pd
 import pyodbc
 import requests
-from pydantic import StringConstraints, Field
+from pydantic import Field, StringConstraints
 from requests.auth import HTTPBasicAuth
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ClusterStartException, ConnectorStatus, pandas_read_sql
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, PlainJsonSecretStr
-from typing_extensions import Annotated
+from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
 
 logger = logging.getLogger(__name__)
 

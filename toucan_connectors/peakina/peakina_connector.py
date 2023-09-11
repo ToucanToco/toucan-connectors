@@ -2,9 +2,9 @@ from typing import Any
 
 import pandas as pd
 from peakina.datasource import DataSource
+from pydantic import ConfigDict
 
 from toucan_connectors.toucan_connector import ToucanConnector
-from pydantic import ConfigDict
 
 
 class PeakinaDataSource(DataSource):

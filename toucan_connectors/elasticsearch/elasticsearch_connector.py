@@ -9,7 +9,7 @@ from pandas.io.json import json_normalize
 from pydantic import BaseModel, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, PlainJsonSecretStr
+from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
 
 
 def _is_branch_list(val):

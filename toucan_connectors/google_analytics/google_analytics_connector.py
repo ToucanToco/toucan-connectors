@@ -3,7 +3,7 @@ from typing import List
 import pandas as pd
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic import ConfigDict, BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.google_credentials import GoogleCredentials

@@ -5,7 +5,7 @@ import asyncio
 import os
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, List, Optional
 
 import pandas as pd
 from aiohttp import ClientSession

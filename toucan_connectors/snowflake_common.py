@@ -5,14 +5,14 @@ from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
-from pydantic import StringConstraints, Field
+from pydantic import Field, StringConstraints
 from snowflake.connector import DictCursor, SnowflakeConnection
+from typing_extensions import Annotated
 
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import DataSlice, DataStats, QueryMetadata, ToucanDataSource
-from typing_extensions import Annotated
 
 type_code_mapping = {
     0: 'float',

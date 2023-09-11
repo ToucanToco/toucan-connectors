@@ -26,9 +26,9 @@ from toucan_connectors.toucan_connector import (
     Category,
     DataSlice,
     DiscoverableConnector,
+    PlainJsonSecretStr,
     ToucanConnector,
     strlist_to_enum,
-    PlainJsonSecretStr,
 )
 
 logger = logging.getLogger(__name__)

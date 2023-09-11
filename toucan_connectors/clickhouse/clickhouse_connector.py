@@ -1,18 +1,18 @@
 from contextlib import suppress
-from typing import Any, Dict, Type
+from typing import Any
 
 import clickhouse_driver
-from pydantic import StringConstraints, Field, create_model
+from pydantic import Field, StringConstraints, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
+from typing_extensions import Annotated
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import (
+    PlainJsonSecretStr,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
-    PlainJsonSecretStr,
 )
-from typing_extensions import Annotated
 
 
 class ClickhouseDataSource(ToucanDataSource):

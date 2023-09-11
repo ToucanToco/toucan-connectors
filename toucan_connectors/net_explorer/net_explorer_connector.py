@@ -8,7 +8,7 @@ import requests
 from pydantic import Field
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, PlainJsonSecretStr
+from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
 
 
 class NetExplorerDataSource(ToucanDataSource):

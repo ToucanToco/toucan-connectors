@@ -4,14 +4,14 @@ from typing import Any, Generator, Protocol, TypeAlias
 
 import pandas as pd
 from hubspot import HubSpot  # type:ignore[import]
-from pydantic import ConfigDict, BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.toucan_connector import (
     DataSlice,
+    PlainJsonSecretStr,
     ToucanConnector,
     ToucanDataSource,
-    PlainJsonSecretStr,
 )
 
 

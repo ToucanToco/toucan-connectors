@@ -4,22 +4,22 @@ import awswrangler as wr
 import boto3
 import pandas as pd
 from cached_property import cached_property_with_ttl
-from pydantic import StringConstraints, ConfigDict, Field, create_model
+from pydantic import ConfigDict, Field, StringConstraints, create_model
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters, sanitize_query
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.toucan_connector import (
-    PlainJsonSecretStr,
     DataSlice,
     DataStats,
     DiscoverableConnector,
+    PlainJsonSecretStr,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
 )
-from typing_extensions import Annotated
 
 
 class AwsathenaDataSource(ToucanDataSource):

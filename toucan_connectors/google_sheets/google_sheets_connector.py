@@ -1,6 +1,6 @@
 from contextlib import suppress
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -13,10 +13,10 @@ from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonS
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import (
+    PlainJsonSecretStr,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
-    PlainJsonSecretStr,
 )
 
 

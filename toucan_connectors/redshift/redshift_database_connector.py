@@ -6,17 +6,17 @@ from functools import cached_property
 from typing import Any
 
 import pandas as pd
-from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 import redshift_connector
 from pydantic import (
     ConfigDict,
-    field_validator,
-    StringConstraints,
     Field,
+    StringConstraints,
     create_model,
+    field_validator,
     root_validator,
 )
-from pydantic.types import constr
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.pagination import build_pagination_info
@@ -25,13 +25,12 @@ from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
     DiscoverableConnector,
+    PlainJsonSecretStr,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
-    PlainJsonSecretStr,
 )
-from typing_extensions import Annotated
 
 TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
 

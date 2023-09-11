@@ -2,21 +2,21 @@ from contextlib import suppress
 from typing import Dict, List, Optional
 
 import psycopg2 as pgsql
-from pydantic import StringConstraints, Field, create_model
+from pydantic import Field, StringConstraints, create_model
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.postgres.utils import build_database_model_extraction_query, types
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
+    PlainJsonSecretStr,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
     UnavailableVersion,
     VersionableEngineConnector,
     strlist_to_enum,
-    PlainJsonSecretStr,
 )
-from typing_extensions import Annotated
 
 DEFAULT_DATABASE = 'postgres'
 

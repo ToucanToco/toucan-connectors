@@ -12,7 +12,7 @@ from typing import Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar,
 
 import pandas as pd
 import tenacity as tny
-from pydantic import ConfigDict, BaseModel, Field, PlainSerializer, SecretBytes, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, SecretStr
 
 from toucan_connectors.common import (
     ConnectorStatus,
