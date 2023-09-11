@@ -95,10 +95,9 @@ class GithubDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class GithubConnector(ToucanConnector):
+class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[str] = None
-    data_source_model: GithubDataSource
     _oauth_trigger = 'instance'
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 

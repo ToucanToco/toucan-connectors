@@ -26,14 +26,12 @@ class GoogleSpreadsheetDataSource(ToucanDataSource):
     )
 
 
-class GoogleSpreadsheetConnector(ToucanConnector):
+class GoogleSpreadsheetConnector(ToucanConnector, data_source_model=GoogleSpreadsheetDataSource):
     """
     For authentication, download an authentication file from console.developper.com
     and use the values here. This is an oauth2 credential file. For more information
     see this: http://gspread.readthedocs.io/en/latest/oauth2.html
     """
-
-    data_source_model: GoogleSpreadsheetDataSource
 
     credentials: GoogleCredentials = Field(
         ...,

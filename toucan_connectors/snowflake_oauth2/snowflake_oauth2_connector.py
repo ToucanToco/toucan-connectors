@@ -61,7 +61,7 @@ class SnowflakeoAuth2DataSource(SfDataSource):
         return res
 
 
-class SnowflakeoAuth2Connector(ToucanConnector):
+class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth2DataSource):
     client_id: str = Field(
         '',
         title='Client ID',
@@ -100,7 +100,6 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
     )
-    data_source_model: SnowflakeoAuth2DataSource
     default_warehouse: str = Field(
         ..., description='The default warehouse that shall be used for any data source'
     )

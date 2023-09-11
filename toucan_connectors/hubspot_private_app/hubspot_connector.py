@@ -91,8 +91,7 @@ def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:
     return api.basic_api
 
 
-class HubspotConnector(ToucanConnector):
-    data_source_model: type[HubspotDataSource] = HubspotDataSource
+class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
     access_token: PlainJsonSecretStr = Field(
         ..., description='An API key for the target private app'
     )

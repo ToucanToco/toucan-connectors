@@ -117,8 +117,7 @@ class ElasticsearchDataSource(ToucanDataSource):
     body: Union[dict, list]
 
 
-class ElasticsearchConnector(ToucanConnector):
-    data_source_model: ElasticsearchDataSource
+class ElasticsearchConnector(ToucanConnector, data_source_model=ElasticsearchDataSource):
     hosts: List[ElasticsearchHost]
 
     def _retrieve_data(self, data_source: ElasticsearchDataSource) -> pd.DataFrame:

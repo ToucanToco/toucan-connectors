@@ -36,9 +36,7 @@ class ODataDataSource(ToucanDataSource):
     )
 
 
-class ODataConnector(ToucanConnector):
-    data_source_model: ODataDataSource
-
+class ODataConnector(ToucanConnector, data_source_model=ODataDataSource):
     baseroute: HttpUrl = Field(..., title='API endpoint', description='Baseroute URL')
     auth: Auth = Field(None, title='Authentication type')
 

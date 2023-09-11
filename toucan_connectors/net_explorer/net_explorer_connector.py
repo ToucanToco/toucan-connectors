@@ -16,13 +16,8 @@ class NetExplorerDataSource(ToucanDataSource):
     sheet: Optional[str] = 0
 
 
-class NetExplorerConnector(ToucanConnector):
-    data_source_model: NetExplorerDataSource
-    instance_url: str = Field(
-        None,
-        Title='Instance URL',
-        placeholder='exemple.netexplorer.pro',
-    )
+class NetExplorerConnector(ToucanConnector, data_source_model=NetExplorerDataSource):
+    instance_url: str = Field(None, Title='Instance URL', placeholder='exemple.netexplorer.pro')
     user: str
     password: PlainJsonSecretStr
 

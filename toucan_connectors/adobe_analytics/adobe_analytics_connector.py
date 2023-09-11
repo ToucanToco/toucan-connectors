@@ -43,13 +43,11 @@ class AdobeAnalyticsDataSource(ToucanDataSource):
         )
 
 
-class AdobeAnalyticsConnector(ToucanConnector):
+class AdobeAnalyticsConnector(ToucanConnector, data_source_model=AdobeAnalyticsDataSource):
     """
     Adobe Analytics Connector using Adobe Analytics' REST API v1.4.
     It provides a high-level interfaces for reporting queries (including Data Warehouse requests).
     """
-
-    data_source_model: AdobeAnalyticsDataSource
 
     username: str
     password: str

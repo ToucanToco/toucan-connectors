@@ -96,12 +96,15 @@ class SSLMode(str, Enum):
     REQUIRED = 'REQUIRED'
 
 
-class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineConnector):
+class MySQLConnector(
+    ToucanConnector,
+    DiscoverableConnector,
+    VersionableEngineConnector,
+    data_source_model=MySQLDataSource,
+):
     """
     Import data from MySQL database.
     """
-
-    data_source_model: MySQLDataSource
 
     host: str = Field(
         ...,

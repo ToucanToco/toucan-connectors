@@ -78,9 +78,7 @@ class FacebookInsightsDataSource(ToucanDataSource):
     date_preset: str = 'last_30d'
 
 
-class FacebookInsightsConnector(ToucanConnector):
-    data_source_model: FacebookInsightsDataSource
-
+class FacebookInsightsConnector(ToucanConnector, data_source_model=FacebookInsightsDataSource):
     def _retrieve_data(self, data_source: FacebookInsightsDataSource) -> pd.DataFrame:
         """Return the concatenated insights for all pages.
 

@@ -96,12 +96,11 @@ class ClickhouseDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class ClickhouseConnector(ToucanConnector):
+class ClickhouseConnector(ToucanConnector, data_source_model=ClickhouseDataSource):
     """
     Import data from Clickhouse.
     """
 
-    data_source_model: ClickhouseDataSource
     host: str = Field(
         None,
         description='Use this parameter if you have an IP address. '

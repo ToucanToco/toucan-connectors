@@ -139,10 +139,10 @@ class MongoDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class MongoConnector(ToucanConnector, VersionableEngineConnector):
+class MongoConnector(
+    ToucanConnector, VersionableEngineConnector, data_source_model=MongoDataSource
+):
     """Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
-
-    data_source_model: MongoDataSource
 
     host: str = Field(
         ...,

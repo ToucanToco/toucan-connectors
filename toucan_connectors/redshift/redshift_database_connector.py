@@ -106,8 +106,9 @@ class RedshiftDataSource(ToucanDataSource):
         ).schema()
 
 
-class RedshiftConnector(ToucanConnector, DiscoverableConnector):
-    data_source_model: RedshiftDataSource
+class RedshiftConnector(
+    ToucanConnector, DiscoverableConnector, data_source_model=RedshiftDataSource
+):
     authentication_method: AuthenticationMethod = Field(
         None,
         title='Authentication Method',

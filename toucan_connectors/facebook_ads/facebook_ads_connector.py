@@ -76,11 +76,10 @@ class FacebookAdsDataSource(ToucanDataSource):
         return params
 
 
-class FacebookAdsConnector(ToucanConnector):
+class FacebookAdsConnector(ToucanConnector, data_source_model=FacebookAdsDataSource):
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[str] = None
     _oauth_trigger = 'instance'
-    data_source_model: FacebookAdsDataSource
     oauth2_version: str = Field('1', **{'ui.hidden': True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 

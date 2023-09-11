@@ -103,10 +103,8 @@ class GoogleSheets2DataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class GoogleSheets2Connector(ToucanConnector):
+class GoogleSheets2Connector(ToucanConnector, data_source_model=GoogleSheets2DataSource):
     """The Google Sheets connector."""
-
-    data_source_model: GoogleSheets2DataSource
 
     _auth_flow = 'oauth2'
     _oauth_trigger = 'instance'

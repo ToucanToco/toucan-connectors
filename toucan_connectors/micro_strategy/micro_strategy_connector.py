@@ -54,13 +54,11 @@ class MicroStrategyDataSource(ToucanDataSource):
     )
 
 
-class MicroStrategyConnector(ToucanConnector):
+class MicroStrategyConnector(ToucanConnector, data_source_model=MicroStrategyDataSource):
     """
     Import data from MicroStrategy using the [JSON Data API](http://bit.ly/2HCzf04) for cubes and
     reports.
     """
-
-    data_source_model: MicroStrategyDataSource
 
     base_url: HttpUrl = Field(
         ...,
@@ -82,7 +80,7 @@ class MicroStrategyConnector(ToucanConnector):
 
     def _retrieve_metadata(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
         client = Client(
-            self.base_url, self.project_id, self.username, self.password.get_secret_value()
+            str(self.base_url), self.project_id, self.username, self.password.get_secret_value()
         )
 
         results = client.list_objects(
@@ -100,7 +98,7 @@ class MicroStrategyConnector(ToucanConnector):
         if not self.password:
             self.password = PlainJsonSecretStr('')
         client = Client(
-            self.base_url, self.project_id, self.username, self.password.get_secret_value()
+            str(self.base_url), self.project_id, self.username, self.password.get_secret_value()
         )
 
         query_func = getattr(client, data_source.dataset)

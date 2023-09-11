@@ -73,15 +73,13 @@ class GoogleSheetsDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class GoogleSheetsConnector(ToucanConnector):
+class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataSource):
     """
     This is a connector for [GoogleSheets](https://developers.google.com/sheets/api/reference/rest)
 
     It needs to be provided a retrieve_token method which should provide a valid OAuth2 access token.
     Not to be confused with the OAuth2 connector, which handles all the OAuth2 process byt itself!
     """
-
-    data_source_model: GoogleSheetsDataSource
 
     _auth_flow = 'managed_oauth2'
     _managed_oauth_service_id = 'google-sheets'

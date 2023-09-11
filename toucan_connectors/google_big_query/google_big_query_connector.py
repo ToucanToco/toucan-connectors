@@ -77,9 +77,9 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
         return bigquery_helpers.scalar_to_query_parameter(value=value, name=name)
 
 
-class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
-    data_source_model: GoogleBigQueryDataSource
-
+class GoogleBigQueryConnector(
+    ToucanConnector, DiscoverableConnector, data_source_model=GoogleBigQueryDataSource
+):
     credentials: GoogleCredentials = Field(
         ...,
         title='Google Credentials',

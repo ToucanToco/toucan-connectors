@@ -14,8 +14,6 @@ class PeakinaDataSource(DataSource):
         super().__init__(**data)
 
 
-class PeakinaConnector(ToucanConnector):
-    data_source_model: type[PeakinaDataSource] = PeakinaDataSource
-
+class PeakinaConnector(ToucanConnector, data_source_model=PeakinaDataSource):
     def _retrieve_data(self, data_source: PeakinaDataSource) -> pd.DataFrame:
         return data_source.get_df()

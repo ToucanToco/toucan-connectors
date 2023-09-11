@@ -38,9 +38,7 @@ class GoogleCredentials(BaseModel):
     client_secret: str
 
 
-class GoogleMyBusinessConnector(ToucanConnector):
-    data_source_model: GoogleMyBusinessDataSource
-
+class GoogleMyBusinessConnector(ToucanConnector, data_source_model=GoogleMyBusinessDataSource):
     credentials: GoogleCredentials
     scopes: List[str] = ['https://www.googleapis.com/auth/business.manage']
 

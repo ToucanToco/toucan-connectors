@@ -8,7 +8,17 @@ import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Annotated,
+    Any,
+    Generic,
+    Iterable,
+    NamedTuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import pandas as pd
 import tenacity as tny
@@ -28,6 +38,10 @@ try:
     from bearer import Bearer  # type: ignore[import]
 except ImportError:
     pass
+
+if TYPE_CHECKING:
+    from pydantic.main import IncEx
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -283,11 +297,15 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     the `_retry_on` class attribute in your concrete connector class.
     """
 
-    data_source_model: type[DS]
+    @classmethod
+    def __init_subclass__(cls, /, *, data_source_model: type[DS]):
+        cls.logger = logging.getLogger(cls.__name__)  # type:ignore[attr-defined]
+        cls.data_source_model = data_source_model  # type:ignore[attr-defined]
+
     name: str = Field(...)
     retry_policy: RetryPolicy | None = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
-    type: str
+    type: str | None = None
     secrets_storage_version: str = Field('1', **_UI_HIDDEN)  # type:ignore[pydantic-field]
 
     # Default ttl for all connector's queries (overridable at the data_source level)
@@ -301,10 +319,6 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     # Used to defined the connection
     identifier: str = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
     model_config = ConfigDict(extra='forbid', validate_assignment=True)
-
-    @classmethod
-    def __init_subclass__(cls):
-        cls.logger = logging.getLogger(cls.__name__)
 
     def bearer_oauth_get_endpoint(
         self,
@@ -425,7 +439,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
         Used by `get_cache_key` method.
         """
-        return self.json()
+        return self.model_dump_json()
 
     def _get_unique_datasource_identifier(self, data_source: DS) -> dict:
         # By default we don't know which variable syntax is be supported by the inheriting connector,
@@ -471,6 +485,33 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
     def describe(self, data_source: DS):
         """ """
+
+    # def model_dump_json(
+    #     self,
+    #     *,
+    #     indent: int | None = None,
+    #     include: 'IncEx' = None,
+    #     exclude: 'IncEx' = None,
+    #     by_alias: bool = False,
+    #     exclude_unset: bool = False,
+    #     exclude_defaults: bool = False,
+    #     exclude_none: bool = False,
+    #     round_trip: bool = False,
+    #     warnings: bool = True,
+    # ) -> str:
+    #     if exclude is None:
+    #         exclude = {'data_source_model'}
+    #     return super().model_dump_json(
+    #         indent=indent,
+    #         include=include,
+    #         exclude=exclude,
+    #         by_alias=by_alias,
+    #         exclude_unset=exclude_unset,
+    #         exclude_defaults=exclude_defaults,
+    #         exclude_none=exclude_none,
+    #         round_trip=round_trip,
+    #         warnings=warnings,
+    #     )
 
 
 TableInfo = dict[str, Union[str, list[dict[str, str]]]]

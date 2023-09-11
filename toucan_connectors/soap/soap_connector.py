@@ -64,8 +64,7 @@ class SoapDataSource(ToucanDataSource):
         return res
 
 
-class SoapConnector(ToucanConnector):
-    data_source_model: SoapDataSource
+class SoapConnector(ToucanConnector, data_source_model=SoapDataSource):
     headers: dict = Field(
         None,
         description='JSON object of HTTP headers to send with every HTTP request',

@@ -89,8 +89,7 @@ class GoogleAdwordsDataSource(ToucanDataSource):
         return schema
 
 
-class GoogleAdwordsConnector(ToucanConnector):
-    data_source_model: GoogleAdwordsDataSource
+class GoogleAdwordsConnector(ToucanConnector, data_source_model=GoogleAdwordsDataSource):
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[str] = None
     developer_token: str = None

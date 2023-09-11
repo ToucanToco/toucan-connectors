@@ -89,12 +89,15 @@ class PostgresDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class PostgresConnector(ToucanConnector, DiscoverableConnector, VersionableEngineConnector):
+class PostgresConnector(
+    ToucanConnector,
+    DiscoverableConnector,
+    VersionableEngineConnector,
+    data_source_model=PostgresDataSource,
+):
     """
     Import data from PostgreSQL.
     """
-
-    data_source_model: PostgresDataSource
 
     host: str = Field(
         None, description='The listening address of your database server (IP adress or hostname)'

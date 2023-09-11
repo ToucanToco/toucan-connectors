@@ -74,12 +74,10 @@ class MSSQLDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class MSSQLConnector(ToucanConnector):
+class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
     """
     Import data from Microsoft SQL Server.
     """
-
-    data_source_model: MSSQLDataSource
 
     host: str = Field(
         ...,

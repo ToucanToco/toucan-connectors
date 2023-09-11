@@ -22,8 +22,7 @@ class DatabricksDataSource(ToucanDataSource):
     )
 
 
-class DatabricksConnector(ToucanConnector):
-    data_source_model: DatabricksDataSource
+class DatabricksConnector(ToucanConnector, data_source_model=DatabricksDataSource):
     host: str = Field(
         ...,
         description='The listening address of your databricks cluster',

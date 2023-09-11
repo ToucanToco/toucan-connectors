@@ -13,12 +13,10 @@ class OdbcDataSource(ToucanDataSource):
     )
 
 
-class OdbcConnector(ToucanConnector):
+class OdbcConnector(ToucanConnector, data_source_model=OdbcDataSource):
     """
     Import data through ODBC apis
     """
-
-    data_source_model: OdbcDataSource
 
     connection_string: str = Field(..., description='The connection string')
     autocommit: bool = False

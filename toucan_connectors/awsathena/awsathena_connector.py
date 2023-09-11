@@ -68,9 +68,9 @@ def athena_variable_transformer(variable: str):
     return f':{variable};'
 
 
-class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
-    data_source_model: AwsathenaDataSource
-
+class AwsathenaConnector(
+    ToucanConnector, DiscoverableConnector, data_source_model=AwsathenaDataSource
+):
     name: str = Field(..., description='Your AWS Athena connector name')
 
     s3_output_bucket: str = Field(

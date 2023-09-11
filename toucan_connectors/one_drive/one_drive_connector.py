@@ -71,9 +71,7 @@ def _prepare_workbook_elements(data_source):
     return workbook_elements_list, workbook_key_column
 
 
-class OneDriveConnector(ToucanConnector):
-    data_source_model: OneDriveDataSource
-
+class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
     _auth_flow = 'oauth2'
     _oauth_trigger = 'connector'
     oauth2_version: str = Field('1', **{'ui.hidden': True})

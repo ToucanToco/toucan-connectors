@@ -157,9 +157,7 @@ class GoogleAnalyticsDataSource(ToucanDataSource):
     )
 
 
-class GoogleAnalyticsConnector(ToucanConnector):
-    data_source_model: GoogleAnalyticsDataSource
-
+class GoogleAnalyticsConnector(ToucanConnector, data_source_model=GoogleAnalyticsDataSource):
     credentials: GoogleCredentials = Field(
         ...,
         title='Google Credentials',

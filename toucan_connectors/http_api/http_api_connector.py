@@ -124,8 +124,7 @@ class HttpAPIDataSource(ToucanDataSource):
         return schema
 
 
-class HttpAPIConnector(ToucanConnector):
-    data_source_model: HttpAPIDataSource
+class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
     responsetype: ResponseType = Field(ResponseType.json, title='Content-type of response')
     baseroute: AnyHttpUrl = Field(..., title='Baseroute URL', description='Baseroute URL')
     cert: List[FilePath] = Field(

@@ -56,9 +56,7 @@ class OracleSQLDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class OracleSQLConnector(ToucanConnector):
-    data_source_model: OracleSQLDataSource
-
+class OracleSQLConnector(ToucanConnector, data_source_model=OracleSQLDataSource):
     dsn: str = Field(
         ...,
         description='A path following the '

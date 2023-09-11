@@ -102,10 +102,9 @@ class LinkedinadsDataSource(ToucanDataSource):
         return schema
 
 
-class LinkedinadsConnector(ToucanConnector):
+class LinkedinadsConnector(ToucanConnector, data_source_model=LinkedinadsDataSource):
     """The LinkedinAds connector."""
 
-    data_source_model: LinkedinadsDataSource
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[
         str

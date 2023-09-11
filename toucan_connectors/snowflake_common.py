@@ -42,7 +42,7 @@ class SnowflakeConnectorWarehouseDoesNotExists(Exception):
 
 class SfDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
-    warehouse: str = Field(None, description='The name of the warehouse you want to query')
+    warehouse: str | None = Field(None, description='The name of the warehouse you want to query')
 
     query: Annotated[str, StringConstraints(min_length=1)] = Field(
         ..., description='You can write your SQL query here', widget='sql'

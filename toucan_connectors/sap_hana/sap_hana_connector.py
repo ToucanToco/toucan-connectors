@@ -12,12 +12,10 @@ class SapHanaDataSource(ToucanDataSource):
     )
 
 
-class SapHanaConnector(ToucanConnector):
+class SapHanaConnector(ToucanConnector, data_source_model=SapHanaDataSource):
     """
     Import data from Sap Hana.
     """
-
-    data_source_model: SapHanaDataSource
 
     host: str = Field(
         ...,

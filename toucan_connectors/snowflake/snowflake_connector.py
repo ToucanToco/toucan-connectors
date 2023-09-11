@@ -124,7 +124,11 @@ _SCHEMA_ORDERED_KEYS = (
 )
 
 
-class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConnector):
+class SnowflakeConnector(
+    ToucanConnector,
+    DiscoverableConnector,
+    data_source_model=SnowflakeDataSource,
+):
     """
     Import data from Snowflake data warehouse.
     """
@@ -133,8 +137,6 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
 
     sso_credentials_keeper: Any = None
     user_tokens_keeper: Any = None
-
-    data_source_model: type[SnowflakeDataSource] = SnowflakeDataSource
 
     account: str = Field(
         ...,
