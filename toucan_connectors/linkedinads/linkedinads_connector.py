@@ -116,7 +116,7 @@ class LinkedinadsConnector(ToucanConnector):
         description='You can provide a custom template that will be used for every HTTP request',
     )
     _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod

@@ -96,7 +96,7 @@ class GoogleAdwordsConnector(ToucanConnector):
     developer_token: str = None
     client_customer_id: str = None
     _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
