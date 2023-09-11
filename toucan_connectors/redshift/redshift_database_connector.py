@@ -13,7 +13,7 @@ from pydantic import (
     StringConstraints,
     create_model,
     field_validator,
-    root_validator,
+    model_validator,
 )
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from typing_extensions import Annotated
@@ -181,29 +181,22 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     def host_validator(cls, v):
         return re.sub(r'^https?://', '', v)
 
-    @root_validator
-    def check_requirements(cls, values):
-        mode = values.get('authentication_method')
-        if mode == AuthenticationMethod.DB_CREDENTIALS.value:
+    @model_validator(mode='after')
+    def check_requirements(self):
+        if self.authentication_method == AuthenticationMethod.DB_CREDENTIALS.value:
             # TODO: Partial check due to missing context in some operations (Missing: password)
-            user = values.get('user')
-            if user is None:
+            if self.user is None:
                 raise ValueError(AuthenticationMethodError.DB_CREDENTIALS.value)
-        elif mode == AuthenticationMethod.AWS_CREDENTIALS.value:
+        elif self.authentication_method == AuthenticationMethod.AWS_CREDENTIALS.value:
             # TODO: Partial check due to missing context in some operations (Missing: secret_access_key)
-            access_key_id, db_user = (
-                values.get('access_key_id'),
-                values.get('db_user'),
-            )
-            if access_key_id is None or db_user is None:
+            if self.access_key_id is None or self.db_user is None:
                 raise ValueError(AuthenticationMethodError.AWS_CREDENTIALS.value)
-        elif mode == AuthenticationMethod.AWS_PROFILE.value:
-            profile, db_user = (values.get('profile'), values.get('db_user'))
-            if profile is None or db_user is None:
+        elif self.authentication_method == AuthenticationMethod.AWS_PROFILE.value:
+            if self.profile is None or self.db_user is None:
                 raise ValueError(AuthenticationMethodError.AWS_PROFILE.value)
         else:
             raise ValueError(AuthenticationMethodError.UNKNOWN.value)
-        return values
+        return self
 
     def _get_connection_params(self, database) -> dict[str, Any]:
         con_params = dict(
