@@ -4,10 +4,15 @@ from typing import Any, Generator, Protocol, TypeAlias
 
 import pandas as pd
 from hubspot import HubSpot  # type:ignore[import]
-from pydantic import ConfigDict, BaseModel, Field, SecretStr
+from pydantic import ConfigDict, BaseModel, Field
 
 from toucan_connectors.pagination import build_pagination_info
-from toucan_connectors.toucan_connector import DataSlice, ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import (
+    DataSlice,
+    ToucanConnector,
+    ToucanDataSource,
+    PlainJsonSecretStr,
+)
 
 
 class HubspotDataset(str, Enum):
@@ -88,7 +93,9 @@ def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:
 
 class HubspotConnector(ToucanConnector):
     data_source_model: HubspotDataSource
-    access_token: SecretStr = Field(..., description='An API key for the target private app')
+    access_token: PlainJsonSecretStr = Field(
+        ..., description='An API key for the target private app'
+    )
 
     def _fetch_page(
         self, api: _PageApi, after: str | None = None, limit: int | None = None

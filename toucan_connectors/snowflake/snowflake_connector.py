@@ -9,7 +9,7 @@ import pandas as pd
 import requests
 import snowflake
 from jinja2 import Template
-from pydantic import Field, SecretStr, create_model
+from pydantic import Field, create_model
 from snowflake import connector as sf_connector
 from snowflake.connector import SnowflakeConnection
 from snowflake.connector.cursor import DictCursor as SfDictCursor
@@ -29,6 +29,7 @@ from toucan_connectors.toucan_connector import (
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
+    PlainJsonSecretStr,
 )
 
 logger = logging.getLogger(__name__)
@@ -133,7 +134,7 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
     )
 
     user: str = Field(..., description='Your login username')
-    password: SecretStr | None = Field(None, description='Your login password')
+    password: PlainJsonSecretStr | None = Field(None, description='Your login password')
     token_endpoint: str | None = Field(None, description='The token endpoint')
     token_endpoint_content_type: str = Field(
         'application/json',

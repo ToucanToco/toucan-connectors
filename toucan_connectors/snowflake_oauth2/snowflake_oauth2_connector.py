@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import snowflake
-from pydantic import Field, PrivateAttr, SecretStr, create_model
+from pydantic import Field, PrivateAttr, create_model
 from snowflake.connector import SnowflakeConnection
 
 from toucan_connectors.connection_manager import ConnectionManager
@@ -28,6 +28,7 @@ from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
     ToucanConnector,
     strlist_to_enum,
+    PlainJsonSecretStr,
 )
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         description='The client id of you Snowflake integration',
         **{'ui.required': True},
     )
-    client_secret: SecretStr = Field(
+    client_secret: PlainJsonSecretStr = Field(
         '',
         title='Client Secret',
         description='The client secret of your Snowflake integration',

@@ -2,10 +2,15 @@ from contextlib import suppress
 
 import cx_Oracle
 import pandas as pd
-from pydantic import StringConstraints, Field, SecretStr, create_model
+from pydantic import StringConstraints, Field, create_model
 
 from toucan_connectors.common import pandas_read_sql
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+    PlainJsonSecretStr,
+)
 from typing_extensions import Annotated
 
 
@@ -62,7 +67,7 @@ class OracleSQLConnector(ToucanConnector):
         examples=['localhost:80/service'],
     )
     user: str = Field(None, description='Your login username')
-    password: SecretStr = Field(None, description='Your login password')
+    password: PlainJsonSecretStr = Field(None, description='Your login password')
     encoding: str = Field(
         None, title='Charset', description='If you need to specify a specific character encoding.'
     )

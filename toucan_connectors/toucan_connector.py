@@ -258,6 +258,11 @@ _UI_HIDDEN: dict[str, Any] = {'ui.hidden': True}
 DS = TypeVar('DS', bound=ToucanDataSource)
 
 
+PlainJsonSecretStr = Annotated[
+    SecretStr, PlainSerializer(SecretStr.get_secret_value, return_type=str)
+]
+
+
 class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     """Abstract base class for all toucan connectors.
 
@@ -294,16 +299,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
     # Used to defined the connection
     identifier: str = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
-    # TODO[pydantic]: The following keys were removed: `json_encoders`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(
-        extra='forbid',
-        validate_assignment=True,
-        json_encoders={
-            SecretStr: lambda v: v.get_secret_value(),
-            SecretBytes: lambda v: v.get_secret_value(),
-        },
-    )
+    model_config = ConfigDict(extra='forbid', validate_assignment=True)
 
     @classmethod
     def __init_subclass__(cls):

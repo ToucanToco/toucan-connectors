@@ -2,10 +2,15 @@ import logging
 from contextlib import suppress
 
 import pyodbc
-from pydantic import StringConstraints, Field, SecretStr, create_model
+from pydantic import StringConstraints, Field, create_model
 
 from toucan_connectors.common import pandas_read_sql
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+    PlainJsonSecretStr,
+)
 from typing_extensions import Annotated
 
 
@@ -85,7 +90,7 @@ class MSSQLConnector(ToucanConnector):
 
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(None, description='Your login password')
+    password: PlainJsonSecretStr = Field(None, description='Your login password')
     connect_timeout: int = Field(
         None,
         title='Connection timeout',

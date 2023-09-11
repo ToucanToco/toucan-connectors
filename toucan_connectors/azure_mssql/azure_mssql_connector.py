@@ -2,10 +2,10 @@ import re
 
 import pandas as pd
 import pyodbc
-from pydantic import StringConstraints, Field, SecretStr
+from pydantic import StringConstraints, Field
 
 from toucan_connectors.common import pandas_read_sql
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, PlainJsonSecretStr
 from typing_extensions import Annotated
 
 CLOUD_HOST = 'database.windows.net'
@@ -32,7 +32,7 @@ class AzureMSSQLConnector(ToucanConnector):
     )
 
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field('', description='Your login password')
+    password: PlainJsonSecretStr = Field('', description='Your login password')
     connect_timeout: int = Field(
         None,
         title='Connection timeout',
@@ -45,7 +45,7 @@ class AzureMSSQLConnector(ToucanConnector):
         user = f'{self.user}@{base_host}' if '@' not in self.user else self.user
 
         if not self.password:
-            self.password = SecretStr('')
+            self.password = PlainJsonSecretStr('')
 
         con_params = {
             'driver': '{ODBC Driver 17 for SQL Server}',

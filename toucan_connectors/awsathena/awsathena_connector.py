@@ -4,12 +4,13 @@ import awswrangler as wr
 import boto3
 import pandas as pd
 from cached_property import cached_property_with_ttl
-from pydantic import StringConstraints, ConfigDict, Field, SecretStr, create_model
+from pydantic import StringConstraints, ConfigDict, Field, create_model
 
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters, sanitize_query
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.toucan_connector import (
+    PlainJsonSecretStr,
     DataSlice,
     DataStats,
     DiscoverableConnector,
@@ -76,17 +77,19 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
         ..., description='Your S3 Output bucket (where query results are stored.)'
     )
     aws_access_key_id: str = Field(..., description='Your AWS access key ID')
-    aws_secret_access_key: SecretStr = Field(None, description='Your AWS secret key')
+    aws_secret_access_key: PlainJsonSecretStr = Field(None, description='Your AWS secret key')
     region_name: str = Field(..., description='Your AWS region name')
     # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(underscore_attrs_are_private=True, ignored_types=(cached_property_with_ttl,))
+    model_config = ConfigDict(
+        underscore_attrs_are_private=True, ignored_types=(cached_property_with_ttl,)
+    )
 
     def get_session(self) -> boto3.Session:
         return boto3.Session(
             aws_access_key_id=self.aws_access_key_id,
             # This is required because this gets appended by boto3
-            # internally, and a SecretStr can't be appended to an str
+            # internally, and a PlainJsonSecretStr can't be appended to an str
             aws_secret_access_key=self.aws_secret_access_key.get_secret_value(),
             region_name=self.region_name,
         )

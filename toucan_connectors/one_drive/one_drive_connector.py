@@ -4,14 +4,14 @@ from typing import List, Optional
 
 import pandas as pd
 import requests
-from pydantic import Field, PrivateAttr, SecretStr
+from pydantic import Field, PrivateAttr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
 )
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, PlainJsonSecretStr
 
 
 class NotFoundError(Exception):
@@ -90,7 +90,7 @@ class OneDriveConnector(ToucanConnector):
         description='The client id of you Azure Active Directory integration',
         **{'ui.required': True},
     )
-    client_secret: SecretStr = Field(
+    client_secret: PlainJsonSecretStr = Field(
         '',
         title='Client Secret',
         description='The client secret of your Azure Active Directory integration',

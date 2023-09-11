@@ -5,13 +5,14 @@ import pandas as pd
 import pymongo
 from bson.son import SON
 from cached_property import cached_property
-from pydantic import ConfigDict, Field, SecretStr, create_model, validator
+from pydantic import ConfigDict, Field, create_model, validator
 
 from toucan_connectors.common import ConnectorStatus, nosql_apply_parameters_to_query
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.toucan_connector import (
+    PlainJsonSecretStr,
     DataSlice,
     ToucanConnector,
     ToucanDataSource,
@@ -150,7 +151,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     )
     port: Optional[int] = Field(None, description='The listening port of your database server')
     username: Optional[str] = Field(None, description='Your login username')
-    password: Optional[SecretStr] = Field(None, description='Your login password')
+    password: Optional[PlainJsonSecretStr] = Field(None, description='Your login password')
     ssl: Optional[bool] = Field(None, description='Create the connection to the server using SSL')
     model_config = ConfigDict(ignored_types=(cached_property, _lru_cache_wrapper))
 

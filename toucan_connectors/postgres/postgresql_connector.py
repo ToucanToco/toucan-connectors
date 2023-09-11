@@ -2,7 +2,7 @@ from contextlib import suppress
 from typing import Dict, List, Optional
 
 import psycopg2 as pgsql
-from pydantic import StringConstraints, Field, SecretStr, create_model
+from pydantic import StringConstraints, Field, create_model
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.postgres.utils import build_database_model_extraction_query, types
@@ -14,6 +14,7 @@ from toucan_connectors.toucan_connector import (
     UnavailableVersion,
     VersionableEngineConnector,
     strlist_to_enum,
+    PlainJsonSecretStr,
 )
 from typing_extensions import Annotated
 
@@ -100,7 +101,7 @@ class PostgresConnector(ToucanConnector, DiscoverableConnector, VersionableEngin
     )
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(None, description='Your login password')
+    password: PlainJsonSecretStr = Field(None, description='Your login password')
     default_database: str = Field(DEFAULT_DATABASE, description='Your default database')
 
     charset: str = Field(None, description='If you need to specify a specific character encoding.')

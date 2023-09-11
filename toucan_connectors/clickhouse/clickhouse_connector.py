@@ -2,10 +2,15 @@ from contextlib import suppress
 from typing import Any, Dict, Type
 
 import clickhouse_driver
-from pydantic import StringConstraints, Field, SecretStr, create_model
+from pydantic import StringConstraints, Field, create_model
 
 from toucan_connectors.common import pandas_read_sql
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+    PlainJsonSecretStr,
+)
 from typing_extensions import Annotated
 
 
@@ -93,7 +98,7 @@ class ClickhouseConnector(ToucanConnector):
     )
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field('', description='Your login password')
+    password: PlainJsonSecretStr = Field('', description='Your login password')
     ssl_connection: bool = Field(False, description='Create a SSL wrapped TCP connection')
 
     def get_connection_url(self, *, database='default'):

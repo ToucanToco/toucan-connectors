@@ -4,11 +4,11 @@ from typing import List, Optional, Tuple
 import pandas as pd
 import pyodbc
 import requests
-from pydantic import StringConstraints, Field, SecretStr
+from pydantic import StringConstraints, Field
 from requests.auth import HTTPBasicAuth
 
 from toucan_connectors.common import ClusterStartException, ConnectorStatus, pandas_read_sql
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, PlainJsonSecretStr
 from typing_extensions import Annotated
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class DatabricksConnector(ToucanConnector):
     http_path: str = Field(
         ..., description='Databricks compute resources URL', placeholder='sql/protocolv1/o/xxx/yyy'
     )
-    pwd: SecretStr = Field(
+    pwd: PlainJsonSecretStr = Field(
         None, description='Your personal access token', placeholder='dapixxxxxxxxxxx'
     )
     ansi: bool = False

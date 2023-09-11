@@ -7,7 +7,7 @@ from typing import Any, Generator, Optional
 import pandas as pd
 import pymysql
 from cached_property import cached_property_with_ttl
-from pydantic import StringConstraints, ConfigDict, Field, SecretStr, create_model, validator
+from pydantic import StringConstraints, ConfigDict, Field, create_model, validator
 from pymysql.constants import CR, ER
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
@@ -19,6 +19,7 @@ from toucan_connectors.toucan_connector import (
     UnavailableVersion,
     VersionableEngineConnector,
     strlist_to_enum,
+    PlainJsonSecretStr,
 )
 from toucan_connectors.utils.pem import sanitize_spaces_pem
 from typing_extensions import Annotated
@@ -109,7 +110,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
     )
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(None, description='Your login password')
+    password: PlainJsonSecretStr = Field(None, description='Your login password')
     charset: str = Field(
         'utf8mb4',
         title='Charset',
@@ -123,17 +124,17 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         'for the server to respond. None by default',
     )
     # SSL options
-    ssl_ca: SecretStr = Field(
+    ssl_ca: PlainJsonSecretStr = Field(
         None,
         description='The CA certificate content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-ca option of the MySQL client',
     )
-    ssl_cert: SecretStr = Field(
+    ssl_cert: PlainJsonSecretStr = Field(
         None,
         description='The X509 certificate content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-cert option of the MySQL client',
     )
-    ssl_key: SecretStr = Field(
+    ssl_key: PlainJsonSecretStr = Field(
         None,
         description='The X509 certificate key content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-key option of the MySQL client',
@@ -145,7 +146,9 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
     )
     # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(underscore_attrs_are_private=True, ignored_types=(cached_property_with_ttl,))
+    model_config = ConfigDict(
+        underscore_attrs_are_private=True, ignored_types=(cached_property_with_ttl,)
+    )
 
     # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.

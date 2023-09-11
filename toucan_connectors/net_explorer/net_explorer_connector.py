@@ -5,10 +5,10 @@ from typing import Optional
 
 import pandas as pd
 import requests
-from pydantic import Field, SecretStr
+from pydantic import Field
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, PlainJsonSecretStr
 
 
 class NetExplorerDataSource(ToucanDataSource):
@@ -24,7 +24,7 @@ class NetExplorerConnector(ToucanConnector):
         placeholder='exemple.netexplorer.pro',
     )
     user: str
-    password: SecretStr
+    password: PlainJsonSecretStr
 
     def _retrieve_token(self):
         login_url = f'https://{self.instance_url}/api/auth'

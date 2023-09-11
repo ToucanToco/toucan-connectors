@@ -7,7 +7,7 @@ from typing import Any
 
 import pandas as pd
 import redshift_connector
-from pydantic import field_validator, StringConstraints, Field, SecretStr, create_model, root_validator
+from pydantic import field_validator, StringConstraints, Field, create_model, root_validator
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
@@ -21,6 +21,7 @@ from toucan_connectors.toucan_connector import (
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
+    PlainJsonSecretStr,
 )
 from typing_extensions import Annotated
 
@@ -114,7 +115,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     user: str | None = Field(
         None, description='The username to use for authentication with the Amazon Redshift cluster'
     )
-    password: SecretStr | None = Field(
+    password: PlainJsonSecretStr | None = Field(
         None, description='The password to use for authentication with the Amazon Redshift cluster'
     )
 
@@ -138,7 +139,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     )
 
     access_key_id: str | None = Field(None, description='The access key id of your aws account.')
-    secret_access_key: SecretStr | None = Field(
+    secret_access_key: PlainJsonSecretStr | None = Field(
         None, description='The secret access key of your aws account.'
     )
     session_token: str | None = Field(None, description='Your session token')

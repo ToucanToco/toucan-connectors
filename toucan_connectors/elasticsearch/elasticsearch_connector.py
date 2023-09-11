@@ -6,10 +6,10 @@ from urllib.parse import urlparse
 import pandas as pd
 from elasticsearch import Elasticsearch
 from pandas.io.json import json_normalize
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, PlainJsonSecretStr
 
 
 def _is_branch_list(val):
@@ -102,7 +102,7 @@ class ElasticsearchHost(BaseModel):
     port: int = None
     scheme: str = None
     username: str = None
-    password: SecretStr = Field(None, description='Your login password')
+    password: PlainJsonSecretStr = Field(None, description='Your login password')
     headers: dict = None
 
 

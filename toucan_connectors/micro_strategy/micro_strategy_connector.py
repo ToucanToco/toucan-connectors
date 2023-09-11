@@ -2,10 +2,10 @@ from enum import Enum
 
 import pandas as pd
 from pandas.io.json import json_normalize
-from pydantic import Field, HttpUrl, SecretStr
+from pydantic import Field, HttpUrl
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, PlainJsonSecretStr
 
 from .client import Client
 from .data import (
@@ -71,7 +71,7 @@ class MicroStrategyConnector(ToucanConnector):
         examples=['https://demo.microstrategy.com/MicroStrategyLibrary2/api/'],
     )
     username: str = Field(..., description='Your login username')
-    password: SecretStr = Field('', description='Your login password')
+    password: PlainJsonSecretStr = Field('', description='Your login password')
     project_id: str = Field(
         ...,
         title='projectID',
@@ -98,7 +98,7 @@ class MicroStrategyConnector(ToucanConnector):
         if data_source.dataset == Dataset.search:
             return self._retrieve_metadata(data_source)
         if not self.password:
-            self.password = SecretStr('')
+            self.password = PlainJsonSecretStr('')
         client = Client(
             self.base_url, self.project_id, self.username, self.password.get_secret_value()
         )
