@@ -6,8 +6,16 @@ from functools import cached_property
 from typing import Any
 
 import pandas as pd
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 import redshift_connector
-from pydantic import field_validator, StringConstraints, Field, create_model, root_validator
+from pydantic import (
+    ConfigDict,
+    field_validator,
+    StringConstraints,
+    Field,
+    create_model,
+    root_validator,
+)
 from pydantic.types import constr
 
 from toucan_connectors.common import ConnectorStatus
@@ -146,15 +154,24 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     profile: str | None = Field(None, description='AWS profile')
     region: str | None = Field(None, description='The region in which there is your aws account.')
 
-    # TODO[pydantic]: We couldn't refactor this class, please create the `model_config` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    class Config:
-        underscore_attrs_are_private = True
-        keep_untouched = (cached_property,)
+    model_config = ConfigDict(ignored_types=(cached_property,))
 
-        @staticmethod
-        def schema_extra(schema: dict[str, Any]) -> None:
-            schema['properties'] = {k: schema['properties'][k] for k in ORDERED_KEYS}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        schema['properties'] = {k: schema['properties'][k] for k in ORDERED_KEYS}
+        return schema
 
     @cached_property
     def available_dbs(self) -> list[str]:

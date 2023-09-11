@@ -3,6 +3,7 @@ from typing import Any, Dict, Type
 
 import clickhouse_driver
 from pydantic import StringConstraints, Field, create_model
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import (
@@ -30,20 +31,30 @@ class ClickhouseDataSource(ToucanDataSource):
         'your_table")',
     )
 
-    # TODO[pydantic]: We couldn't refactor this class, please create the `model_config` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['ClickhouseDataSource']) -> None:
-            keys = schema['properties'].keys()
-            prio_keys = [
-                'database',
-                'table',
-                'query',
-                'parameters',
-            ]
-            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        prio_keys = [
+            'database',
+            'table',
+            'query',
+            'parameters',
+        ]
+        new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
     def __init__(self, **data):
         super().__init__(**data)

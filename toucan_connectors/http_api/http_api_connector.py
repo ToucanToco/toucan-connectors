@@ -5,6 +5,7 @@ from xml.etree.ElementTree import ParseError, fromstring, tostring
 
 import pandas as pd
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from requests import Session
 from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 from xmltodict import parse
@@ -95,22 +96,32 @@ class HttpAPIDataSource(ToucanDataSource):
     filter: str = FilterSchema
     flatten_column: str = Field(None, description='Column containing nested rows')
 
-    # TODO[pydantic]: We couldn't refactor this class, please create the `model_config` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['HttpAPIDataSource']) -> None:
-            keys = schema['properties'].keys()
-            last_keys = [
-                'proxies',
-                'flatten_column',
-                'data',
-                'xpath',
-                'filter',
-                'validation',
-            ]
-            new_keys = [k for k in keys if k not in last_keys] + last_keys
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        last_keys = [
+            'proxies',
+            'flatten_column',
+            'data',
+            'xpath',
+            'filter',
+            'validation',
+        ]
+        new_keys = [k for k in keys if k not in last_keys] + last_keys
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
 
 class HttpAPIConnector(ToucanConnector):

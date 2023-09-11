@@ -6,6 +6,12 @@ from typing import Any, ContextManager, Generator, Literal, Type, overload
 
 import jwt
 import pandas as pd
+from pydantic.json_schema import (
+    DEFAULT_REF_TEMPLATE,
+    GenerateJsonSchema,
+    JsonSchemaMode,
+    model_json_schema,
+)
 import requests
 import snowflake
 from jinja2 import Template
@@ -105,6 +111,24 @@ def _snowflake_connection(
         conn.close()
 
 
+_SCHEMA_ORDERED_KEYS = (
+    'type',
+    'name',
+    'account',
+    'authentication_method',
+    'user',
+    'password',
+    'token_endpoint',
+    'token_endpoint_content_type',
+    'role',
+    'default_warehouse',
+    'retry_policy',
+    'secrets_storage_version',
+    'sso_credentials_keeper',
+    'user_tokens_keeper',
+)
+
+
 class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConnector):
     """
     Import data from Snowflake data warehouse.
@@ -152,28 +176,22 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
     )
     category: Category = Field(Category.SNOWFLAKE, title='category', ui={'checkbox': False})
 
-    # TODO[pydantic]: We couldn't refactor this class, please create the `model_config` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    class Config:
-        @staticmethod
-        def schema_extra(schema: dict[str, Any], model: Type['SnowflakeConnector']) -> None:
-            ordered_keys = [
-                'type',
-                'name',
-                'account',
-                'authentication_method',
-                'user',
-                'password',
-                'token_endpoint',
-                'token_endpoint_content_type',
-                'role',
-                'default_warehouse',
-                'retry_policy',
-                'secrets_storage_version',
-                'sso_credentials_keeper',
-                'user_tokens_keeper',
-            ]
-            schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        schema['properties'] = {k: schema['properties'][k] for k in _SCHEMA_ORDERED_KEYS}
+        return schema
 
     @property
     def access_token(self) -> str | None:

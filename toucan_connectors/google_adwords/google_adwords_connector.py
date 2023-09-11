@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Type
 
 import pandas as pd
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 import requests
 from googleads import AdWordsClient, adwords, oauth2
 from pydantic import Field, PrivateAttr
@@ -59,23 +60,33 @@ class GoogleAdwordsDataSource(ToucanDataSource):
         description='Max number of rows to extract, for service extraction only',
     )
 
-    # TODO[pydantic]: We couldn't refactor this class, please create the `model_config` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['GoogleAdwordsDataSource']) -> None:
-            keys = schema['properties'].keys()
-            prio_keys = [
-                'service',
-                'columns',
-                'from_clause',
-                'parameters',
-                'during',
-                'orderby',
-                'limit',
-            ]
-            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        prio_keys = [
+            'service',
+            'columns',
+            'from_clause',
+            'parameters',
+            'during',
+            'orderby',
+            'limit',
+        ]
+        new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
 
 class GoogleAdwordsConnector(ToucanConnector):

@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional, Type
 
 import dateutil.parser
 import pandas as pd
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 import requests
 from pydantic import Field, PrivateAttr
 from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
@@ -73,22 +74,32 @@ class LinkedinadsDataSource(ToucanDataSource):
         description='See https://docs.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting for more information',
     )
 
-    # TODO[pydantic]: We couldn't refactor this class, please create the `model_config` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['LinkedinadsDataSource']) -> None:
-            keys = schema['properties'].keys()
-            prio_keys = [
-                'finder_methods',
-                'start_date',
-                'end_date',
-                'time_granularity',
-                'flatten_column',
-                'parameters',
-            ]
-            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        prio_keys = [
+            'finder_methods',
+            'start_date',
+            'end_date',
+            'time_granularity',
+            'flatten_column',
+            'parameters',
+        ]
+        new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
 
 class LinkedinadsConnector(ToucanConnector):
