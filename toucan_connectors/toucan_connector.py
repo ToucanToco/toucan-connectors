@@ -283,10 +283,11 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     the `_retry_on` class attribute in your concrete connector class.
     """
 
+    data_source_model: type[DS]
     name: str = Field(...)
     retry_policy: RetryPolicy | None = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
-    type: str | None = None
+    type: str
     secrets_storage_version: str = Field('1', **_UI_HIDDEN)  # type:ignore[pydantic-field]
 
     # Default ttl for all connector's queries (overridable at the data_source level)
@@ -303,13 +304,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
     @classmethod
     def __init_subclass__(cls):
-        try:
-            cls.data_source_model = cls.__fields__.pop('data_source_model').type_
-            cls.logger = logging.getLogger(cls.__name__)
-        except KeyError as e:
-            raise TypeError(f'{cls.__name__} has no {e} attribute.')
-        if 'bearer_integration' in cls.__fields__:
-            cls.bearer_integration = cls.__fields__['bearer_integration'].default
+        cls.logger = logging.getLogger(cls.__name__)
 
     def bearer_oauth_get_endpoint(
         self,

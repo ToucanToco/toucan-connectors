@@ -134,7 +134,7 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
     sso_credentials_keeper: Any = None
     user_tokens_keeper: Any = None
 
-    data_source_model: SnowflakeDataSource
+    data_source_model: type[SnowflakeDataSource] = SnowflakeDataSource
 
     account: str = Field(
         ...,
