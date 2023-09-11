@@ -7,7 +7,7 @@ from typing import Any, Generator, Optional
 import pandas as pd
 import pymysql
 from cached_property import cached_property_with_ttl
-from pydantic import StringConstraints, ConfigDict, Field, create_model, validator
+from pydantic import StringConstraints, ConfigDict, Field, create_model, model_validator, validator
 from pymysql.constants import CR, ER
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
@@ -146,19 +146,15 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
     )
     model_config = ConfigDict(ignored_types=(cached_property_with_ttl,))
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator('ssl_key')
-    @classmethod
-    def ssl_key_validator(cls, ssl_key: str, values: dict) -> str:
-        ssl_cert = values.get('ssl_cert', None)
+    @model_validator(mode='after')
+    def ssl_key_validator(self) -> 'MySQLConnector':
         # if one is present, the other one should be specified
-        if ssl_cert is not None and ssl_key is None:
+        if self.ssl_cert is not None and self.ssl_key is None:
             raise ValueError('SSL option "ssl_key" should be specified if "ssl_cert" is provided !')
-        elif ssl_key is not None and ssl_cert is None:
+        elif self.ssl_key is not None and self.ssl_cert is None:
             raise ValueError('SSL option "ssl_cert" should be specified if "ssl_key" is provided !')
 
-        return ssl_key
+        return self
 
     def _sanitize_ssl_params(self) -> dict[str, Any]:
         params = {}

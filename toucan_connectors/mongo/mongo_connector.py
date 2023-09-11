@@ -5,7 +5,7 @@ import pandas as pd
 import pymongo
 from bson.son import SON
 from cached_property import cached_property
-from pydantic import ConfigDict, Field, create_model, validator
+from pydantic import ConfigDict, Field, create_model, model_validator, validator
 
 from toucan_connectors.common import ConnectorStatus, nosql_apply_parameters_to_query
 from toucan_connectors.json_wrapper import JsonWrapper
@@ -155,13 +155,11 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     ssl: Optional[bool] = Field(None, description='Create the connection to the server using SSL')
     model_config = ConfigDict(ignored_types=(cached_property, _lru_cache_wrapper))
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator('password')
-    def password_must_have_a_user(cls, password, values):
-        if password is not None and values['username'] is None:
+    @model_validator(mode='after')
+    def password_must_have_a_user(self) -> 'MongoConnector':
+        if self.password is not None and self.username is None:
             raise ValueError('username must be set')
-        return password
+        return self
 
     def __hash__(self):
         return hash(id(self)) + hash(JsonWrapper.dumps(self._get_mongo_client_kwargs()))
