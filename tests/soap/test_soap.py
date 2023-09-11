@@ -65,7 +65,7 @@ def test_get_form(mocker, connector, create_datasource):
     )
     form = create_datasource.get_form(connector, {})
     assert form['properties']['parameters']['description'] == 'Services documentation: <br> coucou'
-    assert form['definitions']['method']['enum'][0] == 'fake_func'
+    assert form['$defs']['method']['const'] == 'fake_func'
 
 
 def test_create_client(mocker, connector):

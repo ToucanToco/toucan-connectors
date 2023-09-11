@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_mock import MockerFixture
 from redshift_connector.error import InterfaceError, OperationalError, ProgrammingError
 
 from toucan_connectors.pagination import (
@@ -78,33 +79,10 @@ def redshift_datasource():
     )
 
 
-def test_config_schema_extra():
-    schema = {
-        'properties': {
-            'type': 'type_test',
-            'name': 'name_test',
-            'host': 'host_test',
-            'port': 0,
-            'cluster_identifier': 'cluster_identifier_test',
-            'db_user': 'db_user_test',
-            'connect_timeout': 'connect_timeout_test',
-            'authentication_method': 'authentication_method_test',
-            'user': 'user_test',
-            'password': 'password_test',
-            'default_database': 'dev',
-            'access_key_id': 'access_key_id_test',
-            'secret_access_key': 'secret_access_key_test',
-            'session_token': 'session_token_test',
-            'profile': 'profile_test',
-            'region': 'region_test',
-            'enable_tcp_keepalive': True,
-        }
-    }
-    RedshiftConnector.Config().schema_extra(schema)
-    assert schema['properties'] is not None
-    keys = list(schema['properties'].keys())
-    for i in range(len(keys)):
-        assert keys[i] == ORDERED_KEYS[i]
+def test_model_json_schema():
+    schema = RedshiftConnector.model_json_schema()
+    for key, expected_key in zip(schema['properties'].keys(), ORDERED_KEYS):
+        assert key == expected_key
 
 
 def test_redshiftdatasource_init_(redshift_datasource):
@@ -113,10 +91,11 @@ def test_redshiftdatasource_init_(redshift_datasource):
     assert hasattr(ds, 'query_object')
 
 
-@patch.object(RedshiftConnector, '_retrieve_tables')
-def test_redshiftdatasource_get_form(redshift_connector, redshift_datasource):
+def test_redshiftdatasource_get_form(
+    redshift_connector, redshift_datasource, mocker: MockerFixture
+):
     current_config = {'database': 'dev'}
-    redshift_connector._retrieve_tables.return_value = ['table1', 'table2', 'table3']
+    mocker.patch.object(RedshiftConnector, 'available_dbs', new=['one', 'two'])
     result = redshift_datasource.get_form(redshift_connector, current_config)
     assert result['properties']['parameters']['title'] == 'Parameters'
     assert result['properties']['domain']['title'] == 'Domain'
