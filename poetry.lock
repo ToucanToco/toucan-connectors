@@ -240,13 +240,13 @@ cryptography = ">=3.2"
 
 [[package]]
 name = "awswrangler"
-version = "3.3.0"
+version = "3.4.0"
 description = "Pandas on AWS."
 optional = true
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "awswrangler-3.3.0-py3-none-any.whl", hash = "sha256:dfeac4aca8e2a2fcfb5627bf64ce6b1c01178ed2c36bb8f3ca319019dc14931f"},
-    {file = "awswrangler-3.3.0.tar.gz", hash = "sha256:0bc07fe4f0e79bc9adef9b66718974ae4d18a498c6bf14ec3c7a2059d7efa69f"},
+    {file = "awswrangler-3.4.0-py3-none-any.whl", hash = "sha256:9fb10d8bea5b1e500ba17c930638eeca074b628a128e201b5774f1a9c0db831b"},
+    {file = "awswrangler-3.4.0.tar.gz", hash = "sha256:0cd15ce0d5bad4e001f687af312054199b3245a4b7d9504b375962f77bca79e4"},
 ]
 
 [package.dependencies]
@@ -260,6 +260,7 @@ typing-extensions = ">=4.4.0,<5.0.0"
 
 [package.extras]
 deltalake = ["deltalake (>=0.6.4,<0.11.0)"]
+geopandas = ["geopandas (>=0.13.2,<0.14.0)"]
 gremlin = ["gremlinpython (>=3.6.2,<4.0.0)", "requests (>=2.0.0,<3.0.0)"]
 modin = ["modin (>=0.23.0,<0.24.0)"]
 mysql = ["pymysql (>=1.0.0,<2.0.0)"]
