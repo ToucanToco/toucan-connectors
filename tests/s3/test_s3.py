@@ -26,7 +26,7 @@ def raw_connector() -> S3Connector:
 
 
 @pytest.fixture
-def connector(mocker:  MockFixture, raw_connector: S3Connector) -> Generator[Any, Any, Any]:
+def connector(mocker: MockFixture, raw_connector: S3Connector) -> Generator[Any, Any, Any]:
     mocker.patch.object(
         raw_connector,
         '_get_assumed_sts_role',
