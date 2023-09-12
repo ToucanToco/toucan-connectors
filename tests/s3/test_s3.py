@@ -1,9 +1,11 @@
 import tempfile
+from datetime import datetime, timedelta
 from typing import Any, Generator
 
 import openpyxl
 import pandas as pd
 import pytest
+from dateutil.tz import tzutc
 from pytest_mock import MockFixture
 
 from toucan_connectors.s3.s3_connector import S3Connector, S3DataSource
@@ -11,8 +13,8 @@ from toucan_connectors.toucan_connector import ConnectorStatus
 
 
 @pytest.fixture
-def connector(mocker) -> Generator[Any, Any, Any]:
-    connector = S3Connector(
+def raw_connector() -> S3Connector:
+    return S3Connector(
         name='my_sts_s3_connector',
         bucket_name='my-s3-bucket',
         role_arn='my-role-arn',
@@ -21,8 +23,12 @@ def connector(mocker) -> Generator[Any, Any, Any]:
         sts_access_key_id='id',
         sts_secret_access_key='secret',
     )
+
+
+@pytest.fixture
+def connector(mocker, raw_connector) -> Generator[Any, Any, Any]:
     mocker.patch.object(
-        connector,
+        raw_connector,
         '_get_assumed_sts_role',
         return_value={
             'Credentials': {
@@ -32,7 +38,7 @@ def connector(mocker) -> Generator[Any, Any, Any]:
             }
         },
     )
-    yield connector
+    yield raw_connector
 
 
 @pytest.fixture
@@ -227,3 +233,31 @@ def test_retrieve_data_match_patterns(
     # 'data[0-9]+\.csv$'
     assert connector._forge_url.call_args_list[0][1]['file'] == 'data1.csv'
     assert connector._forge_url.call_args_list[1][1]['file'] == 'data123.csv'
+
+
+def test_get_assumed_sts_role_cached(mocker: MockFixture, raw_connector: S3Connector) -> None:
+    """should cache assume role"""
+    boto3_client = mocker.patch('toucan_connectors.s3.s3_connector.boto3.client')
+    sts_client = boto3_client()
+    sts_client.assume_role.return_value = {
+        'Credentials': {
+            'Expiration': datetime.utcnow().replace(tzinfo=tzutc()) + timedelta(hours=1)
+        }
+    }
+    raw_connector._get_assumed_sts_role()
+    raw_connector._get_assumed_sts_role()
+    assert sts_client.assume_role.call_count == 1
+
+
+def test_get_assumed_sts_role_expired(mocker: MockFixture, raw_connector: S3Connector) -> None:
+    """should invalidate cache and re-assume role when expired"""
+    boto3_client = mocker.patch('toucan_connectors.s3.s3_connector.boto3.client')
+    sts_client = boto3_client()
+    sts_client.assume_role.return_value = {
+        'Test': 'OK',
+        'Credentials': {
+            'Expiration': datetime.utcnow().replace(tzinfo=tzutc()) + timedelta(hours=-1)
+        },
+    }
+    raw_connector._get_assumed_sts_role()
+    assert sts_client.assume_role.call_count == 2
