@@ -438,7 +438,7 @@ def test_oauth2_oidc_authentication(mocker):
     mock_session.assert_called_once()
 
 
-def test_schema_extra():
+def test_model_json_schema():
     data_source_spec = {
         'data': '',
         'domain': 'Clickhouse test',
@@ -458,30 +458,15 @@ def test_schema_extra():
         'validation': {},
         'xpath': '',
     }
-    conf = HttpAPIDataSource(**data_source_spec).Config
-
-    schema = {
-        'properties': {
-            'data': '',
-            'proxies': {},
-            'filter': '',
-            'flatten_column': '',
-            'validation': {},
-            'xpath': '',
-        }
-    }
-    conf.schema_extra(schema, model=HttpAPIDataSource)
-
-    assert schema == {
-        'properties': {
-            'proxies': {},
-            'flatten_column': '',
-            'data': '',
-            'xpath': '',
-            'filter': '',
-            'validation': {},
-        }
-    }
+    ds = HttpAPIDataSource(**data_source_spec)
+    assert list(ds.model_json_schema()['properties'].keys())[-6:] == [
+        'proxies',
+        'flatten_column',
+        'data',
+        'xpath',
+        'filter',
+        'validation',
+    ]
 
 
 def test_get_cache_key(connector, auth, data_source):
@@ -489,7 +474,7 @@ def test_get_cache_key(connector, auth, data_source):
     data_source.parameters = {'first_name': 'raphael'}
     key = connector.get_cache_key(data_source)
 
-    assert key == 'fa95c942-9b94-3f07-9ed4-24c34abfbdae'
+    assert key == 'f24af0b5-f745-3961-8aec-a27d44543fb9'
 
     data_source.headers = {'name': '{{ first_name }}'}  # change the templating style
     key2 = connector.get_cache_key(data_source)

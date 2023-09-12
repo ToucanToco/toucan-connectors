@@ -149,7 +149,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         xpath = query['xpath']
         available_params = ['url', 'method', 'params', 'data', 'json', 'headers', 'proxies']
         query = {k: v for k, v in query.items() if k in available_params}
-        query['url'] = '/'.join([self.baseroute.rstrip('/'), query['url'].lstrip('/')])
+        query['url'] = '/'.join([str(self.baseroute).rstrip('/'), query['url'].lstrip('/')])
 
         if self.cert:
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates

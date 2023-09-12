@@ -48,17 +48,17 @@ class MySQLDataSource(ToucanDataSource):
         **{'ui.hidden': True},
         description='Deprecated, kept for compatibility purpose with old data sources configs',
     )  # Deprecated
-    table: str = Field(
+    table: str | None = Field(
         None, **{'ui.hidden': True}
     )  # To avoid previous config migrations, won't be used
-    query: Annotated[str, StringConstraints(min_length=1)] = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] | None = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
         'the "table" parameter',
         widget='sql',
     )
-    query_object: dict = Field(
+    query_object: dict | None = Field(
         None,
         description='An object describing a simple select query' 'This field is used internally',
         **{'ui.hidden': True},

@@ -307,10 +307,9 @@ def test_get_form_empty_query(postgres_connector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {}
     form = PostgresDataSource.get_form(postgres_connector, current_config)
-    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
-    assert form['definitions']['database'] == {
+    assert form['properties']['database'] == {'$ref': '#/$defs/database'}
+    assert form['$defs']['database'] == {
         'title': 'database',
-        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['postgres', 'postgres_db'],
     }
@@ -320,17 +319,15 @@ def test_get_form_query_with_good_database(postgres_connector, mocker):
     """It should give suggestions of the collections"""
     current_config = {'database': 'postgres_db'}
     form = PostgresDataSource.get_form(postgres_connector, current_config)
-    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
-    assert form['definitions']['database'] == {
+    assert form['properties']['database'] == {'$ref': '#/$defs/database'}
+    assert form['$defs']['database'] == {
         'title': 'database',
-        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['postgres', 'postgres_db'],
     }
-    assert form['properties']['table'] == {'$ref': '#/definitions/table'}
-    assert form['definitions']['table'] == {
+    assert form['properties']['table'] == {'allOf': [{'$ref': '#/$defs/table'}], 'default': None}
+    assert form['$defs']['table'] == {
         'title': 'table',
-        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['city', 'country', 'countrylanguage'],
     }

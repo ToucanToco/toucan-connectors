@@ -8,21 +8,12 @@ import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import (
-    TYPE_CHECKING,
-    Annotated,
-    Any,
-    Generic,
-    Iterable,
-    NamedTuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
 
 import pandas as pd
 import tenacity as tny
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, SecretStr
+from pydantic.fields import ModelPrivateAttr
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -38,9 +29,6 @@ try:
     from bearer import Bearer  # type: ignore[import]
 except ImportError:
     pass
-
-if TYPE_CHECKING:
-    from pydantic.main import IncEx
 
 
 LOGGER = logging.getLogger(__name__)
@@ -121,7 +109,7 @@ class ToucanDataSource(BaseModel, Generic[C]):
 
         By default, we simply return the model schema.
         """
-        return cls.schema()
+        return cls.model_json_schema()
 
 
 class RetryPolicy(BaseModel):
@@ -231,10 +219,14 @@ def get_oauth2_configuration(cls):
     """Return a tuple indicating if the connector is an oauth2 connector
     and in this case, where can the credentials be located
     """
-    oauth2_enabled = hasattr(cls, '_auth_flow') and 'oauth2' in getattr(cls, '_auth_flow')
+    oauth2_enabled = False
+    if hasattr(cls, '_auth_flow'):
+        assert isinstance(cls._auth_flow, ModelPrivateAttr)
+        oauth2_enabled = 'oauth2' in cls._auth_flow.get_default()
     oauth2_credentials_location = None
     if hasattr(cls, '_oauth_trigger'):
-        oauth2_credentials_location = getattr(cls, '_oauth_trigger')
+        assert isinstance(cls._oauth_trigger, ModelPrivateAttr)
+        oauth2_credentials_location = cls._oauth_trigger.get_default()
     return oauth2_enabled, oauth2_credentials_location
 
 
@@ -271,9 +263,8 @@ _UI_HIDDEN: dict[str, Any] = {'ui.hidden': True}
 
 DS = TypeVar('DS', bound=ToucanDataSource)
 
-
 PlainJsonSecretStr = Annotated[
-    SecretStr, PlainSerializer(SecretStr.get_secret_value, return_type=str)
+    SecretStr, PlainSerializer(SecretStr.get_secret_value, return_type=str, when_used='json')
 ]
 
 
@@ -471,7 +462,6 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
             'offset': offset,
             'limit': limit,
         }
-
         if data_source is not None:
             unique_identifier['datasource'] = self._get_unique_datasource_identifier(data_source)
         json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True, default=hash)
@@ -485,33 +475,6 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
     def describe(self, data_source: DS):
         """ """
-
-    # def model_dump_json(
-    #     self,
-    #     *,
-    #     indent: int | None = None,
-    #     include: 'IncEx' = None,
-    #     exclude: 'IncEx' = None,
-    #     by_alias: bool = False,
-    #     exclude_unset: bool = False,
-    #     exclude_defaults: bool = False,
-    #     exclude_none: bool = False,
-    #     round_trip: bool = False,
-    #     warnings: bool = True,
-    # ) -> str:
-    #     if exclude is None:
-    #         exclude = {'data_source_model'}
-    #     return super().model_dump_json(
-    #         indent=indent,
-    #         include=include,
-    #         exclude=exclude,
-    #         by_alias=by_alias,
-    #         exclude_unset=exclude_unset,
-    #         exclude_defaults=exclude_defaults,
-    #         exclude_none=exclude_none,
-    #         round_trip=round_trip,
-    #         warnings=warnings,
-    #     )
 
 
 TableInfo = dict[str, Union[str, list[dict[str, str]]]]

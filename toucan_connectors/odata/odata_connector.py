@@ -38,7 +38,7 @@ class ODataDataSource(ToucanDataSource):
 
 class ODataConnector(ToucanConnector, data_source_model=ODataDataSource):
     baseroute: HttpUrl = Field(..., title='API endpoint', description='Baseroute URL')
-    auth: Auth = Field(None, title='Authentication type')
+    auth: Auth | None = Field(None, title='Authentication type')
 
     def _retrieve_data(self, data_source: ODataDataSource) -> pd.DataFrame:
         if self.auth:
@@ -46,7 +46,7 @@ class ODataConnector(ToucanConnector, data_source_model=ODataDataSource):
         else:
             session = None
 
-        service = ODataService(self.baseroute, reflect_entities=True, session=session)
+        service = ODataService(str(self.baseroute), reflect_entities=True, session=session)
         entities = service.entities[data_source.entity]
         data = service.query(entities).raw(data_source.query)
         return pd.DataFrame(data)

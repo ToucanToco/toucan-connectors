@@ -5,7 +5,7 @@ import asyncio
 import os
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List
 
 import pandas as pd
 from aiohttp import ClientSession
@@ -56,13 +56,11 @@ class GoogleSheets2DataSource(ToucanDataSource):
         description='Can be found in your URL: '
         'https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...',
     )
-    sheet: Optional[str] = Field(
-        None, title='Sheet title', description='Title of the desired sheet'
-    )
+    sheet: str | None = Field(None, title='Sheet title', description='Title of the desired sheet')
     header_row: int = Field(
         0, title='Header row', description='Row of the header of the spreadsheet'
     )
-    rows_limit: int = Field(
+    rows_limit: int | None = Field(
         None, title='Rows limit', description='Maximum number of rows to retrieve'
     )
     parameters: dict = Field(None, description='Additional URL parameters')
@@ -109,7 +107,7 @@ class GoogleSheets2Connector(ToucanConnector, data_source_model=GoogleSheets2Dat
     _auth_flow = 'oauth2'
     _oauth_trigger = 'instance'
     oauth2_version: str = Field('1', **{'ui.hidden': True})
-    auth_flow_id: Optional[str] = None
+    auth_flow_id: str | None = None
 
     # TODO: turn into a class property
     _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
@@ -232,10 +230,10 @@ class GoogleSheets2Connector(ToucanConnector, data_source_model=GoogleSheets2Dat
     def get_slice(
         self,
         data_source: GoogleSheets2DataSource,
-        permissions: Optional[dict] = None,
+        permissions: dict | None = None,
         offset: int = 0,
         limit=50,
-        get_row_count: Optional[bool] = False,
+        get_row_count: bool | None = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe

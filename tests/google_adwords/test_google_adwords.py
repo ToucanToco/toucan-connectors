@@ -3,6 +3,7 @@ from unittest import mock
 import pandas as pd
 import responses
 from pytest import fixture
+from pytest_mock import MockerFixture
 
 from toucan_connectors.common import HttpError
 from toucan_connectors.google_adwords.google_adwords_connector import (
@@ -126,37 +127,20 @@ def test_retrieve_tokens(mocker, connector):
     mock_oauth2_connector.retrieve_tokens.assert_called()
 
 
-def test_schema_extra(build_data_service_source):
+def test_model_json_schema(build_data_service_source: GoogleAdwordsDataSource):
     """
     Check that schema_extra correctly
     structures the Data Source form
     """
-    conf = build_data_service_source.Config
-    schema = {
-        'properties': {
-            'domain': 'bar',
-            'service': 'foo',
-            'columns': 'bababa',
-            'from_clause': 'foofoo',
-            'parameters': 'barbar',
-            'during': 'foobar',
-            'orderby': 'barfoo',
-            'limit': 100,
-        }
-    }
-    conf.schema_extra(schema, model=GoogleAdwordsDataSource)
-    assert schema == {
-        'properties': {
-            'service': 'foo',
-            'columns': 'bababa',
-            'from_clause': 'foofoo',
-            'parameters': 'barbar',
-            'during': 'foobar',
-            'orderby': 'barfoo',
-            'limit': 100,
-            'domain': 'bar',
-        }
-    }
+    assert list(build_data_service_source.model_json_schema()['properties'].keys())[:7] == [
+        'service',
+        'columns',
+        'from_clause',
+        'parameters',
+        'during',
+        'orderby',
+        'limit',
+    ]
 
 
 def test_get_connectors_secrets_form(connector):
@@ -194,7 +178,11 @@ def test_authenticate_client(connector, mocker):
     mocked_refresh.assert_called_once()
 
 
-def test_prepare_service_query(connector, mocker, build_data_service_source):
+def test_prepare_service_query(
+    connector: GoogleAdwordsConnector,
+    mocker: MockerFixture,
+    build_data_service_source: GoogleAdwordsDataSource,
+):
     """
     Check that prepare_service_query is able to build
     & return a service and a built service query

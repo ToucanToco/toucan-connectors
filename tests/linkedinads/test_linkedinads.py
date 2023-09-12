@@ -106,7 +106,9 @@ def test__retrieve_data(connector, create_datasource):
 
 
 @responses.activate
-def test__retrieve_data_no_nested_col(connector, create_datasource):
+def test__retrieve_data_no_nested_col(
+    connector: LinkedinadsConnector, create_datasource: LinkedinadsDataSource
+):
     create_datasource.flatten_column = None
     responses.add(
         method='GET',
@@ -153,30 +155,15 @@ def test_retrieve_tokens(mocker, connector):
     mock_oauth2_connector.retrieve_tokens.assert_called()
 
 
-def test_schema_extra(create_datasource):
-    conf = create_datasource.Config
-    schema = {
-        'properties': {
-            'time_granularity': 'bar',
-            'flatten_column': 'bar',
-            'parameters': 'bar',
-            'finder_methods': 'bar',
-            'start_date': 'bar',
-            'end_date': 'bar',
-        }
-    }
-    conf.schema_extra(schema, model=LinkedinadsDataSource)
-
-    assert schema == {
-        'properties': {
-            'finder_methods': 'bar',
-            'start_date': 'bar',
-            'end_date': 'bar',
-            'time_granularity': 'bar',
-            'flatten_column': 'bar',
-            'parameters': 'bar',
-        }
-    }
+def test_model_json_schema(create_datasource: LinkedinadsDataSource):
+    assert list(create_datasource.model_json_schema()['properties'].keys())[:6] == [
+        'finder_methods',
+        'start_date',
+        'end_date',
+        'time_granularity',
+        'flatten_column',
+        'parameters',
+    ]
 
 
 @responses.activate

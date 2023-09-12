@@ -261,7 +261,7 @@ class MongoConnector(
         get_row_count: Optional[bool] = False,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
-        data_source = MongoDataSource.parse_obj(data_source)
+        data_source = data_source.model_copy(deep=True)
         if offset or limit is not None:
             data_source.query = apply_condition_filter(data_source.query, permissions)
             data_source.query = normalize_query(data_source.query, data_source.parameters)
@@ -315,7 +315,7 @@ class MongoConnector(
         offset: Optional[int] = None,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
-        data_source = MongoDataSource.parse_obj(data_source)
+        data_source = data_source.model_copy(deep=True)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
         # We simply append the match regex at the end of the query,
         # Mongo will then optimize the pipeline to move the match regex to its most convenient position
@@ -385,10 +385,9 @@ class MongoConnector(
 
     def _get_unique_datasource_identifier(self, data_source: MongoDataSource) -> dict:
         # let's make a copy first
-        data_source_rendered = MongoDataSource.parse_obj(data_source)
+        data_source_rendered = data_source.model_copy(deep=True)
         data_source_rendered.query = normalize_query(data_source.query, data_source.parameters)
-        del data_source_rendered.parameters
-        return data_source_rendered.dict()
+        return data_source_rendered.model_dump(exclude={'parameters'})
 
     def get_engine_version(self) -> tuple:
         client = pymongo.MongoClient(**self._get_mongo_client_kwargs())

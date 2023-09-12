@@ -140,9 +140,11 @@ def test_get_form(connector):
 
     # Ensure we've only requested a token once
     responses.assert_call_count('https://auth.anaplan.com/token/authenticate', 1)
-    assert form_schema['definitions']['workspace_id']['enum'] == ['w1 - Workspace One']
-    assert form_schema['definitions']['model_id']['enum'] == ['m1 - Model One']
-    assert form_schema['definitions']['view_id']['enum'] == ['m1v1 - View One', 'm1v2 - View Two']
+    # We have a single values for these, so it's a const
+    assert form_schema['$defs']['workspace_id']['const'] == 'w1 - Workspace One'
+    assert form_schema['$defs']['model_id']['const'] == 'm1 - Model One'
+    # We have several values for this one, so enum
+    assert form_schema['$defs']['view_id']['enum'] == ['m1v1 - View One', 'm1v2 - View Two']
 
 
 @responses.activate

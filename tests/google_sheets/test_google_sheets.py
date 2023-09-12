@@ -300,7 +300,7 @@ def test_get_form(mocker):
         current_config={'spreadsheet_id': 'test_spreadsheet_id'},
     )
     expected_results = ['sample data', 'animals']
-    assert schema['definitions']['sheet']['enum'] == expected_results
+    assert schema['$defs']['sheet']['enum'] == expected_results
 
 
 def test_numeric_dateformat_():

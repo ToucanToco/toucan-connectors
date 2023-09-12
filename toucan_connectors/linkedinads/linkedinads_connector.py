@@ -57,7 +57,7 @@ class LinkedinadsDataSource(ToucanDataSource):
     start_date: str = Field(
         ..., title='Start date', description='Start date of the dataset. Format must be dd/mm/yyyy.'
     )
-    end_date: str = Field(
+    end_date: str | None = Field(
         None,
         title='End date',
         description='End date of the dataset, optional & default to today. Format must be dd/mm/yyyy.',
@@ -67,9 +67,9 @@ class LinkedinadsDataSource(ToucanDataSource):
         title='Time granularity',
         description='Granularity of the dataset, default all result grouped',
     )
-    flatten_column: str = Field(None, description='Column containing nested rows')
+    flatten_column: str | None = Field(None, description='Column containing nested rows')
 
-    parameters: dict = Field(
+    parameters: dict | None = Field(
         None,
         description='See https://docs.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting for more information',
     )

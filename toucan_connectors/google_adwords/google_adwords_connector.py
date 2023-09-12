@@ -192,7 +192,7 @@ class GoogleAdwordsConnector(ToucanConnector, data_source_model=GoogleAdwordsDat
         )
         # Build Limit
         if not data_source.limit:
-            data_source.limit = 100
+            data_source.limit = '100'
         service_query_builder.Limit(0, int(data_source.limit))
 
         return service, service_query_builder.Build()

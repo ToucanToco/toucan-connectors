@@ -4,7 +4,7 @@ from typing import List
 import pandas as pd
 import pytest
 import tenacity as tny
-from pydantic import ValidationError, create_model
+from pydantic import create_model
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import GoogleSheets2Connector

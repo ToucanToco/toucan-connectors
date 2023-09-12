@@ -193,7 +193,7 @@ def test_athenadatasource_get_form(
     assert result['properties']['domain']['title'] == 'Domain'
     assert result['properties']['validation']['title'] == 'Validation'
     assert result['required'] == ['domain', 'name', 'database']
-    assert result['definitions']['database']['enum'] == ['db1', 'db2']
+    assert result['$defs']['database']['enum'] == ['db1', 'db2']
 
 
 @pytest.mark.usefixtures('data_source', 'mocked_boto_session')
