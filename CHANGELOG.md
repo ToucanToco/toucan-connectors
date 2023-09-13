@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### [4.8.0] 2023-09-13
+
+## Changed
+
+- S3: Add a new AWS S3 connector using the Security Token Service (STS) API Assume Role.
+
 ### [4.7.3] 2023-08-22
 
 ### Fixed
