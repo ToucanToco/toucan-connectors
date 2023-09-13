@@ -197,6 +197,11 @@ CONNECTORS_REGISTRY = {
         'label': 'Redshift',
         'logo': 'redshift/redshift.png',
     },
+    'S3': {
+        'connector': 's3.s3_connector.S3Connector',
+        'label': 'Amazon S3',
+        'logo': 's3/s3.png',
+    },
     'Salesforce': {
         'connector': 'salesforce.salesforce_connector.SalesforceConnector',
         'label': 'Salesforce Service Cloud (SFSC)',
