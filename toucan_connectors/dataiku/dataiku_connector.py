@@ -17,8 +17,6 @@ class DataikuConnector(ToucanConnector, data_source_model=DataikuDataSource):
     [DSS API](https://doc.dataiku.com/dss/2.0/api/index.html).
     """
 
-    data_source_model: type[DataikuDataSource] = DataikuDataSource
-
     host: str = Field(
         ...,
         description='The domain name (preferred option as more dynamic) or '

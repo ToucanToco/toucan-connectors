@@ -155,10 +155,8 @@ class MyTypeDataSource(ToucanDataSource):
     query: str
 
 
-class MyTypeConnector(ToucanConnector):
+class MyTypeConnector(ToucanConnector,data_source_model=MyTypeDataSource):
     """Model of my connector"""
-    data_source_model: MyTypeDataSource
-
     host: str
     port: int
     database: str
