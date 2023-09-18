@@ -17,6 +17,20 @@ CREATE TABLE city (
     population integer NOT NULL
 );
 
+CREATE SCHEMA other_schema;
+
+CREATE TABLE other_schema.city (
+    id integer NOT NULL,
+    nom text NOT NULL,
+    code_pays character(3) NOT NULL,
+    districteuh text NOT NULL,
+    populationg integer NOT NULL
+);
+
+COPY other_schema.city (id, nom, code_pays, districteuh, populationg) FROM stdin;
+1	Kabul	AFG	Kabol	1780000
+\.
+
 CREATE TABLE country (
     code character(3) NOT NULL,
     name text NOT NULL,

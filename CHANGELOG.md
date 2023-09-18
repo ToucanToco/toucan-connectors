@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+### Fixed
+
+- Postgres: In case two tables in different schemas have the same name, `get_model`
+  and `get_model_with_info` now return the correct information.
+
 ### [4.8.0] 2023-09-13
 
-## Changed
+### Changed
 
 - S3: Add a new AWS S3 connector using the Security Token Service (STS) API Assume Role.
 

@@ -32,7 +32,7 @@ def postgres_server(service_container):
 
 
 @pytest.fixture
-def postgres_connector(postgres_server):
+def postgres_connector(postgres_server) -> PostgresConnector:
     return PostgresConnector(
         name='test',
         host='localhost',
@@ -41,6 +41,73 @@ def postgres_connector(postgres_server):
         default_database='postgres_db',
         port=postgres_server['port'],
     )
+
+
+@pytest.fixture
+def postgres_db_model() -> list[dict]:
+    return [
+        {
+            'schema': 'other_schema',
+            'database': 'postgres_db',
+            'type': 'table',
+            'name': 'city',
+            'columns': [
+                {'name': 'id', 'type': 'integer'},
+                {'name': 'nom', 'type': 'text'},
+                {'name': 'code_pays', 'type': 'character'},
+                {'name': 'districteuh', 'type': 'text'},
+                {'name': 'populationg', 'type': 'integer'},
+            ],
+        },
+        {
+            'schema': 'public',
+            'database': 'postgres_db',
+            'type': 'table',
+            'name': 'city',
+            'columns': [
+                {'name': 'name', 'type': 'text'},
+                {'name': 'countrycode', 'type': 'character'},
+                {'name': 'district', 'type': 'text'},
+                {'name': 'population', 'type': 'integer'},
+                {'name': 'id', 'type': 'integer'},
+            ],
+        },
+        {
+            'schema': 'public',
+            'database': 'postgres_db',
+            'type': 'table',
+            'name': 'country',
+            'columns': [
+                {'name': 'localname', 'type': 'text'},
+                {'name': 'governmentform', 'type': 'text'},
+                {'name': 'headofstate', 'type': 'text'},
+                {'name': 'capital', 'type': 'integer'},
+                {'name': 'code2', 'type': 'character'},
+                {'name': 'surfacearea', 'type': 'real'},
+                {'name': 'code', 'type': 'character'},
+                {'name': 'name', 'type': 'text'},
+                {'name': 'continent', 'type': 'text'},
+                {'name': 'region', 'type': 'text'},
+                {'name': 'indepyear', 'type': 'smallint'},
+                {'name': 'population', 'type': 'integer'},
+                {'name': 'lifeexpectancy', 'type': 'real'},
+                {'name': 'gnp', 'type': 'numeric'},
+                {'name': 'gnpold', 'type': 'numeric'},
+            ],
+        },
+        {
+            'schema': 'public',
+            'database': 'postgres_db',
+            'type': 'table',
+            'name': 'countrylanguage',
+            'columns': [
+                {'name': 'countrycode', 'type': 'character'},
+                {'name': 'language', 'type': 'text'},
+                {'name': 'isofficial', 'type': 'boolean'},
+                {'name': 'percentage', 'type': 'real'},
+            ],
+        },
+    ]
 
 
 def test_get_status_all_good(postgres_connector):
@@ -380,58 +447,8 @@ def test_describe_error(mocker, postgres_connector):
         postgres_connector.describe(ds)
 
 
-def test_get_model(postgres_connector: PostgresConnector):
+def test_get_model(postgres_connector: PostgresConnector, postgres_db_model: list[dict]) -> None:
     """Check that it returns the db tree structure"""
-    postgres_db_model = [
-        {
-            'name': 'city',
-            'schema': 'public',
-            'database': 'postgres_db',
-            'type': 'table',
-            'columns': [
-                {'name': 'id', 'type': 'integer'},
-                {'name': 'name', 'type': 'text'},
-                {'name': 'countrycode', 'type': 'character'},
-                {'name': 'district', 'type': 'text'},
-                {'name': 'population', 'type': 'integer'},
-            ],
-        },
-        {
-            'name': 'country',
-            'schema': 'public',
-            'database': 'postgres_db',
-            'type': 'table',
-            'columns': [
-                {'name': 'code', 'type': 'character'},
-                {'name': 'name', 'type': 'text'},
-                {'name': 'continent', 'type': 'text'},
-                {'name': 'region', 'type': 'text'},
-                {'name': 'surfacearea', 'type': 'real'},
-                {'name': 'indepyear', 'type': 'smallint'},
-                {'name': 'population', 'type': 'integer'},
-                {'name': 'lifeexpectancy', 'type': 'real'},
-                {'name': 'gnp', 'type': 'numeric'},
-                {'name': 'gnpold', 'type': 'numeric'},
-                {'name': 'localname', 'type': 'text'},
-                {'name': 'governmentform', 'type': 'text'},
-                {'name': 'headofstate', 'type': 'text'},
-                {'name': 'capital', 'type': 'integer'},
-                {'name': 'code2', 'type': 'character'},
-            ],
-        },
-        {
-            'name': 'countrylanguage',
-            'schema': 'public',
-            'database': 'postgres_db',
-            'type': 'table',
-            'columns': [
-                {'name': 'countrycode', 'type': 'character'},
-                {'name': 'language', 'type': 'text'},
-                {'name': 'isofficial', 'type': 'boolean'},
-                {'name': 'percentage', 'type': 'real'},
-            ],
-        },
-    ]
     assert postgres_connector.get_model() == postgres_db_model
     assert postgres_connector.get_model(db_name='postgres_db') == postgres_db_model
     assert postgres_connector.get_model(db_name='another_db') == []
@@ -445,63 +462,12 @@ def test_raised_error_for_get_model(mocker, postgres_connector):
         assert postgres_connector.get_model() == []
 
 
-def test_get_model_with_info(postgres_connector):
+def test_get_model_with_info(
+    postgres_connector: PostgresConnector, postgres_db_model: list[dict]
+) -> None:
     """Check that it returns the db tree structure"""
-    postgres_db_model = (
-        [
-            {
-                'name': 'city',
-                'schema': 'public',
-                'database': 'postgres_db',
-                'type': 'table',
-                'columns': [
-                    {'name': 'id', 'type': 'integer'},
-                    {'name': 'name', 'type': 'text'},
-                    {'name': 'countrycode', 'type': 'character'},
-                    {'name': 'district', 'type': 'text'},
-                    {'name': 'population', 'type': 'integer'},
-                ],
-            },
-            {
-                'name': 'country',
-                'schema': 'public',
-                'database': 'postgres_db',
-                'type': 'table',
-                'columns': [
-                    {'name': 'code', 'type': 'character'},
-                    {'name': 'name', 'type': 'text'},
-                    {'name': 'continent', 'type': 'text'},
-                    {'name': 'region', 'type': 'text'},
-                    {'name': 'surfacearea', 'type': 'real'},
-                    {'name': 'indepyear', 'type': 'smallint'},
-                    {'name': 'population', 'type': 'integer'},
-                    {'name': 'lifeexpectancy', 'type': 'real'},
-                    {'name': 'gnp', 'type': 'numeric'},
-                    {'name': 'gnpold', 'type': 'numeric'},
-                    {'name': 'localname', 'type': 'text'},
-                    {'name': 'governmentform', 'type': 'text'},
-                    {'name': 'headofstate', 'type': 'text'},
-                    {'name': 'capital', 'type': 'integer'},
-                    {'name': 'code2', 'type': 'character'},
-                ],
-            },
-            {
-                'name': 'countrylanguage',
-                'schema': 'public',
-                'database': 'postgres_db',
-                'type': 'table',
-                'columns': [
-                    {'name': 'countrycode', 'type': 'character'},
-                    {'name': 'language', 'type': 'text'},
-                    {'name': 'isofficial', 'type': 'boolean'},
-                    {'name': 'percentage', 'type': 'real'},
-                ],
-            },
-        ],
-        {},
-    )
-    assert postgres_connector.get_model_with_info() == postgres_db_model
-    assert postgres_connector.get_model_with_info(db_name='postgres_db') == postgres_db_model
+    assert postgres_connector.get_model_with_info() == (postgres_db_model, {})
+    assert postgres_connector.get_model_with_info(db_name='postgres_db') == (postgres_db_model, {})
     assert postgres_connector.get_model_with_info(db_name='another_db') == (
         [],
         {'info': {'Could not reach databases': ['another_db']}},
