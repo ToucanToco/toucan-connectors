@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Changed
+
+- Goole Big Query: Now support `signed JWT connexion` on the GBQ connector.
+
 ### Fixed
 
 - Postgres: In case two tables in different schemas have the same name, `get_model`

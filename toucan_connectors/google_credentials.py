@@ -1,3 +1,4 @@
+from google.oauth2.service_account import Credentials
 from pydantic import BaseModel, Field, HttpUrl, validator
 
 CREDENTIALS_INFO_MESSAGE = (
@@ -11,16 +12,17 @@ class GoogleCredentials(BaseModel):
     type: str = Field(
         'service_account', title='Service account', description=CREDENTIALS_INFO_MESSAGE
     )
-    project_id: str = Field(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
-    private_key_id: str = Field(..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE)
+    # On service account MODE :
+    project_id: str = Field(None, title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
+    private_key_id: str = Field(None, title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE)
     private_key: str = Field(
-        ...,
+        None,
         title='Private Key',
         description=f'A private key in the form '
         f'"-----BEGIN PRIVATE KEY-----\\nXXX...XXX\\n-----END PRIVATE KEY-----\\n". {CREDENTIALS_INFO_MESSAGE}',
     )
-    client_email: str = Field(..., title='Client email', description=CREDENTIALS_INFO_MESSAGE)
-    client_id: str = Field(..., title='Client ID', description=CREDENTIALS_INFO_MESSAGE)
+    client_email: str = Field(None, title='Client email', description=CREDENTIALS_INFO_MESSAGE)
+    client_id: str = Field(None, title='Client ID', description=CREDENTIALS_INFO_MESSAGE)
     auth_uri: HttpUrl = Field(
         'https://accounts.google.com/o/oauth2/auth',
         title='Authentication URI',
@@ -37,13 +39,16 @@ class GoogleCredentials(BaseModel):
         description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
     )
     client_x509_cert_url: HttpUrl = Field(
-        ...,
+        None,
         title='Client X509 certification URL',
         description=CREDENTIALS_INFO_MESSAGE,
     )
+    # ---
+    # for the jwt-token given as param
+    jwt_token: str = Field(None, title='JSON web token (JWT)', description=CREDENTIALS_INFO_MESSAGE)
 
     @validator('private_key')
-    def unescape_break_lines(cls, v):
+    def unescape_break_lines(cls, v: str = ''):
         """
         `private_key` is a long string like
         '-----BEGIN PRIVATE KEY-----\nxxx...zzz\n-----END PRIVATE KEY-----\n
@@ -53,7 +58,5 @@ class GoogleCredentials(BaseModel):
         return v.replace('\\n', '\n')
 
 
-def get_google_oauth2_credentials(google_credentials):
-    from google.oauth2.service_account import Credentials
-
+def get_google_oauth2_credentials(google_credentials: GoogleCredentials) -> Credentials:
     return Credentials.from_service_account_info(google_credentials.dict())
