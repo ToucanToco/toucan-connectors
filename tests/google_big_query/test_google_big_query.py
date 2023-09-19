@@ -1,10 +1,11 @@
-from typing import Any, Generator
+from typing import Any, Callable, Generator
 from unittest.mock import patch
 
 import pandas
 import pandas as pd
 import pytest
 from google.api_core.exceptions import NotFound
+from google.cloud import bigquery
 from google.cloud.bigquery import ArrayQueryParameter, Client, ScalarQueryParameter
 from google.cloud.bigquery.job.query import QueryJob
 from google.cloud.bigquery.table import RowIterator
@@ -19,9 +20,11 @@ from toucan_connectors.google_big_query.google_big_query_connector import (
 )
 from toucan_connectors.google_credentials import GoogleCredentials
 
+import_path = 'toucan_connectors.google_big_query.google_big_query_connector'
+
 
 @pytest.fixture
-def _fixture_credentials():
+def _fixture_credentials() -> GoogleCredentials:
     my_credentials = GoogleCredentials(
         type='my_type',
         project_id='my_project_id',
@@ -35,6 +38,25 @@ def _fixture_credentials():
         client_x509_cert_url='https://www.googleapis.com/robot/v1/metadata/x509/pika.com',
     )
     return my_credentials
+
+
+@pytest.fixture
+def _jwt_fixture_credentials() -> GoogleCredentials:
+    my_credentials = GoogleCredentials(
+        type='my_type',
+        project_id='my_project_id',
+        jwt_token='this-is-a-jwt-token',
+    )
+    return my_credentials
+
+
+@pytest.fixture
+def gbq_connector_with_jwt(_jwt_fixture_credentials: GoogleCredentials) -> GoogleBigQueryConnector:
+    return GoogleBigQueryConnector(
+        name='woups',
+        scopes=['https://www.googleapis.com/auth/bigquery'],
+        credentials=_jwt_fixture_credentials,
+    )
 
 
 @pytest.fixture
@@ -121,14 +143,40 @@ def test_connect(load_pem_private_key, client, _fixture_credentials, _fixture_sc
     assert isinstance(connection, Client)
 
 
+def test__http_is_present_as_attr(
+    mocker: MockFixture,
+    gbq_connector_with_jwt: GoogleBigQueryConnector,
+) -> None:
+    """we should have _http as arg to bigquery.Client when the jwt is provided in google-credentials"""
+    mock_bigqueryClient = mocker.patch('google.cloud.bigquery.Client')
+    gbq_connector_with_jwt._get_bigquery_client()
+    assert mock_bigqueryClient.call_count == 1
+    # we ensure that _http is inside the list of called args
+    assert ['project', '_http'] == list(mock_bigqueryClient.call_args[1].keys())
+
+
+def test_http_connect(
+    mocker: MockFixture,
+    gbq_connector_with_jwt: GoogleBigQueryConnector,
+) -> None:
+    """we should call for _http_connect when the jwt is provided in google-credentials"""
+
+    mock_http_connect = mocker.patch(f'{import_path}.GoogleBigQueryConnector._http_connect')
+    gbq_connector_with_jwt._get_bigquery_client()
+    assert mock_http_connect.call_count == 1
+    assert ['http_session', 'project_id'] == list(mock_http_connect.call_args[1].keys())
+
+
 @patch(
-    'google.cloud.bigquery.table.RowIterator.to_dataframe',
-    return_value=pandas.DataFrame({'a': [1, 1], 'b': [2, 2]}),
+    'google.cloud.bigquery.table.RowIterator.to_dataframe_iterable',
+    return_value=iter((pandas.DataFrame({'a': [1, 1], 'b': [2, 2]}),)),
 )
 @patch('google.cloud.bigquery.job.query.QueryJob.result', return_value=RowIterator)
 @patch('google.cloud.bigquery.Client.query', return_value=QueryJob)
 @patch('google.cloud.bigquery.Client', autospec=True)
-def test_execute(client, execute, result, to_dataframe):
+def test_execute(
+    client: bigquery.Client, execute: Callable, result: pd.DataFrame, to_dataframe: Callable
+):
     result = GoogleBigQueryConnector._execute_query(client, 'SELECT 1 FROM my_table', [])
     assert_frame_equal(pandas.DataFrame({'a': [1, 1], 'b': [2, 2]}), result)
 
