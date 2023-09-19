@@ -156,7 +156,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                     project=project_id,
                     _http=http_session,
                 )
-        except JWTNotValidExcption as excp:
+        except GoogleUnauthorized as excp:
             raise JWTNotValidExcption(
                 'Your "JSON Web Token" seems not valid anymore,update it {excp} !'
             ) from excp
