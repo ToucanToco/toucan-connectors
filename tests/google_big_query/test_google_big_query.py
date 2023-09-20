@@ -17,7 +17,7 @@ from pytest_mock import MockFixture
 from toucan_connectors.google_big_query.google_big_query_connector import (
     GoogleBigQueryConnector,
     GoogleBigQueryDataSource,
-    JWTNotValidExcption,
+    InvalidJWTToken,
     _define_query_param,
 )
 from toucan_connectors.google_credentials import GoogleCredentials
@@ -175,7 +175,7 @@ def test_http_connect_on_invalid_token(
     """we should have _http as arg to bigquery.Client when the jwt is provided in google-credentials"""
     mock_bigqueryClient = mocker.patch('google.cloud.bigquery.Client')
     mock_bigqueryClient.side_effect = Unauthorized('Error with the JWT token')
-    with pytest.raises(JWTNotValidExcption):
+    with pytest.raises(InvalidJWTToken):
         gbq_connector_with_jwt._get_bigquery_client()
 
 

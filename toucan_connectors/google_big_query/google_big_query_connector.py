@@ -34,7 +34,7 @@ _MAXIMUM_RESULTS_FETCHED = 2000
 _GBQ_TIMEOUT_HTTP_REQUEST = 30  # in seconds
 
 
-class JWTNotValidExcption(GoogleUnauthorized):
+class InvalidJWTToken(GoogleUnauthorized):
     """When the jwt-token is no longer valid (usualy from google as 401)"""
 
 
@@ -132,8 +132,8 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
 
     @staticmethod
     def _get_google_credentials(credentials: GoogleCredentials, scopes: list[str]) -> Credentials:
-        credentials = get_google_oauth2_credentials(credentials).with_scopes(scopes)  # type: ignore[assignment]
-        return credentials  # type: ignore[assignment]
+        credentials = get_google_oauth2_credentials(credentials).with_scopes(scopes)
+        return credentials
 
     @staticmethod
     def _http_connect(http_session: requests.Session, project_id: str) -> bigquery.Client:
@@ -157,7 +157,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                     _http=http_session,
                 )
         except GoogleUnauthorized as excp:
-            raise JWTNotValidExcption(
+            raise InvalidJWTToken(
                 'Your "JSON Web Token" seems not valid anymore,update it {excp} !'
             ) from excp
 

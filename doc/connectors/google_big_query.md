@@ -32,8 +32,7 @@ in that case, you will only need here two fields:
 - `project_id`: str
 - `jwt_token`: str
 
-*Note*: you will be responsible on updating the `jwt_token` when it expired or
-set a hight value for the expiration.
+*Note*: you will be responsible of updating the `jwt_token` when it expires.
 
 ### HOW TO CREATE A GOOGLE_AUTH JWT
 
