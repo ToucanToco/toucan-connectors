@@ -114,7 +114,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
 
     # for GoogleCredentials
     credentials: GoogleCredentials = Field(
-        ...,
+        None,
         title='Google Credentials',
         description='For authentication, download an authentication file from your '
         '<a href="https://console.developers.google.com/apis/credentials" target="_blank">Google Console</a> and '

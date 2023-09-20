@@ -43,20 +43,11 @@ def _fixture_credentials() -> GoogleCredentials:
 
 
 @pytest.fixture
-def _jwt_fixture_credentials() -> GoogleCredentials:
-    my_credentials = GoogleCredentials(
-        type='my_type',
-        project_id='my_project_id',
-    )
-    return my_credentials
-
-
-@pytest.fixture
-def gbq_connector_with_jwt(_jwt_fixture_credentials: GoogleCredentials) -> GoogleBigQueryConnector:
+def gbq_connector_with_jwt(_fixture_credentials: GoogleCredentials) -> GoogleBigQueryConnector:
     return GoogleBigQueryConnector(
         name='woups',
         scopes=['https://www.googleapis.com/auth/bigquery'],
-        credentials=_jwt_fixture_credentials,
+        credentials=_fixture_credentials,
         jwt_token='this-is-a-jwt-token',
     )
 

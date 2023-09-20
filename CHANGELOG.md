@@ -4,7 +4,7 @@
 
 ## Changed
 
-- Goole Big Query: Now support signed JWT connexion on the GBQ connector.
+- Goole Big Query: Now support signed JWT connection on the GBQ connector.
 
 ### [4.8.1] 2023-09-18
 
