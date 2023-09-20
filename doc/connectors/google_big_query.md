@@ -5,10 +5,11 @@
 * `type`: `"GoogleBigQuery"`
 * `name`: str, required
 * `credentials`: GoogleCredentials, required
+* `jwt_token`: str
 * `dialect`: Dialect, default to legacy
 * `scopes`: list(str), default to ["https://www.googleapis.com/auth/bigquery"]
 
-### GoogleCredentials
+### Auth with GoogleCredentials
 
 For authentication, download an authentication file from console.developper.com
 and use the values here. This is an oauth2 credential file. For more information
@@ -24,7 +25,8 @@ see this: http://gspread.readthedocs.io/en/latest/oauth2.html
 * `token_uri`: str
 * `auth_provider_x509_cert_url`: str
 * `client_x509_cert_url`: str
-* `jwt_token`: str
+
+### Auth with JWT signed
 
 You can also authenticate with a `signed jwt_token` you've created yourself,
 in that case, you will only need here two fields:
@@ -34,7 +36,7 @@ in that case, you will only need here two fields:
 
 *Note*: you will be responsible of updating the `jwt_token` when it expires.
 
-### HOW TO CREATE A GOOGLE_AUTH JWT
+#### HOW TO CREATE A GOOGLE_AUTH JWT
 
 Using python, you can generate a JWT with a `service_account_secret_file.json`,
 like this:

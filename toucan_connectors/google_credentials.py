@@ -43,9 +43,6 @@ class GoogleCredentials(BaseModel):
         title='Client X509 certification URL',
         description=CREDENTIALS_INFO_MESSAGE,
     )
-    # ---
-    # for the jwt-token given as param
-    jwt_token: str = Field(None, title='JSON web token (JWT)', description=CREDENTIALS_INFO_MESSAGE)
 
     @validator('private_key')
     def unescape_break_lines(cls, v):

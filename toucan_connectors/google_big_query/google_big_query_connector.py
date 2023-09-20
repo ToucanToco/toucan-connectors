@@ -112,6 +112,7 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
 class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     data_source_model: GoogleBigQueryDataSource
 
+    # for GoogleCredentials
     credentials: GoogleCredentials = Field(
         ...,
         title='Google Credentials',
@@ -121,6 +122,14 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         '<a href="https://gspread.readthedocs.io/en/latest/oauth2.html" target="_blank" >documentation</a>. '
         'You should use "service_account" credentials, which is the preferred type of credentials '
         'to use when authenticating on behalf of a service or application',
+    )
+    # ---
+    # for the jwt-token given as param
+    jwt_token: str = Field(
+        None,
+        title='JSON web token (JWT) signed',
+        description='JWT signed with your service_account credentials,'
+        'see the docs of the connector for that.',
     )
     dialect: Dialect = Field(
         Dialect.standard,
@@ -271,9 +280,9 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
 
     @cached_property
     def _bigquery_client(self) -> bigquery.Client:
-        if self.credentials.jwt_token:
+        if self.jwt_token:
             # We try to instantiate the bigquery.Client with the given jwt-token
-            _session = CustomRequestSession(self.credentials.jwt_token)
+            _session = CustomRequestSession(self.jwt_token)
             client = GoogleBigQueryConnector._http_connect(
                 http_session=_session, project_id=self.credentials.project_id
             )
