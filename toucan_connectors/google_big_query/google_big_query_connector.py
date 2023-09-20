@@ -48,6 +48,15 @@ class CustomRequestSession(requests.Session):
 
     """
 
+    def __init__(self, jwt_token: str) -> None:
+        super().__init__()
+        self.headers.update(
+            {
+                'Authorization': f'Bearer {jwt_token}',
+                'content-type': 'application/json',
+            }
+        )
+
     # https://github.com/googleapis/google-auth-library-python/blob/v1.35.0/google/auth/transport/requests.py#L535
     is_mtls: bool = False
 
@@ -264,13 +273,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     def _bigquery_client(self) -> bigquery.Client:
         if self.credentials.jwt_token:
             # We try to instantiate the bigquery.Client with the given jwt-token
-            _session = CustomRequestSession()
-            _session.headers.update(
-                {
-                    'Authorization': f'Bearer {self.credentials.jwt_token}',
-                    'content-type': 'application/json',
-                }
-            )
+            _session = CustomRequestSession(self.credentials.jwt_token)
             client = GoogleBigQueryConnector._http_connect(
                 http_session=_session, project_id=self.credentials.project_id
             )
