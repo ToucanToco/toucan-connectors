@@ -48,6 +48,9 @@ class CustomRequestSession(requests.Session):
 
     """
 
+    # https://github.com/googleapis/google-auth-library-python/blob/v1.35.0/google/auth/transport/requests.py#L535
+    is_mtls: bool = False
+
     def __init__(self, jwt_token: str) -> None:
         super().__init__()
         self.headers.update(
@@ -56,9 +59,6 @@ class CustomRequestSession(requests.Session):
                 'content-type': 'application/json',
             }
         )
-
-    # https://github.com/googleapis/google-auth-library-python/blob/v1.35.0/google/auth/transport/requests.py#L535
-    is_mtls: bool = False
 
 
 class Dialect(str, Enum):
