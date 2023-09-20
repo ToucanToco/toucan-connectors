@@ -28,7 +28,7 @@ see this: http://gspread.readthedocs.io/en/latest/oauth2.html
 
 ### Auth with JWT signed
 
-You can also authenticate with a `signed jwt_token` you've created yourself,
+You can also authenticate with a signed `jwt_token` you've created yourself,
 in that case, you will only need here two fields:
 
 - `project_id`: str
