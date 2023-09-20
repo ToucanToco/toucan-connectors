@@ -1,3 +1,4 @@
+from google.oauth2.service_account import Credentials
 from pydantic import BaseModel, Field, HttpUrl, validator
 
 CREDENTIALS_INFO_MESSAGE = (
@@ -11,6 +12,7 @@ class GoogleCredentials(BaseModel):
     type: str = Field(
         'service_account', title='Service account', description=CREDENTIALS_INFO_MESSAGE
     )
+    # On service account MODE :
     project_id: str = Field(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
     private_key_id: str = Field(..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE)
     private_key: str = Field(
@@ -53,7 +55,5 @@ class GoogleCredentials(BaseModel):
         return v.replace('\\n', '\n')
 
 
-def get_google_oauth2_credentials(google_credentials):
-    from google.oauth2.service_account import Credentials
-
+def get_google_oauth2_credentials(google_credentials: GoogleCredentials) -> Credentials:
     return Credentials.from_service_account_info(google_credentials.dict())
