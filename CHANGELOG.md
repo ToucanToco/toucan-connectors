@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [4.9.0] 2023-09-20
+
 ## Changed
 
 - Goole Big Query: Now support signed JWT connection on the GBQ connector.
