@@ -745,3 +745,41 @@ def test_get_form(mocker: MockFixture, _fixture_credentials: MockFixture) -> Non
         )['properties']['database']['default']
         == 'my_project_id'
     )
+
+
+@pytest.mark.parametrize(
+    'input_query, expected_output',
+    [
+        # Test cases with double quotes (unchanged)
+        ('SELECT "column1" FROM table', 'SELECT `column1` FROM table'),
+        ('"quoted text" inside query', '`quoted text` inside query'),
+        # Test cases with '@__' and '__''
+        ('@__param1__ in query', '@__param1__ in query'),  # No change for param1
+        (
+            '"quoted text"@__param2__',
+            '`quoted text`@__param2__',
+        ),  # Replace double quotes, keep param2 intact
+        (
+            '@__param3__ and @__param4__',
+            '@__param3__ and @__param4__',
+        ),  # No change for params 3 and 4
+        # Test cases with escaped single quotes
+        ("'single-quoted text'", "'single-quoted text'"),  # No change for single-quoted text
+        (
+            "'escaped \\' single quote'",
+            "'escaped \\' single quote'",
+        ),  # No change for escaped single quote
+        ("'@__param7__'", '@__param7__'),  # Remove surrounding single quotes for param7
+        (
+            "'@__param8__' and '@__param9__'",
+            '@__param8__ and @__param9__',
+        ),  # Remove surrounding single quotes for params 8 and 9
+        # Mixed cases
+        (
+            '@__param5__ "with quotes" @__param6__',
+            '@__param5__ `with quotes` @__param6__',
+        ),  # No change for params 5 and 6
+    ],
+)
+def test_clean_query(input_query, expected_output):
+    assert GoogleBigQueryConnector._clean_query(input_query) == expected_output
