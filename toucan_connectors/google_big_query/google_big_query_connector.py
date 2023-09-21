@@ -321,7 +321,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         """Add surrounding for parameters injection"""
         return f'@{variable}'
 
-    def _bigquery_client_with_google_creds(self):
+    def _bigquery_client_with_google_creds(self) -> bigquery.Client:
         try:
             credentials = GoogleBigQueryConnector._get_google_credentials(
                 self.credentials, self.scopes

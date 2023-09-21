@@ -826,7 +826,7 @@ def test_optional_fields_validator_for_google_creds():
     incomplete_credentials_with_no_project_id = {
         'type': 'service_account',
     }
-    # should raise an errro if the project_id is not set
+    # should raise an error if the project_id is not set
     with pytest.raises(ValidationError) as _:
         _ = GoogleBigQueryConnector(
             name='something', credentials=incomplete_credentials_with_no_project_id

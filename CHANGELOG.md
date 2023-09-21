@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## Fixed
+
+- Goole Big Query:
+    - fix Validation error when all GoogleCredentials are not set (only the `project_id` is required).
+    - Explicit error information when no data to return.
+    - fallback on normal GoogleCredentials connexion mode when jwt-token is not valid aymore.
+
 ### [4.9.0] 2023-09-20
 
 ## Changed

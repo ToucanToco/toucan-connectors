@@ -15,8 +15,8 @@ For authentication, download an authentication file from console.developper.com
 and use the values here. This is an oauth2 credential file. For more information
 see this: http://gspread.readthedocs.io/en/latest/oauth2.html
 
-* `type`: str
-* `project_id`: str
+* `type`: str, required
+* `project_id`: str, required
 * `private_key_id`: str
 * `private_key`: str
 * `client_email`: str
