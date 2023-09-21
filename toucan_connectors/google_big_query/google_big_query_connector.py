@@ -16,7 +16,7 @@ from google.cloud import bigquery
 from google.cloud.bigquery.dbapi import _helpers as bigquery_helpers
 from google.cloud.bigquery.job import QueryJob
 from google.oauth2.service_account import Credentials
-from pydantic import Field, create_model
+from pydantic import Field, create_model, validator
 
 from toucan_connectors.common import sanitize_query
 from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
@@ -116,6 +116,33 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
 class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     data_source_model: GoogleBigQueryDataSource
 
+    @validator('credentials', pre=True, always=True)
+    def validate_google_credentials(cls, value):
+        # list of fields that can be missing or None
+        optional_fields = [
+            'private_key_id',
+            'private_key',
+            'client_email',
+            'client_id',
+            'auth_uri',
+            'auth_provider_x509_cert_url',
+            'client_x509_cert_url',
+        ]
+
+        # Iterate over optional fields and set them to None if missing
+        for field_name in optional_fields:
+            if not hasattr(value, field_name):
+                if field_name in [
+                    'client_x509_cert_url',
+                    'auth_provider_x509_cert_url',
+                    'auth_uri',
+                ]:
+                    value[field_name] = 'https://valid-scheme.com'
+                else:
+                    value[field_name] = '__not_set__'
+
+        return value
+
     # for GoogleCredentials
     credentials: GoogleCredentials = Field(
         None,
@@ -129,7 +156,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     )
     # ---
     # for the jwt-token given as param
-    jwt_token: str = Field(
+    jwt_token: str | None = Field(
         None,
         title='JSON web token (JWT) signed',
         description='JWT signed with your service_account credentials,'
@@ -404,7 +431,7 @@ WHERE
                 return pd.concat(
                     (df for df in self._fetch_query_results(query_job)), ignore_index=True
                 )
-            except ValueError as excp: # pragma: no cover
+            except ValueError as excp:  # pragma: no cover
                 raise NoDataFoundException(
                     'No data found, please check your config again.'
                 ) from excp
