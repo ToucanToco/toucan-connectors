@@ -12,6 +12,7 @@ from google.cloud.bigquery.table import RowIterator
 from google.cloud.exceptions import Unauthorized
 from google.oauth2.service_account import Credentials
 from pandas.util.testing import assert_frame_equal  # <-- for testing dataframes
+from pydantic import ValidationError
 from pytest_mock import MockFixture
 
 from toucan_connectors.google_big_query.google_big_query_connector import (
@@ -779,3 +780,25 @@ def test_get_form(mocker: MockFixture, _fixture_credentials: MockFixture) -> Non
 )
 def test_clean_query(input_query, expected_output):
     assert GoogleBigQueryConnector._clean_query(input_query) == expected_output
+
+
+def test_optional_fields_validator_for_google_creds():
+    # Create a GoogleCredentials object with some missing fields
+    incomplete_credentials_with_project_id = {
+        'type': 'service_account',
+        'project_id': 'your-project-id',
+    }
+
+    # Can create the connector without all fields on GoogleCredentials
+    _ = GoogleBigQueryConnector(
+        name='something', credentials=incomplete_credentials_with_project_id
+    )
+
+    incomplete_credentials_with_no_project_id = {
+        'type': 'service_account',
+    }
+    # should raise an errro if the project_id is not set
+    with pytest.raises(ValidationError) as _:
+        _ = GoogleBigQueryConnector(
+            name='something', credentials=incomplete_credentials_with_no_project_id
+        )
