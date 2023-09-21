@@ -39,6 +39,10 @@ class InvalidJWTToken(GoogleUnauthorized):
     """When the jwt-token is no longer valid (usualy from google as 401)"""
 
 
+class NoDataFoundException(Exception):
+    """When there is no data to Concatenate and send back to the user"""
+
+
 class CustomRequestSession(requests.Session):
     """
     Had to create this "weird" class that wraps requests.Session
@@ -250,7 +254,13 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                     }
                 },
             )
-            return pd.concat((df for df in result_iterator), ignore_index=True)
+
+            try:
+                return pd.concat((df for df in result_iterator), ignore_index=True)
+            except ValueError as excp:  # pragma: no cover
+                raise NoDataFoundException(
+                    'No data found, please check your config again.'
+                ) from excp
         except TypeError as e:
             _LOGGER.error(f'Failed to execute request {query} - {e}')
             raise e
@@ -390,7 +400,14 @@ WHERE
             query_job = client.query(self._clean_query(query))
             # Fetch pages of results using the generator
             # and Concatenate all dataframes into a single one
-            return pd.concat((df for df in self._fetch_query_results(query_job)), ignore_index=True)
+            try:
+                return pd.concat(
+                    (df for df in self._fetch_query_results(query_job)), ignore_index=True
+                )
+            except ValueError as excp: # pragma: no cover
+                raise NoDataFoundException(
+                    'No data found, please check your config again.'
+                ) from excp
         except Exception as exc:
             raise GoogleAPIError(f'An error occurred while executing the query: {exc}') from exc
 
@@ -418,7 +435,10 @@ WHERE
             dfs.append(client.query(query, location=location).to_dataframe())
 
         # Then, we returning a single dataframe containing all results
-        return pd.concat(dfs)
+        try:
+            return pd.concat(dfs)
+        except ValueError as excp:  # pragma: no cover
+            raise NoDataFoundException('No data found, please check your config again.') from excp
 
     @cached_property
     def _available_schs(self) -> list[str]:  # pragma: no cover
