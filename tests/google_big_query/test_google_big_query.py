@@ -798,9 +798,30 @@ def test_optional_fields_validator_for_google_creds():
     }
 
     # Can create the connector without all fields on GoogleCredentials
-    _ = GoogleBigQueryConnector(
+    connector1 = GoogleBigQueryConnector(
         name='something', credentials=incomplete_credentials_with_project_id
     )
+    # default values setted when not valids
+    assert connector1.credentials.private_key == '__not_set__'
+    assert connector1.credentials.private_key_id == '__not_set__'
+
+    # with valid values set
+    valid_credentials = {
+        'type': 'service_account',
+        'project_id': 'your-project-id',
+        'private_key_id': 'my_private_key_id',
+        'private_key': 'my_private_key',
+        'client_email': 'my_client_email@email.com',
+        'client_id': 'my_client_id',
+        'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
+        'token_uri': 'https://oauth2.googleapis.com/token',
+        'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs',
+        'client_x509_cert_url': 'https://www.googleapis.com/robot/v1/metadata/x509/pika.com',
+    }
+    connector2 = GoogleBigQueryConnector(name='something', credentials=valid_credentials)
+    assert connector2.credentials.private_key == 'my_private_key'
+    assert connector2.credentials.private_key_id == 'my_private_key_id'
+    assert connector2.credentials.auth_uri == 'https://accounts.google.com/o/oauth2/auth'
 
     incomplete_credentials_with_no_project_id = {
         'type': 'service_account',

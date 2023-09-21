@@ -135,7 +135,8 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
 
         # Iterate over optional fields and set them to None if missing
         for field_name in optional_fields:
-            if not hasattr(value, field_name):
+            if not hasattr(value, field_name) and not value.get(field_name):
+                # for all links
                 if field_name in [
                     'client_x509_cert_url',
                     'auth_provider_x509_cert_url',
@@ -143,6 +144,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                 ]:
                     value[field_name] = 'https://valid-scheme.com'
                 else:
+                    # for other values
                     value[field_name] = '__not_set__'
 
         return value
