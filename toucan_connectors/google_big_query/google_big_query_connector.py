@@ -39,6 +39,10 @@ class InvalidJWTToken(GoogleUnauthorized):
     """When the jwt-token is no longer valid (usualy from google as 401)"""
 
 
+class GoogleClientCreationError(Exception):
+    """When it's not possible to create a bigquery.Client with givent fields"""
+
+
 class NoDataFoundException(Exception):
     """When there is no data to Concatenate and send back to the user"""
 
@@ -315,20 +319,35 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         """Add surrounding for parameters injection"""
         return f'@{variable}'
 
-    @cached_property
-    def _bigquery_client(self) -> bigquery.Client:
-        if self.jwt_token:
-            # We try to instantiate the bigquery.Client with the given jwt-token
-            _session = CustomRequestSession(self.jwt_token)
-            client = GoogleBigQueryConnector._http_connect(
-                http_session=_session, project_id=self.credentials.project_id
-            )
-        else:
-            # or we fallback on default google-credentials
+    def _bigquery_client_with_google_creds(self):
+        try:
             credentials = GoogleBigQueryConnector._get_google_credentials(
                 self.credentials, self.scopes
             )
-            client = GoogleBigQueryConnector._connect(credentials)
+            return GoogleBigQueryConnector._connect(credentials)
+        except ValueError as excp:
+            raise GoogleClientCreationError from excp
+
+    @cached_property
+    def _bigquery_client(self) -> bigquery.Client:
+        if self.jwt_token:
+            try:
+                # We try to instantiate the bigquery.Client with the given jwt-token
+                _session = CustomRequestSession(self.jwt_token)
+                client = GoogleBigQueryConnector._http_connect(
+                    http_session=_session, project_id=self.credentials.project_id
+                )
+                _LOGGER.info('bigqueryClient created with the JWT provided !')
+            except InvalidJWTToken:
+                _LOGGER.info(
+                    'JWT login failed, falling back to GoogleCredentials if they are presents'
+                )
+                # We fallback the login on GoogleCredentials creation of the client here ?
+                # or we fallback on default google-credentials
+                client = self._bigquery_client_with_google_creds()
+        else:
+            # or we fallback on default google-credentials
+            client = self._bigquery_client_with_google_creds()
 
         return client
 

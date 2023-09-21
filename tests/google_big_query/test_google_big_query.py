@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pandas
 import pandas as pd
 import pytest
+import requests
 from google.api_core.exceptions import NotFound
 from google.cloud import bigquery
 from google.cloud.bigquery import ArrayQueryParameter, Client, ScalarQueryParameter
@@ -18,6 +19,7 @@ from pytest_mock import MockFixture
 from toucan_connectors.google_big_query.google_big_query_connector import (
     GoogleBigQueryConnector,
     GoogleBigQueryDataSource,
+    GoogleClientCreationError,
     InvalidJWTToken,
     _define_query_param,
 )
@@ -172,7 +174,13 @@ def test_http_connect_on_invalid_token(
     """we should have _http as arg to bigquery.Client when the jwt is provided in google-credentials"""
     mock_bigqueryClient = mocker.patch('google.cloud.bigquery.Client')
     mock_bigqueryClient.side_effect = Unauthorized('Error with the JWT token')
+
+    # when the JWT is not valid
     with pytest.raises(InvalidJWTToken):
+        gbq_connector_with_jwt._http_connect(requests.Session(), 'some-project-id')
+
+    # when falling back on normal creds :
+    with pytest.raises(GoogleClientCreationError):
         gbq_connector_with_jwt._get_bigquery_client()
 
 
