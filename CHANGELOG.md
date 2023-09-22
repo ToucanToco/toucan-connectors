@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## Fixed
+
+- Goole Big Query:
+    - Better UX (Switch between GoogleCreds auth or GoogleJWT  auth).
+    - Explicit errors information when no data is returned.
+    - Fallback on GoogleCredentials auth when JWTCredentials fails (or when jwt-token is not valid aymore).
+
 ### [4.9.0] 2023-09-20
 
 ## Changed

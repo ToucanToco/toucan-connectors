@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pandas
 import pandas as pd
 import pytest
+import requests
 from google.api_core.exceptions import NotFound
 from google.cloud import bigquery
 from google.cloud.bigquery import ArrayQueryParameter, Client, ScalarQueryParameter
@@ -12,15 +13,17 @@ from google.cloud.bigquery.table import RowIterator
 from google.cloud.exceptions import Unauthorized
 from google.oauth2.service_account import Credentials
 from pandas.util.testing import assert_frame_equal  # <-- for testing dataframes
+from pydantic import ValidationError
 from pytest_mock import MockFixture
 
 from toucan_connectors.google_big_query.google_big_query_connector import (
     GoogleBigQueryConnector,
     GoogleBigQueryDataSource,
+    GoogleClientCreationError,
     InvalidJWTToken,
     _define_query_param,
 )
-from toucan_connectors.google_credentials import GoogleCredentials
+from toucan_connectors.google_credentials import GoogleCredentials, JWTCredentials
 
 import_path = 'toucan_connectors.google_big_query.google_big_query_connector'
 
@@ -43,12 +46,21 @@ def _fixture_credentials() -> GoogleCredentials:
 
 
 @pytest.fixture
-def gbq_connector_with_jwt(_fixture_credentials: GoogleCredentials) -> GoogleBigQueryConnector:
+def _jwt_fixture_credentials() -> JWTCredentials:
+    my_credentials = JWTCredentials(
+        project_id='THE_JWT_project_id',
+        jwt_token='valid-jwt',
+    )
+    return my_credentials
+
+
+@pytest.fixture
+def gbq_connector_with_jwt(_jwt_fixture_credentials: JWTCredentials) -> GoogleBigQueryConnector:
+    # those should and can be None
     return GoogleBigQueryConnector(
         name='woups',
         scopes=['https://www.googleapis.com/auth/bigquery'],
-        credentials=_fixture_credentials,
-        jwt_token='this-is-a-jwt-token',
+        jwt_credentials=_jwt_fixture_credentials,
     )
 
 
@@ -166,7 +178,13 @@ def test_http_connect_on_invalid_token(
     """we should have _http as arg to bigquery.Client when the jwt is provided in google-credentials"""
     mock_bigqueryClient = mocker.patch('google.cloud.bigquery.Client')
     mock_bigqueryClient.side_effect = Unauthorized('Error with the JWT token')
+
+    # when the JWT is not valid
     with pytest.raises(InvalidJWTToken):
+        gbq_connector_with_jwt._http_connect(requests.Session(), 'some-project-id')
+
+    # when falling back on normal creds :
+    with pytest.raises(GoogleClientCreationError):
         gbq_connector_with_jwt._get_bigquery_client()
 
 
@@ -713,7 +731,9 @@ WHERE
     assert mocked_query.call_args_list[2][1] == {'location': 'Toulouse'}
 
 
-def test_get_form(mocker: MockFixture, _fixture_credentials: MockFixture) -> None:
+def test_get_form(
+    mocker: MockFixture, _fixture_credentials: MockFixture, _jwt_fixture_credentials: MockFixture
+) -> None:
     def mock_available_schs():
         return ['ok', 'test']
 
@@ -735,6 +755,20 @@ def test_get_form(mocker: MockFixture, _fixture_credentials: MockFixture) -> Non
             {},
         )['properties']['database']['default']
         == 'my_project_id'
+    )
+
+    assert (
+        GoogleBigQueryDataSource(query=',', name='MyGBQ-WITH-JWT', domain='foo').get_form(
+            GoogleBigQueryConnector(
+                name='MyGBQ',
+                jwt_credentials=_jwt_fixture_credentials,
+                scopes=[
+                    'https://www.googleapis.com/auth/bigquery',
+                ],
+            ),
+            {},
+        )['properties']['database']['default']
+        == 'THE_JWT_project_id'
     )
 
 
@@ -774,3 +808,47 @@ def test_get_form(mocker: MockFixture, _fixture_credentials: MockFixture) -> Non
 )
 def test_clean_query(input_query, expected_output):
     assert GoogleBigQueryConnector._clean_query(input_query) == expected_output
+
+
+def test_optional_fields_validator_for_google_creds_or_jwt():
+    # FOR GOOGLE CREDS AUTH
+    incomplete_credentials = {
+        'type': 'service_account',
+        'project_id': 'your-project-id',
+    }
+    # We should have an error raised, because the whole GoogleCreds should be
+    # filled
+    with pytest.raises(ValidationError):
+        _ = GoogleBigQueryConnector(name='something', credentials=incomplete_credentials)
+
+    # with valid values set
+    valid_credentials = {
+        'type': 'service_account',
+        'project_id': 'your-project-id',
+        'private_key_id': 'my_private_key_id',
+        'private_key': 'my_private_key',
+        'client_email': 'my_client_email@email.com',
+        'client_id': 'my_client_id',
+        'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
+        'token_uri': 'https://oauth2.googleapis.com/token',
+        'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs',
+        'client_x509_cert_url': 'https://www.googleapis.com/robot/v1/metadata/x509/pika.com',
+    }
+    # no error raised
+    _ = GoogleBigQueryConnector(name='something', credentials=valid_credentials)
+
+    # FOR JWT GOOGLE CREDS AUTH
+    incomplete_jwt_credentials_ = {
+        'project_id': 'test',
+    }
+    # We have an error, because the jwt_token is missing
+    with pytest.raises(ValidationError) as _:
+        _ = GoogleBigQueryConnector(name='something', jwt_credentials=incomplete_jwt_credentials_)
+
+    # with valid values set
+    valid_credentials = {
+        'project_id': 'your-project-id',
+        'jwt_token': 'valid-token',
+    }
+    # no error raised
+    _ = GoogleBigQueryConnector(name='something', jwt_credentials=valid_credentials)

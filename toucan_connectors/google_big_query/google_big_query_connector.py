@@ -19,7 +19,11 @@ from google.oauth2.service_account import Credentials
 from pydantic import Field, create_model
 
 from toucan_connectors.common import sanitize_query
-from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
+from toucan_connectors.google_credentials import (
+    GoogleCredentials,
+    JWTCredentials,
+    get_google_oauth2_credentials,
+)
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
     TableInfo,
@@ -37,6 +41,14 @@ _GBQ_TIMEOUT_HTTP_REQUEST = 30  # in seconds
 
 class InvalidJWTToken(GoogleUnauthorized):
     """When the jwt-token is no longer valid (usualy from google as 401)"""
+
+
+class GoogleClientCreationError(Exception):
+    """When it's not possible to create a bigquery.Client with given fields"""
+
+
+class NoDataFoundException(Exception):
+    """When there is no data to Concatenate and send back to the user"""
 
 
 class CustomRequestSession(requests.Session):
@@ -89,7 +101,14 @@ class GoogleBigQueryDataSource(ToucanDataSource):
             db_schema=strlist_to_enum('db_schema', connector._available_schs),
             __base__=cls,
         ).schema()
-        schema['properties']['database']['default'] = connector.credentials.project_id
+
+        project_id = ''
+        if connector.jwt_credentials:
+            project_id = connector.jwt_credentials.project_id
+        elif connector.credentials:
+            project_id = connector.credentials.project_id
+
+        schema['properties']['database']['default'] = project_id
 
         return schema
 
@@ -113,7 +132,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     data_source_model: GoogleBigQueryDataSource
 
     # for GoogleCredentials
-    credentials: GoogleCredentials = Field(
+    credentials: GoogleCredentials | None = Field(
         None,
         title='Google Credentials',
         description='For authentication, download an authentication file from your '
@@ -125,12 +144,12 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     )
     # ---
     # for the jwt-token given as param
-    jwt_token: str = Field(
+    jwt_credentials: JWTCredentials | None = Field(
         None,
-        title='JSON web token (JWT) signed',
-        description='JWT signed with your service_account credentials,'
-        'see the docs of the connector for that.',
+        title='Google Credentials With JWT',
+        description='You need to signe a JWT token, that will be use here with the project_id',
     )
+
     dialect: Dialect = Field(
         Dialect.standard,
         description='BigQuery allows you to choose between standard and legacy SQL as query syntax. '
@@ -250,7 +269,13 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                     }
                 },
             )
-            return pd.concat((df for df in result_iterator), ignore_index=True)
+
+            try:
+                return pd.concat((df for df in result_iterator), ignore_index=True)
+            except ValueError as excp:  # pragma: no cover
+                raise NoDataFoundException(
+                    'No data found, please check your config again.'
+                ) from excp
         except TypeError as e:
             _LOGGER.error(f'Failed to execute request {query} - {e}')
             raise e
@@ -278,22 +303,34 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         """Add surrounding for parameters injection"""
         return f'@{variable}'
 
-    @cached_property
-    def _bigquery_client(self) -> bigquery.Client:
-        if self.jwt_token:
-            # We try to instantiate the bigquery.Client with the given jwt-token
-            _session = CustomRequestSession(self.jwt_token)
-            client = GoogleBigQueryConnector._http_connect(
-                http_session=_session, project_id=self.credentials.project_id
-            )
-        else:
-            # or we fallback on default google-credentials
+    def _bigquery_client_with_google_creds(self) -> bigquery.Client:
+        try:
+            assert self.credentials is not None
             credentials = GoogleBigQueryConnector._get_google_credentials(
                 self.credentials, self.scopes
             )
-            client = GoogleBigQueryConnector._connect(credentials)
+            return GoogleBigQueryConnector._connect(credentials)
+        except AssertionError as excp:
+            raise GoogleClientCreationError from excp
 
-        return client
+    @cached_property
+    def _bigquery_client(self) -> bigquery.Client:
+        if self.jwt_credentials and self.jwt_credentials.jwt_token:
+            try:
+                # We try to instantiate the bigquery.Client with the given jwt-token
+                _session = CustomRequestSession(self.jwt_credentials.jwt_token)
+                client = GoogleBigQueryConnector._http_connect(
+                    http_session=_session, project_id=self.jwt_credentials.project_id
+                )
+                _LOGGER.info('bigqueryClient created with the JWT provided !')
+
+                return client
+            except InvalidJWTToken:
+                _LOGGER.info(
+                    'JWT login failed, falling back to GoogleCredentials if they are presents'
+                )
+        # or we fallback on default google-credentials
+        return self._bigquery_client_with_google_creds()
 
     def _get_bigquery_client(self) -> bigquery.Client:
         with suppress(Exception):
@@ -390,7 +427,14 @@ WHERE
             query_job = client.query(self._clean_query(query))
             # Fetch pages of results using the generator
             # and Concatenate all dataframes into a single one
-            return pd.concat((df for df in self._fetch_query_results(query_job)), ignore_index=True)
+            try:
+                return pd.concat(
+                    (df for df in self._fetch_query_results(query_job)), ignore_index=True
+                )
+            except ValueError as excp:  # pragma: no cover
+                raise NoDataFoundException(
+                    'No data found, please check your config again.'
+                ) from excp
         except Exception as exc:
             raise GoogleAPIError(f'An error occurred while executing the query: {exc}') from exc
 
@@ -418,7 +462,10 @@ WHERE
             dfs.append(client.query(query, location=location).to_dataframe())
 
         # Then, we returning a single dataframe containing all results
-        return pd.concat(dfs)
+        try:
+            return pd.concat(dfs)
+        except ValueError as excp:  # pragma: no cover
+            raise NoDataFoundException('No data found, please check your config again.') from excp
 
     @cached_property
     def _available_schs(self) -> list[str]:  # pragma: no cover
