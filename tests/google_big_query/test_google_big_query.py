@@ -732,9 +732,7 @@ WHERE
 
 
 def test_get_form(
-    mocker: MockFixture,
-    _fixture_credentials: MockFixture,
-    _jwt_fixture_credentials: MockFixture
+    mocker: MockFixture, _fixture_credentials: MockFixture, _jwt_fixture_credentials: MockFixture
 ) -> None:
     def mock_available_schs():
         return ['ok', 'test']
@@ -772,7 +770,6 @@ def test_get_form(
         )['properties']['database']['default']
         == 'THE_JWT_project_id'
     )
-
 
 
 @pytest.mark.parametrize(
