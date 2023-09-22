@@ -23,7 +23,7 @@ from toucan_connectors.google_big_query.google_big_query_connector import (
     InvalidJWTToken,
     _define_query_param,
 )
-from toucan_connectors.google_credentials import GoogleCredentials
+from toucan_connectors.google_credentials import GoogleCredentials, JWTCredentials
 
 import_path = 'toucan_connectors.google_big_query.google_big_query_connector'
 
@@ -46,17 +46,21 @@ def _fixture_credentials() -> GoogleCredentials:
 
 
 @pytest.fixture
-def gbq_connector_with_jwt(_fixture_credentials: GoogleCredentials) -> GoogleBigQueryConnector:
+def _jwt_fixture_credentials() -> JWTCredentials:
+    my_credentials = JWTCredentials(
+        project_id='my_project_id',
+        jwt_token='valid-jwt',
+    )
+    return my_credentials
+
+
+@pytest.fixture
+def gbq_connector_with_jwt(_jwt_fixture_credentials: JWTCredentials) -> GoogleBigQueryConnector:
     # those should and can be None
-    _fixture_credentials.private_key = None
-    _fixture_credentials.private_key_id = None
-    _fixture_credentials.client_id = None
-    _fixture_credentials.client_email = None
     return GoogleBigQueryConnector(
         name='woups',
         scopes=['https://www.googleapis.com/auth/bigquery'],
-        credentials=_fixture_credentials,
-        jwt_token='this-is-a-jwt-token',
+        jwt_credentials=_jwt_fixture_credentials,
     )
 
 
@@ -790,20 +794,16 @@ def test_clean_query(input_query, expected_output):
     assert GoogleBigQueryConnector._clean_query(input_query) == expected_output
 
 
-def test_optional_fields_validator_for_google_creds():
-    # Create a GoogleCredentials object with some missing fields
-    incomplete_credentials_with_project_id = {
+def test_optional_fields_validator_for_google_creds_or_jwt():
+    # FOR GOOGLE CREDS AUTH
+    incomplete_credentials = {
         'type': 'service_account',
         'project_id': 'your-project-id',
     }
-
-    # Can create the connector without all fields on GoogleCredentials
-    connector1 = GoogleBigQueryConnector(
-        name='something', credentials=incomplete_credentials_with_project_id
-    )
-    # default values setted when not valids
-    assert connector1.credentials.private_key == '__not_set__'
-    assert connector1.credentials.private_key_id == '__not_set__'
+    # We should have an error raised, because the whole GoogleCreds should be
+    # filled
+    with pytest.raises(ValidationError):
+        _ = GoogleBigQueryConnector(name='something', credentials=incomplete_credentials)
 
     # with valid values set
     valid_credentials = {
@@ -818,16 +818,21 @@ def test_optional_fields_validator_for_google_creds():
         'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs',
         'client_x509_cert_url': 'https://www.googleapis.com/robot/v1/metadata/x509/pika.com',
     }
-    connector2 = GoogleBigQueryConnector(name='something', credentials=valid_credentials)
-    assert connector2.credentials.private_key == 'my_private_key'
-    assert connector2.credentials.private_key_id == 'my_private_key_id'
-    assert connector2.credentials.auth_uri == 'https://accounts.google.com/o/oauth2/auth'
+    # no error raised
+    _ = GoogleBigQueryConnector(name='something', credentials=valid_credentials)
 
-    incomplete_credentials_with_no_project_id = {
-        'type': 'service_account',
+    # FOR JWT GOOGLE CREDS AUTH
+    incomplete_jwt_credentials_ = {
+        'project_id': 'test',
     }
-    # should raise an error if the project_id is not set
+    # We have an error, because the jwt_token is missing
     with pytest.raises(ValidationError) as _:
-        _ = GoogleBigQueryConnector(
-            name='something', credentials=incomplete_credentials_with_no_project_id
-        )
+        _ = GoogleBigQueryConnector(name='something', jwt_credentials=incomplete_jwt_credentials_)
+
+    # with valid values set
+    valid_credentials = {
+        'project_id': 'your-project-id',
+        'jwt_token': 'valid-token',
+    }
+    # no error raised
+    _ = GoogleBigQueryConnector(name='something', jwt_credentials=valid_credentials)

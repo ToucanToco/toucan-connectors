@@ -16,10 +16,14 @@ from google.cloud import bigquery
 from google.cloud.bigquery.dbapi import _helpers as bigquery_helpers
 from google.cloud.bigquery.job import QueryJob
 from google.oauth2.service_account import Credentials
-from pydantic import Field, create_model, validator
+from pydantic import Field, create_model
 
 from toucan_connectors.common import sanitize_query
-from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
+from toucan_connectors.google_credentials import (
+    GoogleCredentials,
+    JWTCredentials,
+    get_google_oauth2_credentials,
+)
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
     TableInfo,
@@ -40,7 +44,7 @@ class InvalidJWTToken(GoogleUnauthorized):
 
 
 class GoogleClientCreationError(Exception):
-    """When it's not possible to create a bigquery.Client with givent fields"""
+    """When it's not possible to create a bigquery.Client with given fields"""
 
 
 class NoDataFoundException(Exception):
@@ -120,37 +124,8 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
 class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     data_source_model: GoogleBigQueryDataSource
 
-    @validator('credentials', pre=True, always=True)
-    def validate_google_credentials(cls, value):
-        # list of fields that can be missing or None
-        optional_fields = [
-            'private_key_id',
-            'private_key',
-            'client_email',
-            'client_id',
-            'auth_uri',
-            'auth_provider_x509_cert_url',
-            'client_x509_cert_url',
-        ]
-
-        # Iterate over optional fields and set them to None if missing
-        for field_name in optional_fields:
-            if not hasattr(value, field_name) and not value.get(field_name):
-                # for all links
-                if field_name in [
-                    'client_x509_cert_url',
-                    'auth_provider_x509_cert_url',
-                    'auth_uri',
-                ]:
-                    value[field_name] = 'https://valid-scheme.com'
-                else:
-                    # for other values
-                    value[field_name] = '__not_set__'
-
-        return value
-
     # for GoogleCredentials
-    credentials: GoogleCredentials = Field(
+    credentials: GoogleCredentials | None = Field(
         None,
         title='Google Credentials',
         description='For authentication, download an authentication file from your '
@@ -162,12 +137,12 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
     )
     # ---
     # for the jwt-token given as param
-    jwt_token: str | None = Field(
+    jwt_credentials: JWTCredentials | None = Field(
         None,
-        title='JSON web token (JWT) signed',
-        description='JWT signed with your service_account credentials,'
-        'see the docs of the connector for that.',
+        title='Google Credentials With JWT',
+        description='You need to signe a JWT token, that will be use here with the project_id',
     )
+
     dialect: Dialect = Field(
         Dialect.standard,
         description='BigQuery allows you to choose between standard and legacy SQL as query syntax. '
@@ -323,35 +298,32 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
 
     def _bigquery_client_with_google_creds(self) -> bigquery.Client:
         try:
+            assert self.credentials is not None
             credentials = GoogleBigQueryConnector._get_google_credentials(
                 self.credentials, self.scopes
             )
             return GoogleBigQueryConnector._connect(credentials)
-        except ValueError as excp:
+        except AssertionError as excp:
             raise GoogleClientCreationError from excp
 
     @cached_property
     def _bigquery_client(self) -> bigquery.Client:
-        if self.jwt_token:
+        if self.jwt_credentials and self.jwt_credentials.jwt_token:
             try:
                 # We try to instantiate the bigquery.Client with the given jwt-token
-                _session = CustomRequestSession(self.jwt_token)
+                _session = CustomRequestSession(self.jwt_credentials.jwt_token)
                 client = GoogleBigQueryConnector._http_connect(
-                    http_session=_session, project_id=self.credentials.project_id
+                    http_session=_session, project_id=self.jwt_credentials.project_id
                 )
                 _LOGGER.info('bigqueryClient created with the JWT provided !')
+
+                return client
             except InvalidJWTToken:
                 _LOGGER.info(
                     'JWT login failed, falling back to GoogleCredentials if they are presents'
                 )
-                # We fallback the login on GoogleCredentials creation of the client here ?
-                # or we fallback on default google-credentials
-                client = self._bigquery_client_with_google_creds()
-        else:
-            # or we fallback on default google-credentials
-            client = self._bigquery_client_with_google_creds()
-
-        return client
+        # or we fallback on default google-credentials
+        return self._bigquery_client_with_google_creds()
 
     def _get_bigquery_client(self) -> bigquery.Client:
         with suppress(Exception):

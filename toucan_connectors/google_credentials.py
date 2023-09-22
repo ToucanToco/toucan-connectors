@@ -8,11 +8,25 @@ CREDENTIALS_INFO_MESSAGE = (
 )
 
 
+class JWTCredentials(BaseModel):
+    """
+    For Google Credentials inside the JWT
+
+    """
+
+    project_id: str = Field(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
+    jwt_token: str = Field(
+        ...,
+        title='JSON web token (JWT) signed',
+        description='JWT signed with your service_account credentials,'
+        'see the docs of the connector for that.',
+    )
+
+
 class GoogleCredentials(BaseModel):
     type: str = Field(
         'service_account', title='Service account', description=CREDENTIALS_INFO_MESSAGE
     )
-    # On service account MODE :
     project_id: str = Field(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
     private_key_id: str = Field(..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE)
     private_key: str = Field(
@@ -39,7 +53,7 @@ class GoogleCredentials(BaseModel):
         description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
     )
     client_x509_cert_url: HttpUrl = Field(
-        ...,
+        'https://www.client_cert.test',
         title='Client X509 certification URL',
         description=CREDENTIALS_INFO_MESSAGE,
     )

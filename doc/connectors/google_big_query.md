@@ -4,8 +4,8 @@
 
 * `type`: `"GoogleBigQuery"`
 * `name`: str, required
-* `credentials`: GoogleCredentials, required
-* `jwt_token`: str
+* `credentials`: GoogleCredentials
+* `jwt_credentials`: JWTCredentials
 * `dialect`: Dialect, default to legacy
 * `scopes`: list(str), default to ["https://www.googleapis.com/auth/bigquery"]
 
@@ -26,7 +26,7 @@ see this: http://gspread.readthedocs.io/en/latest/oauth2.html
 * `auth_provider_x509_cert_url`: str
 * `client_x509_cert_url`: str
 
-### Auth with JWT signed
+### Auth with JWT Credentials
 
 You can also authenticate with a signed `jwt_token` you've created yourself,
 in that case, you will only need here two fields:
