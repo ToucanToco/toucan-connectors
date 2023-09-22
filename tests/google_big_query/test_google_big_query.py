@@ -48,7 +48,7 @@ def _fixture_credentials() -> GoogleCredentials:
 @pytest.fixture
 def _jwt_fixture_credentials() -> JWTCredentials:
     my_credentials = JWTCredentials(
-        project_id='my_project_id',
+        project_id='THE_JWT_project_id',
         jwt_token='valid-jwt',
     )
     return my_credentials
@@ -731,7 +731,11 @@ WHERE
     assert mocked_query.call_args_list[2][1] == {'location': 'Toulouse'}
 
 
-def test_get_form(mocker: MockFixture, _fixture_credentials: MockFixture) -> None:
+def test_get_form(
+    mocker: MockFixture,
+    _fixture_credentials: MockFixture,
+    _jwt_fixture_credentials: MockFixture
+) -> None:
     def mock_available_schs():
         return ['ok', 'test']
 
@@ -754,6 +758,21 @@ def test_get_form(mocker: MockFixture, _fixture_credentials: MockFixture) -> Non
         )['properties']['database']['default']
         == 'my_project_id'
     )
+
+    assert (
+        GoogleBigQueryDataSource(query=',', name='MyGBQ-WITH-JWT', domain='foo').get_form(
+            GoogleBigQueryConnector(
+                name='MyGBQ',
+                jwt_credentials=_jwt_fixture_credentials,
+                scopes=[
+                    'https://www.googleapis.com/auth/bigquery',
+                ],
+            ),
+            {},
+        )['properties']['database']['default']
+        == 'THE_JWT_project_id'
+    )
+
 
 
 @pytest.mark.parametrize(

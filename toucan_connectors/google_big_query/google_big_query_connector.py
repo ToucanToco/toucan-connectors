@@ -101,7 +101,14 @@ class GoogleBigQueryDataSource(ToucanDataSource):
             db_schema=strlist_to_enum('db_schema', connector._available_schs),
             __base__=cls,
         ).schema()
-        schema['properties']['database']['default'] = connector.credentials.project_id
+
+        project_id = ''
+        if connector.jwt_credentials:
+            project_id = connector.jwt_credentials.project_id
+        elif connector.credentials:
+            project_id = connector.credentials.project_id
+
+        schema['properties']['database']['default'] = project_id
 
         return schema
 
