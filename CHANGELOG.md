@@ -2,9 +2,31 @@
 
 ## Unreleased
 
-### [4.8.0] 2023-09-13
+### [4.9.1] 2023-09-22
+
+## Fixed
+
+- Goole Big Query:
+    - Better UX (Switch between GoogleCreds auth or GoogleJWT  auth).
+    - Explicit errors information when no data is returned.
+    - Fallback on GoogleCredentials auth when JWTCredentials fails (or when jwt-token is not valid aymore).
+
+### [4.9.0] 2023-09-20
 
 ## Changed
+
+- Goole Big Query: Now support signed JWT connection on the GBQ connector.
+
+### [4.8.1] 2023-09-18
+
+### Fixed
+
+- Postgres: In case two tables in different schemas have the same name, `get_model`
+  and `get_model_with_info` now return the correct information.
+
+### [4.8.0] 2023-09-13
+
+### Changed
 
 - S3: Add a new AWS S3 connector using the Security Token Service (STS) API Assume Role.
 

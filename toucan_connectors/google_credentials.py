@@ -1,3 +1,4 @@
+from google.oauth2.service_account import Credentials
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 CREDENTIALS_INFO_MESSAGE = (
@@ -5,6 +6,21 @@ CREDENTIALS_INFO_MESSAGE = (
     '<a href="https://gspread.readthedocs.io/en/latest/oauth2.html">authentication file</a> downloadable '
     'from your <a href="https://console.developers.google.com/apis/credentials">Google Console</a>'
 )
+
+
+class JWTCredentials(BaseModel):
+    """
+    For Google Credentials inside the JWT
+
+    """
+
+    project_id: str = Field(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
+    jwt_token: str = Field(
+        ...,
+        title='JSON web token (JWT) signed',
+        description='JWT signed with your service_account credentials,'
+        'see the docs of the connector for that.',
+    )
 
 
 class GoogleCredentials(BaseModel):
@@ -37,7 +53,7 @@ class GoogleCredentials(BaseModel):
         description=f'{CREDENTIALS_INFO_MESSAGE}. You should not need to change the default value.',
     )
     client_x509_cert_url: HttpUrl = Field(
-        ...,
+        'https://www.client_cert.test',
         title='Client X509 certification URL',
         description=CREDENTIALS_INFO_MESSAGE,
     )
@@ -54,7 +70,5 @@ class GoogleCredentials(BaseModel):
         return v.replace('\\n', '\n')
 
 
-def get_google_oauth2_credentials(google_credentials):
-    from google.oauth2.service_account import Credentials
-
+def get_google_oauth2_credentials(google_credentials: GoogleCredentials) -> Credentials:
     return Credentials.from_service_account_info(google_credentials.dict())
