@@ -131,8 +131,6 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
 class GoogleBigQueryConnector(
     ToucanConnector, DiscoverableConnector, data_source_model=GoogleBigQueryDataSource
 ):
-    data_source_model: GoogleBigQueryDataSource
-
     # for GoogleCredentials
     credentials: GoogleCredentials | None = Field(
         None,
