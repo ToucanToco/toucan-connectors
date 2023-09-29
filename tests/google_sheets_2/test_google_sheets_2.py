@@ -83,7 +83,7 @@ FAKE_SHEET_LIST_RESPONSE = {
 def get_columns_in_schema(schema):
     """Pydantic generates schema slightly differently in python <=3.7 and in python 3.8"""
     try:
-        if (defs := schema.get('$defs') or schema.get('definitions')):
+        if defs := schema.get('$defs') or schema.get('definitions'):
             return defs['sheet']['enum']
         else:
             return schema['properties']['sheet']['enum']
