@@ -771,6 +771,37 @@ def test_get_form(
         == 'THE_JWT_project_id'
     )
 
+    # Now let say the JWT is not set or bad, or the project_id is also bad or
+    # not set, we need to fallback on project_id provided by the GoogleCreds
+    assert (
+        GoogleBigQueryDataSource(query=',', name='MyGBQ-WITH-JWT', domain='foo').get_form(
+            GoogleBigQueryConnector(
+                name='MyGBQ',
+                credentials=GoogleCredentials(
+                    type='my_type',
+                    project_id='THE_GOOGLE_CREDS_project_id',
+                    private_key_id='my_private_key_id',
+                    private_key='my_private_key',
+                    client_email='my_client_email@email.com',
+                    client_id='my_client_id',
+                    auth_uri='https://accounts.google.com/o/oauth2/auth',
+                    token_uri='https://oauth2.googleapis.com/token',
+                    auth_provider_x509_cert_url='https://www.googleapis.com/oauth2/v1/certs',
+                    client_x509_cert_url='https://www.googleapis.com/robot/v1/metadata/x509/pika.com',
+                ),
+                jwt_credentials=JWTCredentials(
+                    project_id='THE_JWT_project_id',
+                    jwt_token='',  # the jwt is empty
+                ),
+                scopes=[
+                    'https://www.googleapis.com/auth/bigquery',
+                ],
+            ),
+            {},
+        )['properties']['database']['default']
+        == 'THE_GOOGLE_CREDS_project_id'  # because the jwt_token value is not good or missing
+    )
+
 
 @pytest.mark.parametrize(
     'input_query, expected_output',
@@ -852,3 +883,34 @@ def test_optional_fields_validator_for_google_creds_or_jwt():
     }
     # no error raised
     _ = GoogleBigQueryConnector(name='something', jwt_credentials=valid_credentials)
+
+
+def test_get_project_id(_fixture_credentials: GoogleCredentials) -> None:
+    connector = GoogleBigQueryConnector(
+        name='MyGBQ',
+        credentials=_fixture_credentials,
+        jwt_credentials=JWTCredentials(jwt_token='token', project_id='123'),
+        scopes=[
+            'https://www.googleapis.com/auth/bigquery',
+            'https://www.googleapis.com/auth/drive',
+        ],
+    )
+
+    # test get project id with jwt credentials
+    assert connector._get_project_id() == '123'
+
+    # test get project id with credentials
+    connector.jwt_credentials = None
+    connector.credentials = _fixture_credentials
+    connector.credentials.project_id = '456'
+    assert connector._get_project_id() == '456'
+
+    # On ProjectId missing...
+    connector = GoogleBigQueryConnector(
+        name='MyGBQ',
+        credentials=None,
+        jwt_credentials=JWTCredentials(jwt_token='', project_id=''),
+        scopes=[],
+    )
+    with pytest.raises(GoogleClientCreationError):
+        connector._get_project_id()

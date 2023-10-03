@@ -102,13 +102,7 @@ class GoogleBigQueryDataSource(ToucanDataSource):
             __base__=cls,
         ).schema()
 
-        project_id = ''
-        if connector.jwt_credentials:
-            project_id = connector.jwt_credentials.project_id
-        elif connector.credentials:
-            project_id = connector.credentials.project_id
-
-        schema['properties']['database']['default'] = project_id
+        schema['properties']['database']['default'] = connector._get_project_id()
 
         return schema
 
@@ -320,7 +314,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                 # We try to instantiate the bigquery.Client with the given jwt-token
                 _session = CustomRequestSession(self.jwt_credentials.jwt_token)
                 client = GoogleBigQueryConnector._http_connect(
-                    http_session=_session, project_id=self.jwt_credentials.project_id
+                    http_session=_session, project_id=self._get_project_id()
                 )
                 _LOGGER.info('bigqueryClient created with the JWT provided !')
 
@@ -331,6 +325,22 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
                 )
         # or we fallback on default google-credentials
         return self._bigquery_client_with_google_creds()
+
+    def _get_project_id(self) -> str:
+        """We need an util in other to check either jwt_creds are well set or
+        not for the configuration validation, because self.jwt_credentials can
+        be not None but its value are either empty or None..."""
+        if (
+            self.jwt_credentials
+            and self.jwt_credentials.jwt_token
+            and self.jwt_credentials.project_id
+        ):
+            return self.jwt_credentials.project_id
+        elif self.credentials and self.credentials.project_id:
+            return self.credentials.project_id
+        else:
+            # project-id is missing and it's mandatory
+            raise GoogleClientCreationError
 
     def _get_bigquery_client(self) -> bigquery.Client:
         with suppress(Exception):
