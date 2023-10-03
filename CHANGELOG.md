@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### [4.9.2] 2023-10-04
+
 ## Fixed
 
 - Google Big Query: get project_id from connector config whatever auth mode (JWT/GoogleCreds).
