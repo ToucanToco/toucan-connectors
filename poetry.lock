@@ -764,12 +764,12 @@ files = [
 
 [[package]]
 name = "dataiku-api-client"
-version = "9.0.1"
+version = "12.2.3"
 description = "Python API client for Dataiku APIs"
 optional = true
 python-versions = "*"
 files = [
-    {file = "dataiku-api-client-9.0.1.tar.gz", hash = "sha256:8cbcba7c999d3605454e674fa055d6466d21bfa02e5929e5cdcfdc6f916bee41"},
+    {file = "dataiku-api-client-12.2.3.tar.gz", hash = "sha256:11adb3e53749af092b1d9b83bd318919602d24d9fee01dedc6d3da1481997ded"},
 ]
 
 [package.dependencies]
@@ -3798,4 +3798,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "f80d9c80b413294b94482d8bc11f582bc8a153394b29170317f5587e7bf15330"
+content-hash = "1a2894d65658146678165a3d9287979fc6ba56ef5ff6596515f29dad226a08d7"
