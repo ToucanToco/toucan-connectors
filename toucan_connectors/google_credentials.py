@@ -1,3 +1,4 @@
+from google.oauth2.service_account import Credentials
 from pydantic import BaseModel, Field, HttpUrl, validator
 
 CREDENTIALS_INFO_MESSAGE = (
@@ -53,7 +54,5 @@ class GoogleCredentials(BaseModel):
         return v.replace('\\n', '\n')
 
 
-def get_google_oauth2_credentials(google_credentials):
-    from google.oauth2.service_account import Credentials
-
+def get_google_oauth2_credentials(google_credentials: GoogleCredentials) -> Credentials:
     return Credentials.from_service_account_info(google_credentials.dict())
