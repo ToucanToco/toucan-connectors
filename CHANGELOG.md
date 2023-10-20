@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Fixed
+
+- Snowflake connector: pin oscrypto version to avoid `oscrypto.errors.LibraryNotFoundError: Error detecting the version of libcrypto` (see https://github.com/wbond/oscrypto/issues/75)
+
 ## [3.23.18] 2023-09-04
 
 ### Fixed
