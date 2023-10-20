@@ -1,6 +1,12 @@
 # Changelog (Pypi package)
 
+## [3.23.20] 2023-10-20
+
+Dependencies security updates
+
 ## [3.23.19] 2023-10-20
+
+Unpublished because of a bad dependency
 
 ## [3.23.18] 2023-09-04
 
