@@ -11,7 +11,6 @@
 ## Fixed
 
 - Google Big Query: get project_id from connector config whatever auth mode (JWT/GoogleCreds).
-- Snowflake connector: pin oscrypto version to avoid `oscrypto.errors.LibraryNotFoundError: Error detecting the version of libcrypto` (see https://github.com/wbond/oscrypto/issues/75)
 
 ### [4.9.1] 2023-09-22
 
