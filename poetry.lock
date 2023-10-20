@@ -548,6 +548,20 @@ files = [
     {file = "clickhouse_driver-0.2.6-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:3bdff826074af1b339fe9bff17844f6b8117080f895b8601f536b13a9d04f82a"},
     {file = "clickhouse_driver-0.2.6-cp311-cp311-win32.whl", hash = "sha256:c8c02606eabe4288045bbba497088b7fe976c34330c1066db9744fa09fef4a2a"},
     {file = "clickhouse_driver-0.2.6-cp311-cp311-win_amd64.whl", hash = "sha256:44df94940739a72a02716bb14ac8b683aef84b54b05783d96201ff334bcd88fb"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:079708ac620343736c2c8dace6663178156f4ded47bf25245b56147498d0d7de"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:e13369cf516df6c33c156fe66cfff502f66fc25f2a515c761ed1480fc83b3aa9"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cbc0bf957fc6d0163ee06ac02275bdb2f40d109fc225366e387358e78d968a43"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:f58b0ffb434fefe99b7419e09d6071a49773e9eb49c5ebeedf7c3180b40c2330"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:c0746dac9aa5cf2c275187aef16b67ae922ef257c82671948a6be86e19ee9cb2"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1f1ce40c9a2715ea44be9a5c33cb5b08048c1ef5595a6739443473e4ba23fedf"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a9499a2b2d5e856c7e8efd28da479df8a962e2497c70bf5e2d9a25875d520465"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:8b2e849bb7102365a480d9d1083ed203a244f0c02a0fc973eab6078b3d14638d"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-musllinux_1_1_i686.whl", hash = "sha256:5846c50e2dfe0ce2f300275955a20f82422b1128b09ab5a9ea4d8a00d4ba8438"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-musllinux_1_1_ppc64le.whl", hash = "sha256:a12990b54b92b2a2598f144388e766d6261492408f2434738fe649423371894b"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-musllinux_1_1_s390x.whl", hash = "sha256:af14a5699fea890a1f8f022c624ca9f61994e15913cfaf4e0e58b1e4ac99540a"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:965fb8370eb7ee8a20cdf54d7c2fe024f587da692bd15e94dd2eee93a3c88f4b"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-win32.whl", hash = "sha256:9c552205d2b6125a99121080417c5c7bbc47af81ed15bb5ff9be464fed96bb68"},
+    {file = "clickhouse_driver-0.2.6-cp312-cp312-win_amd64.whl", hash = "sha256:a58fb8b12a32d58ce0c72839293ec5bacc7904f3db36a82bb963f394dbb5f230"},
     {file = "clickhouse_driver-0.2.6-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:f2a9abb8b1464985f7a480f956744736e611970ffc8ffd3eb0b46343a3a691e6"},
     {file = "clickhouse_driver-0.2.6-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f2e01696c450a2de41d586689dbaed0893d4de7469811abd3bf831a0483e723a"},
     {file = "clickhouse_driver-0.2.6-cp37-cp37m-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:a0bb85760dabbef493aec985ad94612132ddeb5b81569cf0a7222f6cb7278eda"},
@@ -2013,16 +2027,20 @@ requests = ["requests (>=2.4.0,<3.0.0)"]
 [[package]]
 name = "oscrypto"
 version = "1.3.0"
-description = "TLS (SSL) sockets, key generation, encryption, decryption, signing, verification and KDFs using the OS crypto libraries. Does not require a compiler, and relies on the OS for patching. Works on Windows, OS X and Linux/BSD."
+description = ""
 optional = true
 python-versions = "*"
-files = [
-    {file = "oscrypto-1.3.0-py2.py3-none-any.whl", hash = "sha256:2b2f1d2d42ec152ca90ccb5682f3e051fb55986e1b170ebde472b133713e7085"},
-    {file = "oscrypto-1.3.0.tar.gz", hash = "sha256:6f5fef59cb5b3708321db7cca56aed8ad7e662853351e7991fcf60ec606d47a4"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 asn1crypto = ">=1.5.1"
+
+[package.source]
+type = "git"
+url = "https://github.com/wbond/oscrypto.git"
+reference = "1547f535001ba568b239b8797465536759c742a3"
+resolved_reference = "1547f535001ba568b239b8797465536759c742a3"
 
 [[package]]
 name = "packaging"
@@ -3791,11 +3809,11 @@ postgres = ["psycopg2"]
 redshift = ["lxml", "redshift-connector"]
 rok = ["PyJWT", "requests", "simplejson"]
 sap-hana = ["pyhdb"]
-snowflake = ["PyJWT", "pyarrow", "snowflake-connector-python"]
+snowflake = ["PyJWT", "oscrypto", "pyarrow", "snowflake-connector-python"]
 soap = ["lxml", "zeep"]
 toucan-toco = ["toucan-client"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "f80d9c80b413294b94482d8bc11f582bc8a153394b29170317f5587e7bf15330"
+content-hash = "b77630cde937c5f4df7e9e777f442e2bd8af37c6ff2cff716c973e6da108f77e"
