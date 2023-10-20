@@ -1,6 +1,6 @@
 # Changelog (Pypi package)
 
-## Unreleased
+### [4.9.3] 2023-10-20
 
 ## Fixed
 
