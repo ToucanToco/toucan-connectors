@@ -40,7 +40,7 @@ class DatabricksConnector(ToucanConnector):
         placeholder='token',
     )
     pwd: SecretStr = Field(
-        None,
+        ...,
         description='Your personal access token, or password if you connect by username/password',
         placeholder='dapixxxxxxxxxxx',
     )
