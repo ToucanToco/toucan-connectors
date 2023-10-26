@@ -34,8 +34,15 @@ class DatabricksConnector(ToucanConnector):
     http_path: str = Field(
         ..., description='Databricks compute resources URL', placeholder='sql/protocolv1/o/xxx/yyy'
     )
+    user: str | None = Field(
+        'token',
+        description='"token" if you use a personal access token, or username if you connect by username/password',
+        placeholder='token',
+    )
     pwd: SecretStr = Field(
-        None, description='Your personal access token', placeholder='dapixxxxxxxxxxx'
+        None,
+        description='Your personal access token, or password if you connect by username/password',
+        placeholder='dapixxxxxxxxxxx',
     )
     ansi: bool = False
     on_demand: bool = Field(
@@ -53,7 +60,7 @@ class DatabricksConnector(ToucanConnector):
             'ThriftTransport': 2,
             'SSL': 1,
             'AuthMech': 3,
-            'UID': 'token',
+            'UID': self.user if self.user is not None else 'token',
             'PWD': self.pwd.get_secret_value(),
         }
         return ';'.join(f'{k}={v}' for k, v in connection_params.items() if v is not None)
