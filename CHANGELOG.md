@@ -1,6 +1,16 @@
 # Changelog (Pypi package)
 
-### [4.9.3] 2023-10-20
+## [4.9.5] 2023-10-27
+
+### Fixed
+
+- Revert a change (from 4.9.3) that prevented the publication of the package on pypi
+
+## [4.9.4] 2023-10-27
+
+### Fixed
+
+- Update DataBricks connector
 
 ### [4.9.2] 2023-10-04
 
