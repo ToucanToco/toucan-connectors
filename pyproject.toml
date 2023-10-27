@@ -68,7 +68,7 @@ aiohttp = "^3.8.4"
 [tool.poetry.dev-dependencies]
 Authlib = "^1.0.1"
 aioresponses = ">=0.7.3,<1.0"
-black = "^23.7.0"
+black = "^23.10.1"
 click = "^8.1.7"
 cryptography = ">=40.0.2"
 docker = "^6.1.3"
