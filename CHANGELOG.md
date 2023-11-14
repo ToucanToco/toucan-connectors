@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.23.22] 2023-11-14
+
+### Fixed
+
+- Databricks: password is not blocking DataProvider's validation
+
 ## [3.23.19] 2023-10-20
 
 ## [3.23.18] 2023-09-04
