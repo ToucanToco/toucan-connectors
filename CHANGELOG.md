@@ -1,6 +1,22 @@
 # Changelog (Pypi package)
 
-## Unreleased
+## [4.9.5] 2023-10-27
+
+### Fixed
+
+- Revert a change (from 4.9.3) that prevented the publication of the package on pypi
+
+## [4.9.4] 2023-10-27
+
+### Fixed
+
+- Update DataBricks connector
+
+### [4.9.2] 2023-10-04
+
+## Fixed
+
+- Google Big Query: get project_id from connector config whatever auth mode (JWT/GoogleCreds).
 
 ### [4.9.1] 2023-09-22
 
@@ -29,6 +45,10 @@
 ### Changed
 
 - S3: Add a new AWS S3 connector using the Security Token Service (STS) API Assume Role.
+
+### Fixed
+
+- Install scripts: fix mssql install scripts by forcing debian/11 deb repo
 
 ### [4.7.3] 2023-08-22
 
