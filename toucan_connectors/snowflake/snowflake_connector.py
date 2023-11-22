@@ -48,7 +48,10 @@ class SnowflakeDataSource(ToucanDataSource['SnowflakeConnector']):
     warehouse: str | None = Field(None, description='The name of the warehouse you want to query')
 
     query: str = Field(
-        ..., description='You can write your SQL query here', min_length=1, widget='sql'
+        ...,
+        description='You can write your SQL query here',
+        min_length=1,
+        widget='sql',  # type:ignore[call-arg]
     )
 
     # Pydantic sees **_UI_HIDDEN as the third argument (the default factory) and raises an error
@@ -144,14 +147,14 @@ class SnowflakeConnector(
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
-        placeholder='your_account_name.region_id.cloud_platform',
+        placeholder='your_account_name.region_id.cloud_platform',  # type:ignore[call-arg]
     )
 
     authentication_method: AuthenticationMethod = Field(
         AuthenticationMethod.PLAIN,
         title='Authentication Method',
         description='The authentication mechanism that will be used to connect to your snowflake data source',
-        ui={'checkbox': False},
+        ui={'checkbox': False},  # type:ignore[call-arg]
     )
 
     user: str = Field(..., description='Your login username')
@@ -171,7 +174,9 @@ class SnowflakeConnector(
     default_warehouse: str | None = Field(
         None, description='The default warehouse that shall be used for any data source'
     )
-    category: Category = Field(Category.SNOWFLAKE, title='category', ui={'checkbox': False})
+    category: Category = Field(
+        Category.SNOWFLAKE, title='category', ui={'checkbox': False}  # type:ignore[call-arg]
+    )
 
     @classmethod
     def model_json_schema(
