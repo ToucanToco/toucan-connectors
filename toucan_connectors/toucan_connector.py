@@ -25,7 +25,7 @@ from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.utils.datetime import sanitize_df_dates
 
 try:
-    from bearer import Bearer  # type: ignore[import]
+    from bearer import Bearer  # type: ignore[import-untyped]
 except ImportError:
     pass
 

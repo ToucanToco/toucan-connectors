@@ -471,4 +471,4 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
                     ]
                 )
 
-        return self.format_db_model(values)  # type: ignore[arg-type]
+        return self.format_db_model(values)
