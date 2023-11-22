@@ -490,4 +490,4 @@ class SnowflakeConnector(
                     ]
                 )
 
-        return self.format_db_model(values)  # type: ignore[arg-type]
+        return self.format_db_model(values)
