@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [4.9.6] 2023-11-23
+
+### Fixed
+
+- Removed the upper constraint on `pyarrow<14`
+
 ## [4.9.5] 2023-10-27
 
 ### Fixed
