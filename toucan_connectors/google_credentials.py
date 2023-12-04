@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, HttpUrl, validator
+from google.oauth2.service_account import Credentials
+from pydantic import BaseModel, Field, HttpUrl, SecretStr, validator
 
 CREDENTIALS_INFO_MESSAGE = (
     'This information is provided in your '
@@ -12,8 +13,10 @@ class GoogleCredentials(BaseModel):
         'service_account', title='Service account', description=CREDENTIALS_INFO_MESSAGE
     )
     project_id: str = Field(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
-    private_key_id: str = Field(..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE)
-    private_key: str = Field(
+    private_key_id: SecretStr = Field(
+        ..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE
+    )
+    private_key: SecretStr = Field(
         ...,
         title='Private Key',
         description=f'A private key in the form '
@@ -43,17 +46,18 @@ class GoogleCredentials(BaseModel):
     )
 
     @validator('private_key')
-    def unescape_break_lines(cls, v):
+    def unescape_break_lines(cls, v: SecretStr) -> SecretStr:
         """
         `private_key` is a long string like
         '-----BEGIN PRIVATE KEY-----\nxxx...zzz\n-----END PRIVATE KEY-----\n
         As the breaking line are often escaped by the client,
         we need to be sure it's unescaped
         """
-        return v.replace('\\n', '\n')
+        return SecretStr(v.get_secret_value().replace('\\n', '\n'))
 
 
-def get_google_oauth2_credentials(google_credentials):
-    from google.oauth2.service_account import Credentials
-
-    return Credentials.from_service_account_info(google_credentials.dict())
+def get_google_oauth2_credentials(google_credentials: GoogleCredentials) -> Credentials:
+    creds = google_credentials.dict()
+    for secret_field in ('private_key_id', 'private_key'):
+        creds[secret_field] = creds[secret_field].get_secret_value()
+    return Credentials.from_service_account_info(creds)
