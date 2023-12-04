@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.23.23] 2023-12-04
+
+### Fixed
+
+- Google Credentials: made `private_key_id` and `private_key` secrets by changing their type to `SecretStr`.
+
 ## [3.23.22] 2023-11-14
 
 ### Fixed
