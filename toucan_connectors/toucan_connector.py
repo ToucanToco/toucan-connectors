@@ -308,7 +308,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     )
 
     # Used to defined the connection
-    identifier: str = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
+    identifier: str | None = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
     model_config = ConfigDict(extra='forbid', validate_assignment=True)
 
     def bearer_oauth_get_endpoint(
