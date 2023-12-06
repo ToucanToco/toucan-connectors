@@ -5,7 +5,7 @@ import pandas as pd
 import pymongo
 from bson.son import SON
 from cached_property import cached_property
-from pydantic import ConfigDict, Field, create_model, model_validator
+from pydantic import ConfigDict, Field, create_model, field_validator, model_validator
 
 from toucan_connectors.common import ConnectorStatus, nosql_apply_parameters_to_query
 from toucan_connectors.json_wrapper import JsonWrapper
@@ -115,6 +115,13 @@ class MongoDataSource(ToucanDataSource):
         description='A mongo query. See more details on the Mongo '
         'Aggregation Pipeline in the MongoDB documentation',
     )
+
+    # FIXME: This is needed for now because with we rely on empty queries being dicts. In pydantic
+    # v1, "[]" was coerced to {}, and we somehow rely on that cursed behaviour
+    @field_validator('query')
+    @classmethod
+    def _ensure_empty_query_is_dict(cls, query: dict | list) -> dict | list:
+        return query or {}
 
     @classmethod
     def get_form(cls, connector: 'MongoConnector', current_config):
