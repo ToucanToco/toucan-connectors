@@ -6,10 +6,9 @@ from urllib import parse as url_parse
 
 from authlib.common.security import generate_token
 from authlib.integrations.requests_client import OAuth2Session
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 from toucan_connectors.json_wrapper import JsonWrapper
-from toucan_connectors.toucan_connector import PlainJsonSecretStr
 
 
 class SecretsKeeper(ABC):
@@ -28,7 +27,7 @@ class SecretsKeeper(ABC):
 
 class OAuth2ConnectorConfig(BaseModel):
     client_id: str
-    client_secret: PlainJsonSecretStr
+    client_secret: SecretStr
 
 
 class OAuth2Connector:
