@@ -1,6 +1,6 @@
 import json
 from enum import Enum
-from typing import Any, List, Union
+from typing import Any, List
 from xml.etree.ElementTree import ParseError, fromstring, tostring
 
 import pandas as pd
@@ -32,24 +32,24 @@ class Method(str, Enum):
 
 
 class Template(BaseModel):
-    headers: dict = Field(
+    headers: dict | None = Field(
         None,
         description='JSON object of HTTP headers to send with every HTTP request',
         examples=['{ "content-type": "application/xml" }'],
     )
-    params: dict = Field(
+    params: dict | None = Field(
         None,
         description='JSON object of parameters to send in the query string of every HTTP request '
         '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    json_: dict = Field(
+    json_: dict | None = Field(
         None,
         alias='json',
         description='JSON object of parameters to send in the body of every HTTP request',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    proxies: dict = Field(
+    proxies: dict | None = Field(
         None,
         description='JSON object expressing a mapping of protocol or host to corresponding proxy',
         examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
@@ -64,37 +64,37 @@ class HttpAPIDataSource(ToucanDataSource):
         'For example "geo/countries"',
     )
     method: Method = Field(Method.GET, title='HTTP Method')
-    headers: dict = Field(
+    headers: dict | None = Field(
         None,
         description='You can also setup headers in the Template section of your Connector see: <br/>'
         'https://docs.toucantoco.com/concepteur/tutorials/connectors/3-http-connector.html#template',
         examples=['{ "content-type": "application/xml" }'],
     )
-    params: dict = Field(
+    params: dict | None = Field(
         None,
         title='URL params',
         description='JSON object of parameters to send in the query string of this HTTP request '
         '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    json_: dict = Field(
+    json_: dict | None = Field(
         None,
         alias='json',
         title='Body',
         description='JSON object of parameters to send in the body of every HTTP request',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    proxies: dict = Field(
+    proxies: dict | None = Field(
         None,
         description='JSON object expressing a mapping of protocol or host to corresponding proxy',
         examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
     )
-    data: Union[str, dict] = Field(
+    data: str | dict | None = Field(
         None, description='JSON object to send in the body of the HTTP request'
     )
     xpath: str = XpathSchema
     filter: str = FilterSchema
-    flatten_column: str = Field(None, description='Column containing nested rows')
+    flatten_column: str | None = Field(None, description='Column containing nested rows')
 
     @classmethod
     def model_json_schema(
@@ -127,11 +127,11 @@ class HttpAPIDataSource(ToucanDataSource):
 class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
     responsetype: ResponseType = Field(ResponseType.json, title='Content-type of response')
     baseroute: AnyHttpUrl = Field(..., title='Baseroute URL', description='Baseroute URL')
-    cert: List[FilePath] = Field(
+    cert: List[FilePath] | None = Field(
         None, title='Certificate', description='File path of your certificate if any'
     )
-    auth: Auth = Field(None, title='Authentication type')
-    template: Template = Field(
+    auth: Auth | None = Field(None, title='Authentication type')
+    template: Template | None = Field(
         None,
         description='You can provide a custom template that will be used for every HTTP request',
     )
