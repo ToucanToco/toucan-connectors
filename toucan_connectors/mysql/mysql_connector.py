@@ -111,15 +111,15 @@ class MySQLConnector(
         description='The domain name (preferred option as more dynamic) or '
         'the hardcoded IP address of your database server',
     )
-    port: int = Field(None, description='The listening port of your database server')
+    port: int | None = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
-    password: PlainJsonSecretStr = Field(None, description='Your login password')
+    password: PlainJsonSecretStr | None = Field(None, description='Your login password')
     charset: str = Field(
         'utf8mb4',
         title='Charset',
         description='Character encoding. You should generally let the default "utf8mb4" here.',
     )
-    connect_timeout: int = Field(
+    connect_timeout: int | None = Field(
         None,
         title='Connection timeout',
         description='You can set a connection timeout in seconds here, '
@@ -127,22 +127,22 @@ class MySQLConnector(
         'for the server to respond. None by default',
     )
     # SSL options
-    ssl_ca: PlainJsonSecretStr = Field(
+    ssl_ca: PlainJsonSecretStr | None = Field(
         None,
         description='The CA certificate content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-ca option of the MySQL client',
     )
-    ssl_cert: PlainJsonSecretStr = Field(
+    ssl_cert: PlainJsonSecretStr | None = Field(
         None,
         description='The X509 certificate content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-cert option of the MySQL client',
     )
-    ssl_key: PlainJsonSecretStr = Field(
+    ssl_key: PlainJsonSecretStr | None = Field(
         None,
         description='The X509 certificate key content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-key option of the MySQL client',
     )
-    ssl_mode: SSLMode = Field(
+    ssl_mode: SSLMode | None = Field(
         None,
         description='SSL Mode to use to connect to the MySQL server. '
         'Equivalent of the --ssl-mode option of the MySQL client. Must be set in order to use SSL',
