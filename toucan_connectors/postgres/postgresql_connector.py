@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import psycopg2 as pgsql
 from pydantic import Field, StringConstraints, create_model
@@ -25,19 +25,19 @@ class PostgresDataSource(ToucanDataSource):
     database: str = Field(
         DEFAULT_DATABASE, description='The name of the database you want to query'
     )
-    query: Annotated[str, StringConstraints(min_length=1)] = Field(
+    query: Annotated[str | None, StringConstraints(min_length=1)] = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
         'the "table" parameter',
         widget='sql',
     )
-    query_object: Dict = Field(
+    query_object: dict | None = Field(
         None,
         description='An object describing a simple select query' 'This field is used internally',
         **{'ui.hidden': True},
     )
-    table: Annotated[str, StringConstraints(min_length=1)] = Field(
+    table: Annotated[str | None, StringConstraints(min_length=1)] = Field(
         None,
         description='The name of the data table that you want to '
         'get (equivalent to "SELECT * FROM '
@@ -99,19 +99,21 @@ class PostgresConnector(
     Import data from PostgreSQL.
     """
 
-    host: str = Field(
+    host: str | None = Field(
         None, description='The listening address of your database server (IP adress or hostname)'
     )
-    port: int = Field(None, description='The listening port of your database server')
+    port: int | None = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
     password: PlainJsonSecretStr = Field(None, description='Your login password')
     default_database: str = Field(DEFAULT_DATABASE, description='Your default database')
 
-    charset: str = Field(None, description='If you need to specify a specific character encoding.')
-    connect_timeout: int = Field(
+    charset: str | None = Field(
+        None, description='If you need to specify a specific character encoding.'
+    )
+    connect_timeout: int | None = Field(
         None,
         title='Connection timeout',
-        description='You can set a connection timeout in seconds here, i.e. the maximum length of '
+        description='You can set a connection timeout in seconds here, i.e. the maximal amount of '
         'time you want to wait for the server to respond. None by default',
     )
 
