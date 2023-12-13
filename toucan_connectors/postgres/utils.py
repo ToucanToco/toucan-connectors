@@ -615,5 +615,6 @@ def build_database_model_extraction_query() -> str:
         t.table_name = c.table_name AND t.table_schema = c.table_schema
     WHERE t.table_type IN ('BASE TABLE', 'VIEW')
     AND t.table_schema NOT IN  ('pg_catalog', 'information_schema', 'pg_internal')
-    GROUP BY t.table_schema, t.table_catalog, t.table_name, t.table_type;
+    GROUP BY t.table_schema, t.table_catalog, t.table_name, t.table_type
+    UNION ALL SELECT NULL, NULL, 'view', matviewname, NULL, from pg_matviews;
     """
