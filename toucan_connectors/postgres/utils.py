@@ -603,7 +603,28 @@ types = {
 }
 
 
-def build_database_model_extraction_query() -> str:
+def _build_materialized_views_info_extraction_query(db_name: str | None) -> str:
+    # Here, we need to query pg_catalog because materialized views are not a standard SQL feature
+    # and are thus not available in information_schema.
+    # The WHERE condition filters to retrieve materialized views only and excludes system columns
+    # (see https://www.postgresql.org/docs/current/catalog-pg-attribute.html)
+    database_name = f"'{db_name}'" if db_name else 'NULL'
+    return f"""
+    SELECT {database_name} AS "database",
+    ns.nspname AS "schema",
+    'view' AS "table_type",
+    cls.relname AS table_name,
+    JSON_AGG(JSON_BUILD_OBJECT('name', attr.attname, 'type', tp.typname)) AS columns
+    FROM pg_catalog.pg_attribute AS attr
+    JOIN pg_catalog.pg_class AS cls ON cls.oid = attr.attrelid
+    JOIN pg_catalog.pg_namespace AS ns ON ns.oid = cls.relnamespace
+    JOIN pg_catalog.pg_type AS tp ON tp.oid = attr.atttypid
+    WHERE cls.relname in (SELECT matviewname FROM pg_matviews) AND attr.attnum >= 0
+    GROUP BY table_schema, table_catalog, table_name, table_type
+    """
+
+
+def _build_regular_tables_model_extraction_query() -> str:
     return """SELECT t.table_catalog AS database,
     t.table_schema AS schema,
     CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END AS type,
@@ -616,5 +637,17 @@ def build_database_model_extraction_query() -> str:
     WHERE t.table_type IN ('BASE TABLE', 'VIEW')
     AND t.table_schema NOT IN  ('pg_catalog', 'information_schema', 'pg_internal')
     GROUP BY t.table_schema, t.table_catalog, t.table_name, t.table_type
-    UNION ALL SELECT NULL, NULL, 'view', matviewname, NULL FROM pg_matviews;
     """
+
+
+def build_database_model_extraction_query(
+    db_name: str | None, include_materialized_views: bool
+) -> str:
+    return (
+        f"""{_build_regular_tables_model_extraction_query()}
+        UNION ALL
+        {_build_materialized_views_info_extraction_query(db_name)};
+        """
+        if include_materialized_views
+        else _build_regular_tables_model_extraction_query() + ';'
+    )
