@@ -607,14 +607,26 @@ def _build_materialized_views_info_extraction_query(db_name: str | None) -> str:
     # Here, we need to query pg_catalog because materialized views are not a standard SQL feature
     # and are thus not available in information_schema.
     # The WHERE condition filters to retrieve materialized views only and excludes system columns
-    # (see https://www.postgresql.org/docs/current/catalog-pg-attribute.html)
+    # (see https://www.postgresql.org/docs/current/catalog-pg-attribute.html).
+    # The CASE statement is to format postgres types to sql types as found in information_schema
     database_name = f"'{db_name}'" if db_name else 'NULL'
     return f"""
     SELECT {database_name} AS "database",
     ns.nspname AS "schema",
     'view' AS "table_type",
     cls.relname AS table_name,
-    JSON_AGG(JSON_BUILD_OBJECT('name', attr.attname, 'type', tp.typname)) AS columns
+    JSON_AGG(
+        JSON_BUILD_OBJECT(
+            'name', attr.attname,
+            'type', CASE
+                WHEN tp.typname = 'int2' THEN 'smallint'
+                WHEN tp.typname = 'bpchar' THEN 'character'
+                WHEN tp.typname IN ('int4', 'int8') THEN 'integer'
+                WHEN tp.typname IN ('float2', 'float4', 'float8') THEN 'real'
+            ELSE tp.typname
+            END
+        )
+    ) AS columns
     FROM pg_catalog.pg_attribute AS attr
     JOIN pg_catalog.pg_class AS cls ON cls.oid = attr.attrelid
     JOIN pg_catalog.pg_namespace AS ns ON ns.oid = cls.relnamespace
