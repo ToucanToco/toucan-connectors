@@ -620,7 +620,7 @@ def _build_materialized_views_info_extraction_query(db_name: str | None) -> str:
     JOIN pg_catalog.pg_namespace AS ns ON ns.oid = cls.relnamespace
     JOIN pg_catalog.pg_type AS tp ON tp.oid = attr.atttypid
     WHERE cls.relname in (SELECT matviewname FROM pg_matviews) AND attr.attnum >= 0
-    GROUP BY table_schema, table_catalog, table_name, table_type
+    GROUP BY schema, database, table_name, table_type
     """
 
 
