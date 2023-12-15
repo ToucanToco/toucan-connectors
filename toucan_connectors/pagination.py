@@ -78,23 +78,15 @@ def build_pagination_info(
         or retrieved_rows < limit
     )
     if total_rows is not None:
-        pagination_info = KnownSizeDatasetPaginationInfo(
-            is_last_page=is_last_page, total_rows=total_rows
-        )
+        pagination_info = KnownSizeDatasetPaginationInfo(is_last_page=is_last_page, total_rows=total_rows)
     # If we've reached the last page AND we have at least one result, we know the size of the
     # dataset. If we had no results, we could be several rows after the actual dataset
     elif is_last_page and retrieved_rows > 0:
-        pagination_info = KnownSizeDatasetPaginationInfo(
-            is_last_page=True, total_rows=offset + retrieved_rows
-        )
+        pagination_info = KnownSizeDatasetPaginationInfo(is_last_page=True, total_rows=offset + retrieved_rows)
     else:
         pagination_info = UnknownSizeDatasetPaginationInfo(is_last_page=is_last_page)
 
-    next_page = (
-        OffsetLimitInfo(offset=offset + limit, limit=limit)
-        if limit is not None and not is_last_page
-        else None
-    )
+    next_page = OffsetLimitInfo(offset=offset + limit, limit=limit) if limit is not None and not is_last_page else None
     # In case limit is None, we don't know how many rows back we need to go, so previous_page is None
     if offset > 0 and limit is not None:
         previous_page = OffsetLimitInfo(offset=max(offset - limit or 0, 0), limit=limit)

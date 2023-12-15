@@ -91,9 +91,7 @@ def test_redshiftdatasource_init_(redshift_datasource):
     assert hasattr(ds, 'query_object')
 
 
-def test_redshiftdatasource_get_form(
-    redshift_connector, redshift_datasource, mocker: MockerFixture
-):
+def test_redshiftdatasource_get_form(redshift_connector, redshift_datasource, mocker: MockerFixture):
     current_config = {'database': 'dev'}
     mocker.patch.object(RedshiftConnector, 'available_dbs', new=['one', 'two'])
     result = redshift_datasource.get_form(redshift_connector, current_config)
@@ -141,16 +139,16 @@ def test_redshiftconnector_get_connection_params_db_cred_mode_missing_params():
 
 def test_redshiftconnector_get_connection_params_db_cred_mode(redshift_connector):
     result = redshift_connector._get_connection_params(database='test')
-    assert result == dict(
-        host='localhost',
-        database='test',
-        cluster_identifier='toucan_test',
-        port=0,
-        timeout=10,
-        user='user',
-        password='sample',
-        tcp_keepalive=True,
-    )
+    assert result == {
+        'host': 'localhost',
+        'database': 'test',
+        'cluster_identifier': 'toucan_test',
+        'port': 0,
+        'timeout': 10,
+        'user': 'user',
+        'password': 'sample',
+        'tcp_keepalive': True,
+    }
 
 
 def test_redshiftconnector_get_connection_params_aws_creds_mode_missing_params():
@@ -198,19 +196,19 @@ def test_redshiftconnector_get_connection_params_aws_creds_mode_missing_params()
 
 def test_redshiftconnector_get_connection_params_aws_creds_mode(redshift_connector_aws_creds):
     result = redshift_connector_aws_creds._get_connection_params(database='test')
-    assert result == dict(
-        host='localhost',
-        database='test',
-        port=0,
-        iam=True,
-        db_user='db_user_test',
-        cluster_identifier='toucan_test',
-        access_key_id='access_key',
-        secret_access_key='secret_access_key',
-        session_token='token',
-        region='eu-west-1',
-        tcp_keepalive=True,
-    )
+    assert result == {
+        'host': 'localhost',
+        'database': 'test',
+        'port': 0,
+        'iam': True,
+        'db_user': 'db_user_test',
+        'cluster_identifier': 'toucan_test',
+        'access_key_id': 'access_key',
+        'secret_access_key': 'secret_access_key',
+        'session_token': 'token',
+        'region': 'eu-west-1',
+        'tcp_keepalive': True,
+    }
 
 
 def test_redshiftconnector_get_connection_params_aws_profile_mode_missing_params():
@@ -241,39 +239,37 @@ def test_redshiftconnector_get_connection_params_aws_profile_mode_missing_params
 
 def test_redshiftconnector_get_connection_params_aws_profile_mode(redshift_connector_aws_profile):
     result = redshift_connector_aws_profile._get_connection_params(database='test')
-    assert result == dict(
-        host='localhost',
-        database='test',
-        port=0,
-        iam=True,
-        db_user='db_user_test',
-        cluster_identifier='toucan_test',
-        region='eu-west-1',
-        profile='sample',
-        tcp_keepalive=True,
-    )
+    assert result == {
+        'host': 'localhost',
+        'database': 'test',
+        'port': 0,
+        'iam': True,
+        'db_user': 'db_user_test',
+        'cluster_identifier': 'toucan_test',
+        'region': 'eu-west-1',
+        'profile': 'sample',
+        'tcp_keepalive': True,
+    }
 
 
 @pytest.mark.parametrize('opt', (True, False))
 def test_redshiftconnector_get_connection_tcp_keepalive(redshift_connector, opt: bool):
     redshift_connector.enable_tcp_keepalive = opt
     result = redshift_connector._get_connection_params(database='test')
-    assert result == dict(
-        host='localhost',
-        database='test',
-        cluster_identifier='toucan_test',
-        port=0,
-        timeout=10,
-        user='user',
-        password='sample',
-        tcp_keepalive=opt,
-    )
+    assert result == {
+        'host': 'localhost',
+        'database': 'test',
+        'cluster_identifier': 'toucan_test',
+        'port': 0,
+        'timeout': 10,
+        'user': 'user',
+        'password': 'sample',
+        'tcp_keepalive': opt,
+    }
 
 
 @patch.object(RedshiftConnector, '_get_connection')
-def test_redshiftconnector_retrieve_tables(
-    mock_connection, redshift_connector, redshift_datasource
-):
+def test_redshiftconnector_retrieve_tables(mock_connection, redshift_connector, redshift_datasource):
     mock_connection().cursor().__enter__().fetchall.return_value = (
         ['table1'],
         ['table2'],
@@ -286,7 +282,10 @@ def test_redshiftconnector_retrieve_tables(
 @patch.object(RedshiftConnector, '_get_connection')
 @patch('toucan_connectors.redshift.redshift_database_connector.SqlQueryHelper')
 def test_redshiftconnector_retrieve_data(
-    mock_SqlQueryHelper, mock_get_connection, redshift_connector, redshift_datasource
+    mock_SqlQueryHelper,  # noqa: N803
+    mock_get_connection,
+    redshift_connector,
+    redshift_datasource,
 ):
     mock_response = Mock()
     mock_SqlQueryHelper.count_query_needed.return_value = True
@@ -300,7 +299,10 @@ def test_redshiftconnector_retrieve_data(
 @patch.object(RedshiftConnector, '_get_connection')
 @patch('toucan_connectors.redshift.redshift_database_connector.SqlQueryHelper')
 def test_redshiftconnector_retrieve_data_empty_result(
-    mock_SqlQueryHelper, mock_get_connection, redshift_connector, redshift_datasource
+    mock_SqlQueryHelper,  # noqa: N803
+    mock_get_connection,
+    redshift_connector,
+    redshift_datasource,
 ):
     mock_SqlQueryHelper.count_query_needed.return_value = True
     mock_SqlQueryHelper.prepare_limit_query.return_value = Mock(), Mock()
@@ -313,7 +315,10 @@ def test_redshiftconnector_retrieve_data_empty_result(
 @patch.object(RedshiftConnector, '_get_connection')
 @patch('toucan_connectors.redshift.redshift_database_connector.SqlQueryHelper')
 def test_redshiftconnector_retrieve_data_without_count(
-    mock_SqlQueryHelper, mock_get_connection, redshift_connector, redshift_datasource
+    mock_SqlQueryHelper,  # noqa: N803
+    mock_get_connection,
+    redshift_connector,
+    redshift_datasource,
 ):
     mock_response = Mock()
     mock_SqlQueryHelper.prepare_limit_query.return_value = Mock(), Mock()
@@ -343,9 +348,7 @@ def test_redshiftconnector_get_slice(mock_retreive_data, redshift_datasource, re
 
 
 @patch.object(RedshiftConnector, '_retrieve_data')
-def test_redshiftconnector_get_slice_without_count(
-    mock_retreive_data, redshift_datasource, redshift_connector
-):
+def test_redshiftconnector_get_slice_without_count(mock_retreive_data, redshift_datasource, redshift_connector):
     mock_df = Mock()
     mock_df.__len__ = lambda x: 10
 
@@ -361,9 +364,7 @@ def test_redshiftconnector_get_slice_without_count(
 
 
 @patch.object(RedshiftConnector, '_retrieve_data')
-def test_redshiftconnector_get_slice_df_is_none(
-    mock_retreive_data, redshift_datasource, redshift_connector
-):
+def test_redshiftconnector_get_slice_df_is_none(mock_retreive_data, redshift_datasource, redshift_connector):
     mock_retreive_data.return_value = None
     result = redshift_connector.get_slice(data_source=redshift_datasource)
     assert result == DataSlice(
@@ -403,7 +404,7 @@ def test_redshiftconnector_get_status_true(
 def test_redshiftconnector_get_status_with_error_host(mock_hostname, redshift_connector):
     mock_hostname.side_effect = InterfaceError('error mock')
     result = redshift_connector.get_status()
-    assert type(result.error) is str
+    assert isinstance(result.error, str)
     assert result.status is False
     assert str(result.error) == 'error mock'
 
@@ -412,7 +413,7 @@ def test_redshiftconnector_get_status_with_error_host(mock_hostname, redshift_co
 def test_redshiftconnector_get_status_with_error_port(mock_port, redshift_connector):
     mock_port.side_effect = InterfaceError('error mock')
     result = redshift_connector.get_status()
-    assert type(result.error) is str
+    assert isinstance(result.error, str)
     assert result.status is False
     assert str(result.error) == 'error mock'
 

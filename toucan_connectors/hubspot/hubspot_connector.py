@@ -76,9 +76,7 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     def __init__(self, **kwargs) -> None:
-        super().__init__(
-            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
-        )
+        super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
@@ -121,9 +119,7 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
         headers,
     ) -> List:
         url: str = endpoint_info['url']
-        name: Optional[str] = (
-            endpoint_info['sub_name'] if 'sub_name' in endpoint_info else dataset_name
-        )
+        name: Optional[str] = endpoint_info['sub_name'] if 'sub_name' in endpoint_info else dataset_name
         response = None
         res = None
         data: List = []
@@ -160,4 +156,4 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
             )
             return pd.json_normalize(data)
         except Exception as e:
-            raise HubspotConnectorException(f'retrieve_data failed with: {str(e)}')
+            raise HubspotConnectorException(f'retrieve_data failed with: {str(e)}') from e

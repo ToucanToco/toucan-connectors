@@ -60,9 +60,7 @@ def test_datasource():
         ClickhouseDataSource(name='mycon', domain='mydomain', database='clickhouse_db')
     assert "'query' or 'table' must be set" in str(exc_info.value)
 
-    ds = ClickhouseDataSource(
-        name='mycon', domain='mydomain', database='clickhouse_db', table='test'
-    )
+    ds = ClickhouseDataSource(name='mycon', domain='mydomain', database='clickhouse_db', table='test')
     assert ds.query == 'select * from test;'
 
 

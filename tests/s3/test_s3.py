@@ -90,10 +90,7 @@ def test_get_status(mocker: MockFixture, connector: S3Connector) -> None:
 
 
 def test_forge_url(connector: S3Connector) -> None:
-    assert (
-        connector._forge_url('key', 'secret', 'token', 'file')
-        == 's3://key:secret@my-s3-bucket/some/path/file'
-    )
+    assert connector._forge_url('key', 'secret', 'token', 'file') == 's3://key:secret@my-s3-bucket/some/path/file'
     # with special characters, those needed to be urlencoded
     assert (
         connector._forge_url('k/e@y', 'sec/re@special/t', 'token1', 'file')
@@ -101,30 +98,18 @@ def test_forge_url(connector: S3Connector) -> None:
     )
     # on prefix empty
     connector.prefix = ''
-    assert (
-        connector._forge_url('key', 'secret', 'token3', 'file')
-        == 's3://key:secret@my-s3-bucket/file'
-    )
+    assert connector._forge_url('key', 'secret', 'token3', 'file') == 's3://key:secret@my-s3-bucket/file'
     connector.prefix = 'tea/'
-    assert (
-        connector._forge_url('key', 'secret', 'token', 'fileC')
-        == 's3://key:secret@my-s3-bucket/tea/fileC'
-    )
+    assert connector._forge_url('key', 'secret', 'token', 'fileC') == 's3://key:secret@my-s3-bucket/tea/fileC'
     connector.prefix = '/tea/secondo'
-    assert (
-        connector._forge_url('key', 'secret', 'token', 'fileB')
-        == 's3://key:secret@my-s3-bucket/tea/secondo/fileB'
-    )
+    assert connector._forge_url('key', 'secret', 'token', 'fileB') == 's3://key:secret@my-s3-bucket/tea/secondo/fileB'
     connector.prefix = '///tea/secondo/tertio////'
     assert (
         connector._forge_url('key', 'secret', 'token', 'fileA')
         == 's3://key:secret@my-s3-bucket/tea/secondo/tertio/fileA'
     )
     connector.prefix = 'tea'
-    assert (
-        connector._forge_url('key', 'secret', 'token', '/fileZ')
-        == 's3://key:secret@my-s3-bucket/tea/fileZ'
-    )
+    assert connector._forge_url('key', 'secret', 'token', '/fileZ') == 's3://key:secret@my-s3-bucket/tea/fileZ'
 
 
 def test_validate_external_id(mocker: MockFixture) -> None:
@@ -175,9 +160,7 @@ def test_retrieve_data_with_limit_offset(
 
             # assert that result is a DataFrame and has the expected values
             assert isinstance(result, pd.DataFrame)
-            expected_result = pd.DataFrame(
-                {'X': [3], 'Y': [7], 'Z': [11], '__filename__': 'my-file.xlsx'}
-            )
+            expected_result = pd.DataFrame({'X': [3], 'Y': [7], 'Z': [11], '__filename__': 'my-file.xlsx'})
             assert result.equals(expected_result)
 
             ### --- for csv --- ###
@@ -196,9 +179,7 @@ def test_retrieve_data_with_limit_offset(
             result = connector._retrieve_data(sts_data_source_csv, offset=1, limit=2)
             # assert that result is a DataFrame and has the expected values
             assert isinstance(result, pd.DataFrame)
-            expected_result = pd.DataFrame(
-                {'A': [2, 3], 'B': [6, 7], 'C': [10, 11], '__filename__': 'my-file.csv'}
-            )
+            expected_result = pd.DataFrame({'A': [2, 3], 'B': [6, 7], 'C': [10, 11], '__filename__': 'my-file.csv'})
             assert result.equals(expected_result)
 
 
@@ -240,9 +221,7 @@ def test_get_assumed_sts_role_cached(mocker: MockFixture, raw_connector: S3Conne
     boto3_client = mocker.patch('toucan_connectors.s3.s3_connector.boto3.client')
     sts_client = boto3_client()
     sts_client.assume_role.return_value = {
-        'Credentials': {
-            'Expiration': datetime.utcnow().replace(tzinfo=tzutc()) + timedelta(hours=1)
-        }
+        'Credentials': {'Expiration': datetime.utcnow().replace(tzinfo=tzutc()) + timedelta(hours=1)}
     }
     raw_connector._get_assumed_sts_role()
     raw_connector._get_assumed_sts_role()
@@ -255,9 +234,7 @@ def test_get_assumed_sts_role_expired(mocker: MockFixture, raw_connector: S3Conn
     sts_client = boto3_client()
     sts_client.assume_role.return_value = {
         'Test': 'OK',
-        'Credentials': {
-            'Expiration': datetime.utcnow().replace(tzinfo=tzutc()) + timedelta(hours=-1)
-        },
+        'Credentials': {'Expiration': datetime.utcnow().replace(tzinfo=tzutc()) + timedelta(hours=-1)},
     }
     raw_connector._get_assumed_sts_role()
     assert sts_client.assume_role.call_count == 2

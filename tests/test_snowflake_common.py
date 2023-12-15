@@ -1,10 +1,10 @@
 import sys
 from sqlite3 import ProgrammingError
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
 import snowflake.connector
-from mock import patch
 
 from toucan_connectors import DataSlice
 from toucan_connectors.json_wrapper import JsonWrapper
@@ -153,9 +153,7 @@ def test_retrieve_data(result, execute_query, connect, snowflake_datasource):
     'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_all),
 )
-def test_get_slice_without_limit_without_offset(
-    result, execute_query, connect, snowflake_datasource
-):
+def test_get_slice_without_limit_without_offset(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
     assert result.call_count == 3
     assert len(ds.df) == 14
@@ -181,9 +179,7 @@ def test_get_slice_with_limit_without_offset(result, execute_query, connect, sno
     'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_none),
 )
-def test_get_slice_with_limit_without_offset_no_data(
-    result, execute_query, connect, snowflake_datasource
-):
+def test_get_slice_with_limit_without_offset_no_data(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
     assert result.call_count == 3
     assert len(ds.df) == 0
@@ -196,9 +192,7 @@ def test_get_slice_with_limit_without_offset_no_data(
     'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_one),
 )
-def test_get_slice_with_limit_without_offset_not_enough_data(
-    result, execute_query, connect, snowflake_datasource
-):
+def test_get_slice_with_limit_without_offset_not_enough_data(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, limit=5)
     assert result.call_count == 3
     assert len(ds.df) == 1
@@ -224,9 +218,7 @@ def test_get_slice_with_limit_with_offset(result, execute_query, connect, snowfl
     'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_none),
 )
-def test_get_slice_with_limit_with_offset_no_data(
-    result, execute_query, connect, snowflake_datasource
-):
+def test_get_slice_with_limit_with_offset_no_data(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 3
     assert len(ds.df) == 0
@@ -241,9 +233,7 @@ def test_get_slice_with_limit_with_offset_no_data(
     'pandas.DataFrame.from_dict',
     return_value=pd.DataFrame(data_result_one),
 )
-def test_get_slice_with_limit_with_offset_not_enough_data(
-    result, execute_query, connect, snowflake_datasource
-):
+def test_get_slice_with_limit_with_offset_not_enough_data(result, execute_query, connect, snowflake_datasource):
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource, offset=5, limit=5)
     assert result.call_count == 3
     assert len(ds.df) == 1
@@ -471,5 +461,5 @@ def test_get_db_content(connect, mocker):
         'SCHEMA': 'TPCH_SF1000',
         'TYPE': 'table',
         'NAME': 'REGION',
-        'COLUMNS': '[\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  }\n]',
+        'COLUMNS': '[\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_NAME",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  },\n  {\n    "name": "R_COMMENT",\n    "type": "TEXT"\n  },\n  {\n    "name": "R_REGIONKEY",\n    "type": "NUMBER"\n  }\n]',  # noqa: E501
     }

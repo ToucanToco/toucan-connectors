@@ -69,9 +69,7 @@ def test_live_instance():
         report_request={
             'viewId': '119151898',
             'pageSize': 100,
-            'orderBys': [
-                {'fieldName': 'ga:date', 'orderType': 'VALUE', 'sortOrder': '%(sortOrder)s'}
-            ],
+            'orderBys': [{'fieldName': 'ga:date', 'orderType': 'VALUE', 'sortOrder': '%(sortOrder)s'}],
             'dimensions': [
                 {'name': 'ga:hostname'},
                 {'name': 'ga:date'},

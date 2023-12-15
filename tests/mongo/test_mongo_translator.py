@@ -21,9 +21,7 @@ def test_translate_condition_unit_to_mongo_match():
     with pytest.raises(ValueError):
         MongoConditionTranslator.translate({'operator': 'eq', 'value': 42})
     with pytest.raises(ValueError):
-        MongoConditionTranslator.translate(
-            {'column': 'population', 'operator': 'unsupported', 'value': 42}
-        )
+        MongoConditionTranslator.translate({'column': 'population', 'operator': 'unsupported', 'value': 42})
 
 
 def test_translate_condition_to_mongo_match():
@@ -111,7 +109,7 @@ def test_MongoConditionTranslator_translate_with_jinja():
     expr = {
         'or': [
             {'column': 'type', 'operator': 'eq', 'value': 'YTD'},
-            {'column': 'periode', 'operator': 'eq', 'value': 'yo_{{my_indic[\"a\"]}}'},
+            {'column': 'periode', 'operator': 'eq', 'value': 'yo_{{my_indic["a"]}}'},
         ]
     }
     expected = {'$or': [{'type': {'$eq': 'YTD'}}, {'periode': {'$eq': 'yo_{{my_indic["a"]}}'}}]}
@@ -139,6 +137,4 @@ def test_MongoConditionTranslator_operators():
     assert MongoConditionTranslator.IS_NULL('col') == {'col': {'$exists': False}}
     assert MongoConditionTranslator.IS_NOT_NULL('col') == {'col': {'$exists': True}}
     assert MongoConditionTranslator.MATCHES('col', 'val') == {'col': {'$regex': 'val'}}
-    assert MongoConditionTranslator.NOT_MATCHES('col', 'val') == {
-        'col': {'$not': {'$regex': 'val'}}
-    }
+    assert MongoConditionTranslator.NOT_MATCHES('col', 'val') == {'col': {'$not': {'$regex': 'val'}}}

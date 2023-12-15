@@ -31,9 +31,7 @@ class OAuth2ConnectorConfig(BaseModel):
 
 
 class OAuth2Connector:
-    init_params = ['secrets_keeper', 'redirect_uri'] + list(
-        OAuth2ConnectorConfig.schema()['properties'].keys()
-    )
+    init_params = ['secrets_keeper', 'redirect_uri'] + list(OAuth2ConnectorConfig.schema()['properties'].keys())
 
     def __init__(
         self,
@@ -62,9 +60,7 @@ class OAuth2Connector:
             scope=self.scope,
         )
         state = {'token': generate_token(), **kwargs}
-        uri, state = client.create_authorization_url(
-            self.authorization_url, state=JsonWrapper.dumps(state)
-        )
+        uri, state = client.create_authorization_url(self.authorization_url, state=JsonWrapper.dumps(state))
 
         self.secrets_keeper.save(self.auth_flow_id, {'state': state})
         return uri
@@ -80,10 +76,7 @@ class OAuth2Connector:
         saved_flow = self.secrets_keeper.load(self.auth_flow_id)
         if saved_flow is None:
             raise AuthFlowNotFound()
-        assert (
-            JsonWrapper.loads(saved_flow['state'])['token']
-            == JsonWrapper.loads(url_params['state'][0])['token']
-        )
+        assert JsonWrapper.loads(saved_flow['state'])['token'] == JsonWrapper.loads(url_params['state'][0])['token']
 
         token = client.fetch_token(
             self.token_url,
@@ -119,9 +112,7 @@ class OAuth2Connector:
                     client_id=self.config.client_id,
                     client_secret=self.config.client_secret.get_secret_value(),
                 )
-                new_token = client.refresh_token(
-                    self.token_url, refresh_token=token['refresh_token']
-                )
+                new_token = client.refresh_token(self.token_url, refresh_token=token['refresh_token'])
                 self.secrets_keeper.save(self.auth_flow_id, new_token)
 
         return self.secrets_keeper.load(self.auth_flow_id)['access_token']
@@ -144,12 +135,8 @@ class OAuth2Connector:
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
         )
-        connection_data = client.refresh_token(
-            self.token_url, refresh_token=access_data['refresh_token']
-        )
-        logging.getLogger(__name__).debug(
-            f'Refresh and get access data new token {str(connection_data)}'
-        )
+        connection_data = client.refresh_token(self.token_url, refresh_token=access_data['refresh_token'])
+        logging.getLogger(__name__).debug(f'Refresh and get access data new token {str(connection_data)}')
 
         self.secrets_keeper.save(self.auth_flow_id, connection_data)
         secrets = self.secrets_keeper.load(self.auth_flow_id)

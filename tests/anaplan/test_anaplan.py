@@ -92,9 +92,7 @@ def test_get_form(connector):
         json={
             'meta': {},
             'status': {},
-            'workspaces': [
-                {'id': 'w1', 'active': True, 'name': 'Workspace One', 'sizeAllowance': 1234}
-            ],
+            'workspaces': [{'id': 'w1', 'active': True, 'name': 'Workspace One', 'sizeAllowance': 1234}],
         },
     )
 
@@ -134,9 +132,7 @@ def test_get_form(connector):
         },
     )
 
-    form_schema = AnaplanDataSource.get_form(
-        connector, {'model_id': 'm1', 'workspace_id': 'w1 - Workspace One'}
-    )
+    form_schema = AnaplanDataSource.get_form(connector, {'model_id': 'm1', 'workspace_id': 'w1 - Workspace One'})
 
     # Ensure we've only requested a token once
     responses.assert_call_count('https://auth.anaplan.com/token/authenticate', 1)
@@ -158,18 +154,12 @@ def test_get_df(connector, datasource):
 
     # response format taken from
     # https://anaplanbulkapi20.docs.apiary.io/#RetrieveCellDataView
-    with open(
-        os.path.join(os.path.dirname(__file__), 'fixtures/cell-data-view.json')
-    ) as fixture_file:
+    with open(os.path.join(os.path.dirname(__file__), 'fixtures/cell-data-view.json')) as fixture_file:
         responses.add(
             responses.GET,
             'https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1',
             status=200,
-            match=[
-                matchers.header_matcher(
-                    {'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'}
-                )
-            ],
+            match=[matchers.header_matcher({'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'})],
             json=json.load(fixture_file),
         )
 
@@ -213,11 +203,7 @@ def test_get_df_invalid_json(connector, datasource):
         responses.GET,
         'https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1',
         status=200,
-        match=[
-            matchers.header_matcher(
-                {'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'}
-            )
-        ],
+        match=[matchers.header_matcher({'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'})],
         body='notvalidjson',
     )
 
@@ -237,15 +223,9 @@ def test_get_df_keyerror(connector, datasource):
         responses.GET,
         'https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1',
         status=200,
-        match=[
-            matchers.header_matcher(
-                {'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'}
-            )
-        ],
+        match=[matchers.header_matcher({'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'})],
         json={},
     )
 
-    with pytest.raises(
-        AnaplanError, match="Did not find expected key 'columnCoordinates' in response body"
-    ):
+    with pytest.raises(AnaplanError, match="Did not find expected key 'columnCoordinates' in response body"):
         connector.get_df(datasource)

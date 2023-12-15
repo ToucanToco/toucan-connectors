@@ -113,16 +113,12 @@ def test_get_status_ok(mocker, con):
 def test_csv(con, ds_csv):
     responses.add(responses.POST, 'https://test.netexplorer.pro/api/auth', json={'token': '123'})
 
-    responses.add(
-        responses.GET, 'https://test.netexplorer.pro/api/folders?depth=-1', json=FAKE_FOLDERS
-    )
+    responses.add(responses.GET, 'https://test.netexplorer.pro/api/folders?depth=-1', json=FAKE_FOLDERS)
 
     with open(os.path.dirname(__file__) + '/fake.csv', 'rb') as file:
-        fileIO = BytesIO(file.read())
-        responses.add(
-            responses.GET, 'https://test.netexplorer.pro/api/file/4/download', body=fileIO.read()
-        )
-        fileIO.seek(0)
+        file_io = BytesIO(file.read())
+        responses.add(responses.GET, 'https://test.netexplorer.pro/api/file/4/download', body=file_io.read())
+        file_io.seek(0)
 
     df = con._retrieve_data(ds_csv)
     assert df.shape == (2, 2)
@@ -133,16 +129,12 @@ def test_csv(con, ds_csv):
 def test_excel(con, ds_excel):
     responses.add(responses.POST, 'https://test.netexplorer.pro/api/auth', json={'token': '123'})
 
-    responses.add(
-        responses.GET, 'https://test.netexplorer.pro/api/folders?depth=-1', json=FAKE_FOLDERS
-    )
+    responses.add(responses.GET, 'https://test.netexplorer.pro/api/folders?depth=-1', json=FAKE_FOLDERS)
 
     with open(os.path.dirname(__file__) + '/fake.xlsx', 'rb') as file:
-        fileIO = BytesIO(file.read())
-        responses.add(
-            responses.GET, 'https://test.netexplorer.pro/api/file/5/download', body=fileIO.read()
-        )
-        fileIO.seek(0)
+        file_io = BytesIO(file.read())
+        responses.add(responses.GET, 'https://test.netexplorer.pro/api/file/5/download', body=file_io.read())
+        file_io.seek(0)
 
     df = con._retrieve_data(ds_excel)
     assert df.shape == (2, 2)
@@ -153,16 +145,12 @@ def test_excel(con, ds_excel):
 def test_excel_with_sheet(con, ds_excel_with_sheet):
     responses.add(responses.POST, 'https://test.netexplorer.pro/api/auth', json={'token': '123'})
 
-    responses.add(
-        responses.GET, 'https://test.netexplorer.pro/api/folders?depth=-1', json=FAKE_FOLDERS
-    )
+    responses.add(responses.GET, 'https://test.netexplorer.pro/api/folders?depth=-1', json=FAKE_FOLDERS)
 
     with open(os.path.dirname(__file__) + '/fake.xlsx', 'rb') as file:
-        fileIO = BytesIO(file.read())
-        responses.add(
-            responses.GET, 'https://test.netexplorer.pro/api/file/5/download', body=fileIO.read()
-        )
-        fileIO.seek(0)
+        file_io = BytesIO(file.read())
+        responses.add(responses.GET, 'https://test.netexplorer.pro/api/file/5/download', body=file_io.read())
+        file_io.seek(0)
 
     df = con._retrieve_data(ds_excel_with_sheet)
     assert df.shape == (1, 1)
@@ -173,16 +161,12 @@ def test_excel_with_sheet(con, ds_excel_with_sheet):
 def test_error_path(con, ds_error_path):
     responses.add(responses.POST, 'https://test.netexplorer.pro/api/auth', json={'token': '123'})
 
-    responses.add(
-        responses.GET, 'https://test.netexplorer.pro/api/folders?depth=-1', json=FAKE_FOLDERS
-    )
+    responses.add(responses.GET, 'https://test.netexplorer.pro/api/folders?depth=-1', json=FAKE_FOLDERS)
 
     with open(os.path.dirname(__file__) + '/fake.xlsx', 'rb') as file:
-        fileIO = BytesIO(file.read())
-        responses.add(
-            responses.GET, 'https://test.netexplorer.pro/api/file/5/download', body=fileIO.read()
-        )
-        fileIO.seek(0)
+        file_io = BytesIO(file.read())
+        responses.add(responses.GET, 'https://test.netexplorer.pro/api/file/5/download', body=file_io.read())
+        file_io.seek(0)
 
     with pytest.raises(ValueError) as e:
         con.get_df(ds_error_path)

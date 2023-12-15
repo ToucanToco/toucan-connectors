@@ -159,26 +159,20 @@ def test_get_engine_version(mocker, postgres_connector):
     # Should be a valide semver version converted to tuple
     mocked_cursor.__enter__().fetchone.return_value = ['3.4.5']
     mocked_connect.cursor.return_value = mocked_cursor
-    mocker.patch(
-        'toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect
-    )
+    mocker.patch('toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect)
     assert postgres_connector.get_engine_version() == (3, 4, 5)
 
     # Should raise a MalformedVersion error
     mocked_cursor.__enter__().fetchone.return_value = ['--bad-version-format-']
     mocked_connect.cursor.return_value = mocked_cursor
-    mocker.patch(
-        'toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect
-    )
+    mocker.patch('toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect)
     with pytest.raises(MalformedVersion):
         assert postgres_connector.get_engine_version()
 
     # Should raise an UnavailableVersion error
     mocked_cursor.__enter__().fetchone.return_value = None
     mocked_connect.cursor.return_value = mocked_cursor
-    mocker.patch(
-        'toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect
-    )
+    mocker.patch('toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect)
     with pytest.raises(UnavailableVersion):
         assert postgres_connector.get_engine_version()
 
@@ -268,9 +262,7 @@ def test_open_connection():
     """It should not open a connection"""
     with pytest.raises(psycopg2.OperationalError):
         ds = PostgresDataSource(domain='pika', name='pika', database='circle_test', query='q')
-        PostgresConnector(name='test', host='lolcathost', user='ubuntu', connect_timeout=1).get_df(
-            ds
-        )
+        PostgresConnector(name='test', host='lolcathost', user='ubuntu', connect_timeout=1).get_df(ds)
 
 
 def test_raise_on_empty_query():
@@ -439,9 +431,7 @@ def test_get_form_connection_fails(mocker, postgres_connector):
 
 def test_describe(mocker, postgres_connector):
     """It should return a table description"""
-    ds = PostgresDataSource(
-        domain='test', name='test', database='postgres_db', query='SELECT * FROM city;'
-    )
+    ds = PostgresDataSource(domain='test', name='test', database='postgres_db', query='SELECT * FROM city;')
     res = postgres_connector.describe(ds)
     assert res == {
         'id': 'int4',
@@ -454,9 +444,7 @@ def test_describe(mocker, postgres_connector):
 
 def test_describe_error(mocker, postgres_connector):
     """It should return a table description"""
-    ds = PostgresDataSource(
-        domain='test', name='test', database='postgres_db', query='SELECT * FROM city;'
-    )
+    ds = PostgresDataSource(domain='test', name='test', database='postgres_db', query='SELECT * FROM city;')
     mocked_connect = mocker.MagicMock()
     mocked_cursor = mocker.MagicMock()
     mocked_connect.cursor.return_value = mocked_cursor
@@ -465,9 +453,7 @@ def test_describe_error(mocker, postgres_connector):
         raise psycopg2.ProgrammingError
 
     mocked_cursor.__enter__().execute = execute
-    mocker.patch(
-        'toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect
-    )
+    mocker.patch('toucan_connectors.postgres.postgresql_connector.pgsql.connect', return_value=mocked_connect)
 
     with pytest.raises(psycopg2.ProgrammingError):
         postgres_connector.describe(ds)
@@ -486,24 +472,17 @@ def test_get_model_with_materialized_views(
     """Check that it returns the db tree structure"""
     postgres_connector.include_materialized_views = True
     assert postgres_connector.get_model() == postgres_db_model_with_materialized_views
-    assert (
-        postgres_connector.get_model(db_name='postgres_db')
-        == postgres_db_model_with_materialized_views
-    )
+    assert postgres_connector.get_model(db_name='postgres_db') == postgres_db_model_with_materialized_views
     assert postgres_connector.get_model(db_name='another_db') == []
 
 
 def test_raised_error_for_get_model(mocker, postgres_connector):
     """Check that it returns the db tree structure"""
-    with mocker.patch.object(
-        PostgresConnector, '_list_tables_info', side_effect=psycopg2.OperationalError()
-    ):
+    with mocker.patch.object(PostgresConnector, '_list_tables_info', side_effect=psycopg2.OperationalError()):
         assert postgres_connector.get_model() == []
 
 
-def test_get_model_with_info(
-    postgres_connector: PostgresConnector, postgres_db_model: list[dict]
-) -> None:
+def test_get_model_with_info(postgres_connector: PostgresConnector, postgres_db_model: list[dict]) -> None:
     """Check that it returns the db tree structure"""
     assert postgres_connector.get_model_with_info() == (postgres_db_model, {})
     assert postgres_connector.get_model_with_info(db_name='postgres_db') == (postgres_db_model, {})
@@ -515,9 +494,7 @@ def test_get_model_with_info(
 
 def test_raised_error_for_get_model_with_info(mocker, postgres_connector):
     """Check that it returns the db tree structure"""
-    with mocker.patch.object(
-        PostgresConnector, '_list_tables_info', side_effect=psycopg2.OperationalError
-    ):
+    with mocker.patch.object(PostgresConnector, '_list_tables_info', side_effect=psycopg2.OperationalError):
         assert postgres_connector.get_model_with_info() == (
             [],
             {'info': {'Could not reach databases': ['postgres', 'postgres_db']}},

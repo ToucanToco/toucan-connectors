@@ -102,9 +102,7 @@ def test_format_team_row():
     """
     Check that a team retrieved from Github's API is correctly formatted
     """
-    formatted = format_team_row(
-        {'edges': [{'node': {'login': 'bla'}}, {'node': {'login': 'ba'}}]}, 'faketeam'
-    )
+    formatted = format_team_row({'edges': [{'node': {'login': 'bla'}}, {'node': {'login': 'ba'}}]}, 'faketeam')
     assert len(formatted) == 2
     assert formatted['bla'] == 'faketeam'
 
@@ -251,10 +249,7 @@ def test_get_errors():
     from Github's API response
     """
     with pytest.raises(GithubError):
-        assert (
-            get_errors({'errors': ['this is an error message', 'and another error']})
-            == 'this is an error message'
-        )
+        assert get_errors({'errors': ['this is an error message', 'and another error']}) == 'this is an error message'
 
 
 def test_get_message():

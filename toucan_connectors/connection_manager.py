@@ -73,9 +73,7 @@ class ConnectionBO:
             logger.debug(f'Connection alive result {result}')
             return result
         except Exception as e:
-            logger.warning(
-                'Alive connection needed but no alive method defined or alive method is not callable'
-            )
+            logger.warning('Alive connection needed but no alive method defined or alive method is not callable')
             raise e
 
     def exec_close(self) -> bool:
@@ -125,13 +123,11 @@ class ConnectionManager:
                 is_closed = self.connection_list[identifier].exec_close()
                 if is_closed:
                     del self.connection_list[identifier]
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
 
     def _clean(self):
-        logger.debug(
-            f'{self} - Check if connection exists ({len(self.connection_list)} open connections)'
-        )
+        logger.debug(f'{self} - Check if connection exists ({len(self.connection_list)} open connections)')
 
         self.lock = True
 
@@ -146,9 +142,7 @@ class ConnectionManager:
                         logger.debug('Close connection - connection not alive')
                         list_connection_to_remove.append(identifier)
                     elif co.t_get and tt - co.t_get > self.time_keep_alive:
-                        logger.debug(
-                            f'Close connection - alive too long ({tt - co.t_get} > {self.time_keep_alive})'
-                        )
+                        logger.debug(f'Close connection - alive too long ({tt - co.t_get} > {self.time_keep_alive})')
                         list_connection_to_remove.append(identifier)
                 elif not co.is_ready() and co.t_start and tt - co.t_start > self.connection_timeout:
                     logger.debug(
@@ -157,9 +151,7 @@ class ConnectionManager:
                     list_connection_to_remove.append(identifier)
             except Exception:
                 if co.t_get and tt - co.t_get > self.time_keep_alive:
-                    logger.debug(
-                        f'Close connection - alive too long ({tt - co.t_get} > {self.time_keep_alive})'
-                    )
+                    logger.debug(f'Close connection - alive too long ({tt - co.t_get} > {self.time_keep_alive})')
                     list_connection_to_remove.append(identifier)
                 continue
 
@@ -187,9 +179,7 @@ class ConnectionManager:
         close_method,
         save: bool = True,
     ):
-        if isinstance(connect_method, types.FunctionType) or isinstance(
-            connect_method, types.MethodType
-        ):
+        if isinstance(connect_method, types.FunctionType) or isinstance(connect_method, types.MethodType):
             cbo = ConnectionBO(
                 status=Status.CONNECTION_IN_PROGRESS,
                 connect=connect_method,

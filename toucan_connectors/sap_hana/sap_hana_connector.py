@@ -32,9 +32,7 @@ class SapHanaConnector(ToucanConnector, data_source_model=SapHanaDataSource):
             self.host,
             self.port,
             self.user,
-            self.password.get_secret_value()
-            if self.password
-            else PlainJsonSecretStr('').get_secret_value(),
+            self.password.get_secret_value() if self.password else PlainJsonSecretStr('').get_secret_value(),
         )
 
         df = pandas_read_sql(data_source.query, con=connection)

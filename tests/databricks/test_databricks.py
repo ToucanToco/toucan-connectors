@@ -38,9 +38,7 @@ CONNECTION_STATUS_OK = ConnectorStatus(
 
 @pytest.fixture
 def databricks_connector() -> DatabricksConnector:
-    return DatabricksConnector(
-        name='test', host='127.0.0.1', port='443', http_path='foo/path', pwd='12345'
-    )
+    return DatabricksConnector(name='test', host='127.0.0.1', port='443', http_path='foo/path', pwd='12345')
 
 
 def test__build_connection_string(databricks_connector: DatabricksConnector):
@@ -112,9 +110,7 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
         'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_port',
         side_effect=Exception('port closed'),
     )
-    mocker.patch(
-        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname'
-    )
+    mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname')
     assert databricks_connector.get_status() == ConnectorStatus(
         status=False,
         message=None,
@@ -131,9 +127,7 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
         side_effect=pyodbc.Error("I don't know mate"),
     )
     mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_port')
-    mocker.patch(
-        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname'
-    )
+    mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname')
     assert databricks_connector.get_status() == ConnectorStatus(
         status=False,
         message=None,
@@ -147,14 +141,10 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
     )
     mocker.patch(
         'pyodbc.connect',
-        side_effect=pyodbc.InterfaceError(
-            'Invalid credentials', 'Authentication/authorization error occured'
-        ),
+        side_effect=pyodbc.InterfaceError('Invalid credentials', 'Authentication/authorization error occured'),
     )
     mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_port')
-    mocker.patch(
-        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname'
-    )
+    mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname')
     assert databricks_connector.get_status() == ConnectorStatus(
         status=False,
         message=None,
@@ -168,9 +158,7 @@ def test_get_status_all(databricks_connector: DatabricksConnector, mocker: MockF
     )
     mocked_connect = mocker.patch('pyodbc.connect')
     mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_port')
-    mocker.patch(
-        'toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname'
-    )
+    mocker.patch('toucan_connectors.databricks.databricks_connector.DatabricksConnector.check_hostname')
     assert databricks_connector.get_status() == CONNECTION_STATUS_OK
     assert mocked_connect.call_args_list[0] == call(
         'Driver=/opt/simba/spark/lib/64/libsparkodbc_sb64.so;'
@@ -201,9 +189,7 @@ def test_cluster_methods(databricks_connector: DatabricksConnector, mocker: Mock
 
 
 @responses.activate
-def test_cluster_start_failed(
-    databricks_connector: DatabricksConnector, mocker: MockFixture
-) -> None:
+def test_cluster_start_failed(databricks_connector: DatabricksConnector, mocker: MockFixture) -> None:
     responses.add(
         method='POST',
         url='https://127.0.0.1/api/2.0/clusters/start',
@@ -215,6 +201,4 @@ def test_cluster_start_failed(
     mockedlog = mocker.patch('toucan_connectors.databricks.databricks_connector.logger.error')
     with pytest.raises(ClusterStartException):
         databricks_connector.start_cluster()
-    mockedlog.assert_called_once_with(
-        'Error while starting cluster: Failed to start Databricks cluster'
-    )
+    mockedlog.assert_called_once_with('Error while starting cluster: Failed to start Databricks cluster')

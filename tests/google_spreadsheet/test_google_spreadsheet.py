@@ -19,9 +19,7 @@ c = GoogleSpreadsheetConnector(
     },
 )
 
-s = GoogleSpreadsheetDataSource(
-    name='test_name', domain='test_domain', spreadsheet_id='test', load=False
-)
+s = GoogleSpreadsheetDataSource(name='test_name', domain='test_domain', spreadsheet_id='test', load=False)
 
 
 def test_spreadsheet(mocker):

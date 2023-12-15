@@ -43,9 +43,7 @@ class GoogleMyBusinessConnector(ToucanConnector, data_source_model=GoogleMyBusin
     scopes: List[str] = ['https://www.googleapis.com/auth/business.manage']
 
     def build_service(self):
-        credentials = Credentials.from_authorized_user_info(
-            self.credentials.dict(), scopes=self.scopes
-        )
+        credentials = Credentials.from_authorized_user_info(self.credentials.dict(), scopes=self.scopes)
         service = build(
             API_SERVICE_NAME,
             API_VERSION,
@@ -75,9 +73,7 @@ class GoogleMyBusinessConnector(ToucanConnector, data_source_model=GoogleMyBusin
             },
         }
 
-        report_insights = (
-            service.accounts().locations().reportInsights(name=name, body=query).execute()
-        )
+        report_insights = service.accounts().locations().reportInsights(name=name, body=query).execute()
 
         location_metrics = report_insights['locationMetrics']
 

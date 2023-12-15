@@ -18,15 +18,12 @@ class JWTCredentials(BaseModel):
     jwt_token: str = Field(
         ...,
         title='JSON web token (JWT) signed',
-        description='JWT signed with your service_account credentials,'
-        'see the docs of the connector for that.',
+        description='JWT signed with your service_account credentials,' 'see the docs of the connector for that.',
     )
 
 
 class GoogleCredentials(BaseModel):
-    type: str = Field(
-        'service_account', title='Service account', description=CREDENTIALS_INFO_MESSAGE
-    )
+    type: str = Field('service_account', title='Service account', description=CREDENTIALS_INFO_MESSAGE)
     project_id: str = Field(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
     private_key_id: str = Field(..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE)
     private_key: str = Field(

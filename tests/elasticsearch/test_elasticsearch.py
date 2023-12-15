@@ -79,9 +79,7 @@ def test_connector(mocker):
 
 
 def test_get_df(elasticsearch):
-    con = ElasticsearchConnector(
-        name='test', hosts=[{'url': 'http://localhost', 'port': elasticsearch['port']}]
-    )
+    con = ElasticsearchConnector(name='test', hosts=[{'url': 'http://localhost', 'port': elasticsearch['port']}])
     ds_search = ElasticsearchDataSource(
         domain='test', name='test', index='_all', search_method='search', body={'_source': True}
     )
@@ -103,9 +101,7 @@ def test_get_df(elasticsearch):
 
 
 def test_get_agg(elasticsearch):
-    con = ElasticsearchConnector(
-        name='test', hosts=[{'url': 'http://localhost', 'port': elasticsearch['port']}]
-    )
+    con = ElasticsearchConnector(name='test', hosts=[{'url': 'http://localhost', 'port': elasticsearch['port']}])
     ds_search = ElasticsearchDataSource(
         domain='test',
         name='test',

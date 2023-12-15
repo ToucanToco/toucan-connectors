@@ -187,9 +187,7 @@ def format_pr_row(pr_row: dict):
     current_record['PR Additions'] = pr_row.get('additions')
     current_record['PR Deletions'] = pr_row.get('deletions')
     try:
-        current_record['PR Type'] = [
-            label['node'].get('name') for label in pr_row['labels'].get('edges')
-        ]
+        current_record['PR Type'] = [label['node'].get('name') for label in pr_row['labels'].get('edges')]
         edges = get_edges(pr_row.get('commits'))
         # Here we choose to select the author of the last commit as the author of the PR
         # It's less wrong than choosing the author of the first commit in case of rebase
@@ -463,8 +461,8 @@ def get_rate_limit_info(response: dict):
     if rate_limit_info:
         if rate_limit_info['remaining'] < 100:  # Raise the Exception Before reaching the limit
             logging.getLogger(__name__).info('Rate limit exhausted')
-            resetAt_date = datetime.strptime(rate_limit_info['resetAt'], '%Y-%m-%dT%H:%M:%SZ')
-            timetowait = (resetAt_date - datetime.utcnow()).seconds + 1  # adding 1 sec to round up
+            reset_at_date = datetime.strptime(rate_limit_info['resetAt'], '%Y-%m-%dT%H:%M:%SZ')
+            timetowait = (reset_at_date - datetime.utcnow()).seconds + 1  # adding 1 sec to round up
             raise RateLimitExhaustedException(timetowait)
 
 

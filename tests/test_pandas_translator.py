@@ -21,13 +21,9 @@ def test_translate_condition_unit():
     with pytest.raises(ValueError):
         PandasConditionTranslator.translate({'operator': 'eq', 'value': 42})
     with pytest.raises(ValueError):
-        PandasConditionTranslator.translate(
-            {'column': 'population', 'operator': 'unsupported', 'value': 42}
-        )
+        PandasConditionTranslator.translate({'column': 'population', 'operator': 'unsupported', 'value': 42})
     with pytest.raises(Exception):
-        PandasConditionTranslator.translate(
-            {'column': 'population', 'operator': 'matches', 'value': 42}
-        )
+        PandasConditionTranslator.translate({'column': 'population', 'operator': 'matches', 'value': 42})
 
 
 def test_translate_condition_to_pandas_query():

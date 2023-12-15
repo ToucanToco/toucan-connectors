@@ -3,7 +3,7 @@ FAKE_LIBRARIES = {'value': [{'id': 'abcd', 'displayName': 'Documents'}]}
 FAKE_SHEET = {
     '@odata.context': 'https://graph.microsoft.com/v1.0/$metadata#workbookRange',
     '@odata.type': '#microsoft.graph.workbookRange',
-    '@odata.id': '/users("a6c30179-14c9-4b1d-8769-1a50bd4fd2ed")/drive/root/workbook/worksheets(%27%7BE6B4A4BA-FBD2-4FBA-B7D6-6F4CF520564A%7D%27)/usedRange(valuesOnly=true)',
+    '@odata.id': '/users("a6c30179-14c9-4b1d-8769-1a50bd4fd2ed")/drive/root/workbook/worksheets(%27%7BE6B4A4BA-FBD2-4FBA-B7D6-6F4CF520564A%7D%27)/usedRange(valuesOnly=true)',  # noqa: E501
     'address': 'DataType!A1:H3',
     'addressLocal': 'DataType!A1:H3',
     'columnCount': 8,

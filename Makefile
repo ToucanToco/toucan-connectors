@@ -16,13 +16,13 @@ install:
 
 .PHONY: format
 format:
-	$(ruff) --fix
 	$(format)
+	$(ruff) --fix
 
 .PHONY: lint
 lint:
-	$(ruff)
 	$(format) --check
+	$(ruff)
 	$(mypy)
 
 .PHONY: test

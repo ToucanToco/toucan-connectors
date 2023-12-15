@@ -92,19 +92,19 @@ def test__define_query_param(input_value, expected_output):
 
 
 def test_prepare_query_parameters():
-    query = 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = {{test_str}} AND test2 = {{test_float}} LIMIT 10'
+    query = 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = {{test_str}} AND test2 = {{test_float}} LIMIT 10'  # noqa:E501
     new_query, parameters = GoogleBigQueryConnector._prepare_query_and_parameters(
         query,
         {
-            'test_str': str('tortank'),
-            'test_int': int(1),
-            'test_float': float(0.0),
+            'test_str': 'tortank',
+            'test_int': 1,
+            'test_float': 0.0,
             'test_bool': True,
         },
     )
     assert (
         new_query
-        == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @__QUERY_PARAM_0__ AND test2 = @__QUERY_PARAM_1__ LIMIT 10'
+        == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @__QUERY_PARAM_0__ AND test2 = @__QUERY_PARAM_1__ LIMIT 10'  # noqa:E501
     )
     assert len(parameters) == 2
     assert parameters[0] == ScalarQueryParameter('__QUERY_PARAM_0__', 'STRING', 'tortank')
@@ -112,19 +112,19 @@ def test_prepare_query_parameters():
 
 
 def test_prepare_parameters_spaces():
-    query = 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = {{ test_str }} AND test2 = {{ test_float }} LIMIT 10'
+    query = 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = {{ test_str }} AND test2 = {{ test_float }} LIMIT 10'  # noqa:E501
     new_query, parameters = GoogleBigQueryConnector._prepare_query_and_parameters(
         query,
         {
-            'test_str': str('tortank'),
-            'test_int': int(1),
-            'test_float': float(0.0),
+            'test_str': 'tortank',
+            'test_int': 1,
+            'test_float': 0.0,
             'test_bool': True,
         },
     )
     assert (
         new_query
-        == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @__QUERY_PARAM_0__ AND test2 = @__QUERY_PARAM_1__ LIMIT 10'
+        == 'SELECT test, test2, test3 FROM `useful-citizen-322414.test.test` WHERE test = @__QUERY_PARAM_0__ AND test2 = @__QUERY_PARAM_1__ LIMIT 10'  # noqa:E501
     )
     assert len(parameters) == 2
     assert parameters[0] == ScalarQueryParameter('__QUERY_PARAM_0__', 'STRING', 'tortank')
@@ -140,9 +140,7 @@ def test_prepare_parameters_empty():
 @patch('google.cloud.bigquery.Client', autospec=True)
 @patch('cryptography.hazmat.primitives.serialization.load_pem_private_key')
 def test_connect(load_pem_private_key, client, _fixture_credentials, _fixture_scope):
-    credentials = GoogleBigQueryConnector._get_google_credentials(
-        _fixture_credentials, _fixture_scope
-    )
+    credentials = GoogleBigQueryConnector._get_google_credentials(_fixture_credentials, _fixture_scope)
     assert isinstance(credentials, Credentials)
     connection = GoogleBigQueryConnector._connect(credentials)
     assert isinstance(connection, Client)
@@ -153,11 +151,11 @@ def test__http_is_present_as_attr(
     gbq_connector_with_jwt: GoogleBigQueryConnector,
 ) -> None:
     """we should have _http as arg to bigquery.Client when the jwt is provided in google-credentials"""
-    mock_bigqueryClient = mocker.patch('google.cloud.bigquery.Client')
+    mock_bigquery_client = mocker.patch('google.cloud.bigquery.Client')
     gbq_connector_with_jwt._get_bigquery_client()
-    assert mock_bigqueryClient.call_count == 1
+    assert mock_bigquery_client.call_count == 1
     # we ensure that _http is inside the list of called args
-    assert ['project', '_http'] == list(mock_bigqueryClient.call_args[1].keys())
+    assert ['project', '_http'] == list(mock_bigquery_client.call_args[1].keys())
 
 
 def test_http_connect(
@@ -176,8 +174,8 @@ def test_http_connect_on_invalid_token(
     gbq_connector_with_jwt: GoogleBigQueryConnector,
 ) -> None:
     """we should have _http as arg to bigquery.Client when the jwt is provided in google-credentials"""
-    mock_bigqueryClient = mocker.patch('google.cloud.bigquery.Client')
-    mock_bigqueryClient.side_effect = Unauthorized('Error with the JWT token')
+    mock_bigquery_client = mocker.patch('google.cloud.bigquery.Client')
+    mock_bigquery_client.side_effect = Unauthorized('Error with the JWT token')
 
     # when the JWT is not valid
     with pytest.raises(InvalidJWTToken):
@@ -195,9 +193,7 @@ def test_http_connect_on_invalid_token(
 @patch('google.cloud.bigquery.job.query.QueryJob.result', return_value=RowIterator)
 @patch('google.cloud.bigquery.Client.query', return_value=QueryJob)
 @patch('google.cloud.bigquery.Client', autospec=True)
-def test_execute(
-    client: bigquery.Client, execute: Callable, result: pd.DataFrame, to_dataframe: Callable
-):
+def test_execute(client: bigquery.Client, execute: Callable, result: pd.DataFrame, to_dataframe: Callable):
     result = GoogleBigQueryConnector._execute_query(client, 'SELECT 1 FROM my_table', [])
     assert_frame_equal(pandas.DataFrame({'a': [1, 1], 'b': [2, 2]}), result)
 
@@ -605,9 +601,7 @@ def test_get_model_multi_location(mocker: MockFixture, _fixture_credentials) -> 
 
     mocker.patch.object(Client, 'list_datasets', return_value=datasets)
     mocker.patch.object(Client, 'get_dataset', side_effect=datasets_info)
-    mocked_query = mocker.patch.object(
-        Client, 'query', side_effect=[NotFound('Oh no'), fake_resp_1, fake_resp_2]
-    )
+    mocked_query = mocker.patch.object(Client, 'query', side_effect=[NotFound('Oh no'), fake_resp_1, fake_resp_2])
     mocker.patch(
         'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._connect',
         return_value=Client,

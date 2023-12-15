@@ -176,9 +176,7 @@ class SnowflakeCommon:
 
         run_count_request = get_row_count and SqlQueryHelper.count_query_needed(query)
         self.logger.info(f'Execute count request: {run_count_request}')
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=2 if run_count_request else 1
-        ) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2 if run_count_request else 1) as executor:
             prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_limit_query(
                 query, query_parameters, offset, limit
             )
@@ -285,23 +283,19 @@ class SnowflakeCommon:
             pagination_info=result.pagination_info,
         )
 
-    def get_warehouses(
-        self, connection: SnowflakeConnection, warehouse_name: Optional[str] = None
-    ) -> List[str]:
+    def get_warehouses(self, connection: SnowflakeConnection, warehouse_name: Optional[str] = None) -> List[str]:
         query = 'SHOW WAREHOUSES'
         if warehouse_name:
             query = f"{query} LIKE '{warehouse_name}'"
         res = self._execute_query(connection, query).to_dict().get('name')
-        return [warehouse for warehouse in res.values()] if res else []
+        return list(res.values()) if res else []
 
-    def get_databases(
-        self, connection: SnowflakeConnection, database_name: Optional[str] = None
-    ) -> List[str]:
+    def get_databases(self, connection: SnowflakeConnection, database_name: Optional[str] = None) -> List[str]:
         query = 'SHOW DATABASES'
         if database_name:
             query = f"{query} LIKE '{database_name}'"
         res = self._execute_query(connection, query).to_dict().get('name')
-        return [database for database in res.values()] if res else []
+        return list(res.values()) if res else []
 
     def describe(self, connection, query):
         return QueryManager().describe(

@@ -75,9 +75,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
         **{'ui.required': True},
     )
     authorization_url: str = Field(None, **{'ui.hidden': True})
-    scope: str = Field(
-        None, Title='Scope', description='The scope the integration', placeholder='refresh_token'
-    )
+    scope: str = Field(None, Title='Scope', description='The scope the integration', placeholder='refresh_token')
     token_url: str = Field(None, **{'ui.hidden': True})
     auth_flow_id: str = Field(None, **{'ui.hidden': True})
     _auth_flow = 'oauth2'
@@ -98,11 +96,9 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
         description='The full name of your Snowflake account. '
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
-        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',  # noqa: E501
     )
-    default_warehouse: str = Field(
-        ..., description='The default warehouse that shall be used for any data source'
-    )
+    default_warehouse: str = Field(..., description='The default warehouse that shall be used for any data source')
     category: Category = Field(Category.SNOWFLAKE, title='category', **{'ui': {'checkbox': False}})
 
     def __init__(self, **kwargs):
@@ -156,13 +152,9 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                 },
             )
 
-            logger.info(
-                f'Connect at Snowflake with {connection_params}, database {database} and warehouse {warehouse}'
-            )
+            logger.info(f'Connect at Snowflake with {connection_params}, database {database} and warehouse {warehouse}')
             connect_start = timer()
-            connection = snowflake.connector.connect(
-                **connection_params, database=database, warehouse=warehouse
-            )
+            connection = snowflake.connector.connect(**connection_params, database=database, warehouse=warehouse)
             connect_end = timer()
             logger.info(
                 f'[benchmark][snowflake] - connect {connect_end - connect_start} seconds',
@@ -181,8 +173,8 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
             if hasattr(conn, 'is_closed'):
                 try:
                     return not conn.is_closed()
-                except Exception:
-                    raise TypeError('is_closed is not a function')
+                except Exception as exc:
+                    raise TypeError('is_closed is not a function') from exc
 
         def close_function(conn: SnowflakeConnection) -> None:
             logger.debug('Close Snowflake connection')
@@ -202,8 +194,8 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                         },
                     )
                     return r
-                except Exception:
-                    raise TypeError('close is not a function')
+                except Exception as exc:
+                    raise TypeError('close is not a function') from exc
 
         connection: SnowflakeConnection = connection_manager.get(
             identifier=f'{self.get_identifier()}{database}{warehouse}',
@@ -249,9 +241,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
         return result
 
     def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> pd.DataFrame:
-        with self._get_connection(
-            database=data_source.database, warehouse=data_source.warehouse
-        ) as connection:
+        with self._get_connection(database=data_source.database, warehouse=data_source.warehouse) as connection:
             result = SnowflakeCommon().retrieve_data(connection, data_source)
         return result
 
@@ -263,9 +253,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
         limit: Optional[int] = None,
         get_row_count: Optional[bool] = False,
     ) -> DataSlice:
-        with self._get_connection(
-            database=data_source.database, warehouse=data_source.warehouse
-        ) as connection:
+        with self._get_connection(database=data_source.database, warehouse=data_source.warehouse) as connection:
             result = SnowflakeCommon().get_slice(
                 connection,
                 data_source,
@@ -286,23 +274,18 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
         return connection_manager
 
     def _get_connection_and_db_content(self, database: str, db_contents: List):
-        with self._get_connection(
-            database=database, warehouse=self.default_warehouse
-        ) as connection:
+        with self._get_connection(database=database, warehouse=self.default_warehouse) as connection:
             db_contents += SnowflakeCommon().get_db_content(connection).to_dict('records')
 
     def get_model(self, db_name: str | None = None):
         with self._get_connection() as connection:
             databases = SnowflakeCommon().get_databases(connection=connection)
         content_queries = []
-        for db in databases:
+        for _ in databases:
             content_queries.append(build_database_model_extraction_query())
         db_contents = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [
-                executor.submit(self._get_connection_and_db_content, db, db_contents)
-                for db in databases
-            ]
+            futures = [executor.submit(self._get_connection_and_db_content, db, db_contents) for db in databases]
             for future in concurrent.futures.as_completed(futures):
                 if future.exception():
                     raise future.exception()

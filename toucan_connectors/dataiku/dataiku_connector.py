@@ -22,7 +22,7 @@ class DataikuConnector(ToucanConnector, data_source_model=DataikuDataSource):
         description='The domain name (preferred option as more dynamic) or '
         'the hardcoded IP address of your Dataiku server',
     )
-    apiKey: str = Field(..., title='API key')
+    apiKey: str = Field(..., title='API key')  # noqa: N815
     project: str
 
     def _retrieve_data(self, data_source: DataikuDataSource) -> pd.DataFrame:

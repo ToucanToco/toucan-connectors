@@ -236,7 +236,7 @@ def is_oauth2_connector(cls) -> bool:
 
 
 def needs_sso_credentials(cls) -> bool:
-    return hasattr(cls, '_sso_credentials_access') and getattr(cls, '_sso_credentials_access')
+    return hasattr(cls, '_sso_credentials_access') and cls._sso_credentials_access
 
 
 class ConnectorSecretsForm(BaseModel):
@@ -255,7 +255,7 @@ def get_connector_secrets_form(cls) -> ConnectorSecretsForm | None:
     return which fields SHOULD be provided by an administrator
     """
     if hasattr(cls, 'get_connector_secrets_form'):
-        return getattr(cls, 'get_connector_secrets_form')()
+        return cls.get_connector_secrets_form()
     return None
 
 
@@ -346,9 +346,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
         if permissions is not None:
             permissions_query = PandasConditionTranslator.translate(permissions)
-            permissions_query = apply_query_parameters(
-                permissions_query, data_source.parameters or {}
-            )
+            permissions_query = apply_query_parameters(permissions_query, data_source.parameters or {})
             res = res.query(permissions_query)
         return res
 
@@ -454,9 +452,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         """
         unique_identifier = {
             'connector': self.get_unique_identifier(),
-            'permissions': nosql_apply_parameters_to_query(
-                permissions or {}, data_source.parameters
-            )
+            'permissions': nosql_apply_parameters_to_query(permissions or {}, data_source.parameters)
             if data_source
             else permissions,
             'offset': offset,
@@ -493,7 +489,7 @@ class DiscoverableConnector(ABC):
     @staticmethod
     def format_db_model(
         # db, schema, type, name, columns as dict or json string
-        unformatted_db_tree: list[tuple[str, str, str, str, list[dict[str, str]] | str]]
+        unformatted_db_tree: list[tuple[str, str, str, str, list[dict[str, str]] | str]],
     ) -> list[TableInfo]:
         if not unformatted_db_tree:
             return []
@@ -511,11 +507,11 @@ class DiscoverableConnector(ABC):
         )
 
 
-class MalformedVersion(Exception):
+class MalformedVersion(Exception):  # noqa: N818
     """raised when the given version of the engine is not well formated"""
 
 
-class UnavailableVersion(Exception):
+class UnavailableVersion(Exception):  # noqa: N818
     """raised when the version of the engine is not available"""
 
 
@@ -542,9 +538,7 @@ class VersionableEngineConnector(ABC):
     """
 
     # The output of these rules :
-    semver_regex = re.compile(
-        r'(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*)))?(?:\-([\w][\w\.\-_]*))?)?'
-    )
+    semver_regex = re.compile(r'(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*)))?(?:\-([\w][\w\.\-_]*))?)?')
 
     def _validate(self, engine_version: str | float | None) -> re.Match | None:
         """

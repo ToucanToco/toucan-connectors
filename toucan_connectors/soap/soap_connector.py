@@ -16,9 +16,7 @@ from .helpers import is_dict_of_lists, is_list_response, is_nested_list
 
 class SoapDataSource(ToucanDataSource):
     method: str = Field(None, title='Method', description='Name of the webservice method to use')
-    parameters: dict = Field(
-        None, title='Service Parameters', description='Parameters to pass to the called service'
-    )
+    parameters: dict = Field(None, title='Service Parameters', description='Parameters to pass to the called service')
     flatten_column: str = Field(None, description='Column containing nested rows')
 
     @classmethod
@@ -70,9 +68,7 @@ class SoapConnector(ToucanConnector, data_source_model=SoapDataSource):
         description='JSON object of HTTP headers to send with every HTTP request',
         examples=['{ "content-type": "application/xml" }'],
     )
-    endpoint: str = Field(
-        ..., title='WSDL Endpoint', description='The URL where the WSDL file is located'
-    )
+    endpoint: str = Field(..., title='WSDL Endpoint', description='The URL where the WSDL file is located')
 
     def create_client(self) -> Client:
         session = Session()
@@ -84,35 +80,21 @@ class SoapConnector(ToucanConnector, data_source_model=SoapDataSource):
         # Instantiate the SOAP client
 
         client = self.create_client()
-        response = serialize_object(
-            getattr(client.service, data_source.method)(**data_source.parameters)
-        )
+        response = serialize_object(getattr(client.service, data_source.method)(**data_source.parameters))
         #  The connector must handle the cases where response is nested
         #  to be parsed as a tabular format
         if is_list_response(response):
             if is_nested_list(response):  # If response is like [['a', 'b',' c', 'd']]
-                result = pd.DataFrame(
-                    response[0]
-                )  # Result will be pd.DataFrame(['a', 'b', 'c', 'd'])
-            elif is_dict_of_lists(
-                response
-            ):  # If response is like [{'col1':['value', 'value'], 'col2':['value',
+                result = pd.DataFrame(response[0])  # Result will be pd.DataFrame(['a', 'b', 'c', 'd'])
+            elif is_dict_of_lists(response):  # If response is like [{'col1':['value', 'value'], 'col2':['value',
                 # 'value']}]
-                result = pd.DataFrame(
-                    response[0]
-                )  # Result will be pd.DataFrame({'col1':[...], 'col2':[...]})
+                result = pd.DataFrame(response[0])  # Result will be pd.DataFrame({'col1':[...], 'col2':[...]})
             else:  # Result will be directly created from response (even an empty list)
                 result = pd.DataFrame(response)
 
         elif isinstance(response, dict):  # In case the result is only a dict
-            result = pd.DataFrame(
-                response, index=[0]
-            )  # We need to give an index to DataFrame constructor
+            result = pd.DataFrame(response, index=[0])  # We need to give an index to DataFrame constructor
         else:  # Occurs when the result is a scalar (e.g. an int or a str)
             result = pd.DataFrame({'response': response}, index=[0])
 
-        return (
-            json_to_table(result, columns=[data_source.flatten_column])
-            if data_source.flatten_column
-            else result
-        )
+        return json_to_table(result, columns=[data_source.flatten_column]) if data_source.flatten_column else result

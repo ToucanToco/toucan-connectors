@@ -207,7 +207,9 @@ def test_get_cache_key_should_be_different_with_different_permissions():
 class UnreliableDataConnector(ToucanConnector, data_source_model=DataSource):
     type: str = 'MyUnreliableDB'
 
-    def _retrieve_data(self, data_source, logbook=[]):
+    def _retrieve_data(self, data_source, logbook=None):
+        if logbook is None:
+            logbook = []
         if len(logbook) < 3:
             logbook.append(time())
             raise RuntimeError('try again!')
@@ -225,7 +227,9 @@ def test_max_attempt_df():
 class CustomPolicyDataConnector(ToucanConnector, data_source_model=DataSource):
     type: str = 'MyUnreliableDB'
 
-    def _retrieve_data(self, data_source, logbook=[]):
+    def _retrieve_data(self, data_source, logbook=None):
+        if logbook is None:
+            logbook = []
         if len(logbook) < 3:
             logbook.append(time())
             raise RuntimeError('try again!')
@@ -247,7 +251,9 @@ class CustomRetryOnDataConnector(ToucanConnector, data_source_model=DataSource):
     type: str = 'MyUnreliableDB'
     _retry_on = (ValueError,)
 
-    def _retrieve_data(self, data_source, logbook=[]):
+    def _retrieve_data(self, data_source, logbook=None):
+        if logbook is None:
+            logbook = []
         if len(logbook) < 3:
             logbook.append(time())
             raise RuntimeError('try again!')
@@ -268,7 +274,9 @@ class CustomNoRetryOnDataConnector(ToucanConnector, data_source_model=DataSource
     def retry_decorator(self):
         return None
 
-    def _retrieve_data(self, data_source, logbook=[]):
+    def _retrieve_data(self, data_source, logbook=None):
+        if logbook is None:
+            logbook = []
         if len(logbook) == 0:
             logbook.append(time())
             raise RuntimeError('try again!')
@@ -319,8 +327,7 @@ def test_strlist_to_enum_default_value():
 
 def test_should_return_connector_config_form():
     assert (
-        get_connector_secrets_form(GoogleSheets2Connector).secrets_schema
-        == OAuth2ConnectorConfig.model_json_schema()
+        get_connector_secrets_form(GoogleSheets2Connector).secrets_schema == OAuth2ConnectorConfig.model_json_schema()
     )
     assert get_connector_secrets_form(MongoConnector) is None
 

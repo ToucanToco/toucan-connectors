@@ -1,6 +1,18 @@
 [tool.ruff]
-line-length = 100
+line-length = 120
 select = ["E", "F", "UP", "N", "C", "B", "I001", "S", "Q"]
+ignore = [
+       "S101", # allow use of assert
+       # FIXME: S105, S106, S608 and S113 should be addressed
+       "S105", "S106", # possible hardcoded password
+       "S608", # possible SQL injection
+       "S113", # requests call without timeout
+       "N801", # class names
+       "N802", # function names
+       "N818", # exception names
+       "B017", # pytest.raises(Exception)
+       "C901", # complexity
+]
 
 [tool.ruff.flake8-quotes]
 docstring-quotes = "double"
@@ -168,6 +180,7 @@ all = [
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.8"
+pre-commit = "^3.6.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

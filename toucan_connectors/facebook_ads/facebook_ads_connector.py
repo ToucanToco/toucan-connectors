@@ -37,16 +37,14 @@ TOKEN_URL = 'https://graph.facebook.com/v10.0/oauth/access_token'
 class FacebookAdsDataSource(ToucanDataSource):
     data_kind: FacebookAdsDataKind = Field(..., description='')
 
-    parameters: Dict = Field(
-        None, description='A set parameters that will be applied against the retrieved data.'
-    )
+    parameters: Dict = Field(None, description='A set parameters that will be applied against the retrieved data.')
 
     data_fields: str = Field(
         None,
         description=(
-            "A string of comma-separated fields, those fields are listed <a href='https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group'>for campaigns</a>, "
-            "<a href='https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/ads/'>for ads under a specific campaign</a> "
-            "and <a href='https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/ads/'>for all the ads under a specific account"
+            "A string of comma-separated fields, those fields are listed <a href='https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group'>for campaigns</a>, "  # noqa: E501
+            "<a href='https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/ads/'>for ads under a specific campaign</a> "  # noqa: E501
+            "and <a href='https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/ads/'>for all the ads under a specific account"  # noqa: E501
         ),
     )
 
@@ -54,9 +52,7 @@ class FacebookAdsDataSource(ToucanDataSource):
         format_key_mapping = {
             FacebookAdsDataKind.campaigns: {'act_id': self.parameters.get('account_id')},
             FacebookAdsDataKind.all_ads: {'act_id': self.parameters.get('account_id')},
-            FacebookAdsDataKind.ads_under_campaign: {
-                'campaign_id': self.parameters.get('campaign_id')
-            },
+            FacebookAdsDataKind.ads_under_campaign: {'campaign_id': self.parameters.get('campaign_id')},
             FacebookAdsDataKind.insights: {'act_id': self.parameters.get('account_id')},
         }
         return urljoin(
@@ -84,9 +80,7 @@ class FacebookAdsConnector(ToucanConnector, data_source_model=FacebookAdsDataSou
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     def __init__(self, **kwargs) -> None:
-        super().__init__(
-            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
-        )
+        super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,

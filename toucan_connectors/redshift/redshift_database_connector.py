@@ -69,15 +69,15 @@ class AuthenticationMethod(str, Enum):
 
 class AuthenticationMethodError(str, Enum):
     DB_CREDENTIALS: str = f'User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}'
-    AWS_CREDENTIALS: str = f'AccessKeyId, SecretAccessKey & db_user are required for {AuthenticationMethod.AWS_CREDENTIALS}'
+    AWS_CREDENTIALS: str = (
+        f'AccessKeyId, SecretAccessKey & db_user are required for {AuthenticationMethod.AWS_CREDENTIALS}'
+    )
     AWS_PROFILE: str = f'Profile & db_user are required for {AuthenticationMethod.AWS_PROFILE}'
     UNKNOWN: str = 'Unknown AuthenticationMethod'
 
 
 class RedshiftDataSource(ToucanDataSource):
-    database: str = Field(
-        DEFAULT_DATABASE, description='The name of the database you want to query'
-    )
+    database: str = Field(DEFAULT_DATABASE, description='The name of the database you want to query')
     query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='You can write a custom query against your '
@@ -106,9 +106,7 @@ class RedshiftDataSource(ToucanDataSource):
         ).schema()
 
 
-class RedshiftConnector(
-    ToucanConnector, DiscoverableConnector, data_source_model=RedshiftDataSource
-):
+class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_model=RedshiftDataSource):
     authentication_method: AuthenticationMethod = Field(
         None,
         title='Authentication Method',
@@ -117,9 +115,7 @@ class RedshiftConnector(
     )
     host: str = Field(..., description='The hostname of the Amazon Redshift cluster')
     port: int = Field(5439, description='The listening port of your Redshift Database')
-    default_database: str = Field(
-        DEFAULT_DATABASE, description='The name of the database instance to connect to'
-    )
+    default_database: str = Field(DEFAULT_DATABASE, description='The name of the database instance to connect to')
     user: str | None = Field(
         None, description='The username to use for authentication with the Amazon Redshift cluster'
     )
@@ -128,9 +124,7 @@ class RedshiftConnector(
     )
 
     db_user: str | None = Field(None, description='The user ID to use with Amazon Redshift')
-    cluster_identifier: str | None = Field(
-        None, description='The cluster identifier of the Amazon Redshift cluster'
-    )
+    cluster_identifier: str | None = Field(None, description='The cluster identifier of the Amazon Redshift cluster')
 
     connect_timeout: int | None = Field(
         None,
@@ -147,9 +141,7 @@ class RedshiftConnector(
     )
 
     access_key_id: str | None = Field(None, description='The access key id of your aws account.')
-    secret_access_key: PlainJsonSecretStr | None = Field(
-        None, description='The secret access key of your aws account.'
-    )
+    secret_access_key: PlainJsonSecretStr | None = Field(None, description='The secret access key of your aws account.')
     session_token: str | None = Field(None, description='Your session token')
     profile: str | None = Field(None, description='AWS profile')
     region: str | None = Field(None, description='The region in which there is your aws account.')
@@ -200,14 +192,14 @@ class RedshiftConnector(
         return self
 
     def _get_connection_params(self, database) -> dict[str, Any]:
-        con_params = dict(
-            database=database,
-            host=self.host,
-            port=self.port,
-            timeout=self.connect_timeout,
-            cluster_identifier=self.cluster_identifier,
-            tcp_keepalive=self.enable_tcp_keepalive,
-        )
+        con_params = {
+            'database': database,
+            'host': self.host,
+            'port': self.port,
+            'timeout': self.connect_timeout,
+            'cluster_identifier': self.cluster_identifier,
+            'tcp_keepalive': self.enable_tcp_keepalive,
+        }
         if self.authentication_method == AuthenticationMethod.DB_CREDENTIALS.value:
             con_params['user'] = self.user
             con_params['password'] = self.password.get_secret_value() if self.password else None
@@ -288,11 +280,7 @@ class RedshiftConnector(
 
         if run_count_request:
             df_count: pd.DataFrame = self._retrieve_data(data_source, True)
-            total_rows = (
-                df_count.total_rows[0]
-                if df_count is not None and len(df_count.total_rows) > 0
-                else 0
-            )
+            total_rows = df_count.total_rows[0] if df_count is not None and len(df_count.total_rows) > 0 else 0
         else:
             total_rows = total_returned_rows
 
@@ -345,10 +333,7 @@ class RedshiftConnector(
         with self._get_connection(database=data_source.database).cursor() as cursor:
             cursor.execute(DESCRIBE_QUERY.format(column=data_source.query.replace(';', '')))
             res = cursor.description
-        return {
-            col[0].decode('utf-8') if isinstance(col[0], bytes) else col[0]: types_map.get(col[1])
-            for col in res
-        }
+        return {col[0].decode('utf-8') if isinstance(col[0], bytes) else col[0]: types_map.get(col[1]) for col in res}
 
     def _db_table_info_rows(self, database: str) -> list[tuple[str, str, str, str]]:
         with self._get_connection(database).cursor() as cursor:

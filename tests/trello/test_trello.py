@@ -63,9 +63,7 @@ def test_get_df():
         status=200,
     )
 
-    df = trello_connector.get_df(
-        TrelloDataSource(board_id='dsjhdejbdkeb', name='trello', domain='my_domain')
-    )
+    df = trello_connector.get_df(TrelloDataSource(board_id='dsjhdejbdkeb', name='trello', domain='my_domain'))
 
     expected_columns = [
         'Date test',
@@ -93,7 +91,7 @@ def test_get_df():
     assert row_1['Menu deroulant test'] == 'A'
     assert row_1['Date test'] == '2019-04-10T10:00:00.000Z'
     assert row_1['Text test'] == 'blabla'
-    assert type(row_1['members']) is list
+    assert isinstance(row_1['members'], list)
     assert row_1['members'][0] == 'Jean-Jacques Goldman'
 
     # generic fields

@@ -114,9 +114,7 @@ def test_apply_parameter_to_query_do_nothing():
         ),
         (
             {'data': '%(fakirQuery)s'},
-            {
-                'fakirQuery': '[{"values":["bibou"],"chartParam":"test","type":"test","name":"test"}]'
-            },
+            {'fakirQuery': '[{"values":["bibou"],"chartParam":"test","type":"test","name":"test"}]'},
             {'data': '[{"values":["bibou"],"chartParam":"test","type":"test","name":"test"}]'},
         ),
         ({'data': 1}, {}, {'data': 1}),
@@ -220,16 +218,12 @@ def test_apply_parameter_to_query_do_nothing():
         ),
         # tests with {% ... %}
         (
-            {
-                'data': '{%if count %}{{ count }}{%else%}No{%endif%} chair{% if count != 1 %}s{% endif %}'
-            },
+            {'data': '{%if count %}{{ count }}{%else%}No{%endif%} chair{% if count != 1 %}s{% endif %}'},
             {'count': 0},
             {'data': 'No chairs'},
         ),
         (
-            {
-                'data': '{%if count %}{{ count }}{%else%}No{%endif%} chair{% if count != 1 %}s{% endif %}'
-            },
+            {'data': '{%if count %}{{ count }}{%else%}No{%endif%} chair{% if count != 1 %}s{% endif %}'},
             {'count': 1},
             {'data': '1 chair'},
         ),
@@ -305,9 +299,7 @@ def test_render_raw_permission():
         'indic2 == "yo_{{my_indic[2]}}" and indic_list == {{my_indic}}'
     )
     params = {'my_indic': ['0', 1, '2']}
-    expected = (
-        '(indic0 == "0" or indic1 == 1) and ' 'indic2 == "yo_2" and indic_list == [\'0\', 1, \'2\']'
-    )
+    expected = '(indic0 == "0" or indic1 == 1) and ' "indic2 == \"yo_2\" and indic_list == ['0', 1, '2']"
     assert apply_query_parameters(query, params) == expected
 
 
@@ -413,9 +405,7 @@ def test_convert_pyformat_to_qmark(query, params, expected_query, expected_order
 def test_convert_to_printf_templating_style():
     """It should convert jinja templates to printf templates only for valid python identifiers"""
     query = 'SELECT {{ a }} {{a1}}{{ _a1}} FROM {{ 1a }} {{ aa$%@%}}\n{{aa bb}} hey {{aa_bb }};'
-    expected_result = (
-        'SELECT %(a)s %(a1)s%(_a1)s FROM {{ 1a }} {{ aa$%@%}}\n{{aa bb}} hey %(aa_bb)s;'
-    )
+    expected_result = 'SELECT %(a)s %(a1)s%(_a1)s FROM {{ 1a }} {{ aa$%@%}}\n{{aa bb}} hey %(aa_bb)s;'
     assert convert_to_printf_templating_style(query) == expected_result
 
 
@@ -446,9 +436,7 @@ def test_pandas_read_sql_forbidden_interpolation(mocker: MockFixture):
     """
     It should enhance the error provided by pandas' read_sql when someone tries to template a table name
     """
-    mocker.patch(
-        'toucan_connectors.common.pd.read_sql', side_effect=pd.io.sql.DatabaseError('Some error')
-    )
+    mocker.patch('toucan_connectors.common.pd.read_sql', side_effect=pd.io.sql.DatabaseError('Some error'))
     with pytest.raises(pd.io.sql.DatabaseError) as e:
         pandas_read_sql(
             query='SELECT * FROM %(tablename)s WHERE Population > 5000000',
@@ -462,9 +450,7 @@ def test_pandas_read_sql_error(mocker: MockFixture):
     """
     It should raise the error raised by pandas' read_sql
     """
-    mocker.patch(
-        'toucan_connectors.common.pd.read_sql', side_effect=pd.io.sql.DatabaseError('Some error')
-    )
+    mocker.patch('toucan_connectors.common.pd.read_sql', side_effect=pd.io.sql.DatabaseError('Some error'))
     with pytest.raises(pd.io.sql.DatabaseError) as e:
         pandas_read_sql(
             query='SELECT * FROM CITY WHERE Population > %(max_pop)s',
@@ -480,12 +466,14 @@ def test_get_param_name():
 
 
 def test_convert_to_qmark():
-    assert convert_to_qmark_paramstyle(
-        'SELECT * FROM foobar WHERE x = %(value)s', {'value': 42}
-    ) == ('SELECT * FROM foobar WHERE x = ?', [42])
-    assert convert_to_qmark_paramstyle(
-        "SELECT * FROM foobar WHERE x = '%(value)s'", {'value': 42}
-    ) == ('SELECT * FROM foobar WHERE x = ?', [42])
+    assert convert_to_qmark_paramstyle('SELECT * FROM foobar WHERE x = %(value)s', {'value': 42}) == (
+        'SELECT * FROM foobar WHERE x = ?',
+        [42],
+    )
+    assert convert_to_qmark_paramstyle("SELECT * FROM foobar WHERE x = '%(value)s'", {'value': 42}) == (
+        'SELECT * FROM foobar WHERE x = ?',
+        [42],
+    )
 
 
 @pytest.mark.parametrize(
@@ -513,10 +501,10 @@ def test_convert_to_qmark():
             {'values': [17, 42], '__QUERY_PARAM_0__': 17},
         ),
         (
-            'SELECT * FROM {{ tables["tableb"] }} WHERE x = {{ values["x"] }} AND y = {{ values["ys"][1] }} ORDER BY id',
+            'SELECT * FROM {{ tables["tableb"] }} WHERE x = {{ values["x"] }} AND y = {{ values["ys"][1] }} ORDER BY id',  # noqa: E501
             {'tables': {'a': 'theTableA', 'tableb': 'theTableB'}, 'values': {'x': 1, 'ys': [2, 3]}},
             lambda x: f'%({x})s',
-            'SELECT * FROM %(__QUERY_PARAM_0__)s WHERE x = %(__QUERY_PARAM_1__)s AND y = %(__QUERY_PARAM_2__)s ORDER BY id',
+            'SELECT * FROM %(__QUERY_PARAM_0__)s WHERE x = %(__QUERY_PARAM_1__)s AND y = %(__QUERY_PARAM_2__)s ORDER BY id',  # noqa: E501
             {
                 'tables': {'a': 'theTableA', 'tableb': 'theTableB'},
                 'values': {'x': 1, 'ys': [2, 3]},
@@ -535,10 +523,6 @@ def test_sanitize_query(query, init_params, transformer, expected_query, expecte
     'query, expected',
     [('{{nope}}', ''), ({'x': '{{nope}}'}, {}), (('{{nope}}',), ()), ([{'x': '{{nope}}'}], [])],
 )
-def test_nosql_apply_parameters_to_query_root_undefined(
-    query: Any, expected: Any, mocker: MockFixture
-):
+def test_nosql_apply_parameters_to_query_root_undefined(query: Any, expected: Any, mocker: MockFixture):
     mocker.patch.object(common_mod, '_render_query', return_value=Undefined())
-    assert (
-        nosql_apply_parameters_to_query(query=query, parameters={}, handle_errors=False) == expected
-    )
+    assert nosql_apply_parameters_to_query(query=query, parameters={}, handle_errors=False) == expected

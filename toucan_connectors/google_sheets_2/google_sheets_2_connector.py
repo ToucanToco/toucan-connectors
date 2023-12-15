@@ -25,9 +25,7 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 
-AUTHORIZATION_URL: str = (
-    'https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent'
-)
+AUTHORIZATION_URL: str = 'https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent'
 SCOPE: str = 'openid email https://www.googleapis.com/auth/spreadsheets.readonly'
 TOKEN_URL: str = 'https://oauth2.googleapis.com/token'
 
@@ -53,16 +51,11 @@ class GoogleSheets2DataSource(ToucanDataSource):
     spreadsheet_id: str = Field(
         ...,
         title='ID of the spreadsheet',
-        description='Can be found in your URL: '
-        'https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...',
+        description='Can be found in your URL: ' 'https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...',
     )
     sheet: str | None = Field(None, title='Sheet title', description='Title of the desired sheet')
-    header_row: int = Field(
-        0, title='Header row', description='Row of the header of the spreadsheet'
-    )
-    rows_limit: int | None = Field(
-        None, title='Rows limit', description='Maximum number of rows to retrieve'
-    )
+    header_row: int = Field(0, title='Header row', description='Row of the header of the spreadsheet')
+    rows_limit: int | None = Field(None, title='Rows limit', description='Maximum number of rows to retrieve')
     parameters: dict = Field(None, description='Additional URL parameters')
     parse_dates: List[str] = Field([], title='Dates column', description='Columns to parse as date')
 
@@ -122,9 +115,7 @@ class GoogleSheets2Connector(ToucanConnector, data_source_model=GoogleSheets2Dat
         )
 
     def __init__(self, **kwargs):
-        super().__init__(
-            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
-        )
+        super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
@@ -185,7 +176,7 @@ class GoogleSheets2Connector(ToucanConnector, data_source_model=GoogleSheets2Dat
             ranges = ''
 
         # https://developers.google.com/sheets/api/samples/reading
-        read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}{ranges}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING'
+        read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}{ranges}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING'  # noqa: E501
         full_url = f'{self._baseroute}{read_sheet_endpoint}'
         # Rajouter le param FORMATTED_VALUE pour le séparateur de décimal dans la Baseroute
         data = self._run_fetch(full_url)['values']

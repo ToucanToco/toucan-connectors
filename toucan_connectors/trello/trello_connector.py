@@ -107,13 +107,9 @@ class TrelloConnector(ToucanConnector, data_source_model=TrelloDataSource):
         if lists_ids_mapping:
             card_with_value['lists'] = lists_ids_mapping[card_with_id['idList']]
         if members_id_mapping:
-            card_with_value['members'] = [
-                members_id_mapping[member] for member in card_with_id['idMembers']
-            ]
+            card_with_value['members'] = [members_id_mapping[member] for member in card_with_id['idMembers']]
         if labels_id_mapping:
-            card_with_value['labels'] = [
-                labels_id_mapping[label['id']] for label in card_with_id['labels']
-            ]
+            card_with_value['labels'] = [labels_id_mapping[label['id']] for label in card_with_id['labels']]
 
         # custom fields
         if custom_fields_id_mapping:
@@ -140,26 +136,22 @@ class TrelloConnector(ToucanConnector, data_source_model=TrelloDataSource):
         if 'lists' in data_source.fields_list:
             fields_for_request += ['idList']
             lists_ids_mapping = {
-                x['id']: x['name']
-                for x in self.get_board(f'{data_source.board_id}/lists', fields='name')
+                x['id']: x['name'] for x in self.get_board(f'{data_source.board_id}/lists', fields='name')
             }
         if 'labels' in data_source.fields_list:
             fields_for_request += ['labels']
             labels_id_mapping = {
-                x['id']: x['name']
-                for x in self.get_board(f'{data_source.board_id}/labels', fields='name')
+                x['id']: x['name'] for x in self.get_board(f'{data_source.board_id}/labels', fields='name')
             }
         if 'members' in data_source.fields_list:
             fields_for_request += ['idMembers']
             members_id_mapping = {
-                x['id']: x['fullName']
-                for x in self.get_board(f'{data_source.board_id}/members', fields='fullName')
+                x['id']: x['fullName'] for x in self.get_board(f'{data_source.board_id}/members', fields='fullName')
             }
 
         if data_source.custom_fields:
             custom_fields_id_mapping = {
-                x['id']: x
-                for x in self.get_board(f'{data_source.board_id}/customFields', fields='name')
+                x['id']: x for x in self.get_board(f'{data_source.board_id}/customFields', fields='name')
             }
 
         # get cards

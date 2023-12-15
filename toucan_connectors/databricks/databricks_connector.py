@@ -28,12 +28,8 @@ class DatabricksConnector(ToucanConnector, data_source_model=DatabricksDataSourc
         description='The listening address of your databricks cluster',
         placeholder='my-databricks-cluster.cloudproviderdatabricks.net',
     )
-    port: int = Field(
-        ..., description='The listening port of your databricks cluster', placeholder=443
-    )
-    http_path: str = Field(
-        ..., description='Databricks compute resources URL', placeholder='sql/protocolv1/o/xxx/yyy'
-    )
+    port: int = Field(..., description='The listening port of your databricks cluster', placeholder=443)
+    http_path: str = Field(..., description='Databricks compute resources URL', placeholder='sql/protocolv1/o/xxx/yyy')
     user: str | None = Field(
         'token',
         description='"token" if you use a personal access token, or username if you connect by username/password',
@@ -90,9 +86,7 @@ class DatabricksConnector(ToucanConnector, data_source_model=DatabricksDataSourc
             details = self._get_details(3, False)
             return ConnectorStatus(status=False, details=details, error=e.args[0])
         except pyodbc.Error as e:
-            return ConnectorStatus(
-                status=False, details=self._get_details(2, False), error=e.args[0]
-            )
+            return ConnectorStatus(status=False, details=self._get_details(2, False), error=e.args[0])
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
     def get_cluster_state(self) -> bool:
@@ -119,9 +113,7 @@ class DatabricksConnector(ToucanConnector, data_source_model=DatabricksDataSourc
         Try to trigger the query, if we receive an error wait for cluster to start then try again
         """
         query_params = data_source.parameters or {}
-        connection = pyodbc.connect(
-            self._build_connection_string(), autocommit=True, ansi=self.ansi
-        )
+        connection = pyodbc.connect(self._build_connection_string(), autocommit=True, ansi=self.ansi)
         result = pandas_read_sql(
             data_source.query,
             con=connection,

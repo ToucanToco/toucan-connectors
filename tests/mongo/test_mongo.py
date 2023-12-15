@@ -75,9 +75,7 @@ def test_username_password():
     assert 'username must be set' in str(e.value)
 
     # password and user set
-    mongo_connector = MongoConnector(
-        name='mycon', host='localhost', port=22, username='pika', password='bibou'
-    )
+    mongo_connector = MongoConnector(name='mycon', host='localhost', port=22, username='pika', password='bibou')
     assert mongo_connector._get_mongo_client_kwargs() == {
         'host': 'localhost',
         'port': 22,
@@ -99,18 +97,13 @@ def test_client_with_mongo_uri():
 def test_client_args_with_mongo_uri(mocker):
     """It should not pass any other parameter than the host to MongoClient"""
     mongo_client_mock = mocker.patch('toucan_connectors.mongo.mongo_connector.pymongo.MongoClient')
-    connector = MongoConnector(name='my_mongo_con', host='mongodb://myuser:mypassword@myhost:123')
-    connector.client
     mongo_client_mock.assert_called_with(host='mongodb://myuser:mypassword@myhost:123')
 
 
 def test_client_args_with_ssl(mocker):
     """It should forward parameters to mongo client"""
     mongo_client_mock = mocker.patch('toucan_connectors.mongo.mongo_connector.pymongo.MongoClient')
-    connector = MongoConnector(
-        name='my_mongo_con', host='myhost', password='blah', username='jean', ssl=True
-    )
-    connector.client
+    MongoConnector(name='my_mongo_con', host='myhost', password='blah', username='jean', ssl=True)
     mongo_client_mock.assert_called_with(host='myhost', ssl=True, password='blah', username='jean')
 
 
@@ -149,9 +142,7 @@ def test_get_df(mocker):
     snock.return_value = MongoMock('toucan', 'test_col')
     aggregate = mocker.patch('pymongo.collection.Collection.aggregate')
 
-    mongo_connector = MongoConnector(
-        name='mycon', host='localhost', port=22, username='ubuntu', password='ilovetoucan'
-    )
+    mongo_connector = MongoConnector(name='mycon', host='localhost', port=22, username='ubuntu', password='ilovetoucan')
 
     datasource = MongoDataSource(
         name='mycon',
@@ -202,9 +193,7 @@ def test_get_df_live(mongo_connector, mongo_datasource):
 
 def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    df = mongo_connector.get_df(
-        datasource, permissions={'column': 'country', 'operator': 'eq', 'value': 'France'}
-    )
+    df = mongo_connector.get_df(datasource, permissions={'column': 'country', 'operator': 'eq', 'value': 'France'})
     expected = pd.DataFrame(
         {
             'country': ['France', 'France'],
@@ -213,17 +202,13 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
             'name': ['François', 'Marie'],
         }
     )
-    assert datasource.query == [
-        {'$match': {'$and': [{'domain': 'domain1'}, {'country': {'$eq': 'France'}}]}}
-    ]
+    assert datasource.query == [{'$match': {'$and': [{'domain': 'domain1'}, {'country': {'$eq': 'France'}}]}}]
     assert df.shape == (2, 6)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value', 'name'}
     assert df[['country', 'language', 'value', 'name']].equals(expected)
 
     datasource = mongo_datasource(collection='test_col', query=[{'$match': {'domain': 'domain1'}}])
-    df = mongo_connector.get_df(
-        datasource, permissions={'column': 'country', 'operator': 'eq', 'value': 'France'}
-    )
+    df = mongo_connector.get_df(datasource, permissions={'column': 'country', 'operator': 'eq', 'value': 'France'})
     expected = pd.DataFrame(
         {
             'country': ['France', 'France'],
@@ -232,17 +217,13 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
             'name': ['François', 'Marie'],
         }
     )
-    assert datasource.query == [
-        {'$match': {'$and': [{'domain': 'domain1'}, {'country': {'$eq': 'France'}}]}}
-    ]
+    assert datasource.query == [{'$match': {'$and': [{'domain': 'domain1'}, {'country': {'$eq': 'France'}}]}}]
     assert df.shape == (2, 6)
     assert set(df.columns) == {'_id', 'country', 'domain', 'language', 'value', 'name'}
     assert df[['country', 'language', 'value', 'name']].equals(expected)
 
 
-def test_get_slice(
-    mongo_connector: MongoConnector, mongo_datasource: Callable[..., MongoDataSource]
-):
+def test_get_slice(mongo_connector: MongoConnector, mongo_datasource: Callable[..., MongoDataSource]):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.get_slice(datasource)
     assert res.pagination_info.pagination_info.total_rows == 5
@@ -345,17 +326,13 @@ def test_get_slice_with_regex(mongo_connector, mongo_datasource):
             ]
         },
     )
-    pd.testing.assert_series_equal(
-        slice.df['country'], pd.Series(['England', 'Germany', 'USA'], name='country')
-    )
+    pd.testing.assert_series_equal(slice.df['country'], pd.Series(['England', 'Germany', 'USA'], name='country'))
 
 
 def test_get_df_with_regex(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     df = mongo_connector.get_df_with_regex(datasource, {'and': [{'country': re.compile('r.*a')}]})
-    pd.testing.assert_series_equal(
-        df['country'], pd.Series(['France', 'France', 'Germany'], name='country')
-    )
+    pd.testing.assert_series_equal(df['country'], pd.Series(['France', 'France', 'Germany'], name='country'))
 
 
 def test_get_df_with_regex_with_projection_stage(mongo_connector, mongo_datasource):
@@ -363,9 +340,7 @@ def test_get_df_with_regex_with_projection_stage(mongo_connector, mongo_datasour
         collection='test_col',
         query=[{'$match': {'domain': 'domain1'}}, {'$addFields': {'new_country_col': '$country'}}],
     )
-    df = mongo_connector.get_df_with_regex(
-        datasource, {'and': [{'new_country_col': re.compile('r.*a')}]}
-    )
+    df = mongo_connector.get_df_with_regex(datasource, {'and': [{'new_country_col': re.compile('r.*a')}]})
     pd.testing.assert_series_equal(
         df['new_country_col'], pd.Series(['France', 'France', 'Germany'], name='new_country_col')
     )
@@ -400,9 +375,7 @@ def test_get_df_with_regex_case_sensitiveness(mongo_connector, mongo_datasource)
         collection='test_col',
         query=[{'$match': {'domain': 'domain1'}}],
     )
-    df = mongo_connector.get_df_with_regex(
-        datasource, {'and': [{'country': re.compile('^FrAn.*')}]}
-    )
+    df = mongo_connector.get_df_with_regex(datasource, {'and': [{'country': re.compile('^FrAn.*')}]})
     assert df.to_dict(orient='records') == [
         {
             'domain': 'domain1',
@@ -423,17 +396,13 @@ def test_get_df_with_regex_case_sensitiveness(mongo_connector, mongo_datasource)
 
 def test_get_df_with_regex_with_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    df = mongo_connector.get_df_with_regex(
-        datasource, {'and': [{'country': re.compile('r.*a')}]}, limit=1
-    )
+    df = mongo_connector.get_df_with_regex(datasource, {'and': [{'country': re.compile('r.*a')}]}, limit=1)
     pd.testing.assert_series_equal(df['country'], pd.Series(['France'], name='country'))
 
 
 def test_get_df_with_regex_with_offset_and_limit(mongo_connector, mongo_datasource):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
-    df = mongo_connector.get_df_with_regex(
-        datasource, {'and': [{'country': re.compile('r.*a')}]}, limit=1, offset=2
-    )
+    df = mongo_connector.get_df_with_regex(datasource, {'and': [{'country': re.compile('r.*a')}]}, limit=1, offset=2)
     pd.testing.assert_series_equal(df['country'], pd.Series(['Germany'], name='country'))
 
 
@@ -637,9 +606,7 @@ def test_get_engine_version(mocker, mongo_connector):
     assert mongo_connector.get_engine_version() == (3, 4, 5)
 
     # Should raise a MalformedVersion error
-    mocker.patch(
-        'pymongo.MongoClient.server_info', return_value={'version': '--bad-version-format-'}
-    )
+    mocker.patch('pymongo.MongoClient.server_info', return_value={'version': '--bad-version-format-'})
     with pytest.raises(MalformedVersion):
         assert mongo_connector.get_engine_version()
 
@@ -861,25 +828,19 @@ def test_get_cache_key_with_datasource(
     datasource_with_parameters = mongo_datasource(
         collection='test_col', query={'domain': '{{ DOMAIN }}'}, parameters={'DOMAIN': 'domain1'}
     )
-    assert mongo_connector.get_cache_key(datasource) == mongo_connector.get_cache_key(
-        datasource_with_parameters
-    )
+    assert mongo_connector.get_cache_key(datasource) == mongo_connector.get_cache_key(datasource_with_parameters)
 
     datasource_with_bad_parameters = mongo_datasource(
         collection='test_col', query={'domain': '{{ DOMAIN }}'}, parameters={'DOMAIN': 'domain3'}
     )
-    assert mongo_connector.get_cache_key(datasource) != mongo_connector.get_cache_key(
-        datasource_with_bad_parameters
-    )
+    assert mongo_connector.get_cache_key(datasource) != mongo_connector.get_cache_key(datasource_with_bad_parameters)
 
     datasource_with_extra_parameters = mongo_datasource(
         collection='test_col',
         query={'domain': '{{ DOMAIN }}'},
         parameters={'DOMAIN': 'domain1', 'FOO': 'BAR'},
     )
-    assert mongo_connector.get_cache_key(datasource) == mongo_connector.get_cache_key(
-        datasource_with_extra_parameters
-    )
+    assert mongo_connector.get_cache_key(datasource) == mongo_connector.get_cache_key(datasource_with_extra_parameters)
 
 
 def test_get_cache_key_with_dates(mongo_connector, mongo_datasource):

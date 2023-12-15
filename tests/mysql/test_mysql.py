@@ -19,9 +19,7 @@ from toucan_connectors.toucan_connector import MalformedVersion, UnavailableVers
 @pytest.fixture(scope='module')
 def mysql_server(service_container):
     def check(host_port):
-        conn = pymysql.connect(
-            host='127.0.0.1', port=host_port, user='ubuntu', password='ilovetoucan'
-        )
+        conn = pymysql.connect(host='127.0.0.1', port=host_port, user='ubuntu', password='ilovetoucan')
         cur = conn.cursor()
         cur.execute('SELECT 1;')
         cur.close()
@@ -98,26 +96,20 @@ def test_get_engine_version(mocker, mysql_connector):
     # Should be a valide semver version converted to tuple
     mocked_cursor.__enter__().fetchone.return_value = {'VERSION()': '3.4.5'}
     mocked_connect.cursor.return_value = mocked_cursor
-    mocker.patch(
-        'toucan_connectors.mysql.mysql_connector.pymysql.connect', return_value=mocked_connect
-    )
+    mocker.patch('toucan_connectors.mysql.mysql_connector.pymysql.connect', return_value=mocked_connect)
     assert mysql_connector.get_engine_version() == (3, 4, 5)
 
     # Should raise a MalformedVersion error
     mocked_cursor.__enter__().fetchone.return_value = {'VERSION()': '--bad-version-format-'}
     mocked_connect.cursor.return_value = mocked_cursor
-    mocker.patch(
-        'toucan_connectors.mysql.mysql_connector.pymysql.connect', return_value=mocked_connect
-    )
+    mocker.patch('toucan_connectors.mysql.mysql_connector.pymysql.connect', return_value=mocked_connect)
     with pytest.raises(MalformedVersion):
         assert mysql_connector.get_engine_version()
 
     # Should raise an UnavailableVersion error
     mocked_cursor.__enter__().fetchone.return_value = None
     mocked_connect.cursor.return_value = mocked_cursor
-    mocker.patch(
-        'toucan_connectors.mysql.mysql_connector.pymysql.connect', return_value=mocked_connect
-    )
+    mocker.patch('toucan_connectors.mysql.mysql_connector.pymysql.connect', return_value=mocked_connect)
     with pytest.raises(UnavailableVersion):
         assert mysql_connector.get_engine_version()
 
@@ -150,9 +142,7 @@ def test_get_status_bad_port(mysql_connector):
 
 def test_get_status_bad_connection(mysql_connector, unused_port, mocker):
     mysql_connector.port = unused_port()
-    mocker.patch(
-        'toucan_connectors.mysql.mysql_connector.MySQLConnector.check_port', return_value=True
-    )
+    mocker.patch('toucan_connectors.mysql.mysql_connector.MySQLConnector.check_port', return_value=True)
     status = mysql_connector.get_status()
     assert status.status is False
     assert status.details == [
@@ -182,9 +172,7 @@ def test_get_df(mocker: MockerFixture):
     """It should call the sql extractor"""
     snock = mocker.patch('pymysql.connect')
     reasq = mocker.patch('pandas.read_sql')
-    mysql_connector = MySQLConnector(
-        name='mycon', host='localhost', port=22, user='ubuntu', password='ilovetoucan'
-    )
+    mysql_connector = MySQLConnector(name='mycon', host='localhost', port=22, user='ubuntu', password='ilovetoucan')
 
     # With query
     reasq.reset_mock()
@@ -395,9 +383,7 @@ def test_get_model_non_existing_db(mysql_connector: Any) -> None:
 def test_get_df_no_query(query: str, mocker: MockerFixture):
     mocker.patch('pymysql.connect')
     mocker.patch('pandas.read_sql')
-    mysql_connector = MySQLConnector(
-        name='mycon', host='localhost', port=22, user='ubuntu', password='ilovetoucan'
-    )
+    mysql_connector = MySQLConnector(name='mycon', host='localhost', port=22, user='ubuntu', password='ilovetoucan')
 
     with pytest.raises(NoQuerySpecified):
         mysql_connector.get_df(
@@ -413,9 +399,7 @@ def test_get_df_no_query(query: str, mocker: MockerFixture):
         )
 
 
-def test_list_db_names_ensure_no_db_specified(
-    mysql_connector: MySQLConnector, mocker: MockerFixture
-):
+def test_list_db_names_ensure_no_db_specified(mysql_connector: MySQLConnector, mocker: MockerFixture):
     connect_mock = mocker.patch('pymysql.connect')
     mysql_connector._list_db_names()
     assert connect_mock.call_count == 1
@@ -432,9 +416,7 @@ def test_get_project_structure_no_parameter_ensure_no_db_name_specified(
     assert 'database' not in connect_mock.call_args.kwargs
 
 
-def test_get_project_structure_no_parameter_with_db_name(
-    mysql_connector: MySQLConnector, mocker: MockerFixture
-):
+def test_get_project_structure_no_parameter_with_db_name(mysql_connector: MySQLConnector, mocker: MockerFixture):
     connect_mock = mocker.patch('pymysql.connect')
     # Calling list to actually execute the function body
     list(mysql_connector._get_project_structure(db_name='something'))
@@ -465,7 +447,7 @@ def mysql_connector_with_ssl_bundle():
         port=3306,
         user='ubuntu',
         password='ilovetoucan',
-        ssl_ca='-----BEGIN CERTIFICATE----- something -----END CERTIFICATE----- -----BEGIN CERTIFICATE----- something -----END CERTIFICATE-----',
+        ssl_ca='-----BEGIN CERTIFICATE----- something -----END CERTIFICATE----- -----BEGIN CERTIFICATE----- something -----END CERTIFICATE-----',  # noqa: E501
         ssl_mode='VERIFY_CA',
     )
 
@@ -509,9 +491,7 @@ def test_ssl_parameters_verify_ca(mysql_connector_with_ssl: MySQLConnector, mock
     assert kwargs['ssl_verify_identity'] is False
 
 
-def test_ssl_parameters_verify_identity(
-    mysql_connector_with_ssl: MySQLConnector, mocker: MockerFixture
-):
+def test_ssl_parameters_verify_identity(mysql_connector_with_ssl: MySQLConnector, mocker: MockerFixture):
     connect_mock = mocker.patch('pymysql.connect')
     mysql_connector_with_ssl.ssl_mode = 'VERIFY_IDENTITY'
     mysql_connector_with_ssl._connect()

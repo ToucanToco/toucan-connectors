@@ -71,7 +71,7 @@ class LinkedinadsDataSource(ToucanDataSource):
 
     parameters: dict | None = Field(
         None,
-        description='See https://docs.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting for more information',
+        description='See https://docs.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting for more information',  # noqa: E501
     )
 
     @classmethod
@@ -126,9 +126,7 @@ class LinkedinadsConnector(ToucanConnector, data_source_model=LinkedinadsDataSou
         )
 
     def __init__(self, **kwargs):
-        super().__init__(
-            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
-        )
+        super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
@@ -182,7 +180,7 @@ class LinkedinadsConnector(ToucanConnector, data_source_model=LinkedinadsDataSou
                 splitted_end = datetime.strptime(data_source.end_date, '%d/%m/%Y')
             except ValueError:
                 splitted_end = dateutil.parser.parse(data_source.end_date)
-            query += f'&dateRange.end.day={splitted_end.day}&dateRange.end.month={splitted_end.month}&dateRange.end.year={splitted_end.year}'
+            query += f'&dateRange.end.day={splitted_end.day}&dateRange.end.month={splitted_end.month}&dateRange.end.year={splitted_end.year}'  # noqa: E501
 
         # Build the query, 2 optional array parameters
         if data_source.parameters:
@@ -200,8 +198,8 @@ class LinkedinadsConnector(ToucanConnector, data_source_model=LinkedinadsDataSou
             assert res.ok
             data = res.json().get('elements')
 
-        except AssertionError:
-            raise HttpError(res.text)
+        except AssertionError as exc:
+            raise HttpError(res.text) from exc
 
         res = pd.DataFrame(data)
 

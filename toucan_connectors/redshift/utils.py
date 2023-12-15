@@ -35,9 +35,7 @@ def create_columns_query(database: str):
 
 def aggregate_columns(df: pd.DataFrame):
     df['columns'] = df['columns'].apply(json.loads)
-    df = pd.DataFrame(
-        df.groupby(['database', 'name'])['columns'].apply(lambda x: list(x))
-    ).reset_index()
+    df = pd.DataFrame(df.groupby(['database', 'name'])['columns'].apply(lambda x: list(x))).reset_index()
     return df
 
 

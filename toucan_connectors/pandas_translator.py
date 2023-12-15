@@ -1,3 +1,4 @@
+# ruff: noqa: N802
 from ast import literal_eval
 from functools import wraps
 from typing import Callable, TypeAlias

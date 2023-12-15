@@ -7,25 +7,25 @@ from toucan_connectors.utils.pem import sanitize_spaces_pem
 
 @pytest.fixture
 def pem_key_with_spaces() -> str:
-    with open(join(dirname(__file__), 'fixtures', 'pem_key_with_spaces.pem'), 'r') as f:
+    with open(join(dirname(__file__), 'fixtures', 'pem_key_with_spaces.pem')) as f:
         return f.read()
 
 
 @pytest.fixture
 def sanitized_pem_key() -> str:
-    with open(join(dirname(__file__), 'fixtures', 'sanitized_pem_key.pem'), 'r') as f:
+    with open(join(dirname(__file__), 'fixtures', 'sanitized_pem_key.pem')) as f:
         return f.read()
 
 
 @pytest.fixture
 def pem_bundle_with_spaces() -> str:
-    with open(join(dirname(__file__), 'fixtures', 'pem_bundle_with_spaces.pem'), 'r') as f:
+    with open(join(dirname(__file__), 'fixtures', 'pem_bundle_with_spaces.pem')) as f:
         return f.read()
 
 
 @pytest.fixture
 def sanitized_pem_bundle() -> str:
-    with open(join(dirname(__file__), 'fixtures', 'sanitized_pem_bundle.pem'), 'r') as f:
+    with open(join(dirname(__file__), 'fixtures', 'sanitized_pem_bundle.pem')) as f:
         return f.read()
 
 

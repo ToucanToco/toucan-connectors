@@ -3,9 +3,7 @@ import responses
 
 from toucan_connectors.dataiku.dataiku_connector import DataikuConnector, DataikuDataSource
 
-dc = DataikuConnector(
-    name='test', host='http://domain.dataiku.com:9876/', apiKey='', project='TOUCANTOCO'
-)
+dc = DataikuConnector(name='test', host='http://domain.dataiku.com:9876/', apiKey='', project='TOUCANTOCO')
 
 ds = DataikuDataSource(name='test', domain='my_domain', dataset='my_dataset')
 

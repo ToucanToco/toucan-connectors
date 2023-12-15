@@ -16,7 +16,7 @@ def clean_type_str(field_str):
         'ConstrainedStrValue': 'str (not empty)',
         'ConstrainedIntValue': 'int (not empty)',
     }
-    field_str = f'{field_str}'.replace("<class '", "").replace("'>", "").replace("<enum '", "")
+    field_str = f'{field_str}'.replace("<class '", '').replace("'>", '').replace("<enum '", '')
     field_str = field_str.split('.')
     if field_str[-1] in Constr_values.keys():
         return Constr_values[field_str[-1]]
@@ -115,9 +115,7 @@ def generate(klass):
 
 def get_connectors():
     path = 'toucan_connectors/'
-    connectors = [
-        o for o in os.listdir(path) if os.path.isdir(os.path.join(path, o)) & (o != '__pycache__')
-    ]
+    connectors = [o for o in os.listdir(path) if os.path.isdir(os.path.join(path, o)) & (o != '__pycache__')]
     connectors_ok = {}
     for connector in connectors:
         try:

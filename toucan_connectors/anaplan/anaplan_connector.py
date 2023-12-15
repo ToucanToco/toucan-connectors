@@ -27,18 +27,14 @@ def _format_name_and_id(obj: Dict[str, str]) -> str:
 
 
 class AnaplanDataSource(ToucanDataSource):
-    model_id: Annotated[str, StringConstraints(min_length=1)] = Field(
-        ..., description='The model you want to query'
-    )
-    view_id: Annotated[str, StringConstraints(min_length=1)] = Field(
-        ..., description='The view you want to query'
-    )
+    model_id: Annotated[str, StringConstraints(min_length=1)] = Field(..., description='The model you want to query')
+    view_id: Annotated[str, StringConstraints(min_length=1)] = Field(..., description='The view you want to query')
     workspace_id: str = Field(..., description='The ID of the workspace you want to query')
 
     model_config = ConfigDict(protected_namespaces=())
 
     @pydantic.validator('model_id', 'view_id', 'workspace_id')
-    def _sanitize_id(cls, value: str) -> str:
+    def _sanitize_id(cls, value: str) -> str:  # noqa: N805
         return _sanitize_id(value)
 
     @classmethod
@@ -104,15 +100,11 @@ class AnaplanConnector(ToucanConnector, data_source_model=AnaplanDataSource):
 
     def _extract_json(self, resp: requests.Response) -> dict:
         if resp.status_code in (401, 403):
-            raise AnaplanAuthError(
-                f'Invalid credentials for {self.username}: got HTTP status {resp.status_code}'
-            )
+            raise AnaplanAuthError(f'Invalid credentials for {self.username}: got HTTP status {resp.status_code}')
         try:
             return resp.json()
         except requests.JSONDecodeError as exc:
-            raise AnaplanError(
-                f'Anaplan response appears to be invalid JSON: {resp.content} {exc!r}'
-            ) from exc
+            raise AnaplanError(f'Anaplan response appears to be invalid JSON: {resp.content} {exc!r}') from exc
         except requests.RequestException as exc:  # pragma: no cover
             raise AnaplanError(f'Encountered error while executing request: {exc}') from exc
 
@@ -136,12 +128,10 @@ class AnaplanConnector(ToucanConnector, data_source_model=AnaplanDataSource):
             # Columns can have several levels, we flatten them with the "/" separator
             df_columns = ['index'] + ['/'.join(col) for col in data['columnCoordinates']]
             # No MultiIndex for now
-            data = (
-                ['/'.join(row['rowCoordinates'])] + row['cells'] for row in data.get('rows', [])
-            )
+            data = (['/'.join(row['rowCoordinates'])] + row['cells'] for row in data.get('rows', []))
             return pd.DataFrame(columns=df_columns, data=data)
         except KeyError as exc:
-            raise AnaplanError(f'Did not find expected key {exc} in response body')
+            raise AnaplanError(f'Did not find expected key {exc} in response body') from exc
 
     def fetch_token(self) -> str:
         try:
@@ -157,7 +147,7 @@ class AnaplanConnector(ToucanConnector, data_source_model=AnaplanDataSource):
         try:
             return body['tokenInfo']['tokenValue']
         except KeyError as key:
-            raise AnaplanAuthError(f'did not find expected key {key} in response body: {body}')
+            raise AnaplanAuthError(f'did not find expected key {key} in response body: {body}') from key
 
     def get_status(self) -> ConnectorStatus:
         try:
@@ -167,22 +157,16 @@ class AnaplanConnector(ToucanConnector, data_source_model=AnaplanDataSource):
             return ConnectorStatus(status=False, error=f'could not retrieve token: {exc}')
 
     def get_available_workspaces(self, token: str) -> List[Dict[str, str]]:
-        body = self._extract_json(
-            self._http_get(f'{_ANAPLAN_API_BASEROUTE}/workspaces', token=token)
-        )
+        body = self._extract_json(self._http_get(f'{_ANAPLAN_API_BASEROUTE}/workspaces', token=token))
         return body.get('workspaces', [])
 
     def get_available_models(self, workspace_id: str, *, token: str) -> List[Dict[str, str]]:
         body = self._extract_json(
-            self._http_get(
-                f'{_ANAPLAN_API_BASEROUTE}/workspaces/{workspace_id}/models', token=token
-            )
+            self._http_get(f'{_ANAPLAN_API_BASEROUTE}/workspaces/{workspace_id}/models', token=token)
         )
         return body.get('models', [])
 
-    def get_available_views(
-        self, workspace_id: str, model_id: str, *, token: str
-    ) -> List[Dict[str, str]]:
+    def get_available_views(self, workspace_id: str, model_id: str, *, token: str) -> List[Dict[str, str]]:
         body = self._extract_json(
             self._http_get(
                 f'{_ANAPLAN_API_BASEROUTE}/workspaces/{workspace_id}/models/{model_id}/views',

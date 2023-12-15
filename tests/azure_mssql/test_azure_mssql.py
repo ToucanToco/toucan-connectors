@@ -10,16 +10,12 @@ def test_connection_params():
     assert params['server'] == 'my_host.database.windows.net'
     assert params['user'] == 'my_user@my_host'
 
-    connector = AzureMSSQLConnector(
-        host='my_host.database.windows.net', user='my_user', password='', name=''
-    )
+    connector = AzureMSSQLConnector(host='my_host.database.windows.net', user='my_user', password='', name='')
     params = connector.get_connection_params()
     assert params['server'] == 'my_host.database.windows.net'
     assert params['user'] == 'my_user@my_host'
 
-    connector = AzureMSSQLConnector(
-        host='my_host.database.windows.net', user='my_user@my_host', password='', name=''
-    )
+    connector = AzureMSSQLConnector(host='my_host.database.windows.net', user='my_user@my_host', password='', name='')
     params = connector.get_connection_params()
     assert params['server'] == 'my_host.database.windows.net'
     assert params['user'] == 'my_user@my_host'
@@ -29,9 +25,7 @@ def test_gcmysql_get_df(mocker):
     snock = mocker.patch('pyodbc.connect')
     reasq = mocker.patch('pandas.read_sql')
 
-    mssql_connector = AzureMSSQLConnector(
-        name='test', host='localhost', user='ubuntu', password='ilovetoucan'
-    )
+    mssql_connector = AzureMSSQLConnector(name='test', host='localhost', user='ubuntu', password='ilovetoucan')
     ds = AzureMSSQLDataSource(domain='test', name='test', database='mssql_db', query='my_query')
     mssql_connector.get_df(ds)
 

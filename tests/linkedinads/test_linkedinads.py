@@ -106,9 +106,7 @@ def test__retrieve_data(connector, create_datasource):
 
 
 @responses.activate
-def test__retrieve_data_no_nested_col(
-    connector: LinkedinadsConnector, create_datasource: LinkedinadsDataSource
-):
+def test__retrieve_data_no_nested_col(connector: LinkedinadsConnector, create_datasource: LinkedinadsDataSource):
     create_datasource.flatten_column = None
     responses.add(
         method='GET',

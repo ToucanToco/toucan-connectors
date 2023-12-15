@@ -41,9 +41,7 @@ def remove_secrets(secrets_keeper, gc):
 
 def build_ds(dataset: str):
     """Builds test datasource"""
-    return GithubDataSource(
-        name='mah_ds', domain='mah_domain', dataset=dataset, organization='foorganization'
-    )
+    return GithubDataSource(name='mah_ds', domain='mah_domain', dataset=dataset, organization='foorganization')
 
 
 def test_datasource():
@@ -81,9 +79,7 @@ def test_get_status_ok(mocker, gc):
     Check that we get the connector status set to True if
     the access token is correctly retrieved
     """
-    mocker.patch.object(
-        GithubConnector, 'get_access_token', return_value={'access_token': 'access_token'}
-    )
+    mocker.patch.object(GithubConnector, 'get_access_token', return_value={'access_token': 'access_token'})
     assert gc.get_status().status is True
 
 
@@ -233,9 +229,7 @@ def test_corrupt_get_pages(mocker, gc, client, event_loop, extracted_team_page_1
         side_effect=[extracted_team_page_1, {'corrupt': 'data'}],
     )
     result = event_loop.run_until_complete(
-        gc.get_pages(
-            name='foo', organization='foorganization', dataset='teams', client=client, page_limit=2
-        )
+        gc.get_pages(name='foo', organization='foorganization', dataset='teams', client=client, page_limit=2)
     )
     assert result == [{'bar': 'foo', 'foo': 'foo', 'ofo': 'foo'}]
 
@@ -271,9 +265,7 @@ def test_fetch_members_data(
         ],
     )
     members_dataset = event_loop.run_until_complete(
-        gc._fetch_data(
-            dataset=ds.dataset, organization=ds.organization, client=client, page_limit=10
-        )
+        gc._fetch_data(dataset=ds.dataset, organization=ds.organization, client=client, page_limit=10)
     )
     assert mocked_api_call.call_count == 2
     assert mocked_api_call_async.call_count == 7
@@ -303,9 +295,7 @@ def test_fetch_pull_requests_data(
         side_effect=[extracted_prs_1, extracted_prs_2, extracted_prs_3],
     )
     pr_dataset = event_loop.run_until_complete(
-        gc._fetch_data(
-            dataset=ds.dataset, organization=ds.organization, page_limit=10, client=client
-        )
+        gc._fetch_data(dataset=ds.dataset, organization=ds.organization, page_limit=10, client=client)
     )
     assert mocked_api_call.call_count == 1
     assert mocked_api_call_async.call_count == 3
@@ -368,9 +358,7 @@ def test_get_pages(
         side_effect=[extracted_team_page_1, extracted_team_page_2],
     )
     members_rows = event_loop.run_until_complete(
-        gc.get_pages(
-            name='foo', organization='foorganization', dataset='teams', client=client, page_limit=2
-        )
+        gc.get_pages(name='foo', organization='foorganization', dataset='teams', client=client, page_limit=2)
     )
     assert mocked_api_call.call_count == 2
     assert len(members_rows) == 2

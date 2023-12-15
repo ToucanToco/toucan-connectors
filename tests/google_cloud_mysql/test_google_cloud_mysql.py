@@ -7,9 +7,7 @@ from toucan_connectors.google_cloud_mysql.google_cloud_mysql_connector import (
 
 
 def test_connection_params():
-    connector = GoogleCloudMySQLConnector(
-        name='gcloud_sql_con', host='my_host', user='my_user', password='my_pass'
-    )
+    connector = GoogleCloudMySQLConnector(name='gcloud_sql_con', host='my_host', user='my_user', password='my_pass')
     params = connector.get_connection_params()
     assert set(params) == {'host', 'password', 'charset', 'user', 'conv', 'cursorclass'}
 
@@ -39,9 +37,7 @@ def test_gcmysql_get_df(mocker):
     mysql_connector = GoogleCloudMySQLConnector(
         name='test', host='localhost', port=22, user='ubuntu', password='ilovetoucan'
     )
-    ds = GoogleCloudMySQLDataSource(
-        domain='test', name='test', database='mysql_db', query='my_query'
-    )
+    ds = GoogleCloudMySQLDataSource(domain='test', name='test', database='mysql_db', query='my_query')
     mysql_connector.get_df(ds)
 
     conv = pymysql.converters.conversions.copy()

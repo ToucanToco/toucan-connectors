@@ -56,9 +56,7 @@ TOKEN_URL: str = 'https://github.com/login/oauth/access_token'
 BASE_ROUTE: str = 'https://api.github.com/graphql'
 BASE_ROUTE_REST: str = 'https://api.github.com/'
 NO_CREDENTIALS_ERROR = 'No credentials'
-extraction_start_date = datetime.strftime(
-    datetime.now() - relativedelta.relativedelta(years=1), '%Y-%m-%dT%H:%M:%SZ'
-)
+extraction_start_date = datetime.strftime(datetime.now() - relativedelta.relativedelta(years=1), '%Y-%m-%dT%H:%M:%SZ')
 
 
 class NoCredentialsError(Exception):
@@ -109,9 +107,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
         )
 
     def __init__(self, **kwargs):
-        super().__init__(
-            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
-        )
+        super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
@@ -187,9 +183,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
 
             if has_next_page(page_info):
                 variables['cursor'] = get_cursor(page_info)
-                self.get_names(
-                    client, organization, names=names, variables=variables, dataset=dataset
-                )
+                self.get_names(client, organization, names=names, variables=variables, dataset=dataset)
         except (GithubError, KeyNotFoundException) as g:
             logging.getLogger(__name__).error(f'Aborting query due to {g}')
 
@@ -265,8 +259,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
                     # Find the first index where PR Creation Date is < extraction_start_date
                     # Throws IndexError if such index cannot be found
                     index = np.where(
-                        np.array([pr['PR Creation Date'] for pr in formatted_data])
-                        < extraction_start_date
+                        np.array([pr['PR Creation Date'] for pr in formatted_data]) < extraction_start_date
                     )[0][0]
                     formatted_data = formatted_data[:index]
                     data_list.extend(formatted_data)
@@ -296,7 +289,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
                     latest_retrieved_object=latest_retrieved_object,
                 )
 
-        except GithubError:
+        except GithubError as exc:
             logging.getLogger(__name__).info('Retrying in 15 seconds')
             await asyncio.sleep(15)
             retries += 1
@@ -315,7 +308,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
                     latest_retrieved_object=latest_retrieved_object,
                 )
             else:
-                raise GithubError('Max number of retries reached, aborting connection')
+                raise GithubError('Max number of retries reached, aborting connection') from exc
 
         except KeyNotFoundException as k:
             logging.getLogger(__name__).error(f'{k}')
@@ -369,9 +362,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
                 dataset=dataset,
                 organization=organization,
                 page_limit=page_limit,
-                latest_retrieved_object=latest_retrieved_object.get(name)
-                if latest_retrieved_object
-                else None,
+                latest_retrieved_object=latest_retrieved_object.get(name) if latest_retrieved_object else None,
             )
             for name in names[:names_limit]
         ]

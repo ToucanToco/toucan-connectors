@@ -1,8 +1,8 @@
 import time
 from typing import Optional
+from unittest.mock import patch
 
 import pytest
-from mock import patch
 
 from toucan_connectors.connection_manager import ConnectionBO, ConnectionManager
 
@@ -177,18 +177,14 @@ def test_get_basic(connection_manager):
 
 
 def test_multiple_same_get(connection_manager):
-    with _get_connection(connection_manager, 'conn_1') as conn, _get_connection(
-        connection_manager, 'conn_1'
-    ) as conn2:
+    with _get_connection(connection_manager, 'conn_1') as conn, _get_connection(connection_manager, 'conn_1') as conn2:
         assert len(connection_manager.connection_list) == 1
         assert conn == conn2
         connection_manager.force_clean()
 
 
 def test_multiple_different_get(connection_manager):
-    with _get_connection(connection_manager, 'conn_1') as conn, _get_connection(
-        connection_manager, 'conn_2'
-    ) as conn2:
+    with _get_connection(connection_manager, 'conn_1') as conn, _get_connection(connection_manager, 'conn_2') as conn2:
         assert len(connection_manager.connection_list) == 2
         assert conn != conn2
         connection_manager.force_clean()
@@ -242,9 +238,7 @@ def test_auto_clean_multiple(connection_manager):
     t2 = connection_manager.time_between_clean
     connection_manager.time_keep_alive = 2
     connection_manager.time_between_clean = 1
-    with _get_connection(connection_manager, 'conn_1'), _get_connection(
-        connection_manager, 'conn_2'
-    ):
+    with _get_connection(connection_manager, 'conn_1'), _get_connection(connection_manager, 'conn_2'):
         assert len(connection_manager.connection_list) == 2
         time.sleep(1)
         with _get_connection(connection_manager, 'conn_3'):
@@ -257,9 +251,7 @@ def test_auto_clean_multiple(connection_manager):
 
 
 def test_force_clean(connection_manager):
-    with _get_connection(connection_manager, 'conn_1'), _get_connection(
-        connection_manager, 'conn_2'
-    ):
+    with _get_connection(connection_manager, 'conn_1'), _get_connection(connection_manager, 'conn_2'):
         assert len(connection_manager.connection_list) == 2
     connection_manager.force_clean()
     assert len(connection_manager.connection_list) == 0

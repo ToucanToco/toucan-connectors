@@ -63,8 +63,8 @@ class NetExplorerConnector(ToucanConnector, data_source_model=NetExplorerDataSou
                 else:
                     folders = _search(folders['folders'], elem)
                     assert folders
-        except AssertionError:
-            raise ValueError('Unable to find the file')
+        except AssertionError as exc:
+            raise ValueError('Unable to find the file') from exc
 
         return _id
 

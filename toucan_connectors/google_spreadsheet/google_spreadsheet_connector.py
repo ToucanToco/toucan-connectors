@@ -16,9 +16,7 @@ class GoogleSpreadsheetDataSource(ToucanDataSource):
         description='You can find this ID in the URL of your spreadsheet, '
         'just after the base path "https://docs.google.com/spreadsheets/d/"',
     )
-    sheetname: str = Field(
-        None, description='If not specified, the first sheet will be extracted by default'
-    )
+    sheetname: str = Field(None, description='If not specified, the first sheet will be extracted by default')
     skip_rows: int = Field(
         0,
         title='Number of rows to skip',
@@ -55,9 +53,7 @@ class GoogleSpreadsheetConnector(ToucanConnector, data_source_model=GoogleSpread
     )
 
     def _retrieve_data(self, data_source):
-        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-            self.credentials.dict(), self.scope
-        )
+        credentials = ServiceAccountCredentials.from_json_keyfile_dict(self.credentials.dict(), self.scope)
         gc = gspread.authorize(credentials)
 
         sheets = gc.open_by_key(data_source.spreadsheet_id)

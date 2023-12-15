@@ -242,9 +242,7 @@ def test_get_status_api_down(mocker):
         'toucan_connectors.google_sheets.google_sheets_connector.GoogleSheetsConnector._google_client_request_kwargs',
         return_value={
             'http': HttpMock(
-                path.join(
-                    path.dirname(__file__), './user-infos.json'
-                ),  # the content will not be read
+                path.join(path.dirname(__file__), './user-infos.json'),  # the content will not be read
                 {'status': '400'},
             )
         },
@@ -260,9 +258,7 @@ def test_get_status_api_down(mocker):
 
 
 def test_schema_fields_order():
-    schema_props_keys = list(
-        JsonWrapper.loads(GoogleSheetsDataSource.schema_json())['properties'].keys()
-    )
+    schema_props_keys = list(JsonWrapper.loads(GoogleSheetsDataSource.schema_json())['properties'].keys())
     assert schema_props_keys[0] == 'domain'
     assert schema_props_keys[1] == 'spreadsheet_id'
     assert schema_props_keys[2] == 'sheet'

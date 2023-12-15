@@ -25,9 +25,7 @@ def athena_connector():
 
 @pytest.fixture
 def data_source():
-    return AwsathenaDataSource(
-        name='test', domain='toto', database='mydatabase', query='SELECT * FROM beers;'
-    )
+    return AwsathenaDataSource(name='test', domain='toto', database='mydatabase', query='SELECT * FROM beers;')
 
 
 @pytest.fixture
@@ -95,9 +93,7 @@ def test_get_session(athena_connector):
     assert creds.secret_key == 'test_secret_access_key'
 
 
-def test_get_slice(
-    mocker, athena_connector, data_source, mocked_read_sql_query, mocked_boto_session
-):
+def test_get_slice(mocker, athena_connector, data_source, mocked_read_sql_query, mocked_boto_session):
     permissions = {'column': 'style', 'operator': 'in', 'value': ['Blonde', 'Triple']}
     result = athena_connector.get_slice(data_source, permissions=permissions, offset=10, limit=110)
     assert len(result.df) == 4
@@ -140,9 +136,7 @@ def test_get_status_ko(mocker, athena_connector, status_checks):
     mocker.patch('awswrangler.catalog.databases', side_effect=Exception('Insufficient permissions'))
 
     mocked_session = mocker.MagicMock()
-    mocked_session.return_value.client.return_value.get_caller_identity.side_effect = Exception(
-        'Authentication failed'
-    )
+    mocked_session.return_value.client.return_value.get_caller_identity.side_effect = Exception('Authentication failed')
     mocker.patch.object(AwsathenaConnector, 'get_session', new=mocked_session)
 
     # should failed
@@ -169,9 +163,7 @@ def test_get_status_ko(mocker, athena_connector, status_checks):
         (' SELECT * FROM toto; ', 5, 100, 'SELECT * FROM (SELECT * FROM toto) OFFSET 5 LIMIT 100;'),
     ],
 )
-def test_add_pagination_to_query(
-    athena_connector, query: str, offset: int, limit: Optional[int], expected: str
-):
+def test_add_pagination_to_query(athena_connector, query: str, offset: int, limit: Optional[int], expected: str):
     assert athena_connector._add_pagination_to_query(query, offset=offset, limit=limit) == expected
 
 
@@ -205,9 +197,7 @@ def test_athenaconnector_get_model(mocker: MockFixture, athena_connector: Awsath
     )
     tables_mock = mocker.patch(
         'toucan_connectors.awsathena.awsathena_connector.wr.catalog.tables',
-        return_value=pd.DataFrame(
-            {'Table': ['table1', 'table2'], 'TableType': ['EXTERNAL_TABLE', 'EXTERNAL_TABLE']}
-        ),
+        return_value=pd.DataFrame({'Table': ['table1', 'table2'], 'TableType': ['EXTERNAL_TABLE', 'EXTERNAL_TABLE']}),
     )
     table_types = [
         {'foo': 'string', 'bar': 'string'},

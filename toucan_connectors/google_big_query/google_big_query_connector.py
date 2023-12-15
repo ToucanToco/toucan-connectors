@@ -122,9 +122,7 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
         return bigquery_helpers.scalar_to_query_parameter(value=value, name=name)
 
 
-class GoogleBigQueryConnector(
-    ToucanConnector, DiscoverableConnector, data_source_model=GoogleBigQueryDataSource
-):
+class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_source_model=GoogleBigQueryDataSource):
     # for GoogleCredentials
     credentials: GoogleCredentials | None = Field(
         None,
@@ -148,7 +146,7 @@ class GoogleBigQueryConnector(
         Dialect.standard,
         description='BigQuery allows you to choose between standard and legacy SQL as query syntax. '
         'The preferred query syntax is the default standard SQL. You can find more information on this '
-        '<a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax" target="_blank" >documentation</a>',
+        '<a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax" target="_blank" >documentation</a>',  # noqa: E501
     )
     scopes: list[str] = Field(
         ['https://www.googleapis.com/auth/bigquery'],
@@ -186,9 +184,7 @@ class GoogleBigQueryConnector(
                     _http=http_session,
                 )
         except GoogleUnauthorized as excp:
-            raise InvalidJWTToken(
-                'Your "JSON Web Token" seems not valid anymore,update it {excp} !'
-            ) from excp
+            raise InvalidJWTToken('Your "JSON Web Token" seems not valid anymore,update it {excp} !') from excp
 
         end = timer()
         _LOGGER.info(
@@ -264,17 +260,13 @@ class GoogleBigQueryConnector(
             try:
                 return pd.concat((df for df in result_iterator), ignore_index=True)
             except ValueError as excp:  # pragma: no cover
-                raise NoDataFoundException(
-                    'No data found, please check your config again.'
-                ) from excp
+                raise NoDataFoundException('No data found, please check your config again.') from excp
         except TypeError as e:
             _LOGGER.error(f'Failed to execute request {query} - {e}')
             raise e
 
     @staticmethod
-    def _prepare_query_and_parameters(
-        query: str, parameters: dict[str, object] | None
-    ) -> tuple[str, list]:
+    def _prepare_query_and_parameters(query: str, parameters: dict[str, object] | None) -> tuple[str, list]:
         """Replace ToucanToco variable definitions by Google Big Query variable
         definition and sanitize the query"""
         query, params = sanitize_query(
@@ -297,9 +289,7 @@ class GoogleBigQueryConnector(
     def _bigquery_client_with_google_creds(self) -> bigquery.Client:
         try:
             assert self.credentials is not None
-            credentials = GoogleBigQueryConnector._get_google_credentials(
-                self.credentials, self.scopes
-            )
+            credentials = GoogleBigQueryConnector._get_google_credentials(self.credentials, self.scopes)
             return GoogleBigQueryConnector._connect(credentials)
         except AssertionError as excp:
             raise GoogleClientCreationError from excp
@@ -310,16 +300,12 @@ class GoogleBigQueryConnector(
             try:
                 # We try to instantiate the bigquery.Client with the given jwt-token
                 _session = CustomRequestSession(self.jwt_credentials.jwt_token)
-                client = GoogleBigQueryConnector._http_connect(
-                    http_session=_session, project_id=self._get_project_id()
-                )
+                client = GoogleBigQueryConnector._http_connect(http_session=_session, project_id=self._get_project_id())
                 _LOGGER.info('bigqueryClient created with the JWT provided !')
 
                 return client
             except InvalidJWTToken:
-                _LOGGER.info(
-                    'JWT login failed, falling back to GoogleCredentials if they are presents'
-                )
+                _LOGGER.info('JWT login failed, falling back to GoogleCredentials if they are presents')
         # or we fallback on default google-credentials
         return self._bigquery_client_with_google_creds()
 
@@ -327,11 +313,7 @@ class GoogleBigQueryConnector(
         """We need an util in other to check either jwt_creds are well set or
         not for the configuration validation, because self.jwt_credentials can
         be not None but its value are either empty or None..."""
-        if (
-            self.jwt_credentials
-            and self.jwt_credentials.jwt_token
-            and self.jwt_credentials.project_id
-        ):
+        if self.jwt_credentials and self.jwt_credentials.jwt_token and self.jwt_credentials.project_id:
             return self.jwt_credentials.project_id
         elif self.credentials and self.credentials.project_id:
             return self.credentials.project_id
@@ -366,20 +348,14 @@ class GoogleBigQueryConnector(
             col = x.split()
             return {'name': col[0], 'type': col[1]}
 
-        unformatted_db_tree['type'] = unformatted_db_tree['type'].apply(
-            lambda x: 'view' if 'VIEW' in x else 'table'
-        )
+        unformatted_db_tree['type'] = unformatted_db_tree['type'].apply(lambda x: 'view' if 'VIEW' in x else 'table')
         unformatted_db_tree['columns'] = (
-            unformatted_db_tree['column_name']
-            + ' '
-            + unformatted_db_tree['data_type'].apply(lambda x: x.lower())
+            unformatted_db_tree['column_name'] + ' ' + unformatted_db_tree['data_type'].apply(lambda x: x.lower())
         )
 
         unformatted_db_tree['columns'] = unformatted_db_tree['columns'].apply(_format_columns)
         return (
-            unformatted_db_tree.groupby(['name', 'schema', 'database', 'type'], group_keys=False)[
-                'columns'
-            ]
+            unformatted_db_tree.groupby(['name', 'schema', 'database', 'type'], group_keys=False)['columns']
             .apply(list)
             .reset_index()
             .to_dict(orient='records')
@@ -417,9 +393,7 @@ WHERE
 
     def _fetch_query_results(self, query_job: QueryJob) -> Iterable:  # pragma: no cover
         """Fetches query results in a paginated manner using a generator."""
-        return query_job.result(
-            page_size=_PAGE_SIZE, max_results=_MAXIMUM_RESULTS_FETCHED
-        ).to_dataframe_iterable()
+        return query_job.result(page_size=_PAGE_SIZE, max_results=_MAXIMUM_RESULTS_FETCHED).to_dataframe_iterable()
 
     def _get_project_structure_fast(
         self, client: bigquery.Client, db_name: str | None, dataset_ids: Iterable[str]
@@ -435,13 +409,9 @@ WHERE
             # Fetch pages of results using the generator
             # and Concatenate all dataframes into a single one
             try:
-                return pd.concat(
-                    (df for df in self._fetch_query_results(query_job)), ignore_index=True
-                )
+                return pd.concat((df for df in self._fetch_query_results(query_job)), ignore_index=True)
             except ValueError as excp:  # pragma: no cover
-                raise NoDataFoundException(
-                    'No data found, please check your config again.'
-                ) from excp
+                raise NoDataFoundException('No data found, please check your config again.') from excp
         except Exception as exc:
             raise GoogleAPIError(f'An error occurred while executing the query: {exc}') from exc
 
@@ -462,9 +432,7 @@ WHERE
         # We then build and execute a query for every distinct location
         for location, datasets_for_region in groupby(dataset_info, key=lambda x: x.location):
             _LOGGER.info(f'Retrieving dataset structure for datasets located in {location}')
-            query = self._build_dataset_info_query(
-                (ds.dataset_id for ds in datasets_for_region), db_name
-            )
+            query = self._build_dataset_info_query((ds.dataset_id for ds in datasets_for_region), db_name)
 
             dfs.append(client.query(query, location=location).to_dataframe())
 
@@ -483,9 +451,7 @@ WHERE
 
         return pd.Series(dataset_ids).values
 
-    def _get_project_structure(
-        self, db_name: str | None = None, schema_name: str | None = None
-    ) -> list[TableInfo]:
+    def _get_project_structure(self, db_name: str | None = None, schema_name: str | None = None) -> list[TableInfo]:
         client = self._get_bigquery_client()
 
         # Either the schema_name is not specified
@@ -510,8 +476,6 @@ WHERE
 
         return self._format_db_model(df)
 
-    def get_model(
-        self, db_name: str | None = None, schema_name: str | None = None
-    ) -> list[TableInfo]:
+    def get_model(self, db_name: str | None = None, schema_name: str | None = None) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
         return self._get_project_structure(db_name, schema_name)

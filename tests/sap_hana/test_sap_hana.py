@@ -19,9 +19,7 @@ def test_saphana_get_df(mocker):
     snock = mocker.patch('pyhdb.connect')
     reasq = mocker.patch('pandas.read_sql')
 
-    saphana_connector = SapHanaConnector(
-        name='test', host='localhost', port=22, user='ubuntu', password='truc'
-    )
+    saphana_connector = SapHanaConnector(name='test', host='localhost', port=22, user='ubuntu', password='truc')
     ds = SapHanaDataSource(domain='test', name='test', query='my_query')
     saphana_connector.get_df(ds)
 

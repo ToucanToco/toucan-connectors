@@ -27,9 +27,7 @@ class S3Connector(ToucanConnector, data_source_model=S3DataSource):
     _sts_role: dict
 
     bucket_name: str = Field(..., description='Your Bucket Name')
-    prefix: str | None = Field(
-        '', description='A Prefix for your objects like a path folder Ex: /marketing/revenues'
-    )
+    prefix: str | None = Field('', description='A Prefix for your objects like a path folder Ex: /marketing/revenues')
     role_arn: str = Field(..., description='The Role ARN')
     external_id: str = Field(
         ...,
@@ -46,10 +44,8 @@ class S3Connector(ToucanConnector, data_source_model=S3DataSource):
         validate_on_assignment = True
 
     @validator('external_id', pre=True, always=True)
-    def _validate_external_id(cls, value: str, values: dict) -> str:
-        return values.get(
-            'workspace_id', value
-        )  # once set, external_id cannot be changed from the workspace id
+    def _validate_external_id(cls, value: str, values: dict) -> str:  # noqa:N805
+        return values.get('workspace_id', value)  # once set, external_id cannot be changed from the workspace id
 
     def get_status(self) -> ConnectorStatus:
         try:
@@ -71,9 +67,7 @@ class S3Connector(ToucanConnector, data_source_model=S3DataSource):
         prefix = (self.prefix or '').lstrip('/')
         file = file.lstrip('/')
 
-        absolute_path = str(
-            ('/' / Path(self.bucket_name) / Path(prefix or '') / file).absolute()
-        ).removeprefix('/')
+        absolute_path = str(('/' / Path(self.bucket_name) / Path(prefix or '') / file).absolute()).removeprefix('/')
 
         forged_url = f's3://{access_key}:{access_secret}@{absolute_path}'
 

@@ -39,9 +39,7 @@ class ToucanTocoConnector(ToucanConnector, data_source_model=ToucanTocoDataSourc
         if data_source.all_small_apps:
             ret = []
             for app in g(tc['small-apps']):
-                ret.append(
-                    {'small_app': app['id'], 'response': g(tc[app['id']][data_source.endpoint])}
-                )
+                ret.append({'small_app': app['id'], 'response': g(tc[app['id']][data_source.endpoint])})
             return pd.DataFrame(ret)
 
         else:

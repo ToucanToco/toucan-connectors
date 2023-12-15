@@ -20,8 +20,7 @@ class OracleSQLDataSource(ToucanDataSource):
     )
     table: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
-        description='The name of the data table that you want to '
-        'get (equivalent to "SELECT * FROM "your_table")',
+        description='The name of the data table that you want to ' 'get (equivalent to "SELECT * FROM "your_table")',
     )
 
     def __init__(self, **data):
@@ -66,9 +65,7 @@ class OracleSQLConnector(ToucanConnector, data_source_model=OracleSQLDataSource)
     )
     user: str = Field(None, description='Your login username')
     password: PlainJsonSecretStr = Field(None, description='Your login password')
-    encoding: str = Field(
-        None, title='Charset', description='If you need to specify a specific character encoding.'
-    )
+    encoding: str = Field(None, title='Charset', description='If you need to specify a specific character encoding.')
 
     def get_connection_params(self):
         con_params = {

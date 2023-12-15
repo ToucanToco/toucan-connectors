@@ -24,7 +24,7 @@ def test_json_dumps():
 def test_json_dump():
     with open(path_dumps, 'w+') as f:
         JsonWrapper.dump(json_json, f)
-    with open(path_dumps, 'r') as f:
+    with open(path_dumps) as f:
         result = JsonWrapper.load(f)
         assert json_json == result
     if os.path.exists(path_dumps):
@@ -47,13 +47,13 @@ def test_json_loads_not_string():
 
 
 def test_json_load():
-    result = JsonWrapper.load(open(path_loads, 'r'))
+    result = JsonWrapper.load(open(path_loads))
     assert {'key1': 'value1', 'key2': 'value2'} == result
 
 
 def test_json_load_file_not_found():
     with pytest.raises(FileNotFoundError):
-        JsonWrapper.load(open(path_not_found, 'r'))
+        JsonWrapper.load(open(path_not_found))
 
 
 def test_custom_json_serializer():

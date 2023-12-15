@@ -55,7 +55,7 @@ def is_jinja_alone(s: str) -> bool:
 
 
 def _has_parameters(query: dict | list[dict] | tuple | str) -> bool:
-    t = Environment().parse(query)
+    t = Environment().parse(query)  # noqa: S701
     return bool(meta.find_undeclared_variables(t) or re.search(RE_PARAM, query))
 
 
@@ -115,9 +115,7 @@ def _is_defined(value: Any) -> bool:
     return not isinstance(value, Undefined)
 
 
-def _render_query(
-    query: dict | list[dict] | tuple | str, parameters: dict | None, handle_errors: bool = False
-):
+def _render_query(query: dict | list[dict] | tuple | str, parameters: dict | None, handle_errors: bool = False):
     """
     Render both jinja or %()s templates in query
     while keeping type of parameters
@@ -161,7 +159,7 @@ def _render_query(
         if is_jinja_alone(query):
             env = NativeEnvironment()
         else:
-            env = Environment()
+            env = Environment()  # noqa: S701
 
         try:
             res = env.from_string(query).render(clean_p)
@@ -206,7 +204,7 @@ def apply_query_parameters(query: str, parameters: dict) -> str:
             new_key = f'{parent_key}_{k}' if parent_key else k
             new_p[new_key] = v
             if isinstance(v, list):
-                v = {idx: elt for idx, elt in enumerate(v)}
+                v = dict(enumerate(v))
             if isinstance(v, dict):
                 new_p.update(_flatten_dict(v, new_key))
             elif isinstance(v, str):
@@ -282,9 +280,7 @@ async def fetch(url: str, session: ClientSession):
     """Fetch data from an API."""
     async with session.get(url) as res:
         if res.status != 200:
-            raise HttpError(
-                f'Aborting request due to error from the API: {res.status}, {res.reason}'
-            )
+            raise HttpError(f'Aborting request due to error from the API: {res.status}, {res.reason}')
         return await res.json()
 
 
@@ -330,9 +326,7 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> tuple
         if isinstance(o, list):
             # in the query string, replace the ? at index i by the number of item
             # in the provided parameter of type list
-            query_string = query_string.replace(
-                extracted_params[i], f'({",".join(len(ordered_values[i])*["?"])})'
-            )
+            query_string = query_string.replace(extracted_params[i], f'({",".join(len(ordered_values[i])*["?"])})')
 
     flattened_values = []
     for val in ordered_values:
@@ -418,10 +412,10 @@ def pandas_read_sql(
         query = query.replace('%%', '%')
         query = re.sub(r'%[^(%]', r'%\g<0>', query)
         df = pd.read_sql(query, con=con, params=params, **kwargs)
-    except pd.io.sql.DatabaseError:
+    except pd.io.sql.DatabaseError as exc:
         if is_interpolating_table_name(query):
             errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
-            raise pd.io.sql.DatabaseError(errmsg)
+            raise pd.io.sql.DatabaseError(errmsg) from exc
         else:
             raise
 

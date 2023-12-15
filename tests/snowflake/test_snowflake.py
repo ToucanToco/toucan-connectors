@@ -35,9 +35,7 @@ def snowflake_connector_oauth(mocker):
         refresh_token=SecretStr(OAUTH_REFRESH_TOKEN),
         update_tokens=mocker.Mock(),
     )
-    sso_credentials_keeper = mocker.Mock(
-        client_id=OAUTH_CLIENT_ID, client_secret=SecretStr(OAUTH_CLIENT_SECRET)
-    )
+    sso_credentials_keeper = mocker.Mock(client_id=OAUTH_CLIENT_ID, client_secret=SecretStr(OAUTH_CLIENT_SECRET))
     return SnowflakeConnector(
         name='test_name',
         authentication_method=AuthenticationMethod.OAUTH,
@@ -115,7 +113,7 @@ def snowflake_cursor(mocker: MockerFixture, snowflake_connect: MagicMock) -> _SF
 
 @pytest.fixture
 def snowflake_retrieve_data(snowflake_cursor: _SFCursor) -> _SFCursor:
-    with open('tests/snowflake/fixture/data.json', 'r') as fd:
+    with open('tests/snowflake/fixture/data.json') as fd:
         data = JsonWrapper.load(fd)
 
     snowflake_cursor.set_return_value(data)
@@ -145,16 +143,12 @@ def test_datasource_get_form(
     snowflake_connector: SnowflakeConnector,
     snowflake_cursor: _SFCursor,
 ):
-    snowflake_cursor.set_side_effect(
-        [{'name': ['warehouse_1', 'warehouse_2']}, {'name': ['database_1', 'database_2']}]
-    )
+    snowflake_cursor.set_side_effect([{'name': ['warehouse_1', 'warehouse_2']}, {'name': ['database_1', 'database_2']}])
     result = snowflake_datasource.get_form(snowflake_connector, {})
     assert 'warehouse_1' == result['properties']['warehouse']['default']
 
 
-def test_set_warehouse(
-    snowflake_datasource: SnowflakeDataSource, snowflake_connector: SnowflakeConnector
-):
+def test_set_warehouse(snowflake_datasource: SnowflakeDataSource, snowflake_connector: SnowflakeConnector):
     snowflake_datasource.warehouse = None
     new_data_source = snowflake_connector._set_warehouse(snowflake_datasource)
     assert new_data_source.warehouse == 'warehouse_1'
@@ -176,9 +170,7 @@ def test_set_warehouse_without_default_warehouse(snowflake_datasource: Snowflake
     assert new_data_source.warehouse is None
 
 
-def test_get_database_without_filter(
-    snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor
-):
+def test_get_database_without_filter(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
     snowflake_cursor.set_return_value([{'name': 'database_1'}, {'name': 'database_2'}])
     result = snowflake_connector._get_databases()
     assert result[0] == 'database_1'
@@ -186,9 +178,7 @@ def test_get_database_without_filter(
     assert len(result) == 2
 
 
-def test_get_database_with_filter_found(
-    snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor
-):
+def test_get_database_with_filter_found(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
     snowflake_cursor.set_return_value([{'name': 'database_1'}])
     result = snowflake_connector._get_databases('database_1')
     assert result[0] == 'database_1'
@@ -201,18 +191,14 @@ def test_get_database_with_filter_not_found(snowflake_connector: SnowflakeConnec
     assert len(result) == 0
 
 
-def test_get_warehouse_without_filter(
-    snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor
-):
+def test_get_warehouse_without_filter(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
     snowflake_cursor.set_return_value([{'name': 'warehouse_1'}, {'name': 'warehouse_2'}])
     result = snowflake_connector._get_warehouses()
     assert result[0] == 'warehouse_1'
     assert result[1] == 'warehouse_2'
 
 
-def test_get_warehouse_with_filter_found(
-    snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor
-):
+def test_get_warehouse_with_filter_found(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
     snowflake_cursor.set_return_value([{'name': 'warehouse_1'}])
     result = snowflake_connector._get_warehouses('warehouse_1')
     assert result[0] == 'warehouse_1'
@@ -229,17 +215,13 @@ _DF = None
 
 
 @pytest.mark.usefixtures('snowflake_retrieve_data')
-def test_retrieve_data(
-    snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource
-):
+def test_retrieve_data(snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource):
     df_result: DataFrame = snowflake_connector._retrieve_data(snowflake_datasource)
     assert 11 == len(df_result)
 
 
 @pytest.mark.usefixtures('snowflake_retrieve_data')
-def test_retrieve_data_slice(
-    snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource
-):
+def test_retrieve_data_slice(snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource)
     assert 11 == len(df_result.df)
 
@@ -262,9 +244,7 @@ def test_retrieve_data_slice_too_much(
 
 
 @pytest.mark.usefixtures('snowflake_retrieve_data')
-def test_retrieve_data_fetch(
-    snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource
-):
+def test_retrieve_data_fetch(snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource):
     df_result = snowflake_connector._fetch_data(snowflake_datasource)
     assert 11 == len(df_result)
 
@@ -286,9 +266,7 @@ def test_retrieve_data_fetch_too_much(
 
 
 def test_schema_fields_order():
-    schema_props_keys = list(
-        JsonWrapper.loads(SnowflakeConnector.schema_json())['properties'].keys()
-    )
+    schema_props_keys = list(JsonWrapper.loads(SnowflakeConnector.schema_json())['properties'].keys())
     ordered_keys = [
         'type',
         'name',
@@ -316,17 +294,13 @@ def test_get_status_all_good(snowflake_connector: SnowflakeConnector, snowflake_
     )
 
 
-def test_get_status_without_warehouses(
-    snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor
-):
+def test_get_status_without_warehouses(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
     snowflake_cursor.set_return_value([])
     connector_status = snowflake_connector.get_status()
     assert not connector_status.status
 
 
-def test_get_status_account_nok(
-    snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor
-):
+def test_get_status_account_nok(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
     snowflake_cursor.set_side_effect(snowflake.connector.errors.ProgrammingError('Account nok'))
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
@@ -336,9 +310,7 @@ def test_get_status_account_nok(
     )
 
 
-def test_account_does_not_exists(
-    snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor
-):
+def test_account_does_not_exists(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
     snowflake_cursor.set_side_effect(snowflake.connector.errors.OperationalError())
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
@@ -353,14 +325,12 @@ def test_account_forbidden(snowflake_connector: SnowflakeConnector, snowflake_cu
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
         status=False,
-        error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",
+        error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",  # noqa: E501
         details=[('Connection to Snowflake', False), ('Default warehouse exists', None)],
     )
 
 
-def test_account_failed_for_user(
-    snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor
-):
+def test_account_failed_for_user(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
     snowflake_cursor.set_side_effect(snowflake.connector.errors.DatabaseError())
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
@@ -397,9 +367,7 @@ def test_oauth_args_endpoint_not_200(
 
     post_mock = mocker.patch('requests.post')
     post_mock.return_value.ok = False
-    post_mock.return_value.raise_for_status.side_effect = HTTPError(
-        'url', 401, 'Unauthorized', {}, None
-    )
+    post_mock.return_value.raise_for_status.side_effect = HTTPError('url', 401, 'Unauthorized', {}, None)
     post_mock.return_value.status_code = 401
 
     with pytest.raises(Exception, match='HTTP Error 401: Unauthorized'):
@@ -427,9 +395,7 @@ def test_refresh_oauth_token(
     assert post_mock.call_count == 1
 
     post_mock.reset_mock()
-    post_mock.return_value.raise_for_status.side_effect = HTTPError(
-        'url', 401, 'Unauthorized', {}, None
-    )
+    post_mock.return_value.raise_for_status.side_effect = HTTPError('url', 401, 'Unauthorized', {}, None)
     # Invalid JWT
     snowflake_connector_oauth.user_tokens_keeper.access_token = SecretStr('PLOP')
     with pytest.raises(Exception, match='HTTP Error 401: Unauthorized'):
@@ -452,7 +418,7 @@ def test_get_connection_connect_oauth(
     assert call_args['account'] == 'test_account'
     assert (
         call_args['token']
-        == 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQyLCJzdWIiOiJzbm93Zmxha2VfdXNlciJ9.WIi6tM3WAGh7gSyxcNHl8fFyDDXymyeBIVG55MFufvw'
+        == 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQyLCJzdWIiOiJzbm93Zmxha2VfdXNlciJ9.WIi6tM3WAGh7gSyxcNHl8fFyDDXymyeBIVG55MFufvw'  # noqa: E501
     )
     assert call_args['database'] == 'test_database'
     assert call_args['warehouse'] == 'test_warehouse'
@@ -499,7 +465,7 @@ def test_get_unique_datasource_identifier():
         warehouse='warehouse_1',
         query='test_query with %(foo)s and %(pokemon)s',
         query_object={'schema': 'SHOW_SCHEMA', 'table': 'MY_TABLE', 'columns': ['col1', 'col2']},
-        parameters={'foo': 'bar', 'pokemon': 'pikachu', 'foo': 'bar'},
+        parameters={'foo': 'bar', 'pokemon': 'pikachu'},
     )
     key2 = snowflake_connector.get_cache_key(datasource2)
 
@@ -528,15 +494,9 @@ def test_get_unique_datasource_identifier():
         default_warehouse='warehouse_1',
     )
 
-    assert snowflake_connector.get_cache_key(
-        datasource
-    ) != another_snowflake_connector.get_cache_key(datasource)
-    assert snowflake_connector.get_cache_key(
-        datasource2
-    ) != another_snowflake_connector.get_cache_key(datasource2)
-    assert snowflake_connector.get_cache_key(
-        datasource3
-    ) != another_snowflake_connector.get_cache_key(datasource3)
+    assert snowflake_connector.get_cache_key(datasource) != another_snowflake_connector.get_cache_key(datasource)
+    assert snowflake_connector.get_cache_key(datasource2) != another_snowflake_connector.get_cache_key(datasource2)
+    assert snowflake_connector.get_cache_key(datasource3) != another_snowflake_connector.get_cache_key(datasource3)
 
 
 _EXPECTED_MODEL = {

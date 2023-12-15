@@ -33,20 +33,16 @@ class MicroStrategyDataSource(ToucanDataSource):
     Specify whether you want to use the `cube` or `reports` endpoints and a microstrategy doc id.
     """
 
-    id: str = Field(
-        None, title='Cube / Report ID', description='In the form "BD91AF40492D2C188240DEAF7D9D1510"'
-    )
+    id: str = Field(None, title='Cube / Report ID', description='In the form "BD91AF40492D2C188240DEAF7D9D1510"')
     dataset: Dataset
     viewfilter: dict = Field(
         None,
         title='View filters',
         description='You can apply Microstrategy View Filters here. Please find configuration details in our '
-        '<a href="https://docs.toucantoco.com/concepteur/power-apps-with-data/01-add-data-to-small-app.html#microstrategy-connector" target="_blank"> '
+        '<a href="https://docs.toucantoco.com/concepteur/power-apps-with-data/01-add-data-to-small-app.html#microstrategy-connector" target="_blank"> '  # noqa: E501
         'documentation</a>',
     )
-    offset: int = Field(
-        0, description='If you need to skip results, specify here the number of rows to skip'
-    )
+    offset: int = Field(0, description='If you need to skip results, specify here the number of rows to skip')
     limit: int = Field(
         100,
         title='Limit the number of results to:',
@@ -73,15 +69,12 @@ class MicroStrategyConnector(ToucanConnector, data_source_model=MicroStrategyDat
     project_id: str = Field(
         ...,
         title='projectID',
-        description='The unique ID of your MicroStrategy project. '
-        'In the form "B7CA92F04B9FAE8D941C3E9B7E0CD754"',
+        description='The unique ID of your MicroStrategy project. ' 'In the form "B7CA92F04B9FAE8D941C3E9B7E0CD754"',
         examples=['https://demo.microstrategy.com/MicroStrategyLibrary2/api/'],
     )
 
     def _retrieve_metadata(self, data_source: MicroStrategyDataSource) -> pd.DataFrame:
-        client = Client(
-            str(self.base_url), self.project_id, self.username, self.password.get_secret_value()
-        )
+        client = Client(str(self.base_url), self.project_id, self.username, self.password.get_secret_value())
 
         results = client.list_objects(
             [st.value for st in Subtypes], data_source.id, data_source.offset, data_source.limit
@@ -97,21 +90,15 @@ class MicroStrategyConnector(ToucanConnector, data_source_model=MicroStrategyDat
             return self._retrieve_metadata(data_source)
         if not self.password:
             self.password = PlainJsonSecretStr('')
-        client = Client(
-            str(self.base_url), self.project_id, self.username, self.password.get_secret_value()
-        )
+        client = Client(str(self.base_url), self.project_id, self.username, self.password.get_secret_value())
 
         query_func = getattr(client, data_source.dataset)
         if not data_source.viewfilter:
-            results = query_func(
-                id=data_source.id, offset=data_source.offset, limit=data_source.limit
-            )
+            results = query_func(id=data_source.id, offset=data_source.offset, limit=data_source.limit)
         else:
             results = query_func(id=data_source.id, limit=0)
             dfn = get_definition(results)
-            data_source.viewfilter = nosql_apply_parameters_to_query(
-                data_source.viewfilter, data_source.parameters
-            )
+            data_source.viewfilter = nosql_apply_parameters_to_query(data_source.viewfilter, data_source.parameters)
             viewfilter = fill_viewfilter_with_ids(data_source.viewfilter, dfn)
             results = query_func(
                 id=data_source.id,

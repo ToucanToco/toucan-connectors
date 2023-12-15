@@ -92,13 +92,9 @@ def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:
 
 
 class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
-    access_token: PlainJsonSecretStr = Field(
-        ..., description='An API key for the target private app'
-    )
+    access_token: PlainJsonSecretStr = Field(..., description='An API key for the target private app')
 
-    def _fetch_page(
-        self, api: _PageApi, after: str | None = None, limit: int | None = None
-    ) -> _HubSpotResponse:
+    def _fetch_page(self, api: _PageApi, after: str | None = None, limit: int | None = None) -> _HubSpotResponse:
         page = api.get_page(after=after, limit=limit)
         return _HubSpotResponse(**page.to_dict())
 
@@ -148,9 +144,7 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
             api = self._api_for_dataset(data_source.dataset)
             page_api = _page_api_for(api, data_source.dataset)
             results = []
-            result_iterator = self._result_iterator(
-                page_api, max_results=offset + (limit or 0), limit=limit
-            )
+            result_iterator = self._result_iterator(page_api, max_results=offset + (limit or 0), limit=limit)
             try:
                 for _ in range(offset):
                     next(result_iterator)
@@ -161,7 +155,5 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
 
         return DataSlice(
             df=df,
-            pagination_info=build_pagination_info(
-                offset=offset, limit=limit, retrieved_rows=len(df), total_rows=None
-            ),
+            pagination_info=build_pagination_info(offset=offset, limit=limit, retrieved_rows=len(df), total_rows=None),
         )

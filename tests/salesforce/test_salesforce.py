@@ -54,9 +54,7 @@ def test_make_request(sc, ds):
         },
     )
 
-    resp = sc.make_request(
-        Session(), ds, 'https://salesforce.is.awsome', 'services/data/v39.0/query'
-    )
+    resp = sc.make_request(Session(), ds, 'https://salesforce.is.awsome', 'services/data/v39.0/query')
     assert resp == {
         'attributes': ['a', 'b'],
         'records': [{'id': 1, 'name': 'a'}, {'id': 2, 'name': 'b'}],
@@ -103,9 +101,7 @@ def test_get_status_ok(mocker, sc):
     Check that we get the connector status set to True if
     the access token is correctly retrieved
     """
-    mocker.patch.object(
-        SalesforceConnector, 'get_access_data', return_value={'access_token': 'access_token'}
-    )
+    mocker.patch.object(SalesforceConnector, 'get_access_data', return_value={'access_token': 'access_token'})
     assert sc.get_status().status is True
 
 
@@ -160,9 +156,7 @@ def test__retrieve_data(mocker, sc, ds, clean_p1):
         'refresh_token': 'shiny token',
     }
     mocker.patch.object(SalesforceConnector, 'get_access_data', return_value=secret_object)
-    mocked_generate_rows = mocker.patch.object(
-        SalesforceConnector, 'generate_rows', return_value=clean_p1
-    )
+    mocked_generate_rows = mocker.patch.object(SalesforceConnector, 'generate_rows', return_value=clean_p1)
     res = sc._retrieve_data(ds)
     assert mocked_generate_rows.call_count == 1
     assert res.iloc[0]['Id'] == 'A111FA'
@@ -170,9 +164,7 @@ def test__retrieve_data(mocker, sc, ds, clean_p1):
 
 def test_get_secrets_form(mocker, sc):
     """Check that the doc for oAuth setup is correctly retrieved"""
-    mocker.patch(
-        'toucan_connectors.salesforce.salesforce_connector.os.path.dirname', return_value='fakepath'
-    )
+    mocker.patch('toucan_connectors.salesforce.salesforce_connector.os.path.dirname', return_value='fakepath')
     mocker.patch.object(Path, 'read_text', return_value='<h1>Awesome Doc</h1>')
     doc = sc.get_connector_secrets_form()
     assert doc.documentation_md == '<h1>Awesome Doc</h1>'

@@ -24,7 +24,7 @@ s = GoogleMyBusinessDataSource(
 
 
 def test_get_df(mocker):
-    REPORT_INSIGHTS = {
+    REPORT_INSIGHTS = {  # noqa: N806
         'locationMetrics': [
             {
                 'locationName': 'locations/hey',
@@ -51,9 +51,7 @@ def test_get_df(mocker):
     }
 
     mock_service = mocker.patch.object(GoogleMyBusinessConnector, 'build_service').return_value
-    mock_service.accounts.return_value.list.return_value.execute.return_value = {
-        'accounts': [{'name': 'plop'}]
-    }
+    mock_service.accounts.return_value.list.return_value.execute.return_value = {'accounts': [{'name': 'plop'}]}
     mock_service.accounts.return_value.locations.return_value.reportInsights.return_value.execute.return_value = (
         REPORT_INSIGHTS
     )

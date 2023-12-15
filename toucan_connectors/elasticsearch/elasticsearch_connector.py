@@ -15,7 +15,7 @@ from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnect
 def _is_branch_list(val):
     res = False
     if isinstance(val, dict):
-        for k, v in val.items():
+        for _k, v in val.items():
             if _is_branch_list(v):
                 res = True
                 break
@@ -144,15 +144,13 @@ class ElasticsearchConnector(ToucanConnector, data_source_model=ElasticsearchDat
             connection_params.append(h)
 
         esclient = Elasticsearch(connection_params)
-        response = getattr(esclient, data_source.search_method)(
-            index=data_source.index, body=data_source.body
-        )
+        response = getattr(esclient, data_source.search_method)(index=data_source.index, body=data_source.body)
 
         if data_source.search_method == SearchMethod.msearch:
             res = []
             # Body alternate index and query `[index, query, index, query...]`
             queries = data_source.body[1::2]
-            for query, data in zip(queries, response['responses']):
+            for _query, data in zip(queries, response['responses']):
                 res += _read_response(data)
         else:
             res = _read_response(response)

@@ -1,5 +1,4 @@
 from datetime import date, datetime, timezone
-from zoneinfo import ZoneInfo
 
 import pandas as pd
 import pytest
@@ -7,6 +6,7 @@ from dateutil import tz
 from numpy import dtype
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
 from pytz import utc
+from zoneinfo import ZoneInfo
 
 from toucan_connectors.utils.datetime import is_datetime_col, sanitize_df_dates
 

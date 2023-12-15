@@ -77,9 +77,7 @@ def extracted_pr_list():
                         {'node': {'name': 'label'}},
                     ]
                 },
-                'commits': {
-                    'edges': [{'node': {'commit': {'author': {'user': {'login': 'user1'}}}}}]
-                },
+                'commits': {'edges': [{'node': {'commit': {'author': {'user': {'login': 'user1'}}}}}]},
             },
             {
                 'createdAt': '2020-11-18T15:21:21Z',
@@ -95,9 +93,7 @@ def extracted_pr_list():
                         {'node': {'name': '✌️ TO MERGE ✌️'}},
                     ]
                 },
-                'commits': {
-                    'edges': [{'node': {'commit': {'author': {'user': {'login': 'michel'}}}}}]
-                },
+                'commits': {'edges': [{'node': {'commit': {'author': {'user': {'login': 'michel'}}}}}]},
             },
             {
                 'createdAt': '2020-11-18T14:18:20Z',
@@ -107,9 +103,7 @@ def extracted_pr_list():
                 'title': 'chore(somethinh):bla',
                 'state': 'CLOSED',
                 'labels': {'edges': [{'node': {'name': 'tech'}}]},
-                'commits': {
-                    'edges': [{'node': {'commit': {'author': {'user': {'login': 'jeanlouis'}}}}}]
-                },
+                'commits': {'edges': [{'node': {'commit': {'author': {'user': {'login': 'jeanlouis'}}}}}]},
             },
         ],
         'pageInfo': {
@@ -299,15 +293,7 @@ def extracted_prs_1():
                                     ]
                                 },
                                 'commits': {
-                                    'edges': [
-                                        {
-                                            'node': {
-                                                'commit': {
-                                                    'author': {'user': {'login': 'jeanlouis'}}
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    'edges': [{'node': {'commit': {'author': {'user': {'login': 'jeanlouis'}}}}}]
                                 },
                             },
                             {
@@ -324,15 +310,7 @@ def extracted_prs_1():
                                         {'node': {'name': 'Label'}},
                                     ]
                                 },
-                                'commits': {
-                                    'edges': [
-                                        {
-                                            'node': {
-                                                'commit': {'author': {'user': {'login': 'michel'}}}
-                                            }
-                                        }
-                                    ]
-                                },
+                                'commits': {'edges': [{'node': {'commit': {'author': {'user': {'login': 'michel'}}}}}]},
                             },
                             {
                                 'createdAt': '2020-11-18T14:18:20Z',
@@ -342,11 +320,7 @@ def extracted_prs_1():
                                 'title': 'chore(something): somethin',
                                 'state': 'MERGED',
                                 'labels': {'edges': [{'node': {'name': 'tech'}}]},
-                                'commits': {
-                                    'edges': [
-                                        {'node': {'commit': {'author': {'user': {'login': 'boo'}}}}}
-                                    ]
-                                },
+                                'commits': {'edges': [{'node': {'commit': {'author': {'user': {'login': 'boo'}}}}}]},
                             },
                         ],
                         'pageInfo': {
@@ -384,15 +358,7 @@ def extracted_prs_2():
                                     ]
                                 },
                                 'commits': {
-                                    'edges': [
-                                        {
-                                            'node': {
-                                                'commit': {
-                                                    'author': {'user': {'login': 'jeanlouis'}}
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    'edges': [{'node': {'commit': {'author': {'user': {'login': 'jeanlouis'}}}}}]
                                 },
                             }
                         ],
@@ -428,15 +394,7 @@ def extracted_prs_3():
                                     ]
                                 },
                                 'commits': {
-                                    'edges': [
-                                        {
-                                            'node': {
-                                                'commit': {
-                                                    'author': {'user': {'login': 'jeanlouis'}}
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    'edges': [{'node': {'commit': {'author': {'user': {'login': 'jeanlouis'}}}}}]
                                 },
                             },
                         ],
@@ -472,15 +430,7 @@ def extracted_prs_4():
                                     ]
                                 },
                                 'commits': {
-                                    'edges': [
-                                        {
-                                            'node': {
-                                                'commit': {
-                                                    'author': {'user': {'login': 'jeanlouis'}}
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    'edges': [{'node': {'commit': {'author': {'user': {'login': 'jeanlouis'}}}}}]
                                 },
                             },
                         ],

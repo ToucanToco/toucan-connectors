@@ -218,10 +218,7 @@ def test_prepare_report_query(connector, mocker, build_report_data_source):
         client=mocked_adwords_client, data_source=build_report_data_source
     )
     mock_apply_filter.assert_called_once()
-    assert (
-        built_report_query._awql
-        == 'SELECT Id, Adname FROM CriteriaReport DURING 20210101, 20210131'
-    )
+    assert built_report_query._awql == 'SELECT Id, Adname FROM CriteriaReport DURING 20210101, 20210131'
 
 
 def test__retrieve_data_service(connector, build_data_service_source, mocker):
@@ -240,9 +237,7 @@ def test__retrieve_data_service(connector, build_data_service_source, mocker):
     )
     mocked_built_query.Pager()
     mocker.patch(f'{import_path}.clean_columns', return_value=['id', 'name', 'status'])
-    mocker.patch(
-        f'{import_path}.serialize_object', return_value={'id': 1, 'name': 'a', 'status': 'ENABLED'}
-    )
+    mocker.patch(f'{import_path}.serialize_object', return_value={'id': 1, 'name': 'a', 'status': 'ENABLED'})
     res = connector._retrieve_data(build_data_service_source)
     assert res['id'][0] == 1
     mocked_built_query.assert_called_once()
@@ -254,9 +249,7 @@ def test__retrieve_data_report(connector, build_report_data_source, mocker):
     """
     mocker.patch(f'{import_path}.GoogleAdwordsConnector.authenticate_client')
 
-    fake_query = (
-        'SELECT Id, AdName FROM CriteriaReport WHERE AdName StartsWith "G" DURING 20210101,20210131'
-    )
+    fake_query = 'SELECT Id, AdName FROM CriteriaReport WHERE AdName StartsWith "G" DURING 20210101,20210131'
     mocked_report_downloader = mock.Mock()
     mocked_report_downloader.DownloadReportWithAwql().return_value = [
         {'Id': 1, 'AdName': 'a'},
@@ -268,9 +261,7 @@ def test__retrieve_data_report(connector, build_report_data_source, mocker):
     )
     mocked_io = mocker.patch(f'{import_path}.StringIO')
     mocked_pandas = mocker.patch(f'{import_path}.pd')
-    mocked_pandas.read_csv.return_value = pd.DataFrame(
-        [{'id': 1, 'adName': 'a'}, {'id': 2, 'adName': 'b'}]
-    )
+    mocked_pandas.read_csv.return_value = pd.DataFrame([{'id': 1, 'adName': 'a'}, {'id': 2, 'adName': 'b'}])
     connector._retrieve_data(build_report_data_source)
     assert (
         mocked_report_downloader.DownloadReportWithAwql.call_args_list[1][0][0]

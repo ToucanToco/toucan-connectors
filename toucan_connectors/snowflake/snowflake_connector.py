@@ -146,7 +146,7 @@ class SnowflakeConnector(
         description='The full name of your Snowflake account. '
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
-        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',  # noqa: E501
         placeholder='your_account_name.region_id.cloud_platform',  # type:ignore[call-arg]
     )
 
@@ -168,14 +168,16 @@ class SnowflakeConnector(
     role: str | None = Field(
         None,
         description='The user role that you want to connect with. '
-        'See more details <a href="https://docs.snowflake.com/en/user-guide/admin-user-management.html#user-roles" target="_blank">here</a>.',
+        'See more details <a href="https://docs.snowflake.com/en/user-guide/admin-user-management.html#user-roles" target="_blank">here</a>.',  # noqa: E501
     )
 
     default_warehouse: str | None = Field(
         None, description='The default warehouse that shall be used for any data source'
     )
     category: Category = Field(
-        Category.SNOWFLAKE, title='category', ui={'checkbox': False}  # type:ignore[call-arg]
+        Category.SNOWFLAKE,
+        title='category',
+        ui={'checkbox': False},  # type:ignore[call-arg]
     )
 
     @classmethod
@@ -210,17 +212,12 @@ class SnowflakeConnector(
 
     @property
     def client_secret(self) -> str | None:
-        return (
-            self.sso_credentials_keeper
-            and self.sso_credentials_keeper.client_secret.get_secret_value()
-        )
+        return self.sso_credentials_keeper and self.sso_credentials_keeper.client_secret.get_secret_value()
 
     @staticmethod
     def _get_status_details(index: int, status: bool | None) -> list[tuple[str, bool | None]]:
         checks = ['Connection to Snowflake', 'Default warehouse exists']
-        ok_checks: list[tuple[str, bool | None]] = [
-            (check, True) for i, check in enumerate(checks) if i < index
-        ]
+        ok_checks: list[tuple[str, bool | None]] = [(check, True) for i, check in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks: list[tuple[str, bool | None]] = [
             (check, None) for i, check in enumerate(checks) if i > index
@@ -248,12 +245,10 @@ class SnowflakeConnector(
             return ConnectorStatus(
                 status=False,
                 details=self._get_status_details(0, False),
-                error=f"Access forbidden, please check that you have access to the '{self.account}' account or try again later.",
+                error=f"Access forbidden, please check that you have access to the '{self.account}' account or try again later.",  # noqa: E501
             )
         except snowflake.connector.errors.ProgrammingError as e:
-            return ConnectorStatus(
-                status=False, details=self._get_status_details(0, False), error=str(e)
-            )
+            return ConnectorStatus(status=False, details=self._get_status_details(0, False), error=str(e))
         except snowflake.connector.errors.DatabaseError:
             # Raised when the provided User/Password aren't correct
             return ConnectorStatus(
@@ -340,15 +335,11 @@ class SnowflakeConnector(
             self._refresh_oauth_token()
             logger.info('Done refreshing OAuth token')
 
-        return _snowflake_connection(
-            **self.get_connection_params(), database=database, warehouse=warehouse
-        )
+        return _snowflake_connection(**self.get_connection_params(), database=database, warehouse=warehouse)
 
     def _set_warehouse(self, data_source: SnowflakeDataSource):
         return (
-            data_source.copy(update={'warehouse': self.default_warehouse})
-            if not data_source.warehouse
-            else data_source
+            data_source.copy(update={'warehouse': self.default_warehouse}) if not data_source.warehouse else data_source
         )
 
     @overload
@@ -454,9 +445,7 @@ class SnowflakeConnector(
         df = self._fetch_data(data_source, offset=offset, limit=limit)
         return DataSlice(
             df=df,
-            pagination_info=build_pagination_info(
-                offset=0, limit=limit, total_rows=None, retrieved_rows=len(df)
-            ),
+            pagination_info=build_pagination_info(offset=0, limit=limit, total_rows=None, retrieved_rows=len(df)),
         )
 
     def describe(self, data_source: SnowflakeDataSource) -> dict[str, str]:

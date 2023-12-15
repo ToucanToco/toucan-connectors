@@ -46,9 +46,7 @@ def test_oracle_get_df(mocker: MockerFixture):
     )
 
     # With query
-    datasource = OracleSQLDataSource(
-        domain='Oracle test', name='my_oracle_sql_con', query='SELECT * FROM City;'
-    )
+    datasource = OracleSQLDataSource(domain='Oracle test', name='my_oracle_sql_con', query='SELECT * FROM City;')
     oracle_connector.get_df(datasource)
 
     snock.assert_called_once_with(user='system', password='oracle', dsn='localhost:22/xe')
@@ -57,9 +55,7 @@ def test_oracle_get_df(mocker: MockerFixture):
 
     # With table
     reasq.reset_mock()
-    oracle_connector.get_df(
-        OracleSQLDataSource(domain='Oracle test', name='my_oracle_sql_con', table='Nation')
-    )
+    oracle_connector.get_df(OracleSQLDataSource(domain='Oracle test', name='my_oracle_sql_con', table='Nation'))
 
     reasq.assert_called_once_with('SELECT * FROM Nation', con=snock(), params=None)
 

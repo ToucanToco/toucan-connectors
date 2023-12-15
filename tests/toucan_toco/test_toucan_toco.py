@@ -6,9 +6,7 @@ from toucan_connectors.toucan_toco.toucan_toco_connector import (
     ToucanTocoDataSource,
 )
 
-tcc = ToucanTocoConnector(
-    name='test', host='https://example.com', username='username', password='password'
-)
+tcc = ToucanTocoConnector(name='test', host='https://example.com', username='username', password='password')
 
 tcd = ToucanTocoDataSource(name='test', domain='test', endpoint='small-apps')
 

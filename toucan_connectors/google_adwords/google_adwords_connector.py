@@ -23,9 +23,7 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
 )
 
-AUTHORIZATION_URL: str = (
-    'https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent'
-)
+AUTHORIZATION_URL: str = 'https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent'
 USER_AGENT: str = 'toucantoco.com:reportextractor:v1'
 TOKEN_URL: str = 'https://oauth2.googleapis.com/token'
 SCOPE: str = 'https://www.googleapis.com/auth/adwords'
@@ -38,16 +36,12 @@ class GoogleAdwordsDataSource(ToucanDataSource):
         description='Service to Query',
     )
     columns: str = Field(..., title='Columns', description='Fields to select in the dataset')
-    from_clause: str = Field(
-        None, title='From', description='From clause, for report extraction only'
-    )
-    parameters: dict = Field(
-        None, title='Filter', description='A dict such as {"Column": {"Operator": "Value"}}'
-    )
+    from_clause: str = Field(None, title='From', description='From clause, for report extraction only')
+    parameters: dict = Field(None, title='Filter', description='A dict such as {"Column": {"Operator": "Value"}}')
     during: str = Field(
         None,
         title='During',
-        description='During clause, for report extraction only see: https://developers.google.com/adwords/api/docs/guides/awql#using_awql_with_reports ',
+        description='During clause, for report extraction only see: https://developers.google.com/adwords/api/docs/guides/awql#using_awql_with_reports ',  # noqa: E501
     )
     orderby: Dict = Field(
         None,
@@ -106,9 +100,7 @@ class GoogleAdwordsConnector(ToucanConnector, data_source_model=GoogleAdwordsDat
         )
 
     def __init__(self, **kwargs):
-        super().__init__(
-            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
-        )
+        super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
@@ -187,9 +179,7 @@ class GoogleAdwordsConnector(ToucanConnector, data_source_model=GoogleAdwordsDat
         # Build Where
         apply_filter(service_query_builder, data_source.parameters)
         # Build Orderby
-        service_query_builder.OrderBy(
-            data_source.orderby['column'], data_source.orderby['direction']
-        )
+        service_query_builder.OrderBy(data_source.orderby['column'], data_source.orderby['direction'])
         # Build Limit
         if not data_source.limit:
             data_source.limit = '100'

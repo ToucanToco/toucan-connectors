@@ -652,9 +652,7 @@ def _build_regular_tables_model_extraction_query() -> str:
     """
 
 
-def build_database_model_extraction_query(
-    db_name: str | None, include_materialized_views: bool
-) -> str:
+def build_database_model_extraction_query(db_name: str | None, include_materialized_views: bool) -> str:
     return (
         f"""{_build_regular_tables_model_extraction_query()}
         UNION ALL

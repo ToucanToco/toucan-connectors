@@ -79,9 +79,7 @@ def test_fetch_data_filter_props():
                 status=200,
                 payload=[{'page': i, 'x': 1, 'y': 2}],
             )
-        data = woot.fetch_wootric_data(
-            base_query, props_fetched=('page', 'y'), max_pages=6, batch_size=10
-        )
+        data = woot.fetch_wootric_data(base_query, props_fetched=('page', 'y'), max_pages=6, batch_size=10)
         assert data == [
             {'page': 1, 'y': 2},
             {'page': 2, 'y': 2},
@@ -102,9 +100,7 @@ def test_wootric_get_df(empty_token_cache):
         batch_size=10,
         max_pages=3,
     )
-    connector = woot.WootricConnector(
-        name='wootric', type='wootric', client_id='cid', client_secret='cs'
-    )
+    connector = woot.WootricConnector(name='wootric', type='wootric', client_id='cid', client_secret='cs')
     responses.add(
         responses.POST,
         'https://api.wootric.com/oauth/token',
@@ -132,9 +128,7 @@ def test_wootric_get_df(empty_token_cache):
 
 @responses.activate
 def test_token_cache_hit(mocker, empty_token_cache):
-    connector = woot.WootricConnector(
-        name='wootric', type='wootric', client_id='cid', client_secret='cs'
-    )
+    connector = woot.WootricConnector(name='wootric', type='wootric', client_id='cid', client_secret='cs')
     responses.add(
         responses.POST,
         'https://api.wootric.com/oauth/token',
@@ -150,9 +144,7 @@ def test_token_cache_hit(mocker, empty_token_cache):
 
 @responses.activate
 def test_token_cache_miss(mocker, empty_token_cache):
-    connector = woot.WootricConnector(
-        name='wootric', type='wootric', client_id='cid', client_secret='cs'
-    )
+    connector = woot.WootricConnector(name='wootric', type='wootric', client_id='cid', client_secret='cs')
     # HACK: use a negative expire
     responses.add(
         responses.POST,

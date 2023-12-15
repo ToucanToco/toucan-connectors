@@ -15,9 +15,7 @@ from requests_oauthlib import OAuth1, OAuth2Session
 def oauth2_backend(token_url, client_id, client_secret):
     oauthclient = BackendApplicationClient(client_id=client_id)
     oauthsession = OAuth2Session(client=oauthclient)
-    token = oauthsession.fetch_token(
-        token_url=token_url, client_id=client_id, client_secret=client_secret
-    )
+    token = oauthsession.fetch_token(token_url=token_url, client_id=client_id, client_secret=client_secret)
     return OAuth2Session(client_id=client_id, token=token)
 
 
@@ -57,9 +55,7 @@ class CustomTokenServer(AuthBase):
     Get a token from a request to a custom token server.
     """
 
-    def __init__(
-        self, method, url, params=None, data=None, headers=None, auth=None, json=None, filter='.'
-    ):
+    def __init__(self, method, url, params=None, data=None, headers=None, auth=None, json=None, filter='.'):
         self.request_kwargs = {
             'method': method,
             'url': url,
@@ -110,8 +106,7 @@ class Auth(BaseModel):
     args: List[str] = Field(
         ...,
         title='Positionnal arguments',
-        description='For example for a basic authentication, you can provide '
-        'your username and password here',
+        description='For example for a basic authentication, you can provide ' 'your username and password here',
     )
     kwargs: dict = Field(
         None,

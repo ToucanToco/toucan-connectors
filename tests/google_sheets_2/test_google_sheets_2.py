@@ -177,9 +177,7 @@ def test_spreadsheet_without_sheet(mocker, con, ds_without_sheet):
         else:
             return FAKE_SHEET_LIST_RESPONSE
 
-    fetch_mock: Mock = mocker.patch.object(
-        GoogleSheets2Connector, '_run_fetch', side_effect=mock_api_responses
-    )
+    fetch_mock: Mock = mocker.patch.object(GoogleSheets2Connector, '_run_fetch', side_effect=mock_api_responses)
     df = con.get_df(ds_without_sheet)
 
     assert fetch_mock.call_count == 2
@@ -215,9 +213,7 @@ def test_get_status_success(mocker, con):
     """
     It should fail if no secrets are provided.
     """
-    fetch_mock: Mock = mocker.patch.object(
-        GoogleSheets2Connector, '_run_fetch', return_value={'email': 'foo@bar.baz'}
-    )
+    fetch_mock: Mock = mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value={'email': 'foo@bar.baz'})
 
     connector_status = con.get_status()
     assert connector_status.status is True
@@ -259,18 +255,14 @@ def test_delegate_oauth2_methods(mocker, con):
 
 def test_get_slice(mocker, con, ds):
     """It should return a slice of spreadsheet"""
-    run_fetch_mock = mocker.patch.object(
-        GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET
-    )
+    run_fetch_mock = mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
 
     ds = con.get_slice(ds, limit=2)
     assert '!1:3' in run_fetch_mock.call_args_list[0][0][0]
     assert ds.df.shape == (2, 2)
 
 
-def test_get_slice_no_limit(
-    mocker: MockerFixture, con: GoogleSheets2Connector, ds: GoogleSheets2DataSource
-):
+def test_get_slice_no_limit(mocker: MockerFixture, con: GoogleSheets2Connector, ds: GoogleSheets2DataSource):
     """It should return a slice of spreadsheet"""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
 
@@ -280,9 +272,7 @@ def test_get_slice_no_limit(
 
 
 def test_schema_fields_order(con, ds):
-    schema_props_keys = list(
-        JsonWrapper.loads(GoogleSheets2DataSource.schema_json())['properties'].keys()
-    )
+    schema_props_keys = list(JsonWrapper.loads(GoogleSheets2DataSource.schema_json())['properties'].keys())
     assert schema_props_keys[0] == 'domain'
     assert schema_props_keys[1] == 'spreadsheet_id'
     assert schema_props_keys[2] == 'sheet'

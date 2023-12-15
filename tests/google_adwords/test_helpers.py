@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 from toucan_connectors.google_adwords.helpers import apply_filter, clean_columns
 

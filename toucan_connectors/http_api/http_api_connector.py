@@ -60,8 +60,7 @@ class HttpAPIDataSource(ToucanDataSource):
     url: str = Field(
         ...,
         title='Endpoint URL',
-        description='The URL path that will be appended to your baseroute URL. '
-        'For example "geo/countries"',
+        description='The URL path that will be appended to your baseroute URL. ' 'For example "geo/countries"',
     )
     method: Method = Field(Method.GET, title='HTTP Method')
     headers: dict | None = Field(
@@ -89,9 +88,7 @@ class HttpAPIDataSource(ToucanDataSource):
         description='JSON object expressing a mapping of protocol or host to corresponding proxy',
         examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
     )
-    data: str | dict | None = Field(
-        None, description='JSON object to send in the body of the HTTP request'
-    )
+    data: str | dict | None = Field(None, description='JSON object to send in the body of the HTTP request')
     xpath: str = XpathSchema
     filter: str = FilterSchema
     flatten_column: str | None = Field(None, description='Column containing nested rows')
@@ -127,9 +124,7 @@ class HttpAPIDataSource(ToucanDataSource):
 class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
     responsetype: ResponseType = Field(ResponseType.json, title='Content-type of response')
     baseroute: AnyHttpUrl = Field(..., title='Baseroute URL', description='Baseroute URL')
-    cert: List[FilePath] | None = Field(
-        None, title='Certificate', description='File path of your certificate if any'
-    )
+    cert: List[FilePath] | None = Field(None, title='Certificate', description='File path of your certificate if any')
     auth: Auth | None = Field(None, title='Authentication type')
     template: Template | None = Field(
         None,
@@ -155,17 +150,13 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates
             query['cert'] = [str(c) for c in self.cert]
 
-        HttpAPIConnector.logger.debug(
-            f'>> Request:  method={query.get("method")} url={query.get("url")}'
-        )
+        HttpAPIConnector.logger.debug(f'>> Request:  method={query.get("method")} url={query.get("url")}')
         res = session.request(**query)
-        HttpAPIConnector.logger.debug(
-            f'<< Response: status_code={res.status_code} reason={res.reason}'
-        )
+        HttpAPIConnector.logger.debug(f'<< Response: status_code={res.status_code} reason={res.reason}')
 
         if self.responsetype == 'xml':
             try:
-                data = fromstring(res.content)
+                data = fromstring(res.content)  # noqa: S314
                 data = parse(tostring(data.find(xpath), method='xml'), attr_prefix='')
             except ParseError:
                 HttpAPIConnector.logger.error(f'Could not decode {res.content!r}')
@@ -181,7 +172,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                     data = json.loads(res.content)
                 except ValueError:
                     HttpAPIConnector.logger.error(
-                        f'Cannot decode response content from query: method={query.get("method")} url={query.get("url")} response_status_code={res.status_code} response_reason=${res.reason}'
+                        f'Cannot decode response content from query: method={query.get("method")} url={query.get("url")} response_status_code={res.status_code} response_reason=${res.reason}'  # noqa: E501
                     )
                     raise
         try:

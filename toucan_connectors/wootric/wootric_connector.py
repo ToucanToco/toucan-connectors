@@ -52,19 +52,12 @@ def fetch_wootric_data(query, props_fetched=None, batch_size=5, max_pages=30):
     """
     all_data = []
     per_batch = 10
-    logging.getLogger(__name__).debug(
-        f'Fetch data for {max_pages} page(s) with {batch_size} per page'
-    )
+    logging.getLogger(__name__).debug(f'Fetch data for {max_pages} page(s) with {batch_size} per page')
     for page in range(1, max_pages + 1, per_batch):
-        logging.getLogger(__name__).debug(
-            f'Treat page from page {page} to {max_pages + 1} / per_batch {per_batch}'
-        )
+        logging.getLogger(__name__).debug(f'Treat page from page {page} to {max_pages + 1} / per_batch {per_batch}')
         page_to_crawl = max_pages - page + 1 if page + per_batch > max_pages else per_batch
         logging.getLogger(__name__).debug(f'Page(s) to crawl {page_to_crawl}')
-        urls = [
-            f'{query}&page={pagenum}&per_page={batch_size}'
-            for pagenum in range(page, page + page_to_crawl)
-        ]
+        urls = [f'{query}&page={pagenum}&per_page={batch_size}' for pagenum in range(page, page + page_to_crawl)]
         logging.getLogger(__name__).debug(f'URL list (l = {len(urls)}): {urls}')
         responses = batch_fetch(urls)
         data = chain.from_iterable(responses)
@@ -117,9 +110,7 @@ class WootricDataSource(ToucanDataSource):
         ge=1,
         le=50,
     )
-    max_pages: int = Field(
-        10, title='max pages', description='Number of returned page, max 30', ge=1, le=30
-    )
+    max_pages: int = Field(10, title='max pages', description='Number of returned page, max 30', ge=1, le=30)
 
 
 class WootricConnector(ToucanConnector, data_source_model=WootricDataSource):

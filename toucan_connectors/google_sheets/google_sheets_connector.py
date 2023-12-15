@@ -28,15 +28,10 @@ class GoogleSheetsDataSource(ToucanDataSource):
     spreadsheet_id: str = Field(
         ...,
         title='ID of the spreadsheet',
-        description='Can be found in your URL: '
-        'https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...',
+        description='Can be found in your URL: ' 'https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...',
     )
-    sheet: Optional[str] = Field(
-        None, title='Sheet title', description='Title of the desired sheet'
-    )
-    header_row: int = Field(
-        0, title='Header row', description='Row of the header of the spreadsheet'
-    )
+    sheet: Optional[str] = Field(None, title='Sheet title', description='Title of the desired sheet')
+    header_row: int = Field(0, title='Header row', description='Row of the header of the spreadsheet')
     dates_as_float: bool = Field(
         True, title='Dates as floats', description='Render Date as Floats or String from the sheet'
     )
@@ -94,9 +89,7 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
 
     def _google_client_build_kwargs(self):  # pragma: no cover
         # Override it for testing purposes
-        access_token = self._retrieve_token(
-            self._managed_oauth_service_id, self.auth_id.get_secret_value()
-        )
+        access_token = self._retrieve_token(self._managed_oauth_service_id, self.auth_id.get_secret_value())
         return {'credentials': Credentials(token=access_token)}
 
     def _google_client_request_kwargs(self):  # pragma: no cover
@@ -136,9 +129,7 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
         If successful, returns a message with the email of the connected user account.
         """
         try:
-            access_token = self._retrieve_token(
-                self._managed_oauth_service_id, self.auth_id.get_secret_value()
-            )
+            access_token = self._retrieve_token(self._managed_oauth_service_id, self.auth_id.get_secret_value())
         except Exception:
             return ConnectorStatus(status=False, error='Credentials are missing')
 
@@ -147,12 +138,8 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
 
         try:
             with self.build_oauth2() as oauth2_api:
-                user_info = (
-                    oauth2_api.userinfo().get().execute(**self._google_client_request_kwargs())
-                )
-                return ConnectorStatus(
-                    status=True, message=f"Connected as {user_info.get('email')}"
-                )
+                user_info = oauth2_api.userinfo().get().execute(**self._google_client_request_kwargs())
+                return ConnectorStatus(status=True, message=f"Connected as {user_info.get('email')}")
         except GoogleApiClientError:
             return ConnectorStatus(status=False, error="Couldn't retrieve user infos")
 
@@ -177,9 +164,7 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
                 .get(
                     spreadsheetId=data_source.spreadsheet_id,
                     range=f"'{data_source.sheet}'",  # FIXME what will happen is the sheet name contains a single quote?
-                    dateTimeRenderOption=self._render_date_time_option_from_sheet(
-                        data_source=data_source
-                    ),
+                    dateTimeRenderOption=self._render_date_time_option_from_sheet(data_source=data_source),
                     majorDimension='ROWS',
                     valueRenderOption='UNFORMATTED_VALUE',
                 )
@@ -198,9 +183,9 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
 
         def cell_format(row_index: int, column_index: int):
             try:
-                return sheet_cell_formats['sheets'][0]['data'][0]['rowData'][row_index]['values'][
-                    column_index
-                ]['effectiveFormat']
+                return sheet_cell_formats['sheets'][0]['data'][0]['rowData'][row_index]['values'][column_index][
+                    'effectiveFormat'
+                ]
             except (KeyError, IndexError):
                 return None
 
@@ -212,9 +197,7 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
             for row_index, row_values in enumerate(sheet_values['values'])
         ]
 
-        df = pd.DataFrame(
-            columns=values[data_source.header_row], data=values[data_source.header_row + 1 :]
-        )
+        df = pd.DataFrame(columns=values[data_source.header_row], data=values[data_source.header_row + 1 :])
 
         # TODO Columns must be uniquely named (raise an error or suffix some of them) - otherwise, .to_json will fail
         return df

@@ -1,7 +1,8 @@
+from unittest.mock import Mock
+
 import pandas as pd
 import pytest
 import responses
-from mock import Mock
 from pandas._testing import assert_frame_equal
 from pytest import fixture
 
@@ -60,9 +61,7 @@ def test_get_form(mocker, connector, create_datasource):
     Check that get_form correctly returns a data source form with prefilled informations
     """
     mocker.patch(f'{import_path}.SoapConnector.create_client')
-    mocker.patch(
-        f'{import_path}.SoapDataSource._get_methods_docs', return_value={'fake_func': 'coucou'}
-    )
+    mocker.patch(f'{import_path}.SoapDataSource._get_methods_docs', return_value={'fake_func': 'coucou'})
     form = create_datasource.get_form(connector, {})
     assert form['properties']['parameters']['description'] == 'Services documentation: <br> coucou'
     assert form['$defs']['method']['const'] == 'fake_func'
@@ -281,8 +280,6 @@ def test_serialized_response(mocker, connector, wsdl_sample, xml_response):
         method='ListOfLanguagesByCode',
         parameters={},
     )
-    expected = pd.DataFrame(
-        [{'sISOCode': 'FR', 'sName': 'French'}, {'sISOCode': 'US', 'sName': 'English'}]
-    )
+    expected = pd.DataFrame([{'sISOCode': 'FR', 'sName': 'French'}, {'sISOCode': 'US', 'sName': 'English'}])
     res = connector._retrieve_data(ds)
     assert res.equals(expected)

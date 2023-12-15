@@ -27,9 +27,7 @@ class AwsathenaDataSource(ToucanDataSource):
     database: Annotated[str, StringConstraints(min_length=1)] = Field(
         ..., description='The name of the database you want to query.'
     )
-    table: str = Field(
-        None, **{'ui.hidden': True}
-    )  # To avoid previous config migrations, won't be used
+    table: str = Field(None, **{'ui.hidden': True})  # To avoid previous config migrations, won't be used
     language: str = Field('sql', **{'ui.hidden': True})
     query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
@@ -58,9 +56,7 @@ class AwsathenaDataSource(ToucanDataSource):
         super().__init__(**data)
         # Named parameters need to be passed as `:name`
         # (see https://aws-data-wrangler.readthedocs.io/en/stable/stubs/awswrangler.athena.read_sql_query.html)
-        self.query, self.parameters = sanitize_query(
-            self.query, self.parameters, athena_variable_transformer
-        )
+        self.query, self.parameters = sanitize_query(self.query, self.parameters, athena_variable_transformer)
 
 
 def athena_variable_transformer(variable: str):
@@ -68,14 +64,10 @@ def athena_variable_transformer(variable: str):
     return f':{variable};'
 
 
-class AwsathenaConnector(
-    ToucanConnector, DiscoverableConnector, data_source_model=AwsathenaDataSource
-):
+class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_model=AwsathenaDataSource):
     name: str = Field(..., description='Your AWS Athena connector name')
 
-    s3_output_bucket: str = Field(
-        ..., description='Your S3 Output bucket (where query results are stored.)'
-    )
+    s3_output_bucket: str = Field(..., description='Your S3 Output bucket (where query results are stored.)')
     aws_access_key_id: str = Field(..., description='Your AWS access key ID')
     aws_secret_access_key: PlainJsonSecretStr = Field(None, description='Your AWS secret key')
     region_name: str = Field(..., description='Your AWS region name')
@@ -96,9 +88,7 @@ class AwsathenaConnector(
         return q[:-1] if q.endswith(';') else q
 
     @classmethod
-    def _add_pagination_to_query(
-        cls, query: str, offset: int = 0, limit: Optional[int] = None
-    ) -> str:
+    def _add_pagination_to_query(cls, query: str, offset: int = 0, limit: Optional[int] = None) -> str:
         if offset and limit:
             return f'SELECT * FROM ({cls._strip_trailing_semicolumn(query)}) OFFSET {offset} LIMIT {limit};'
         if limit:
@@ -139,9 +129,9 @@ class AwsathenaConnector(
         available_dbs = self.available_dbs if db_name is None else [db_name]
         session = self.get_session()
         for db in available_dbs:
-            tables = wr.catalog.tables(boto3_session=session, database=db)[
-                ['Table', 'TableType']
-            ].to_dict(orient='records')
+            tables = wr.catalog.tables(boto3_session=session, database=db)[['Table', 'TableType']].to_dict(
+                orient='records'
+            )
             for table_object in tables:
                 if 'temp_table' not in table_object['Table']:
                     columns = wr.catalog.get_table_types(
@@ -176,9 +166,7 @@ class AwsathenaConnector(
         return DataSlice(
             df,
             stats=DataStats(df_memory_size=df.memory_usage().sum()),
-            pagination_info=build_pagination_info(
-                offset=offset, limit=limit, retrieved_rows=len(df), total_rows=None
-            ),
+            pagination_info=build_pagination_info(offset=offset, limit=limit, retrieved_rows=len(df), total_rows=None),
         )
 
     def get_status(self) -> ConnectorStatus:

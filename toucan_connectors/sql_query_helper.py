@@ -14,16 +14,12 @@ class SqlQueryHelper:
         return bool(re.search(r'select.*', query, re.I))
 
     @staticmethod
-    def prepare_count_query(
-        query_string: str, query_parameters: Optional[Dict] = None
-    ) -> Tuple[str, list]:
+    def prepare_count_query(query_string: str, query_parameters: Optional[Dict] = None) -> Tuple[str, list]:
         """Build the count(*) query by removing the limit and the offset and adding a count query above from input
         query"""
-        prepared_query, prepared_values = SqlQueryHelper.prepare_query(
-            query_string, query_parameters
-        )
+        prepared_query, prepared_values = SqlQueryHelper.prepare_query(query_string, query_parameters)
         prepared_query = prepared_query.replace(';', '')
-        prepared_query = f'SELECT COUNT(*) AS TOTAL_ROWS FROM ({prepared_query});'
+        prepared_query = f'SELECT COUNT(*) AS TOTAL_ROWS FROM ({prepared_query});'  # noqa: S608
         return prepared_query, prepared_values
 
     @staticmethod
@@ -34,17 +30,15 @@ class SqlQueryHelper:
         limit: Optional[int] = None,
     ) -> Tuple[str, list]:
         """Build a new query by adding a select query with a limit above from input query"""
-        prepared_query, prepared_values = SqlQueryHelper.prepare_query(
-            query_string, query_parameters
-        )
+        prepared_query, prepared_values = SqlQueryHelper.prepare_query(query_string, query_parameters)
         query_check = prepared_query.strip().lower()
         if not query_check.startswith('show') and not query_check.startswith('describe'):
             if limit and offset:
                 prepared_query = prepared_query.replace(';', '')
-                prepared_query = f'SELECT * FROM ({prepared_query}) LIMIT {limit} OFFSET {offset};'
+                prepared_query = f'SELECT * FROM ({prepared_query}) LIMIT {limit} OFFSET {offset};'  # noqa: S608
             elif limit:
                 prepared_query = prepared_query.replace(';', '')
-                prepared_query = f'SELECT * FROM ({prepared_query}) LIMIT {limit};'
+                prepared_query = f'SELECT * FROM ({prepared_query}) LIMIT {limit};'  # noqa: S608
 
         return prepared_query, prepared_values
 

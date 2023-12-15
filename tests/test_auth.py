@@ -78,9 +78,7 @@ def test_custom_token_server_initial_basic():
 @responses.activate
 def test_oauth2_oidc():
     # Case 1: id_token is valid and not expired
-    id_token = jwt.encode(
-        {'exp': (datetime.now() + timedelta(seconds=10000)).timestamp(), 'user': 'babar'}, key='key'
-    )
+    id_token = jwt.encode({'exp': (datetime.now() + timedelta(seconds=10000)).timestamp(), 'user': 'babar'}, key='key')
     auth = Auth(
         type='oauth2_oidc',
         args=[],
@@ -99,9 +97,7 @@ def test_oauth2_oidc():
     assert session.headers['Authorization'] == f'Bearer {id_token}'
 
     # Case 2: id_token is expired but refresh token is not
-    id_token = jwt.encode(
-        {'exp': (datetime.now() - timedelta(seconds=100)).timestamp(), 'aud': 'babar'}, key='key'
-    )
+    id_token = jwt.encode({'exp': (datetime.now() - timedelta(seconds=100)).timestamp(), 'aud': 'babar'}, key='key')
     auth.kwargs['id_token'] = id_token
     responses.add(
         method=responses.POST,

@@ -36,9 +36,7 @@ class OneDriveDataSource(ToucanDataSource):
         Title='File',
         placeholder='Enter your path file',
     )
-    match: bool = Field(
-        False, Title='Match', description='Try to match files using provided file name'
-    )
+    match: bool = Field(False, Title='Match', description='Try to match files using provided file name')
     sheet: Optional[str] = Field(
         None,
         Title='Sheets',
@@ -113,9 +111,7 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
 
         logging.getLogger(__name__).debug(f'Init: {self.client_id} - {self.client_secret}')
 
-        self.authorization_url = (
-            f'https://login.microsoftonline.com/{self.tenant}/oauth2/v2.0/authorize'
-        )
+        self.authorization_url = f'https://login.microsoftonline.com/{self.tenant}/oauth2/v2.0/authorize'
         self.token_url = f'https://login.microsoftonline.com/{self.tenant}/oauth2/v2.0/token'
 
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
@@ -284,7 +280,7 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
             else:
                 urls = [self._format_url(data_source, workbook_element, data_source.file)]
 
-            def url_yielder():
+            def url_yielder(urls):
                 for url in urls:
                     try:
                         yield self._run_fetch(url).get('values')
@@ -294,7 +290,7 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
                         )
                         # TODO: some day make it async
 
-            data = list(url_yielder())
+            data = list(url_yielder(urls))
 
             for d in [d for d in data if d]:
                 cols = d[0]
@@ -313,8 +309,8 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
                         origin=pd.Timestamp('1899-12-30'),
                         unit='s',
                     )
-                except ValueError:
-                    raise ValueError(f"Cannot convert column '{date_col}' to datetime")
+                except ValueError as exc:
+                    raise ValueError(f"Cannot convert column '{date_col}' to datetime") from exc
 
         return df_all
 

@@ -60,9 +60,7 @@ def test_retrieve_tokens(mocker, oauth2_connector, secrets_keeper):
         return_value={'access_token': 'dummy_token'},
     )
 
-    oauth2_connector.retrieve_tokens(
-        f'http://localhost/?state={JsonWrapper.dumps({"token": "the_token"})}'
-    )
+    oauth2_connector.retrieve_tokens(f'http://localhost/?state={JsonWrapper.dumps({"token": "the_token"})}')
     mock_fetch_token.assert_called()
     assert secrets_keeper.load('test')['access_token'] == 'dummy_token'
 
@@ -74,9 +72,7 @@ def test_fail_retrieve_tokens(oauth2_connector, secrets_keeper):
     secrets_keeper.save('test', {'state': JsonWrapper.dumps({'token': 'the_token'})})
 
     with pytest.raises(AssertionError):
-        oauth2_connector.retrieve_tokens(
-            f'http://localhost/?state={JsonWrapper.dumps({"token": "bad_token"})}'
-        )
+        oauth2_connector.retrieve_tokens(f'http://localhost/?state={JsonWrapper.dumps({"token": "bad_token"})}')
 
 
 def test_get_access_token(oauth2_connector, secrets_keeper):
@@ -157,9 +153,7 @@ def test_get_access_token_expired_no_refresh_token(mocker, oauth2_connector, sec
     """
     It should fail to refresh the token if no refresh token is provided
     """
-    secrets_keeper.save(
-        'test', {'access_token': 'dummy_token', 'expires_at': datetime.fromtimestamp(0)}
-    )
+    secrets_keeper.save('test', {'access_token': 'dummy_token', 'expires_at': datetime.fromtimestamp(0)})
 
     mock_refresh_token: Mock = mocker.patch(
         'toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token',
@@ -224,9 +218,7 @@ def test_get_access_data_without_instance(mocker, oauth2_connector, secrets_keep
 
 def test_should_throw_if_authflow_id_not_found(oauth2_connector, secrets_keeper):
     with pytest.raises(AuthFlowNotFound):
-        oauth2_connector.retrieve_tokens(
-            f'http://localhost/?state={JsonWrapper.dumps({"token": "bad_token"})}'
-        )
+        oauth2_connector.retrieve_tokens(f'http://localhost/?state={JsonWrapper.dumps({"token": "bad_token"})}')
 
 
 def test_should_return_if_is_instance_oauth2_connector(oauth2_connector):

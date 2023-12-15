@@ -22,9 +22,7 @@ DEFAULT_DATABASE = 'postgres'
 
 
 class PostgresDataSource(ToucanDataSource):
-    database: str = Field(
-        DEFAULT_DATABASE, description='The name of the database you want to query'
-    )
+    database: str = Field(DEFAULT_DATABASE, description='The name of the database you want to query')
     query: Annotated[str | None, StringConstraints(min_length=1)] = Field(
         None,
         description='You can write a custom query against your '
@@ -39,9 +37,7 @@ class PostgresDataSource(ToucanDataSource):
     )
     table: Annotated[str | None, StringConstraints(min_length=1)] = Field(
         None,
-        description='The name of the data table that you want to '
-        'get (equivalent to "SELECT * FROM '
-        'your_table")',
+        description='The name of the data table that you want to ' 'get (equivalent to "SELECT * FROM ' 'your_table")',
     )
     language: str = Field('sql', **{'ui.hidden': True})
 
@@ -66,9 +62,7 @@ class PostgresDataSource(ToucanDataSource):
 
         with suppress(Exception):
             connection = pgsql.connect(
-                **connector.get_connection_params(
-                    database=current_config.get('database', DEFAULT_DATABASE)
-                )
+                **connector.get_connection_params(database=current_config.get('database', DEFAULT_DATABASE))
             )
             # # Always add the suggestions for the available databases
             with connection.cursor() as cursor:
@@ -99,17 +93,13 @@ class PostgresConnector(
     Import data from PostgreSQL.
     """
 
-    host: str | None = Field(
-        None, description='The listening address of your database server (IP adress or hostname)'
-    )
+    host: str | None = Field(None, description='The listening address of your database server (IP adress or hostname)')
     port: int | None = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
     password: PlainJsonSecretStr = Field(None, description='Your login password')
     default_database: str = Field(DEFAULT_DATABASE, description='Your default database')
 
-    charset: str | None = Field(
-        None, description='If you need to specify a specific character encoding.'
-    )
+    charset: str | None = Field(None, description='If you need to specify a specific character encoding.')
     connect_timeout: int | None = Field(
         None,
         title='Connection timeout',
@@ -122,15 +112,15 @@ class PostgresConnector(
     )
 
     def get_connection_params(self, *, database: str | None = None):
-        con_params = dict(
-            user=self.user,
-            host=self.host,
-            client_encoding=self.charset,
-            dbname=database if database is not None else self.default_database,
-            password=self.password.get_secret_value() if self.password else None,
-            port=self.port,
-            connect_timeout=self.connect_timeout,
-        )
+        con_params = {
+            'user': self.user,
+            'host': self.host,
+            'client_encoding': self.charset,
+            'dbname': database if database is not None else self.default_database,
+            'password': self.password.get_secret_value() if self.password else None,
+            'port': self.port,
+            'connect_timeout': self.connect_timeout,
+        }
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
@@ -138,9 +128,7 @@ class PostgresConnector(
         connection = pgsql.connect(**self.get_connection_params(database=data_source.database))
 
         query_params = data_source.parameters or {}
-        df = pandas_read_sql(
-            data_source.query, con=connection, params=query_params, adapt_params=True
-        )
+        df = pandas_read_sql(data_source.query, con=connection, params=query_params, adapt_params=True)
 
         connection.close()
 
@@ -181,15 +169,11 @@ class PostgresConnector(
 
             # Can't connect to full URI
             if 'Connection refused' in error_code:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(2, False), error=e.args[0]
-                )
+                return ConnectorStatus(status=False, details=self._get_details(2, False), error=e.args[0])
 
             # Wrong user/password
             else:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(3, False), error=e.args[0]
-                )
+                return ConnectorStatus(status=False, details=self._get_details(3, False), error=e.args[0])
 
         # Basic db query
         try:
@@ -197,9 +181,7 @@ class PostgresConnector(
             with connection.cursor() as cursor:
                 cursor.execute("""select 1;""")
         except (Exception, pgsql.Error) as e:
-            return ConnectorStatus(
-                status=False, details=self._get_details(4, False), error=e.args[0]
-            )
+            return ConnectorStatus(status=False, details=self._get_details(4, False), error=e.args[0])
 
         return ConnectorStatus(status=True, details=self._get_details(4, True), error=None)
 
@@ -244,9 +226,7 @@ class PostgresConnector(
 
     def _list_tables_info(self, database_name: str = None) -> List[tuple]:
         connection = pgsql.connect(
-            **self.get_connection_params(
-                database=self.default_database if not database_name else database_name
-            )
+            **self.get_connection_params(database=self.default_database if not database_name else database_name)
         )
         with connection.cursor() as cursor:
             cursor.execute(

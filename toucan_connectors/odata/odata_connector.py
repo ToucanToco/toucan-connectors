@@ -31,7 +31,7 @@ class ODataDataSource(ToucanDataSource):
         'For example {"$filter": "my_value", "$skip": 100} '
         '(equivalent to "$filter=my_value&$skip=100" in parameterized URL). '
         'For more details on query parameters convention, see '
-        '<a href="https://www.odata.org/documentation/odata-version-2-0/uri-conventions/" target="_blank">this documentation</a>',
+        '<a href="https://www.odata.org/documentation/odata-version-2-0/uri-conventions/" target="_blank">this documentation</a>',  # noqa: E501
         widget='json',
     )
 

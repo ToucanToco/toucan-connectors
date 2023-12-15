@@ -36,9 +36,7 @@ def xml_datasource():
 
 @pytest.fixture(scope='function')
 def connector():
-    return HttpAPIConnector(
-        name='myHttpConnector', type='HttpAPI', baseroute='https://jsonplaceholder.typicode.com'
-    )
+    return HttpAPIConnector(name='myHttpConnector', type='HttpAPI', baseroute='https://jsonplaceholder.typicode.com')
 
 
 @pytest.fixture(scope='function')
@@ -54,9 +52,7 @@ def auth():
 def test_transform_with_jq():
     assert transform_with_jq(data=[1, 2, 3], jq_filter='.[]+1') == [2, 3, 4]
     assert transform_with_jq([[1, 2, 3]], '.[]') == [1, 2, 3]
-    assert transform_with_jq([{'col1': [1, 2], 'col2': [3, 4]}], '.') == [
-        {'col1': [1, 2], 'col2': [3, 4]}
-    ]
+    assert transform_with_jq([{'col1': [1, 2], 'col2': [3, 4]}], '.') == [{'col1': [1, 2], 'col2': [3, 4]}]
 
 
 @responses.activate
@@ -113,9 +109,7 @@ def test_get_df_with_parameters_and_auth(connector, data_source, auth, mocker):
 
 
 def test_exceptions_not_json():
-    connector = HttpAPIConnector(
-        name='myHttpConnector', type='HttpAPI', baseroute='https://demo.toucantoco.com'
-    )
+    connector = HttpAPIConnector(name='myHttpConnector', type='HttpAPI', baseroute='https://demo.toucantoco.com')
     data_source = HttpAPIDataSource(name='myHttpDataSource', domain='my_domain', url='/')
 
     with pytest.raises(ValueError):
@@ -152,9 +146,7 @@ def test_e2e():
 
 @responses.activate
 def test_get_df_with_json(connector, data_source, mocker):
-    data_source = HttpAPIDataSource(
-        name='myHttpDataSource', domain='my_domain', url='/comments', json={'a': 1}
-    )
+    data_source = HttpAPIDataSource(name='myHttpDataSource', domain='my_domain', url='/comments', json={'a': 1})
 
     responses.add(responses.GET, 'https://jsonplaceholder.typicode.com/comments', json=[{'a': 2}])
 
@@ -279,9 +271,7 @@ def test_get_df_oauth2_backend_mocked():
         'https://mscenter.piam.eu1.mindsphere.io/oauth/token',
         json={'access_token': 'A'},
     )
-    responses.add(
-        responses.GET, 'https://gateway.eu1.mindsphere.io/api/im/v3/Users', json=[{'A': 1}]
-    )
+    responses.add(responses.GET, 'https://gateway.eu1.mindsphere.io/api/im/v3/Users', json=[{'A': 1}])
 
     co = HttpAPIConnector(**data_provider)
     co.get_df(HttpAPIDataSource(**users))
@@ -394,7 +384,7 @@ def test_parse_xml_response(xml_connector, xml_datasource):
                     name="J. Random User" roleId="2" timeZone="US/Pacific"/>
                 </users>
             </output>
-            </response>""",
+            </response>""",  # noqa: E501
     )
     df = xml_connector.get_df(xml_datasource)
     assert df['login'][0] == 'analytica@fakecompany.com'
@@ -431,9 +421,7 @@ def test_oauth2_oidc_authentication(mocker):
     session = requests.Session()
     session.headers.update({'Authorization': 'Bearer MyNiceToken'})
     mock_session = mocker.patch('toucan_connectors.auth.oauth2_oidc')
-    responses.add(
-        method=responses.GET, url='https://api.bidule.com/data', json={'ultimecia': 'citadel'}
-    )
+    responses.add(method=responses.GET, url='https://api.bidule.com/data', json={'ultimecia': 'citadel'})
     c.get_df(HttpAPIDataSource(**data_source))
     mock_session.assert_called_once()
 
@@ -492,20 +480,14 @@ def test_get_cache_key(connector, auth, data_source):
     assert connector.get_cache_key(data_source) != another_connector.get_cache_key(data_source)
 
 
-def test_response_json_fails(
-    connector: HttpAPIConnector, mocker: MockFixture, data_source: HttpAPIDataSource
-) -> None:
+def test_response_json_fails(connector: HttpAPIConnector, mocker: MockFixture, data_source: HttpAPIDataSource) -> None:
     mocked_request = mocker.MagicMock(name='mocked_request')
     mocked_response = mocker.MagicMock(name='mocked_response')
     mocked_request.request.return_value = mocked_response
     mocked_response.json.side_effect = ValueError
     mocked_request.return_value = mocked_response
-    mocker.patch(
-        'toucan_connectors.http_api.http_api_connector.Session', return_value=mocked_request
-    )
+    mocker.patch('toucan_connectors.http_api.http_api_connector.Session', return_value=mocked_request)
     mocked_loads = mocker.patch('toucan_connectors.http_api.http_api_connector.json.loads')
-    mocker.patch(
-        'toucan_connectors.http_api.http_api_connector.transform_with_jq', return_value=[{'a': 1}]
-    )
+    mocker.patch('toucan_connectors.http_api.http_api_connector.transform_with_jq', return_value=[{'a': 1}])
     connector.get_df(data_source)
     mocked_loads.assert_called_once()

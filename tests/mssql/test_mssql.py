@@ -91,9 +91,7 @@ def test_mssql_get_df(mocker):
     snock = mocker.patch('pyodbc.connect')
     reasq = mocker.patch('pandas.read_sql')
 
-    mssql_connector = MSSQLConnector(
-        name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!', port=22
-    )
+    mssql_connector = MSSQLConnector(name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!', port=22)
     datasource = MSSQLDataSource(
         name='mycon',
         domain='mydomain',
@@ -128,9 +126,7 @@ def test_get_df(mssql_connector):
         database='master',
     )
 
-    expected = pd.DataFrame(
-        {'Name': ['Kabul', 'Qandahar', 'Herat'], 'Population': [1780000, 237500, 186800]}
-    )
+    expected = pd.DataFrame({'Name': ['Kabul', 'Qandahar', 'Herat'], 'Population': [1780000, 237500, 186800]})
     expected['CountryCode'] = 'AFG'
     expected = expected[['Name', 'CountryCode', 'Population']]
 
@@ -144,9 +140,7 @@ def test_query_variability(mocker):
     """It should connect to the database and retrieve the response to the query"""
     mock_pyodbc_connect = mocker.patch('pyodbc.connect')
     mock_pandas_read_sql = mocker.patch('pandas.read_sql')
-    con = MSSQLConnector(
-        name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!', port=22
-    )
+    con = MSSQLConnector(name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!', port=22)
 
     # Test with integer values
     ds = MSSQLDataSource(
@@ -184,9 +178,7 @@ def test_query_variability_jinja(mocker):
     """It should interpolate safe (server side) parameters using jinja templating"""
     mock_pyodbc_connect = mocker.patch('pyodbc.connect')
     mock_pandas_read_sql = mocker.patch('pandas.read_sql')
-    con = MSSQLConnector(
-        name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!', port=22
-    )
+    con = MSSQLConnector(name='mycon', host='localhost', user='SA', password='Il0veT0uc@n!', port=22)
     ds = MSSQLDataSource(
         query='select * from {{user.attributes.table_name}} where id_nb in %(ids)s;',
         domain='test',

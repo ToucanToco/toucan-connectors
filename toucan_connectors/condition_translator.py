@@ -67,16 +67,12 @@ class ConditionTranslator(ABC):
         """
         if 'or' in condition:
             if isinstance(condition['or'], list):
-                return cls.join_clauses(
-                    [cls.translate(condition) for condition in condition['or']], 'or'
-                )
+                return cls.join_clauses([cls.translate(condition) for condition in condition['or']], 'or')
             else:
                 raise ValueError("'or' value must be an array")
         elif 'and' in condition:
             if isinstance(condition['and'], list):
-                return cls.join_clauses(
-                    [cls.translate(condition) for condition in condition['and']], 'and'
-                )
+                return cls.join_clauses([cls.translate(condition) for condition in condition['and']], 'and')
             else:
                 raise ValueError("'and' value must be an array")
         else:
@@ -86,9 +82,7 @@ class ConditionTranslator(ABC):
             if isinstance(condition_m.value, str):
                 condition_m.value = cls.get_value_str_ref(condition_m.value)
 
-            return clause_generator_for_operator(
-                cls.get_column_ref(condition_m.column), condition_m.value
-            )
+            return clause_generator_for_operator(cls.get_column_ref(condition_m.column), condition_m.value)
 
     @classmethod
     @abstractmethod

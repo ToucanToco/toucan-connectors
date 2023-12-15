@@ -25,9 +25,7 @@ js_queue = {'reportID': 1}
 
 js_report = {
     'report': {
-        'data': [
-            {'counts': ['0'], 'day': 7, 'month': 6, 'name': 'Thu.  7 Jun. 2018', 'year': 2018}
-        ],
+        'data': [{'counts': ['0'], 'day': 7, 'month': 6, 'name': 'Thu.  7 Jun. 2018', 'year': 2018}],
         'elements': [{'id': 'datetime', 'name': 'Date'}],
         'metrics': [
             {

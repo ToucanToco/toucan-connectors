@@ -210,9 +210,7 @@ def fake_sheet(*args, **kwargs):
     return copy.deepcopy(FAKE_SHEET)
 
 
-def test_user_input(
-    con, ds_error_sheet_and_table, ds_error_range_and_table, ds_error_no_sheet_no_table
-):
+def test_user_input(con, ds_error_sheet_and_table, ds_error_range_and_table, ds_error_no_sheet_no_table):
     """It should return an error when the user inputs are wrong"""
     with pytest.raises(ValueError) as e:
         con.get_df(ds_error_sheet_and_table)
@@ -442,10 +440,7 @@ def test_url_with_table(mocker, con, ds_with_table):
 
     url = con._format_url(ds_with_table, 'test_table', ds_with_table.file)
 
-    assert (
-        url
-        == 'https://graph.microsoft.com/v1.0/me/drive/root:/test_file:/workbook/tables/test_table/range'
-    )
+    assert url == 'https://graph.microsoft.com/v1.0/me/drive/root:/test_file:/workbook/tables/test_table/range'
 
 
 def test_url_with_site_with_range(mocker, con, ds_with_site):
@@ -472,8 +467,7 @@ def test_url_with_site_without_range(mocker, con, ds_with_site_without_range):
     url = con._format_url(ds_with_site_without_range, 'test_sheet', ds_with_site_without_range.file)
 
     assert (
-        url
-        == 'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test_file:/workbook/worksheets'
+        url == 'https://graph.microsoft.com/v1.0/sites/1234/lists/abcd/drive/root:/test_file:/workbook/worksheets'
         '/test_sheet/usedRange(valuesOnly=true)'
     )
 
@@ -607,9 +601,7 @@ def test_get_site_id(con, mocker, ds_with_site, ds_with_site_sheme):
 @responses.activate
 def test_get_list_id(con, mocker, ds_with_site):
     """It should return a list id among the lists (when list name is equal to the document_library)"""
-    responses.add(
-        responses.GET, 'https://graph.microsoft.com/v1.0/sites/1234/lists', json=FAKE_LIBRARIES
-    )
+    responses.add(responses.GET, 'https://graph.microsoft.com/v1.0/sites/1234/lists', json=FAKE_LIBRARIES)
 
     id = con._get_list_id(ds_with_site, '1234')
     assert id == 'abcd'

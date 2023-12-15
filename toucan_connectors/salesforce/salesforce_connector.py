@@ -69,14 +69,10 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         )
 
     def __init__(self, **kwargs):
-        super().__init__(
-            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
-        )
+        super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
-            authorization_url=AUTHORIZATION_URL_SANDBOX
-            if self.type == 'SalesforceSandbox'
-            else AUTHORIZATION_URL_PROD,
+            authorization_url=AUTHORIZATION_URL_SANDBOX if self.type == 'SalesforceSandbox' else AUTHORIZATION_URL_PROD,
             scope=SCOPE,
             token_url=TOKEN_URL_SANDBOX if self.type == 'SalesforceSandbox' else TOKEN_URL_PROD,
             secrets_keeper=kwargs['secrets_keeper'],
@@ -135,11 +131,10 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         data_source: SalesforceDataSource,
         instance_url: str,
         endpoint: str,
-        params={},
+        params: dict | None = None,
     ):
-        results = self.make_request(
-            session, data_source, instance_url=instance_url, data=params, endpoint=endpoint
-        )
+        params = params or {}
+        results = self.make_request(session, data_source, instance_url=instance_url, data=params, endpoint=endpoint)
 
         if isinstance(results, list) and 'errorCode' in results[0]:
             logging.getLogger(__name__).error(
@@ -150,17 +145,13 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
             raise SalesforceApiError(error)
 
         results.get('records', None)
-        records = [
-            {k: v for k, v in d.items() if k != 'attributes'} for d in results.get('records', None)
-        ]
+        records = [{k: v for k, v in d.items() if k != 'attributes'} for d in results.get('records', None)]
         logging.getLogger(__name__).debug(f'records ({len(records)}) - {str(records)}')
         next_page = results.get('nextRecordsUrl', None)
         if records:
             if next_page:
                 logging.getLogger(__name__).debug('next_page exists')
-                records += self.generate_rows(
-                    session, data_source, instance_url=instance_url, endpoint=next_page
-                )
+                records += self.generate_rows(session, data_source, instance_url=instance_url, endpoint=next_page)
         return records
 
     def make_request(
@@ -169,12 +160,12 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         data_source: SalesforceDataSource,
         instance_url: str,
         endpoint: str,
-        data={},
+        data: dict | None = None,
     ):
         logging.getLogger(__name__).info(
             f'Generate Salesforce request ' f'{instance_url}/{endpoint} with params {str(data)}'
         )
-        r = session.request('GET', url=f'{instance_url}/{endpoint}', params=data).json()
+        r = session.request('GET', url=f'{instance_url}/{endpoint}', params=data or {}).json()
         return r
 
     def get_status(self) -> ConnectorStatus:
@@ -191,10 +182,6 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         except OAuthError as ex:
             return ConnectorStatus(status=False, error=f'Error to get status - {ex.error}')
         except NoOAuth2RefreshToken:
-            return ConnectorStatus(
-                status=False, error='Error to get status - no refresh token found'
-            )
+            return ConnectorStatus(status=False, error='Error to get status - no refresh token found')
         except Exception as ex:
-            return ConnectorStatus(
-                status=False, error=f'Error to get status - unknown exception - {ex}'
-            )
+            return ConnectorStatus(status=False, error=f'Error to get status - unknown exception - {ex}')

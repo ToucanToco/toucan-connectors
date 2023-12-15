@@ -48,9 +48,7 @@ class MySQLDataSource(ToucanDataSource):
         **{'ui.hidden': True},
         description='Deprecated, kept for compatibility purpose with old data sources configs',
     )  # Deprecated
-    table: str | None = Field(
-        None, **{'ui.hidden': True}
-    )  # To avoid previous config migrations, won't be used
+    table: str | None = Field(None, **{'ui.hidden': True})  # To avoid previous config migrations, won't be used
     query: Annotated[str, StringConstraints(min_length=1)] | None = Field(
         None,
         description='You can write a custom query against your '
@@ -86,7 +84,7 @@ _DATABASE_MODEL_EXTRACTION_QUERY = (
     # Inner join on table name
     'ON t.table_name = c.table_name AND t.table_schema = c.table_schema '
     # Filtering on concrete tables/views
-    "WHERE t.table_type in ('BASE TABLE', 'VIEW') AND t.table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys') "
+    "WHERE t.table_type in ('BASE TABLE', 'VIEW') AND t.table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys') "  # noqa: E501
 )
 
 
@@ -178,14 +176,10 @@ class MySQLConnector(
             cursor.execute('SHOW DATABASES;')
             res = cursor.fetchall()
             return [
-                db_name
-                for (db_name,) in res
-                if db_name not in ('information_schema', 'mysql', 'performance_schema')
+                db_name for (db_name,) in res if db_name not in ('information_schema', 'mysql', 'performance_schema')
             ]
 
-    def _get_project_structure(
-        self, db_name: str | None = None
-    ) -> Generator[TableInfo, None, None]:
+    def _get_project_structure(self, db_name: str | None = None) -> Generator[TableInfo, None, None]:
         connection = self._connect(cursorclass=None, database=db_name)
 
         extraction_query = _DATABASE_MODEL_EXTRACTION_QUERY
@@ -211,9 +205,7 @@ class MySQLConnector(
     def project_tree(self, db_name: str | None = None) -> list[TableInfo]:
         return list(self._get_project_structure(db_name=db_name))
 
-    def get_connection_params(
-        self, *, database: str | None = None, cursorclass=pymysql.cursors.DictCursor
-    ):
+    def get_connection_params(self, *, database: str | None = None, cursorclass=pymysql.cursors.DictCursor):
         conv = pymysql.converters.conversions.copy()
         conv[246] = float
         con_params = {
@@ -230,9 +222,7 @@ class MySQLConnector(
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _connect(
-        self, *, database: str | None = None, cursorclass=pymysql.cursors.DictCursor
-    ) -> pymysql.Connection:
+    def _connect(self, *, database: str | None = None, cursorclass=pymysql.cursors.DictCursor) -> pymysql.Connection:
         connection_params = self.get_connection_params(database=database, cursorclass=cursorclass)
         if self.ssl_mode is not None:
             connection_params |= {
@@ -295,15 +285,11 @@ class MySQLConnector(
 
             # Can't connect to full URI
             if error_code == CR.CR_CONN_HOST_ERROR:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(2, False), error=e.args[1]
-                )
+                return ConnectorStatus(status=False, details=self._get_details(2, False), error=e.args[1])
 
             # Wrong user/password
             if error_code == ER.ACCESS_DENIED_ERROR:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(3, False), error=e.args[1]
-                )
+                return ConnectorStatus(status=False, details=self._get_details(3, False), error=e.args[1])
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 

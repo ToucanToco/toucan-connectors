@@ -1,5 +1,3 @@
-import socket
-
 import pandas as pd
 import pytest
 from odata.metadata import MetaData
@@ -36,7 +34,7 @@ def test_get_df(mocker):
         df = provider.get_df(data_source)
         sl = ['CustomerID', 'EmployeeID', 'Freight']
         assert df[sl].equals(expected_df[sl])
-    except socket.error:
+    except OSError:
         pytest.skip('Could not connect to the standard example OData service.')
 
     assert spy_load_metadata.call_count == 1
@@ -46,5 +44,5 @@ def test_get_df(mocker):
     provider.auth = None
     try:
         provider.get_df(data_source)
-    except socket.error:
+    except OSError:
         pytest.skip('Could not connect to the standard example OData service.')

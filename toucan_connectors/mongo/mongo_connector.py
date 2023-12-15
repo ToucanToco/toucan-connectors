@@ -61,9 +61,7 @@ def _sanitize_query_matches(query: dict | list[dict]) -> Any:
     passthrough. It cannot be removed from the query to prevent having an empty query.
     """
     if isinstance(query, list):
-        return [
-            {'$match': _sanitize_match(q['$match'])} if _is_match_statement(q) else q for q in query
-        ]
+        return [{'$match': _sanitize_match(q['$match'])} if _is_match_statement(q) else q for q in query]
     return query
 
 
@@ -112,8 +110,7 @@ class MongoDataSource(ToucanDataSource):
     collection: str = Field(..., description='The name of the collection you want to query')
     query: Union[dict, list] = Field(
         {},
-        description='A mongo query. See more details on the Mongo '
-        'Aggregation Pipeline in the MongoDB documentation',
+        description='A mongo query. See more details on the Mongo ' 'Aggregation Pipeline in the MongoDB documentation',
     )
 
     # FIXME: This is needed for now because with we rely on empty queries being dicts. In pydantic
@@ -146,9 +143,7 @@ class MongoDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class MongoConnector(
-    ToucanConnector, VersionableEngineConnector, data_source_model=MongoDataSource
-):
+class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_model=MongoDataSource):
     """Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
 
     host: str = Field(
@@ -202,17 +197,13 @@ class MongoConnector(
             try:
                 self.check_hostname(self.host)
             except Exception as e:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(0, False), error=str(e)
-                )
+                return ConnectorStatus(status=False, details=self._get_details(0, False), error=str(e))
 
             # Check port
             try:
                 self.check_port(self.host, self.port)
             except Exception as e:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(1, False), error=str(e)
-                )
+                return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
 
         # Check databases access
         mongo_client_kwargs = self._get_mongo_client_kwargs()
@@ -231,11 +222,11 @@ class MongoConnector(
     def client(self):
         return pymongo.MongoClient(**self._get_mongo_client_kwargs())
 
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=32)  # noqa: B019
     def validate_database(self, database: str):
         return validate_database(self.client, database)
 
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=32)  # noqa: B019
     def validate_collection(self, database: str, collection: str):
         return validate_collection(self.client, database, collection)
 
@@ -304,7 +295,7 @@ class MongoConnector(
             # ugly for now but we need to handle that in this else case
             try:
                 df.pop('_id')
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         return DataSlice(
             df,
@@ -332,9 +323,7 @@ class MongoConnector(
         for condition in search:
             search_steps[f'${condition}'] = []  # convert "and"/"or" to "$and"/"$or"
             for column in search[condition]:
-                search_steps[f'${condition}'].append(
-                    {'$and': []}
-                )  # makes an "and" of all columns searches
+                search_steps[f'${condition}'].append({'$and': []})  # makes an "and" of all columns searches
                 for col, regex in column.items():
                     search_steps[f'${condition}'][-1]['$and'].append(
                         {
@@ -380,15 +369,11 @@ class MongoConnector(
                 ('cursor', {}),
             ]
         )
-        result = client[data_source.database].command(
-            command='explain', value=agg_cmd, verbosity='executionStats'
-        )
+        result = client[data_source.database].command(command='explain', value=agg_cmd, verbosity='executionStats')
         return _format_explain_result(result)
 
     def get_unique_identifier(self) -> str:
-        return self.json(
-            exclude={'client'}
-        )  # client is a MongoClient instance, not json serializable
+        return self.json(exclude={'client'})  # client is a MongoClient instance, not json serializable
 
     def _get_unique_datasource_identifier(self, data_source: MongoDataSource) -> dict:
         # let's make a copy first
@@ -420,11 +405,7 @@ def _format_explain_result(explain_result):
     if explain_result:
         explain_result.pop('serverInfo', None)
         if 'stages' in explain_result:
-            stats = [
-                stage['$cursor']['executionStats']
-                for stage in explain_result['stages']
-                if '$cursor' in stage
-            ]
+            stats = [stage['$cursor']['executionStats'] for stage in explain_result['stages'] if '$cursor' in stage]
         else:
             stats = [explain_result['executionStats']]
         return {
