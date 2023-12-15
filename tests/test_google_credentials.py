@@ -20,12 +20,13 @@ def test_google_credentials(mocker: MockFixture):
     }
     credentials = GoogleCredentials(**conf)
     # Ensure `private_key_id` and `private_key` are masked
-    assert credentials.json() == json.dumps(
+    assert credentials.model_dump_json() == json.dumps(
         {
             **conf,
             "private_key_id": "**********",
             "private_key": "**********",
-        }
+        },
+        separators=(",", ":"),
     )
     # Ensure `Credentials` is called with the right values of secrets
     mock_credentials = mocker.patch("toucan_connectors.google_credentials.Credentials")
