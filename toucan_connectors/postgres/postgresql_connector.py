@@ -117,6 +117,10 @@ class PostgresConnector(
         'time you want to wait for the server to respond. None by default',
     )
 
+    include_materialized_views: bool = Field(
+        False, description='Wether materialized views should be listed in the query builder or not.'
+    )
+
     def get_connection_params(self, *, database: str | None = None):
         con_params = dict(
             user=self.user,
@@ -245,7 +249,11 @@ class PostgresConnector(
             )
         )
         with connection.cursor() as cursor:
-            cursor.execute(build_database_model_extraction_query())
+            cursor.execute(
+                build_database_model_extraction_query(
+                    database_name, include_materialized_views=self.include_materialized_views
+                )
+            )
             return cursor.fetchall()
 
     def get_engine_version(self) -> tuple:
