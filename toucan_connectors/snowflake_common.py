@@ -5,8 +5,9 @@ from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
-from pydantic import Field, constr
+from pydantic import Field, StringConstraints
 from snowflake.connector import DictCursor, SnowflakeConnection
+from typing_extensions import Annotated
 
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.query_manager import QueryManager
@@ -41,9 +42,9 @@ class SnowflakeConnectorWarehouseDoesNotExists(Exception):
 
 class SfDataSource(ToucanDataSource):
     database: str = Field(..., description='The name of the database you want to query')
-    warehouse: str = Field(None, description='The name of the warehouse you want to query')
+    warehouse: str | None = Field(None, description='The name of the warehouse you want to query')
 
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         ..., description='You can write your SQL query here', widget='sql'
     )
 

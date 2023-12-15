@@ -290,10 +290,9 @@ def test_get_form_empty_query(mysql_connector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {}
     form = MySQLDataSource.get_form(mysql_connector, current_config)
-    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
-    assert form['definitions']['database'] == {
+    assert form['properties']['database'] == {'$ref': '#/$defs/database'}
+    assert form['$defs']['database'] == {
         'title': 'database',
-        'description': 'An enumeration.',
         'enum': ['mysql_db', 'other_db'],
         'type': 'string',
     }
@@ -303,10 +302,9 @@ def test_get_form_query_with_good_database(mysql_connector):
     """It should give suggestions of the collections"""
     current_config = {'database': 'mysql_db'}
     form = MySQLDataSource.get_form(mysql_connector, current_config)
-    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
-    assert form['definitions']['database'] == {
+    assert form['properties']['database'] == {'$ref': '#/$defs/database'}
+    assert form['$defs']['database'] == {
         'title': 'database',
-        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['mysql_db', 'other_db'],
     }

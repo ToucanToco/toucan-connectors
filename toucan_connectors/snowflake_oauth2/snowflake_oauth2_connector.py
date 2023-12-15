@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import snowflake
-from pydantic import Field, PrivateAttr, SecretStr, create_model
+from pydantic import Field, PrivateAttr, create_model
 from snowflake.connector import SnowflakeConnection
 
 from toucan_connectors.connection_manager import ConnectionManager
@@ -26,6 +26,7 @@ from toucan_connectors.toucan_connector import (
     Category,
     DataSlice,
     DiscoverableConnector,
+    PlainJsonSecretStr,
     ToucanConnector,
     strlist_to_enum,
 )
@@ -60,14 +61,14 @@ class SnowflakeoAuth2DataSource(SfDataSource):
         return res
 
 
-class SnowflakeoAuth2Connector(ToucanConnector):
+class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth2DataSource):
     client_id: str = Field(
         '',
         title='Client ID',
         description='The client id of you Snowflake integration',
         **{'ui.required': True},
     )
-    client_secret: SecretStr = Field(
+    client_secret: PlainJsonSecretStr = Field(
         '',
         title='Client Secret',
         description='The client secret of your Snowflake integration',
@@ -81,7 +82,7 @@ class SnowflakeoAuth2Connector(ToucanConnector):
     auth_flow_id: str = Field(None, **{'ui.hidden': True})
     _auth_flow = 'oauth2'
     _oauth_trigger = 'connector'
-    oauth2_version = Field('1', **{'ui.hidden': True})
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
     redirect_uri: str = Field(None, **{'ui.hidden': True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
@@ -99,7 +100,6 @@ class SnowflakeoAuth2Connector(ToucanConnector):
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
     )
-    data_source_model: SnowflakeoAuth2DataSource
     default_warehouse: str = Field(
         ..., description='The default warehouse that shall be used for any data source'
     )

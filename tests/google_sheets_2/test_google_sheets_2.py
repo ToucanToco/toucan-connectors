@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 from pytest import fixture
+from pytest_mock import MockerFixture
 from pytz import utc
 
 from toucan_connectors.common import HttpError
@@ -82,8 +83,8 @@ FAKE_SHEET_LIST_RESPONSE = {
 def get_columns_in_schema(schema):
     """Pydantic generates schema slightly differently in python <=3.7 and in python 3.8"""
     try:
-        if schema.get('definitions'):
-            return schema['definitions']['sheet']['enum']
+        if defs := schema.get('$defs') or schema.get('definitions'):
+            return defs['sheet']['enum']
         else:
             return schema['properties']['sheet']['enum']
     except KeyError:
@@ -267,13 +268,15 @@ def test_get_slice(mocker, con, ds):
     assert ds.df.shape == (2, 2)
 
 
-def test_get_slice_no_limit(mocker, con, ds):
+def test_get_slice_no_limit(
+    mocker: MockerFixture, con: GoogleSheets2Connector, ds: GoogleSheets2DataSource
+):
     """It should return a slice of spreadsheet"""
     mocker.patch.object(GoogleSheets2Connector, '_run_fetch', return_value=FAKE_SHEET)
 
-    ds = con.get_slice(ds, limit=None)
+    slice = con.get_slice(ds, limit=None)
 
-    assert ds.df.shape == (2, 2)
+    assert slice.df.shape == (2, 2)
 
 
 def test_schema_fields_order(con, ds):

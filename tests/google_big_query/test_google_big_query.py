@@ -739,7 +739,7 @@ def test_get_form(
 
     mocker.patch(
         'toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._available_schs',
-        return_value=mock_available_schs,
+        new=['ok', 'test'],
     )
 
     assert (

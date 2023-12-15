@@ -4,11 +4,16 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 import pydantic
 import requests
-from pydantic import Field, constr, create_model
-from pydantic.types import SecretStr
+from pydantic import ConfigDict, Field, StringConstraints, create_model
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    PlainJsonSecretStr,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 _ID_SEPARATOR = ' - '
 
@@ -22,9 +27,15 @@ def _format_name_and_id(obj: Dict[str, str]) -> str:
 
 
 class AnaplanDataSource(ToucanDataSource):
-    model_id: constr(min_length=1) = Field(..., description='The model you want to query')
-    view_id: constr(min_length=1) = Field(..., description='The view you want to query')
+    model_id: Annotated[str, StringConstraints(min_length=1)] = Field(
+        ..., description='The model you want to query'
+    )
+    view_id: Annotated[str, StringConstraints(min_length=1)] = Field(
+        ..., description='The view you want to query'
+    )
     workspace_id: str = Field(..., description='The ID of the workspace you want to query')
+
+    model_config = ConfigDict(protected_namespaces=())
 
     @pydantic.validator('model_id', 'view_id', 'workspace_id')
     def _sanitize_id(cls, value: str) -> str:
@@ -87,10 +98,9 @@ _ANAPLAN_AUTH_ROUTE = 'https://auth.anaplan.com/token/authenticate'
 _ANAPLAN_API_BASEROUTE = 'https://api.anaplan.com/2/0'
 
 
-class AnaplanConnector(ToucanConnector):
-    data_source_model: AnaplanDataSource
+class AnaplanConnector(ToucanConnector, data_source_model=AnaplanDataSource):
     username: str
-    password: Optional[SecretStr]
+    password: Optional[PlainJsonSecretStr] = None
 
     def _extract_json(self, resp: requests.Response) -> dict:
         if resp.status_code in (401, 403):

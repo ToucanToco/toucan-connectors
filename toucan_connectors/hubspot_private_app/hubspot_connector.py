@@ -4,10 +4,15 @@ from typing import Any, Generator, Protocol, TypeAlias
 
 import pandas as pd
 from hubspot import HubSpot  # type:ignore[import-untyped]
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field
 
 from toucan_connectors.pagination import build_pagination_info
-from toucan_connectors.toucan_connector import DataSlice, ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import (
+    DataSlice,
+    PlainJsonSecretStr,
+    ToucanConnector,
+    ToucanDataSource,
+)
 
 
 class HubspotDataset(str, Enum):
@@ -32,15 +37,11 @@ class _HubSpotPaging(BaseModel):
 
 
 class _HubSpotResult(BaseModel):
-    created_at: datetime | None
-    updated_at: datetime | None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
     id_: str = Field(..., alias='id')
     properties: dict[str, Any] = Field(default_factory=dict)
-
-    # For basic_api objects, properties are in a 'properties' object. For specialized APIs, such as
-    # owners, they're keys of the root object
-    class Config:
-        extra = 'allow'
+    model_config = ConfigDict(extra='allow')
 
     def to_dict(self) -> dict[str, Any]:
         dict_ = self.dict(by_alias=True)
@@ -90,9 +91,10 @@ def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:
     return api.basic_api
 
 
-class HubspotConnector(ToucanConnector):
-    data_source_model: HubspotDataSource
-    access_token: SecretStr = Field(..., description='An API key for the target private app')
+class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
+    access_token: PlainJsonSecretStr = Field(
+        ..., description='An API key for the target private app'
+    )
 
     def _fetch_page(
         self, api: _PageApi, after: str | None = None, limit: int | None = None

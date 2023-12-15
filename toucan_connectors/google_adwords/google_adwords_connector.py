@@ -2,12 +2,13 @@
 import os
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional
 
 import pandas as pd
 import requests
 from googleads import AdWordsClient, adwords, oauth2
 from pydantic import Field, PrivateAttr
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from zeep.helpers import serialize_object
 
 from toucan_connectors.common import ConnectorStatus, HttpError
@@ -59,31 +60,42 @@ class GoogleAdwordsDataSource(ToucanDataSource):
         description='Max number of rows to extract, for service extraction only',
     )
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['GoogleAdwordsDataSource']) -> None:
-            keys = schema['properties'].keys()
-            prio_keys = [
-                'service',
-                'columns',
-                'from_clause',
-                'parameters',
-                'during',
-                'orderby',
-                'limit',
-            ]
-            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        prio_keys = [
+            'service',
+            'columns',
+            'from_clause',
+            'parameters',
+            'during',
+            'orderby',
+            'limit',
+        ]
+        new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
 
-class GoogleAdwordsConnector(ToucanConnector):
-    data_source_model: GoogleAdwordsDataSource
+class GoogleAdwordsConnector(ToucanConnector, data_source_model=GoogleAdwordsDataSource):
     _auth_flow = 'oauth2'
-    auth_flow_id: Optional[str]
+    auth_flow_id: Optional[str] = None
     developer_token: str = None
     client_customer_id: str = None
     _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
@@ -180,7 +192,7 @@ class GoogleAdwordsConnector(ToucanConnector):
         )
         # Build Limit
         if not data_source.limit:
-            data_source.limit = 100
+            data_source.limit = '100'
         service_query_builder.Limit(0, int(data_source.limit))
 
         return service, service_query_builder.Build()

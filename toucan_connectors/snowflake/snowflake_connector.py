@@ -2,14 +2,15 @@ import logging
 from contextlib import contextmanager, suppress
 from datetime import datetime
 from enum import Enum
-from typing import Any, ContextManager, Generator, Literal, Type, overload
+from typing import Any, ContextManager, Generator, Literal, overload
 
 import jwt
 import pandas as pd
 import requests
 import snowflake
 from jinja2 import Template
-from pydantic import Field, SecretStr, create_model
+from pydantic import Field, create_model
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from snowflake import connector as sf_connector
 from snowflake.connector import SnowflakeConnection
 from snowflake.connector.cursor import DictCursor as SfDictCursor
@@ -25,6 +26,7 @@ from toucan_connectors.toucan_connector import (
     Category,
     DataSlice,
     DiscoverableConnector,
+    PlainJsonSecretStr,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
@@ -46,7 +48,10 @@ class SnowflakeDataSource(ToucanDataSource['SnowflakeConnector']):
     warehouse: str | None = Field(None, description='The name of the warehouse you want to query')
 
     query: str = Field(
-        ..., description='You can write your SQL query here', min_length=1, widget='sql'
+        ...,
+        description='You can write your SQL query here',
+        min_length=1,
+        widget='sql',  # type:ignore[call-arg]
     )
 
     # Pydantic sees **_UI_HIDDEN as the third argument (the default factory) and raises an error
@@ -104,7 +109,29 @@ def _snowflake_connection(
         conn.close()
 
 
-class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConnector):
+_SCHEMA_ORDERED_KEYS = (
+    'type',
+    'name',
+    'account',
+    'authentication_method',
+    'user',
+    'password',
+    'token_endpoint',
+    'token_endpoint_content_type',
+    'role',
+    'default_warehouse',
+    'retry_policy',
+    'secrets_storage_version',
+    'sso_credentials_keeper',
+    'user_tokens_keeper',
+)
+
+
+class SnowflakeConnector(
+    ToucanConnector,
+    DiscoverableConnector,
+    data_source_model=SnowflakeDataSource,
+):
     """
     Import data from Snowflake data warehouse.
     """
@@ -114,26 +141,24 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
     sso_credentials_keeper: Any = None
     user_tokens_keeper: Any = None
 
-    data_source_model: SnowflakeDataSource
-
     account: str = Field(
         ...,
         description='The full name of your Snowflake account. '
         'It might require the region and cloud platform where your account is located, '
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
-        placeholder='your_account_name.region_id.cloud_platform',
+        placeholder='your_account_name.region_id.cloud_platform',  # type:ignore[call-arg]
     )
 
     authentication_method: AuthenticationMethod = Field(
         AuthenticationMethod.PLAIN,
         title='Authentication Method',
         description='The authentication mechanism that will be used to connect to your snowflake data source',
-        ui={'checkbox': False},
+        ui={'checkbox': False},  # type:ignore[call-arg]
     )
 
     user: str = Field(..., description='Your login username')
-    password: SecretStr | None = Field(None, description='Your login password')
+    password: PlainJsonSecretStr | None = Field(None, description='Your login password')
     token_endpoint: str | None = Field(None, description='The token endpoint')
     token_endpoint_content_type: str = Field(
         'application/json',
@@ -149,28 +174,27 @@ class SnowflakeConnector(ToucanConnector[SnowflakeDataSource], DiscoverableConne
     default_warehouse: str | None = Field(
         None, description='The default warehouse that shall be used for any data source'
     )
-    category: Category = Field(Category.SNOWFLAKE, title='category', ui={'checkbox': False})
+    category: Category = Field(
+        Category.SNOWFLAKE, title='category', ui={'checkbox': False}  # type:ignore[call-arg]
+    )
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: dict[str, Any], model: Type['SnowflakeConnector']) -> None:
-            ordered_keys = [
-                'type',
-                'name',
-                'account',
-                'authentication_method',
-                'user',
-                'password',
-                'token_endpoint',
-                'token_endpoint_content_type',
-                'role',
-                'default_warehouse',
-                'retry_policy',
-                'secrets_storage_version',
-                'sso_credentials_keeper',
-                'user_tokens_keeper',
-            ]
-            schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        # This confuses mypy because of the type field
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,  # type:ignore[valid-type]
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        schema['properties'] = {k: schema['properties'][k] for k in _SCHEMA_ORDERED_KEYS}
+        return schema
 
     @property
     def access_token(self) -> str | None:

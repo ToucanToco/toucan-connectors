@@ -21,12 +21,10 @@ class ToucanTocoDataSource(ToucanDataSource):
     all_small_apps: bool = False
 
 
-class ToucanTocoConnector(ToucanConnector):
+class ToucanTocoConnector(ToucanConnector, data_source_model=ToucanTocoDataSource):
     """
     Get data from a Toucan Toco instance, usefull to build analytics applications.
     """
-
-    data_source_model: ToucanTocoDataSource
 
     host: str
     username: str

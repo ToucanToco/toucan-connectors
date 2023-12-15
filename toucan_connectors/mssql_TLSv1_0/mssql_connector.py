@@ -2,10 +2,16 @@ import logging
 from contextlib import suppress
 
 import pyodbc
-from pydantic import Field, SecretStr, constr, create_model
+from pydantic import Field, StringConstraints, create_model
+from typing_extensions import Annotated
 
 from toucan_connectors.common import pandas_read_sql
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    PlainJsonSecretStr,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 
 class MSSQLDataSource(ToucanDataSource):
@@ -16,13 +22,13 @@ class MSSQLDataSource(ToucanDataSource):
         description='The name of the database you want to query. '
         "By default SQL Server selects the user's default database",
     )
-    table: constr(min_length=1) = Field(
+    table: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='The name of the data table that you want to '
         'get (equivalent to "SELECT * FROM '
         'your_table")',
     )
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
@@ -69,12 +75,10 @@ class MSSQLDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class MSSQLConnector(ToucanConnector):
+class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
     """
     Import data from Microsoft SQL Server.
     """
-
-    data_source_model: MSSQLDataSource
 
     host: str = Field(
         ...,
@@ -84,7 +88,7 @@ class MSSQLConnector(ToucanConnector):
 
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(None, description='Your login password')
+    password: PlainJsonSecretStr = Field(None, description='Your login password')
     connect_timeout: int = Field(
         None,
         title='Connection timeout',

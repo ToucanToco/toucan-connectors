@@ -145,7 +145,9 @@ def test_datasource_get_form(
     snowflake_connector: SnowflakeConnector,
     snowflake_cursor: _SFCursor,
 ):
-    snowflake_cursor.set_side_effect([['warehouse_1', 'warehouse_2'], ['database_1', 'database_2']])
+    snowflake_cursor.set_side_effect(
+        [{'name': ['warehouse_1', 'warehouse_2']}, {'name': ['database_1', 'database_2']}]
+    )
     result = snowflake_datasource.get_form(snowflake_connector, {})
     assert 'warehouse_1' == result['properties']['warehouse']['default']
 

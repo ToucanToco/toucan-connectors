@@ -151,20 +151,14 @@ def test_get_form_query_with_good_database(clickhouse_connector):
     """It should give suggestions of the collections"""
     current_config = {'database': 'clickhouse_db'}
     form = ClickhouseDataSource.get_form(clickhouse_connector, current_config)
-    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
-    assert form['definitions']['database'] == {
+    assert form['properties']['database'] == {'$ref': '#/$defs/database'}
+    assert form['$defs']['database'] == {
         'title': 'database',
-        'description': 'An enumeration.',
         'enum': ['INFORMATION_SCHEMA', 'clickhouse_db', 'default', 'information_schema'],
         'type': 'string',
     }
-    assert form['properties']['table'] == {'$ref': '#/definitions/table'}
-    assert form['definitions']['table'] == {
-        'title': 'table',
-        'description': 'An enumeration.',
-        'type': 'string',
-        'enum': ['city'],
-    }
+    assert form['properties']['table'] == {'allOf': [{'$ref': '#/$defs/table'}], 'default': None}
+    assert form['$defs']['table'] == {'const': 'city', 'title': 'table', 'type': 'string'}
     assert form['required'] == ['domain', 'name', 'database']
 
 
@@ -175,7 +169,7 @@ def test_get_form_connection_fails(mocker, clickhouse_connector):
     assert 'table' in form['properties']
 
 
-def test_schema_extra():
+def test_model_json_schema():
     data_source_spec = {
         'domain': 'Clickhouse test',
         'type': 'external_database',
@@ -184,25 +178,13 @@ def test_schema_extra():
         'query': 'SELECT * FROM city WHERE id in %(ids)s',
         'parameters': {'ids': [3986, 3958]},
     }
-    conf = ClickhouseDataSource(**data_source_spec).Config
-    schema = {
-        'properties': {
-            'query': 'bar',
-            'parameters': 'bar',
-            'table': 'bar',
-            'database': 'bar',
-        }
-    }
-    conf.schema_extra(schema, model=ClickhouseDataSource)
-
-    assert schema == {
-        'properties': {
-            'database': 'bar',
-            'table': 'bar',
-            'query': 'bar',
-            'parameters': 'bar',
-        }
-    }
+    ds = ClickhouseDataSource(**data_source_spec)
+    assert list(ds.model_json_schema()['properties'].keys())[:4] == [
+        'database',
+        'table',
+        'query',
+        'parameters',
+    ]
 
 
 def test_create_connections():

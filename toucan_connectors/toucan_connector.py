@@ -8,11 +8,12 @@ import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
+from typing import Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
 
 import pandas as pd
 import tenacity as tny
-from pydantic import BaseModel, Field, SecretBytes, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, SecretStr
+from pydantic.fields import ModelPrivateAttr
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -28,6 +29,7 @@ try:
     from bearer import Bearer  # type: ignore[import-untyped]
 except ImportError:
     pass
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -96,10 +98,7 @@ class ToucanDataSource(BaseModel, Generic[C]):
         title="Slow Queries' Cache Expiration Time",
         description='In seconds. Will override the 5min instance default and/or the connector value',
     )
-
-    class Config:
-        extra = 'forbid'
-        validate_assignment = True
+    model_config = ConfigDict(extra='forbid', validate_assignment=True)
 
     @classmethod
     def get_form(cls, connector: C, current_config):
@@ -110,7 +109,7 @@ class ToucanDataSource(BaseModel, Generic[C]):
 
         By default, we simply return the model schema.
         """
-        return cls.schema()
+        return cls.model_json_schema()
 
 
 class RetryPolicy(BaseModel):
@@ -220,10 +219,14 @@ def get_oauth2_configuration(cls):
     """Return a tuple indicating if the connector is an oauth2 connector
     and in this case, where can the credentials be located
     """
-    oauth2_enabled = hasattr(cls, '_auth_flow') and 'oauth2' in getattr(cls, '_auth_flow')
+    oauth2_enabled = False
+    if hasattr(cls, '_auth_flow'):
+        assert isinstance(cls._auth_flow, ModelPrivateAttr)
+        oauth2_enabled = 'oauth2' in cls._auth_flow.get_default()
     oauth2_credentials_location = None
     if hasattr(cls, '_oauth_trigger'):
-        oauth2_credentials_location = getattr(cls, '_oauth_trigger')
+        assert isinstance(cls._oauth_trigger, ModelPrivateAttr)
+        oauth2_credentials_location = cls._oauth_trigger.get_default()
     return oauth2_enabled, oauth2_credentials_location
 
 
@@ -260,6 +263,10 @@ _UI_HIDDEN: dict[str, Any] = {'ui.hidden': True}
 
 DS = TypeVar('DS', bound=ToucanDataSource)
 
+PlainJsonSecretStr = Annotated[
+    SecretStr, PlainSerializer(SecretStr.get_secret_value, return_type=str, when_used='json')
+]
+
 
 class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     """Abstract base class for all toucan connectors.
@@ -281,10 +288,15 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     the `_retry_on` class attribute in your concrete connector class.
     """
 
+    @classmethod
+    def __init_subclass__(cls, /, *, data_source_model: type[DS]):
+        cls.logger = logging.getLogger(cls.__name__)  # type:ignore[attr-defined]
+        cls.data_source_model = data_source_model  # type:ignore[attr-defined]
+
     name: str = Field(...)
     retry_policy: RetryPolicy | None = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
-    type: str | None
+    type: str | None = None
     secrets_storage_version: str = Field('1', **_UI_HIDDEN)  # type:ignore[pydantic-field]
 
     # Default ttl for all connector's queries (overridable at the data_source level)
@@ -296,25 +308,8 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     )
 
     # Used to defined the connection
-    identifier: str = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
-
-    class Config:
-        extra = 'forbid'
-        validate_assignment = True
-        json_encoders = {
-            SecretStr: lambda v: v.get_secret_value(),
-            SecretBytes: lambda v: v.get_secret_value(),
-        }
-
-    @classmethod
-    def __init_subclass__(cls):
-        try:
-            cls.data_source_model = cls.__fields__.pop('data_source_model').type_
-            cls.logger = logging.getLogger(cls.__name__)
-        except KeyError as e:
-            raise TypeError(f'{cls.__name__} has no {e} attribute.')
-        if 'bearer_integration' in cls.__fields__:
-            cls.bearer_integration = cls.__fields__['bearer_integration'].default
+    identifier: str | None = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
+    model_config = ConfigDict(extra='forbid', validate_assignment=True)
 
     def bearer_oauth_get_endpoint(
         self,
@@ -435,7 +430,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
         Used by `get_cache_key` method.
         """
-        return self.json()
+        return self.model_dump_json()
 
     def _get_unique_datasource_identifier(self, data_source: DS) -> dict:
         # By default we don't know which variable syntax is be supported by the inheriting connector,
@@ -467,7 +462,6 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
             'offset': offset,
             'limit': limit,
         }
-
         if data_source is not None:
             unique_identifier['datasource'] = self._get_unique_datasource_identifier(data_source)
         json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True, default=hash)

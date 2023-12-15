@@ -1,7 +1,8 @@
-from typing import Any, Dict, Type
+from typing import Any
 
 import pandas as pd
 from pydantic import Field, create_model
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from requests import Session
 from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 from zeep import Client
@@ -20,13 +21,25 @@ class SoapDataSource(ToucanDataSource):
     )
     flatten_column: str = Field(None, description='Column containing nested rows')
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['SoapDataSource']) -> None:
-            keys = schema['properties'].keys()
-            prio_keys = ['domain', 'method', 'parameters', 'flatten_column']
-            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        prio_keys = ['domain', 'method', 'parameters', 'flatten_column']
+        new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
     @classmethod
     def _get_methods_docs(cls, client):
@@ -51,8 +64,7 @@ class SoapDataSource(ToucanDataSource):
         return res
 
 
-class SoapConnector(ToucanConnector):
-    data_source_model: SoapDataSource
+class SoapConnector(ToucanConnector, data_source_model=SoapDataSource):
     headers: dict = Field(
         None,
         description='JSON object of HTTP headers to send with every HTTP request',

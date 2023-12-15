@@ -122,9 +122,7 @@ class WootricDataSource(ToucanDataSource):
     )
 
 
-class WootricConnector(ToucanConnector):
-    data_source_model: WootricDataSource
-
+class WootricConnector(ToucanConnector, data_source_model=WootricDataSource):
     client_id: str
     client_secret: str
     api_version: str = 'v1'

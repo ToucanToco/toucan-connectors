@@ -65,11 +65,9 @@ class TrelloDataSource(ToucanDataSource):
     filter: CardsFilter = CardsFilter.open
 
 
-class TrelloConnector(ToucanConnector):
-    data_source_model: TrelloDataSource
-
-    key_id: str = None
-    token: str = None
+class TrelloConnector(ToucanConnector, data_source_model=TrelloDataSource):
+    key_id: str | None = None
+    token: str | None = None
 
     def get_board(self, path, **custom_params):
         return requests.get(

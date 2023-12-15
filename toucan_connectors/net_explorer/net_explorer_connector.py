@@ -5,10 +5,10 @@ from typing import Optional
 
 import pandas as pd
 import requests
-from pydantic import Field, SecretStr
+from pydantic import Field
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
 
 
 class NetExplorerDataSource(ToucanDataSource):
@@ -16,15 +16,10 @@ class NetExplorerDataSource(ToucanDataSource):
     sheet: Optional[str] = 0
 
 
-class NetExplorerConnector(ToucanConnector):
-    data_source_model: NetExplorerDataSource
-    instance_url: str = Field(
-        None,
-        Title='Instance URL',
-        placeholder='exemple.netexplorer.pro',
-    )
+class NetExplorerConnector(ToucanConnector, data_source_model=NetExplorerDataSource):
+    instance_url: str = Field(None, Title='Instance URL', placeholder='exemple.netexplorer.pro')
     user: str
-    password: SecretStr
+    password: PlainJsonSecretStr
 
     def _retrieve_token(self):
         login_url = f'https://{self.instance_url}/api/auth'

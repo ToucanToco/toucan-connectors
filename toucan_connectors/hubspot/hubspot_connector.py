@@ -68,12 +68,11 @@ class HubspotDataSource(ToucanDataSource):
     parameters: Dict = Field(None)
 
 
-class HubspotConnector(ToucanConnector):
+class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
     _auth_flow = 'oauth2'
-    auth_flow_id: Optional[str]
+    auth_flow_id: Optional[str] = None
     _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
-    data_source_model: HubspotDataSource
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     def __init__(self, **kwargs) -> None:

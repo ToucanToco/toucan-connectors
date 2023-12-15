@@ -49,17 +49,16 @@ class SalesforceDataSource(ToucanDataSource):
     )
 
 
-class SalesforceConnector(ToucanConnector):
+class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSource):
     _auth_flow = 'oauth2'
-    auth_flow_id: Optional[str]
-    data_source_model: SalesforceDataSource
+    auth_flow_id: Optional[str] = None
     instance_url: str = Field(
         None,
         title='instance url',
         description='Baseroute URL of the salesforces instance to query (without the trailing slash)',
     )
     _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod

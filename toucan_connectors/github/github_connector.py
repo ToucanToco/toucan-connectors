@@ -82,7 +82,7 @@ class GithubDataSource(ToucanDataSource):
         description='Max Number of entities such as teams and repositories to extract',
     )
     _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
 
     @classmethod
     def get_form(cls, connector: 'GithubConnector', current_config, **kwargs):
@@ -95,10 +95,9 @@ class GithubDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class GithubConnector(ToucanConnector):
+class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
     _auth_flow = 'oauth2'
-    auth_flow_id: Optional[str]
-    data_source_model: GithubDataSource
+    auth_flow_id: Optional[str] = None
     _oauth_trigger = 'instance'
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 

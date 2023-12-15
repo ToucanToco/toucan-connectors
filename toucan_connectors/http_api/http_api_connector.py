@@ -1,10 +1,11 @@
 import json
 from enum import Enum
-from typing import Any, Dict, List, Type, Union
+from typing import Any, List
 from xml.etree.ElementTree import ParseError, fromstring, tostring
 
 import pandas as pd
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from requests import Session
 from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 from xmltodict import parse
@@ -31,24 +32,24 @@ class Method(str, Enum):
 
 
 class Template(BaseModel):
-    headers: dict = Field(
+    headers: dict | None = Field(
         None,
         description='JSON object of HTTP headers to send with every HTTP request',
         examples=['{ "content-type": "application/xml" }'],
     )
-    params: dict = Field(
+    params: dict | None = Field(
         None,
         description='JSON object of parameters to send in the query string of every HTTP request '
         '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    json_: dict = Field(
+    json_: dict | None = Field(
         None,
         alias='json',
         description='JSON object of parameters to send in the body of every HTTP request',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    proxies: dict = Field(
+    proxies: dict | None = Field(
         None,
         description='JSON object expressing a mapping of protocol or host to corresponding proxy',
         examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
@@ -63,63 +64,74 @@ class HttpAPIDataSource(ToucanDataSource):
         'For example "geo/countries"',
     )
     method: Method = Field(Method.GET, title='HTTP Method')
-    headers: dict = Field(
+    headers: dict | None = Field(
         None,
         description='You can also setup headers in the Template section of your Connector see: <br/>'
         'https://docs.toucantoco.com/concepteur/tutorials/connectors/3-http-connector.html#template',
         examples=['{ "content-type": "application/xml" }'],
     )
-    params: dict = Field(
+    params: dict | None = Field(
         None,
         title='URL params',
         description='JSON object of parameters to send in the query string of this HTTP request '
         '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    json_: dict = Field(
+    json_: dict | None = Field(
         None,
         alias='json',
         title='Body',
         description='JSON object of parameters to send in the body of every HTTP request',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    proxies: dict = Field(
+    proxies: dict | None = Field(
         None,
         description='JSON object expressing a mapping of protocol or host to corresponding proxy',
         examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
     )
-    data: Union[str, dict] = Field(
+    data: str | dict | None = Field(
         None, description='JSON object to send in the body of the HTTP request'
     )
     xpath: str = XpathSchema
     filter: str = FilterSchema
-    flatten_column: str = Field(None, description='Column containing nested rows')
+    flatten_column: str | None = Field(None, description='Column containing nested rows')
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['HttpAPIDataSource']) -> None:
-            keys = schema['properties'].keys()
-            last_keys = [
-                'proxies',
-                'flatten_column',
-                'data',
-                'xpath',
-                'filter',
-                'validation',
-            ]
-            new_keys = [k for k in keys if k not in last_keys] + last_keys
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        last_keys = [
+            'proxies',
+            'flatten_column',
+            'data',
+            'xpath',
+            'filter',
+            'validation',
+        ]
+        new_keys = [k for k in keys if k not in last_keys] + last_keys
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
 
-class HttpAPIConnector(ToucanConnector):
-    data_source_model: HttpAPIDataSource
+class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
     responsetype: ResponseType = Field(ResponseType.json, title='Content-type of response')
     baseroute: AnyHttpUrl = Field(..., title='Baseroute URL', description='Baseroute URL')
-    cert: List[FilePath] = Field(
+    cert: List[FilePath] | None = Field(
         None, title='Certificate', description='File path of your certificate if any'
     )
-    auth: Auth = Field(None, title='Authentication type')
-    template: Template = Field(
+    auth: Auth | None = Field(None, title='Authentication type')
+    template: Template | None = Field(
         None,
         description='You can provide a custom template that will be used for every HTTP request',
     )
@@ -137,7 +149,7 @@ class HttpAPIConnector(ToucanConnector):
         xpath = query['xpath']
         available_params = ['url', 'method', 'params', 'data', 'json', 'headers', 'proxies']
         query = {k: v for k, v in query.items() if k in available_params}
-        query['url'] = '/'.join([self.baseroute.rstrip('/'), query['url'].lstrip('/')])
+        query['url'] = '/'.join([str(self.baseroute).rstrip('/'), query['url'].lstrip('/')])
 
         if self.cert:
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates

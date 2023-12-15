@@ -7,8 +7,16 @@ from typing import Any
 
 import pandas as pd
 import redshift_connector
-from pydantic import Field, SecretStr, create_model, root_validator, validator
-from pydantic.types import constr
+from pydantic import (
+    ConfigDict,
+    Field,
+    StringConstraints,
+    create_model,
+    field_validator,
+    model_validator,
+)
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.pagination import build_pagination_info
@@ -17,6 +25,7 @@ from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
     DiscoverableConnector,
+    PlainJsonSecretStr,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
@@ -69,7 +78,7 @@ class RedshiftDataSource(ToucanDataSource):
     database: str = Field(
         DEFAULT_DATABASE, description='The name of the database you want to query'
     )
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
@@ -97,8 +106,9 @@ class RedshiftDataSource(ToucanDataSource):
         ).schema()
 
 
-class RedshiftConnector(ToucanConnector, DiscoverableConnector):
-    data_source_model: RedshiftDataSource
+class RedshiftConnector(
+    ToucanConnector, DiscoverableConnector, data_source_model=RedshiftDataSource
+):
     authentication_method: AuthenticationMethod = Field(
         None,
         title='Authentication Method',
@@ -113,7 +123,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     user: str | None = Field(
         None, description='The username to use for authentication with the Amazon Redshift cluster'
     )
-    password: SecretStr | None = Field(
+    password: PlainJsonSecretStr | None = Field(
         None, description='The password to use for authentication with the Amazon Redshift cluster'
     )
 
@@ -137,52 +147,57 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector):
     )
 
     access_key_id: str | None = Field(None, description='The access key id of your aws account.')
-    secret_access_key: SecretStr | None = Field(
+    secret_access_key: PlainJsonSecretStr | None = Field(
         None, description='The secret access key of your aws account.'
     )
     session_token: str | None = Field(None, description='Your session token')
     profile: str | None = Field(None, description='AWS profile')
     region: str | None = Field(None, description='The region in which there is your aws account.')
 
-    class Config:
-        underscore_attrs_are_private = True
-        keep_untouched = (cached_property,)
+    model_config = ConfigDict(ignored_types=(cached_property,))
 
-        @staticmethod
-        def schema_extra(schema: dict[str, Any]) -> None:
-            schema['properties'] = {k: schema['properties'][k] for k in ORDERED_KEYS}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        schema['properties'] = {k: schema['properties'][k] for k in ORDERED_KEYS}
+        return schema
 
     @cached_property
     def available_dbs(self) -> list[str]:
         return self._list_db_names()
 
-    @validator('host')
+    @field_validator('host')
+    @classmethod
     def host_validator(cls, v):
         return re.sub(r'^https?://', '', v)
 
-    @root_validator
-    def check_requirements(cls, values):
-        mode = values.get('authentication_method')
-        if mode == AuthenticationMethod.DB_CREDENTIALS.value:
+    @model_validator(mode='after')
+    def check_requirements(self):
+        if self.authentication_method == AuthenticationMethod.DB_CREDENTIALS.value:
             # TODO: Partial check due to missing context in some operations (Missing: password)
-            user = values.get('user')
-            if user is None:
+            if self.user is None:
                 raise ValueError(AuthenticationMethodError.DB_CREDENTIALS.value)
-        elif mode == AuthenticationMethod.AWS_CREDENTIALS.value:
+        elif self.authentication_method == AuthenticationMethod.AWS_CREDENTIALS.value:
             # TODO: Partial check due to missing context in some operations (Missing: secret_access_key)
-            access_key_id, db_user = (
-                values.get('access_key_id'),
-                values.get('db_user'),
-            )
-            if access_key_id is None or db_user is None:
+            if self.access_key_id is None or self.db_user is None:
                 raise ValueError(AuthenticationMethodError.AWS_CREDENTIALS.value)
-        elif mode == AuthenticationMethod.AWS_PROFILE.value:
-            profile, db_user = (values.get('profile'), values.get('db_user'))
-            if profile is None or db_user is None:
+        elif self.authentication_method == AuthenticationMethod.AWS_PROFILE.value:
+            if self.profile is None or self.db_user is None:
                 raise ValueError(AuthenticationMethodError.AWS_PROFILE.value)
         else:
             raise ValueError(AuthenticationMethodError.UNKNOWN.value)
-        return values
+        return self
 
     def _get_connection_params(self, database) -> dict[str, Any]:
         con_params = dict(

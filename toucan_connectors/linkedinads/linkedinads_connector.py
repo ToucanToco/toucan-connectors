@@ -3,12 +3,13 @@ import os
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional, Type
+from typing import Any, Optional
 
 import dateutil.parser
 import pandas as pd
 import requests
 from pydantic import Field, PrivateAttr
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 
 from toucan_connectors.common import ConnectorStatus, HttpError
@@ -56,7 +57,7 @@ class LinkedinadsDataSource(ToucanDataSource):
     start_date: str = Field(
         ..., title='Start date', description='Start date of the dataset. Format must be dd/mm/yyyy.'
     )
-    end_date: str = Field(
+    end_date: str | None = Field(
         None,
         title='End date',
         description='End date of the dataset, optional & default to today. Format must be dd/mm/yyyy.',
@@ -66,44 +67,55 @@ class LinkedinadsDataSource(ToucanDataSource):
         title='Time granularity',
         description='Granularity of the dataset, default all result grouped',
     )
-    flatten_column: str = Field(None, description='Column containing nested rows')
+    flatten_column: str | None = Field(None, description='Column containing nested rows')
 
-    parameters: dict = Field(
+    parameters: dict | None = Field(
         None,
         description='See https://docs.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting for more information',
     )
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['LinkedinadsDataSource']) -> None:
-            keys = schema['properties'].keys()
-            prio_keys = [
-                'finder_methods',
-                'start_date',
-                'end_date',
-                'time_granularity',
-                'flatten_column',
-                'parameters',
-            ]
-            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        prio_keys = [
+            'finder_methods',
+            'start_date',
+            'end_date',
+            'time_granularity',
+            'flatten_column',
+            'parameters',
+        ]
+        new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
 
-class LinkedinadsConnector(ToucanConnector):
+class LinkedinadsConnector(ToucanConnector, data_source_model=LinkedinadsDataSource):
     """The LinkedinAds connector."""
 
-    data_source_model: LinkedinadsDataSource
     _auth_flow = 'oauth2'
     auth_flow_id: Optional[
         str
-    ]  # This ID is generated & provided to the data provider during the oauth authentication process
+    ] = None  # This ID is generated & provided to the data provider during the oauth authentication process
     _baseroute = 'https://api.linkedin.com/v2/adAnalyticsV2?q='
     template: Template = Field(
         None,
         description='You can provide a custom template that will be used for every HTTP request',
     )
     _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod

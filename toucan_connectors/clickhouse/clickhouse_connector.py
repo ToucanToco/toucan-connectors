@@ -1,41 +1,60 @@
 from contextlib import suppress
-from typing import Any, Dict, Type
+from typing import Any
 
 import clickhouse_driver
-from pydantic import Field, SecretStr, constr, create_model
+from pydantic import Field, StringConstraints, create_model
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
+from typing_extensions import Annotated
 
 from toucan_connectors.common import pandas_read_sql
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    PlainJsonSecretStr,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 
 class ClickhouseDataSource(ToucanDataSource):
     database: str = Field(None, description='The name of the database you want to query')
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
         'the "table" parameter above',
         widget='sql',
     )
-    table: constr(min_length=1) = Field(
+    table: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='The name of the data table that you want to '
         'get (equivalent to "SELECT * FROM '
         'your_table")',
     )
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['ClickhouseDataSource']) -> None:
-            keys = schema['properties'].keys()
-            prio_keys = [
-                'database',
-                'table',
-                'query',
-                'parameters',
-            ]
-            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        prio_keys = [
+            'database',
+            'table',
+            'query',
+            'parameters',
+        ]
+        new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -77,12 +96,11 @@ class ClickhouseDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class ClickhouseConnector(ToucanConnector):
+class ClickhouseConnector(ToucanConnector, data_source_model=ClickhouseDataSource):
     """
     Import data from Clickhouse.
     """
 
-    data_source_model: ClickhouseDataSource
     host: str = Field(
         None,
         description='Use this parameter if you have an IP address. '
@@ -90,7 +108,7 @@ class ClickhouseConnector(ToucanConnector):
     )
     port: int = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field('', description='Your login password')
+    password: PlainJsonSecretStr = Field('', description='Your login password')
     ssl_connection: bool = Field(False, description='Create a SSL wrapped TCP connection')
 
     def get_connection_url(self, *, database='default'):

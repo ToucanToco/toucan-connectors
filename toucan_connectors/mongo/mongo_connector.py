@@ -5,7 +5,7 @@ import pandas as pd
 import pymongo
 from bson.son import SON
 from cached_property import cached_property
-from pydantic import Field, SecretStr, create_model, validator
+from pydantic import ConfigDict, Field, create_model, field_validator, model_validator
 
 from toucan_connectors.common import ConnectorStatus, nosql_apply_parameters_to_query
 from toucan_connectors.json_wrapper import JsonWrapper
@@ -13,6 +13,7 @@ from toucan_connectors.mongo.mongo_translator import MongoConditionTranslator
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.toucan_connector import (
     DataSlice,
+    PlainJsonSecretStr,
     ToucanConnector,
     ToucanDataSource,
     UnavailableVersion,
@@ -115,6 +116,13 @@ class MongoDataSource(ToucanDataSource):
         'Aggregation Pipeline in the MongoDB documentation',
     )
 
+    # FIXME: This is needed for now because with we rely on empty queries being dicts. In pydantic
+    # v1, "[]" was coerced to {}, and we somehow rely on that cursed behaviour
+    @field_validator('query')
+    @classmethod
+    def _ensure_empty_query_is_dict(cls, query: dict | list) -> dict | list:
+        return query or {}
+
     @classmethod
     def get_form(cls, connector: 'MongoConnector', current_config):
         """
@@ -138,10 +146,10 @@ class MongoDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class MongoConnector(ToucanConnector, VersionableEngineConnector):
+class MongoConnector(
+    ToucanConnector, VersionableEngineConnector, data_source_model=MongoDataSource
+):
     """Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
-
-    data_source_model: MongoDataSource
 
     host: str = Field(
         ...,
@@ -150,17 +158,15 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     )
     port: Optional[int] = Field(None, description='The listening port of your database server')
     username: Optional[str] = Field(None, description='Your login username')
-    password: Optional[SecretStr] = Field(None, description='Your login password')
+    password: Optional[PlainJsonSecretStr] = Field(None, description='Your login password')
     ssl: Optional[bool] = Field(None, description='Create the connection to the server using SSL')
+    model_config = ConfigDict(ignored_types=(cached_property, _lru_cache_wrapper))
 
-    class Config:
-        keep_untouched = (cached_property, _lru_cache_wrapper)
-
-    @validator('password')
-    def password_must_have_a_user(cls, password, values):
-        if password is not None and values['username'] is None:
+    @model_validator(mode='after')
+    def password_must_have_a_user(self) -> 'MongoConnector':
+        if self.password is not None and self.username is None:
             raise ValueError('username must be set')
-        return password
+        return self
 
     def __hash__(self):
         return hash(id(self)) + hash(JsonWrapper.dumps(self._get_mongo_client_kwargs()))
@@ -262,7 +268,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         get_row_count: Optional[bool] = False,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
-        data_source = MongoDataSource.parse_obj(data_source)
+        data_source = data_source.model_copy(deep=True)
         if offset or limit is not None:
             data_source.query = apply_condition_filter(data_source.query, permissions)
             data_source.query = normalize_query(data_source.query, data_source.parameters)
@@ -316,7 +322,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         offset: Optional[int] = None,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
-        data_source = MongoDataSource.parse_obj(data_source)
+        data_source = data_source.model_copy(deep=True)
         data_source.query = normalize_query(data_source.query, data_source.parameters)
         # We simply append the match regex at the end of the query,
         # Mongo will then optimize the pipeline to move the match regex to its most convenient position
@@ -386,10 +392,9 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
 
     def _get_unique_datasource_identifier(self, data_source: MongoDataSource) -> dict:
         # let's make a copy first
-        data_source_rendered = MongoDataSource.parse_obj(data_source)
+        data_source_rendered = data_source.model_copy(deep=True)
         data_source_rendered.query = normalize_query(data_source.query, data_source.parameters)
-        del data_source_rendered.parameters
-        return data_source_rendered.dict()
+        return data_source_rendered.model_dump(exclude={'parameters'})
 
     def get_engine_version(self) -> tuple:
         client = pymongo.MongoClient(**self._get_mongo_client_kwargs())

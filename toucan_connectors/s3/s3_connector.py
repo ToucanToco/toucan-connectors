@@ -23,8 +23,7 @@ class S3DataSource(ToucanDataSource):
     fetcher_kwargs: dict[str, Any] = {}
 
 
-class S3Connector(ToucanConnector):
-    data_source_model: S3DataSource
+class S3Connector(ToucanConnector, data_source_model=S3DataSource):
     _sts_role: dict
 
     bucket_name: str = Field(..., description='Your Bucket Name')

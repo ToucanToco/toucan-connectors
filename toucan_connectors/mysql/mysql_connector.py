@@ -7,12 +7,14 @@ from typing import Any, Generator, Optional
 import pandas as pd
 import pymysql
 from cached_property import cached_property_with_ttl
-from pydantic import Field, SecretStr, constr, create_model, validator
+from pydantic import ConfigDict, Field, StringConstraints, create_model, model_validator
 from pymysql.constants import CR, ER
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
+    PlainJsonSecretStr,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
@@ -46,17 +48,17 @@ class MySQLDataSource(ToucanDataSource):
         **{'ui.hidden': True},
         description='Deprecated, kept for compatibility purpose with old data sources configs',
     )  # Deprecated
-    table: str = Field(
+    table: str | None = Field(
         None, **{'ui.hidden': True}
     )  # To avoid previous config migrations, won't be used
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] | None = Field(
         None,
         description='You can write a custom query against your '
         'database here. It will take precedence over '
         'the "table" parameter',
         widget='sql',
     )
-    query_object: dict = Field(
+    query_object: dict | None = Field(
         None,
         description='An object describing a simple select query' 'This field is used internally',
         **{'ui.hidden': True},
@@ -94,27 +96,30 @@ class SSLMode(str, Enum):
     REQUIRED = 'REQUIRED'
 
 
-class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineConnector):
+class MySQLConnector(
+    ToucanConnector,
+    DiscoverableConnector,
+    VersionableEngineConnector,
+    data_source_model=MySQLDataSource,
+):
     """
     Import data from MySQL database.
     """
-
-    data_source_model: MySQLDataSource
 
     host: str = Field(
         ...,
         description='The domain name (preferred option as more dynamic) or '
         'the hardcoded IP address of your database server',
     )
-    port: int = Field(None, description='The listening port of your database server')
+    port: int | None = Field(None, description='The listening port of your database server')
     user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(None, description='Your login password')
+    password: PlainJsonSecretStr | None = Field(None, description='Your login password')
     charset: str = Field(
         'utf8mb4',
         title='Charset',
         description='Character encoding. You should generally let the default "utf8mb4" here.',
     )
-    connect_timeout: int = Field(
+    connect_timeout: int | None = Field(
         None,
         title='Connection timeout',
         description='You can set a connection timeout in seconds here, '
@@ -122,42 +127,37 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         'for the server to respond. None by default',
     )
     # SSL options
-    ssl_ca: SecretStr = Field(
+    ssl_ca: PlainJsonSecretStr | None = Field(
         None,
         description='The CA certificate content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-ca option of the MySQL client',
     )
-    ssl_cert: SecretStr = Field(
+    ssl_cert: PlainJsonSecretStr | None = Field(
         None,
         description='The X509 certificate content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-cert option of the MySQL client',
     )
-    ssl_key: SecretStr = Field(
+    ssl_key: PlainJsonSecretStr | None = Field(
         None,
         description='The X509 certificate key content in PEM format to use to connect to the MySQL '
         'server. Equivalent of the --ssl-key option of the MySQL client',
     )
-    ssl_mode: SSLMode = Field(
+    ssl_mode: SSLMode | None = Field(
         None,
         description='SSL Mode to use to connect to the MySQL server. '
         'Equivalent of the --ssl-mode option of the MySQL client. Must be set in order to use SSL',
     )
+    model_config = ConfigDict(ignored_types=(cached_property_with_ttl,))
 
-    class Config:
-        underscore_attrs_are_private = True
-        keep_untouched = (cached_property_with_ttl,)
-
-    @validator('ssl_key')
-    @classmethod
-    def ssl_key_validator(cls, ssl_key: str, values: dict) -> str:
-        ssl_cert = values.get('ssl_cert', None)
+    @model_validator(mode='after')
+    def ssl_key_validator(self) -> 'MySQLConnector':
         # if one is present, the other one should be specified
-        if ssl_cert is not None and ssl_key is None:
+        if self.ssl_cert is not None and self.ssl_key is None:
             raise ValueError('SSL option "ssl_key" should be specified if "ssl_cert" is provided !')
-        elif ssl_key is not None and ssl_cert is None:
+        elif self.ssl_key is not None and self.ssl_cert is None:
             raise ValueError('SSL option "ssl_cert" should be specified if "ssl_key" is provided !')
 
-        return ssl_key
+        return self
 
     def _sanitize_ssl_params(self) -> dict[str, Any]:
         params = {}

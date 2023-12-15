@@ -4,7 +4,8 @@ import awswrangler as wr
 import boto3
 import pandas as pd
 from cached_property import cached_property_with_ttl
-from pydantic import Field, SecretStr, constr, create_model
+from pydantic import ConfigDict, Field, StringConstraints, create_model
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters, sanitize_query
 from toucan_connectors.pagination import build_pagination_info
@@ -13,6 +14,7 @@ from toucan_connectors.toucan_connector import (
     DataSlice,
     DataStats,
     DiscoverableConnector,
+    PlainJsonSecretStr,
     TableInfo,
     ToucanConnector,
     ToucanDataSource,
@@ -22,14 +24,14 @@ from toucan_connectors.toucan_connector import (
 
 class AwsathenaDataSource(ToucanDataSource):
     name: str = Field(..., description='Your AWS Athena connector name')
-    database: constr(min_length=1) = Field(
+    database: Annotated[str, StringConstraints(min_length=1)] = Field(
         ..., description='The name of the database you want to query.'
     )
     table: str = Field(
         None, **{'ui.hidden': True}
     )  # To avoid previous config migrations, won't be used
     language: str = Field('sql', **{'ui.hidden': True})
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='The SQL query to execute.',
         widget='sql',
@@ -66,27 +68,24 @@ def athena_variable_transformer(variable: str):
     return f':{variable};'
 
 
-class AwsathenaConnector(ToucanConnector, DiscoverableConnector):
-    data_source_model: AwsathenaDataSource
-
+class AwsathenaConnector(
+    ToucanConnector, DiscoverableConnector, data_source_model=AwsathenaDataSource
+):
     name: str = Field(..., description='Your AWS Athena connector name')
 
     s3_output_bucket: str = Field(
         ..., description='Your S3 Output bucket (where query results are stored.)'
     )
     aws_access_key_id: str = Field(..., description='Your AWS access key ID')
-    aws_secret_access_key: SecretStr = Field(None, description='Your AWS secret key')
+    aws_secret_access_key: PlainJsonSecretStr = Field(None, description='Your AWS secret key')
     region_name: str = Field(..., description='Your AWS region name')
-
-    class Config:
-        underscore_attrs_are_private = True
-        keep_untouched = (cached_property_with_ttl,)
+    model_config = ConfigDict(ignored_types=(cached_property_with_ttl,))
 
     def get_session(self) -> boto3.Session:
         return boto3.Session(
             aws_access_key_id=self.aws_access_key_id,
             # This is required because this gets appended by boto3
-            # internally, and a SecretStr can't be appended to an str
+            # internally, and a PlainJsonSecretStr can't be appended to an str
             aws_secret_access_key=self.aws_secret_access_key.get_secret_value(),
             region_name=self.region_name,
         )

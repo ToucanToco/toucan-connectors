@@ -1,23 +1,22 @@
 import pandas as pd
 import pyodbc
-from pydantic import Field, constr
+from pydantic import Field, StringConstraints
+from typing_extensions import Annotated
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class OdbcDataSource(ToucanDataSource):
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         ..., description='You can write your SQL query here', widget='sql'
     )
 
 
-class OdbcConnector(ToucanConnector):
+class OdbcConnector(ToucanConnector, data_source_model=OdbcDataSource):
     """
     Import data through ODBC apis
     """
-
-    data_source_model: OdbcDataSource
 
     connection_string: str = Field(..., description='The connection string')
     autocommit: bool = False

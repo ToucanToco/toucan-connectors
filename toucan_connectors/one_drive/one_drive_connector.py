@@ -4,14 +4,14 @@ from typing import List, Optional
 
 import pandas as pd
 import requests
-from pydantic import Field, PrivateAttr, SecretStr
+from pydantic import Field, PrivateAttr
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.oauth2_connector.oauth2connector import (
     OAuth2Connector,
     OAuth2ConnectorConfig,
 )
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
 
 
 class NotFoundError(Exception):
@@ -45,7 +45,7 @@ class OneDriveDataSource(ToucanDataSource):
         description='Read one sheet or append multiple sheets',
         placeholder='Enter a sheet or a comma separated list of sheets',
     )
-    range: Optional[str]
+    range: Optional[str] = None
     table: Optional[str] = Field(
         None,
         Title='Tables',
@@ -71,13 +71,11 @@ def _prepare_workbook_elements(data_source):
     return workbook_elements_list, workbook_key_column
 
 
-class OneDriveConnector(ToucanConnector):
-    data_source_model: OneDriveDataSource
-
+class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
     _auth_flow = 'oauth2'
     _oauth_trigger = 'connector'
-    oauth2_version = Field('1', **{'ui.hidden': True})
-    auth_flow_id: Optional[str]
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
+    auth_flow_id: Optional[str] = None
 
     authorization_url: str = Field(None, **{'ui.hidden': True})
     token_url: str = Field(None, **{'ui.hidden': True})
@@ -90,7 +88,7 @@ class OneDriveConnector(ToucanConnector):
         description='The client id of you Azure Active Directory integration',
         **{'ui.required': True},
     )
-    client_secret: SecretStr = Field(
+    client_secret: PlainJsonSecretStr = Field(
         '',
         title='Client Secret',
         description='The client secret of your Azure Active Directory integration',

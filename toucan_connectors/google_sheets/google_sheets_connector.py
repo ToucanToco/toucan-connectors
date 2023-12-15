@@ -1,6 +1,6 @@
 from contextlib import suppress
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -8,10 +8,16 @@ from dateutil.relativedelta import relativedelta
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import Error as GoogleApiClientError
-from pydantic import Field, PrivateAttr, SecretStr, create_model
+from pydantic import Field, PrivateAttr, create_model
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    PlainJsonSecretStr,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 
 class GoogleSheetsDataSource(ToucanDataSource):
@@ -35,13 +41,25 @@ class GoogleSheetsDataSource(ToucanDataSource):
         True, title='Dates as floats', description='Render Date as Floats or String from the sheet'
     )
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['GoogleSheetsDataSource']) -> None:
-            keys = schema['properties'].keys()
-            prio_keys = ['domain', 'spreadsheet_id', 'sheet']
-            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        prio_keys = ['domain', 'spreadsheet_id', 'sheet']
+        new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
     @classmethod
     def get_form(cls, connector: 'GoogleSheetsConnector', current_config, **kwargs):
@@ -55,7 +73,7 @@ class GoogleSheetsDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class GoogleSheetsConnector(ToucanConnector):
+class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataSource):
     """
     This is a connector for [GoogleSheets](https://developers.google.com/sheets/api/reference/rest)
 
@@ -63,14 +81,12 @@ class GoogleSheetsConnector(ToucanConnector):
     Not to be confused with the OAuth2 connector, which handles all the OAuth2 process byt itself!
     """
 
-    data_source_model: GoogleSheetsDataSource
-
     _auth_flow = 'managed_oauth2'
     _managed_oauth_service_id = 'google-sheets'
     _oauth_trigger = 'retrieve_token'
     _retrieve_token: Callable[[str, str], str] = PrivateAttr()
 
-    auth_id: SecretStr = None
+    auth_id: PlainJsonSecretStr = None
 
     def __init__(self, retrieve_token: Callable[[str, str], str], *args, **kwargs):
         super().__init__(**kwargs)

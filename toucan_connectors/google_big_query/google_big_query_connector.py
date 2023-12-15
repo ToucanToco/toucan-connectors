@@ -16,7 +16,7 @@ from google.cloud import bigquery
 from google.cloud.bigquery.dbapi import _helpers as bigquery_helpers
 from google.cloud.bigquery.job import QueryJob
 from google.oauth2.service_account import Credentials
-from pydantic import Field, create_model
+from pydantic import ConfigDict, Field, create_model
 
 from toucan_connectors.common import sanitize_query
 from toucan_connectors.google_credentials import (
@@ -122,9 +122,9 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
         return bigquery_helpers.scalar_to_query_parameter(value=value, name=name)
 
 
-class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
-    data_source_model: GoogleBigQueryDataSource
-
+class GoogleBigQueryConnector(
+    ToucanConnector, DiscoverableConnector, data_source_model=GoogleBigQueryDataSource
+):
     # for GoogleCredentials
     credentials: GoogleCredentials | None = Field(
         None,
@@ -157,10 +157,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
         'the Google APIs. For more information, see this '
         '<a href="https://developers.google.com/identity/protocols/googlescopes" target="_blank" >documentation</a>',
     )
-
-    class Config:
-        underscore_attrs_are_private = True
-        keep_untouched = (cached_property,)
+    model_config = ConfigDict(ignored_types=(cached_property,))
 
     @staticmethod
     def _get_google_credentials(credentials: GoogleCredentials, scopes: list[str]) -> Credentials:

@@ -479,7 +479,7 @@ def test_datasource_get_form_no_secret(gc, remove_secrets):
         status=200,
     )
     res = ds.get_form(connector=gc, current_config={})
-    assert 'organization' not in res['definitions'].keys()
+    assert 'organization' not in res['$defs'].keys()
 
 
 def test_get_slice(

@@ -2,17 +2,23 @@ from contextlib import suppress
 
 import cx_Oracle
 import pandas as pd
-from pydantic import Field, SecretStr, constr, create_model
+from pydantic import Field, StringConstraints, create_model
+from typing_extensions import Annotated
 
 from toucan_connectors.common import pandas_read_sql
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.toucan_connector import (
+    PlainJsonSecretStr,
+    ToucanConnector,
+    ToucanDataSource,
+    strlist_to_enum,
+)
 
 
 class OracleSQLDataSource(ToucanDataSource):
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None, description='You can write your SQL query here', widget='sql'
     )
-    table: constr(min_length=1) = Field(
+    table: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
         description='The name of the data table that you want to '
         'get (equivalent to "SELECT * FROM "your_table")',
@@ -50,9 +56,7 @@ class OracleSQLDataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class OracleSQLConnector(ToucanConnector):
-    data_source_model: OracleSQLDataSource
-
+class OracleSQLConnector(ToucanConnector, data_source_model=OracleSQLDataSource):
     dsn: str = Field(
         ...,
         description='A path following the '
@@ -61,7 +65,7 @@ class OracleSQLConnector(ToucanConnector):
         examples=['localhost:80/service'],
     )
     user: str = Field(None, description='Your login username')
-    password: SecretStr = Field(None, description='Your login password')
+    password: PlainJsonSecretStr = Field(None, description='Your login password')
     encoding: str = Field(
         None, title='Charset', description='If you need to specify a specific character encoding.'
     )

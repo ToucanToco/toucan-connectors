@@ -11,13 +11,11 @@ class DataikuDataSource(ToucanDataSource):
     dataset: str
 
 
-class DataikuConnector(ToucanConnector):
+class DataikuConnector(ToucanConnector, data_source_model=DataikuDataSource):
     """
     This is a basic connector for [Dataiku](https://www.dataiku.com/) using their
     [DSS API](https://doc.dataiku.com/dss/2.0/api/index.html).
     """
-
-    data_source_model: DataikuDataSource
 
     host: str = Field(
         ...,

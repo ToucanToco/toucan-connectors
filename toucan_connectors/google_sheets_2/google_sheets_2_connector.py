@@ -5,11 +5,12 @@ import asyncio
 import os
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, List
 
 import pandas as pd
 from aiohttp import ClientSession
 from pydantic import Field, PrivateAttr, create_model
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 
 from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -55,25 +56,35 @@ class GoogleSheets2DataSource(ToucanDataSource):
         description='Can be found in your URL: '
         'https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...',
     )
-    sheet: Optional[str] = Field(
-        None, title='Sheet title', description='Title of the desired sheet'
-    )
+    sheet: str | None = Field(None, title='Sheet title', description='Title of the desired sheet')
     header_row: int = Field(
         0, title='Header row', description='Row of the header of the spreadsheet'
     )
-    rows_limit: int = Field(
+    rows_limit: int | None = Field(
         None, title='Rows limit', description='Maximum number of rows to retrieve'
     )
     parameters: dict = Field(None, description='Additional URL parameters')
     parse_dates: List[str] = Field([], title='Dates column', description='Columns to parse as date')
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['GoogleSheets2DataSource']) -> None:
-            keys = schema['properties'].keys()
-            prio_keys = ['domain', 'spreadsheet_id', 'sheet']
-            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = 'validation',
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema['properties'].keys()
+        prio_keys = ['domain', 'spreadsheet_id', 'sheet']
+        new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        return schema
 
     @classmethod
     def get_form(cls, connector: 'GoogleSheets2Connector', current_config, **kwargs):
@@ -90,15 +101,13 @@ class GoogleSheets2DataSource(ToucanDataSource):
         return create_model('FormSchema', **constraints, __base__=cls).schema()
 
 
-class GoogleSheets2Connector(ToucanConnector):
+class GoogleSheets2Connector(ToucanConnector, data_source_model=GoogleSheets2DataSource):
     """The Google Sheets connector."""
-
-    data_source_model: GoogleSheets2DataSource
 
     _auth_flow = 'oauth2'
     _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
-    auth_flow_id: Optional[str]
+    oauth2_version: str = Field('1', **{'ui.hidden': True})
+    auth_flow_id: str | None = None
 
     # TODO: turn into a class property
     _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
@@ -221,10 +230,10 @@ class GoogleSheets2Connector(ToucanConnector):
     def get_slice(
         self,
         data_source: GoogleSheets2DataSource,
-        permissions: Optional[dict] = None,
+        permissions: dict | None = None,
         offset: int = 0,
         limit=50,
-        get_row_count: Optional[bool] = False,
+        get_row_count: bool | None = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe

@@ -4,25 +4,25 @@ from typing import List, Optional, Tuple
 import pandas as pd
 import pyodbc
 import requests
-from pydantic import Field, SecretStr, constr
+from pydantic import Field, StringConstraints
 from requests.auth import HTTPBasicAuth
+from typing_extensions import Annotated
 
 from toucan_connectors.common import ClusterStartException, ConnectorStatus, pandas_read_sql
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
 
 logger = logging.getLogger(__name__)
 
 
 class DatabricksDataSource(ToucanDataSource):
-    query: constr(min_length=1) = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(
         ...,
         description='You can write a query here',
         widget='sql',
     )
 
 
-class DatabricksConnector(ToucanConnector):
-    data_source_model: DatabricksDataSource
+class DatabricksConnector(ToucanConnector, data_source_model=DatabricksDataSource):
     host: str = Field(
         ...,
         description='The listening address of your databricks cluster',
@@ -39,7 +39,7 @@ class DatabricksConnector(ToucanConnector):
         description='"token" if you use a personal access token, or username if you connect by username/password',
         placeholder='token',
     )
-    pwd: SecretStr = Field(
+    pwd: PlainJsonSecretStr = Field(
         ...,
         description='Your personal access token, or password if you connect by username/password',
         placeholder='dapixxxxxxxxxxx',

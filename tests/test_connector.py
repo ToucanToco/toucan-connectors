@@ -29,9 +29,8 @@ class DataSource(ToucanDataSource):
     parameters: dict = {}
 
 
-class DataConnector(ToucanConnector):
-    type = 'MyDB'
-    data_source_model: DataSource
+class DataConnector(ToucanConnector, data_source_model=DataSource):
+    type: str = 'MyDB'
     a_parameter: str = ''
 
     def _retrieve_data(self, data_source):
@@ -41,21 +40,18 @@ class DataConnector(ToucanConnector):
 ################################################
 def test_missing_attributes():
     # missing data_source_model
-    with pytest.raises(TypeError) as exc_info:
+    with pytest.raises(TypeError, match='data_source_model'):
 
         class MissingDataConnector2(ToucanConnector):
-            type = 'MyDB'
+            type: str = 'MyDB'
 
             def _retrieve_data(self, data_source):
                 pass
 
-    assert str(exc_info.value) == "MissingDataConnector2 has no 'data_source_model' attribute."
-
 
 def test_no_get_df():
-    class BadDataConnector(ToucanConnector):
-        type = 'MyDB'
-        data_source_model = 'asd'
+    class BadDataConnector(ToucanConnector, data_source_model=DataSource):
+        type: str = 'MyDB'
 
     with pytest.raises(TypeError):
         BadDataConnector(name='my_name')
@@ -74,9 +70,8 @@ def test_validate():
 
 
 def test_formated_engine_version():
-    class DataConnector(ToucanConnector, VersionableEngineConnector):
-        type = 'MyDB'
-        data_source_model: DataSource
+    class DataConnector(ToucanConnector, VersionableEngineConnector, data_source_model=DataSource):
+        type: str = 'MyDB'
 
         def get_engine_version(self) -> tuple:
             return super().get_engine_version()
@@ -99,9 +94,8 @@ def test_formated_engine_version():
 
 
 def test_get_df_with_permissions():
-    class DataConnector(ToucanConnector):
-        type = 'MyDB'
-        data_source_model: DataSource
+    class DataConnector(ToucanConnector, data_source_model=DataSource):
+        type: str = 'MyDB'
 
         def _retrieve_data(self, datasource):
             return pd.DataFrame({'A': [1, 2]})
@@ -113,9 +107,8 @@ def test_get_df_with_permissions():
 
 
 def test_get_slice():
-    class DataConnector(ToucanConnector):
-        type = 'MyDB'
-        data_source_model = 'asd'
+    class DataConnector(ToucanConnector, data_source_model=DataSource):
+        type: str = 'MyDB'
 
         def _retrieve_data(self, datasource):
             return pd.DataFrame({'A': [1, 2, 3, 4, 5]})
@@ -144,9 +137,8 @@ def test_get_slice():
 
 
 def test_explain():
-    class DataConnector(ToucanConnector):
-        type = 'MyDB'
-        data_source_model = 'asd'
+    class DataConnector(ToucanConnector, data_source_model=DataSource):
+        type: str = 'MyDB'
 
         def _retrieve_data(self, datasource):
             return pd.DataFrame()
@@ -166,7 +158,7 @@ def test_get_cache_key():
     key = connector.get_cache_key(ds)
     # We should get a deterministic identifier:
     # /!\ the identifier will change if the model of the connector or the datasource changes
-    assert key == '10ae8360-5e30-319e-8cb8-a8a817826d12'
+    assert key == 'cc66ddcd-e717-381f-838e-f960e6cb410e'
 
     ds.query = 'wow'
     key2 = connector.get_cache_key(ds)
@@ -212,9 +204,8 @@ def test_get_cache_key_should_be_different_with_different_permissions():
     assert key_a1 != key_a2
 
 
-class UnreliableDataConnector(ToucanConnector):
-    type = 'MyUnreliableDB'
-    data_source_model: DataSource
+class UnreliableDataConnector(ToucanConnector, data_source_model=DataSource):
+    type: str = 'MyUnreliableDB'
 
     def _retrieve_data(self, data_source, logbook=[]):
         if len(logbook) < 3:
@@ -231,9 +222,8 @@ def test_max_attempt_df():
     assert result == 42
 
 
-class CustomPolicyDataConnector(ToucanConnector):
-    type = 'MyUnreliableDB'
-    data_source_model: DataSource
+class CustomPolicyDataConnector(ToucanConnector, data_source_model=DataSource):
+    type: str = 'MyUnreliableDB'
 
     def _retrieve_data(self, data_source, logbook=[]):
         if len(logbook) < 3:
@@ -253,9 +243,8 @@ def test_custom_max_attempt_df():
     assert result['1'].values.tolist() == [42, 32]
 
 
-class CustomRetryOnDataConnector(ToucanConnector):
-    type = 'MyUnreliableDB'
-    data_source_model: DataSource
+class CustomRetryOnDataConnector(ToucanConnector, data_source_model=DataSource):
+    type: str = 'MyUnreliableDB'
     _retry_on = (ValueError,)
 
     def _retrieve_data(self, data_source, logbook=[]):
@@ -272,9 +261,8 @@ def test_custom_retry_on_df():
         udc.get_df({})
 
 
-class CustomNoRetryOnDataConnector(ToucanConnector):
-    type = 'MyUnreliableDB'
-    data_source_model: DataSource
+class CustomNoRetryOnDataConnector(ToucanConnector, data_source_model=DataSource):
+    type: str = 'MyUnreliableDB'
 
     @property
     def retry_decorator(self):
@@ -297,18 +285,17 @@ def test_no_retry_on_df():
 def test_strlist_to_enum_required():
     """It should be required by default"""
     model = create_model('Test', pokemon=strlist_to_enum('pokemon', ['pika', 'bulbi']))
-    assert model.schema() == {
+    assert model.model_json_schema() == {
         'title': 'Test',
         'type': 'object',
-        'definitions': {
+        '$defs': {
             'pokemon': {
-                'description': 'An enumeration.',
                 'enum': ['pika', 'bulbi'],
                 'title': 'pokemon',
                 'type': 'string',
             }
         },
-        'properties': {'pokemon': {'$ref': '#/definitions/pokemon'}},
+        'properties': {'pokemon': {'$ref': '#/$defs/pokemon'}},
         'required': ['pokemon'],
     }
 
@@ -316,27 +303,24 @@ def test_strlist_to_enum_required():
 def test_strlist_to_enum_default_value():
     """It should be possible to add a default value (not required)"""
     model = create_model('Test', pokemon=strlist_to_enum('pokemon', ['pika', 'bulbi'], 'pika'))
-    assert model.schema() == {
+    assert model.model_json_schema() == {
         'title': 'Test',
         'type': 'object',
-        'definitions': {
+        '$defs': {
             'pokemon': {
-                'description': 'An enumeration.',
                 'enum': ['pika', 'bulbi'],
                 'title': 'pokemon',
                 'type': 'string',
             }
         },
-        'properties': {
-            'pokemon': {'allOf': [{'$ref': '#/definitions/pokemon'}], 'default': 'pika'}
-        },
+        'properties': {'pokemon': {'allOf': [{'$ref': '#/$defs/pokemon'}], 'default': 'pika'}},
     }
 
 
 def test_should_return_connector_config_form():
     assert (
         get_connector_secrets_form(GoogleSheets2Connector).secrets_schema
-        == OAuth2ConnectorConfig.schema()
+        == OAuth2ConnectorConfig.model_json_schema()
     )
     assert get_connector_secrets_form(MongoConnector) is None
 
@@ -344,9 +328,8 @@ def test_should_return_connector_config_form():
 def test_get_df_int_column(mocker):
     """The int column should be casted as str"""
 
-    class DataConnector(ToucanConnector):
-        type = 'MyDB'
-        data_source_model: DataSource
+    class DataConnector(ToucanConnector, data_source_model=DataSource):
+        type: str = 'MyDB'
 
         def _retrieve_data(self, datasource):
             return pd.DataFrame({0: [1, 2]})
@@ -356,9 +339,8 @@ def test_get_df_int_column(mocker):
 
 
 def test_default_implementation_of_discoverable_connector():
-    class DataConnector(ToucanConnector, DiscoverableConnector):
-        type = 'MyDB'
-        data_source_model: DataSource
+    class DataConnector(ToucanConnector, DiscoverableConnector, data_source_model=DataSource):
+        type: str = 'MyDB'
 
         def _retrieve_data(self, datasource):
             return pd.DataFrame()

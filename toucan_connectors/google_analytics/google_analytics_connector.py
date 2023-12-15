@@ -1,9 +1,7 @@
-from typing import List
-
 import pandas as pd
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.google_credentials import GoogleCredentials
@@ -16,23 +14,20 @@ VERSION = 'v4'
 
 class Dimension(BaseModel):
     name: str
-    histogramBuckets: List[str] = None
+    histogramBuckets: list[str] | None = None
 
 
 class DimensionFilter(BaseModel):
     dimensionName: str
     operator: str
-    expressions: List[str] = None
+    expressions: list[str] | None = None
     caseSensitive: bool = False
-
-    class Config:
-        # TODO `not` param is not implemented
-        extra = 'allow'
+    model_config = ConfigDict(extra='allow')
 
 
 class DimensionFilterClause(BaseModel):
     operator: str
-    filters: List[DimensionFilter]
+    filters: list[DimensionFilter]
 
 
 class DateRange(BaseModel):
@@ -42,71 +37,65 @@ class DateRange(BaseModel):
 
 class Metric(BaseModel):
     expression: str
-    alias: str = None
-
-    class Config:
-        # TODO `metricType` param is not implemented
-        extra = 'allow'
+    alias: str | None = None
+    model_config = ConfigDict(extra='allow')
 
 
 class MetricFilter(BaseModel):
     metricName: str
     operator: str
     comparisonValue: str
-
-    class Config:
-        # TODO `not` param is not implemented
-        extra = 'allow'
+    model_config = ConfigDict(extra='allow')
 
 
 class MetricFilterClause(BaseModel):
     operator: str
-    filters: List[MetricFilter]
+    filters: list[MetricFilter]
 
 
 class OrderBy(BaseModel):
     fieldName: str
-    orderType: str = None
-    sortOrder: str = None
+    orderType: str | None = None
+    sortOrder: str | None = None
 
 
 class Pivot(BaseModel):
-    dimensions: List[Dimension] = None
-    dimensionFilterClauses: List[DimensionFilterClause] = None
-    metrics: List[Metric] = None
-    startGroup: int = None
-    maxGroupCount: int = None
+    dimensions: list[Dimension] | None = None
+    dimensionFilterClauses: list[DimensionFilterClause] | None = None
+    metrics: list[Metric] | None = None
+    startGroup: int | None = None
+    maxGroupCount: int | None = None
 
 
 class Cohort(BaseModel):
     name: str
     type: str
-    dateRange: DateRange = None
+    dateRange: DateRange | None = None
 
 
 class CohortGroup(BaseModel):
-    cohorts: List[Cohort]
+    cohorts: list[Cohort]
     lifetimeValue: bool = False
 
 
 class Segment(BaseModel):
-    segmentId: str = None
+    segmentId: str | None = None
     # TODO dynamicSegment: DynamicSegment
 
 
 class ReportRequest(BaseModel):
     viewId: str
-    dateRanges: List[DateRange] = None
-    samplingLevel: str = None
-    dimensions: List[Dimension] = None
-    dimensionFilterClauses: List[DimensionFilterClause] = None
-    metrics: List[Metric] = None
-    metricFilterClauses: List[MetricFilterClause] = None
+    dateRanges: list[DateRange] | None = None
+    samplingLevel: str | None = None
+    dimensions: list[Dimension] | None = None
+    dimensionFilterClauses: list[DimensionFilterClause] | None = None
+    metrics: list[Metric] | None = None
+    metricFilterClauses: list[MetricFilterClause] | None = None
     filtersExpression: str = ''
-    orderBys: List[OrderBy] = []
-    segments: List[Segment] = []
-    pivots: List[Pivot] = None
-    cohortGroup: CohortGroup = None
+    orderBys: list[OrderBy] = []
+    segments: list[Segment] = []
+    pivots: list[Pivot] | None = None
+    cohortGroup: CohortGroup | None = None
     pageToken: str = ''
     pageSize: int = 10000
     includeEmptyRows: bool = False
@@ -166,9 +155,7 @@ class GoogleAnalyticsDataSource(ToucanDataSource):
     )
 
 
-class GoogleAnalyticsConnector(ToucanConnector):
-    data_source_model: GoogleAnalyticsDataSource
-
+class GoogleAnalyticsConnector(ToucanConnector, data_source_model=GoogleAnalyticsDataSource):
     credentials: GoogleCredentials = Field(
         ...,
         title='Google Credentials',
@@ -179,7 +166,7 @@ class GoogleAnalyticsConnector(ToucanConnector):
         'You should use "service_account" credentials, which is the preferred type of credentials '
         'to use when authenticating on behalf of a service or application',
     )
-    scope: List[str] = Field(
+    scope: list[str] = Field(
         [SCOPE],
         description='OAuth 2.0 scopes define the level of access you need to '
         'request the Google APIs. For more information, see this '

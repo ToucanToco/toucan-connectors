@@ -1,6 +1,7 @@
 import os
 import re
 from datetime import datetime
+from typing import Callable
 
 import pandas as pd
 import pymongo
@@ -239,7 +240,9 @@ def test_get_df_with_permissions(mongo_connector, mongo_datasource):
     assert df[['country', 'language', 'value', 'name']].equals(expected)
 
 
-def test_get_slice(mongo_connector, mongo_datasource):
+def test_get_slice(
+    mongo_connector: MongoConnector, mongo_datasource: Callable[..., MongoDataSource]
+):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.get_slice(datasource)
     assert res.pagination_info.pagination_info.total_rows == 5
@@ -664,10 +667,9 @@ def test_get_form_empty_query(mongo_connector):
     current_config = {}
     form = MongoDataSource.get_form(mongo_connector, current_config)
     assert form['required'] == ['domain', 'name', 'database', 'collection']
-    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
-    assert form['definitions']['database'] == {
+    assert form['properties']['database'] == {'$ref': '#/$defs/database'}
+    assert form['$defs']['database'] == {
         'title': 'database',
-        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['admin', 'config', 'local', 'toucan'],
     }
@@ -690,19 +692,17 @@ def test_get_form_query_with_good_database(mongo_connector):
     current_config = {'database': 'toucan'}
     form = MongoDataSource.get_form(mongo_connector, current_config)
     assert form['required'] == ['domain', 'name', 'database', 'collection']
-    assert form['properties']['database'] == {'$ref': '#/definitions/database'}
-    assert form['definitions']['database'] == {
+    assert form['properties']['database'] == {'$ref': '#/$defs/database'}
+    assert form['$defs']['database'] == {
         'title': 'database',
-        'description': 'An enumeration.',
         'type': 'string',
         'enum': ['admin', 'config', 'local', 'toucan'],
     }
-    assert form['properties']['collection'] == {'$ref': '#/definitions/collection'}
-    assert form['definitions']['collection'] == {
+    assert form['properties']['collection'] == {'$ref': '#/$defs/collection'}
+    assert form['$defs']['collection'] == {
         'title': 'collection',
-        'description': 'An enumeration.',
         'type': 'string',
-        'enum': ['test_col'],
+        'const': 'test_col',
     }
 
 
@@ -854,7 +854,9 @@ def test_get_cache_key(mongo_connector):
     assert conn1.get_cache_key() != conn2.get_cache_key()
 
 
-def test_get_cache_key_with_datasource(mongo_connector, mongo_datasource):
+def test_get_cache_key_with_datasource(
+    mongo_connector: MongoConnector, mongo_datasource: Callable[..., MongoConnector]
+):
     datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     datasource_with_parameters = mongo_datasource(
         collection='test_col', query={'domain': '{{ DOMAIN }}'}, parameters={'DOMAIN': 'domain1'}
