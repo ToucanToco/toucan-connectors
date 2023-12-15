@@ -5,6 +5,8 @@ from contextlib import suppress
 from importlib import import_module
 from pathlib import Path
 
+from .toucan_connector import DataSlice, ToucanConnector, ToucanDataSource  # noqa: F401
+
 __version__ = lib_meta.version(__package__ or __name__)
 
 CONNECTORS_REGISTRY = {
@@ -277,7 +279,7 @@ for connector_type, connector_infos in CONNECTORS_REGISTRY.items():
             connector_infos['_managed_oauth_service_id'] = connector_cls._managed_oauth_service_id
         # check if connector implements `get_status`,
         # which is hence different from `ToucanConnector.get_status`
-        connector_infos['hasStatusCheck'] = connector_cls.get_status is not connector_cls.__bases__[0].get_status
+        connector_infos['hasStatusCheck'] = connector_cls.get_status is not connector_cls.__bases__[0].get_status  # type: ignore[assignment]
 
     # Set default label if not set
     if 'label' not in connector_infos:
