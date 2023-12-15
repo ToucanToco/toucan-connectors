@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## Unreleased
+
+### Changed
+
+- Postgres: Materialized views are now returned as well via `get_model`. Their type is `'view'`.
+
 ## [4.9.6] 2023-11-23
 
 ### Fixed

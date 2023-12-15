@@ -110,6 +110,35 @@ def postgres_db_model() -> list[dict]:
     ]
 
 
+@pytest.fixture
+def postgres_db_model_with_materialized_views(postgres_db_model: list[dict]) -> list[dict]:
+    return postgres_db_model + [
+        {
+            'database': 'postgres_db',
+            'name': 'country_materialized_view',
+            'schema': 'public',
+            'type': 'view',
+            'columns': [
+                {'name': 'code', 'type': 'character'},
+                {'name': 'name', 'type': 'text'},
+                {'name': 'continent', 'type': 'text'},
+                {'name': 'region', 'type': 'text'},
+                {'name': 'surfacearea', 'type': 'real'},
+                {'name': 'indepyear', 'type': 'smallint'},
+                {'name': 'population', 'type': 'integer'},
+                {'name': 'lifeexpectancy', 'type': 'real'},
+                {'name': 'gnp', 'type': 'numeric'},
+                {'name': 'gnpold', 'type': 'numeric'},
+                {'name': 'localname', 'type': 'text'},
+                {'name': 'governmentform', 'type': 'text'},
+                {'name': 'headofstate', 'type': 'text'},
+                {'name': 'capital', 'type': 'integer'},
+                {'name': 'code2', 'type': 'character'},
+            ],
+        }
+    ]
+
+
 def test_get_status_all_good(postgres_connector):
     assert postgres_connector.get_status() == ConnectorStatus(
         status=True,
@@ -451,6 +480,19 @@ def test_get_model(postgres_connector: PostgresConnector, postgres_db_model: lis
     """Check that it returns the db tree structure"""
     assert postgres_connector.get_model() == postgres_db_model
     assert postgres_connector.get_model(db_name='postgres_db') == postgres_db_model
+    assert postgres_connector.get_model(db_name='another_db') == []
+
+
+def test_get_model_with_materialized_views(
+    postgres_connector: PostgresConnector, postgres_db_model_with_materialized_views: list[dict]
+) -> None:
+    """Check that it returns the db tree structure"""
+    postgres_connector.include_materialized_views = True
+    assert postgres_connector.get_model() == postgres_db_model_with_materialized_views
+    assert (
+        postgres_connector.get_model(db_name='postgres_db')
+        == postgres_db_model_with_materialized_views
+    )
     assert postgres_connector.get_model(db_name='another_db') == []
 
 
