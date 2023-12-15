@@ -3,22 +3,22 @@ import json
 import pandas as pd
 
 types_map = {
-    16: 'BOOLEAN',
-    20: 'BIGINT',
-    21: 'SMALLINT',
-    23: 'INTEGER',
-    700: 'REAL',
-    701: 'DOUBLE_PRECISION',
-    1008: 'VARCHAR',
-    1009: 'VARCHAR',
-    1014: 'VARCHAR',
-    1015: 'VARCHAR',
-    1082: 'DATE',
-    1043: 'VARCHAR',
-    1114: 'TIMESTAMPTZ',
-    1184: 'TIMESTAMPTZ',
-    1700: 'DECIMAL',
-    2951: 'VARCHAR',
+    16: "BOOLEAN",
+    20: "BIGINT",
+    21: "SMALLINT",
+    23: "INTEGER",
+    700: "REAL",
+    701: "DOUBLE_PRECISION",
+    1008: "VARCHAR",
+    1009: "VARCHAR",
+    1014: "VARCHAR",
+    1015: "VARCHAR",
+    1082: "DATE",
+    1043: "VARCHAR",
+    1114: "TIMESTAMPTZ",
+    1184: "TIMESTAMPTZ",
+    1700: "DECIMAL",
+    2951: "VARCHAR",
 }
 
 
@@ -28,16 +28,14 @@ def create_columns_query(database: str):
         """ || '"' || ',' ||  '"type"' ||  ':'  || '"' || c.data_type  || '"' || CHR(125), '""', '"')"""
     )
     return (
-        f'SELECT table_catalog as database, table_name as name, {records} as columns from information_schema.columns c '
+        f"SELECT table_catalog as database, table_name as name, {records} as columns from information_schema.columns c "
         f"WHERE table_schema not in ('information_schema', 'pg_catalog') and table_name not like 'redshift%'"
     )
 
 
 def aggregate_columns(df: pd.DataFrame):
-    df['columns'] = df['columns'].apply(json.loads)
-    df = pd.DataFrame(
-        df.groupby(['database', 'name'])['columns'].apply(lambda x: list(x))
-    ).reset_index()
+    df["columns"] = df["columns"].apply(json.loads)
+    df = pd.DataFrame(df.groupby(["database", "name"])["columns"].apply(lambda x: list(x))).reset_index()
     return df
 
 
@@ -56,5 +54,5 @@ def build_database_model_extraction_query() -> str:
 
 
 def merge_columns_and_tables(cols: pd.DataFrame, tables: pd.DataFrame):
-    output = pd.merge(tables, cols, on=['database', 'name'])
-    return output.to_dict('records')
+    output = pd.merge(tables, cols, on=["database", "name"])
+    return output.to_dict("records")

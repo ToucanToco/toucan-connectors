@@ -10,12 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class Status(Enum):
-    NOT_START = 'connection not start'
-    AVAILABLE = 'connection available'
-    QUERY_IN_PROGRESS = 'query in progress'
-    CONNECTION_IN_PROGRESS = 'connection in progress'
-    CLOSE_IN_PROGRESS = 'connection closing in progress'
-    CLOSED = 'connection closed'
+    NOT_START = "connection not start"
+    AVAILABLE = "connection available"
+    QUERY_IN_PROGRESS = "query in progress"
+    CONNECTION_IN_PROGRESS = "connection in progress"
+    CLOSE_IN_PROGRESS = "connection closing in progress"
+    CLOSED = "connection closed"
 
 
 class ConnectionBO:
@@ -70,12 +70,10 @@ class ConnectionBO:
     def exec_alive(self):
         try:
             result = self.alive(self.connection)
-            logger.debug(f'Connection alive result {result}')
+            logger.debug(f"Connection alive result {result}")
             return result
         except Exception as e:
-            logger.warning(
-                'Alive connection needed but no alive method defined or alive method is not callable'
-            )
+            logger.warning("Alive connection needed but no alive method defined or alive method is not callable")
             raise e
 
     def exec_close(self) -> bool:
@@ -100,7 +98,7 @@ class ConnectionBO:
 
 class ConnectionManager:
     def __init__(self, **kwargs):
-        self.name: str = 'connection_manager'
+        self.name: str = "connection_manager"
         self.connection_list: Dict[str, ConnectionBO] = {}
 
         self.timeout = 5
@@ -125,13 +123,11 @@ class ConnectionManager:
                 is_closed = self.connection_list[identifier].exec_close()
                 if is_closed:
                     del self.connection_list[identifier]
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
 
     def _clean(self):
-        logger.debug(
-            f'{self} - Check if connection exists ({len(self.connection_list)} open connections)'
-        )
+        logger.debug(f"{self} - Check if connection exists ({len(self.connection_list)} open connections)")
 
         self.lock = True
 
@@ -143,23 +139,19 @@ class ConnectionManager:
             try:
                 if co.is_ready():
                     if not co.exec_alive():
-                        logger.debug('Close connection - connection not alive')
+                        logger.debug("Close connection - connection not alive")
                         list_connection_to_remove.append(identifier)
                     elif co.t_get and tt - co.t_get > self.time_keep_alive:
-                        logger.debug(
-                            f'Close connection - alive too long ({tt - co.t_get} > {self.time_keep_alive})'
-                        )
+                        logger.debug(f"Close connection - alive too long ({tt - co.t_get} > {self.time_keep_alive})")
                         list_connection_to_remove.append(identifier)
                 elif not co.is_ready() and co.t_start and tt - co.t_start > self.connection_timeout:
                     logger.debug(
-                        f'Close connection - connection too long ({tt - co.t_start} > {self.connection_timeout})'
+                        f"Close connection - connection too long ({tt - co.t_start} > {self.connection_timeout})"
                     )
                     list_connection_to_remove.append(identifier)
             except Exception:
                 if co.t_get and tt - co.t_get > self.time_keep_alive:
-                    logger.debug(
-                        f'Close connection - alive too long ({tt - co.t_get} > {self.time_keep_alive})'
-                    )
+                    logger.debug(f"Close connection - alive too long ({tt - co.t_get} > {self.time_keep_alive})")
                     list_connection_to_remove.append(identifier)
                 continue
 
@@ -187,9 +179,7 @@ class ConnectionManager:
         close_method,
         save: bool = True,
     ):
-        if isinstance(connect_method, types.FunctionType) or isinstance(
-            connect_method, types.MethodType
-        ):
+        if isinstance(connect_method, types.FunctionType) or isinstance(connect_method, types.MethodType):
             cbo = ConnectionBO(
                 status=Status.CONNECTION_IN_PROGRESS,
                 connect=connect_method,
@@ -207,20 +197,20 @@ class ConnectionManager:
                 cbo.update(status=Status.AVAILABLE, connection=c)
             return cbo.get_connection()
         else:
-            raise Exception('Connection is not a method')
+            raise Exception("Connection is not a method")
 
     def get(self, identifier: str, connect_method, alive_method, close_method, save: bool = True):
         """Retrieve or create connection if not exist in connection_list"""
-        logger.debug(f'Get element in Dict {identifier}')
+        logger.debug(f"Get element in Dict {identifier}")
         if (
             identifier is not None
             and identifier in self.connection_list
             and self.connection_list[identifier].is_ready()
         ):
-            logging.getLogger(__name__).debug('Connection exist')
+            logging.getLogger(__name__).debug("Connection exist")
             return self.connection_list[identifier].get_connection()
         else:
-            logger.debug('Connection does not exist, create and save it')
+            logger.debug("Connection does not exist, create and save it")
             return self._create(identifier, connect_method, alive_method, close_method, save)
 
     def force_clean(self):

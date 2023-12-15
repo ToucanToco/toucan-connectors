@@ -6,16 +6,16 @@ from urllib.parse import urlparse
 import pandas as pd
 from elasticsearch import Elasticsearch
 from pandas.io.json import json_normalize
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
-from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
 
 
 def _is_branch_list(val):
     res = False
     if isinstance(val, dict):
-        for k, v in val.items():
+        for _k, v in val.items():
             if _is_branch_list(v):
                 res = True
                 break
@@ -62,7 +62,7 @@ def _flatten_aggregations(data, parent=None, neighbours=None):
                 data.pop(k)
 
         for k, v in data.items():
-            new_parent = f'{parent}_{k}' if parent else k
+            new_parent = f"{parent}_{k}" if parent else k
             neighbours = _flatten_aggregations(v, new_parent, neighbours)
 
         if not branch_l:
@@ -70,7 +70,7 @@ def _flatten_aggregations(data, parent=None, neighbours=None):
         else:
             res = []
             for k, v in branch_l.items():
-                new_parent = f'{parent}_{k}' if parent else k
+                new_parent = f"{parent}_{k}" if parent else k
                 if isinstance(v, list):  # buckets
                     new_list = []
                     for elt in v:
@@ -88,12 +88,12 @@ def _flatten_aggregations(data, parent=None, neighbours=None):
 
 
 def _read_response(response):
-    if 'aggregations' in response:
-        res = _flatten_aggregations(response['aggregations'])
+    if "aggregations" in response:
+        res = _flatten_aggregations(response["aggregations"])
         if isinstance(res, dict):
             res = [res]
     else:
-        res = [elt['_source'] for elt in response['hits']['hits']]
+        res = [elt["_source"] for elt in response["hits"]["hits"]]
     return res
 
 
@@ -102,13 +102,13 @@ class ElasticsearchHost(BaseModel):
     port: int = None
     scheme: str = None
     username: str = None
-    password: SecretStr = Field(None, description='Your login password')
+    password: PlainJsonSecretStr = Field(None, description="Your login password")
     headers: dict = None
 
 
 class SearchMethod(str, Enum):
-    search = 'search'
-    msearch = 'msearch'
+    search = "search"
+    msearch = "msearch"
 
 
 class ElasticsearchDataSource(ToucanDataSource):
@@ -117,8 +117,7 @@ class ElasticsearchDataSource(ToucanDataSource):
     body: Union[dict, list]
 
 
-class ElasticsearchConnector(ToucanConnector):
-    data_source_model: ElasticsearchDataSource
+class ElasticsearchConnector(ToucanConnector, data_source_model=ElasticsearchDataSource):
     hosts: List[ElasticsearchHost]
 
     def _retrieve_data(self, data_source: ElasticsearchDataSource) -> pd.DataFrame:
@@ -126,34 +125,32 @@ class ElasticsearchConnector(ToucanConnector):
         connection_params = []
         for host in self.hosts:
             parsed_url = urlparse(host.url)
-            h = {'host': parsed_url.hostname}
+            h = {"host": parsed_url.hostname}
 
-            if parsed_url.path and parsed_url.path != '/':
-                h['url_prefix'] = parsed_url.path
-            if parsed_url.scheme == 'https':
-                h['port'] = host.port or 443
-                h['use_ssl'] = True
-                h['scheme'] = parsed_url.scheme
+            if parsed_url.path and parsed_url.path != "/":
+                h["url_prefix"] = parsed_url.path
+            if parsed_url.scheme == "https":
+                h["port"] = host.port or 443
+                h["use_ssl"] = True
+                h["scheme"] = parsed_url.scheme
             elif host.port:
-                h['port'] = host.port
-                h['scheme'] = parsed_url.scheme
+                h["port"] = host.port
+                h["scheme"] = parsed_url.scheme
 
             if host.username or host.password:
-                h['http_auth'] = f'{host.username}:{host.password.get_secret_value()}'
+                h["http_auth"] = f"{host.username}:{host.password.get_secret_value()}"
             if host.headers:
-                h['headers'] = host.headers
+                h["headers"] = host.headers
             connection_params.append(h)
 
         esclient = Elasticsearch(connection_params)
-        response = getattr(esclient, data_source.search_method)(
-            index=data_source.index, body=data_source.body
-        )
+        response = getattr(esclient, data_source.search_method)(index=data_source.index, body=data_source.body)
 
         if data_source.search_method == SearchMethod.msearch:
             res = []
             # Body alternate index and query `[index, query, index, query...]`
             queries = data_source.body[1::2]
-            for query, data in zip(queries, response['responses']):
+            for _query, data in zip(queries, response["responses"]):
                 res += _read_response(data)
         else:
             res = _read_response(response)

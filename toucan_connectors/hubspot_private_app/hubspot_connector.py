@@ -4,18 +4,23 @@ from typing import Any, Generator, Protocol, TypeAlias
 
 import pandas as pd
 from hubspot import HubSpot  # type:ignore[import-untyped]
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field
 
 from toucan_connectors.pagination import build_pagination_info
-from toucan_connectors.toucan_connector import DataSlice, ToucanConnector, ToucanDataSource
+from toucan_connectors.toucan_connector import (
+    DataSlice,
+    PlainJsonSecretStr,
+    ToucanConnector,
+    ToucanDataSource,
+)
 
 
 class HubspotDataset(str, Enum):
-    contacts = 'contacts'
-    companies = 'companies'
-    deals = 'deals'
-    quotes = 'quotes'
-    owners = 'owners'
+    contacts = "contacts"
+    companies = "companies"
+    deals = "deals"
+    quotes = "quotes"
+    owners = "owners"
 
 
 class HubspotDataSource(ToucanDataSource):
@@ -28,23 +33,19 @@ class _HubSpotPagingNext(BaseModel):
 
 
 class _HubSpotPaging(BaseModel):
-    next_: _HubSpotPagingNext = Field(..., alias='next')
+    next_: _HubSpotPagingNext = Field(..., alias="next")
 
 
 class _HubSpotResult(BaseModel):
-    created_at: datetime | None
-    updated_at: datetime | None
-    id_: str = Field(..., alias='id')
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    id_: str = Field(..., alias="id")
     properties: dict[str, Any] = Field(default_factory=dict)
-
-    # For basic_api objects, properties are in a 'properties' object. For specialized APIs, such as
-    # owners, they're keys of the root object
-    class Config:
-        extra = 'allow'
+    model_config = ConfigDict(extra="allow")
 
     def to_dict(self) -> dict[str, Any]:
         dict_ = self.dict(by_alias=True)
-        properties = dict_.pop('properties', None)
+        properties = dict_.pop("properties", None)
 
         return {**dict_, **(properties or {})}
 
@@ -84,19 +85,16 @@ def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:
 
     basic_api seems to be the default fallback
     """
-    page_api_name = dataset.value + '_api'
+    page_api_name = dataset.value + "_api"
     if hasattr(api, page_api_name):
         return getattr(api, page_api_name)
     return api.basic_api
 
 
-class HubspotConnector(ToucanConnector):
-    data_source_model: HubspotDataSource
-    access_token: SecretStr = Field(..., description='An API key for the target private app')
+class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
+    access_token: PlainJsonSecretStr = Field(..., description="An API key for the target private app")
 
-    def _fetch_page(
-        self, api: _PageApi, after: str | None = None, limit: int | None = None
-    ) -> _HubSpotResponse:
+    def _fetch_page(self, api: _PageApi, after: str | None = None, limit: int | None = None) -> _HubSpotResponse:
         page = api.get_page(after=after, limit=limit)
         return _HubSpotResponse(**page.to_dict())
 
@@ -146,9 +144,7 @@ class HubspotConnector(ToucanConnector):
             api = self._api_for_dataset(data_source.dataset)
             page_api = _page_api_for(api, data_source.dataset)
             results = []
-            result_iterator = self._result_iterator(
-                page_api, max_results=offset + (limit or 0), limit=limit
-            )
+            result_iterator = self._result_iterator(page_api, max_results=offset + (limit or 0), limit=limit)
             try:
                 for _ in range(offset):
                     next(result_iterator)
@@ -159,7 +155,5 @@ class HubspotConnector(ToucanConnector):
 
         return DataSlice(
             df=df,
-            pagination_info=build_pagination_info(
-                offset=offset, limit=limit, retrieved_rows=len(df), total_rows=None
-            ),
+            pagination_info=build_pagination_info(offset=offset, limit=limit, retrieved_rows=len(df), total_rows=None),
         )

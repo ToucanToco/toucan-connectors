@@ -8,9 +8,7 @@ class cap(TYPE)DataSource(ToucanDataSource):
     query: str
 
 
-class cap(TYPE)Connector(ToucanConnector):
-    data_source_model: cap(TYPE)DataSource
-
+class cap(TYPE)Connector(ToucanConnector, data_source_model=cap(TYPE)DataSource):
     username: str
     password: str
 

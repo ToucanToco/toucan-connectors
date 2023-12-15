@@ -30,39 +30,39 @@ class _DictableDict(dict):
 def hubspot_full_page() -> _DictableDict:
     return _DictableDict(
         **{
-            'paging': None,
-            'results': [
+            "paging": None,
+            "results": [
                 {
-                    'archived': False,
-                    'archived_at': None,
-                    'associations': None,
-                    'created_at': datetime(2023, 2, 21, 9, 50, 48, 148000, tzinfo=timezone.utc),
-                    'id': '1',
-                    'properties': {
-                        'createdate': '2023-02-21T09:50:48.148Z',
-                        'email': 'emailmaria@hubspot.com',
-                        'firstname': 'Maria',
-                        'hs_object_id': '1',
-                        'lastmodifieddate': '2023-02-21T09:50:53.651Z',
-                        'lastname': 'Johnson (Sample Contact)',
+                    "archived": False,
+                    "archived_at": None,
+                    "associations": None,
+                    "created_at": datetime(2023, 2, 21, 9, 50, 48, 148000, tzinfo=timezone.utc),
+                    "id": "1",
+                    "properties": {
+                        "createdate": "2023-02-21T09:50:48.148Z",
+                        "email": "emailmaria@hubspot.com",
+                        "firstname": "Maria",
+                        "hs_object_id": "1",
+                        "lastmodifieddate": "2023-02-21T09:50:53.651Z",
+                        "lastname": "Johnson (Sample Contact)",
                     },
-                    'properties_with_history': None,
-                    'updated_at': datetime(2023, 2, 21, 9, 50, 53, 651000, tzinfo=timezone.utc),
+                    "properties_with_history": None,
+                    "updated_at": datetime(2023, 2, 21, 9, 50, 53, 651000, tzinfo=timezone.utc),
                 },
                 {
-                    'archived': False,
-                    'archived_at': None,
-                    'associations': None,
-                    'created_at': datetime(2023, 2, 21, 9, 50, 48, 490000, tzinfo=timezone.utc),
-                    'id': '51',
-                    'createdate': '2023-02-21T09:50:48.490Z',
-                    'email': 'bh@hubspot.com',
-                    'firstname': 'Brian',
-                    'hs_object_id': '51',
-                    'lastmodifieddate': '2023-02-21T09:50:55.765Z',
-                    'lastname': 'Halligan (Sample Contact)',
-                    'properties_with_history': None,
-                    'updated_at': datetime(2023, 2, 21, 9, 50, 55, 765000, tzinfo=timezone.utc),
+                    "archived": False,
+                    "archived_at": None,
+                    "associations": None,
+                    "created_at": datetime(2023, 2, 21, 9, 50, 48, 490000, tzinfo=timezone.utc),
+                    "id": "51",
+                    "createdate": "2023-02-21T09:50:48.490Z",
+                    "email": "bh@hubspot.com",
+                    "firstname": "Brian",
+                    "hs_object_id": "51",
+                    "lastmodifieddate": "2023-02-21T09:50:55.765Z",
+                    "lastname": "Halligan (Sample Contact)",
+                    "properties_with_history": None,
+                    "updated_at": datetime(2023, 2, 21, 9, 50, 55, 765000, tzinfo=timezone.utc),
                 },
             ],
         }
@@ -73,25 +73,25 @@ def hubspot_full_page() -> _DictableDict:
 def hubspot_first_page(hubspot_full_page: _DictableDict) -> _DictableDict:
     return _DictableDict(
         **{
-            'paging': {
-                'next': {
-                    'after': '1',
-                    'link': 'https://api.hubapi.com/crm/v3/objects/contacts?limit=1&after=2',
+            "paging": {
+                "next": {
+                    "after": "1",
+                    "link": "https://api.hubapi.com/crm/v3/objects/contacts?limit=1&after=2",
                 }
             },
-            'results': hubspot_full_page['results'][:1],
+            "results": hubspot_full_page["results"][:1],
         }
     )
 
 
 @pytest.fixture
 def hubspot_second_page(hubspot_full_page: _DictableDict) -> _DictableDict:
-    return _DictableDict(paging=None, results=hubspot_full_page['results'][1:])
+    return _DictableDict(paging=None, results=hubspot_full_page["results"][1:])
 
 
 @pytest.fixture
 def hubspot_all_results(hubspot_full_page: _DictableDict) -> list[_DictableDict]:
-    return [_DictableDict(r) for r in hubspot_full_page['results']]
+    return [_DictableDict(r) for r in hubspot_full_page["results"]]
 
 
 @pytest.fixture
@@ -100,9 +100,9 @@ def hubspot_client(mocker: MockFixture) -> MagicMock:
     api = MagicMock()
     api.basic_api = basic_api
 
-    mocker.patch.object(HubspotConnector, '_api_for_dataset', return_value=api)
+    mocker.patch.object(HubspotConnector, "_api_for_dataset", return_value=api)
     mocker.patch(
-        'toucan_connectors.hubspot_private_app.hubspot_connector._page_api_for',
+        "toucan_connectors.hubspot_private_app.hubspot_connector._page_api_for",
         return_value=basic_api,
     )
 
@@ -113,25 +113,25 @@ def hubspot_client(mocker: MockFixture) -> MagicMock:
 def expected_df() -> pd.DataFrame:
     df = pd.DataFrame(
         {
-            'created_at': [
-                pd.Timestamp('2023-02-21 09:50:48.148000+0000', tz='UTC'),
-                pd.Timestamp('2023-02-21 09:50:48.490000+0000', tz='UTC'),
+            "created_at": [
+                pd.Timestamp("2023-02-21 09:50:48.148000+0000", tz="UTC"),
+                pd.Timestamp("2023-02-21 09:50:48.490000+0000", tz="UTC"),
             ],
-            'updated_at': [
-                pd.Timestamp('2023-02-21 09:50:53.651000+0000', tz='UTC'),
-                pd.Timestamp('2023-02-21 09:50:55.765000+0000', tz='UTC'),
+            "updated_at": [
+                pd.Timestamp("2023-02-21 09:50:53.651000+0000", tz="UTC"),
+                pd.Timestamp("2023-02-21 09:50:55.765000+0000", tz="UTC"),
             ],
-            'id': ['1', '51'],
-            'properties_with_history': [None, None],
-            'archived': [False, False],
-            'archived_at': [None, None],
-            'associations': [None, None],
-            'createdate': ['2023-02-21T09:50:48.148Z', '2023-02-21T09:50:48.490Z'],
-            'email': ['emailmaria@hubspot.com', 'bh@hubspot.com'],
-            'firstname': ['Maria', 'Brian'],
-            'hs_object_id': ['1', '51'],
-            'lastmodifieddate': ['2023-02-21T09:50:53.651Z', '2023-02-21T09:50:55.765Z'],
-            'lastname': ['Johnson (Sample Contact)', 'Halligan (Sample Contact)'],
+            "id": ["1", "51"],
+            "properties_with_history": [None, None],
+            "archived": [False, False],
+            "archived_at": [None, None],
+            "associations": [None, None],
+            "createdate": ["2023-02-21T09:50:48.148Z", "2023-02-21T09:50:48.490Z"],
+            "email": ["emailmaria@hubspot.com", "bh@hubspot.com"],
+            "firstname": ["Maria", "Brian"],
+            "hs_object_id": ["1", "51"],
+            "lastmodifieddate": ["2023-02-21T09:50:53.651Z", "2023-02-21T09:50:55.765Z"],
+            "lastname": ["Johnson (Sample Contact)", "Halligan (Sample Contact)"],
         }
     )
     return df.reindex(columns=sorted(df.columns.to_list()))
@@ -139,12 +139,12 @@ def expected_df() -> pd.DataFrame:
 
 @pytest.fixture
 def hubspot_connector() -> HubspotConnector:
-    return HubspotConnector(name='hubspot', access_token='s3cr3t')
+    return HubspotConnector(name="hubspot", access_token="s3cr3t")
 
 
 @pytest.fixture
 def hubspot_data_source() -> HubspotDataSource:
-    return HubspotDataSource(name='hubspot', domain='coucou', dataset=HubspotDataset.contacts)
+    return HubspotDataSource(name="hubspot", domain="coucou", dataset=HubspotDataset.contacts)
 
 
 def test_get_df(
@@ -224,7 +224,7 @@ def test_get_slice_with_offset_and_limit_in_bounds(
 
     assert hubspot_client.basic_api.get_page.call_args_list == [
         call(after=None, limit=1),
-        call(after='1', limit=1),
+        call(after="1", limit=1),
     ]
     hubspot_client.get_all.assert_not_called()
 

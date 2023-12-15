@@ -10,7 +10,7 @@ class OffsetLimitInfo(BaseModel):
     """
 
     offset: int
-    limit: int | None
+    limit: int | None = None
 
 
 class UnknownSizeDatasetPaginationInfo(BaseModel):
@@ -19,7 +19,7 @@ class UnknownSizeDatasetPaginationInfo(BaseModel):
     :param is_last_page: indicates wether the last page has been reached.
     """
 
-    type: Literal['unknown_size'] = 'unknown_size'
+    type: Literal["unknown_size"] = "unknown_size"
     is_last_page: bool
 
 
@@ -30,7 +30,7 @@ class KnownSizeDatasetPaginationInfo(BaseModel):
     :param total_rows: The total number of rows in the dataset.
     """
 
-    type: Literal['known_size'] = 'known_size'
+    type: Literal["known_size"] = "known_size"
     is_last_page: bool
     total_rows: int
 
@@ -48,8 +48,8 @@ class PaginationInfo(BaseModel):
 
     parameters: OffsetLimitInfo
     pagination_info: UnknownSizeDatasetPaginationInfo | KnownSizeDatasetPaginationInfo
-    next_page: OffsetLimitInfo | None
-    previous_page: OffsetLimitInfo | None
+    next_page: OffsetLimitInfo | None = None
+    previous_page: OffsetLimitInfo | None = None
 
 
 def build_pagination_info(
@@ -78,23 +78,15 @@ def build_pagination_info(
         or retrieved_rows < limit
     )
     if total_rows is not None:
-        pagination_info = KnownSizeDatasetPaginationInfo(
-            is_last_page=is_last_page, total_rows=total_rows
-        )
+        pagination_info = KnownSizeDatasetPaginationInfo(is_last_page=is_last_page, total_rows=total_rows)
     # If we've reached the last page AND we have at least one result, we know the size of the
     # dataset. If we had no results, we could be several rows after the actual dataset
     elif is_last_page and retrieved_rows > 0:
-        pagination_info = KnownSizeDatasetPaginationInfo(
-            is_last_page=True, total_rows=offset + retrieved_rows
-        )
+        pagination_info = KnownSizeDatasetPaginationInfo(is_last_page=True, total_rows=offset + retrieved_rows)
     else:
         pagination_info = UnknownSizeDatasetPaginationInfo(is_last_page=is_last_page)
 
-    next_page = (
-        OffsetLimitInfo(offset=offset + limit, limit=limit)
-        if limit is not None and not is_last_page
-        else None
-    )
+    next_page = OffsetLimitInfo(offset=offset + limit, limit=limit) if limit is not None and not is_last_page else None
     # In case limit is None, we don't know how many rows back we need to go, so previous_page is None
     if offset > 0 and limit is not None:
         previous_page = OffsetLimitInfo(offset=max(offset - limit or 0, 0), limit=limit)

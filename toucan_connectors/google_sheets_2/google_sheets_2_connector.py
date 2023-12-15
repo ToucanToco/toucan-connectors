@@ -5,11 +5,12 @@ import asyncio
 import os
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, List
 
 import pandas as pd
 from aiohttp import ClientSession
 from pydantic import Field, PrivateAttr, create_model
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 
 from toucan_connectors.common import ConnectorStatus, HttpError, fetch, get_loop
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -24,11 +25,9 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 
-AUTHORIZATION_URL: str = (
-    'https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent'
-)
-SCOPE: str = 'openid email https://www.googleapis.com/auth/spreadsheets.readonly'
-TOKEN_URL: str = 'https://oauth2.googleapis.com/token'
+AUTHORIZATION_URL: str = "https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent"
+SCOPE: str = "openid email https://www.googleapis.com/auth/spreadsheets.readonly"
+TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
 
 class NoCredentialsError(Exception):
@@ -47,87 +46,88 @@ class GoogleSheets2DataSource(ToucanDataSource):
 
     domain: str = Field(
         ...,
-        title='dataset',
+        title="dataset",
     )
     spreadsheet_id: str = Field(
         ...,
-        title='ID of the spreadsheet',
-        description='Can be found in your URL: '
-        'https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...',
+        title="ID of the spreadsheet",
+        description="Can be found in your URL: " "https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...",
     )
-    sheet: Optional[str] = Field(
-        None, title='Sheet title', description='Title of the desired sheet'
-    )
-    header_row: int = Field(
-        0, title='Header row', description='Row of the header of the spreadsheet'
-    )
-    rows_limit: int = Field(
-        None, title='Rows limit', description='Maximum number of rows to retrieve'
-    )
-    parameters: dict = Field(None, description='Additional URL parameters')
-    parse_dates: List[str] = Field([], title='Dates column', description='Columns to parse as date')
-
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['GoogleSheets2DataSource']) -> None:
-            keys = schema['properties'].keys()
-            prio_keys = ['domain', 'spreadsheet_id', 'sheet']
-            new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    sheet: str | None = Field(None, title="Sheet title", description="Title of the desired sheet")
+    header_row: int = Field(0, title="Header row", description="Row of the header of the spreadsheet")
+    rows_limit: int | None = Field(None, title="Rows limit", description="Maximum number of rows to retrieve")
+    parameters: dict = Field(None, description="Additional URL parameters")
+    parse_dates: List[str] = Field([], title="Dates column", description="Columns to parse as date")
 
     @classmethod
-    def get_form(cls, connector: 'GoogleSheets2Connector', current_config, **kwargs):
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = "validation",
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema["properties"].keys()
+        prio_keys = ["domain", "spreadsheet_id", "sheet"]
+        new_keys = prio_keys + [k for k in keys if k not in prio_keys]
+        schema["properties"] = {k: schema["properties"][k] for k in new_keys}
+        return schema
+
+    @classmethod
+    def get_form(cls, connector: "GoogleSheets2Connector", current_config, **kwargs):
         """Retrieve a form filled with suggestions of available sheets."""
         # Always add the suggestions for the available sheets
         constraints = {}
         with suppress(Exception):
-            partial_endpoint = current_config['spreadsheet_id']
-            final_url = f'{connector._baseroute}{partial_endpoint}'
+            partial_endpoint = current_config["spreadsheet_id"]
+            final_url = f"{connector._baseroute}{partial_endpoint}"
             data = connector._run_fetch(final_url)
-            available_sheets = [str(x['properties']['title']) for x in data['sheets']]
-            constraints['sheet'] = strlist_to_enum('sheet', available_sheets)
+            available_sheets = [str(x["properties"]["title"]) for x in data["sheets"]]
+            constraints["sheet"] = strlist_to_enum("sheet", available_sheets)
 
-        return create_model('FormSchema', **constraints, __base__=cls).schema()
+        return create_model("FormSchema", **constraints, __base__=cls).schema()
 
 
-class GoogleSheets2Connector(ToucanConnector):
+class GoogleSheets2Connector(ToucanConnector, data_source_model=GoogleSheets2DataSource):
     """The Google Sheets connector."""
 
-    data_source_model: GoogleSheets2DataSource
-
-    _auth_flow = 'oauth2'
-    _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
-    auth_flow_id: Optional[str]
+    _auth_flow = "oauth2"
+    _oauth_trigger = "instance"
+    oauth2_version: str = Field("1", **{"ui.hidden": True})
+    auth_flow_id: str | None = None
 
     # TODO: turn into a class property
-    _baseroute = 'https://sheets.googleapis.com/v4/spreadsheets/'
+    _baseroute = "https://sheets.googleapis.com/v4/spreadsheets/"
 
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
         return ConnectorSecretsForm(
-            documentation_md=(Path(os.path.dirname(__file__)) / 'doc.md').read_text(),
+            documentation_md=(Path(os.path.dirname(__file__)) / "doc.md").read_text(),
             secrets_schema=OAuth2ConnectorConfig.schema(),
         )
 
     def __init__(self, **kwargs):
-        super().__init__(
-            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
-        )
+        super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,
-            redirect_uri=kwargs['redirect_uri'],
+            redirect_uri=kwargs["redirect_uri"],
             config=OAuth2ConnectorConfig(
-                client_id=kwargs['client_id'],
-                client_secret=kwargs['client_secret'],
+                client_id=kwargs["client_id"],
+                client_secret=kwargs["client_secret"],
             ),
-            secrets_keeper=kwargs['secrets_keeper'],
+            secrets_keeper=kwargs["secrets_keeper"],
         )
 
     def build_authorization_url(self, **kwargs):
@@ -148,8 +148,8 @@ class GoogleSheets2Connector(ToucanConnector):
         """Run loop."""
         access_token = self.get_access_token()
         if not access_token:
-            raise NoCredentialsError('No credentials')
-        headers = {'Authorization': f'Bearer {access_token}'}
+            raise NoCredentialsError("No credentials")
+        headers = {"Authorization": f"Bearer {access_token}"}
 
         loop = get_loop()
         future = asyncio.ensure_future(self._fetch(url, headers))
@@ -166,20 +166,20 @@ class GoogleSheets2Connector(ToucanConnector):
         if data_source.sheet is None:
             # Get spreadsheet informations and retrieve all the available sheets
             # https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
-            data = self._run_fetch(f'{self._baseroute}{data_source.spreadsheet_id}')
-            available_sheets = [str(x['properties']['title']) for x in data['sheets']]
+            data = self._run_fetch(f"{self._baseroute}{data_source.spreadsheet_id}")
+            available_sheets = [str(x["properties"]["title"]) for x in data["sheets"]]
             data_source.sheet = available_sheets[0]
 
         if data_source.rows_limit:
-            ranges = f'!1:{data_source.rows_limit+1}'
+            ranges = f"!1:{data_source.rows_limit+1}"
         else:
-            ranges = ''
+            ranges = ""
 
         # https://developers.google.com/sheets/api/samples/reading
-        read_sheet_endpoint = f'{data_source.spreadsheet_id}/values/{data_source.sheet}{ranges}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING'
-        full_url = f'{self._baseroute}{read_sheet_endpoint}'
+        read_sheet_endpoint = f"{data_source.spreadsheet_id}/values/{data_source.sheet}{ranges}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING"  # noqa: E501
+        full_url = f"{self._baseroute}{read_sheet_endpoint}"
         # Rajouter le param FORMATTED_VALUE pour le séparateur de décimal dans la Baseroute
-        data = self._run_fetch(full_url)['values']
+        data = self._run_fetch(full_url)["values"]
         df = pd.DataFrame(data)
 
         # Since `data` is a list of lists, the columns are not set properly
@@ -207,13 +207,13 @@ class GoogleSheets2Connector(ToucanConnector):
         try:
             access_token = self.get_access_token()
         except Exception:
-            return ConnectorStatus(status=False, error='Credentials are missing')
+            return ConnectorStatus(status=False, error="Credentials are missing")
 
         if not access_token:
-            return ConnectorStatus(status=False, error='Credentials are missing')
+            return ConnectorStatus(status=False, error="Credentials are missing")
 
         try:
-            user_info = self._run_fetch('https://www.googleapis.com/oauth2/v2/userinfo?alt=json')
+            user_info = self._run_fetch("https://www.googleapis.com/oauth2/v2/userinfo?alt=json")
             return ConnectorStatus(status=True, message=f"Connected as {user_info.get('email')}")
         except HttpError:
             return ConnectorStatus(status=False, error="Couldn't retrieve user infos")
@@ -221,10 +221,10 @@ class GoogleSheets2Connector(ToucanConnector):
     def get_slice(
         self,
         data_source: GoogleSheets2DataSource,
-        permissions: Optional[dict] = None,
+        permissions: dict | None = None,
         offset: int = 0,
         limit=50,
-        get_row_count: Optional[bool] = False,
+        get_row_count: bool | None = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe

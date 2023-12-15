@@ -8,11 +8,12 @@ import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
+from typing import Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
 
 import pandas as pd
 import tenacity as tny
-from pydantic import BaseModel, Field, SecretBytes, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, SecretStr
+from pydantic.fields import ModelPrivateAttr
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -28,6 +29,7 @@ try:
     from bearer import Bearer  # type: ignore[import-untyped]
 except ImportError:
     pass
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +50,7 @@ class QueryMetadata(NamedTuple):
 
 
 class Category(str, Enum):
-    SNOWFLAKE: str = 'Snowflake'
+    SNOWFLAKE: str = "Snowflake"
 
 
 class DataSlice(NamedTuple):
@@ -80,7 +82,7 @@ def strlist_to_enum(field: str, strlist: list[str], default_value=...) -> tuple[
 
 
 # Binding C to ToucanConnector causes mypy to crash (last checked with mypy 0.991)
-C = TypeVar('C')
+C = TypeVar("C")
 
 
 class ToucanDataSource(BaseModel, Generic[C]):
@@ -94,12 +96,9 @@ class ToucanDataSource(BaseModel, Generic[C]):
     cache_ttl: int | None = Field(
         None,
         title="Slow Queries' Cache Expiration Time",
-        description='In seconds. Will override the 5min instance default and/or the connector value',
+        description="In seconds. Will override the 5min instance default and/or the connector value",
     )
-
-    class Config:
-        extra = 'forbid'
-        validate_assignment = True
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
     @classmethod
     def get_form(cls, connector: C, current_config):
@@ -110,7 +109,7 @@ class ToucanDataSource(BaseModel, Generic[C]):
 
         By default, we simply return the model schema.
         """
-        return cls.schema()
+        return cls.model_json_schema()
 
 
 class RetryPolicy(BaseModel):
@@ -140,8 +139,8 @@ class RetryPolicy(BaseModel):
 
     def __init__(self, retry_on=(), logger=None, **data):
         super().__init__(**data)
-        self.__dict__['retry_on'] = retry_on
-        self.__dict__['logger'] = logger
+        self.__dict__["retry_on"] = retry_on
+        self.__dict__["logger"] = logger
 
     @property
     def tny_stop(self):
@@ -182,14 +181,14 @@ class RetryPolicy(BaseModel):
         for attr in dir(self):
             # the "after" hook is handled separately later to plug it only if
             # there is an actual retry policy
-            if attr.startswith('tny_') and attr != 'tny_after':
+            if attr.startswith("tny_") and attr != "tny_after":
                 paramvalue = getattr(self, attr)
                 if paramvalue is not None:
                     tny_kwargs[attr[4:]] = paramvalue
         if tny_kwargs:
             # plug the "after" hook if there's one
             if self.tny_after:
-                tny_kwargs['after'] = self.tny_after
+                tny_kwargs["after"] = self.tny_after
             return tny.retry(reraise=True, **tny_kwargs)
         return None
 
@@ -220,10 +219,14 @@ def get_oauth2_configuration(cls):
     """Return a tuple indicating if the connector is an oauth2 connector
     and in this case, where can the credentials be located
     """
-    oauth2_enabled = hasattr(cls, '_auth_flow') and 'oauth2' in getattr(cls, '_auth_flow')
+    oauth2_enabled = False
+    if hasattr(cls, "_auth_flow"):
+        assert isinstance(cls._auth_flow, ModelPrivateAttr)
+        oauth2_enabled = "oauth2" in cls._auth_flow.get_default()
     oauth2_credentials_location = None
-    if hasattr(cls, '_oauth_trigger'):
-        oauth2_credentials_location = getattr(cls, '_oauth_trigger')
+    if hasattr(cls, "_oauth_trigger"):
+        assert isinstance(cls._oauth_trigger, ModelPrivateAttr)
+        oauth2_credentials_location = cls._oauth_trigger.get_default()
     return oauth2_enabled, oauth2_credentials_location
 
 
@@ -233,12 +236,12 @@ def is_oauth2_connector(cls) -> bool:
 
 
 def needs_sso_credentials(cls) -> bool:
-    return hasattr(cls, '_sso_credentials_access') and getattr(cls, '_sso_credentials_access')
+    return hasattr(cls, "_sso_credentials_access") and cls._sso_credentials_access
 
 
 class ConnectorSecretsForm(BaseModel):
-    documentation_md: str = Field(description='This field contains documentation as a md string')
-    secrets_schema: dict = Field(description='The schema for the configuration form')
+    documentation_md: str = Field(description="This field contains documentation as a md string")
+    secrets_schema: dict = Field(description="The schema for the configuration form")
 
 
 def get_connector_secrets_form(cls) -> ConnectorSecretsForm | None:
@@ -251,14 +254,18 @@ def get_connector_secrets_form(cls) -> ConnectorSecretsForm | None:
     To document this, ToucanConnector subclasses can implement as a @classmethod 'get_connector_config_form' that will
     return which fields SHOULD be provided by an administrator
     """
-    if hasattr(cls, 'get_connector_secrets_form'):
-        return getattr(cls, 'get_connector_secrets_form')()
+    if hasattr(cls, "get_connector_secrets_form"):
+        return cls.get_connector_secrets_form()
     return None
 
 
-_UI_HIDDEN: dict[str, Any] = {'ui.hidden': True}
+_UI_HIDDEN: dict[str, Any] = {"ui.hidden": True}
 
-DS = TypeVar('DS', bound=ToucanDataSource)
+DS = TypeVar("DS", bound=ToucanDataSource)
+
+PlainJsonSecretStr = Annotated[
+    SecretStr, PlainSerializer(SecretStr.get_secret_value, return_type=str, when_used="json")
+]
 
 
 class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
@@ -281,40 +288,28 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     the `_retry_on` class attribute in your concrete connector class.
     """
 
+    @classmethod
+    def __init_subclass__(cls, /, *, data_source_model: type[DS]):
+        cls.logger = logging.getLogger(cls.__name__)  # type:ignore[attr-defined]
+        cls.data_source_model = data_source_model  # type:ignore[attr-defined]
+
     name: str = Field(...)
     retry_policy: RetryPolicy | None = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
-    type: str | None
-    secrets_storage_version: str = Field('1', **_UI_HIDDEN)  # type:ignore[pydantic-field]
+    type: str | None = None
+    secrets_storage_version: str = Field("1", **_UI_HIDDEN)  # type:ignore[pydantic-field]
 
     # Default ttl for all connector's queries (overridable at the data_source level)
     # /!\ cache ttl is used by the caching system which is not implemented in toucan_connectors.
     cache_ttl: int | None = Field(
         None,
         title="Slow Queries' Cache Expiration Time",
-        description='In seconds. Will override the 5min instance default. Can also be overridden at the query level',
+        description="In seconds. Will override the 5min instance default. Can also be overridden at the query level",
     )
 
     # Used to defined the connection
-    identifier: str = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
-
-    class Config:
-        extra = 'forbid'
-        validate_assignment = True
-        json_encoders = {
-            SecretStr: lambda v: v.get_secret_value(),
-            SecretBytes: lambda v: v.get_secret_value(),
-        }
-
-    @classmethod
-    def __init_subclass__(cls):
-        try:
-            cls.data_source_model = cls.__fields__.pop('data_source_model').type_
-            cls.logger = logging.getLogger(cls.__name__)
-        except KeyError as e:
-            raise TypeError(f'{cls.__name__} has no {e} attribute.')
-        if 'bearer_integration' in cls.__fields__:
-            cls.bearer_integration = cls.__fields__['bearer_integration'].default
+    identifier: str | None = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
     def bearer_oauth_get_endpoint(
         self,
@@ -323,7 +318,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     ):
         """Generic method to get an endpoint for an OAuth API integrated with Bearer"""
         return (
-            Bearer(os.environ.get('BEARER_API_KEY'))
+            Bearer(os.environ.get("BEARER_API_KEY"))
             .integration(self.bearer_integration)  # type: ignore[attr-defined]
             .auth(self.bearer_auth_id)  # type: ignore[attr-defined]
             .get(endpoint, query=query)
@@ -332,7 +327,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
     @property
     def retry_decorator(self):
-        kwargs = {**self.retry_policy.dict(), 'retry_on': self._retry_on, 'logger': self.logger}
+        kwargs = {**self.retry_policy.dict(), "retry_on": self._retry_on, "logger": self.logger}
         return RetryPolicy(**kwargs)
 
     @abstractmethod
@@ -351,9 +346,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
         if permissions is not None:
             permissions_query = PandasConditionTranslator.translate(permissions)
-            permissions_query = apply_query_parameters(
-                permissions_query, data_source.parameters or {}
-            )
+            permissions_query = apply_query_parameters(permissions_query, data_source.parameters or {})
             res = res.query(permissions_query)
         return res
 
@@ -435,7 +428,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
         Used by `get_cache_key` method.
         """
-        return self.json()
+        return self.model_dump_json()
 
     def _get_unique_datasource_identifier(self, data_source: DS) -> dict:
         # By default we don't know which variable syntax is be supported by the inheriting connector,
@@ -458,18 +451,15 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         This identifier will then be used as a cache key.
         """
         unique_identifier = {
-            'connector': self.get_unique_identifier(),
-            'permissions': nosql_apply_parameters_to_query(
-                permissions or {}, data_source.parameters
-            )
+            "connector": self.get_unique_identifier(),
+            "permissions": nosql_apply_parameters_to_query(permissions or {}, data_source.parameters)
             if data_source
             else permissions,
-            'offset': offset,
-            'limit': limit,
+            "offset": offset,
+            "limit": limit,
         }
-
         if data_source is not None:
-            unique_identifier['datasource'] = self._get_unique_datasource_identifier(data_source)
+            unique_identifier["datasource"] = self._get_unique_datasource_identifier(data_source)
         json_uid = JsonWrapper.dumps(unique_identifier, sort_keys=True, default=hash)
         string_uid = str(uuid.uuid3(uuid.NAMESPACE_OID, json_uid))
         return string_uid
@@ -499,29 +489,29 @@ class DiscoverableConnector(ABC):
     @staticmethod
     def format_db_model(
         # db, schema, type, name, columns as dict or json string
-        unformatted_db_tree: list[tuple[str, str, str, str, list[dict[str, str]] | str]]
+        unformatted_db_tree: list[tuple[str, str, str, str, list[dict[str, str]] | str]],
     ) -> list[TableInfo]:
         if not unformatted_db_tree:
             return []
         df = pd.DataFrame(unformatted_db_tree)
-        df.columns = ['database', 'schema', 'type', 'name', 'columns']  # type:ignore[assignment]
+        df.columns = ["database", "schema", "type", "name", "columns"]  # type:ignore[assignment]
         try:  # if columns is a string
-            df['columns'] = df['columns'].apply(json.loads)
+            df["columns"] = df["columns"].apply(json.loads)
         except TypeError:  # else ignore
             pass
         return (
-            df.groupby(by=['schema', 'database', 'type', 'name'])['columns']  # type: ignore[return-value]
+            df.groupby(by=["schema", "database", "type", "name"])["columns"]  # type: ignore[return-value]
             .apply(sum)
             .reset_index()
-            .to_dict('records')
+            .to_dict("records")
         )
 
 
-class MalformedVersion(Exception):
+class MalformedVersion(Exception):  # noqa: N818
     """raised when the given version of the engine is not well formated"""
 
 
-class UnavailableVersion(Exception):
+class UnavailableVersion(Exception):  # noqa: N818
     """raised when the version of the engine is not available"""
 
 
@@ -548,9 +538,7 @@ class VersionableEngineConnector(ABC):
     """
 
     # The output of these rules :
-    semver_regex = re.compile(
-        r'(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*)))?(?:\-([\w][\w\.\-_]*))?)?'
-    )
+    semver_regex = re.compile(r"(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*))(?:\.(0|(?:[1-9]\d*)))?(?:\-([\w][\w\.\-_]*))?)?")
 
     def _validate(self, engine_version: str | float | None) -> re.Match | None:
         """
@@ -575,6 +563,6 @@ class VersionableEngineConnector(ABC):
         """
         input_version_validated: re.Match | None = self._validate(input_version)
         if input_version_validated is not None:
-            return tuple(map(int, input_version_validated.group(0).split('.')))
+            return tuple(map(int, input_version_validated.group(0).split(".")))
 
         raise MalformedVersion(f'"{input_version}" is not understood')

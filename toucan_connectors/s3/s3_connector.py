@@ -18,39 +18,34 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class S3DataSource(ToucanDataSource):
-    file: str = Field(..., description='Your File')
+    file: str = Field(..., description="Your File")
     reader_kwargs: dict[str, Any] = {}
     fetcher_kwargs: dict[str, Any] = {}
 
 
-class S3Connector(ToucanConnector):
-    data_source_model: S3DataSource
+class S3Connector(ToucanConnector, data_source_model=S3DataSource):
     _sts_role: dict
 
-    bucket_name: str = Field(..., description='Your Bucket Name')
-    prefix: str | None = Field(
-        '', description='A Prefix for your objects like a path folder Ex: /marketing/revenues'
-    )
-    role_arn: str = Field(..., description='The Role ARN')
+    bucket_name: str = Field(..., description="Your Bucket Name")
+    prefix: str | None = Field("", description="A Prefix for your objects like a path folder Ex: /marketing/revenues")
+    role_arn: str = Field(..., description="The Role ARN")
     external_id: str = Field(
         ...,
-        description='This is the external ID you need to use on your AWS policy configuration',
-        ui={'readonly': True},
+        description="This is the external ID you need to use on your AWS policy configuration",
+        ui={"readonly": True},
     )
 
     def __init__(self, **data):
-        data['external_id'] = data.get('workspace_id', data.get('external_id'))
+        data["external_id"] = data.get("workspace_id", data.get("external_id"))
         super().__init__(**data)
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
         validate_on_assignment = True
 
-    @validator('external_id', pre=True, always=True)
-    def _validate_external_id(cls, value: str, values: dict) -> str:
-        return values.get(
-            'workspace_id', value
-        )  # once set, external_id cannot be changed from the workspace id
+    @validator("external_id", pre=True, always=True)
+    def _validate_external_id(cls, value: str, values: dict) -> str:  # noqa:N805
+        return values.get("workspace_id", value)  # once set, external_id cannot be changed from the workspace id
 
     def get_status(self) -> ConnectorStatus:
         try:
@@ -58,25 +53,23 @@ class S3Connector(ToucanConnector):
         except Exception as sts_exc:
             return ConnectorStatus(
                 status=False,
-                error=f'Cannot verify connection to S3 and/or AssumeRole failed : {sts_exc}',
+                error=f"Cannot verify connection to S3 and/or AssumeRole failed : {sts_exc}",
             )
         return ConnectorStatus(status=True)
 
     def _forge_url(self, access_key: str, access_secret: str, session_token: str, file: str) -> str:
         # we encode the strings that may contain special characters
-        access_key = urllib.parse.quote(access_key, safe='')
-        access_secret = urllib.parse.quote(access_secret, safe='')
-        session_token = urllib.parse.quote(session_token, safe='')
+        access_key = urllib.parse.quote(access_key, safe="")
+        access_secret = urllib.parse.quote(access_secret, safe="")
+        session_token = urllib.parse.quote(session_token, safe="")
 
         # we control slashes ourselves
-        prefix = (self.prefix or '').lstrip('/')
-        file = file.lstrip('/')
+        prefix = (self.prefix or "").lstrip("/")
+        file = file.lstrip("/")
 
-        absolute_path = str(
-            ('/' / Path(self.bucket_name) / Path(prefix or '') / file).absolute()
-        ).removeprefix('/')
+        absolute_path = str(("/" / Path(self.bucket_name) / Path(prefix or "") / file).absolute()).removeprefix("/")
 
-        forged_url = f's3://{access_key}:{access_secret}@{absolute_path}'
+        forged_url = f"s3://{access_key}:{access_secret}@{absolute_path}"
 
         return forged_url
 
@@ -86,24 +79,24 @@ class S3Connector(ToucanConnector):
         offset: int = 0,
         limit: int | None = None,
     ) -> pd.DataFrame | TextFileReader:
-        credentials = self._get_assumed_sts_role()['Credentials']
+        credentials = self._get_assumed_sts_role()["Credentials"]
 
         # See the documentation here for the schema :
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sts/client/assume_role.html
-        access_key = credentials['AccessKeyId']
-        access_secret = credentials['SecretAccessKey']
-        session_token = credentials['SessionToken']
+        access_key = credentials["AccessKeyId"]
+        access_secret = credentials["SecretAccessKey"]
+        session_token = credentials["SessionToken"]
 
         reader_kwargs = {
             **data_source.reader_kwargs,
-            'preview_nrows': limit,
-            'preview_offset': offset,
+            "preview_nrows": limit,
+            "preview_offset": offset,
         }
         fetcher_kwargs = data_source.fetcher_kwargs
-        client_kwargs = fetcher_kwargs.get('client_kwargs', {})
+        client_kwargs = fetcher_kwargs.get("client_kwargs", {})
         fetcher_kwargs = {
             **fetcher_kwargs,
-            'client_kwargs': {**client_kwargs, 'session_token': session_token},
+            "client_kwargs": {**client_kwargs, "session_token": session_token},
         }
 
         session = boto3.Session(
@@ -111,16 +104,16 @@ class S3Connector(ToucanConnector):
             aws_secret_access_key=access_secret,
             aws_session_token=session_token,
         )
-        s3 = session.client('s3')
-        paginator = s3.get_paginator('list_objects_v2')
+        s3 = session.client("s3")
+        paginator = s3.get_paginator("list_objects_v2")
         pages = paginator.paginate(Bucket=self.bucket_name, Prefix=self.prefix)
-        pattern = re.compile(rf'{data_source.file}')
+        pattern = re.compile(rf"{data_source.file}")
 
         dfs = []
         # We loop over pages to fetch for available file's paths as object keys
         for page in pages:
-            for obj_sum in page.get('Contents', []):
-                file_path = obj_sum['Key']
+            for obj_sum in page.get("Contents", []):
+                file_path = obj_sum["Key"]
                 # We check the regex match pattern for the given file path
                 if pattern.match(file_path):
                     s3_uri = self._forge_url(
@@ -128,13 +121,13 @@ class S3Connector(ToucanConnector):
                         access_secret=access_secret,
                         session_token=session_token,
                         file=file_path,
-                    ).rstrip('$')
+                    ).rstrip("$")
                     df = DataSource(
                         uri=s3_uri,
                         reader_kwargs=reader_kwargs,
                         fetcher_kwargs=fetcher_kwargs,
                     ).get_df()
-                    df['__filename__'] = file_path
+                    df["__filename__"] = file_path
                     dfs.append(df)
 
         return pd.concat(dfs)
@@ -142,13 +135,13 @@ class S3Connector(ToucanConnector):
     @cached_property
     def _sts_assumed_role(self) -> dict:
         sts_client = boto3.client(
-            'sts',
+            "sts",
             aws_access_key_id=self.sts_access_key_id,
             aws_secret_access_key=self.sts_secret_access_key,
         )
         return sts_client.assume_role(
             RoleArn=self.role_arn,
-            RoleSessionName='toucantoco',
+            RoleSessionName="toucantoco",
             ExternalId=self.workspace_id,
         )
 
@@ -156,9 +149,9 @@ class S3Connector(ToucanConnector):
         with suppress(Exception):
             assumed_role = self._sts_assumed_role  # cached using @cached_property
             now = datetime.utcnow().replace(tzinfo=tzutc())
-            if assumed_role['Credentials']['Expiration'] > now:
+            if assumed_role["Credentials"]["Expiration"] > now:
                 return assumed_role
 
         # If cache is expired, delete it and re-assume the role
-        self.__dict__.pop('_sts_assumed_role', None)
+        self.__dict__.pop("_sts_assumed_role", None)
         return self._sts_assumed_role

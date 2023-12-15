@@ -1,7 +1,6 @@
 .DEFAULT_GOAL := all
-isort = isort toucan_connectors tests
-black = black toucan_connectors tests
-flake8 = flake8 toucan_connectors tests
+ruff = ruff toucan_connectors tests
+format = ruff format toucan_connectors tests
 mypy = mypy
 
 .PHONY: clean
@@ -17,14 +16,13 @@ install:
 
 .PHONY: format
 format:
-	$(isort)
-	$(black)
+	$(format)
+	$(ruff) --fix
 
 .PHONY: lint
 lint:
-	$(flake8)
-	$(isort) --check-only
-	$(black) --check
+	$(format) --check
+	$(ruff)
 	$(mypy)
 
 .PHONY: test

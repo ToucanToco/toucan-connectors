@@ -1,10 +1,11 @@
 import json
 from enum import Enum
-from typing import Any, Dict, List, Type, Union
+from typing import Any, List
 from xml.etree.ElementTree import ParseError, fromstring, tostring
 
 import pandas as pd
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from requests import Session
 from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 from xmltodict import parse
@@ -20,37 +21,37 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class ResponseType(str, Enum):
-    json = 'json'
-    xml = 'xml'
+    json = "json"
+    xml = "xml"
 
 
 class Method(str, Enum):
-    GET = 'GET'
-    POST = 'POST'
-    PUT = 'PUT'
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
 
 
 class Template(BaseModel):
-    headers: dict = Field(
+    headers: dict | None = Field(
         None,
-        description='JSON object of HTTP headers to send with every HTTP request',
+        description="JSON object of HTTP headers to send with every HTTP request",
         examples=['{ "content-type": "application/xml" }'],
     )
-    params: dict = Field(
+    params: dict | None = Field(
         None,
-        description='JSON object of parameters to send in the query string of every HTTP request '
+        description="JSON object of parameters to send in the query string of every HTTP request "
         '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    json_: dict = Field(
+    json_: dict | None = Field(
         None,
-        alias='json',
-        description='JSON object of parameters to send in the body of every HTTP request',
+        alias="json",
+        description="JSON object of parameters to send in the body of every HTTP request",
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    proxies: dict = Field(
+    proxies: dict | None = Field(
         None,
-        description='JSON object expressing a mapping of protocol or host to corresponding proxy',
+        description="JSON object expressing a mapping of protocol or host to corresponding proxy",
         examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
     )
 
@@ -58,70 +59,76 @@ class Template(BaseModel):
 class HttpAPIDataSource(ToucanDataSource):
     url: str = Field(
         ...,
-        title='Endpoint URL',
-        description='The URL path that will be appended to your baseroute URL. '
-        'For example "geo/countries"',
+        title="Endpoint URL",
+        description="The URL path that will be appended to your baseroute URL. " 'For example "geo/countries"',
     )
-    method: Method = Field(Method.GET, title='HTTP Method')
-    headers: dict = Field(
+    method: Method = Field(Method.GET, title="HTTP Method")
+    headers: dict | None = Field(
         None,
-        description='You can also setup headers in the Template section of your Connector see: <br/>'
-        'https://docs.toucantoco.com/concepteur/tutorials/connectors/3-http-connector.html#template',
+        description="You can also setup headers in the Template section of your Connector see: <br/>"
+        "https://docs.toucantoco.com/concepteur/tutorials/connectors/3-http-connector.html#template",
         examples=['{ "content-type": "application/xml" }'],
     )
-    params: dict = Field(
+    params: dict | None = Field(
         None,
-        title='URL params',
-        description='JSON object of parameters to send in the query string of this HTTP request '
+        title="URL params",
+        description="JSON object of parameters to send in the query string of this HTTP request "
         '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    json_: dict = Field(
+    json_: dict | None = Field(
         None,
-        alias='json',
-        title='Body',
-        description='JSON object of parameters to send in the body of every HTTP request',
+        alias="json",
+        title="Body",
+        description="JSON object of parameters to send in the body of every HTTP request",
         examples=['{ "offset": 100, "limit": 50 }'],
     )
-    proxies: dict = Field(
+    proxies: dict | None = Field(
         None,
-        description='JSON object expressing a mapping of protocol or host to corresponding proxy',
+        description="JSON object expressing a mapping of protocol or host to corresponding proxy",
         examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
     )
-    data: Union[str, dict] = Field(
-        None, description='JSON object to send in the body of the HTTP request'
-    )
+    data: str | dict | None = Field(None, description="JSON object to send in the body of the HTTP request")
     xpath: str = XpathSchema
     filter: str = FilterSchema
-    flatten_column: str = Field(None, description='Column containing nested rows')
+    flatten_column: str | None = Field(None, description="Column containing nested rows")
 
-    class Config:
-        @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['HttpAPIDataSource']) -> None:
-            keys = schema['properties'].keys()
-            last_keys = [
-                'proxies',
-                'flatten_column',
-                'data',
-                'xpath',
-                'filter',
-                'validation',
-            ]
-            new_keys = [k for k in keys if k not in last_keys] + last_keys
-            schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+    @classmethod
+    def model_json_schema(
+        cls,
+        by_alias: bool = True,
+        ref_template: str = DEFAULT_REF_TEMPLATE,
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        mode: JsonSchemaMode = "validation",
+    ) -> dict[str, Any]:
+        schema = super().model_json_schema(
+            by_alias=by_alias,
+            ref_template=ref_template,
+            schema_generator=schema_generator,
+            mode=mode,
+        )
+        keys = schema["properties"].keys()
+        last_keys = [
+            "proxies",
+            "flatten_column",
+            "data",
+            "xpath",
+            "filter",
+            "validation",
+        ]
+        new_keys = [k for k in keys if k not in last_keys] + last_keys
+        schema["properties"] = {k: schema["properties"][k] for k in new_keys}
+        return schema
 
 
-class HttpAPIConnector(ToucanConnector):
-    data_source_model: HttpAPIDataSource
-    responsetype: ResponseType = Field(ResponseType.json, title='Content-type of response')
-    baseroute: AnyHttpUrl = Field(..., title='Baseroute URL', description='Baseroute URL')
-    cert: List[FilePath] = Field(
-        None, title='Certificate', description='File path of your certificate if any'
-    )
-    auth: Auth = Field(None, title='Authentication type')
-    template: Template = Field(
+class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
+    responsetype: ResponseType = Field(ResponseType.json, title="Content-type of response")
+    baseroute: AnyHttpUrl = Field(..., title="Baseroute URL", description="Baseroute URL")
+    cert: List[FilePath] | None = Field(None, title="Certificate", description="File path of your certificate if any")
+    auth: Auth | None = Field(None, title="Authentication type")
+    template: Template | None = Field(
         None,
-        description='You can provide a custom template that will be used for every HTTP request',
+        description="You can provide a custom template that will be used for every HTTP request",
     )
 
     def do_request(self, query, session):
@@ -133,49 +140,45 @@ class HttpAPIConnector(ToucanConnector):
         Returns:
             data (list): The response from the API in the form of a list of dict
         """
-        jq_filter = query['filter']
-        xpath = query['xpath']
-        available_params = ['url', 'method', 'params', 'data', 'json', 'headers', 'proxies']
+        jq_filter = query["filter"]
+        xpath = query["xpath"]
+        available_params = ["url", "method", "params", "data", "json", "headers", "proxies"]
         query = {k: v for k, v in query.items() if k in available_params}
-        query['url'] = '/'.join([self.baseroute.rstrip('/'), query['url'].lstrip('/')])
+        query["url"] = "/".join([str(self.baseroute).rstrip("/"), query["url"].lstrip("/")])
 
         if self.cert:
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates
-            query['cert'] = [str(c) for c in self.cert]
+            query["cert"] = [str(c) for c in self.cert]
 
-        HttpAPIConnector.logger.debug(
-            f'>> Request:  method={query.get("method")} url={query.get("url")}'
-        )
+        HttpAPIConnector.logger.debug(f'>> Request:  method={query.get("method")} url={query.get("url")}')
         res = session.request(**query)
-        HttpAPIConnector.logger.debug(
-            f'<< Response: status_code={res.status_code} reason={res.reason}'
-        )
+        HttpAPIConnector.logger.debug(f"<< Response: status_code={res.status_code} reason={res.reason}")
 
-        if self.responsetype == 'xml':
+        if self.responsetype == "xml":
             try:
-                data = fromstring(res.content)
-                data = parse(tostring(data.find(xpath), method='xml'), attr_prefix='')
+                data = fromstring(res.content)  # noqa: S314
+                data = parse(tostring(data.find(xpath), method="xml"), attr_prefix="")
             except ParseError:
-                HttpAPIConnector.logger.error(f'Could not decode {res.content!r}')
+                HttpAPIConnector.logger.error(f"Could not decode {res.content!r}")
                 raise
 
         else:
             try:
                 data = res.json()
             except ValueError:
-                HttpAPIConnector.logger.error('Could not decode content using response.json()')
+                HttpAPIConnector.logger.error("Could not decode content using response.json()")
                 try:
                     # sometimes when the content is too big res.json() fails but json.loads works
                     data = json.loads(res.content)
                 except ValueError:
                     HttpAPIConnector.logger.error(
-                        f'Cannot decode response content from query: method={query.get("method")} url={query.get("url")} response_status_code={res.status_code} response_reason=${res.reason}'
+                        f'Cannot decode response content from query: method={query.get("method")} url={query.get("url")} response_status_code={res.status_code} response_reason=${res.reason}'  # noqa: E501
                     )
                     raise
         try:
             return transform_with_jq(data, jq_filter)
         except ValueError:
-            HttpAPIConnector.logger.error(f'Could not transform {data} using {jq_filter}')
+            HttpAPIConnector.logger.error(f"Could not transform {data} using {jq_filter}")
             raise
 
     def _retrieve_data(self, data_source: HttpAPIDataSource) -> pd.DataFrame:
@@ -205,5 +208,5 @@ class HttpAPIConnector(ToucanConnector):
 
     def _get_unique_datasource_identifier(self, data_source: ToucanDataSource) -> dict:
         query = self._render_query(data_source)
-        del query['parameters']
+        del query["parameters"]
         return query

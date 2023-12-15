@@ -19,30 +19,30 @@ from toucan_connectors.toucan_connector import (
 from .enums import HubspotDataset
 from .helpers import has_next_page
 
-AUTHORIZATION_URL: str = 'https://app.hubspot.com/oauth/authorize'
-SCOPE: str = 'oauth contacts content forms business-intelligence e-commerce'
-TOKEN_URL: str = 'https://api.hubapi.com/oauth/v1/token'
+AUTHORIZATION_URL: str = "https://app.hubspot.com/oauth/authorize"
+SCOPE: str = "oauth contacts content forms business-intelligence e-commerce"
+TOKEN_URL: str = "https://api.hubapi.com/oauth/v1/token"
 HUBSPOT_ENDPOINTS: dict = {
-    'contacts': {
-        'url': ' https://api.hubapi.com/contacts/v1/lists/all/contacts/all',
+    "contacts": {
+        "url": " https://api.hubapi.com/contacts/v1/lists/all/contacts/all",
         # 'url': 'https://api.hubapi.com/crm/v3/objects/contacts',
-        'legacy': False,
+        "legacy": False,
     },
-    'companies': {
-        'url': 'https://api.hubapi.com/companies/v2/companies/paged',
+    "companies": {
+        "url": "https://api.hubapi.com/companies/v2/companies/paged",
         # 'url': 'https://api.hubapi.com/crm/v3/objects/companies',
-        'legacy': False,
+        "legacy": False,
     },
-    'deals': {
-        'url': 'https://api.hubapi.com/deals/v1/deal/paged',
+    "deals": {
+        "url": "https://api.hubapi.com/deals/v1/deal/paged",
         # 'url': 'https://api.hubapi.com/crm/v3/objects/deals',
-        'legacy': False,
+        "legacy": False,
     },
-    'products': {
-        'url': 'https://api.hubapi.com/crm-objects/v1/objects/products/paged',
+    "products": {
+        "url": "https://api.hubapi.com/crm-objects/v1/objects/products/paged",
         # 'url': 'https://api.hubapi.com/crm/v3/objects/products',
-        'legacy': False,
-        'sub_name': 'objects',
+        "legacy": False,
+        "sub_name": "objects",
     },
     # 'web-analytics': {
     #     'url': 'https://api.hubapi.com/reports/v2/events',
@@ -64,39 +64,36 @@ class HubspotConnectorException(Exception):
 
 
 class HubspotDataSource(ToucanDataSource):
-    dataset: HubspotDataset = 'contacts'
+    dataset: HubspotDataset = "contacts"
     parameters: Dict = Field(None)
 
 
-class HubspotConnector(ToucanConnector):
-    _auth_flow = 'oauth2'
-    auth_flow_id: Optional[str]
-    _oauth_trigger = 'instance'
-    oauth2_version = Field('1', **{'ui.hidden': True})
-    data_source_model: HubspotDataSource
+class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
+    _auth_flow = "oauth2"
+    auth_flow_id: Optional[str] = None
+    _oauth_trigger = "instance"
+    oauth2_version: str = Field("1", **{"ui.hidden": True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     def __init__(self, **kwargs) -> None:
-        super().__init__(
-            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
-        )
+        super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,
-            secrets_keeper=kwargs['secrets_keeper'],
-            redirect_uri=kwargs['redirect_uri'],
+            secrets_keeper=kwargs["secrets_keeper"],
+            redirect_uri=kwargs["redirect_uri"],
             config=OAuth2ConnectorConfig(
-                client_id=kwargs['client_id'],
-                client_secret=kwargs['client_secret'],
+                client_id=kwargs["client_id"],
+                client_secret=kwargs["client_secret"],
             ),
         )
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
         return ConnectorSecretsForm(
-            documentation_md=(Path(os.path.dirname(__file__)) / 'doc.md').read_text(),
+            documentation_md=(Path(os.path.dirname(__file__)) / "doc.md").read_text(),
             secrets_schema=OAuth2ConnectorConfig.schema(),
         )
 
@@ -121,10 +118,8 @@ class HubspotConnector(ToucanConnector):
         query_params: Dict[str, str],
         headers,
     ) -> List:
-        url: str = endpoint_info['url']
-        name: Optional[str] = (
-            endpoint_info['sub_name'] if 'sub_name' in endpoint_info else dataset_name
-        )
+        url: str = endpoint_info["url"]
+        name: Optional[str] = endpoint_info["sub_name"] if "sub_name" in endpoint_info else dataset_name
         response = None
         res = None
         data: List = []
@@ -134,7 +129,7 @@ class HubspotConnector(ToucanConnector):
         index = 1
         while not response or next_page_exists(res):
             if res:
-                query_params['after'] = res['paging']['next']['after']
+                query_params["after"] = res["paging"]["next"]["after"]
 
             response = requests.get(url, params=query_params, headers=headers)
             # throw if the request's status is not 200
@@ -143,7 +138,7 @@ class HubspotConnector(ToucanConnector):
             # Flatten the results
             results = res.get(name)
             if results is None:
-                raise HubspotConnectorException(f'Impossible to retrieve data for {name}')
+                raise HubspotConnectorException(f"Impossible to retrieve data for {name}")
             if results:
                 for r in results:
                     data.append(r)
@@ -151,7 +146,7 @@ class HubspotConnector(ToucanConnector):
         return data
 
     def _retrieve_data(self, data_source: HubspotDataSource) -> pd.DataFrame:
-        headers = {'authorization': f'Bearer {self._get_access_token()}'}
+        headers = {"authorization": f"Bearer {self._get_access_token()}"}
         try:
             query_params = {}
 
@@ -161,4 +156,4 @@ class HubspotConnector(ToucanConnector):
             )
             return pd.json_normalize(data)
         except Exception as e:
-            raise HubspotConnectorException(f'retrieve_data failed with: {str(e)}')
+            raise HubspotConnectorException(f"retrieve_data failed with: {str(e)}") from e

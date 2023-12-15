@@ -22,9 +22,7 @@ github_conn = GithubConnector(
 )
 
 # The OAuth2 authorization process
-authorization_response = get_authorization_response(
-    github_conn.build_authorization_url(), 'localhost', 34097
-)
+authorization_response = get_authorization_response(github_conn.build_authorization_url(), 'localhost', 34097)
 
 github_conn.retrieve_tokens(authorization_response)
 print('retrieved github token %s' % github_conn.get_access_token())
