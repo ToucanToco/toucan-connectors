@@ -70,7 +70,7 @@ def test_max_attempts():
     def myfunc(max_attempts):
         if len(logbook) < max_attempts:
             logbook.append(None)
-            raise RuntimeError('try again!')
+            raise RuntimeError("try again!")
 
     myfunc(1)
     assert len(logbook) == 1
@@ -90,7 +90,7 @@ def test_max_delay():
     @retry_policy.retry_decorator()
     def myfunc():
         logbook[0] = time()
-        raise RuntimeError('try again!')
+        raise RuntimeError("try again!")
 
     with pytest.raises(RuntimeError):
         approx_start = time()
@@ -107,7 +107,7 @@ def test_wait_time():
     def myfunc():
         if len(logbook) < 3:
             logbook.append(time())
-            raise RuntimeError('try again!')
+            raise RuntimeError("try again!")
 
     myfunc()
     assert len(logbook) == 3
@@ -123,7 +123,7 @@ def test_mix_attempts_and_max_delay():
     @retry_policy.retry_decorator()
     def myfunc():
         logbook.append(time())
-        raise RuntimeError('try again!')
+        raise RuntimeError("try again!")
 
     with pytest.raises(RuntimeError):
         approx_start = time()

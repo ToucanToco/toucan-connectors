@@ -24,22 +24,22 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
 )
 
-AUTHORIZATION_URL: str = 'https://www.linkedin.com/oauth/v2/authorization'
-SCOPE: str = 'r_organization_social,r_ads_reporting,r_ads'
-TOKEN_URL: str = 'https://www.linkedin.com/oauth/v2/accessToken'
+AUTHORIZATION_URL: str = "https://www.linkedin.com/oauth/v2/authorization"
+SCOPE: str = "r_organization_social,r_ads_reporting,r_ads"
+TOKEN_URL: str = "https://www.linkedin.com/oauth/v2/accessToken"
 
 
 class FinderMethod(str, Enum):
-    analytics = 'analytics'
-    statistics = 'statistics'
+    analytics = "analytics"
+    statistics = "statistics"
 
 
 class TimeGranularity(str, Enum):
     # https://docs.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting#query-parameters
-    all = 'ALL'
-    daily = 'DAILY'
-    monthly = 'MONTHLY'
-    yearly = 'YEARLY'
+    all = "ALL"
+    daily = "DAILY"
+    monthly = "MONTHLY"
+    yearly = "YEARLY"
 
 
 class NoCredentialsError(Exception):
@@ -52,26 +52,26 @@ class LinkedinadsDataSource(ToucanDataSource):
     """
 
     finder_methods: FinderMethod = Field(
-        FinderMethod.analytics, title='Finder methods', description='Default: analytics'
+        FinderMethod.analytics, title="Finder methods", description="Default: analytics"
     )
     start_date: str = Field(
-        ..., title='Start date', description='Start date of the dataset. Format must be dd/mm/yyyy.'
+        ..., title="Start date", description="Start date of the dataset. Format must be dd/mm/yyyy."
     )
     end_date: str | None = Field(
         None,
-        title='End date',
-        description='End date of the dataset, optional & default to today. Format must be dd/mm/yyyy.',
+        title="End date",
+        description="End date of the dataset, optional & default to today. Format must be dd/mm/yyyy.",
     )
     time_granularity: TimeGranularity = Field(
         TimeGranularity.all,
-        title='Time granularity',
-        description='Granularity of the dataset, default all result grouped',
+        title="Time granularity",
+        description="Granularity of the dataset, default all result grouped",
     )
-    flatten_column: str | None = Field(None, description='Column containing nested rows')
+    flatten_column: str | None = Field(None, description="Column containing nested rows")
 
     parameters: dict | None = Field(
         None,
-        description='See https://docs.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting for more information',
+        description="See https://docs.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting for more information",  # noqa: E501
     )
 
     @classmethod
@@ -80,7 +80,7 @@ class LinkedinadsDataSource(ToucanDataSource):
         by_alias: bool = True,
         ref_template: str = DEFAULT_REF_TEMPLATE,
         schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
-        mode: JsonSchemaMode = 'validation',
+        mode: JsonSchemaMode = "validation",
     ) -> dict[str, Any]:
         schema = super().model_json_schema(
             by_alias=by_alias,
@@ -88,59 +88,57 @@ class LinkedinadsDataSource(ToucanDataSource):
             schema_generator=schema_generator,
             mode=mode,
         )
-        keys = schema['properties'].keys()
+        keys = schema["properties"].keys()
         prio_keys = [
-            'finder_methods',
-            'start_date',
-            'end_date',
-            'time_granularity',
-            'flatten_column',
-            'parameters',
+            "finder_methods",
+            "start_date",
+            "end_date",
+            "time_granularity",
+            "flatten_column",
+            "parameters",
         ]
         new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        schema["properties"] = {k: schema["properties"][k] for k in new_keys}
         return schema
 
 
 class LinkedinadsConnector(ToucanConnector, data_source_model=LinkedinadsDataSource):
     """The LinkedinAds connector."""
 
-    _auth_flow = 'oauth2'
+    _auth_flow = "oauth2"
     auth_flow_id: Optional[
         str
     ] = None  # This ID is generated & provided to the data provider during the oauth authentication process
-    _baseroute = 'https://api.linkedin.com/v2/adAnalyticsV2?q='
+    _baseroute = "https://api.linkedin.com/v2/adAnalyticsV2?q="
     template: Template = Field(
         None,
-        description='You can provide a custom template that will be used for every HTTP request',
+        description="You can provide a custom template that will be used for every HTTP request",
     )
-    _oauth_trigger = 'instance'
-    oauth2_version: str = Field('1', **{'ui.hidden': True})
+    _oauth_trigger = "instance"
+    oauth2_version: str = Field("1", **{"ui.hidden": True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
         return ConnectorSecretsForm(
-            documentation_md=(Path(os.path.dirname(__file__)) / 'doc.md').read_text(),
+            documentation_md=(Path(os.path.dirname(__file__)) / "doc.md").read_text(),
             secrets_schema=OAuth2ConnectorConfig.schema(),
         )
 
     def __init__(self, **kwargs):
-        super().__init__(
-            **{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params}
-        )
+        super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         # we use __dict__ so that pydantic does not complain about the _oauth2_connector field
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,
-            redirect_uri=kwargs['redirect_uri'],
+            redirect_uri=kwargs["redirect_uri"],
             config=OAuth2ConnectorConfig(
-                client_id=kwargs['client_id'],
-                client_secret=kwargs['client_secret'],
+                client_id=kwargs["client_id"],
+                client_secret=kwargs["client_secret"],
             ),
-            secrets_keeper=kwargs['secrets_keeper'],
+            secrets_keeper=kwargs["secrets_keeper"],
         )
 
     def build_authorization_url(self, **kwargs):
@@ -163,45 +161,45 @@ class LinkedinadsConnector(ToucanConnector, data_source_model=LinkedinadsDataSou
         # Retrieve the access token
         access_token = self.get_access_token()
         if not access_token:
-            raise NoCredentialsError('No credentials')
-        headers = {'Authorization': f'Bearer {access_token}'}
+            raise NoCredentialsError("No credentials")
+        headers = {"Authorization": f"Bearer {access_token}"}
 
         # Parse provided dates
         try:
-            splitted_start = datetime.strptime(data_source.start_date, '%d/%m/%Y')
+            splitted_start = datetime.strptime(data_source.start_date, "%d/%m/%Y")
         except ValueError:
             splitted_start = dateutil.parser.parse(data_source.start_date)
         # Build the query, 1 mandatory parameters
         query = (
-            f'dateRange.start.day={splitted_start.day}&dateRange.start.month={splitted_start.month}'
-            f'&dateRange.start.year={splitted_start.year}&timeGranularity={data_source.time_granularity.value}'
+            f"dateRange.start.day={splitted_start.day}&dateRange.start.month={splitted_start.month}"
+            f"&dateRange.start.year={splitted_start.year}&timeGranularity={data_source.time_granularity.value}"
         )
 
         if data_source.end_date:
             try:
-                splitted_end = datetime.strptime(data_source.end_date, '%d/%m/%Y')
+                splitted_end = datetime.strptime(data_source.end_date, "%d/%m/%Y")
             except ValueError:
                 splitted_end = dateutil.parser.parse(data_source.end_date)
-            query += f'&dateRange.end.day={splitted_end.day}&dateRange.end.month={splitted_end.month}&dateRange.end.year={splitted_end.year}'
+            query += f"&dateRange.end.day={splitted_end.day}&dateRange.end.month={splitted_end.month}&dateRange.end.year={splitted_end.year}"  # noqa: E501
 
         # Build the query, 2 optional array parameters
         if data_source.parameters:
             for p in data_source.parameters.keys():
-                query += f'&{p}={data_source.parameters.get(p)}'
+                query += f"&{p}={data_source.parameters.get(p)}"
 
         # Get the data
         res = requests.get(
-            url=f'{self._baseroute}{data_source.finder_methods.value}',
+            url=f"{self._baseroute}{data_source.finder_methods.value}",
             params=query,
             headers=headers,
         )
 
         try:
             assert res.ok
-            data = res.json().get('elements')
+            data = res.json().get("elements")
 
-        except AssertionError:
-            raise HttpError(res.text)
+        except AssertionError as exc:
+            raise HttpError(res.text) from exc
 
         res = pd.DataFrame(data)
 
@@ -218,9 +216,9 @@ class LinkedinadsConnector(ToucanConnector, data_source_model=LinkedinadsDataSou
         try:
             access_token = self.get_access_token()
         except Exception:
-            return ConnectorStatus(status=False, error='Credentials are missing')
+            return ConnectorStatus(status=False, error="Credentials are missing")
 
         if not access_token:
-            return ConnectorStatus(status=False, error='Credentials are missing')
+            return ConnectorStatus(status=False, error="Credentials are missing")
 
-        return ConnectorStatus(status=True, message='Connector status OK')
+        return ConnectorStatus(status=True, message="Connector status OK")

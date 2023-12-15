@@ -1,19 +1,19 @@
 import time
 from typing import Optional
+from unittest.mock import patch
 
 import pytest
-from mock import patch
 
 from toucan_connectors.connection_manager import ConnectionBO, ConnectionManager
 
 # FIXME: Whenever possible, completely delete this module and the code tested by it
-pytest.skip(allow_module_level=True, reason='flaky')
+pytest.skip(allow_module_level=True, reason="flaky")
 
 
 @pytest.fixture
 def connection_manager():
     return ConnectionManager(
-        name='connection_manager_name',
+        name="connection_manager_name",
         timeout=3,
         wait=0.2,
         time_between_clean=1,
@@ -25,13 +25,13 @@ def connection_manager():
 @pytest.fixture
 def connection_manager_with_error():
     return ConnectionManager(
-        name='connection_manager_name',
+        name="connection_manager_name",
         timeout=3,
         wait=0.2,
         time_between_clean=1,
         time_keep_alive=5,
         connection_timeout=60,
-        tortank='test',
+        tortank="test",
     )
 
 
@@ -96,7 +96,7 @@ def _get_connection_without_connect_method(
 
     connection = cm.get(
         identifier,
-        connect_method='connect',
+        connect_method="connect",
         alive_method=__alive,
         close_method=__close,
     )
@@ -113,8 +113,8 @@ def _get_connection_without_alive_close_method(
     connection = cm.get(
         identifier,
         connect_method=__connect,
-        alive_method='alive',
-        close_method='close',
+        alive_method="alive",
+        close_method="close",
     )
     return connection
 
@@ -140,7 +140,7 @@ def _get_connection_long_closing(cm: ConnectionManager, identifier: str, time_sl
 
 
 class ConnectionObject:
-    name: str = 'ConnectionObject'
+    name: str = "ConnectionObject"
 
     @staticmethod
     def is_closed():
@@ -153,42 +153,38 @@ class ConnectionObject:
 
 def test_init_exception_connectionbo():
     with pytest.raises(KeyError):
-        ConnectionBO(tortank='test')
+        ConnectionBO(tortank="test")
 
 
 def test_init_exception_connectionmanager():
     with pytest.raises(KeyError):
         ConnectionManager(
-            name='connection_manager_name',
+            name="connection_manager_name",
             timeout=3,
             wait=0.2,
             time_between_clean=1,
             time_keep_alive=5,
             connection_timeout=60,
-            tortank='test',
+            tortank="test",
         )
 
 
 def test_get_basic(connection_manager):
-    with _get_connection(connection_manager, 'conn_1') as conn:
+    with _get_connection(connection_manager, "conn_1") as conn:
         assert len(connection_manager.connection_list) == 1
-        assert conn.name == 'ConnectionObject'
+        assert conn.name == "ConnectionObject"
         connection_manager.force_clean()
 
 
 def test_multiple_same_get(connection_manager):
-    with _get_connection(connection_manager, 'conn_1') as conn, _get_connection(
-        connection_manager, 'conn_1'
-    ) as conn2:
+    with _get_connection(connection_manager, "conn_1") as conn, _get_connection(connection_manager, "conn_1") as conn2:
         assert len(connection_manager.connection_list) == 1
         assert conn == conn2
         connection_manager.force_clean()
 
 
 def test_multiple_different_get(connection_manager):
-    with _get_connection(connection_manager, 'conn_1') as conn, _get_connection(
-        connection_manager, 'conn_2'
-    ) as conn2:
+    with _get_connection(connection_manager, "conn_1") as conn, _get_connection(connection_manager, "conn_2") as conn2:
         assert len(connection_manager.connection_list) == 2
         assert conn != conn2
         connection_manager.force_clean()
@@ -200,7 +196,7 @@ def test_auto_clean_exception(connection_manager):
     connection_manager.time_keep_alive = 1
     connection_manager.time_between_clean = 1
 
-    with _get_connection_exception(connection_manager, 'conn_1'):
+    with _get_connection_exception(connection_manager, "conn_1"):
         assert len(connection_manager.connection_list) == 1
     time.sleep(6)
     assert len(connection_manager.connection_list) == 0
@@ -209,14 +205,14 @@ def test_auto_clean_exception(connection_manager):
     connection_manager.force_clean()
 
 
-@patch('toucan_connectors.connection_manager.ConnectionBO.force_to_remove', return_value=True)
+@patch("toucan_connectors.connection_manager.ConnectionBO.force_to_remove", return_value=True)
 def test_auto_clean_force_remove(rs, connection_manager):
     t1 = connection_manager.time_keep_alive
     t2 = connection_manager.time_between_clean
     connection_manager.time_keep_alive = 1
     connection_manager.time_between_clean = 1
 
-    _get_connection(connection_manager, 'conn_1')
+    _get_connection(connection_manager, "conn_1")
     assert len(connection_manager.connection_list) == 1
     time.sleep(3)
     assert len(connection_manager.connection_list) == 0
@@ -229,7 +225,7 @@ def test_auto_clean_simple(connection_manager):
     t1 = connection_manager.time_keep_alive
     connection_manager.time_keep_alive = 1
 
-    with _get_connection(connection_manager, 'conn_1'):
+    with _get_connection(connection_manager, "conn_1"):
         assert len(connection_manager.connection_list) == 1
     time.sleep(3)
     assert len(connection_manager.connection_list) == 0
@@ -242,12 +238,10 @@ def test_auto_clean_multiple(connection_manager):
     t2 = connection_manager.time_between_clean
     connection_manager.time_keep_alive = 2
     connection_manager.time_between_clean = 1
-    with _get_connection(connection_manager, 'conn_1'), _get_connection(
-        connection_manager, 'conn_2'
-    ):
+    with _get_connection(connection_manager, "conn_1"), _get_connection(connection_manager, "conn_2"):
         assert len(connection_manager.connection_list) == 2
         time.sleep(1)
-        with _get_connection(connection_manager, 'conn_3'):
+        with _get_connection(connection_manager, "conn_3"):
             assert len(connection_manager.connection_list) == 3
     time.sleep(1)
     assert len(connection_manager.connection_list) == 1
@@ -257,9 +251,7 @@ def test_auto_clean_multiple(connection_manager):
 
 
 def test_force_clean(connection_manager):
-    with _get_connection(connection_manager, 'conn_1'), _get_connection(
-        connection_manager, 'conn_2'
-    ):
+    with _get_connection(connection_manager, "conn_1"), _get_connection(connection_manager, "conn_2"):
         assert len(connection_manager.connection_list) == 2
     connection_manager.force_clean()
     assert len(connection_manager.connection_list) == 0
@@ -267,7 +259,7 @@ def test_force_clean(connection_manager):
 
 
 def test_clean_connection_not_alive(connection_manager):
-    with _get_connection(connection_manager, 'conn_1', enabled_alive=False):
+    with _get_connection(connection_manager, "conn_1", enabled_alive=False):
         assert len(connection_manager.connection_list) == 1
     time.sleep(1)
     assert len(connection_manager.connection_list) == 0
@@ -279,7 +271,7 @@ def test_remove_connection_in_progress_too_long(connection_manager):
     connection_manager.connection_timeout = 1
 
     with pytest.raises(Exception):
-        with _get_connection(connection_manager, 'conn_1', sleep=3):
+        with _get_connection(connection_manager, "conn_1", sleep=3):
             assert len(connection_manager.connection_list) == 0
 
     connection_manager.connection_timeout = t1
@@ -290,7 +282,7 @@ def test_connection_manager_without_close_method_define(connection_manager):
     t1 = connection_manager.time_keep_alive
     t2 = connection_manager.time_between_clean
     connection_manager.time_keep_alive = 1
-    with _get_connection_without_alive_close_method(connection_manager, 'conn_1'):
+    with _get_connection_without_alive_close_method(connection_manager, "conn_1"):
         assert len(connection_manager.connection_list) == 1
     time.sleep(5)
     assert len(connection_manager.connection_list) == 0
@@ -301,6 +293,6 @@ def test_connection_manager_without_close_method_define(connection_manager):
 
 def test_connect_method_is_not_callable(connection_manager):
     with pytest.raises(Exception):
-        with _get_connection_without_connect_method(connection_manager, 'conn_1'):
+        with _get_connection_without_connect_method(connection_manager, "conn_1"):
             assert len(connection_manager.connection_list) == 0
     connection_manager.force_clean()

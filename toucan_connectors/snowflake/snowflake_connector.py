@@ -40,59 +40,59 @@ _DB_MODEL_EXTRACTION_QUERY = build_database_model_extraction_query()
 # TODO: Once we remove SnowflakeCommon, declare the mapping here
 _TYPE_CODE_MAPPING = type_code_mapping
 
-_UI_HIDDEN: dict[str, Any] = {'ui.hidden': True}
+_UI_HIDDEN: dict[str, Any] = {"ui.hidden": True}
 
 
-class SnowflakeDataSource(ToucanDataSource['SnowflakeConnector']):
-    database: str = Field(..., description='The name of the database you want to query')
-    warehouse: str | None = Field(None, description='The name of the warehouse you want to query')
+class SnowflakeDataSource(ToucanDataSource["SnowflakeConnector"]):
+    database: str = Field(..., description="The name of the database you want to query")
+    warehouse: str | None = Field(None, description="The name of the warehouse you want to query")
 
     query: str = Field(
         ...,
-        description='You can write your SQL query here',
+        description="You can write your SQL query here",
         min_length=1,
-        widget='sql',  # type:ignore[call-arg]
+        widget="sql",  # type:ignore[call-arg]
     )
 
     # Pydantic sees **_UI_HIDDEN as the third argument (the default factory) and raises an error
     query_object: dict | None = Field(  # type: ignore[pydantic-field]
         None,
-        description='An object describing a simple select query'
-        'For example '
+        description="An object describing a simple select query"
+        "For example "
         '{"schema": "SHOW_SCHEMA", "table": "MY_TABLE", "columns": ["col1", "col2"]}'
-        'This field is used internally',
+        "This field is used internally",
         **_UI_HIDDEN,
     )
-    language: str = Field('sql', **_UI_HIDDEN)  # type: ignore[pydantic-field]
+    language: str = Field("sql", **_UI_HIDDEN)  # type: ignore[pydantic-field]
 
     @classmethod
-    def _get_databases(cls, connector: 'SnowflakeConnector'):
+    def _get_databases(cls, connector: "SnowflakeConnector"):
         return connector._get_databases()
 
     @classmethod
-    def get_form(cls, connector: 'SnowflakeConnector', current_config):
+    def get_form(cls, connector: "SnowflakeConnector", current_config):
         constraints: dict[str, Any] = {}
 
         with suppress(Exception):
             databases = connector._get_databases()
             warehouses = connector._get_warehouses()
             # Restrict some fields to lists of existing counterparts
-            constraints['database'] = strlist_to_enum('database', databases)
-            constraints['warehouse'] = strlist_to_enum('warehouse', warehouses)
+            constraints["database"] = strlist_to_enum("database", databases)
+            constraints["warehouse"] = strlist_to_enum("warehouse", warehouses)
 
-        res = create_model('FormSchema', __base__=cls, **constraints).schema()
-        res['properties']['warehouse']['default'] = connector.default_warehouse
+        res = create_model("FormSchema", __base__=cls, **constraints).schema()
+        res["properties"]["warehouse"]["default"] = connector.default_warehouse
         return res
 
 
 class AuthenticationMethod(str, Enum):
-    PLAIN: str = 'Snowflake (ID + Password)'
-    OAUTH: str = 'oAuth'
+    PLAIN: str = "Snowflake (ID + Password)"
+    OAUTH: str = "oAuth"
 
 
 class AuthenticationMethodValue(str, Enum):
-    PLAIN: str = 'snowflake'
-    OAUTH: str = 'oauth'
+    PLAIN: str = "snowflake"
+    OAUTH: str = "oauth"
 
 
 @contextmanager
@@ -100,7 +100,7 @@ def _snowflake_connection(
     **args: str | int | None,
 ) -> Generator[SnowflakeConnection, None, None]:
     """Returns a Snowflake connection and automatically closes it."""
-    sf_connector.paramstyle = 'qmark'
+    sf_connector.paramstyle = "qmark"
     conn = SnowflakeConnection(**args)  # type:ignore[arg-type]
     try:
         yield conn
@@ -110,20 +110,20 @@ def _snowflake_connection(
 
 
 _SCHEMA_ORDERED_KEYS = (
-    'type',
-    'name',
-    'account',
-    'authentication_method',
-    'user',
-    'password',
-    'token_endpoint',
-    'token_endpoint_content_type',
-    'role',
-    'default_warehouse',
-    'retry_policy',
-    'secrets_storage_version',
-    'sso_credentials_keeper',
-    'user_tokens_keeper',
+    "type",
+    "name",
+    "account",
+    "authentication_method",
+    "user",
+    "password",
+    "token_endpoint",
+    "token_endpoint_content_type",
+    "role",
+    "default_warehouse",
+    "retry_policy",
+    "secrets_storage_version",
+    "sso_credentials_keeper",
+    "user_tokens_keeper",
 )
 
 
@@ -143,39 +143,41 @@ class SnowflakeConnector(
 
     account: str = Field(
         ...,
-        description='The full name of your Snowflake account. '
-        'It might require the region and cloud platform where your account is located, '
+        description="The full name of your Snowflake account. "
+        "It might require the region and cloud platform where your account is located, "
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
-        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
-        placeholder='your_account_name.region_id.cloud_platform',  # type:ignore[call-arg]
+        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',  # noqa: E501
+        placeholder="your_account_name.region_id.cloud_platform",  # type:ignore[call-arg]
     )
 
     authentication_method: AuthenticationMethod = Field(
         AuthenticationMethod.PLAIN,
-        title='Authentication Method',
-        description='The authentication mechanism that will be used to connect to your snowflake data source',
-        ui={'checkbox': False},  # type:ignore[call-arg]
+        title="Authentication Method",
+        description="The authentication mechanism that will be used to connect to your snowflake data source",
+        ui={"checkbox": False},  # type:ignore[call-arg]
     )
 
-    user: str = Field(..., description='Your login username')
-    password: PlainJsonSecretStr | None = Field(None, description='Your login password')
-    token_endpoint: str | None = Field(None, description='The token endpoint')
+    user: str = Field(..., description="Your login username")
+    password: PlainJsonSecretStr | None = Field(None, description="Your login password")
+    token_endpoint: str | None = Field(None, description="The token endpoint")
     token_endpoint_content_type: str = Field(
-        'application/json',
-        description='The content type to use when requesting the token endpoint',
+        "application/json",
+        description="The content type to use when requesting the token endpoint",
     )
 
     role: str | None = Field(
         None,
-        description='The user role that you want to connect with. '
-        'See more details <a href="https://docs.snowflake.com/en/user-guide/admin-user-management.html#user-roles" target="_blank">here</a>.',
+        description="The user role that you want to connect with. "
+        'See more details <a href="https://docs.snowflake.com/en/user-guide/admin-user-management.html#user-roles" target="_blank">here</a>.',  # noqa: E501
     )
 
     default_warehouse: str | None = Field(
-        None, description='The default warehouse that shall be used for any data source'
+        None, description="The default warehouse that shall be used for any data source"
     )
     category: Category = Field(
-        Category.SNOWFLAKE, title='category', ui={'checkbox': False}  # type:ignore[call-arg]
+        Category.SNOWFLAKE,
+        title="category",
+        ui={"checkbox": False},  # type:ignore[call-arg]
     )
 
     @classmethod
@@ -185,7 +187,7 @@ class SnowflakeConnector(
         ref_template: str = DEFAULT_REF_TEMPLATE,
         # This confuses mypy because of the type field
         schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,  # type:ignore[valid-type]
-        mode: JsonSchemaMode = 'validation',
+        mode: JsonSchemaMode = "validation",
     ) -> dict[str, Any]:
         schema = super().model_json_schema(
             by_alias=by_alias,
@@ -193,7 +195,7 @@ class SnowflakeConnector(
             schema_generator=schema_generator,
             mode=mode,
         )
-        schema['properties'] = {k: schema['properties'][k] for k in _SCHEMA_ORDERED_KEYS}
+        schema["properties"] = {k: schema["properties"][k] for k in _SCHEMA_ORDERED_KEYS}
         return schema
 
     @property
@@ -210,17 +212,12 @@ class SnowflakeConnector(
 
     @property
     def client_secret(self) -> str | None:
-        return (
-            self.sso_credentials_keeper
-            and self.sso_credentials_keeper.client_secret.get_secret_value()
-        )
+        return self.sso_credentials_keeper and self.sso_credentials_keeper.client_secret.get_secret_value()
 
     @staticmethod
     def _get_status_details(index: int, status: bool | None) -> list[tuple[str, bool | None]]:
-        checks = ['Connection to Snowflake', 'Default warehouse exists']
-        ok_checks: list[tuple[str, bool | None]] = [
-            (check, True) for i, check in enumerate(checks) if i < index
-        ]
+        checks = ["Connection to Snowflake", "Default warehouse exists"]
+        ok_checks: list[tuple[str, bool | None]] = [(check, True) for i, check in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks: list[tuple[str, bool | None]] = [
             (check, None) for i, check in enumerate(checks) if i > index
@@ -248,12 +245,10 @@ class SnowflakeConnector(
             return ConnectorStatus(
                 status=False,
                 details=self._get_status_details(0, False),
-                error=f"Access forbidden, please check that you have access to the '{self.account}' account or try again later.",
+                error=f"Access forbidden, please check that you have access to the '{self.account}' account or try again later.",  # noqa: E501
             )
         except snowflake.connector.errors.ProgrammingError as e:
-            return ConnectorStatus(
-                status=False, details=self._get_status_details(0, False), error=str(e)
-            )
+            return ConnectorStatus(status=False, details=self._get_status_details(0, False), error=str(e))
         except snowflake.connector.errors.DatabaseError:
             # Raised when the provided User/Password aren't correct
             return ConnectorStatus(
@@ -266,27 +261,27 @@ class SnowflakeConnector(
 
     def get_connection_params(self) -> dict[str, str | int]:
         params: dict[str, str | int] = {
-            'user': Template(self.user).render(),
-            'account': self.account,
-            'authenticator': self.authentication_method,
+            "user": Template(self.user).render(),
+            "account": self.account,
+            "authenticator": self.authentication_method,
             # hard Snowflake params
-            'application': 'ToucanToco',
-            'client_session_keep_alive_heartbeat_frequency': 59,
-            'client_prefetch_threads': 5,
-            'session_id': self.identifier,
+            "application": "ToucanToco",
+            "client_session_keep_alive_heartbeat_frequency": 59,
+            "client_prefetch_threads": 5,
+            "session_id": self.identifier,
         }
 
-        if params['authenticator'] == AuthenticationMethod.PLAIN and self.password:
-            params['authenticator'] = AuthenticationMethodValue.PLAIN
-            params['password'] = self.password.get_secret_value()
+        if params["authenticator"] == AuthenticationMethod.PLAIN and self.password:
+            params["authenticator"] = AuthenticationMethodValue.PLAIN
+            params["password"] = self.password.get_secret_value()
 
         if self.authentication_method == AuthenticationMethod.OAUTH:
             if self.access_token is not None:
-                params['token'] = self.access_token
-            params['authenticator'] = AuthenticationMethodValue.OAUTH
+                params["token"] = self.access_token
+            params["authenticator"] = AuthenticationMethodValue.OAUTH
 
         if self.role:
-            params['role'] = self.role
+            params["role"] = self.role
 
         return params
 
@@ -302,15 +297,15 @@ class SnowflakeConnector(
                 access_token = jwt.decode(
                     self.access_token,
                     options={
-                        'verify_signature': False,
-                        'verify_exp': False,
-                        'verify_nbf': False,
-                        'verify_iat': False,
-                        'verify_aud': False,
-                        'verify_iss': False,
+                        "verify_signature": False,
+                        "verify_exp": False,
+                        "verify_nbf": False,
+                        "verify_iat": False,
+                        "verify_aud": False,
+                        "verify_iss": False,
                     },
                 )
-                is_expired = datetime.fromtimestamp(access_token['exp']) < datetime.now()
+                is_expired = datetime.fromtimestamp(access_token["exp"]) < datetime.now()
             except Exception:
                 is_expired = True
 
@@ -318,37 +313,33 @@ class SnowflakeConnector(
                 res = requests.post(
                     self.token_endpoint,
                     data={
-                        'grant_type': 'refresh_token',
-                        'client_id': self.client_id,
-                        'client_secret': self.client_secret,
-                        'refresh_token': self.refresh_token,
+                        "grant_type": "refresh_token",
+                        "client_id": self.client_id,
+                        "client_secret": self.client_secret,
+                        "refresh_token": self.refresh_token,
                     },
-                    headers={'Content-Type': self.token_endpoint_content_type},
+                    headers={"Content-Type": self.token_endpoint_content_type},
                 )
                 res.raise_for_status()
 
                 self.user_tokens_keeper.update_tokens(
-                    access_token=res.json().get('access_token'),
-                    refresh_token=res.json().get('refresh_token'),
+                    access_token=res.json().get("access_token"),
+                    refresh_token=res.json().get("refresh_token"),
                 )
 
     def _get_connection(
         self, database: str | None = None, warehouse: str | None = None
     ) -> ContextManager[SnowflakeConnection]:
         if self.authentication_method == AuthenticationMethod.OAUTH:
-            logger.info('Refreshing OAuth token...')
+            logger.info("Refreshing OAuth token...")
             self._refresh_oauth_token()
-            logger.info('Done refreshing OAuth token')
+            logger.info("Done refreshing OAuth token")
 
-        return _snowflake_connection(
-            **self.get_connection_params(), database=database, warehouse=warehouse
-        )
+        return _snowflake_connection(**self.get_connection_params(), database=database, warehouse=warehouse)
 
     def _set_warehouse(self, data_source: SnowflakeDataSource):
         return (
-            data_source.copy(update={'warehouse': self.default_warehouse})
-            if not data_source.warehouse
-            else data_source
+            data_source.copy(update={"warehouse": self.default_warehouse}) if not data_source.warehouse else data_source
         )
 
     @overload
@@ -406,20 +397,20 @@ class SnowflakeConnector(
             return {r.name: _TYPE_CODE_MAPPING[r.type_code] for r in curs.describe(query)}
 
     def _get_warehouses(self, warehouse_name: str | None = None) -> list[str]:
-        query = 'SHOW WAREHOUSES'
+        query = "SHOW WAREHOUSES"
         if warehouse_name:
             query += f" LIKE '{warehouse_name}'"
 
         result = self._execute_query(query, warehouse=warehouse_name)
-        return result['name'].to_list() if 'name' in result.columns else []
+        return result["name"].to_list() if "name" in result.columns else []
 
     def _get_databases(self, database_name: str | None = None) -> list[str]:
-        query = 'SHOW DATABASES'
+        query = "SHOW DATABASES"
         if database_name:
             query += f" LIKE '{database_name}'"
 
         result = self._execute_query(query, database=database_name)
-        return result['name'].to_list() if 'name' in result.columns else []
+        return result["name"].to_list() if "name" in result.columns else []
 
     def _fetch_data(
         self,
@@ -454,9 +445,7 @@ class SnowflakeConnector(
         df = self._fetch_data(data_source, offset=offset, limit=limit)
         return DataSlice(
             df=df,
-            pagination_info=build_pagination_info(
-                offset=0, limit=limit, total_rows=None, retrieved_rows=len(df)
-            ),
+            pagination_info=build_pagination_info(offset=0, limit=limit, total_rows=None, retrieved_rows=len(df)),
         )
 
     def describe(self, data_source: SnowflakeDataSource) -> dict[str, str]:
@@ -467,10 +456,10 @@ class SnowflakeConnector(
             data_source.query, data_source.parameters
         )
         return {
-            'warehouse': data_source.warehouse,
-            'database': data_source.database,
-            'query': prepared_query,
-            'parameters': prepared_query_parameters,
+            "warehouse": data_source.warehouse,
+            "database": data_source.database,
+            "query": prepared_query,
+            "parameters": prepared_query_parameters,
         }
 
     def get_model(self, db_name: str | None = None) -> list[TableInfo]:

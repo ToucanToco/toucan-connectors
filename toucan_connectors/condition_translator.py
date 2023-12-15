@@ -6,25 +6,25 @@ from pydantic import BaseModel
 
 Number = Union[int, float]
 
-ClauseType = TypeVar('ClauseType')
+ClauseType = TypeVar("ClauseType")
 
 
-LogicalOperator = Union[Literal['and'], Literal['or']]
+LogicalOperator = Union[Literal["and"], Literal["or"]]
 
 
 class ConditionOperator(Enum):
-    EQUAL = 'eq'
-    NOT_EQUAL = 'ne'
-    LOWER_THAN = 'lt'
-    LOWER_THAN_EQUAL = 'le'
-    GREATER_THAN = 'gt'
-    GREATER_THAN_EQUAL = 'ge'
-    IN = 'in'
-    NOT_IN = 'nin'
-    MATCHES = 'matches'
-    NOT_MATCHES = 'notmatches'
-    IS_NULL = 'isnull'
-    IS_NOT_NULL = 'notnull'
+    EQUAL = "eq"
+    NOT_EQUAL = "ne"
+    LOWER_THAN = "lt"
+    LOWER_THAN_EQUAL = "le"
+    GREATER_THAN = "gt"
+    GREATER_THAN_EQUAL = "ge"
+    IN = "in"
+    NOT_IN = "nin"
+    MATCHES = "matches"
+    NOT_MATCHES = "notmatches"
+    IS_NULL = "isnull"
+    IS_NOT_NULL = "notnull"
 
 
 class ConditionModel(BaseModel):
@@ -65,18 +65,14 @@ class ConditionTranslator(ABC):
                 ]
             }
         """
-        if 'or' in condition:
-            if isinstance(condition['or'], list):
-                return cls.join_clauses(
-                    [cls.translate(condition) for condition in condition['or']], 'or'
-                )
+        if "or" in condition:
+            if isinstance(condition["or"], list):
+                return cls.join_clauses([cls.translate(condition) for condition in condition["or"]], "or")
             else:
                 raise ValueError("'or' value must be an array")
-        elif 'and' in condition:
-            if isinstance(condition['and'], list):
-                return cls.join_clauses(
-                    [cls.translate(condition) for condition in condition['and']], 'and'
-                )
+        elif "and" in condition:
+            if isinstance(condition["and"], list):
+                return cls.join_clauses([cls.translate(condition) for condition in condition["and"]], "and")
             else:
                 raise ValueError("'and' value must be an array")
         else:
@@ -86,9 +82,7 @@ class ConditionTranslator(ABC):
             if isinstance(condition_m.value, str):
                 condition_m.value = cls.get_value_str_ref(condition_m.value)
 
-            return clause_generator_for_operator(
-                cls.get_column_ref(condition_m.column), condition_m.value
-            )
+            return clause_generator_for_operator(cls.get_column_ref(condition_m.column), condition_m.value)
 
     @classmethod
     @abstractmethod

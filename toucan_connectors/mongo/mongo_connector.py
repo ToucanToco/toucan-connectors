@@ -41,16 +41,16 @@ def _is_match_empty(match_: dict) -> bool:
 
 
 def _is_match_statement(d: Any) -> bool:
-    return isinstance(d, dict) and list(d.keys()) == ['$match']
+    return isinstance(d, dict) and list(d.keys()) == ["$match"]
 
 
 def _sanitize_match(query: dict) -> dict:
     if _is_match_empty(query):
         return {}
-    if '$and' in query:
-        and_condition = query['$and']
+    if "$and" in query:
+        and_condition = query["$and"]
         if isinstance(and_condition, list):
-            query['$and'] = [elem for elem in and_condition if not _is_empty_match_column(elem)]
+            query["$and"] = [elem for elem in and_condition if not _is_empty_match_column(elem)]
     return query
 
 
@@ -61,9 +61,7 @@ def _sanitize_query_matches(query: dict | list[dict]) -> Any:
     passthrough. It cannot be removed from the query to prevent having an empty query.
     """
     if isinstance(query, list):
-        return [
-            {'$match': _sanitize_match(q['$match'])} if _is_match_statement(q) else q for q in query
-        ]
+        return [{"$match": _sanitize_match(q["$match"])} if _is_match_statement(q) else q for q in query]
     return query
 
 
@@ -77,12 +75,12 @@ def normalize_query(query, parameters):
     query = _sanitize_query_matches(query)
 
     if isinstance(query, dict):
-        query = [{'$match': query}]
+        query = [{"$match": query}]
 
     for stage in query:
         # Allow ordered sorts
-        if '$sort' in stage and isinstance(stage['$sort'], list):
-            stage['$sort'] = SON([x.popitem() for x in stage['$sort']])
+        if "$sort" in stage and isinstance(stage["$sort"], list):
+            stage["$sort"] = SON([x.popitem() for x in stage["$sort"]])
 
     return query
 
@@ -91,9 +89,9 @@ def apply_condition_filter(query, permissions_condition: dict):
     if permissions_condition:
         permissions = MongoConditionTranslator.translate(permissions_condition)
         if isinstance(query, dict):
-            query = {'$and': [query, permissions]}
+            query = {"$and": [query, permissions]}
         else:
-            query[0]['$match'] = {'$and': [query[0]['$match'], permissions]}
+            query[0]["$match"] = {"$and": [query[0]["$match"], permissions]}
     return query
 
 
@@ -108,23 +106,22 @@ def validate_collection(client, database: str, collection: str):
 
 
 class MongoDataSource(ToucanDataSource):
-    database: str = Field(..., description='The name of the database you want to query')
-    collection: str = Field(..., description='The name of the collection you want to query')
+    database: str = Field(..., description="The name of the database you want to query")
+    collection: str = Field(..., description="The name of the collection you want to query")
     query: Union[dict, list] = Field(
         {},
-        description='A mongo query. See more details on the Mongo '
-        'Aggregation Pipeline in the MongoDB documentation',
+        description="A mongo query. See more details on the Mongo " "Aggregation Pipeline in the MongoDB documentation",
     )
 
     # FIXME: This is needed for now because with we rely on empty queries being dicts. In pydantic
     # v1, "[]" was coerced to {}, and we somehow rely on that cursed behaviour
-    @field_validator('query')
+    @field_validator("query")
     @classmethod
     def _ensure_empty_query_is_dict(cls, query: dict | list) -> dict | list:
         return query or {}
 
     @classmethod
-    def get_form(cls, connector: 'MongoConnector', current_config):
+    def get_form(cls, connector: "MongoConnector", current_config):
         """
         Method to retrieve the form with a current config
         For example, once the connector is set,
@@ -136,36 +133,34 @@ class MongoDataSource(ToucanDataSource):
         client = pymongo.MongoClient(**connector._get_mongo_client_kwargs())
         # Always add the suggestions for the available databases
         available_databases = client.list_database_names()
-        constraints['database'] = strlist_to_enum('database', available_databases)
+        constraints["database"] = strlist_to_enum("database", available_databases)
 
-        if 'database' in current_config:
-            validate_database(client, current_config['database'])
-            available_cols = client[current_config['database']].list_collection_names()
-            constraints['collection'] = strlist_to_enum('collection', available_cols)
+        if "database" in current_config:
+            validate_database(client, current_config["database"])
+            available_cols = client[current_config["database"]].list_collection_names()
+            constraints["collection"] = strlist_to_enum("collection", available_cols)
 
-        return create_model('FormSchema', **constraints, __base__=cls).schema()
+        return create_model("FormSchema", **constraints, __base__=cls).schema()
 
 
-class MongoConnector(
-    ToucanConnector, VersionableEngineConnector, data_source_model=MongoDataSource
-):
+class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_model=MongoDataSource):
     """Retrieve data from a [MongoDB](https://www.mongodb.com/) database."""
 
     host: str = Field(
         ...,
-        description='The domain name (preferred option as more dynamic) or '
-        'the hardcoded IP address of your database server',
+        description="The domain name (preferred option as more dynamic) or "
+        "the hardcoded IP address of your database server",
     )
-    port: Optional[int] = Field(None, description='The listening port of your database server')
-    username: Optional[str] = Field(None, description='Your login username')
-    password: Optional[PlainJsonSecretStr] = Field(None, description='Your login password')
-    ssl: Optional[bool] = Field(None, description='Create the connection to the server using SSL')
+    port: Optional[int] = Field(None, description="The listening port of your database server")
+    username: Optional[str] = Field(None, description="Your login username")
+    password: Optional[PlainJsonSecretStr] = Field(None, description="Your login password")
+    ssl: Optional[bool] = Field(None, description="Create the connection to the server using SSL")
     model_config = ConfigDict(ignored_types=(cached_property, _lru_cache_wrapper))
 
-    @model_validator(mode='after')
-    def password_must_have_a_user(self) -> 'MongoConnector':
+    @model_validator(mode="after")
+    def password_must_have_a_user(self) -> "MongoConnector":
         if self.password is not None and self.username is None:
-            raise ValueError('username must be set')
+            raise ValueError("username must be set")
         return self
 
     def __hash__(self):
@@ -179,7 +174,7 @@ class MongoConnector(
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
-        checks = ['Hostname resolved', 'Port opened', 'Host connection', 'Authenticated']
+        checks = ["Hostname resolved", "Port opened", "Host connection", "Authenticated"]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
@@ -188,11 +183,11 @@ class MongoConnector(
     def _get_mongo_client_kwargs(self):
         # We don't want parent class attributes nor the `client` property
         # nor attributes with `None` value
-        to_exclude = set(ToucanConnector.__fields__) | {'client'}
+        to_exclude = set(ToucanConnector.__fields__) | {"client"}
         mongo_client_kwargs = self.dict(exclude=to_exclude, exclude_none=True).copy()
 
-        if 'password' in mongo_client_kwargs:
-            mongo_client_kwargs['password'] = mongo_client_kwargs['password'].get_secret_value()
+        if "password" in mongo_client_kwargs:
+            mongo_client_kwargs["password"] = mongo_client_kwargs["password"].get_secret_value()
 
         return mongo_client_kwargs
 
@@ -202,21 +197,17 @@ class MongoConnector(
             try:
                 self.check_hostname(self.host)
             except Exception as e:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(0, False), error=str(e)
-                )
+                return ConnectorStatus(status=False, details=self._get_details(0, False), error=str(e))
 
             # Check port
             try:
                 self.check_port(self.host, self.port)
             except Exception as e:
-                return ConnectorStatus(
-                    status=False, details=self._get_details(1, False), error=str(e)
-                )
+                return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
 
         # Check databases access
         mongo_client_kwargs = self._get_mongo_client_kwargs()
-        mongo_client_kwargs['serverSelectionTimeoutMS'] = 500
+        mongo_client_kwargs["serverSelectionTimeoutMS"] = 500
         client = pymongo.MongoClient(**mongo_client_kwargs)
         try:
             client.server_info()
@@ -231,11 +222,11 @@ class MongoConnector(
     def client(self):
         return pymongo.MongoClient(**self._get_mongo_client_kwargs())
 
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=32)  # noqa: B019
     def validate_database(self, database: str):
         return validate_database(self.client, database)
 
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=32)  # noqa: B019
     def validate_collection(self, database: str, collection: str):
         return validate_collection(self.client, database, collection)
 
@@ -275,36 +266,36 @@ class MongoConnector(
 
             df_facet = []
             if offset:
-                df_facet.append({'$skip': offset})
+                df_facet.append({"$skip": offset})
             if limit is not None:
-                df_facet.append({'$limit': limit})
+                df_facet.append({"$limit": limit})
 
-            df_facet.append({'$unset': ['_id']})
+            df_facet.append({"$unset": ["_id"]})
 
             facet = {
-                '$facet': {
+                "$facet": {
                     # counting more than 1M values can be really slow, and the exact number is not that much relevant
-                    'count': [
-                        {'$limit': MAX_COUNTED_ROWS},
-                        {'$count': 'value'},
-                        {'$unset': ['_id']},
+                    "count": [
+                        {"$limit": MAX_COUNTED_ROWS},
+                        {"$count": "value"},
+                        {"$unset": ["_id"]},
                     ],
-                    'df': df_facet,  # df_facet is never empty
+                    "df": df_facet,  # df_facet is never empty
                 }
             }
             data_source.query.append(facet)
 
             res = self._execute_query(data_source).next()
-            total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
-            df = pd.DataFrame(res['df'])
+            total_count = res["count"][0]["value"] if len(res["count"]) > 0 else 0
+            df = pd.DataFrame(res["df"])
         else:
             df = self.get_df(data_source, permissions)
             total_count = len(df)
             # We try to remove the _id from this DataFrame if there is one
             # ugly for now but we need to handle that in this else case
             try:
-                df.pop('_id')
-            except Exception:
+                df.pop("_id")
+            except Exception:  # noqa: S110
                 pass
         return DataSlice(
             df,
@@ -330,23 +321,21 @@ class MongoConnector(
         # Since Mongo '$regex' operator doesn't work with integer values, we need to check the stringified versions
         search_steps = {}
         for condition in search:
-            search_steps[f'${condition}'] = []  # convert "and"/"or" to "$and"/"$or"
+            search_steps[f"${condition}"] = []  # convert "and"/"or" to "$and"/"$or"
             for column in search[condition]:
-                search_steps[f'${condition}'].append(
-                    {'$and': []}
-                )  # makes an "and" of all columns searches
+                search_steps[f"${condition}"].append({"$and": []})  # makes an "and" of all columns searches
                 for col, regex in column.items():
-                    search_steps[f'${condition}'][-1]['$and'].append(
+                    search_steps[f"${condition}"][-1]["$and"].append(
                         {
-                            '$regexMatch': {
-                                'input': {'$toString': f'${col}'},
-                                'regex': regex.pattern,
-                                'options': 'i',  # i -> Case insensitivity
+                            "$regexMatch": {
+                                "input": {"$toString": f"${col}"},
+                                "regex": regex.pattern,
+                                "options": "i",  # i -> Case insensitivity
                             }
                         }
                     )
-        data_source.query.append({'$match': {'$expr': search_steps}})
-        data_source.query.append({'$unset': ['_id']})
+        data_source.query.append({"$match": {"$expr": search_steps}})
+        data_source.query.append({"$unset": ["_id"]})
 
         return self.get_slice(data_source, permissions, limit=limit, offset=offset or 0)
 
@@ -375,31 +364,27 @@ class MongoConnector(
 
         agg_cmd = SON(
             [
-                ('aggregate', data_source.collection),
-                ('pipeline', data_source.query),
-                ('cursor', {}),
+                ("aggregate", data_source.collection),
+                ("pipeline", data_source.query),
+                ("cursor", {}),
             ]
         )
-        result = client[data_source.database].command(
-            command='explain', value=agg_cmd, verbosity='executionStats'
-        )
+        result = client[data_source.database].command(command="explain", value=agg_cmd, verbosity="executionStats")
         return _format_explain_result(result)
 
     def get_unique_identifier(self) -> str:
-        return self.json(
-            exclude={'client'}
-        )  # client is a MongoClient instance, not json serializable
+        return self.json(exclude={"client"})  # client is a MongoClient instance, not json serializable
 
     def _get_unique_datasource_identifier(self, data_source: MongoDataSource) -> dict:
         # let's make a copy first
         data_source_rendered = data_source.model_copy(deep=True)
         data_source_rendered.query = normalize_query(data_source.query, data_source.parameters)
-        return data_source_rendered.model_dump(exclude={'parameters'})
+        return data_source_rendered.model_dump(exclude={"parameters"})
 
     def get_engine_version(self) -> tuple:
         client = pymongo.MongoClient(**self._get_mongo_client_kwargs())
         try:
-            version = client.server_info()['version']
+            version = client.server_info()["version"]
             return super()._format_version(version)
         except (TypeError, KeyError) as exc:
             raise UnavailableVersion from exc
@@ -418,18 +403,14 @@ def _format_explain_result(explain_result):
     if `explain_result` is empty, return `None`
     """
     if explain_result:
-        explain_result.pop('serverInfo', None)
-        if 'stages' in explain_result:
-            stats = [
-                stage['$cursor']['executionStats']
-                for stage in explain_result['stages']
-                if '$cursor' in stage
-            ]
+        explain_result.pop("serverInfo", None)
+        if "stages" in explain_result:
+            stats = [stage["$cursor"]["executionStats"] for stage in explain_result["stages"] if "$cursor" in stage]
         else:
-            stats = [explain_result['executionStats']]
+            stats = [explain_result["executionStats"]]
         return {
-            'details': explain_result,
-            'summary': stats,
+            "details": explain_result,
+            "summary": stats,
         }
     return None
 

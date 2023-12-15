@@ -52,20 +52,13 @@ def fetch_wootric_data(query, props_fetched=None, batch_size=5, max_pages=30):
     """
     all_data = []
     per_batch = 10
-    logging.getLogger(__name__).debug(
-        f'Fetch data for {max_pages} page(s) with {batch_size} per page'
-    )
+    logging.getLogger(__name__).debug(f"Fetch data for {max_pages} page(s) with {batch_size} per page")
     for page in range(1, max_pages + 1, per_batch):
-        logging.getLogger(__name__).debug(
-            f'Treat page from page {page} to {max_pages + 1} / per_batch {per_batch}'
-        )
+        logging.getLogger(__name__).debug(f"Treat page from page {page} to {max_pages + 1} / per_batch {per_batch}")
         page_to_crawl = max_pages - page + 1 if page + per_batch > max_pages else per_batch
-        logging.getLogger(__name__).debug(f'Page(s) to crawl {page_to_crawl}')
-        urls = [
-            f'{query}&page={pagenum}&per_page={batch_size}'
-            for pagenum in range(page, page + page_to_crawl)
-        ]
-        logging.getLogger(__name__).debug(f'URL list (l = {len(urls)}): {urls}')
+        logging.getLogger(__name__).debug(f"Page(s) to crawl {page_to_crawl}")
+        urls = [f"{query}&page={pagenum}&per_page={batch_size}" for pagenum in range(page, page + page_to_crawl)]
+        logging.getLogger(__name__).debug(f"URL list (l = {len(urls)}): {urls}")
         responses = batch_fetch(urls)
         data = chain.from_iterable(responses)
         if props_fetched is None:
@@ -89,10 +82,10 @@ def access_token(connector):
     else:
         token_infos = {}
     now = datetime.now()
-    if not token_infos or token_infos.get('expiration-date') < now:
+    if not token_infos or token_infos.get("expiration-date") < now:
         token_infos = connector.fetch_access_token()
         _TOKEN_CACHE = token_infos
-    return token_infos['access_token']
+    return token_infos["access_token"]
 
 
 def wootric_url(route):
@@ -103,8 +96,8 @@ def wootric_url(route):
     >>> wootric_url('/v1/responses')
     ''https://api.wootric.com/v1/responses'
     """
-    route = route.lstrip('/')
-    return f'https://api.wootric.com/{route}'
+    route = route.lstrip("/")
+    return f"https://api.wootric.com/{route}"
 
 
 class WootricDataSource(ToucanDataSource):
@@ -112,20 +105,18 @@ class WootricDataSource(ToucanDataSource):
     properties: Optional[List[str]] = None
     batch_size: int = Field(
         5,
-        title='batch size',
-        description='Number of records returned on each page, max 50',
+        title="batch size",
+        description="Number of records returned on each page, max 50",
         ge=1,
         le=50,
     )
-    max_pages: int = Field(
-        10, title='max pages', description='Number of returned page, max 30', ge=1, le=30
-    )
+    max_pages: int = Field(10, title="max pages", description="Number of returned page, max 30", ge=1, le=30)
 
 
 class WootricConnector(ToucanConnector, data_source_model=WootricDataSource):
     client_id: str
     client_secret: str
-    api_version: str = 'v1'
+    api_version: str = "v1"
 
     def fetch_access_token(self):
         """fetch OAUH access token
@@ -133,22 +124,22 @@ class WootricConnector(ToucanConnector, data_source_model=WootricDataSource):
         cf. https://docs.wootric.com/api/#authentication
         """
         response = requests.post(
-            wootric_url('oauth/token'),
+            wootric_url("oauth/token"),
             data={
-                'client_id': self.client_id,
-                'client_secret': self.client_secret,
-                'grant_type': 'client_credentials',
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "grant_type": "client_credentials",
             },
         ).json()
         return {
-            'access_token': response['access_token'],
-            'expiration-date': datetime.now() + timedelta(seconds=int(response['expires_in'])),
+            "access_token": response["access_token"],
+            "expiration-date": datetime.now() + timedelta(seconds=int(response["expires_in"])),
         }
 
     def _retrieve_data(self, data_source: WootricDataSource) -> pd.DataFrame:
         """Return the concatenated data for all pages."""
-        baseroute = wootric_url(f'{self.api_version}/{data_source.query}')
-        query = f'{baseroute}?access_token={access_token(self)}'
+        baseroute = wootric_url(f"{self.api_version}/{data_source.query}")
+        query = f"{baseroute}?access_token={access_token(self)}"
         all_data = fetch_wootric_data(
             query,
             props_fetched=data_source.properties,
