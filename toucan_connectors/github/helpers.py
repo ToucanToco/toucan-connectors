@@ -42,7 +42,7 @@ def build_query_repositories(organization: str) -> str:
             }
         }
     }""",
-        {'organization': organization},
+        {"organization": organization},
     )
 
 
@@ -102,7 +102,7 @@ def build_query_pr(organization: str, name: str) -> str:
                 resetAt
               }
             }""",
-        {'organization': organization, 'repo_name': name},
+        {"organization": organization, "repo_name": name},
     )
 
 
@@ -134,7 +134,7 @@ def build_query_teams(organization: str) -> str:
               }
             }
             """,
-        {'organization': organization},
+        {"organization": organization},
     )
 
 
@@ -169,7 +169,7 @@ def build_query_members(organization: str, name: str) -> str:
       }
 }
 """,
-        {'organization': organization, 'team': name},
+        {"organization": organization, "team": name},
     )
 
 
@@ -181,20 +181,20 @@ def format_pr_row(pr_row: dict):
     """
 
     current_record = {}
-    current_record['PR Name'] = pr_row.get('title')
-    current_record['PR Creation Date'] = pr_row.get('createdAt')
-    current_record['PR Merging Date'] = pr_row.get('mergedAt')
-    current_record['PR Additions'] = pr_row.get('additions')
-    current_record['PR Deletions'] = pr_row.get('deletions')
+    current_record["PR Name"] = pr_row.get("title")
+    current_record["PR Creation Date"] = pr_row.get("createdAt")
+    current_record["PR Merging Date"] = pr_row.get("mergedAt")
+    current_record["PR Additions"] = pr_row.get("additions")
+    current_record["PR Deletions"] = pr_row.get("deletions")
     try:
-        current_record['PR Type'] = [label['node'].get('name') for label in pr_row['labels'].get('edges')]
-        edges = get_edges(pr_row.get('commits'))
+        current_record["PR Type"] = [label["node"].get("name") for label in pr_row["labels"].get("edges")]
+        edges = get_edges(pr_row.get("commits"))
         # Here we choose to select the author of the last commit as the author of the PR
         # It's less wrong than choosing the author of the first commit in case of rebase
-        current_record['Dev'] = edges[-1]['node']['commit']['author']['user']['login']
+        current_record["Dev"] = edges[-1]["node"]["commit"]["author"]["user"]["login"]
 
     except (AttributeError, TypeError, KeyNotFoundException):
-        current_record['Dev'] = None
+        current_record["Dev"] = None
 
     return current_record
 
@@ -211,9 +211,9 @@ def format_pr_rows(pr_nodes: dict, repo_name: str) -> List[dict]:
     formatted = [
         format_pr_row(pr)
         for pr in pull_requests
-        if pr.get('state') != 'CLOSED'  # we ignore closed PR in KPIs
+        if pr.get("state") != "CLOSED"  # we ignore closed PR in KPIs
     ]
-    return [dict(r, **{'Repo Name': repo_name}) for r in formatted]
+    return [dict(r, **{"Repo Name": repo_name}) for r in formatted]
 
 
 def format_team_row(members: dict, team_name: str) -> dict:
@@ -223,10 +223,10 @@ def format_team_row(members: dict, team_name: str) -> dict:
     :param team_name: a str representing the team name
     :return: a dict with login as key and teams as values
     """
-    current_record = {team_name: [dev.get('node').get('login') for dev in get_edges(members)]}
+    current_record = {team_name: [dev.get("node").get("login") for dev in get_edges(members)]}
     devs = pd.DataFrame(current_record).melt()
-    devs.set_index('value', drop=True, inplace=True)
-    return devs.to_dict().get('variable')
+    devs.set_index("value", drop=True, inplace=True)
+    return devs.to_dict().get("variable")
 
 
 def format_team_df(team_rows: List[dict]) -> pd.DataFrame:
@@ -238,11 +238,11 @@ def format_team_df(team_rows: List[dict]) -> pd.DataFrame:
     list of teams in teams column
     """
     team_df = pd.DataFrame(team_rows).transpose()
-    team_df['teams'] = team_df.values.tolist()
-    team_df['teams'] = team_df['teams'].apply(lambda x: list({t for t in x if not pd.isnull(t)}))
+    team_df["teams"] = team_df.values.tolist()
+    team_df["teams"] = team_df["teams"].apply(lambda x: list({t for t in x if not pd.isnull(t)}))
     team_df.reset_index(inplace=True)
-    team_df.rename(columns={'index': 'Dev'}, inplace=True)
-    return team_df[['Dev', 'teams']]
+    team_df.rename(columns={"index": "Dev"}, inplace=True)
+    return team_df[["Dev", "teams"]]
 
 
 def get_data(response: dict) -> dict:
@@ -251,11 +251,11 @@ def get_data(response: dict) -> dict:
     :param response: a response from Github's API
     :return: the content of the Data field in response if exists
     """
-    data = response.get('data')
+    data = response.get("data")
     if data:
         return data
     else:
-        raise KeyNotFoundException('No Data Key Available')
+        raise KeyNotFoundException("No Data Key Available")
 
 
 def get_organization(data: dict) -> dict:
@@ -264,11 +264,11 @@ def get_organization(data: dict) -> dict:
     :param data: data extracted from Github's API
     :return: the content of the organization field in response if exists
     """
-    organization = data.get('organization')
+    organization = data.get("organization")
     if organization:
         return organization
     else:
-        raise KeyNotFoundException('No Organization Key Available')
+        raise KeyNotFoundException("No Organization Key Available")
 
 
 def get_repositories(organization: dict) -> dict:
@@ -279,11 +279,11 @@ def get_repositories(organization: dict) -> dict:
     :return: the content of the repositories field in response if exists
     """
 
-    repositories = organization.get('repositories')
+    repositories = organization.get("repositories")
     if repositories:
         return repositories
     else:
-        raise KeyNotFoundException('No repositories Key Available')
+        raise KeyNotFoundException("No repositories Key Available")
 
 
 def get_repository(organization: dict) -> dict:
@@ -292,11 +292,11 @@ def get_repository(organization: dict) -> dict:
     :param organization: an organization extracted from Github's API
     :return: the content of the repository field in response if exists
     """
-    repository = organization.get('repository')
+    repository = organization.get("repository")
     if repository:
         return repository
     else:
-        raise KeyNotFoundException('No repository Key Available')
+        raise KeyNotFoundException("No repository Key Available")
 
 
 def get_teams(organization: dict):
@@ -305,11 +305,11 @@ def get_teams(organization: dict):
     :param organization: an organization extracted from Github's API
     :return: the content of the teams field in response if exists
     """
-    teams = organization.get('teams')
+    teams = organization.get("teams")
     if teams:
         return teams
     else:
-        raise KeyNotFoundException('No teams Key Available')
+        raise KeyNotFoundException("No teams Key Available")
 
 
 def get_nodes(response: dict) -> List[dict]:
@@ -318,7 +318,7 @@ def get_nodes(response: dict) -> List[dict]:
     :param response: a response from Github's API
     :return: the content of the Nodes field in response if exists
     """
-    nodes = response.get('nodes')
+    nodes = response.get("nodes")
     return nodes
 
 
@@ -328,11 +328,11 @@ def get_edges(data: dict) -> List[dict]:
     :param data: data extracted from Github's API
     :return: the content of the Edges field in response if exists
     """
-    edges = data.get('edges')
+    edges = data.get("edges")
     if edges:
         return edges
     else:
-        raise KeyNotFoundException('No Edges Key Available')
+        raise KeyNotFoundException("No Edges Key Available")
 
 
 def get_pull_requests(repo: dict) -> dict:
@@ -341,12 +341,12 @@ def get_pull_requests(repo: dict) -> dict:
     :param repo: a repo extracted from Github's API
     :return: the content of the pull_requests field in response if exists
     """
-    pull_requests = repo.get('pullRequests')
+    pull_requests = repo.get("pullRequests")
 
     if pull_requests:
         return pull_requests
     else:
-        raise KeyNotFoundException('No Pull Requests Available')
+        raise KeyNotFoundException("No Pull Requests Available")
 
 
 def get_team(organization: dict) -> dict:
@@ -355,7 +355,7 @@ def get_team(organization: dict) -> dict:
     :param organization: organization data extracted from Github's API
     :return: the content of the team field in response if exists
     """
-    team = organization.get('team')
+    team = organization.get("team")
     if team:
         return team
     else:
@@ -368,11 +368,11 @@ def get_members(team: dict) -> dict:
     :param team: a team extracted from Github's API
     :return: the content of the members field in response if exists
     """
-    members = team.get('members')
+    members = team.get("members")
     if members:
         return members
     else:
-        raise KeyNotFoundException('No Members Available')
+        raise KeyNotFoundException("No Members Available")
 
 
 def get_page_info(page: dict) -> dict:
@@ -381,11 +381,11 @@ def get_page_info(page: dict) -> dict:
     :param page: a page extracted from Github's API
     :return: a dict with pagination data
     """
-    page_info = page.get('pageInfo')
+    page_info = page.get("pageInfo")
     if page_info:
         return page_info
     else:
-        raise KeyNotFoundException('No PageInfo Key available')
+        raise KeyNotFoundException("No PageInfo Key available")
 
 
 def get_errors(data: dict):
@@ -394,11 +394,11 @@ def get_errors(data: dict):
     a GithubError
     :param dict: data extracted from Github's API
     """
-    errors = data.get('errors')
+    errors = data.get("errors")
     if errors:
         for error in errors:
-            logging.getLogger(__name__).error(f'A Github error occured:' f' {error}')
-        raise GithubError(f'Retrying query due to {errors}')
+            logging.getLogger(__name__).error(f"A Github error occured:" f" {error}")
+        raise GithubError(f"Retrying query due to {errors}")
 
 
 def has_next_page(page_info: dict) -> bool:
@@ -407,10 +407,10 @@ def has_next_page(page_info: dict) -> bool:
     :param page_info: pagination info
     :return: a bool indicating if response hase a next page
     """
-    has_next_page = page_info.get('hasNextPage')
+    has_next_page = page_info.get("hasNextPage")
 
     if has_next_page is None:
-        raise KeyNotFoundException('hasNextPage key not available')
+        raise KeyNotFoundException("hasNextPage key not available")
     else:
         return has_next_page
 
@@ -421,12 +421,12 @@ def get_cursor(page_info: dict) -> str:
     :param page_info: pagination info
     :return: the endcursor of current page as str
     """
-    cursor = page_info.get('endCursor')
+    cursor = page_info.get("endCursor")
 
     if cursor:
         return cursor
     else:
-        raise KeyNotFoundException('endCursor key not available')
+        raise KeyNotFoundException("endCursor key not available")
 
 
 def get_message(response: dict):
@@ -436,11 +436,11 @@ def get_message(response: dict):
     :param response: response from Github's API
     :return: extracted message
     """
-    message = response.get('message')
+    message = response.get("message")
 
     if message:
-        logging.getLogger(__name__).error(f'A Github error occured:' f' {message}')
-        raise GithubError(f'API sent {message}')
+        logging.getLogger(__name__).error(f"A Github error occured:" f" {message}")
+        raise GithubError(f"API sent {message}")
 
 
 class RateLimitExhaustedException(Exception):
@@ -457,20 +457,20 @@ def get_rate_limit_info(response: dict):
       "remaining": 4994,
       "resetAt": "2021-02-23T13:26:47Z" UTC TIME !
     """
-    rate_limit_info = response.get('rateLimit')
+    rate_limit_info = response.get("rateLimit")
     if rate_limit_info:
-        if rate_limit_info['remaining'] < 100:  # Raise the Exception Before reaching the limit
-            logging.getLogger(__name__).info('Rate limit exhausted')
-            reset_at_date = datetime.strptime(rate_limit_info['resetAt'], '%Y-%m-%dT%H:%M:%SZ')
+        if rate_limit_info["remaining"] < 100:  # Raise the Exception Before reaching the limit
+            logging.getLogger(__name__).info("Rate limit exhausted")
+            reset_at_date = datetime.strptime(rate_limit_info["resetAt"], "%Y-%m-%dT%H:%M:%SZ")
             timetowait = (reset_at_date - datetime.utcnow()).seconds + 1  # adding 1 sec to round up
             raise RateLimitExhaustedException(timetowait)
 
 
-extraction_funcs_names = {'pull requests': get_repositories, 'teams': get_teams}
-extraction_funcs_pages_1 = {'pull requests': get_pull_requests, 'teams': get_members}
-extraction_funcs_pages_2 = {'pull requests': get_repository, 'teams': get_team}
-queries_funcs_names = {'pull requests': build_query_repositories, 'teams': build_query_teams}
-queries_funcs_pages = {'pull requests': build_query_pr, 'teams': build_query_members}
-extraction_keys = {'pull requests': 'name', 'teams': 'slug'}
-format_functions = {'pull requests': format_pr_rows, 'teams': format_team_row}
-dataset_formatter = {'pull requests': pd.DataFrame, 'teams': format_team_df}
+extraction_funcs_names = {"pull requests": get_repositories, "teams": get_teams}
+extraction_funcs_pages_1 = {"pull requests": get_pull_requests, "teams": get_members}
+extraction_funcs_pages_2 = {"pull requests": get_repository, "teams": get_team}
+queries_funcs_names = {"pull requests": build_query_repositories, "teams": build_query_teams}
+queries_funcs_pages = {"pull requests": build_query_pr, "teams": build_query_members}
+extraction_keys = {"pull requests": "name", "teams": "slug"}
+format_functions = {"pull requests": format_pr_rows, "teams": format_team_row}
+dataset_formatter = {"pull requests": pd.DataFrame, "teams": format_team_df}

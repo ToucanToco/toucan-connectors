@@ -15,22 +15,22 @@ from toucan_connectors.anaplan.anaplan_connector import (
 
 @pytest.fixture()
 def anaplan_auth_response() -> dict:
-    return {'tokenInfo': {'tokenValue': 'SomethingNotEntirelySecret'}}
+    return {"tokenInfo": {"tokenValue": "SomethingNotEntirelySecret"}}
 
 
 @pytest.fixture()
 def connector() -> AnaplanConnector:
-    return AnaplanConnector(username='JohnDoe', password='s3cr3t', name="John's connector")
+    return AnaplanConnector(username="JohnDoe", password="s3cr3t", name="John's connector")
 
 
 @pytest.fixture
 def datasource() -> AnaplanDataSource:
     return AnaplanDataSource(
-        name='anaplan_test_api',
-        domain='data_for_m1v1',
-        model_id='m1',
-        view_id='m1v1',
-        workspace_id='w1',
+        name="anaplan_test_api",
+        domain="data_for_m1v1",
+        model_id="m1",
+        view_id="m1v1",
+        workspace_id="w1",
     )
 
 
@@ -38,8 +38,8 @@ def datasource() -> AnaplanDataSource:
 def test_get_status_expect_auth_ok(connector):
     responses.add(
         responses.POST,
-        'https://auth.anaplan.com/token/authenticate',
-        json={'tokenInfo': {'tokenValue': 'youpi'}},
+        "https://auth.anaplan.com/token/authenticate",
+        json={"tokenInfo": {"tokenValue": "youpi"}},
         status=200,
     )
     status = connector.get_status()
@@ -51,27 +51,27 @@ def test_get_status_expect_auth_ok(connector):
 def test_get_status_expect_auth_failed_http_40X(connector):
     responses.add(
         responses.POST,
-        'https://auth.anaplan.com/token/authenticate',
+        "https://auth.anaplan.com/token/authenticate",
         status=401,
     )
 
     status = connector.get_status()
     assert not status.status
-    assert 'credentials' in status.error
+    assert "credentials" in status.error
 
 
 @responses.activate
 def test_get_status_expect_auth_failed_invalid_resp_body(connector):
     responses.add(
         responses.POST,
-        'https://auth.anaplan.com/token/authenticate',
+        "https://auth.anaplan.com/token/authenticate",
         status=200,
-        json={'nein': 'nope'},
+        json={"nein": "nope"},
     )
 
     status = connector.get_status()
     assert not status.status
-    assert 'nein' in status.error
+    assert "nein" in status.error
 
 
 @responses.activate
@@ -80,41 +80,41 @@ def test_get_form(connector):
     # https://anaplanbulkapi20.docs.apiary.io/#Models
     responses.add(
         responses.POST,
-        'https://auth.anaplan.com/token/authenticate',
-        json={'tokenInfo': {'tokenValue': 'youpi'}},
+        "https://auth.anaplan.com/token/authenticate",
+        json={"tokenInfo": {"tokenValue": "youpi"}},
         status=200,
     )
 
     responses.add(
         responses.GET,
-        'https://api.anaplan.com/2/0/workspaces',
+        "https://api.anaplan.com/2/0/workspaces",
         status=200,
         json={
-            'meta': {},
-            'status': {},
-            'workspaces': [{'id': 'w1', 'active': True, 'name': 'Workspace One', 'sizeAllowance': 1234}],
+            "meta": {},
+            "status": {},
+            "workspaces": [{"id": "w1", "active": True, "name": "Workspace One", "sizeAllowance": 1234}],
         },
     )
 
     responses.add(
         responses.GET,
-        'https://api.anaplan.com/2/0/workspaces/w1/models',
+        "https://api.anaplan.com/2/0/workspaces/w1/models",
         status=200,
         json={
             # NOTE: There's paging information in here, we
             # should think about checking if we retrieved all pages
-            'meta': {},
+            "meta": {},
             # HTTP status info. Are the returned HTTP status
             # codes consistent with what's in here ?
-            'status': {},
-            'models': [
+            "status": {},
+            "models": [
                 {
-                    'id': 'm1',
-                    'activeState': 'UNLOCKED',
-                    'name': 'Model One',
-                    'currentWorkspaceId': 'w1',
-                    'currentWorkspaceName': 'NiceWorkspace',
-                    'categoryValues': [],
+                    "id": "m1",
+                    "activeState": "UNLOCKED",
+                    "name": "Model One",
+                    "currentWorkspaceId": "w1",
+                    "currentWorkspaceName": "NiceWorkspace",
+                    "categoryValues": [],
                 }
             ],
         },
@@ -122,72 +122,72 @@ def test_get_form(connector):
 
     responses.add(
         responses.GET,
-        'https://api.anaplan.com/2/0/workspaces/w1/models/m1/views',
+        "https://api.anaplan.com/2/0/workspaces/w1/models/m1/views",
         status=200,
         json={
-            'views': [
-                {'name': 'View One', 'id': 'm1v1'},
-                {'name': 'View Two', 'id': 'm1v2'},
+            "views": [
+                {"name": "View One", "id": "m1v1"},
+                {"name": "View Two", "id": "m1v2"},
             ]
         },
     )
 
-    form_schema = AnaplanDataSource.get_form(connector, {'model_id': 'm1', 'workspace_id': 'w1 - Workspace One'})
+    form_schema = AnaplanDataSource.get_form(connector, {"model_id": "m1", "workspace_id": "w1 - Workspace One"})
 
     # Ensure we've only requested a token once
-    responses.assert_call_count('https://auth.anaplan.com/token/authenticate', 1)
+    responses.assert_call_count("https://auth.anaplan.com/token/authenticate", 1)
     # We have a single values for these, so it's a const
-    assert form_schema['$defs']['workspace_id']['const'] == 'w1 - Workspace One'
-    assert form_schema['$defs']['model_id']['const'] == 'm1 - Model One'
+    assert form_schema["$defs"]["workspace_id"]["const"] == "w1 - Workspace One"
+    assert form_schema["$defs"]["model_id"]["const"] == "m1 - Model One"
     # We have several values for this one, so enum
-    assert form_schema['$defs']['view_id']['enum'] == ['m1v1 - View One', 'm1v2 - View Two']
+    assert form_schema["$defs"]["view_id"]["enum"] == ["m1v1 - View One", "m1v2 - View Two"]
 
 
 @responses.activate
 def test_get_df(connector, datasource):
     responses.add(
         responses.POST,
-        'https://auth.anaplan.com/token/authenticate',
-        json={'tokenInfo': {'tokenValue': 'youpi'}},
+        "https://auth.anaplan.com/token/authenticate",
+        json={"tokenInfo": {"tokenValue": "youpi"}},
         status=200,
     )
 
     # response format taken from
     # https://anaplanbulkapi20.docs.apiary.io/#RetrieveCellDataView
-    with open(os.path.join(os.path.dirname(__file__), 'fixtures/cell-data-view.json')) as fixture_file:
+    with open(os.path.join(os.path.dirname(__file__), "fixtures/cell-data-view.json")) as fixture_file:
         responses.add(
             responses.GET,
-            'https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1',
+            "https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1",
             status=200,
-            match=[matchers.header_matcher({'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'})],
+            match=[matchers.header_matcher({"Accept": "application/json", "Authorization": "AnaplanAuthToken youpi"})],
             json=json.load(fixture_file),
         )
 
     df = connector.get_df(datasource)
 
     assert isinstance(df, pd.DataFrame)
-    assert df['index'].to_list() == ['Durham', 'Newcastle upon Tyne', 'Sunderland']
+    assert df["index"].to_list() == ["Durham", "Newcastle upon Tyne", "Sunderland"]
     assert df.columns.to_list() == [
-        'index',
-        'Jan 13',
-        'Feb 13',
-        'Mar 13',
-        'Q1 FY13',
-        'Apr 13',
-        'May 13',
-        'Jun 13',
-        'Q2 FY13',
-        'H1 FY13',
-        'Jul 13',
-        'Aug 13',
-        'Sep 13',
-        'Q3 FY13',
-        'Oct 13',
-        'Nov 13',
-        'Dec 13',
-        'Q4 FY13',
-        'H2 FY13',
-        'FY13',
+        "index",
+        "Jan 13",
+        "Feb 13",
+        "Mar 13",
+        "Q1 FY13",
+        "Apr 13",
+        "May 13",
+        "Jun 13",
+        "Q2 FY13",
+        "H1 FY13",
+        "Jul 13",
+        "Aug 13",
+        "Sep 13",
+        "Q3 FY13",
+        "Oct 13",
+        "Nov 13",
+        "Dec 13",
+        "Q4 FY13",
+        "H2 FY13",
+        "FY13",
     ]
 
 
@@ -195,16 +195,16 @@ def test_get_df(connector, datasource):
 def test_get_df_invalid_json(connector, datasource):
     responses.add(
         responses.POST,
-        'https://auth.anaplan.com/token/authenticate',
-        json={'tokenInfo': {'tokenValue': 'youpi'}},
+        "https://auth.anaplan.com/token/authenticate",
+        json={"tokenInfo": {"tokenValue": "youpi"}},
         status=200,
     )
     responses.add(
         responses.GET,
-        'https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1',
+        "https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1",
         status=200,
-        match=[matchers.header_matcher({'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'})],
-        body='notvalidjson',
+        match=[matchers.header_matcher({"Accept": "application/json", "Authorization": "AnaplanAuthToken youpi"})],
+        body="notvalidjson",
     )
 
     with pytest.raises(AnaplanError):
@@ -215,15 +215,15 @@ def test_get_df_invalid_json(connector, datasource):
 def test_get_df_keyerror(connector, datasource):
     responses.add(
         responses.POST,
-        'https://auth.anaplan.com/token/authenticate',
-        json={'tokenInfo': {'tokenValue': 'youpi'}},
+        "https://auth.anaplan.com/token/authenticate",
+        json={"tokenInfo": {"tokenValue": "youpi"}},
         status=200,
     )
     responses.add(
         responses.GET,
-        'https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1',
+        "https://api.anaplan.com/2/0/models/m1/views/m1v1/data?format=v1",
         status=200,
-        match=[matchers.header_matcher({'Accept': 'application/json', 'Authorization': 'AnaplanAuthToken youpi'})],
+        match=[matchers.header_matcher({"Accept": "application/json", "Authorization": "AnaplanAuthToken youpi"})],
         json={},
     )
 

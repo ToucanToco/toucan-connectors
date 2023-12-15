@@ -16,11 +16,11 @@ from toucan_connectors.toucan_connector import (
 
 
 class HubspotDataset(str, Enum):
-    contacts = 'contacts'
-    companies = 'companies'
-    deals = 'deals'
-    quotes = 'quotes'
-    owners = 'owners'
+    contacts = "contacts"
+    companies = "companies"
+    deals = "deals"
+    quotes = "quotes"
+    owners = "owners"
 
 
 class HubspotDataSource(ToucanDataSource):
@@ -33,19 +33,19 @@ class _HubSpotPagingNext(BaseModel):
 
 
 class _HubSpotPaging(BaseModel):
-    next_: _HubSpotPagingNext = Field(..., alias='next')
+    next_: _HubSpotPagingNext = Field(..., alias="next")
 
 
 class _HubSpotResult(BaseModel):
     created_at: datetime | None = None
     updated_at: datetime | None = None
-    id_: str = Field(..., alias='id')
+    id_: str = Field(..., alias="id")
     properties: dict[str, Any] = Field(default_factory=dict)
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="allow")
 
     def to_dict(self) -> dict[str, Any]:
         dict_ = self.dict(by_alias=True)
-        properties = dict_.pop('properties', None)
+        properties = dict_.pop("properties", None)
 
         return {**dict_, **(properties or {})}
 
@@ -85,14 +85,14 @@ def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:
 
     basic_api seems to be the default fallback
     """
-    page_api_name = dataset.value + '_api'
+    page_api_name = dataset.value + "_api"
     if hasattr(api, page_api_name):
         return getattr(api, page_api_name)
     return api.basic_api
 
 
 class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
-    access_token: PlainJsonSecretStr = Field(..., description='An API key for the target private app')
+    access_token: PlainJsonSecretStr = Field(..., description="An API key for the target private app")
 
     def _fetch_page(self, api: _PageApi, after: str | None = None, limit: int | None = None) -> _HubSpotResponse:
         page = api.get_page(after=after, limit=limit)

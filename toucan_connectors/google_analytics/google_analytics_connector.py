@@ -8,9 +8,9 @@ from toucan_connectors.common import nosql_apply_parameters_to_query
 from toucan_connectors.google_credentials import GoogleCredentials
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
-API = 'analyticsreporting'
-SCOPE = 'https://www.googleapis.com/auth/analytics.readonly'
-VERSION = 'v4'
+API = "analyticsreporting"
+SCOPE = "https://www.googleapis.com/auth/analytics.readonly"
+VERSION = "v4"
 
 
 class Dimension(BaseModel):
@@ -23,7 +23,7 @@ class DimensionFilter(BaseModel):
     operator: str
     expressions: list[str] | None = None
     caseSensitive: bool = False
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="allow")
 
 
 class DimensionFilterClause(BaseModel):
@@ -39,14 +39,14 @@ class DateRange(BaseModel):
 class Metric(BaseModel):
     expression: str
     alias: str | None = None
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="allow")
 
 
 class MetricFilter(BaseModel):
     metricName: str
     operator: str
     comparisonValue: str
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="allow")
 
 
 class MetricFilterClause(BaseModel):
@@ -92,12 +92,12 @@ class ReportRequest(BaseModel):
     dimensionFilterClauses: list[DimensionFilterClause] | None = None
     metrics: list[Metric] | None = None
     metricFilterClauses: list[MetricFilterClause] | None = None
-    filtersExpression: str = ''
+    filtersExpression: str = ""
     orderBys: list[OrderBy] = []
     segments: list[Segment] = []
     pivots: list[Pivot] | None = None
     cohortGroup: CohortGroup | None = None
-    pageToken: str = ''
+    pageToken: str = ""
     pageSize: int = 10000
     includeEmptyRows: bool = False
     hideTotals: bool = False
@@ -105,34 +105,34 @@ class ReportRequest(BaseModel):
 
 
 def get_dict_from_response(report, request_date_ranges):
-    columnHeader = report.get('columnHeader', {})
-    dimensionHeaders = columnHeader.get('dimensions', [])
-    metricHeaders = columnHeader.get('metricHeader', {}).get('metricHeaderEntries', [])
-    rows = report.get('data', {}).get('rows', [])
+    columnHeader = report.get("columnHeader", {})
+    dimensionHeaders = columnHeader.get("dimensions", [])
+    metricHeaders = columnHeader.get("metricHeader", {}).get("metricHeaderEntries", [])
+    rows = report.get("data", {}).get("rows", [])
 
     all_rows = []
     for row_index, row in enumerate(rows):
-        dimensions = row.get('dimensions', [])
-        dateRangeValues = row.get('metrics', [])
+        dimensions = row.get("dimensions", [])
+        dateRangeValues = row.get("metrics", [])
 
         for i, values in enumerate(dateRangeValues):
-            for metricHeader, value in zip(metricHeaders, values.get('values')):
+            for metricHeader, value in zip(metricHeaders, values.get("values")):
                 row_dict = {
-                    'row_index': row_index,
-                    'date_range_id': i,
-                    'metric_name': metricHeader.get('name'),
+                    "row_index": row_index,
+                    "date_range_id": i,
+                    "metric_name": metricHeader.get("name"),
                 }
 
                 if request_date_ranges and (len(request_date_ranges) >= i):
-                    row_dict['start_date'] = request_date_ranges[i].startDate
-                    row_dict['end_date'] = request_date_ranges[i].endDate
+                    row_dict["start_date"] = request_date_ranges[i].startDate
+                    row_dict["end_date"] = request_date_ranges[i].endDate
 
-                if metricHeader.get('type') == 'INTEGER':
-                    row_dict['metric_value'] = int(value)
-                elif metricHeader.get('type') == 'FLOAT':
-                    row_dict['metric_value'] = float(value)
+                if metricHeader.get("type") == "INTEGER":
+                    row_dict["metric_value"] = int(value)
+                elif metricHeader.get("type") == "FLOAT":
+                    row_dict["metric_value"] = float(value)
                 else:
-                    row_dict['metric_value'] = value
+                    row_dict["metric_value"] = value
 
                 for dimension_name, dimension_value in zip(dimensionHeaders, dimensions):
                     row_dict[dimension_name] = dimension_value
@@ -143,15 +143,15 @@ def get_dict_from_response(report, request_date_ranges):
 
 
 def get_query_results(service, report_request):
-    response = service.reports().batchGet(body={'reportRequests': report_request.dict()}).execute()
-    return response.get('reports', [])[0]
+    response = service.reports().batchGet(body={"reportRequests": report_request.dict()}).execute()
+    return response.get("reports", [])[0]
 
 
 class GoogleAnalyticsDataSource(ToucanDataSource):
     report_request: ReportRequest = Field(
         ...,
-        title='Report request',
-        description='See the complete '
+        title="Report request",
+        description="See the complete "
         '<a href="https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet#reportrequest" target="_blank">Google documentation</a>',  # noqa: E501
     )
 
@@ -159,18 +159,18 @@ class GoogleAnalyticsDataSource(ToucanDataSource):
 class GoogleAnalyticsConnector(ToucanConnector, data_source_model=GoogleAnalyticsDataSource):
     credentials: GoogleCredentials = Field(
         ...,
-        title='Google Credentials',
-        description='For authentication, download an authentication file from your '
+        title="Google Credentials",
+        description="For authentication, download an authentication file from your "
         '<a href="https://console.developers.google.com/apis/credentials" target="_blank">Google Console</a> '
-        'and use the values here. This is an oauth2 credential file. For more information see this '
+        "and use the values here. This is an oauth2 credential file. For more information see this "
         '<a href="https://gspread.readthedocs.io/en/latest/oauth2.html" target="_blank">documentation</a>. '
         'You should use "service_account" credentials, which is the preferred type of credentials '
-        'to use when authenticating on behalf of a service or application',
+        "to use when authenticating on behalf of a service or application",
     )
     scope: list[str] = Field(
         [SCOPE],
-        description='OAuth 2.0 scopes define the level of access you need to '
-        'request the Google APIs. For more information, see this '
+        description="OAuth 2.0 scopes define the level of access you need to "
+        "request the Google APIs. For more information, see this "
         '<a href="https://developers.google.com/identity/protocols/googlescopes" target="_blank">documentation</a>',
     )
 
@@ -183,8 +183,8 @@ class GoogleAnalyticsConnector(ToucanConnector, data_source_model=GoogleAnalytic
         report = get_query_results(service, report_request)
         reports_data = [pd.DataFrame(get_dict_from_response(report, report_request.dateRanges))]
 
-        while 'nextPageToken' in report:
-            report_request.pageToken = report['nextPageToken']
+        while "nextPageToken" in report:
+            report_request.pageToken = report["nextPageToken"]
 
             report = get_query_results(service, report_request)
             reports_data.append(pd.DataFrame(get_dict_from_response(report, report_request.dateRanges)))

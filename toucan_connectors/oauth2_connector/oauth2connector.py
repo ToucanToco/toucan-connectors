@@ -31,7 +31,7 @@ class OAuth2ConnectorConfig(BaseModel):
 
 
 class OAuth2Connector:
-    init_params = ['secrets_keeper', 'redirect_uri'] + list(OAuth2ConnectorConfig.schema()['properties'].keys())
+    init_params = ["secrets_keeper", "redirect_uri"] + list(OAuth2ConnectorConfig.schema()["properties"].keys())
 
     def __init__(
         self,
@@ -59,10 +59,10 @@ class OAuth2Connector:
             redirect_uri=self.redirect_uri,
             scope=self.scope,
         )
-        state = {'token': generate_token(), **kwargs}
+        state = {"token": generate_token(), **kwargs}
         uri, state = client.create_authorization_url(self.authorization_url, state=JsonWrapper.dumps(state))
 
-        self.secrets_keeper.save(self.auth_flow_id, {'state': state})
+        self.secrets_keeper.save(self.auth_flow_id, {"state": state})
         return uri
 
     def retrieve_tokens(self, authorization_response: str, **kwargs):
@@ -76,7 +76,7 @@ class OAuth2Connector:
         saved_flow = self.secrets_keeper.load(self.auth_flow_id)
         if saved_flow is None:
             raise AuthFlowNotFound()
-        assert JsonWrapper.loads(saved_flow['state'])['token'] == JsonWrapper.loads(url_params['state'][0])['token']
+        assert JsonWrapper.loads(saved_flow["state"])["token"] == JsonWrapper.loads(url_params["state"][0])["token"]
 
         token = client.fetch_token(
             self.token_url,
@@ -96,8 +96,8 @@ class OAuth2Connector:
         """
         token = self.secrets_keeper.load(self.auth_flow_id)
 
-        if 'expires_at' in token:
-            expires_at = token['expires_at']
+        if "expires_at" in token:
+            expires_at = token["expires_at"]
             if isinstance(expires_at, bool):
                 is_expired = expires_at
             elif isinstance(expires_at, (int, float)):
@@ -106,16 +106,16 @@ class OAuth2Connector:
                 is_expired = expires_at.timestamp() < time()
 
             if is_expired:
-                if 'refresh_token' not in token:
+                if "refresh_token" not in token:
                     raise NoOAuth2RefreshToken
                 client = OAuth2Session(
                     client_id=self.config.client_id,
                     client_secret=self.config.client_secret.get_secret_value(),
                 )
-                new_token = client.refresh_token(self.token_url, refresh_token=token['refresh_token'])
+                new_token = client.refresh_token(self.token_url, refresh_token=token["refresh_token"])
                 self.secrets_keeper.save(self.auth_flow_id, new_token)
 
-        return self.secrets_keeper.load(self.auth_flow_id)['access_token']
+        return self.secrets_keeper.load(self.auth_flow_id)["access_token"]
 
     def get_access_data(self):
         """
@@ -124,31 +124,31 @@ class OAuth2Connector:
         """
         access_data = self.secrets_keeper.load(self.auth_flow_id)
 
-        logging.getLogger(__name__).debug('Refresh and get access data')
+        logging.getLogger(__name__).debug("Refresh and get access data")
 
-        if 'refresh_token' not in access_data:
+        if "refresh_token" not in access_data:
             raise NoOAuth2RefreshToken
-        if 'instance_url' not in access_data:
+        if "instance_url" not in access_data:
             raise NoInstanceUrl
 
         client = OAuth2Session(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
         )
-        connection_data = client.refresh_token(self.token_url, refresh_token=access_data['refresh_token'])
-        logging.getLogger(__name__).debug(f'Refresh and get access data new token {str(connection_data)}')
+        connection_data = client.refresh_token(self.token_url, refresh_token=access_data["refresh_token"])
+        logging.getLogger(__name__).debug(f"Refresh and get access data new token {str(connection_data)}")
 
         self.secrets_keeper.save(self.auth_flow_id, connection_data)
         secrets = self.secrets_keeper.load(self.auth_flow_id)
 
-        logging.getLogger(__name__).debug('Refresh and get data finished')
+        logging.getLogger(__name__).debug("Refresh and get data finished")
         return secrets
 
     def get_refresh_token(self) -> str:
         """
         Return the refresh token, used to obtain an access token
         """
-        return self.secrets_keeper.load(self.auth_flow_id)['refresh_token']
+        return self.secrets_keeper.load(self.auth_flow_id)["refresh_token"]
 
 
 class NoOAuth2RefreshToken(Exception):

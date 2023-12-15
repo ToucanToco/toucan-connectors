@@ -50,13 +50,13 @@ from .helpers import (
     queries_funcs_pages,
 )
 
-AUTHORIZATION_URL: str = 'https://github.com/login/oauth/authorize'
-SCOPE: str = 'user repo read:org read:discussion'
-TOKEN_URL: str = 'https://github.com/login/oauth/access_token'
-BASE_ROUTE: str = 'https://api.github.com/graphql'
-BASE_ROUTE_REST: str = 'https://api.github.com/'
-NO_CREDENTIALS_ERROR = 'No credentials'
-extraction_start_date = datetime.strftime(datetime.now() - relativedelta.relativedelta(years=1), '%Y-%m-%dT%H:%M:%SZ')
+AUTHORIZATION_URL: str = "https://github.com/login/oauth/authorize"
+SCOPE: str = "user repo read:org read:discussion"
+TOKEN_URL: str = "https://github.com/login/oauth/access_token"
+BASE_ROUTE: str = "https://api.github.com/graphql"
+BASE_ROUTE_REST: str = "https://api.github.com/"
+NO_CREDENTIALS_ERROR = "No credentials"
+extraction_start_date = datetime.strftime(datetime.now() - relativedelta.relativedelta(years=1), "%Y-%m-%dT%H:%M:%SZ")
 
 
 class NoCredentialsError(Exception):
@@ -64,45 +64,45 @@ class NoCredentialsError(Exception):
 
 
 class GithubDataSet(str, Enum):
-    pull_requests = 'pull requests'
-    teams = 'teams'
+    pull_requests = "pull requests"
+    teams = "teams"
 
 
 class GithubDataSource(ToucanDataSource):
-    dataset: GithubDataSet = GithubDataSet('teams')
+    dataset: GithubDataSet = GithubDataSet("teams")
     organization: Optional[str] = Field(
-        None, title='Organization', description='The organization to extract the data from'
+        None, title="Organization", description="The organization to extract the data from"
     )
-    page_limit: int = Field(10, description='Limit of entries (default is 10 pages)', ge=0)
+    page_limit: int = Field(10, description="Limit of entries (default is 10 pages)", ge=0)
     entities_limit: int = Field(
         None,
-        title='Entities Limit',
-        description='Max Number of entities such as teams and repositories to extract',
+        title="Entities Limit",
+        description="Max Number of entities such as teams and repositories to extract",
     )
-    _oauth_trigger = 'instance'
-    oauth2_version: str = Field('1', **{'ui.hidden': True})
+    _oauth_trigger = "instance"
+    oauth2_version: str = Field("1", **{"ui.hidden": True})
 
     @classmethod
-    def get_form(cls, connector: 'GithubConnector', current_config, **kwargs):
+    def get_form(cls, connector: "GithubConnector", current_config, **kwargs):
         """Retrieve a form filled with suggestions of available organizations."""
         # Always add the suggestions for the available organizations
         constraints = {}
         with suppress(Exception):
             available_organizations = connector.get_organizations()
-            constraints['organization'] = strlist_to_enum('organization', available_organizations)
-        return create_model('FormSchema', **constraints, __base__=cls).schema()
+            constraints["organization"] = strlist_to_enum("organization", available_organizations)
+        return create_model("FormSchema", **constraints, __base__=cls).schema()
 
 
 class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
-    _auth_flow = 'oauth2'
+    _auth_flow = "oauth2"
     auth_flow_id: Optional[str] = None
-    _oauth_trigger = 'instance'
+    _oauth_trigger = "instance"
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
         return ConnectorSecretsForm(
-            documentation_md=(Path(os.path.dirname(__file__)) / 'doc.md').read_text(),
+            documentation_md=(Path(os.path.dirname(__file__)) / "doc.md").read_text(),
             secrets_schema=OAuth2ConnectorConfig.schema(),
         )
 
@@ -113,11 +113,11 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,
-            secrets_keeper=kwargs['secrets_keeper'],
-            redirect_uri=kwargs['redirect_uri'],
+            secrets_keeper=kwargs["secrets_keeper"],
+            redirect_uri=kwargs["redirect_uri"],
             config=OAuth2ConnectorConfig(
-                client_id=kwargs['client_id'],
-                client_secret=kwargs['client_secret'],
+                client_id=kwargs["client_id"],
+                client_secret=kwargs["client_secret"],
             ),
         )
 
@@ -130,12 +130,12 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
         access_token = self.get_access_token()
 
         if not access_token:
-            raise NoCredentialsError('No credentials')
+            raise NoCredentialsError("No credentials")
 
-        headers = {'Authorization': f'Bearer {access_token}'}
-        logging.getLogger(__name__).info('Retrieving organization')
-        data = requests.get(f'{BASE_ROUTE_REST}user/orgs', headers=headers).json()
-        return [str(x['login']) for x in data]
+        headers = {"Authorization": f"Bearer {access_token}"}
+        logging.getLogger(__name__).info("Retrieving organization")
+        data = requests.get(f"{BASE_ROUTE_REST}user/orgs", headers=headers).json()
+        return [str(x["login"]) for x in data]
 
     def retrieve_tokens(self, authorization_response: str):
         """
@@ -182,10 +182,10 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
             names.extend([t[extraction_keys[dataset]] for t in get_nodes(extracted_data)])
 
             if has_next_page(page_info):
-                variables['cursor'] = get_cursor(page_info)
+                variables["cursor"] = get_cursor(page_info)
                 self.get_names(client, organization, names=names, variables=variables, dataset=dataset)
         except (GithubError, KeyNotFoundException) as g:
-            logging.getLogger(__name__).error(f'Aborting query due to {g}')
+            logging.getLogger(__name__).error(f"Aborting query due to {g}")
 
         return names
 
@@ -241,11 +241,11 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
             # Check if the extraction script can see a previously extracted object (e.g PR)
             # in current page
 
-            if latest_retrieved_object and dataset == GithubDataSet('pull requests'):
+            if latest_retrieved_object and dataset == GithubDataSet("pull requests"):
                 # check if latest_retrieved_object is in current page
 
                 try:
-                    index = [pr['PR Name'] for pr in formatted_data].index(latest_retrieved_object)
+                    index = [pr["PR Name"] for pr in formatted_data].index(latest_retrieved_object)
                     formatted_data = formatted_data[:index]
                     data_list.extend(formatted_data)
                     return data_list
@@ -254,12 +254,12 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
 
             # For now we want to retrieve only max 1 year of Pull requests
             # TODO change this to be able to receive a extraction_start_date date for extraction as a parameter
-            if dataset == GithubDataSet('pull requests'):
+            if dataset == GithubDataSet("pull requests"):
                 try:
                     # Find the first index where PR Creation Date is < extraction_start_date
                     # Throws IndexError if such index cannot be found
                     index = np.where(
-                        np.array([pr['PR Creation Date'] for pr in formatted_data]) < extraction_start_date
+                        np.array([pr["PR Creation Date"] for pr in formatted_data]) < extraction_start_date
                     )[0][0]
                     formatted_data = formatted_data[:index]
                     data_list.extend(formatted_data)
@@ -267,14 +267,14 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
                 except (IndexError, TypeError):
                     pass
 
-            if dataset == GithubDataSet('pull requests'):
+            if dataset == GithubDataSet("pull requests"):
                 data_list.extend(formatted_data)
             else:
                 data_list.append(formatted_data)
 
             if has_next_page(page_info) and retrieved_pages < page_limit:
                 retrieved_pages += 1
-                variables['cursor'] = get_cursor(page_info)
+                variables["cursor"] = get_cursor(page_info)
                 get_rate_limit_info(data_value)
 
                 await self.get_pages(
@@ -290,7 +290,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
                 )
 
         except GithubError as exc:
-            logging.getLogger(__name__).info('Retrying in 15 seconds')
+            logging.getLogger(__name__).info("Retrying in 15 seconds")
             await asyncio.sleep(15)
             retries += 1
             if retries <= retry_limit:
@@ -308,14 +308,14 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
                     latest_retrieved_object=latest_retrieved_object,
                 )
             else:
-                raise GithubError('Max number of retries reached, aborting connection') from exc
+                raise GithubError("Max number of retries reached, aborting connection") from exc
 
         except KeyNotFoundException as k:
-            logging.getLogger(__name__).error(f'{k}')
+            logging.getLogger(__name__).error(f"{k}")
 
         except RateLimitExhaustedException as r:
             sleep_time = r.args[0]  # Value to wait is sent within the Exception
-            logging.getLogger(__name__).info(f'Pausing until reset, waiting {sleep_time}')
+            logging.getLogger(__name__).info(f"Pausing until reset, waiting {sleep_time}")
             await asyncio.sleep(sleep_time)
             await self.get_pages(
                 name=name,
@@ -353,7 +353,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
         :param latest_retrieved_object a dict with object as key and entity as value e. g {'repo': 'plop', 'pr: stuff'}
         :return: a Pandas DataFrame of pull requests or team memberships
         """
-        logging.getLogger(__name__).info(f'Starting fetch for {dataset}')
+        logging.getLogger(__name__).info(f"Starting fetch for {dataset}")
         names = self.get_names(client=client, organization=organization, dataset=dataset)
         subtasks = [
             self.get_pages(
@@ -382,7 +382,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
         if not access_token:
             raise NoCredentialsError(NO_CREDENTIALS_ERROR)
 
-        headers = {'Authorization': f'token {access_token}'}
+        headers = {"Authorization": f"token {access_token}"}
         client = GraphqlClient(BASE_ROUTE, headers)
         loop = get_loop()
         return loop.run_until_complete(
@@ -414,7 +414,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
         preview_datasource = GithubDataSource(
             page_limit=1,
             dataset=data_source.dataset,
-            domain=f'preview_{data_source.domain}',
+            domain=f"preview_{data_source.domain}",
             name=data_source.name,
             organization=data_source.organization,
             entities_limit=3,
@@ -438,4 +438,4 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
             else:
                 return ConnectorStatus(status=False)
         except Exception:
-            return ConnectorStatus(status=False, error='Credentials are missing')
+            return ConnectorStatus(status=False, error="Credentials are missing")

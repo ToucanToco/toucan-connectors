@@ -21,16 +21,16 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
 )
 
-AUTHORIZATION_URL_PROD = 'https://login.salesforce.com/services/oauth2/authorize'
-AUTHORIZATION_URL_SANDBOX = 'https://test.salesforce.com/services/oauth2/authorize'
+AUTHORIZATION_URL_PROD = "https://login.salesforce.com/services/oauth2/authorize"
+AUTHORIZATION_URL_SANDBOX = "https://test.salesforce.com/services/oauth2/authorize"
 
-SCOPE = 'full api refresh_token'
+SCOPE = "full api refresh_token"
 # In Sandbox case, TOKEN_URL must be set to https://login.salesforce.com/services/oauth2/token
-TOKEN_URL_PROD = 'https://login.salesforce.com/services/oauth2/token'
-TOKEN_URL_SANDBOX = 'https://test.salesforce.com/services/oauth2/token'
+TOKEN_URL_PROD = "https://login.salesforce.com/services/oauth2/token"
+TOKEN_URL_SANDBOX = "https://test.salesforce.com/services/oauth2/token"
 
-NO_CREDENTIALS_ERROR = 'No credentials'
-DATA_ENDPOINT = 'services/data/v39.0/query'
+NO_CREDENTIALS_ERROR = "No credentials"
+DATA_ENDPOINT = "services/data/v39.0/query"
 
 
 class SalesforceApiError(Exception):
@@ -44,27 +44,27 @@ class NoCredentialsError(Exception):
 class SalesforceDataSource(ToucanDataSource):
     query: str = Field(
         None,
-        description='The SOQL query to send',
-        widget='sql',
+        description="The SOQL query to send",
+        widget="sql",
     )
 
 
 class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSource):
-    _auth_flow = 'oauth2'
+    _auth_flow = "oauth2"
     auth_flow_id: Optional[str] = None
     instance_url: str = Field(
         None,
-        title='instance url',
-        description='Baseroute URL of the salesforces instance to query (without the trailing slash)',
+        title="instance url",
+        description="Baseroute URL of the salesforces instance to query (without the trailing slash)",
     )
-    _oauth_trigger = 'instance'
-    oauth2_version: str = Field('1', **{'ui.hidden': True})
+    _oauth_trigger = "instance"
+    oauth2_version: str = Field("1", **{"ui.hidden": True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
         return ConnectorSecretsForm(
-            documentation_md=(Path(os.path.dirname(__file__)) / 'doc.md').read_text(),
+            documentation_md=(Path(os.path.dirname(__file__)) / "doc.md").read_text(),
             secrets_schema=OAuth2ConnectorConfig.schema(),
         )
 
@@ -72,14 +72,14 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
-            authorization_url=AUTHORIZATION_URL_SANDBOX if self.type == 'SalesforceSandbox' else AUTHORIZATION_URL_PROD,
+            authorization_url=AUTHORIZATION_URL_SANDBOX if self.type == "SalesforceSandbox" else AUTHORIZATION_URL_PROD,
             scope=SCOPE,
-            token_url=TOKEN_URL_SANDBOX if self.type == 'SalesforceSandbox' else TOKEN_URL_PROD,
-            secrets_keeper=kwargs['secrets_keeper'],
-            redirect_uri=kwargs['redirect_uri'],
+            token_url=TOKEN_URL_SANDBOX if self.type == "SalesforceSandbox" else TOKEN_URL_PROD,
+            secrets_keeper=kwargs["secrets_keeper"],
+            redirect_uri=kwargs["redirect_uri"],
             config=OAuth2ConnectorConfig(
-                client_id=kwargs['client_id'],
-                client_secret=kwargs['client_secret'],
+                client_id=kwargs["client_id"],
+                client_secret=kwargs["client_secret"],
             ),
         )
 
@@ -98,17 +98,17 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         return self._oauth2_connector.get_access_data()
 
     def _retrieve_data(self, data_source: SalesforceDataSource) -> pd.DataFrame:
-        logging.getLogger(__name__).info('_retrieve_data with Salesforce Connector')
+        logging.getLogger(__name__).info("_retrieve_data with Salesforce Connector")
         ts_start = datetime.datetime.now().timestamp()
         access_data = self.get_access_data()
-        logging.getLogger(__name__).debug(f'Retrieve connection information {access_data}')
+        logging.getLogger(__name__).debug(f"Retrieve connection information {access_data}")
 
         if not access_data:
             raise NoCredentialsError(NO_CREDENTIALS_ERROR)
         headers = {
-            'Authorization': f'Bearer {access_data["access_token"]}',
-            'Content-type': 'application/json',
-            'Accept-Encoding': 'gzip',
+            "Authorization": f'Bearer {access_data["access_token"]}',
+            "Content-type": "application/json",
+            "Accept-Encoding": "gzip",
         }
         session = Session()
         session.headers.update(headers)
@@ -116,13 +116,13 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
             self.generate_rows(
                 session,
                 data_source,
-                instance_url=access_data['instance_url'],
+                instance_url=access_data["instance_url"],
                 endpoint=DATA_ENDPOINT,
-                params={'q': data_source.query},
+                params={"q": data_source.query},
             )
         )
         ts_end = datetime.datetime.now().timestamp()
-        logging.getLogger(__name__).info(f'_retrieve_data finished in {ts_end - ts_start} ms')
+        logging.getLogger(__name__).info(f"_retrieve_data finished in {ts_end - ts_start} ms")
         return result
 
     def generate_rows(
@@ -136,7 +136,7 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         params = params or {}
         results = self.make_request(session, data_source, instance_url=instance_url, data=params, endpoint=endpoint)
 
-        if isinstance(results, list) and 'errorCode' in results[0]:
+        if isinstance(results, list) and "errorCode" in results[0]:
             logging.getLogger(__name__).error(
                 f'Impossible to retrieve data with error {results[0]["errorCode"]} '
                 f'and message {results[0]["message"]}'
@@ -144,13 +144,13 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
             error = f'[{results[0]["errorCode"]}] {results[0]["message"]}'
             raise SalesforceApiError(error)
 
-        results.get('records', None)
-        records = [{k: v for k, v in d.items() if k != 'attributes'} for d in results.get('records', None)]
-        logging.getLogger(__name__).debug(f'records ({len(records)}) - {str(records)}')
-        next_page = results.get('nextRecordsUrl', None)
+        results.get("records", None)
+        records = [{k: v for k, v in d.items() if k != "attributes"} for d in results.get("records", None)]
+        logging.getLogger(__name__).debug(f"records ({len(records)}) - {str(records)}")
+        next_page = results.get("nextRecordsUrl", None)
         if records:
             if next_page:
-                logging.getLogger(__name__).debug('next_page exists')
+                logging.getLogger(__name__).debug("next_page exists")
                 records += self.generate_rows(session, data_source, instance_url=instance_url, endpoint=next_page)
         return records
 
@@ -163,9 +163,9 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         data: dict | None = None,
     ):
         logging.getLogger(__name__).info(
-            f'Generate Salesforce request ' f'{instance_url}/{endpoint} with params {str(data)}'
+            f"Generate Salesforce request " f"{instance_url}/{endpoint} with params {str(data)}"
         )
-        r = session.request('GET', url=f'{instance_url}/{endpoint}', params=data or {}).json()
+        r = session.request("GET", url=f"{instance_url}/{endpoint}", params=data or {}).json()
         return r
 
     def get_status(self) -> ConnectorStatus:
@@ -176,12 +176,12 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         try:
             access_data = self.get_access_data()
             if access_data:
-                return ConnectorStatus(status=True, message='Connection successful')
+                return ConnectorStatus(status=True, message="Connection successful")
             else:
-                return ConnectorStatus(status=False, error='Impossible to retrieve access_token')
+                return ConnectorStatus(status=False, error="Impossible to retrieve access_token")
         except OAuthError as ex:
-            return ConnectorStatus(status=False, error=f'Error to get status - {ex.error}')
+            return ConnectorStatus(status=False, error=f"Error to get status - {ex.error}")
         except NoOAuth2RefreshToken:
-            return ConnectorStatus(status=False, error='Error to get status - no refresh token found')
+            return ConnectorStatus(status=False, error="Error to get status - no refresh token found")
         except Exception as ex:
-            return ConnectorStatus(status=False, error=f'Error to get status - unknown exception - {ex}')
+            return ConnectorStatus(status=False, error=f"Error to get status - unknown exception - {ex}")

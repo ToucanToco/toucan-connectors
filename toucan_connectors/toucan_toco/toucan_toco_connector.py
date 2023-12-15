@@ -7,9 +7,9 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class Endpoints(str, Enum):
-    users = 'users'
-    small_apps = 'small-apps'
-    config = 'config'
+    users = "users"
+    small_apps = "small-apps"
+    config = "config"
 
 
 class ToucanTocoDataSource(ToucanDataSource):
@@ -38,8 +38,8 @@ class ToucanTocoConnector(ToucanConnector, data_source_model=ToucanTocoDataSourc
 
         if data_source.all_small_apps:
             ret = []
-            for app in g(tc['small-apps']):
-                ret.append({'small_app': app['id'], 'response': g(tc[app['id']][data_source.endpoint])})
+            for app in g(tc["small-apps"]):
+                ret.append({"small_app": app["id"], "response": g(tc[app["id"]][data_source.endpoint])})
             return pd.DataFrame(ret)
 
         else:

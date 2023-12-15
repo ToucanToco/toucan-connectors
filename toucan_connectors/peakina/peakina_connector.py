@@ -8,7 +8,7 @@ from toucan_connectors.toucan_connector import ToucanConnector
 
 
 class PeakinaDataSource(DataSource):
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="allow")
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)

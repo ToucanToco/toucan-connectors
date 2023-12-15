@@ -28,7 +28,7 @@ class JsonWrapper:
         sort_keys=False,
         **kwargs,
     ):
-        logging.getLogger(__name__).debug(f'JSON object {obj}')
+        logging.getLogger(__name__).debug(f"JSON object {obj}")
         json.dump(
             obj,
             fp,
@@ -38,12 +38,12 @@ class JsonWrapper:
             allow_nan=allow_nan,
             cls=cls,
             indent=indent,
-            separators=(',', ':'),
+            separators=(",", ":"),
             default=default,
             sort_keys=sort_keys,
             **kwargs,
         )
-        logging.getLogger(__name__).debug(f'Stringify JSON in file {fp}')
+        logging.getLogger(__name__).debug(f"Stringify JSON in file {fp}")
 
     @staticmethod
     def dumps(
@@ -60,7 +60,7 @@ class JsonWrapper:
         sort_keys=False,
         **kwargs,
     ):
-        logging.getLogger(__name__).debug(f'JSON object {obj}')
+        logging.getLogger(__name__).debug(f"JSON object {obj}")
         result = json.dumps(
             obj,
             skipkeys=skipkeys,
@@ -69,12 +69,12 @@ class JsonWrapper:
             allow_nan=allow_nan,
             cls=cls,
             indent=indent,
-            separators=(',', ':'),
+            separators=(",", ":"),
             default=default,
             sort_keys=sort_keys,
             **kwargs,
         )
-        logging.getLogger(__name__).debug(f'Stringify JSON {result}')
+        logging.getLogger(__name__).debug(f"Stringify JSON {result}")
         return result
 
     @staticmethod
@@ -112,7 +112,7 @@ class JsonWrapper:
         object_pairs_hook=None,
         **kwargs,
     ) -> Dict:
-        logging.getLogger(__name__).debug(f'Stringify JSON {s}')
+        logging.getLogger(__name__).debug(f"Stringify JSON {s}")
         result = json.loads(
             s,
             cls=cls,
@@ -123,5 +123,5 @@ class JsonWrapper:
             object_pairs_hook=object_pairs_hook,
             **kwargs,
         )
-        logging.getLogger(__name__).debug(f'Parsed JSON {result}')
+        logging.getLogger(__name__).debug(f"Parsed JSON {result}")
         return result

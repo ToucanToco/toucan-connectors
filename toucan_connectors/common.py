@@ -18,18 +18,18 @@ from toucan_data_sdk.utils.helpers import slugify
 
 # Query interpolation
 
-RE_PARAM = r'%\(([^(%\()]*)\)s'
-RE_JINJA = r'{{([^({{)}]*)}}'
-RE_SINGLE_VAR_JINJA = r'{{\s*([^\W\d]\w*)\s*}}'  # a single identifier, e.g: {{ __foo__ }}
+RE_PARAM = r"%\(([^(%\()]*)\)s"
+RE_JINJA = r"{{([^({{)}]*)}}"
+RE_SINGLE_VAR_JINJA = r"{{\s*([^\W\d]\w*)\s*}}"  # a single identifier, e.g: {{ __foo__ }}
 
-RE_JINJA_ALONE = r'^' + RE_JINJA + '$'
+RE_JINJA_ALONE = r"^" + RE_JINJA + "$"
 
 # Identify jinja params with no quotes around or complex condition
-RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r'([ )])', RE_JINJA + r'()$']
+RE_JINJA_ALONE_IN_STRING = [RE_JINJA + r"([ )])", RE_JINJA + r"()$"]
 
-RE_SET_KEEP_TYPE = r'{{__keep_type__\1}}\2'
-RE_GET_KEEP_TYPE = r'{{(__keep_type__[^({{)}]*)}}'
-RE_NAMED_PARAM = r'\'?%\([a-zA-Z0-9_]*\)s\'?'
+RE_SET_KEEP_TYPE = r"{{__keep_type__\1}}\2"
+RE_GET_KEEP_TYPE = r"{{(__keep_type__[^({{)}]*)}}"
+RE_NAMED_PARAM = r"\'?%\([a-zA-Z0-9_]*\)s\'?"
 
 
 class ClusterStartException(Exception):
@@ -51,7 +51,7 @@ def is_jinja_alone(s: str) -> bool:
 
     In the 2nd case, we will always render the result as a string.
     """
-    return re.match(RE_JINJA_ALONE, s) or (s.startswith('{%') and s.endswith('%}'))
+    return re.match(RE_JINJA_ALONE, s) or (s.startswith("{%") and s.endswith("%}"))
 
 
 def _has_parameters(query: dict | list[dict] | tuple | str) -> bool:
@@ -108,7 +108,7 @@ def _raise_or_return_undefined(res: Undefined | None, handle_errors: bool) -> Un
         return res or Undefined(name=var_name)
     # This is publicly documented, so we can safely access it:
     # https://jinja.palletsprojects.com/en/3.0.x/api/#jinja2.Undefined._undefined_name
-    raise UndefinedVariableError(var_name=var_name, message=f'Undefined variable: {var_name}')
+    raise UndefinedVariableError(var_name=var_name, message=f"Undefined variable: {var_name}")
 
 
 def _is_defined(value: Any) -> bool:
@@ -149,7 +149,7 @@ def _render_query(query: dict | list[dict] | tuple | str, parameters: dict | Non
             return query
 
         # Replace param templating with jinja templating:
-        query = re.sub(RE_PARAM, r'{{ \g<1> }}', query)
+        query = re.sub(RE_PARAM, r"{{ \g<1> }}", query)
 
         # Add quotes to string parameters to keep type if not complex
         clean_p = deepcopy(parameters)
@@ -198,10 +198,10 @@ def apply_query_parameters(query: str, parameters: dict) -> str:
     Interpolate the query, which is a Jinja templates, with the provided parameters.
     """
 
-    def _flatten_dict(p, parent_key=''):
+    def _flatten_dict(p, parent_key=""):
         new_p = {}
         for k, v in deepcopy(p).items():
-            new_key = f'{parent_key}_{k}' if parent_key else k
+            new_key = f"{parent_key}_{k}" if parent_key else k
             new_p[new_key] = v
             if isinstance(v, list):
                 v = dict(enumerate(v))
@@ -222,13 +222,13 @@ def apply_query_parameters(query: str, parameters: dict) -> str:
         query = re.sub(pattern, RE_SET_KEEP_TYPE, query)
     p_keep_type = re.findall(RE_GET_KEEP_TYPE, query)
     for key in p_keep_type:
-        query = query.replace(key, slugify(key, separator='_'))
+        query = query.replace(key, slugify(key, separator="_"))
     if len(p_keep_type):
         # Add a version of parameters flatten + with quotes for string
-        p_keep_type = _flatten_dict(parameters, parent_key='__keep_type_')
+        p_keep_type = _flatten_dict(parameters, parent_key="__keep_type_")
         parameters.update(p_keep_type)
 
-    logging.getLogger(__name__).debug(f'Render query: {query} with parameters {parameters}')
+    logging.getLogger(__name__).debug(f"Render query: {query} with parameters {parameters}")
     return Template(query).render(parameters)
 
 
@@ -251,16 +251,16 @@ def transform_with_jq(data: object, jq_filter: str) -> list:
 
 
 FilterSchema = Field(
-    '.',
-    description='You can apply filters to json response if data is nested. As we rely on a '
-    'library called jq, we suggest the refer to the dedicated '
+    ".",
+    description="You can apply filters to json response if data is nested. As we rely on a "
+    "library called jq, we suggest the refer to the dedicated "
     '<a href="https://stedolan.github.io/jq/manual/">documentation</a>',
 )
 
 XpathSchema = Field(
-    '',
-    description='You can define an XPath to parse the XML cdata retrieved.'
-    'For reference visit: '
+    "",
+    description="You can define an XPath to parse the XML cdata retrieved."
+    "For reference visit: "
     '<a href="https://developer.mozilla.org/en-US/docs/Web/XPath">documentation</a>',
 )
 
@@ -280,7 +280,7 @@ async def fetch(url: str, session: ClientSession):
     """Fetch data from an API."""
     async with session.get(url) as res:
         if res.status != 200:
-            raise HttpError(f'Aborting request due to error from the API: {res.status}, {res.reason}')
+            raise HttpError(f"Aborting request due to error from the API: {res.status}, {res.reason}")
         return await res.json()
 
 
@@ -336,7 +336,7 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> tuple
         else:
             flattened_values.append(val)
 
-    return re.sub(RE_NAMED_PARAM, '?', query_string), flattened_values
+    return re.sub(RE_NAMED_PARAM, "?", query_string), flattened_values
 
 
 def convert_to_printf_templating_style(query_string: str) -> str:
@@ -345,7 +345,7 @@ def convert_to_printf_templating_style(query_string: str) -> str:
     Useful for sql-based connectors, which, for security reasons, cannot be rendered
     with jinja.
     """
-    return re.sub(RE_SINGLE_VAR_JINJA, r'%(\g<1>)s', query_string)
+    return re.sub(RE_SINGLE_VAR_JINJA, r"%(\g<1>)s", query_string)
 
 
 def adapt_param_type(params):
@@ -357,14 +357,14 @@ def adapt_param_type(params):
 
 
 def extract_table_name(query: str) -> str:
-    m = re.search(r'from\s*(?P<table>[^\s;]+)\s*(where|order by|group by|limit)?', query, re.I)
-    table = m.group('table')
+    m = re.search(r"from\s*(?P<table>[^\s;]+)\s*(where|order by|group by|limit)?", query, re.I)
+    table = m.group("table")
     return table
 
 
 def is_interpolating_table_name(query: str) -> bool:
     table_name = extract_table_name(query)
-    return table_name.startswith('%(')
+    return table_name.startswith("%(")
 
 
 def infer_datetime_dtype(df: pd.DataFrame) -> None:
@@ -374,7 +374,7 @@ def infer_datetime_dtype(df: pd.DataFrame) -> None:
     This util allows to automatically convert it to `datetime64[ns]`.
     """
     for colname in df:
-        if df[colname].dtype == 'object':
+        if df[colname].dtype == "object":
             # get the first non-null value in the series.
             # if it's a datetime, try to convert the whole serie to datetime dtype.
             s = df[colname]
@@ -383,7 +383,7 @@ def infer_datetime_dtype(df: pd.DataFrame) -> None:
                 first_value = s.loc[idx]
                 if isinstance(first_value, (datetime.datetime, datetime.date)):
                     with suppress(Exception):
-                        df[colname] = pd.to_datetime(df[colname], errors='coerce')
+                        df[colname] = pd.to_datetime(df[colname], errors="coerce")
 
 
 def pandas_read_sql(
@@ -399,7 +399,7 @@ def pandas_read_sql(
     if convert_to_printf:
         query = convert_to_printf_templating_style(query)
     if render_user:
-        query = Template(query).render({'user': params.get('user', {})})
+        query = Template(query).render({"user": params.get("user", {})})
     if convert_to_qmark:
         query, params = convert_to_qmark_paramstyle(query, params)
     if adapt_params:
@@ -409,8 +409,8 @@ def pandas_read_sql(
         # FIXME: We should use here the sqlalchemy.text() module to
         # escape characters like % but as a quick fix,
         # we added regex replace that will exclude %(.*) compositions
-        query = query.replace('%%', '%')
-        query = re.sub(r'%[^(%]', r'%\g<0>', query)
+        query = query.replace("%%", "%")
+        query = re.sub(r"%[^(%]", r"%\g<0>", query)
         df = pd.read_sql(query, con=con, params=params, **kwargs)
     except pd.io.sql.DatabaseError as exc:
         if is_interpolating_table_name(query):
@@ -434,9 +434,9 @@ def sanitize_query(
     """
     import re
 
-    all_query_params = re.findall(r'{{.*?}}', query)
+    all_query_params = re.findall(r"{{.*?}}", query)
     for i, query_param in enumerate(all_query_params):
-        params[f'__QUERY_PARAM_{i}__'] = nosql_apply_parameters_to_query(query_param, params)
-        query = query.replace(query_param, transformer(f'__QUERY_PARAM_{i}__'))
+        params[f"__QUERY_PARAM_{i}__"] = nosql_apply_parameters_to_query(query_param, params)
+        query = query.replace(query_param, transformer(f"__QUERY_PARAM_{i}__"))
 
     return query, params

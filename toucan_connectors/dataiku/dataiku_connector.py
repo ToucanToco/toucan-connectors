@@ -19,14 +19,14 @@ class DataikuConnector(ToucanConnector, data_source_model=DataikuDataSource):
 
     host: str = Field(
         ...,
-        description='The domain name (preferred option as more dynamic) or '
-        'the hardcoded IP address of your Dataiku server',
+        description="The domain name (preferred option as more dynamic) or "
+        "the hardcoded IP address of your Dataiku server",
     )
-    apiKey: str = Field(..., title='API key')  # noqa: N815
+    apiKey: str = Field(..., title="API key")  # noqa: N815
     project: str
 
     def _retrieve_data(self, data_source: DataikuDataSource) -> pd.DataFrame:
         client = dataikuapi.DSSClient(self.host, self.apiKey)
-        data_url = f'/projects/{self.project}/datasets/{data_source.dataset}/data/'
-        stream = client._perform_raw('GET', data_url, params={'format': 'tsv-excel-header'})
-        return pd.read_csv(StringIO(stream.text), sep='\t')
+        data_url = f"/projects/{self.project}/datasets/{data_source.dataset}/data/"
+        stream = client._perform_raw("GET", data_url, params={"format": "tsv-excel-header"})
+        return pd.read_csv(StringIO(stream.text), sep="\t")

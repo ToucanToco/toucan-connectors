@@ -5,7 +5,7 @@ from typing import Callable, TypeAlias
 
 from toucan_connectors.condition_translator import ConditionTranslator, Number
 
-FnTakingNumber: TypeAlias = Callable[[type['PandasConditionTranslator'], str, Number], str]
+FnTakingNumber: TypeAlias = Callable[[type["PandasConditionTranslator"], str, Number], str]
 
 
 def requires_number(fn: Callable[[type, str, Number | str], str]) -> FnTakingNumber:
@@ -31,7 +31,7 @@ class PandasConditionTranslator(ConditionTranslator):
     @classmethod
     def get_column_ref(cls, column: str) -> str:
         """To refer column names (even with spaces or operators), we surround them in backticks"""
-        return f'`{column}`'
+        return f"`{column}`"
 
     @classmethod
     def get_value_str_ref(cls, value: str) -> str:
@@ -39,42 +39,42 @@ class PandasConditionTranslator(ConditionTranslator):
 
     @classmethod
     def join_clauses(cls, clauses: list[str], logical_operator: str) -> str:
-        return '(' + f' {logical_operator} '.join(clauses) + ')'
+        return "(" + f" {logical_operator} ".join(clauses) + ")"
 
     @classmethod
     def EQUAL(cls, column: str, value: str | Number) -> str:
-        return f'{column} == {value}'
+        return f"{column} == {value}"
 
     @classmethod
     def NOT_EQUAL(cls, column: str, value: str | Number) -> str:
-        return f'{column} != {value}'
+        return f"{column} != {value}"
 
     @classmethod
     @requires_number
     def LOWER_THAN(cls, column: str, value: Number) -> str:
-        return f'{column} < {value}'
+        return f"{column} < {value}"
 
     @classmethod
     @requires_number
     def LOWER_THAN_EQUAL(cls, column: str, value: Number) -> str:
-        return f'{column} <= {value}'
+        return f"{column} <= {value}"
 
     @classmethod
     @requires_number
     def GREATER_THAN(cls, column: str, value: Number) -> str:
-        return f'{column} > {value}'
+        return f"{column} > {value}"
 
     @classmethod
     @requires_number
     def GREATER_THAN_EQUAL(cls, column: str, value: Number) -> str:
-        return f'{column} >= {value}'
+        return f"{column} >= {value}"
 
     # NOTE: Here, we cannot ensure that the parameter has the expected type. Some frontend dev has
     # to be expected
     @classmethod
     def IN(cls, column: str, value: str | Number | list[str | Number]) -> str:
-        return f'{column} in {value}'
+        return f"{column} in {value}"
 
     @classmethod
     def NOT_IN(cls, column: str, value: str | Number | list[str | Number]) -> str:
-        return f'{column} not in {value}'
+        return f"{column} not in {value}"

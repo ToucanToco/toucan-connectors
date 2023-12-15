@@ -14,14 +14,6 @@ ignore = [
        "C901", # complexity
 ]
 
-[tool.ruff.flake8-quotes]
-docstring-quotes = "double"
-inline-quotes = "single"
-
-[tool.ruff.format]
-# Prefer single quotes over double quotes
-quote-style = "single"
-
 [tool.poetry]
 name = "toucan-connectors"
 version = "5.0.0"

@@ -8,12 +8,12 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
 class Granularity(str, Enum):
-    hour = 'hour'
-    day = 'day'
-    week = 'week'
-    month = 'month'
-    quarter = 'quarter'
-    year = 'year'
+    hour = "hour"
+    day = "day"
+    week = "week"
+    month = "month"
+    quarter = "quarter"
+    year = "year"
 
 
 class AdobeAnalyticsDataSource(ToucanDataSource):
@@ -56,5 +56,5 @@ class AdobeAnalyticsConnector(ToucanConnector, data_source_model=AdobeAnalyticsD
     def _retrieve_data(self, data_source: AdobeAnalyticsDataSource) -> pd.DataFrame:
         suites = Client(self.username, self.password, self.endpoint).suites()
         df = suites[data_source.suite_id].download(data_source.report_definition)
-        df['suite_id'] = data_source.suite_id
+        df["suite_id"] = data_source.suite_id
         return df

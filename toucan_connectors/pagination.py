@@ -19,7 +19,7 @@ class UnknownSizeDatasetPaginationInfo(BaseModel):
     :param is_last_page: indicates wether the last page has been reached.
     """
 
-    type: Literal['unknown_size'] = 'unknown_size'
+    type: Literal["unknown_size"] = "unknown_size"
     is_last_page: bool
 
 
@@ -30,7 +30,7 @@ class KnownSizeDatasetPaginationInfo(BaseModel):
     :param total_rows: The total number of rows in the dataset.
     """
 
-    type: Literal['known_size'] = 'known_size'
+    type: Literal["known_size"] = "known_size"
     is_last_page: bool
     total_rows: int
 

@@ -15,9 +15,9 @@ from .helpers import is_dict_of_lists, is_list_response, is_nested_list
 
 
 class SoapDataSource(ToucanDataSource):
-    method: str = Field(None, title='Method', description='Name of the webservice method to use')
-    parameters: dict = Field(None, title='Service Parameters', description='Parameters to pass to the called service')
-    flatten_column: str = Field(None, description='Column containing nested rows')
+    method: str = Field(None, title="Method", description="Name of the webservice method to use")
+    parameters: dict = Field(None, title="Service Parameters", description="Parameters to pass to the called service")
+    flatten_column: str = Field(None, description="Column containing nested rows")
 
     @classmethod
     def model_json_schema(
@@ -25,7 +25,7 @@ class SoapDataSource(ToucanDataSource):
         by_alias: bool = True,
         ref_template: str = DEFAULT_REF_TEMPLATE,
         schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
-        mode: JsonSchemaMode = 'validation',
+        mode: JsonSchemaMode = "validation",
     ) -> dict[str, Any]:
         schema = super().model_json_schema(
             by_alias=by_alias,
@@ -33,10 +33,10 @@ class SoapDataSource(ToucanDataSource):
             schema_generator=schema_generator,
             mode=mode,
         )
-        keys = schema['properties'].keys()
-        prio_keys = ['domain', 'method', 'parameters', 'flatten_column']
+        keys = schema["properties"].keys()
+        prio_keys = ["domain", "method", "parameters", "flatten_column"]
         new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        schema["properties"] = {k: schema["properties"][k] for k in new_keys}
         return schema
 
     @classmethod
@@ -44,20 +44,20 @@ class SoapDataSource(ToucanDataSource):
         # Returns a list of available methods
         docs = {}
         for m in dir(client.service):
-            if not m.startswith('_'):
+            if not m.startswith("_"):
                 docs[m] = getattr(client.service, m).__doc__
         return docs
 
     @classmethod
-    def get_form(cls, connector: 'SoapConnector', current_config):
+    def get_form(cls, connector: "SoapConnector", current_config):
         constraints = {}
         client = connector.create_client()
         methods_docs = cls._get_methods_docs(client)
-        constraints['method'] = strlist_to_enum('method', list(methods_docs.keys()))
+        constraints["method"] = strlist_to_enum("method", list(methods_docs.keys()))
 
-        res = create_model('FormSchema', **constraints, __base__=cls).schema()
-        res['properties']['parameters'][
-            'description'
+        res = create_model("FormSchema", **constraints, __base__=cls).schema()
+        res["properties"]["parameters"][
+            "description"
         ] = f'Services documentation: <br> {"<br>".join(list(methods_docs.values()))}'
         return res
 
@@ -65,10 +65,10 @@ class SoapDataSource(ToucanDataSource):
 class SoapConnector(ToucanConnector, data_source_model=SoapDataSource):
     headers: dict = Field(
         None,
-        description='JSON object of HTTP headers to send with every HTTP request',
+        description="JSON object of HTTP headers to send with every HTTP request",
         examples=['{ "content-type": "application/xml" }'],
     )
-    endpoint: str = Field(..., title='WSDL Endpoint', description='The URL where the WSDL file is located')
+    endpoint: str = Field(..., title="WSDL Endpoint", description="The URL where the WSDL file is located")
 
     def create_client(self) -> Client:
         session = Session()
@@ -95,6 +95,6 @@ class SoapConnector(ToucanConnector, data_source_model=SoapDataSource):
         elif isinstance(response, dict):  # In case the result is only a dict
             result = pd.DataFrame(response, index=[0])  # We need to give an index to DataFrame constructor
         else:  # Occurs when the result is a scalar (e.g. an int or a str)
-            result = pd.DataFrame({'response': response}, index=[0])
+            result = pd.DataFrame({"response": response}, index=[0])
 
         return json_to_table(result, columns=[data_source.flatten_column]) if data_source.flatten_column else result

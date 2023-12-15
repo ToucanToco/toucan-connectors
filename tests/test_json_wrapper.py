@@ -9,11 +9,11 @@ from toucan_connectors.json_wrapper import JsonWrapper, custom_json_serializer
 json_not_string = None
 json_string = '{"key1":"value1","key2":"value2"}'
 json_not_valid_string = '{"key1":"value1","key2"}'
-json_json = {'key1': 'value1', 'key2': 'value2'}
+json_json = {"key1": "value1", "key2": "value2"}
 
-path_dumps = 'tests/fixtures/json_output.json'
-path_loads = 'tests/fixtures/json.json'
-path_not_found = 'tests/fixtures/not_found.json'
+path_dumps = "tests/fixtures/json_output.json"
+path_loads = "tests/fixtures/json.json"
+path_not_found = "tests/fixtures/not_found.json"
 
 
 def test_json_dumps():
@@ -22,7 +22,7 @@ def test_json_dumps():
 
 
 def test_json_dump():
-    with open(path_dumps, 'w+') as f:
+    with open(path_dumps, "w+") as f:
         JsonWrapper.dump(json_json, f)
     with open(path_dumps) as f:
         result = JsonWrapper.load(f)
@@ -48,7 +48,7 @@ def test_json_loads_not_string():
 
 def test_json_load():
     result = JsonWrapper.load(open(path_loads))
-    assert {'key1': 'value1', 'key2': 'value2'} == result
+    assert {"key1": "value1", "key2": "value2"} == result
 
 
 def test_json_load_file_not_found():
@@ -57,5 +57,5 @@ def test_json_load_file_not_found():
 
 
 def test_custom_json_serializer():
-    assert custom_json_serializer(SecretStr('foobar')) == 'foobar'
+    assert custom_json_serializer(SecretStr("foobar")) == "foobar"
     assert custom_json_serializer(42) == 42

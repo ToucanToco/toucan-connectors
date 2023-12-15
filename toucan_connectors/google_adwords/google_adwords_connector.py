@@ -23,35 +23,35 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
 )
 
-AUTHORIZATION_URL: str = 'https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent'
-USER_AGENT: str = 'toucantoco.com:reportextractor:v1'
-TOKEN_URL: str = 'https://oauth2.googleapis.com/token'
-SCOPE: str = 'https://www.googleapis.com/auth/adwords'
+AUTHORIZATION_URL: str = "https://accounts.google.com/o/oauth2/auth?access_type=offline&prompt=consent"
+USER_AGENT: str = "toucantoco.com:reportextractor:v1"
+TOKEN_URL: str = "https://oauth2.googleapis.com/token"
+SCOPE: str = "https://www.googleapis.com/auth/adwords"
 
 
 class GoogleAdwordsDataSource(ToucanDataSource):
     service: str = Field(
         None,
-        title='Service',
-        description='Service to Query',
+        title="Service",
+        description="Service to Query",
     )
-    columns: str = Field(..., title='Columns', description='Fields to select in the dataset')
-    from_clause: str = Field(None, title='From', description='From clause, for report extraction only')
-    parameters: dict = Field(None, title='Filter', description='A dict such as {"Column": {"Operator": "Value"}}')
+    columns: str = Field(..., title="Columns", description="Fields to select in the dataset")
+    from_clause: str = Field(None, title="From", description="From clause, for report extraction only")
+    parameters: dict = Field(None, title="Filter", description='A dict such as {"Column": {"Operator": "Value"}}')
     during: str = Field(
         None,
-        title='During',
-        description='During clause, for report extraction only see: https://developers.google.com/adwords/api/docs/guides/awql#using_awql_with_reports ',  # noqa: E501
+        title="During",
+        description="During clause, for report extraction only see: https://developers.google.com/adwords/api/docs/guides/awql#using_awql_with_reports ",  # noqa: E501
     )
     orderby: Dict = Field(
         None,
-        title='Order By',
+        title="Order By",
         description='Fields to sort on, e.g. {"column":"Id", "direction":"Asc"}, for service extraction only',
     )
     limit: str = Field(
         None,
-        title='Limit',
-        description='Max number of rows to extract, for service extraction only',
+        title="Limit",
+        description="Max number of rows to extract, for service extraction only",
     )
 
     @classmethod
@@ -60,7 +60,7 @@ class GoogleAdwordsDataSource(ToucanDataSource):
         by_alias: bool = True,
         ref_template: str = DEFAULT_REF_TEMPLATE,
         schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
-        mode: JsonSchemaMode = 'validation',
+        mode: JsonSchemaMode = "validation",
     ) -> dict[str, Any]:
         schema = super().model_json_schema(
             by_alias=by_alias,
@@ -68,34 +68,34 @@ class GoogleAdwordsDataSource(ToucanDataSource):
             schema_generator=schema_generator,
             mode=mode,
         )
-        keys = schema['properties'].keys()
+        keys = schema["properties"].keys()
         prio_keys = [
-            'service',
-            'columns',
-            'from_clause',
-            'parameters',
-            'during',
-            'orderby',
-            'limit',
+            "service",
+            "columns",
+            "from_clause",
+            "parameters",
+            "during",
+            "orderby",
+            "limit",
         ]
         new_keys = prio_keys + [k for k in keys if k not in prio_keys]
-        schema['properties'] = {k: schema['properties'][k] for k in new_keys}
+        schema["properties"] = {k: schema["properties"][k] for k in new_keys}
         return schema
 
 
 class GoogleAdwordsConnector(ToucanConnector, data_source_model=GoogleAdwordsDataSource):
-    _auth_flow = 'oauth2'
+    _auth_flow = "oauth2"
     auth_flow_id: Optional[str] = None
     developer_token: str = None
     client_customer_id: str = None
-    _oauth_trigger = 'instance'
-    oauth2_version: str = Field('1', **{'ui.hidden': True})
+    _oauth_trigger = "instance"
+    oauth2_version: str = Field("1", **{"ui.hidden": True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     @staticmethod
     def get_connector_secrets_form() -> ConnectorSecretsForm:
         return ConnectorSecretsForm(
-            documentation_md=(Path(os.path.dirname(__file__)) / 'doc.md').read_text(),
+            documentation_md=(Path(os.path.dirname(__file__)) / "doc.md").read_text(),
             secrets_schema=OAuth2ConnectorConfig.schema(),
         )
 
@@ -107,12 +107,12 @@ class GoogleAdwordsConnector(ToucanConnector, data_source_model=GoogleAdwordsDat
             authorization_url=AUTHORIZATION_URL,
             scope=SCOPE,
             token_url=TOKEN_URL,
-            redirect_uri=kwargs['redirect_uri'],
+            redirect_uri=kwargs["redirect_uri"],
             config=OAuth2ConnectorConfig(
-                client_id=kwargs['client_id'],
-                client_secret=kwargs['client_secret'],
+                client_id=kwargs["client_id"],
+                client_secret=kwargs["client_secret"],
             ),
-            secrets_keeper=kwargs['secrets_keeper'],
+            secrets_keeper=kwargs["secrets_keeper"],
         )
 
     def build_authorization_url(self, **kwargs):
@@ -136,15 +136,15 @@ class GoogleAdwordsConnector(ToucanConnector, data_source_model=GoogleAdwordsDat
         try:
             access_token = self.get_access_token()
         except Exception:
-            return ConnectorStatus(status=False, error='Credentials are missing')
+            return ConnectorStatus(status=False, error="Credentials are missing")
 
         if not access_token:
-            return ConnectorStatus(status=False, error='Credentials are missing')
+            return ConnectorStatus(status=False, error="Credentials are missing")
 
         try:
             user_info = requests.get(
-                url='https://www.googleapis.com/oauth2/v2/userinfo?alt=json',
-                headers={'Authorization': f'Bearer {access_token}'},
+                url="https://www.googleapis.com/oauth2/v2/userinfo?alt=json",
+                headers={"Authorization": f"Bearer {access_token}"},
             ).json()
             return ConnectorStatus(status=True, message=f"Connected as {user_info.get('email')}")
         except HttpError:
@@ -179,10 +179,10 @@ class GoogleAdwordsConnector(ToucanConnector, data_source_model=GoogleAdwordsDat
         # Build Where
         apply_filter(service_query_builder, data_source.parameters)
         # Build Orderby
-        service_query_builder.OrderBy(data_source.orderby['column'], data_source.orderby['direction'])
+        service_query_builder.OrderBy(data_source.orderby["column"], data_source.orderby["direction"])
         # Build Limit
         if not data_source.limit:
-            data_source.limit = '100'
+            data_source.limit = "100"
         service_query_builder.Limit(0, int(data_source.limit))
 
         return service, service_query_builder.Build()
@@ -220,15 +220,15 @@ class GoogleAdwordsConnector(ToucanConnector, data_source_model=GoogleAdwordsDat
             service, query = self.prepare_service_query(client, data_source)
 
             for page in query.Pager(service):
-                if 'entries' in page:
-                    results.extend([serialize_object(e) for e in page['entries']])
+                if "entries" in page:
+                    results.extend([serialize_object(e) for e in page["entries"]])
             return pd.DataFrame(results)[clean_columns(data_source.columns)]
         else:
             output = StringIO()
             report_downloader, query = self.prepare_report_query(client, data_source)
             report_downloader.DownloadReportWithAwql(
                 query,
-                'CSV',
+                "CSV",
                 output,
                 skip_report_header=True,
                 skip_column_header=False,
