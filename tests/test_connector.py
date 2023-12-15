@@ -227,9 +227,8 @@ def test_max_attempt_df():
 class CustomPolicyDataConnector(ToucanConnector, data_source_model=DataSource):
     type: str = 'MyUnreliableDB'
 
-    def _retrieve_data(self, data_source, logbook=None):
-        if logbook is None:
-            logbook = []
+    # NOTE: Leave this as is, the test below actually relies on the param default vzlue being mutated
+    def _retrieve_data(self, data_source, logbook=[]):  # noqa: B006
         if len(logbook) < 3:
             logbook.append(time())
             raise RuntimeError('try again!')

@@ -18,9 +18,3 @@ repos:
     entry: poetry run ruff format
     types: [python]
     language: system
-
-  - id: system
-    name: Lint with Mypy
-    entry: poetry run mypy
-    types: [python]
-    language: system

@@ -97,13 +97,16 @@ def test_client_with_mongo_uri():
 def test_client_args_with_mongo_uri(mocker):
     """It should not pass any other parameter than the host to MongoClient"""
     mongo_client_mock = mocker.patch('toucan_connectors.mongo.mongo_connector.pymongo.MongoClient')
+    connector = MongoConnector(name='my_mongo_con', host='mongodb://myuser:mypassword@myhost:123')
+    connector.client  # noqa: B018
     mongo_client_mock.assert_called_with(host='mongodb://myuser:mypassword@myhost:123')
 
 
 def test_client_args_with_ssl(mocker):
     """It should forward parameters to mongo client"""
     mongo_client_mock = mocker.patch('toucan_connectors.mongo.mongo_connector.pymongo.MongoClient')
-    MongoConnector(name='my_mongo_con', host='myhost', password='blah', username='jean', ssl=True)
+    connector = MongoConnector(name='my_mongo_con', host='myhost', password='blah', username='jean', ssl=True)
+    connector.client  # noqa: B018
     mongo_client_mock.assert_called_with(host='myhost', ssl=True, password='blah', username='jean')
 
 
