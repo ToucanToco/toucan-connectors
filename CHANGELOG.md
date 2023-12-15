@@ -2,9 +2,13 @@
 
 ## Unreleased
 
+## [5.0.0] 2023-12-15
+
 ### Changed
 
 - Postgres: Materialized views are now returned as well via `get_model`. Their type is `'view'`.
+
+- **Breaking:** The version requirement for pydantic has been increased to `>=2.4.2,<3`
 
 ## [4.9.6] 2023-11-23
 
