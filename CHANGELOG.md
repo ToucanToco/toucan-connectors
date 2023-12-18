@@ -6,6 +6,10 @@
 
 ### Changed
 
+- Added support for Python 3.12
+
+### Changed
+
 - **Breaking**: Support for Python 3.10 has been dropped.
 - **Breaking**: The following connectors have been removed:
     * Wootric
