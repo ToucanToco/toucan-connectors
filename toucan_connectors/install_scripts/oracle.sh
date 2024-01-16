@@ -13,6 +13,6 @@ wget 'https://public-package.toucantoco.com/connectors_sources/oracle/oracle_cli
 unzip /tmp/oracle_client_lib.zip -d /opt/oracle
 sh -c "echo /opt/oracle/instantclient_12_2 > /etc/ld.so.conf.d/oracle-instantclient.conf"
 ldconfig
-rm -rf /tmp/oracle_client_lib.zip
+rm -f /tmp/oracle_client_lib.zip
 
 touch ~/oracle-installed
