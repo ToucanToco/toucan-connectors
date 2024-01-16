@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Install scripts: fix oracle install script by replacing gdown.pl with wget
+
 ## [5.0.0] 2023-12-15
 
 ### Changed
