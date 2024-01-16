@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.23.24] 2024-01-16
+
+### Fixed
+
+- Install scripts: fix oracle install script by replacing gdown.pl with wget
+
 ## [3.23.23] 2023-12-04
 
 ### Fixed
