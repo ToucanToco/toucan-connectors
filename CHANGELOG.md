@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.23.25] 2024-01-17
+
+### Fixed
+
+- Google credentials: Set a default value for `secret_key` and `secret_key_id`
+
 ## [3.23.24] 2024-01-16
 
 ### Fixed
