@@ -13,11 +13,11 @@ class GoogleCredentials(BaseModel):
         'service_account', title='Service account', description=CREDENTIALS_INFO_MESSAGE
     )
     project_id: str = Field(..., title='Project ID', description=CREDENTIALS_INFO_MESSAGE)
-    private_key_id: SecretStr = Field(
-        ..., title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE
+    private_key_id: SecretStr | None = Field(
+        None, title='Private Key ID', description=CREDENTIALS_INFO_MESSAGE
     )
-    private_key: SecretStr = Field(
-        ...,
+    private_key: SecretStr | None = Field(
+        None,
         title='Private Key',
         description=f'A private key in the form '
         f'"-----BEGIN PRIVATE KEY-----\\nXXX...XXX\\n-----END PRIVATE KEY-----\\n". {CREDENTIALS_INFO_MESSAGE}',
