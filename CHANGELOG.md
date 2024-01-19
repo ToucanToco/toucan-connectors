@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.23.26] 2024-01-19
+
+### Fixed
+
+- Google credentials: better error management in case `secret_key` or `secret_key_id` is `None`
+
 ## [3.23.25] 2024-01-17
 
 ### Fixed

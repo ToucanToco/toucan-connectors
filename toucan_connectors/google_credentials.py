@@ -46,18 +46,21 @@ class GoogleCredentials(BaseModel):
     )
 
     @validator('private_key')
-    def unescape_break_lines(cls, v: SecretStr) -> SecretStr:
+    def unescape_break_lines(cls, v: SecretStr | None) -> SecretStr | None:
         """
         `private_key` is a long string like
         '-----BEGIN PRIVATE KEY-----\nxxx...zzz\n-----END PRIVATE KEY-----\n
         As the breaking line are often escaped by the client,
         we need to be sure it's unescaped
         """
+        if v is None:
+            return v
         return SecretStr(v.get_secret_value().replace('\\n', '\n'))
 
 
 def get_google_oauth2_credentials(google_credentials: GoogleCredentials) -> Credentials:
     creds = google_credentials.dict()
     for secret_field in ('private_key_id', 'private_key'):
-        creds[secret_field] = creds[secret_field].get_secret_value()
+        hidden_secret_value = creds.get(secret_field)
+        creds[secret_field] = hidden_secret_value.get_secret_value() if hidden_secret_value else ''
     return Credentials.from_service_account_info(creds)
