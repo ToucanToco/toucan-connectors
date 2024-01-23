@@ -145,6 +145,13 @@ class ElasticsearchConnector(ToucanConnector):
             connection_params.append(h)
 
         esclient = Elasticsearch(connection_params)
+        # We need to set this flag as some customers force auth and refuse the connection if no auth
+        # header is present. Elasticsearch-py accepts 401/403s
+        # (https://github.com/elastic/elasticsearch-py/blob/v7.17.6/elasticsearch/transport.py#L586),
+        # but not connection errors. In consequence, we set the flag to True, which means that we
+        # couldn't figure out wether we are talking to Elasticsearch or not due to an auth error:
+        # https://github.com/elastic/elasticsearch-py/blob/v7.17.6/elasticsearch/transport.py#L216.
+        # If we are indded not talking to Elasticsearch, the query will fail later on.
         esclient.transport._verified_elasticsearch = True
         response = getattr(esclient, data_source.search_method)(
             index=data_source.index, body=data_source.body
