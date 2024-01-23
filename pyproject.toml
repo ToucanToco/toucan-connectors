@@ -16,7 +16,7 @@ ignore = [
 
 [tool.poetry]
 name = "toucan-connectors"
-version = "5.0.0"
+version = "5.1.0"
 description = "Toucan Toco Connectors"
 authors = ["Toucan Toco <dev@toucantoco.com>"]
 license = "BSD"
