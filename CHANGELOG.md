@@ -1,5 +1,9 @@
 # Changelog (Pypi package)
 
+### Changed
+
+- Google Big Query: A simple status check that validates the private key's format has been implemented
+
 ## [3.23.25] 2024-01-17
 
 ### Fixed

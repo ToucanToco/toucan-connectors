@@ -13,7 +13,7 @@ from google.cloud.bigquery.job import QueryJob
 from google.oauth2.service_account import Credentials
 from pydantic import Field, create_model
 
-from toucan_connectors.common import sanitize_query
+from toucan_connectors.common import ConnectorStatus, sanitize_query
 from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
@@ -75,6 +75,9 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
         )
     else:
         return bigquery_helpers.scalar_to_query_parameter(value=value, name=name)
+
+
+_KEY_CHECK_NAME = 'Private key validity'
 
 
 class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector):
@@ -349,3 +352,10 @@ WHERE
     ) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
         return self._get_project_structure(db_name, schema_name)
+
+    def get_status(self) -> ConnectorStatus:
+        try:
+            get_google_oauth2_credentials(self.credentials)
+            return ConnectorStatus(status=True, details=[(_KEY_CHECK_NAME, True)], error=None)
+        except Exception as exc:
+            return ConnectorStatus(status=False, details=[(_KEY_CHECK_NAME, False)], error=str(exc))
