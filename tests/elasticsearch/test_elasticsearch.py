@@ -39,13 +39,9 @@ def pytest_generate_tests(metafunc):
 
 
 def test_connector(mocker):
-    class ElasticsearchMock:
-        def search(self, index, body):
-            return {"hits": {"hits": [{"_source": {"yo": "la"}}]}}
-
     module = "toucan_connectors.elasticsearch.elasticsearch_connector"
     mock_es = mocker.patch(f"{module}.Elasticsearch")
-    mock_es.return_value = ElasticsearchMock()
+    mock_es.return_value.search.return_value = {"hits": {"hits": [{"_source": {"yo": "la"}}]}}
 
     con = ElasticsearchConnector(
         name="test",

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Elasticsearch: Host verification has been disabled to tolerate strict network configurations
+
 ### Fixed
 
 - Install scripts: fix oracle install script by replacing gdown.pl with wget
