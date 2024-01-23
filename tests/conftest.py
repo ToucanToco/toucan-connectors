@@ -2,6 +2,7 @@ import socket
 import time
 from contextlib import suppress
 from os import environ, getenv, path
+from os.path import dirname, join
 from typing import Any
 
 import pytest
@@ -189,3 +190,9 @@ def xml_response():
     </ListOfLanguagesByCodeResponse>
   </soap:Body>
 </soap:Envelope>"""
+
+
+@pytest.fixture
+def sanitized_pem_key() -> str:
+    with open(join(dirname(__file__), "utils", "fixtures", "sanitized_pem_key.pem")) as f:
+        return f.read()

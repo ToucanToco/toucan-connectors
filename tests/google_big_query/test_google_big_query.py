@@ -14,7 +14,7 @@ from google.cloud.exceptions import Unauthorized
 from google.oauth2.service_account import Credentials
 from pandas.util.testing import assert_frame_equal  # <-- for testing dataframes
 from pydantic import ValidationError
-from pytest_mock import MockFixture
+from pytest_mock import MockerFixture, MockFixture
 
 from toucan_connectors.google_big_query.google_big_query_connector import (
     GoogleBigQueryConnector,
@@ -29,7 +29,7 @@ import_path = "toucan_connectors.google_big_query.google_big_query_connector"
 
 
 @pytest.fixture
-def _fixture_credentials() -> GoogleCredentials:
+def fixture_credentials() -> GoogleCredentials:
     my_credentials = GoogleCredentials(
         type="my_type",
         project_id="my_project_id",
@@ -46,7 +46,7 @@ def _fixture_credentials() -> GoogleCredentials:
 
 
 @pytest.fixture
-def _jwt_fixture_credentials() -> JWTCredentials:
+def jwt_fixture_credentials() -> JWTCredentials:
     my_credentials = JWTCredentials(
         project_id="THE_JWT_project_id",
         jwt_token="valid-jwt",
@@ -55,17 +55,17 @@ def _jwt_fixture_credentials() -> JWTCredentials:
 
 
 @pytest.fixture
-def gbq_connector_with_jwt(_jwt_fixture_credentials: JWTCredentials) -> GoogleBigQueryConnector:
+def gbq_connector_with_jwt(jwt_fixture_credentials: JWTCredentials) -> GoogleBigQueryConnector:
     # those should and can be None
     return GoogleBigQueryConnector(
         name="woups",
         scopes=["https://www.googleapis.com/auth/bigquery"],
-        jwt_credentials=_jwt_fixture_credentials,
+        jwt_credentials=jwt_fixture_credentials,
     )
 
 
 @pytest.fixture
-def _fixture_scope():
+def fixture_scope():
     scopes = [
         "https://www.googleapis.com/auth/bigquery",
         "https://www.googleapis.com/auth/drive",
@@ -139,8 +139,8 @@ def test_prepare_parameters_empty():
 
 @patch("google.cloud.bigquery.Client", autospec=True)
 @patch("cryptography.hazmat.primitives.serialization.load_pem_private_key")
-def test_connect(load_pem_private_key, client, _fixture_credentials, _fixture_scope):
-    credentials = GoogleBigQueryConnector._get_google_credentials(_fixture_credentials, _fixture_scope)
+def test_connect(load_pem_private_key, client, fixture_credentials, fixture_scope):
+    credentials = GoogleBigQueryConnector._get_google_credentials(fixture_credentials, fixture_scope)
     assert isinstance(credentials, Credentials)
     connection = GoogleBigQueryConnector._connect(credentials)
     assert isinstance(connection, Client)
@@ -222,10 +222,10 @@ def test_execute_error(client, execute, result, to_dataframe):
     "toucan_connectors.google_big_query.google_big_query_connector.GoogleBigQueryConnector._execute_query",
     return_value=pandas.DataFrame({"a": [1, 1], "b": [2, 2]}),
 )
-def test_retrieve_data(execute, connect, credentials, _fixture_credentials):
+def test_retrieve_data(execute, connect, credentials, fixture_credentials):
     connector = GoogleBigQueryConnector(
         name="MyGBQ",
-        credentials=_fixture_credentials,
+        credentials=fixture_credentials,
         scopes=[
             "https://www.googleapis.com/auth/bigquery",
             "https://www.googleapis.com/auth/drive",
@@ -241,7 +241,7 @@ def test_retrieve_data(execute, connect, credentials, _fixture_credentials):
     assert_frame_equal(pandas.DataFrame({"a": [1, 1], "b": [2, 2]}), result)
 
 
-def test_get_model(mocker: MockFixture, _fixture_credentials) -> None:
+def test_get_model(mocker: MockFixture, fixture_credentials) -> None:
     class FakeResponse:
         def __init__(self) -> None:
             ...
@@ -348,7 +348,7 @@ def test_get_model(mocker: MockFixture, _fixture_credentials) -> None:
     )
     connector = GoogleBigQueryConnector(
         name="MyGBQ",
-        credentials=_fixture_credentials,
+        credentials=fixture_credentials,
         scopes=[
             "https://www.googleapis.com/auth/bigquery",
             "https://www.googleapis.com/auth/drive",
@@ -547,7 +547,7 @@ AND T.table_catalog = 'some-db'
     )
 
 
-def test_get_model_multi_location(mocker: MockFixture, _fixture_credentials) -> None:
+def test_get_model_multi_location(mocker: MockFixture, fixture_credentials) -> None:
     fake_resp_1 = mocker.MagicMock()
     fake_resp_1.to_dataframe.return_value = pd.DataFrame(
         [
@@ -613,7 +613,7 @@ def test_get_model_multi_location(mocker: MockFixture, _fixture_credentials) -> 
     )
     connector = GoogleBigQueryConnector(
         name="MyGBQ",
-        credentials=_fixture_credentials,
+        credentials=fixture_credentials,
         scopes=[
             "https://www.googleapis.com/auth/bigquery",
             "https://www.googleapis.com/auth/drive",
@@ -726,7 +726,7 @@ WHERE
 
 
 def test_get_form(
-    mocker: MockFixture, _fixture_credentials: MockFixture, _jwt_fixture_credentials: MockFixture
+    mocker: MockerFixture, fixture_credentials: GoogleCredentials, jwt_fixture_credentials: MockFixture
 ) -> None:
     def mock_available_schs():
         return ["ok", "test"]
@@ -740,7 +740,7 @@ def test_get_form(
         GoogleBigQueryDataSource(query=",", name="MyGBQ", domain="foo").get_form(
             GoogleBigQueryConnector(
                 name="MyGBQ",
-                credentials=_fixture_credentials,
+                credentials=fixture_credentials,
                 scopes=[
                     "https://www.googleapis.com/auth/bigquery",
                     "https://www.googleapis.com/auth/drive",
@@ -755,7 +755,7 @@ def test_get_form(
         GoogleBigQueryDataSource(query=",", name="MyGBQ-WITH-JWT", domain="foo").get_form(
             GoogleBigQueryConnector(
                 name="MyGBQ",
-                jwt_credentials=_jwt_fixture_credentials,
+                jwt_credentials=jwt_fixture_credentials,
                 scopes=[
                     "https://www.googleapis.com/auth/bigquery",
                 ],
@@ -879,10 +879,10 @@ def test_optional_fields_validator_for_google_creds_or_jwt():
     _ = GoogleBigQueryConnector(name="something", jwt_credentials=valid_credentials)
 
 
-def test_get_project_id(_fixture_credentials: GoogleCredentials) -> None:
+def test_get_project_id(fixture_credentials: GoogleCredentials) -> None:
     connector = GoogleBigQueryConnector(
         name="MyGBQ",
-        credentials=_fixture_credentials,
+        credentials=fixture_credentials,
         jwt_credentials=JWTCredentials(jwt_token="token", project_id="123"),
         scopes=[
             "https://www.googleapis.com/auth/bigquery",
@@ -895,7 +895,7 @@ def test_get_project_id(_fixture_credentials: GoogleCredentials) -> None:
 
     # test get project id with credentials
     connector.jwt_credentials = None
-    connector.credentials = _fixture_credentials
+    connector.credentials = fixture_credentials
     connector.credentials.project_id = "456"
     assert connector._get_project_id() == "456"
 
@@ -908,3 +908,26 @@ def test_get_project_id(_fixture_credentials: GoogleCredentials) -> None:
     )
     with pytest.raises(GoogleClientCreationError):
         connector._get_project_id()
+
+
+def test_get_status(mocker: MockerFixture, fixture_credentials: GoogleCredentials, sanitized_pem_key: str) -> None:
+    connector = GoogleBigQueryConnector(
+        name="MyGBQ",
+        credentials=fixture_credentials,
+        scopes=[
+            "https://www.googleapis.com/auth/bigquery",
+            "https://www.googleapis.com/auth/drive",
+        ],
+    )
+
+    status = connector.get_status()
+    assert status.status is False
+    assert status.details == [("Private key validity", False)]
+    assert status.error is not None
+    assert "Could not deserialize key data" in status.error
+
+    connector.credentials.private_key = sanitized_pem_key
+    status = connector.get_status()
+    assert status.status is True
+    assert status.details == [("Private key validity", True)]
+    assert status.error is None
