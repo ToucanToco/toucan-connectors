@@ -12,12 +12,6 @@ def pem_key_with_spaces() -> str:
 
 
 @pytest.fixture
-def sanitized_pem_key() -> str:
-    with open(join(dirname(__file__), "fixtures", "sanitized_pem_key.pem")) as f:
-        return f.read()
-
-
-@pytest.fixture
 def pem_bundle_with_spaces() -> str:
     with open(join(dirname(__file__), "fixtures", "pem_bundle_with_spaces.pem")) as f:
         return f.read()
