@@ -13,7 +13,7 @@ from google.cloud.bigquery.table import RowIterator
 from google.cloud.exceptions import Unauthorized
 from google.oauth2.service_account import Credentials
 from pandas.util.testing import assert_frame_equal  # <-- for testing dataframes
-from pydantic import SecretStr, ValidationError
+from pydantic import ValidationError
 from pytest_mock import MockerFixture, MockFixture
 
 from toucan_connectors.google_big_query.google_big_query_connector import (
@@ -64,6 +64,7 @@ def gbq_connector_with_jwt(jwt_fixture_credentials: JWTCredentials) -> GoogleBig
     )
 
 
+@pytest.fixture
 def fixture_scope():
     scopes = [
         "https://www.googleapis.com/auth/bigquery",
@@ -878,10 +879,10 @@ def test_optional_fields_validator_for_google_creds_or_jwt():
     _ = GoogleBigQueryConnector(name="something", jwt_credentials=valid_credentials)
 
 
-def test_get_project_id(_fixture_credentials: GoogleCredentials) -> None:
+def test_get_project_id(fixture_credentials: GoogleCredentials) -> None:
     connector = GoogleBigQueryConnector(
         name="MyGBQ",
-        credentials=_fixture_credentials,
+        credentials=fixture_credentials,
         jwt_credentials=JWTCredentials(jwt_token="token", project_id="123"),
         scopes=[
             "https://www.googleapis.com/auth/bigquery",
@@ -894,7 +895,7 @@ def test_get_project_id(_fixture_credentials: GoogleCredentials) -> None:
 
     # test get project id with credentials
     connector.jwt_credentials = None
-    connector.credentials = _fixture_credentials
+    connector.credentials = fixture_credentials
     connector.credentials.project_id = "456"
     assert connector._get_project_id() == "456"
 
@@ -925,7 +926,7 @@ def test_get_status(mocker: MockerFixture, fixture_credentials: GoogleCredential
     assert status.error is not None
     assert "Could not deserialize key data" in status.error
 
-    connector.credentials.private_key = SecretStr(sanitized_pem_key)
+    connector.credentials.private_key = sanitized_pem_key
     status = connector.get_status()
     assert status.status is True
     assert status.details == [("Private key validity", True)]
