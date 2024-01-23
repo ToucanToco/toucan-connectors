@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [5.1.0] 2024-01-23
+
 ### Changed
 
 - Google Big Query: A simple status check that validates the private key's format has been implemented
