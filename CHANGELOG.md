@@ -3,6 +3,7 @@
 ### Changed
 
 - Google Big Query: A simple status check that validates the private key's format has been implemented
+- Elasticsearch: Host verification has been disabled to tolerate strict network configurations
 
 ## [3.23.25] 2024-01-17
 
