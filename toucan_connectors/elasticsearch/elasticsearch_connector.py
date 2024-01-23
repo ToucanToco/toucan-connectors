@@ -145,6 +145,7 @@ class ElasticsearchConnector(ToucanConnector):
             connection_params.append(h)
 
         esclient = Elasticsearch(connection_params)
+        esclient.transport._verified_elasticsearch = True
         response = getattr(esclient, data_source.search_method)(
             index=data_source.index, body=data_source.body
         )
