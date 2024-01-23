@@ -123,6 +123,7 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
 
 
 _KEY_CHECK_NAME = "Private key validity"
+_SAMPLE_QUERY = "Sample BigQuery job"
 
 
 class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_source_model=GoogleBigQueryDataSource):
@@ -485,7 +486,32 @@ WHERE
 
     def get_status(self) -> ConnectorStatus:
         try:
-            get_google_oauth2_credentials(self.credentials)
-            return ConnectorStatus(status=True, details=[(_KEY_CHECK_NAME, True)], error=None)
+            credentials = get_google_oauth2_credentials(self.credentials)
         except Exception as exc:
-            return ConnectorStatus(status=False, details=[(_KEY_CHECK_NAME, False)], error=str(exc))
+            return ConnectorStatus(
+                status=False,
+                details=[
+                    (_KEY_CHECK_NAME, False),
+                    (_SAMPLE_QUERY, False),
+                ],
+                error=str(exc),
+            )
+
+        try:
+            client = self._connect(credentials)
+            client.query("SELECT SESSION_USER() as whoami")
+        except Exception as exc:
+            return ConnectorStatus(
+                status=False,
+                details=[
+                    (_KEY_CHECK_NAME, True),
+                    (_SAMPLE_QUERY, False),
+                ],
+                error=str(exc),
+            )
+
+        return ConnectorStatus(
+            status=True,
+            details=[(_KEY_CHECK_NAME, True), (_SAMPLE_QUERY, True)],
+            error=None,
+        )

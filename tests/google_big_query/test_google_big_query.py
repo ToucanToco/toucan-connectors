@@ -922,12 +922,61 @@ def test_get_status(mocker: MockerFixture, fixture_credentials: GoogleCredential
 
     status = connector.get_status()
     assert status.status is False
-    assert status.details == [("Private key validity", False)]
+    assert status.details == [
+        ("Private key validity", False),
+        ("Sample BigQuery job", False),
+    ]
     assert status.error is not None
     assert "Could not deserialize key data" in status.error
 
+    # Fix the key format
     connector.credentials.private_key = sanitized_pem_key
+
+    # But now there is an error when creating the client
+    connect_spy = mocker.spy(GoogleBigQueryConnector, "_connect")
+
+    def connect_spy_fail(*args, **kwargs):
+        raise Exception("Something happened while creating client")
+
+    connect_spy.side_effect = connect_spy_fail
+    status = connector.get_status()
+    assert status.status is False
+    assert status.details == [
+        ("Private key validity", True),
+        ("Sample BigQuery job", False),
+    ]
+    assert "Something happened while creating client" in status.error
+
+    # Fix client creation but now the returned client cannot make a query
+    def connect_spy_client_query_fail(*args, **kwargs):
+        class FailingClient:
+            def query(self, *args, **kwargs):
+                raise Exception("Impossible to reach BigQuery")
+
+        return FailingClient()
+
+    connect_spy.side_effect = connect_spy_client_query_fail
+    status = connector.get_status()
+    assert status.status is False
+    assert status.details == [
+        ("Private key validity", True),
+        ("Sample BigQuery job", False),
+    ]
+    assert "Impossible to reach BigQuery" in status.error
+
+    # Finally return a functioning client
+    def connect_spy_ok(*args, **kwargs):
+        class Client:
+            def query(self, *args, **kwargs):
+                return None
+
+        return Client()
+
+    connect_spy.side_effect = connect_spy_ok
     status = connector.get_status()
     assert status.status is True
-    assert status.details == [("Private key validity", True)]
+    assert status.details == [
+        ("Private key validity", True),
+        ("Sample BigQuery job", True),
+    ]
     assert status.error is None
