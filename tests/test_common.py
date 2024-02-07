@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from aiohttp import web
 from jinja2 import Undefined
+from pandas.testing import assert_frame_equal
 from pytest_mock import MockFixture
 
 from toucan_connectors import common as common_mod
@@ -458,6 +459,29 @@ def test_pandas_read_sql_error(mocker: MockFixture):
             params={"max_pop": 1_000_000},
         )
     assert "Some error" in str(e.value)
+
+
+def test_pandas_read_sql_duplicate_columns(mocker: MockFixture):
+    duplicate_cols_df = pd.DataFrame(
+        {
+            "id": [1, 2, 3],
+            "name": ["Paris", "London", "Berlin"],
+            "id2": [4, 5, 6],
+        }
+    )
+    duplicate_cols_df.rename(columns={"id2": "id"}, inplace=True)
+    mocker.patch("toucan_connectors.common.pd.read_sql", return_value=duplicate_cols_df)
+    df = pandas_read_sql(query="SELECT * FROM CITY", con="sample_connection")
+    assert_frame_equal(
+        df,
+        pd.DataFrame(
+            {
+                "id_0": [1, 2, 3],
+                "name": ["Paris", "London", "Berlin"],
+                "id_1": [4, 5, 6],
+            }
+        ),
+    )
 
 
 def test_get_param_name():

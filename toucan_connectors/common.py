@@ -386,6 +386,19 @@ def infer_datetime_dtype(df: pd.DataFrame) -> None:
                         df[colname] = pd.to_datetime(df[colname], errors="coerce")
 
 
+def rename_duplicate_columns(df: pd.DataFrame) -> None:
+    """
+    Check if there are duplicated columns in the dataframe.
+    If there are, rename them.
+    For example, if we have a dataframe with columns ['foo', 'foo'],
+    we will rename them to ['foo_0', 'foo_1'].
+    """
+    cols = pd.Series(df.columns)
+    for dup in df.columns[df.columns.duplicated(keep=False)]:
+        cols[df.columns.get_loc(dup)] = [f"{dup}_{d_idx}" for d_idx in range(df.columns.get_loc(dup).sum())]
+    df.columns = cols
+
+
 def pandas_read_sql(
     query: str,
     con,
@@ -419,6 +432,7 @@ def pandas_read_sql(
         else:
             raise
 
+    rename_duplicate_columns(df)
     infer_datetime_dtype(df)
     return df
 
