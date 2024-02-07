@@ -1,5 +1,7 @@
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint]
 select = ["E", "F", "UP", "N", "C", "B", "I001", "S", "Q"]
 ignore = [
        "S101", # allow use of assert
@@ -171,7 +173,7 @@ all = [
 ]
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.1.8"
+ruff = "^0.2.0"
 pre-commit = "^3.6.0"
 
 [build-system]
