@@ -171,7 +171,7 @@ all = [
 ]
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.1.8"
+ruff = ">=0.1.8,<0.3.0"
 pre-commit = "^3.6.0"
 
 [build-system]
