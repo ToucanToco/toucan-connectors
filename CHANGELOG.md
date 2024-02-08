@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## [5.2.0] 2024-02-08
+
+### Changed
+
+- Google Big Query: an actual connection check is now done in `get_status`, rather than just a private key validation.
+- SQL connectors: duplicate columns are now renamed with a suffix indicating their position. A duplicate `my_column` column
+  now becomes `my_column_0`, `my_column_1`...
+
 ## [5.1.0] 2024-01-23
 
 ### Changed
