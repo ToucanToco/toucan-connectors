@@ -4057,13 +4057,13 @@ toucan-client = ">=1.1.0,<2.0.0"
 
 [[package]]
 name = "types-pyopenssl"
-version = "23.3.0.20240106"
+version = "24.0.0.20240130"
 description = "Typing stubs for pyOpenSSL"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "types-pyOpenSSL-23.3.0.20240106.tar.gz", hash = "sha256:3d6f3462bec0c260caadf93fbb377225c126661b779c7d9ab99b6dad5ca10db9"},
-    {file = "types_pyOpenSSL-23.3.0.20240106-py3-none-any.whl", hash = "sha256:47a7eedbd18b7bcad17efebf1c53416148f5a173918a6d75027e75e32fe039ae"},
+    {file = "types-pyOpenSSL-24.0.0.20240130.tar.gz", hash = "sha256:c812e5c1c35249f75ef5935708b2a997d62abf9745be222e5f94b9595472ab25"},
+    {file = "types_pyOpenSSL-24.0.0.20240130-py3-none-any.whl", hash = "sha256:24a255458b5b8a7fca8139cf56f2a8ad5a4f1a5f711b73a5bb9cb50dc688fab5"},
 ]
 
 [package.dependencies]
@@ -4518,4 +4518,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "0d2a72380decee902a576fc52a25c01cfa08e5d1a3317c4f97468d9ea4a446bc"
+content-hash = "f4a1ea16acbd69c1448abb1d006732cf58de221710d713e17425c816a3667698"
