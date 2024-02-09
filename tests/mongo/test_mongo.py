@@ -1,7 +1,7 @@
 import os
 import re
 from datetime import datetime
-from typing import Callable, Self
+from typing import TYPE_CHECKING, Callable
 
 import pandas as pd
 import pymongo
@@ -21,6 +21,9 @@ from toucan_connectors.mongo.mongo_connector import (
 )
 from toucan_connectors.pagination import OffsetLimitInfo
 from toucan_connectors.toucan_connector import MalformedVersion, UnavailableVersion
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 @pytest.fixture(scope="module")
@@ -137,7 +140,7 @@ def test_get_df(mocker):
         def __getitem__(self, row):
             return self.data[row]
 
-        def __enter__(self) -> Self:
+        def __enter__(self) -> "Self":
             return self
 
         def __exit__(self, *_) -> None:
