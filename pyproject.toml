@@ -1,24 +1,6 @@
-[tool.ruff]
-line-length = 120
-
-[tool.ruff.lint]
-select = ["E", "F", "UP", "N", "C", "B", "I001", "S", "Q"]
-ignore = [
-       "S101", # allow use of assert
-       # FIXME: S105, S106, S608 and S113 should be addressed
-       "S105", "S106", # possible hardcoded password
-       "S608", # possible SQL injection
-       "S113", # requests call without timeout
-       "N801", # class names
-       "N802", # function names
-       "N818", # exception names
-       "B017", # pytest.raises(Exception)
-       "C901", # complexity
-]
-
 [tool.poetry]
 name = "toucan-connectors"
-version = "5.2.0"
+version = "5.3.0"
 description = "Toucan Toco Connectors"
 authors = ["Toucan Toco <dev@toucantoco.com>"]
 license = "BSD"
@@ -194,4 +176,22 @@ files = [
       "toucan_connectors/snowflake/snowflake_connector.py",
       "toucan_connectors/peakina/peakina_connector.py",
       "toucan_connectors/mongo/mongo_connector.py"
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "UP", "N", "C", "B", "I001", "S", "Q"]
+ignore = [
+       "S101", # allow use of assert
+       # FIXME: S105, S106, S608 and S113 should be addressed
+       "S105", "S106", # possible hardcoded password
+       "S608", # possible SQL injection
+       "S113", # requests call without timeout
+       "N801", # class names
+       "N802", # function names
+       "N818", # exception names
+       "B017", # pytest.raises(Exception)
+       "C901", # complexity
 ]
