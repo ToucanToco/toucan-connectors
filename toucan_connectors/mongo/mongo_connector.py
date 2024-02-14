@@ -1,5 +1,8 @@
-from functools import _lru_cache_wrapper, lru_cache
+from collections.abc import Generator
+from contextlib import contextmanager
+from functools import _lru_cache_wrapper, cached_property, lru_cache
 from typing import Any, List, Optional, Pattern, Union
+from warnings import warn
 
 import pandas as pd
 import pymongo
@@ -84,7 +87,7 @@ def apply_condition_filter(query, permissions_condition: dict):
     return query
 
 
-def validate_database(client, database: str):
+def validate_database(client: pymongo.MongoClient, database: str):
     if database not in client.list_database_names():
         raise UnkwownMongoDatabase(f"Database {database!r} doesn't exist")
 
@@ -114,17 +117,17 @@ class MongoDataSource(ToucanDataSource):
         """
         constraints = {}
 
-        client = pymongo.MongoClient(**connector._get_mongo_client_kwargs())
         # Always add the suggestions for the available databases
-        available_databases = client.list_database_names()
-        constraints['database'] = strlist_to_enum('database', available_databases)
+        with connector.client() as client:
+            available_databases = client.list_database_names()
+            constraints["database"] = strlist_to_enum("database", available_databases)
 
-        if 'database' in current_config:
-            validate_database(client, current_config['database'])
-            available_cols = client[current_config['database']].list_collection_names()
-            constraints['collection'] = strlist_to_enum('collection', available_cols)
+            if "database" in current_config:
+                validate_database(client, current_config["database"])
+                available_cols = client[current_config["database"]].list_collection_names()
+                constraints["collection"] = strlist_to_enum("collection", available_cols)
 
-        return create_model('FormSchema', **constraints, __base__=cls).schema()
+        return create_model("FormSchema", __base__=cls, **constraints).schema()  # type: ignore[call-overload]
 
 
 class MongoConnector(ToucanConnector, VersionableEngineConnector):
@@ -141,6 +144,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     username: Optional[str] = Field(None, description='Your login username')
     password: Optional[SecretStr] = Field(None, description='Your login password')
     ssl: Optional[bool] = Field(None, description='Create the connection to the server using SSL')
+    max_pool_size: int = Field(1, alias="maxPoolSize")
 
     class Config:
         keep_untouched = (cached_property, _lru_cache_wrapper)
@@ -155,10 +159,11 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         return hash(id(self)) + hash(JsonWrapper.dumps(self._get_mongo_client_kwargs()))
 
     def __enter__(self):
+        warn("Using MongoConnector as a context manager is deprecated", stacklevel=2)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.client.close()
+        pass
 
     @staticmethod
     def _get_details(index: int, status: Optional[bool]):
@@ -168,14 +173,16 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         not_validated_checks = [(c, None) for i, c in enumerate(checks) if i > index]
         return ok_checks + [new_check] + not_validated_checks
 
-    def _get_mongo_client_kwargs(self):
+    def _get_mongo_client_kwargs(self) -> dict[str, Any]:
         # We don't want parent class attributes nor the `client` property
         # nor attributes with `None` value
-        to_exclude = set(ToucanConnector.__fields__) | {'client'}
-        mongo_client_kwargs = self.dict(exclude=to_exclude, exclude_none=True).copy()
+        to_exclude = set(ToucanConnector.model_fields.keys()) | {"client", "max_pool_size"}
+        mongo_client_kwargs = self.model_dump(exclude=to_exclude, exclude_none=True).copy()
 
         if 'password' in mongo_client_kwargs:
             mongo_client_kwargs['password'] = mongo_client_kwargs['password'].get_secret_value()
+
+        mongo_client_kwargs["maxPoolSize"] = self.max_pool_size
 
         return mongo_client_kwargs
 
@@ -199,37 +206,44 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
 
         # Check databases access
         mongo_client_kwargs = self._get_mongo_client_kwargs()
-        mongo_client_kwargs['serverSelectionTimeoutMS'] = 500
-        client = pymongo.MongoClient(**mongo_client_kwargs)
-        try:
-            client.server_info()
-        except pymongo.errors.ServerSelectionTimeoutError as e:
-            return ConnectorStatus(status=False, details=self._get_details(2, False), error=str(e))
-        except pymongo.errors.OperationFailure as e:
-            return ConnectorStatus(status=False, details=self._get_details(3, False), error=str(e))
+        mongo_client_kwargs["serverSelectionTimeoutMS"] = 500
+        with self.client(mongo_client_kwargs) as client:
+            try:
+                client.server_info()
+            except pymongo.errors.ServerSelectionTimeoutError as e:
+                return ConnectorStatus(status=False, details=self._get_details(2, False), error=str(e))
+            except pymongo.errors.OperationFailure as e:
+                return ConnectorStatus(status=False, details=self._get_details(3, False), error=str(e))
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
-    @cached_property
-    def client(self):
-        return pymongo.MongoClient(**self._get_mongo_client_kwargs())
+    @contextmanager
+    def client(self, client_args: dict[str, Any] | None = None) -> Generator[pymongo.MongoClient, None, None]:
+        client: pymongo.MongoClient = pymongo.MongoClient(
+            **(self._get_mongo_client_kwargs() if client_args is None else client_args)
+        )
+        try:
+            yield client
+        finally:
+            client.close()
 
-    @lru_cache(maxsize=32)
-    def validate_database(self, database: str):
-        return validate_database(self.client, database)
+    @lru_cache(maxsize=32)  # noqa: B019
+    def _validate_database(self, client: pymongo.MongoClient, database: str):
+        return validate_database(client, database)
 
-    @lru_cache(maxsize=32)
-    def validate_collection(self, database: str, collection: str):
-        return validate_collection(self.client, database, collection)
+    @lru_cache(maxsize=32)  # noqa: B019
+    def _validate_collection(self, client: pymongo.MongoClient, database: str, collection: str):
+        return validate_collection(client, database, collection)
 
-    def validate_database_and_collection(self, database: str, collection: str):
-        self.validate_database(database)
-        self.validate_collection(database, collection)
+    def validate_database_and_collection(self, client: pymongo.MongoClient, database: str, collection: str):
+        self._validate_database(client, database)
+        self._validate_collection(client, database, collection)
 
     def _execute_query(self, data_source: MongoDataSource):
-        self.validate_database_and_collection(data_source.database, data_source.collection)
-        col = self.client[data_source.database][data_source.collection]
-        return col.aggregate(data_source.query)
+        with self.client() as client:
+            self.validate_database_and_collection(client, data_source.database, data_source.collection)
+            col = client[data_source.database][data_source.collection]
+            return col.aggregate(data_source.query)  # type: ignore[arg-type]
 
     def _retrieve_data(self, data_source):
         data_source.query = normalize_query(data_source.query, data_source.parameters)
@@ -245,18 +259,18 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     def get_slice(
         self,
         data_source: MongoDataSource,
-        permissions: Optional[str] = None,
+        permissions: dict[str, Any] | None = None,
         offset: int = 0,
-        limit: Optional[int] = None,
-        get_row_count: Optional[bool] = False,
+        limit: int | None = None,
+        get_row_count: bool | None = False,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = MongoDataSource.parse_obj(data_source)
         if offset or limit is not None:
-            data_source.query = apply_condition_filter(data_source.query, permissions)
+            data_source.query = apply_condition_filter(data_source.query, permissions or {})
             data_source.query = normalize_query(data_source.query, data_source.parameters)
 
-            df_facet = []
+            df_facet: list[dict[str, Any]] = []
             if offset:
                 df_facet.append({'$skip': offset})
             if limit is not None:
@@ -275,7 +289,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
                     'df': df_facet,  # df_facet is never empty
                 }
             }
-            data_source.query.append(facet)
+            data_source.query.append(facet)  # type:ignore[union-attr]
 
             res = self._execute_query(data_source).next()
             total_count = res['count'][0]['value'] if len(res['count']) > 0 else 0
@@ -308,7 +322,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         # Mongo will then optimize the pipeline to move the match regex to its most convenient position
         # (c.f https://docs.mongodb.com/manual/core/aggregation-pipeline-optimization/#pipeline-sequence-optimization)
         # Since Mongo '$regex' operator doesn't work with integer values, we need to check the stringified versions
-        search_steps = {}
+        search_steps: dict[str, Any] = {}
         for condition in search:
             search_steps[f'${condition}'] = []  # convert "and"/"or" to "$and"/"$or"
             for column in search[condition]:
@@ -325,8 +339,8 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
                             }
                         }
                     )
-        data_source.query.append({'$match': {'$expr': search_steps}})
-        data_source.query.append({'$unset': ['_id']})
+        data_source.query.append({"$match": {"$expr": search_steps}})  # type:ignore[union-attr]
+        data_source.query.append({"$unset": ["_id"]})  # type:ignore[union-attr]
 
         return self.get_slice(data_source, permissions, limit=limit, offset=offset)
 
@@ -348,21 +362,19 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
 
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):
-        client = pymongo.MongoClient(**self._get_mongo_client_kwargs())
-        self.validate_database_and_collection(data_source.database, data_source.collection)
-        data_source.query = apply_condition_filter(data_source.query, permissions)
-        data_source.query = normalize_query(data_source.query, data_source.parameters)
+        with self.client() as client:
+            self.validate_database_and_collection(client, data_source.database, data_source.collection)
+            data_source.query = apply_condition_filter(data_source.query, permissions)
+            data_source.query = normalize_query(data_source.query, data_source.parameters)
 
-        agg_cmd = SON(
-            [
-                ('aggregate', data_source.collection),
-                ('pipeline', data_source.query),
-                ('cursor', {}),
-            ]
-        )
-        result = client[data_source.database].command(
-            command='explain', value=agg_cmd, verbosity='executionStats'
-        )
+            agg_cmd = SON(
+                [
+                    ("aggregate", data_source.collection),
+                    ("pipeline", data_source.query),
+                    ("cursor", {}),
+                ]
+            )
+            result = client[data_source.database].command(command="explain", value=agg_cmd, verbosity="executionStats")
         return _format_explain_result(result)
 
     def get_unique_identifier(self) -> str:
@@ -378,9 +390,9 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         return data_source_rendered.dict()
 
     def get_engine_version(self) -> tuple:
-        client = pymongo.MongoClient(**self._get_mongo_client_kwargs())
         try:
-            version = client.server_info()['version']
+            with self.client() as client:
+                version = client.server_info()["version"]
             return super()._format_version(version)
         except (TypeError, KeyError) as exc:
             raise UnavailableVersion from exc
