@@ -26,7 +26,7 @@ s = GoogleSpreadsheetDataSource(
 
 def test_spreadsheet(mocker):
     module = 'toucan_connectors.google_spreadsheet.google_spreadsheet_connector'
-    mocker.patch(f'{module}.ServiceAccountCredentials.from_json_keyfile_dict')
+    mocker.patch(f'{module}.get_google_oauth2_credentials')
     mocker.patch(
         f'{module}.gspread.authorize'
     ).return_value.open_by_key.return_value.sheet1.get_all_records.return_value = [
