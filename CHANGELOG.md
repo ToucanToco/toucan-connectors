@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- Google Spreasheet (legacy connector): credentials are correctly decrypted from secrets storage
+- Google Spreadsheet (legacy connector): credentials are correctly decrypted from secrets storage
 
 ## [5.3.0] 2024-02-14
 
