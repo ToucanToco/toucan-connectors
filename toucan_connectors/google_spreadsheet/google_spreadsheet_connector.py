@@ -2,10 +2,9 @@ from typing import List
 
 import gspread
 import pandas as pd
-from oauth2client.service_account import ServiceAccountCredentials
 from pydantic import Field
 
-from toucan_connectors.google_credentials import GoogleCredentials
+from toucan_connectors.google_credentials import GoogleCredentials, get_google_oauth2_credentials
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 
 
@@ -57,9 +56,7 @@ class GoogleSpreadsheetConnector(ToucanConnector):
     )
 
     def _retrieve_data(self, data_source):
-        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-            self.credentials.dict(), self.scope
-        )
+        credentials = get_google_oauth2_credentials(self.credentials).with_scopes(self.scope)
         gc = gspread.authorize(credentials)
 
         sheets = gc.open_by_key(data_source.spreadsheet_id)
