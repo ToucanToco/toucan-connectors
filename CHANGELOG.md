@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## [3.23.27] 2024-03-01
+
+### Fix
+
+- Google Spreadsheet: decrypt secrets in credentials
+
 ## [3.23.26] 2024-01-23
 
 ### Changed
