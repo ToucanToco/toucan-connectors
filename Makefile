@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := all
-ruff = ruff toucan_connectors tests
+ruff = ruff check toucan_connectors tests
 format = ruff format toucan_connectors tests
 mypy = mypy
 
@@ -17,11 +17,9 @@ install:
 .PHONY: format
 format:
 	$(format)
-	$(ruff) --fix
 
 .PHONY: lint
 lint:
-	$(format) --check
 	$(ruff)
 	$(mypy)
 
