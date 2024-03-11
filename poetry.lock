@@ -1641,13 +1641,13 @@ protobuf = ">=3.12.0"
 
 [[package]]
 name = "gspread"
-version = "6.0.1"
+version = "6.0.2"
 description = "Google Spreadsheets Python API"
 optional = true
 python-versions = ">=3.8"
 files = [
-    {file = "gspread-6.0.1-py3-none-any.whl", hash = "sha256:6c3af32b753fe75d9dd513ea9e088e9e043e09b9e3bf04d61d77213f37e67b79"},
-    {file = "gspread-6.0.1.tar.gz", hash = "sha256:8c8bf83be676a019d3a483455d8b17b442f2acfc620172f245422ca4fc960dd0"},
+    {file = "gspread-6.0.2-py3-none-any.whl", hash = "sha256:0238ba43f3bd45e7fa96fd206e9ceb73b03c2896eb143d7f4373c6d0cfe6fddf"},
+    {file = "gspread-6.0.2.tar.gz", hash = "sha256:0982beeb07fa3ec4482a3aaa96ca13a1e6b427a0aca4058beab4cdc33c0cbb64"},
 ]
 
 [package.dependencies]
@@ -2537,13 +2537,13 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "pre-commit"
-version = "3.6.0"
+version = "3.6.2"
 description = "A framework for managing and maintaining multi-language pre-commit hooks."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "pre_commit-3.6.0-py2.py3-none-any.whl", hash = "sha256:c255039ef399049a5544b6ce13d135caba8f2c28c3b4033277a788f434308376"},
-    {file = "pre_commit-3.6.0.tar.gz", hash = "sha256:d30bad9abf165f7785c15a21a1f46da7d0677cb00ee7ff4c579fd38922efe15d"},
+    {file = "pre_commit-3.6.2-py2.py3-none-any.whl", hash = "sha256:ba637c2d7a670c10daedc059f5c49b5bd0aadbccfcd7ec15592cf9665117532c"},
+    {file = "pre_commit-3.6.2.tar.gz", hash = "sha256:c3ef34f463045c88658c5b99f38c1e297abdcc0ff13f98d3370055fbbfabc67e"},
 ]
 
 [package.dependencies]
@@ -3479,13 +3479,13 @@ requests = ">=2.0.1,<3.0.0"
 
 [[package]]
 name = "responses"
-version = "0.24.1"
+version = "0.25.0"
 description = "A utility library for mocking out the `requests` Python library."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "responses-0.24.1-py3-none-any.whl", hash = "sha256:a2b43f4c08bfb9c9bd242568328c65a34b318741d3fab884ac843c5ceeb543f9"},
-    {file = "responses-0.24.1.tar.gz", hash = "sha256:b127c6ca3f8df0eb9cc82fd93109a3007a86acb24871834c47b77765152ecf8c"},
+    {file = "responses-0.25.0-py3-none-any.whl", hash = "sha256:2f0b9c2b6437db4b528619a77e5d565e4ec2a9532162ac1a131a83529db7be1a"},
+    {file = "responses-0.25.0.tar.gz", hash = "sha256:01ae6a02b4f34e39bffceb0fc6786b67a25eae919c6368d05eabc8d9576c2a66"},
 ]
 
 [package.dependencies]
