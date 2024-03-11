@@ -62,22 +62,18 @@ _RawHubSpotResult: TypeAlias = dict[str, str | None | list[Any]]
 
 
 class _HubSpotObject(Protocol):  # pragma: no cover
-    def to_dict(self) -> _RawHubSpotResult:
-        ...
+    def to_dict(self) -> _RawHubSpotResult: ...
 
 
 class _PageApi(Protocol):  # pragma: no cover
-    def get_page(self, after: str | None, limit: int | None) -> _HubSpotObject:
-        ...
+    def get_page(self, after: str | None, limit: int | None) -> _HubSpotObject: ...
 
 
 class _Api(Protocol):  # pragma: no cover
     @property
-    def basic_api(self) -> _PageApi:
-        ...
+    def basic_api(self) -> _PageApi: ...
 
-    def get_all(self) -> list[_HubSpotObject]:
-        ...
+    def get_all(self) -> list[_HubSpotObject]: ...
 
 
 def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:

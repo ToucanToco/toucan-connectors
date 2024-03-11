@@ -2,6 +2,7 @@
 Real-life responses of the Sheets API can be obtained in their documentation:
 https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
 """
+
 from datetime import datetime
 from os import path
 
