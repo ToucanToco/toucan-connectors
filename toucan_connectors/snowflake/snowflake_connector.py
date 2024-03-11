@@ -185,8 +185,7 @@ class SnowflakeConnector(
         cls,
         by_alias: bool = True,
         ref_template: str = DEFAULT_REF_TEMPLATE,
-        # This confuses mypy because of the type field
-        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,  # type:ignore[valid-type]
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
         mode: JsonSchemaMode = "validation",
     ) -> dict[str, Any]:
         schema = super().model_json_schema(
@@ -259,8 +258,8 @@ class SnowflakeConnector(
 
         return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
 
-    def get_connection_params(self) -> dict[str, str | int]:
-        params: dict[str, str | int] = {
+    def get_connection_params(self) -> dict[str, str | int | None]:
+        params: dict[str, str | int | None] = {
             "user": Template(self.user).render(),
             "account": self.account,
             "authenticator": self.authentication_method,
