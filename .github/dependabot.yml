@@ -5,12 +5,24 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      prod-deps:
+        dependency-type: "production"
+      dev-deps:
+        dependency-type: "development"
   # poetry LTS
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
     target-branch: "release/v3.23"
+    allow:
+      - dependency-type: "production"
+    groups:
+      prod-deps:
+        dependency-type: "production"
+      dev-deps:
+        dependency-type: "development"
   # GH actions
   - package-ecosystem: "github-actions"
     directory: "/"
