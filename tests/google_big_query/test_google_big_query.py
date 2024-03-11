@@ -243,8 +243,7 @@ def test_retrieve_data(execute, connect, credentials, fixture_credentials):
 
 def test_get_model(mocker: MockFixture, fixture_credentials) -> None:
     class FakeResponse:
-        def __init__(self) -> None:
-            ...
+        def __init__(self) -> None: ...
 
         def to_dataframe(self) -> Generator[Any, Any, Any]:
             yield pd.DataFrame(

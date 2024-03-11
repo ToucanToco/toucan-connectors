@@ -351,8 +351,7 @@ class SnowflakeConnector(
         database: str | None = None,
         as_df: Literal[True] = ...,
         snowflake_connection: SnowflakeConnection | None = None,
-    ) -> pd.DataFrame:
-        ...  # pragma: no cover
+    ) -> pd.DataFrame: ...  # pragma: no cover
 
     @overload
     def _execute_query(
@@ -364,8 +363,7 @@ class SnowflakeConnector(
         database: str | None = None,
         as_df: Literal[False],
         snowflake_connection: SnowflakeConnection | None = None,
-    ) -> list[dict]:
-        ...  # pragma: no cover
+    ) -> list[dict]: ...  # pragma: no cover
 
     def _execute_query(
         self,

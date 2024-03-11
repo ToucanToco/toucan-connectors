@@ -20,6 +20,7 @@ ll_token = get_longlived_token(shortlived_token, 'my-app-id', 'my-app-secret')
 page_tokens = get_page_tokens(ll_token)
 ```
 """
+
 from typing import Dict, List
 
 import facebook

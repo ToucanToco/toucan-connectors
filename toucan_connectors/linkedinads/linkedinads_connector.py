@@ -1,4 +1,5 @@
 """LinkedinAds connector"""
+
 import os
 from datetime import datetime
 from enum import Enum
@@ -106,9 +107,9 @@ class LinkedinadsConnector(ToucanConnector, data_source_model=LinkedinadsDataSou
     """The LinkedinAds connector."""
 
     _auth_flow = "oauth2"
-    auth_flow_id: Optional[
-        str
-    ] = None  # This ID is generated & provided to the data provider during the oauth authentication process
+    auth_flow_id: Optional[str] = (
+        None  # This ID is generated & provided to the data provider during the oauth authentication process
+    )
     _baseroute = "https://api.linkedin.com/v2/adAnalyticsV2?q="
     template: Template = Field(
         None,

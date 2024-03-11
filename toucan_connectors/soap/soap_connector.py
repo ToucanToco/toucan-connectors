@@ -56,9 +56,9 @@ class SoapDataSource(ToucanDataSource):
         constraints["method"] = strlist_to_enum("method", list(methods_docs.keys()))
 
         res = create_model("FormSchema", **constraints, __base__=cls).schema()
-        res["properties"]["parameters"][
-            "description"
-        ] = f'Services documentation: <br> {"<br>".join(list(methods_docs.values()))}'
+        res["properties"]["parameters"]["description"] = (
+            f'Services documentation: <br> {"<br>".join(list(methods_docs.values()))}'
+        )
         return res
 
 
