@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Changed
+
+- **Breaking**: Support for Python 3.10 has been dropped.
+- **Breaking**: The following connectors have been removed:
+    * Wootric
+    * Trello
+    * Toucan Toco
+    * Net Explorer
+    * Linkedin Ads
+    * Microstrategy
+    * Hubspot
+    * Google My Business
+    * Google Adwords
+    * Facebook Insights
+    * Facebook Ads
+    * Anaplan
+    * Adobe Analytics
+
 ### Fixed
 
 - Google Big Query: do not exclude partitioning columns when listing table structure
