@@ -404,7 +404,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 
 UNION ALL
@@ -422,7 +421,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 
 UNION ALL
@@ -440,7 +438,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 """
     )
@@ -468,7 +465,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 AND T.table_catalog = 'some-db'
 
@@ -487,7 +483,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 AND T.table_catalog = 'some-db'
 
@@ -506,7 +501,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 AND T.table_catalog = 'some-db'
 """
@@ -539,7 +533,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 AND T.table_catalog = 'some-db'
 """
@@ -654,7 +647,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 
 UNION ALL
@@ -672,7 +664,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 """
     )
@@ -694,7 +685,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 """
     )
@@ -716,7 +706,6 @@ FROM
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
-    AND IS_PARTITIONING_COLUMN = 'NO'
     AND IS_HIDDEN = 'NO'
 """
     )
