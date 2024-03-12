@@ -17,6 +17,10 @@ jobs:
       matrix:
         python-version: ['3.11', '3.12']
         pandas-version: ['<2','>=2']
+        # Pandas<2 is not supported on Python 3.12
+        exclude:
+          - python-version: '3.12'
+            pandas-version: '<2'
 
     steps:
     - uses: actions/checkout@v4
