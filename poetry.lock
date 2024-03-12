@@ -18,18 +18,6 @@ requests = "*"
 retrying = "*"
 
 [[package]]
-name = "aenum"
-version = "3.1.11"
-description = "Advanced Enumerations (compatible with Python's stdlib Enum), NamedTuples, and NamedConstants"
-optional = true
-python-versions = "*"
-files = [
-    {file = "aenum-3.1.11-py2-none-any.whl", hash = "sha256:525b4870a27d0b471c265bda692bc657f1e0dd7597ad4186d072c59f9db666f6"},
-    {file = "aenum-3.1.11-py3-none-any.whl", hash = "sha256:12ae89967f2e25c0ce28c293955d643f891603488bc3d9946158ba2b35203638"},
-    {file = "aenum-3.1.11.tar.gz", hash = "sha256:aed2c273547ae72a0d5ee869719c02a643da16bf507c80958faadc7e038e3f73"},
-]
-
-[[package]]
 name = "aiohttp"
 version = "3.8.6"
 description = "Async http client/server framework (asyncio)"
@@ -220,47 +208,40 @@ cryptography = ">=3.2"
 
 [[package]]
 name = "awswrangler"
-version = "2.17.0"
+version = "3.7.0"
 description = "Pandas on AWS."
 optional = true
-python-versions = ">=3.7.1,<3.11"
+python-versions = ">=3.8,<4.0"
 files = [
-    {file = "awswrangler-2.17.0-py3-none-any.whl", hash = "sha256:e8806dce7b42140feb0317a19318dbf55a3a8011e73b7f3815833761b029af79"},
-    {file = "awswrangler-2.17.0.tar.gz", hash = "sha256:c130d451659a5539266374198643c214efd056b64d376e0ee399a69292887c44"},
+    {file = "awswrangler-3.7.0-py3-none-any.whl", hash = "sha256:03822a5e3ea5867c439aba81b532a4bce81949cbba1f2ce626109bee94ed3060"},
+    {file = "awswrangler-3.7.0.tar.gz", hash = "sha256:8b81770fee4ed574f90ef97566d4b45f4d7cef4d26d0ef9f2aeafcd7f11728ac"},
 ]
 
 [package.dependencies]
-backoff = ">=1.11.1,<3.0.0"
-boto3 = ">=1.24.11,<2.0.0"
-botocore = ">=1.27.11,<2.0.0"
-gremlinpython = ">=3.5.2,<4.0.0"
-jsonpath-ng = ">=1.5.3,<2.0.0"
-numpy = ">=1.21.0,<2.0.0"
-openpyxl = ">=3.0.0,<3.1.0"
-opensearch-py = ">=1,<3"
-pandas = ">=1.2.0,<2.0.0"
-pg8000 = ">=1.20.0,<2.0.0"
-progressbar2 = ">=4.0.0,<5.0.0"
-pyarrow = ">=2.0.0,<8.1.0"
-pymysql = ">=1.0.0,<2.0.0"
-redshift-connector = ">=2.0.889,<2.1.0"
-requests-aws4auth = ">=1.1.1,<2.0.0"
+boto3 = ">=1.20.32,<2.0.0"
+botocore = ">=1.23.32,<2.0.0"
+numpy = {version = ">=1.18,<2.0", markers = "python_version < \"3.12\""}
+packaging = ">=21.1,<24.0"
+pandas = {version = ">=1.2.0,<3.0.0", markers = "python_version >= \"3.9\""}
+pyarrow = ">=7.0.0"
+typing-extensions = ">=4.4.0,<5.0.0"
 
 [package.extras]
-oracle = ["oracledb (>=1.0.0,<1.1.0)"]
-sparql = ["SPARQLWrapper (>=1.8.5,<3.0.0)"]
-sqlserver = ["pyodbc (>=4.0.32,<4.1.0)"]
-
-[[package]]
-name = "backoff"
-version = "2.1.2"
-description = "Function decoration for backoff and retry"
-optional = true
-python-versions = ">=3.7,<4.0"
-files = [
-    {file = "backoff-2.1.2-py3-none-any.whl", hash = "sha256:b135e6d7c7513ba2bfd6895bc32bc8c66c6f3b0279b4c6cd866053cfd7d3126b"},
-    {file = "backoff-2.1.2.tar.gz", hash = "sha256:407f1bc0f22723648a8880821b935ce5df8475cf04f7b6b5017ae264d30f6069"},
-]
+deltalake = ["deltalake (>=0.6.4,<0.16.0)"]
+geopandas = ["geopandas (>=0.13.2,<0.14.0)", "geopandas (>=0.14.1,<0.15.0)"]
+gremlin = ["aiohttp (>=3.9.0,<4.0.0)", "async-timeout (>=4.0.3,<5.0.0)", "gremlinpython (>=3.7.1,<4.0.0)", "requests (>=2.0.0,<3.0.0)"]
+modin = ["modin (==0.23.1post0)", "modin (>=0.26.0,<0.27.0)"]
+mysql = ["pymysql (>=1.0.0,<2.0.0)"]
+opencypher = ["requests (>=2.0.0,<3.0.0)"]
+openpyxl = ["openpyxl (>=3.0.0,<4.0.0)"]
+opensearch = ["jsonpath-ng (>=1.5.3,<2.0.0)", "opensearch-py (>=2.0.0,<3.0.0)", "requests-aws4auth (>=1.1.1,<2.0.0)"]
+oracle = ["oracledb (>=1,<3)"]
+postgres = ["pg8000 (>=1.29.0,<2.0.0)"]
+progressbar = ["progressbar2 (>=4.0.0,<5.0.0)"]
+ray = ["ray[data,default] (>=2.9.0,<3.0.0)"]
+redshift = ["redshift-connector (>=2.0.0,<3.0.0)"]
+sparql = ["SPARQLWrapper (>=2.0.0,<3.0.0)", "requests (>=2.0.0,<3.0.0)"]
+sqlserver = ["pyodbc (>=4,<6)"]
 
 [[package]]
 name = "bearer"
@@ -789,17 +770,6 @@ files = [
 [package.dependencies]
 python-dateutil = "*"
 requests = "<3"
-
-[[package]]
-name = "decorator"
-version = "5.1.1"
-description = "Decorators for Humans"
-optional = true
-python-versions = ">=3.5"
-files = [
-    {file = "decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"},
-    {file = "decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330"},
-]
 
 [[package]]
 name = "dnspython"
@@ -1336,28 +1306,6 @@ protobuf = ">=3.15.0,<5.0.0dev"
 grpc = ["grpcio (>=1.0.0,<2.0.0dev)"]
 
 [[package]]
-name = "gremlinpython"
-version = "3.6.3"
-description = "Gremlin-Python for Apache TinkerPop"
-optional = true
-python-versions = "*"
-files = [
-    {file = "gremlinpython-3.6.3-py2.py3-none-any.whl", hash = "sha256:4dbac51b137e7a245a2fb68540fc55ee57d4222a6ba758af0e3d8f4cec49c3f2"},
-    {file = "gremlinpython-3.6.3.tar.gz", hash = "sha256:ab306a8ca78b29158cfd933c42f5eaa35217044e851a200a60b6c2d85ba82807"},
-]
-
-[package.dependencies]
-aenum = ">=1.4.5,<4.0.0"
-aiohttp = ">=3.8.0,<4.0.0"
-isodate = ">=0.6.0,<1.0.0"
-nest-asyncio = "*"
-six = ">=1.10.0,<2.0.0"
-
-[package.extras]
-kerberos = ["kerberos (>=1.3.0,<2.0.0)"]
-ujson = ["ujson (>=2.0.0)"]
-
-[[package]]
 name = "grpcio"
 version = "1.48.1"
 description = "HTTP/2-based RPC framework"
@@ -1640,23 +1588,6 @@ files = [
 ]
 
 [[package]]
-name = "jsonpath-ng"
-version = "1.5.3"
-description = "A final implementation of JSONPath for Python that aims to be standard compliant, including arithmetic and binary comparison operators and providing clear AST for metaprogramming."
-optional = true
-python-versions = "*"
-files = [
-    {file = "jsonpath-ng-1.5.3.tar.gz", hash = "sha256:a273b182a82c1256daab86a313b937059261b5c5f8c4fa3fc38b882b344dd567"},
-    {file = "jsonpath_ng-1.5.3-py2-none-any.whl", hash = "sha256:f75b95dbecb8a0f3b86fd2ead21c2b022c3f5770957492b9b6196ecccfeb10aa"},
-    {file = "jsonpath_ng-1.5.3-py3-none-any.whl", hash = "sha256:292a93569d74029ba75ac2dc3d3630fc0e17b2df26119a165fa1d498ca47bf65"},
-]
-
-[package.dependencies]
-decorator = "*"
-ply = "*"
-six = "*"
-
-[[package]]
 name = "lxml"
 version = "4.9.3"
 description = "Powerful and Pythonic XML processing library combining libxml2/libxslt with the ElementTree API."
@@ -1930,17 +1861,6 @@ files = [
 ]
 
 [[package]]
-name = "nest-asyncio"
-version = "1.5.5"
-description = "Patch asyncio to allow nested event loops"
-optional = true
-python-versions = ">=3.5"
-files = [
-    {file = "nest_asyncio-1.5.5-py3-none-any.whl", hash = "sha256:b98e3ec1b246135e4642eceffa5a6c23a3ab12c82ff816a92c612d68205813b2"},
-    {file = "nest_asyncio-1.5.5.tar.gz", hash = "sha256:e442291cd942698be619823a17a86a5759eabe1f8613084790de189fe9e16d65"},
-]
-
-[[package]]
 name = "numpy"
 version = "1.23.5"
 description = "NumPy is the fundamental package for array computing with Python."
@@ -2026,27 +1946,6 @@ files = [
 et-xmlfile = "*"
 
 [[package]]
-name = "opensearch-py"
-version = "1.1.0"
-description = "Python low-level client for OpenSearch"
-optional = true
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4"
-files = [
-    {file = "opensearch-py-1.1.0.tar.gz", hash = "sha256:7d0c41cea61fedc34542be7fb9169931360134cf823c596f719106c3bd8466fe"},
-    {file = "opensearch_py-1.1.0-py2.py3-none-any.whl", hash = "sha256:cb573546fb373dac8091be9b8eac2ba8da277713eea4b50b4a49ccd30dec25f1"},
-]
-
-[package.dependencies]
-certifi = "*"
-urllib3 = ">=1.21.1,<2"
-
-[package.extras]
-async = ["aiohttp (>=3,<4)"]
-develop = ["black", "botocore", "coverage", "jinja2", "mock", "myst-parser", "pytest", "pytest-cov", "pyyaml", "requests (>=2.0.0,<3.0.0)", "sphinx", "sphinx-copybutton", "sphinx-rtd-theme"]
-docs = ["myst-parser", "sphinx", "sphinx-copybutton", "sphinx-rtd-theme"]
-requests = ["requests (>=2.4.0,<3.0.0)"]
-
-[[package]]
 name = "oscrypto"
 version = "1.3.0"
 description = "TLS (SSL) sockets, key generation, encryption, decryption, signing, verification and KDFs using the OS crypto libraries. Does not require a compiler, and relies on the OS for patching. Works on Windows, OS X and Linux/BSD."
@@ -2124,20 +2023,6 @@ files = [
 ]
 
 [[package]]
-name = "pg8000"
-version = "1.29.1"
-description = "PostgreSQL interface library"
-optional = true
-python-versions = ">=3.7"
-files = [
-    {file = "pg8000-1.29.1-py3-none-any.whl", hash = "sha256:d9a21291ecf74ee626e704c690f2e5ccbaa3fd656be202673f13f39fe1b7029f"},
-    {file = "pg8000-1.29.1.tar.gz", hash = "sha256:80b4f4de4b0254832b7948511e0dd46342d1c0446ccd4fdd892b63d02e4fbc7b"},
-]
-
-[package.dependencies]
-scramp = ">=1.4.1"
-
-[[package]]
 name = "platformdirs"
 version = "2.5.2"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
@@ -2166,35 +2051,6 @@ files = [
 [package.extras]
 dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
-
-[[package]]
-name = "ply"
-version = "3.11"
-description = "Python Lex & Yacc"
-optional = true
-python-versions = "*"
-files = [
-    {file = "ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce"},
-    {file = "ply-3.11.tar.gz", hash = "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3"},
-]
-
-[[package]]
-name = "progressbar2"
-version = "4.0.0"
-description = "A Python Progressbar library to provide visual (yet text based) progress to long running operations."
-optional = true
-python-versions = ">=3.7.0"
-files = [
-    {file = "progressbar2-4.0.0-py2.py3-none-any.whl", hash = "sha256:2562ba3e554433f08e81fb7b786208b19de135f3ca1c5da1787d9b05558e6247"},
-    {file = "progressbar2-4.0.0.tar.gz", hash = "sha256:14d3165a1781d053ffaa117daf27cc706128d2ec1d2977fdb05b6bb079888013"},
-]
-
-[package.dependencies]
-python-utils = ">=3.0.0"
-
-[package.extras]
-docs = ["sphinx (>=1.8.5)"]
-tests = ["flake8 (>=3.7.7)", "freezegun (>=0.3.11)", "pytest (>=4.6.9)", "pytest-cov (>=2.6.1)", "pytest-mypy", "sphinx (>=1.8.5)"]
 
 [[package]]
 name = "proto-plus"
@@ -2882,22 +2738,6 @@ text-unidecode = ">=1.3"
 unidecode = ["Unidecode (>=1.1.1)"]
 
 [[package]]
-name = "python-utils"
-version = "3.3.3"
-description = "Python Utils is a module with some convenient utilities not included with the standard Python install"
-optional = true
-python-versions = ">3.6.0"
-files = [
-    {file = "python-utils-3.3.3.tar.gz", hash = "sha256:3b1c8b706e40e91280eec5fa72ea730880a166cee99afa5555b863d55664478d"},
-    {file = "python_utils-3.3.3-py2.py3-none-any.whl", hash = "sha256:5cb9cf295018202fb4d6abdd694a33a7f08bc0ce1bf1eab8cce80ab2cde35c07"},
-]
-
-[package.extras]
-docs = ["mock", "python-utils", "sphinx"]
-loguru = ["loguru"]
-tests = ["flake8", "loguru", "pytest", "pytest-asyncio", "pytest-cov", "pytest-mypy", "sphinx", "types-setuptools"]
-
-[[package]]
 name = "pytz"
 version = "2022.1"
 description = "World timezone definitions, modern and historical"
@@ -2970,6 +2810,7 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
+    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -3048,24 +2889,6 @@ urllib3 = ">=1.21.1,<1.27"
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
-
-[[package]]
-name = "requests-aws4auth"
-version = "1.1.2"
-description = "AWS4 authentication for Requests"
-optional = true
-python-versions = "*"
-files = [
-    {file = "requests-aws4auth-1.1.2.tar.gz", hash = "sha256:ebde0662dccda5023546055ec4cbe4470cae017ecbfce8d368b80b5e4a94d619"},
-    {file = "requests_aws4auth-1.1.2-py2.py3-none-any.whl", hash = "sha256:23b7a054326f80f86caf87e3eaf54ea41aa27adbed4297bd3456b1fa38f06a52"},
-]
-
-[package.dependencies]
-requests = "*"
-six = "*"
-
-[package.extras]
-httpx = ["httpx"]
 
 [[package]]
 name = "requests-file"
@@ -3545,13 +3368,13 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.3.0"
-description = "Backported and Experimental Type Hints for Python 3.7+"
+version = "4.10.0"
+description = "Backported and Experimental Type Hints for Python 3.8+"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
-    {file = "typing_extensions-4.3.0.tar.gz", hash = "sha256:e6d2677a32f47fc7eb2795db1dd15c1f34eff616bcaf2cfb5e997f854fa1c4a6"},
+    {file = "typing_extensions-4.10.0-py3-none-any.whl", hash = "sha256:69b1a937c3a517342112fb4c6df7e72fc39a38e7891a5730ed4985b5214b5475"},
+    {file = "typing_extensions-4.10.0.tar.gz", hash = "sha256:b0abd7c89e8fb96f98db18d86106ff1d90ab692004eb746cf6eda2682f91b3cb"},
 ]
 
 [[package]]
@@ -3836,4 +3659,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "019950494c42c4134aec63361a7ff088ede8b3d737535e2cb8dee9fedc275c57"
+content-hash = "4192c84e740b278faa6e2262577b4dbdca739cf5268ab731bd2fd1e041bf3b1e"
