@@ -10,16 +10,6 @@ from .toucan_connector import DataSlice, ToucanConnector, ToucanDataSource  # no
 __version__ = lib_meta.version(__package__ or __name__)
 
 CONNECTORS_REGISTRY = {
-    "AdobeAnalytics": {
-        "connector": "adobe_analytics.adobe_analytics_connector.AdobeAnalyticsConnector",
-        "label": "Adobe Analytics",
-        "logo": "adobe_analytics/adobe-analytics.png",
-    },
-    "Anaplan": {
-        "connector": "anaplan.anaplan_connector.AnaplanConnector",
-        "label": "Anaplan",
-        "logo": "anaplan/anaplan.png",
-    },
     "AWSAthena": {
         "connector": "awsathena.awsathena_connector.AwsathenaConnector",
         "label": "Amazon Athena",
@@ -64,16 +54,6 @@ CONNECTORS_REGISTRY = {
         "label": "Elasticsearch",
         "logo": "elasticsearch/elasticsearch.png",
     },
-    "facebook_insights": {
-        "connector": "facebook_insights.facebook_insights_connector.FacebookInsightsConnector",
-        "label": "Facebook Insights",
-        "logo": "facebook_insights/facebook-insights.png",
-    },
-    "facebook_ads": {
-        "connector": "facebook_ads.facebook_ads_connector.FacebookAdsConnector",
-        "label": "Facebook Ads",
-        "logo": "facebook_ads/facebook_logo.png",
-    },
     "Github": {
         "connector": "github.github_connector.GithubConnector",
         "label": "Github Connector",
@@ -84,11 +64,6 @@ CONNECTORS_REGISTRY = {
         "label": "Google Analytics",
         "logo": "google_analytics/google-analytics.png",
     },
-    "GoogleAdwords": {
-        "connector": "google_adwords.google_adwords_connector.GoogleAdwordsConnector",
-        "label": "Google Adwords",
-        "logo": "google_adwords/google_adwords.jpg",
-    },
     "GoogleBigQuery": {
         "connector": "google_big_query.google_big_query_connector.GoogleBigQueryConnector",
         "label": "Google Big Query",
@@ -98,11 +73,6 @@ CONNECTORS_REGISTRY = {
         "connector": "google_cloud_mysql.google_cloud_mysql_connector.GoogleCloudMySQLConnector",
         "label": "Google Cloud MySQL",
         "logo": "google_cloud_mysql/google-cloud-mysql.png",
-    },
-    "google_my_business": {
-        "connector": "google_my_business.google_my_business_connector.GoogleMyBusinessConnector",
-        "label": "Google My Business",
-        "logo": "google_my_business/google-my-business.png",
     },
     "GoogleSheets": {
         "connector": "google_sheets.google_sheets_connector.GoogleSheetsConnector",
@@ -124,24 +94,6 @@ CONNECTORS_REGISTRY = {
         "label": "Http API",
         "logo": "http_api/http-api.png",
     },
-    "Hubspot": {
-        "connector": "hubspot.hubspot_connector.HubspotConnector",
-        "label": "Hubspot",
-        "logo": "hubspot/hubspot.png",
-    },
-    "HubspotPrivateApp": {
-        "connector": "hubspot_private_app.hubspot_connector.HubspotConnector",
-        "label": "Hubspot (Private App)",
-        "logo": "hubspot/hubspot.png",
-    },
-    "LinkedinAds": {
-        "connector": "linkedinads.linkedinads_connector.LinkedinadsConnector",
-        "logo": "linkedinads/linkedinads.png",
-    },
-    "MicroStrategy": {
-        "connector": "micro_strategy.micro_strategy_connector.MicroStrategyConnector",
-        "logo": "micro_strategy/microstrategy.png",
-    },
     "MongoDB": {
         "connector": "mongo.mongo_connector.MongoConnector",
         "logo": "mongo/mongo-db.png",
@@ -159,11 +111,6 @@ CONNECTORS_REGISTRY = {
     "MySQL": {
         "connector": "mysql.mysql_connector.MySQLConnector",
         "logo": "mysql/mysql.png",
-    },
-    "NetExplorer": {
-        "connector": "net_explorer.net_explorer_connector.NetExplorerConnector",
-        "label": "Net Explorer",
-        "logo": "net_explorer/net_explorer.png",
     },
     "OData": {
         "connector": "odata.odata_connector.ODataConnector",
@@ -235,19 +182,6 @@ CONNECTORS_REGISTRY = {
         "connector": "soap.soap_connector.SoapConnector",
         "label": "Soap",
         "logo": "soap/soap.png",
-    },
-    "ToucanToco": {
-        "connector": "toucan_toco.toucan_toco_connector.ToucanTocoConnector",
-        "label": "Toucan Toco",
-        "logo": "toucan_toco/toucan.png",
-    },
-    "Trello": {
-        "connector": "trello.trello_connector.TrelloConnector",
-        "logo": "trello/trello.png",
-    },
-    "Wootric": {
-        "connector": "wootric.wootric_connector.WootricConnector",
-        "logo": "wootric/wootric.png",
     },
 }
 
