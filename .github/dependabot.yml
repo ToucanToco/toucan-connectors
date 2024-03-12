@@ -10,6 +10,9 @@ updates:
         dependency-type: "production"
       dev-deps:
         dependency-type: "development"
+    ignore:
+      - dependency-name: "elasticsearch"
+        versions: ["8.x", "9.x"]
   # poetry LTS
   - package-ecosystem: "pip"
     directory: "/"
@@ -18,11 +21,6 @@ updates:
     target-branch: "release/v3.23"
     allow:
       - dependency-type: "production"
-    groups:
-      prod-deps:
-        dependency-type: "production"
-      dev-deps:
-        dependency-type: "development"
   # GH actions
   - package-ecosystem: "github-actions"
     directory: "/"
