@@ -7,7 +7,6 @@ import pandas as pd
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from requests import Session
-from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 from xmltodict import parse
 
 from toucan_connectors.auth import Auth
@@ -18,6 +17,7 @@ from toucan_connectors.common import (
     transform_with_jq,
 )
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
+from toucan_connectors.utils.json_to_table import json_to_table
 
 
 class ResponseType(str, Enum):

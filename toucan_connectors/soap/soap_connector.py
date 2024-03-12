@@ -4,12 +4,12 @@ import pandas as pd
 from pydantic import Field, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from requests import Session
-from toucan_data_sdk.utils.postprocess.json_to_table import json_to_table
 from zeep import Client
 from zeep.helpers import serialize_object
 from zeep.transports import Transport
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
+from toucan_connectors.utils.json_to_table import json_to_table
 
 from .helpers import is_dict_of_lists, is_list_response, is_nested_list
 

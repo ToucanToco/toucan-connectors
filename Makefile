@@ -17,6 +17,7 @@ install:
 .PHONY: format
 format:
 	$(format)
+	$(ruff) --fix
 
 .PHONY: lint
 lint:
