@@ -14,7 +14,8 @@ from aiohttp import ClientSession
 from jinja2 import Environment, Template, Undefined, UndefinedError, meta
 from jinja2.nativetypes import NativeEnvironment
 from pydantic import Field
-from toucan_data_sdk.utils.helpers import slugify
+
+from toucan_connectors.utils.slugify import slugify
 
 # Query interpolation
 
