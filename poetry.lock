@@ -2047,20 +2047,6 @@ docs = ["myst-parser", "sphinx", "sphinx-copybutton", "sphinx-rtd-theme"]
 requests = ["requests (>=2.4.0,<3.0.0)"]
 
 [[package]]
-name = "oscrypto"
-version = "1.3.0"
-description = "TLS (SSL) sockets, key generation, encryption, decryption, signing, verification and KDFs using the OS crypto libraries. Does not require a compiler, and relies on the OS for patching. Works on Windows, OS X and Linux/BSD."
-optional = true
-python-versions = "*"
-files = [
-    {file = "oscrypto-1.3.0-py2.py3-none-any.whl", hash = "sha256:2b2f1d2d42ec152ca90ccb5682f3e051fb55986e1b170ebde472b133713e7085"},
-    {file = "oscrypto-1.3.0.tar.gz", hash = "sha256:6f5fef59cb5b3708321db7cca56aed8ad7e662853351e7991fcf60ec606d47a4"},
-]
-
-[package.dependencies]
-asn1crypto = ">=1.5.1"
-
-[[package]]
 name = "packaging"
 version = "21.3"
 description = "Core utilities for Python packages"
@@ -2139,18 +2125,18 @@ scramp = ">=1.4.1"
 
 [[package]]
 name = "platformdirs"
-version = "2.5.2"
-description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+version = "3.11.0"
+description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-2.5.2-py3-none-any.whl", hash = "sha256:027d8e83a2d7de06bbac4e5ef7e023c02b863d7ea5d079477e722bb41ab25788"},
-    {file = "platformdirs-2.5.2.tar.gz", hash = "sha256:58c8abb07dcb441e6ee4b11d8df0ac856038f944ab98b7be6b27b2a3c7feef19"},
+    {file = "platformdirs-3.11.0-py3-none-any.whl", hash = "sha256:e9d171d00af68be50e9202731309c4e658fd8bc76f55c11c7dd760d023bda68e"},
+    {file = "platformdirs-3.11.0.tar.gz", hash = "sha256:cf8ee52a3afdb965072dcc652433e0c7e3e40cf5ea1477cd4b3b1d2eb75495b3"},
 ]
 
 [package.extras]
-docs = ["furo (>=2021.7.5b38)", "proselint (>=0.10.2)", "sphinx (>=4)", "sphinx-autodoc-typehints (>=1.12)"]
-test = ["appdirs (==1.4.4)", "pytest (>=6)", "pytest-cov (>=2.7)", "pytest-mock (>=3.6)"]
+docs = ["furo (>=2023.7.26)", "proselint (>=0.13)", "sphinx (>=7.1.1)", "sphinx-autodoc-typehints (>=1.24)"]
+test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=7.4)", "pytest-cov (>=4.1)", "pytest-mock (>=3.11.1)"]
 
 [[package]]
 name = "pluggy"
@@ -2378,48 +2364,6 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 files = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
     {file = "pycparser-2.21.tar.gz", hash = "sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206"},
-]
-
-[[package]]
-name = "pycryptodomex"
-version = "3.15.0"
-description = "Cryptographic library for Python"
-optional = true
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-files = [
-    {file = "pycryptodomex-3.15.0-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:6f5b6ba8aefd624834bc177a2ac292734996bb030f9d1b388e7504103b6fcddf"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:4540904c09704b6f831059c0dfb38584acb82cb97b0125cd52688c1f1e3fffa6"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:0fadb9f7fa3150577800eef35f62a8a24b9ddf1563ff060d9bd3af22d3952c8c"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27m-manylinux2010_i686.whl", hash = "sha256:fc9bc7a9b79fe5c750fc81a307052f8daabb709bdaabb0fb18fb136b66b653b5"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27m-manylinux2010_x86_64.whl", hash = "sha256:f8be976cec59b11f011f790b88aca67b4ea2bd286578d0bd3e31bcd19afcd3e4"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27m-manylinux2014_aarch64.whl", hash = "sha256:78d9621cf0ea35abf2d38fa2ca6d0634eab6c991a78373498ab149953787e5e5"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27m-musllinux_1_1_aarch64.whl", hash = "sha256:7db44039cc8b449bd08ab338a074e87093bd170f1a1b76d2fcef8a3e2ee11199"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27m-win32.whl", hash = "sha256:b6306403228edde6e289f626a3908a2f7f67c344e712cf7c0a508bab3ad9e381"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27m-win_amd64.whl", hash = "sha256:48697790203909fab02a33226fda546604f4e2653f9d47bc5d3eb40879fa7c64"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:18e2ab4813883ae63396c0ffe50b13554b32bb69ec56f0afaf052e7a7ae0d55b"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:3709f13ca3852b0b07fc04a2c03b379189232b24007c466be0f605dd4723e9d4"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27mu-manylinux2010_i686.whl", hash = "sha256:191e73bc84a8064ad1874dba0ebadedd7cce4dedee998549518f2c74a003b2e1"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27mu-manylinux2010_x86_64.whl", hash = "sha256:e3164a18348bd53c69b4435ebfb4ac8a4076291ffa2a70b54f0c4b80c7834b1d"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27mu-manylinux2014_aarch64.whl", hash = "sha256:5676a132169a1c1a3712edf25250722ebc8c9102aa9abd814df063ca8362454f"},
-    {file = "pycryptodomex-3.15.0-cp27-cp27mu-musllinux_1_1_aarch64.whl", hash = "sha256:781efd04ea6762bb2ef7d4fa632c9c89895433744b6c345bd0c239d5ab058dfc"},
-    {file = "pycryptodomex-3.15.0-cp35-abi3-macosx_10_9_x86_64.whl", hash = "sha256:e2b12968522a0358b8917fc7b28865acac002f02f4c4c6020fcb264d76bfd06d"},
-    {file = "pycryptodomex-3.15.0-cp35-abi3-manylinux1_i686.whl", hash = "sha256:e47bf8776a7e15576887f04314f5228c6527b99946e6638cf2f16da56d260cab"},
-    {file = "pycryptodomex-3.15.0-cp35-abi3-manylinux1_x86_64.whl", hash = "sha256:996e1ba717077ce1e6d4849af7a1426f38b07b3d173b879e27d5e26d2e958beb"},
-    {file = "pycryptodomex-3.15.0-cp35-abi3-manylinux2010_i686.whl", hash = "sha256:65204412d0c6a8e3c41e21e93a5e6054a74fea501afa03046a388cf042e3377a"},
-    {file = "pycryptodomex-3.15.0-cp35-abi3-manylinux2010_x86_64.whl", hash = "sha256:dd452a5af7014e866206d41751886c9b4bf379a339fdf2dbfc7dd16c0fb4f8e0"},
-    {file = "pycryptodomex-3.15.0-cp35-abi3-manylinux2014_aarch64.whl", hash = "sha256:b9279adc16e4b0f590ceff581f53a80179b02cba9056010d733eb4196134a870"},
-    {file = "pycryptodomex-3.15.0-cp35-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:04a5d6a17560e987272fc1763e9772a87689a08427b8cbdebe3ca7cba95d6156"},
-    {file = "pycryptodomex-3.15.0-cp35-abi3-win32.whl", hash = "sha256:46b3f05f2f7ac7841053da4e0f69616929ca3c42f238c405f6c3df7759ad2780"},
-    {file = "pycryptodomex-3.15.0-cp35-abi3-win_amd64.whl", hash = "sha256:8eecdf9cdc7343001d047f951b9cc805cd68cb6cd77b20ea46af5bffc5bd3dfb"},
-    {file = "pycryptodomex-3.15.0-pp27-pypy_73-macosx_10_9_x86_64.whl", hash = "sha256:67e1e6a92151023ccdfcfbc0afb3314ad30080793b4c27956ea06ab1fb9bcd8a"},
-    {file = "pycryptodomex-3.15.0-pp27-pypy_73-manylinux1_x86_64.whl", hash = "sha256:c4cb9cb492ea7dcdf222a8d19a1d09002798ea516aeae8877245206d27326d86"},
-    {file = "pycryptodomex-3.15.0-pp27-pypy_73-manylinux2010_x86_64.whl", hash = "sha256:94c7b60e1f52e1a87715571327baea0733708ab4723346598beca4a3b6879794"},
-    {file = "pycryptodomex-3.15.0-pp27-pypy_73-win32.whl", hash = "sha256:04cc393045a8f19dd110c975e30f38ed7ab3faf21ede415ea67afebd95a22380"},
-    {file = "pycryptodomex-3.15.0-pp36-pypy36_pp73-macosx_10_9_x86_64.whl", hash = "sha256:0776bfaf2c48154ab54ea45392847c1283d2fcf64e232e85565f858baedfc1fa"},
-    {file = "pycryptodomex-3.15.0-pp36-pypy36_pp73-manylinux1_x86_64.whl", hash = "sha256:463119d7d22d0fc04a0f9122e9d3e6121c6648bcb12a052b51bd1eed1b996aa2"},
-    {file = "pycryptodomex-3.15.0-pp36-pypy36_pp73-manylinux2010_x86_64.whl", hash = "sha256:a07a64709e366c2041cd5cfbca592b43998bf4df88f7b0ca73dca37071ccf1bd"},
-    {file = "pycryptodomex-3.15.0-pp36-pypy36_pp73-win32.whl", hash = "sha256:35a8f7afe1867118330e2e0e0bf759c409e28557fb1fc2fbb1c6c937297dbe9a"},
-    {file = "pycryptodomex-3.15.0.tar.gz", hash = "sha256:7341f1bb2dadb0d1a0047f34c3a58208a92423cdbd3244d998e4b28df5eac0ed"},
 ]
 
 [[package]]
@@ -2970,6 +2914,7 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
+    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -3328,55 +3273,72 @@ files = [
 
 [[package]]
 name = "snowflake-connector-python"
-version = "2.8.3"
+version = "3.7.1"
 description = "Snowflake Connector for Python"
 optional = true
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "snowflake-connector-python-2.8.3.tar.gz", hash = "sha256:8888e852270410c5bafb3f813d6d2abe779418ca7c4b56cfe542e3a65b98e9cb"},
-    {file = "snowflake_connector_python-2.8.3-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:ff5c4e675f5896b61b1e9e3597bd652e3880b8ce34fa5fb73e0211c8ebe4b673"},
-    {file = "snowflake_connector_python-2.8.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:1dde9972606358ad91838848995f5d86291579fc1c98b1eb31c269e6f15b9a40"},
-    {file = "snowflake_connector_python-2.8.3-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8fab7c44b60c7b551d20d1e0aea8649123db14e57e4246a93a1c053aedd81f2e"},
-    {file = "snowflake_connector_python-2.8.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:13d6062f1c76373998035145a2f21a03d1c33cbad2de4d5676f6436ff1277c02"},
-    {file = "snowflake_connector_python-2.8.3-cp310-cp310-win_amd64.whl", hash = "sha256:ccf305753d465902053bd65eb2e2f62b2dd5b85d6749bfef64b474d2e0617e3e"},
-    {file = "snowflake_connector_python-2.8.3-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:8a42f8d5f23c4fc3485d2692568c2942e71339031f447bc446f5ed7c99fd0088"},
-    {file = "snowflake_connector_python-2.8.3-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7b7314eddfc460c625c585abc5e282f68c76df9429e7d0e10c2dc371728eb8f8"},
-    {file = "snowflake_connector_python-2.8.3-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:56b4801c1becc94bd17bd55a8ab2a50e85bb4987a5d3b86b0678871bfd0db24c"},
-    {file = "snowflake_connector_python-2.8.3-cp37-cp37m-win_amd64.whl", hash = "sha256:1e4957b4cea93a2135a420d900dadd959b33429309781982b7fdff0452c45b6a"},
-    {file = "snowflake_connector_python-2.8.3-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:d61f9e9f68d6a723e22c7279cb9d5b439954f7c90774a5a5d59a17c065997f64"},
-    {file = "snowflake_connector_python-2.8.3-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:084c5880d6708bcca6762f3b14347e936a94cb76e96e4850da2a4ffd5e605fb0"},
-    {file = "snowflake_connector_python-2.8.3-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:af994f773fb49bc62339db15174e693dd2ea2841cea4e536fb37fa147c1285ea"},
-    {file = "snowflake_connector_python-2.8.3-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6b38504a48c01342a826b492bdefe032f2ec51826ad67ae379b4b65e0f42ce71"},
-    {file = "snowflake_connector_python-2.8.3-cp38-cp38-win_amd64.whl", hash = "sha256:445f453f8a49f4907bd096f58aeefbe2a51912627527d7a49258b76c2c30ca0d"},
-    {file = "snowflake_connector_python-2.8.3-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:a1c4e335d5acfea4b9afc1b6fd0a0d9523123df925be593e0b6309fc75bee882"},
-    {file = "snowflake_connector_python-2.8.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:0adcea84ba163b2ddf4c0fc32c021eba65c2ff1319a48d491e66bfa9cfea5e5e"},
-    {file = "snowflake_connector_python-2.8.3-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:198a78aa8b6a86b108e16de13bb7eb64b37e4d2c4e8f85acc64e842a21bdd466"},
-    {file = "snowflake_connector_python-2.8.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ef120391abfd72ec459ee52106a892ae673e2bad4088b960028c990f81007c77"},
-    {file = "snowflake_connector_python-2.8.3-cp39-cp39-win_amd64.whl", hash = "sha256:b6c1f14d08d055a578231571c5d2c6554499bd2b06c2cf7d0a7e7b7ffe92a2e7"},
+    {file = "snowflake-connector-python-3.7.1.tar.gz", hash = "sha256:dc6982f653860edef1614a3047a16bcb07e22775e6e090808bbf4f7629c4191d"},
+    {file = "snowflake_connector_python-3.7.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c5c60093a47ead3bf9dafe6194626f433a1872ddb521f1635492584ee65885c3"},
+    {file = "snowflake_connector_python-3.7.1-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:959b1c93f9aff684627c3ce56e9193e23f28d867d932da83a18d8aff613cc182"},
+    {file = "snowflake_connector_python-3.7.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f6966a50dd981ce8f553867e8e4216ba966ae8d0625b2ef63de383f3184d7351"},
+    {file = "snowflake_connector_python-3.7.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a8f1c1c95388b3bb18fb17f185e21860cf4f8feae4167a432183dfadbda3f7ae"},
+    {file = "snowflake_connector_python-3.7.1-cp310-cp310-win_amd64.whl", hash = "sha256:d771ff5e632a088b9aa1c663f956cc89714cc1c5732cbdeb39217d749c8c447b"},
+    {file = "snowflake_connector_python-3.7.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:796be35e6b4842fc4eaf7d82628f61a9bff946c89a7c47a97c2ac442e7c69b45"},
+    {file = "snowflake_connector_python-3.7.1-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:d26b509185333a7681191fed6d4e345d3206bb630e545f575d8cce0149f2f7cf"},
+    {file = "snowflake_connector_python-3.7.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a972f4cabb3c5fd23f6b310ba1c2216f0d5afa0dbb95d05ad935ddeba700a718"},
+    {file = "snowflake_connector_python-3.7.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:266506d4001f3260a80425d1d9b61e1f4d1183dcb4623e3799b7dc0757327469"},
+    {file = "snowflake_connector_python-3.7.1-cp311-cp311-win_amd64.whl", hash = "sha256:cb6d90cf992af2a795613ba54a9b0824dc1b73b4f4377b4f7479f40b5135d4eb"},
+    {file = "snowflake_connector_python-3.7.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:09b62cb4fd447d99756aa251d07fdec726b4c0173978450d6172e900ede2da7f"},
+    {file = "snowflake_connector_python-3.7.1-cp312-cp312-macosx_11_0_x86_64.whl", hash = "sha256:3f466f459942520fc2bc4ae2a0ffbdc2535cb2eac73e180c7ec8fa11a75fe993"},
+    {file = "snowflake_connector_python-3.7.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a0a770fe783868b1559ba5e72c436b2781cd0a06ca0c9127776a3f927a91249f"},
+    {file = "snowflake_connector_python-3.7.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4f5f178d71892d54f246681e601a628cab7086fbd80828430d795b60a5e4991f"},
+    {file = "snowflake_connector_python-3.7.1-cp312-cp312-win_amd64.whl", hash = "sha256:c6822d6b21d22a237d90b0b45b7d28d12d9b9ff392445fc1aaf3fe60aa200e81"},
+    {file = "snowflake_connector_python-3.7.1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:2e2fdd6c65f03f0fd649477e35828e7ebd0bd2717852542e720f2a4ab3443bc8"},
+    {file = "snowflake_connector_python-3.7.1-cp38-cp38-macosx_11_0_x86_64.whl", hash = "sha256:0ec3a7d17643167e1224d0f992fd34abf3ddca64099c3c377bbeb5ec54b58fc6"},
+    {file = "snowflake_connector_python-3.7.1-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bcce35becef53b80d8addbd0d248242c14f74e842eb989baabceb42016800d66"},
+    {file = "snowflake_connector_python-3.7.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:093732fb559d255e6687eb1940e6677ae98cfa3713c548696ad99f345c3c43d7"},
+    {file = "snowflake_connector_python-3.7.1-cp38-cp38-win_amd64.whl", hash = "sha256:cf1021752e11b9e23688440b81e116dd54ada6335a9745db8ce3f223fa5e942c"},
+    {file = "snowflake_connector_python-3.7.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:2ab47de37dcf66464f45eb365c66ec07c3af19a4011ef1d575116af308fcb025"},
+    {file = "snowflake_connector_python-3.7.1-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:c4e824c6226a8c01ccc0af258517d707b614254f58cc7b0b6005cf641e34d2c2"},
+    {file = "snowflake_connector_python-3.7.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:97f13203ec29790d1c7e6e7d37a16ddb5182c93820a328a7f6d3678733baadd8"},
+    {file = "snowflake_connector_python-3.7.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d73d2af0435cb29bda23609a94220dd0e4765e997fe669a7ef117620b731c772"},
+    {file = "snowflake_connector_python-3.7.1-cp39-cp39-win_amd64.whl", hash = "sha256:1b833b4165e7c3b0e911fb33aba936bee46b320a367b3f9451987039bef85be9"},
 ]
 
 [package.dependencies]
 asn1crypto = ">0.24.0,<2.0.0"
 certifi = ">=2017.4.17"
 cffi = ">=1.9,<2.0.0"
-charset-normalizer = ">=2,<3"
-cryptography = ">=3.1.0,<41.0.0"
+charset-normalizer = ">=2,<4"
+cryptography = ">=3.1.0,<43.0.0"
 filelock = ">=3.5,<4"
 idna = ">=2.5,<4"
-oscrypto = "<2.0.0"
-pycryptodomex = ">=3.2,<3.5.0 || >3.5.0,<4.0.0"
+packaging = "*"
+platformdirs = ">=2.6.0,<4.0.0"
 pyjwt = "<3.0.0"
-pyOpenSSL = ">=16.2.0,<23.0.0"
+pyOpenSSL = ">=16.2.0,<25.0.0"
 pytz = "*"
 requests = "<3.0.0"
-setuptools = ">34.0.0"
+sortedcontainers = ">=2.4.0"
+tomlkit = "*"
 typing-extensions = ">=4.3,<5"
-urllib3 = ">=1.21.1,<1.27"
 
 [package.extras]
-development = ["Cython", "coverage", "more-itertools", "numpy (<1.24.0)", "pendulum (!=2.1.1)", "pexpect", "pytest (<7.3.0)", "pytest-cov", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist", "pytzdata"]
-pandas = ["pandas (>=1.0.0,<1.6.0)", "pyarrow (>=8.0.0,<8.1.0)"]
-secure-local-storage = ["keyring (!=16.1.0,<24.0.0)"]
+development = ["Cython", "coverage", "more-itertools", "numpy (<1.27.0)", "pendulum (!=2.1.1)", "pexpect", "pytest (<7.5.0)", "pytest-cov", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist", "pytzdata"]
+pandas = ["pandas (>=1.0.0,<3.0.0)", "pyarrow"]
+secure-local-storage = ["keyring (>=23.1.0,<25.0.0)"]
+
+[[package]]
+name = "sortedcontainers"
+version = "2.4.0"
+description = "Sorted Containers -- Sorted List, Sorted Dict, Sorted Set"
+optional = true
+python-versions = "*"
+files = [
+    {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
+    {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
+]
 
 [[package]]
 name = "soupsieve"
@@ -3497,6 +3459,17 @@ python-versions = ">=3.7"
 files = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+
+[[package]]
+name = "tomlkit"
+version = "0.12.4"
+description = "Style preserving TOML library"
+optional = true
+python-versions = ">=3.7"
+files = [
+    {file = "tomlkit-0.12.4-py3-none-any.whl", hash = "sha256:5cd82d48a3dd89dee1f9d64420aa20ae65cfbd00668d6f094d7578a78efbb77b"},
+    {file = "tomlkit-0.12.4.tar.gz", hash = "sha256:7ca1cfc12232806517a8515047ba66a19369e71edf2439d0f5824f91032b6cc3"},
 ]
 
 [[package]]
@@ -3836,4 +3809,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "019950494c42c4134aec63361a7ff088ede8b3d737535e2cb8dee9fedc275c57"
+content-hash = "af42b160c195634d3c832a77fee0c830bccd81b6423153b59230c860bf43e20f"
