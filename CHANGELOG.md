@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [6.0.0] 2024-03-12
+
 ### Changed
 
 - **Breaking**: Support for Python 3.10 has been dropped.
