@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 from elasticsearch import Elasticsearch
-from pandas.io.json import json_normalize
+from pandas import json_normalize
 from pydantic import BaseModel, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
