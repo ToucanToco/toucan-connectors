@@ -284,20 +284,6 @@ tests = ["pytest (>=3.2.1,!=3.3.0)"]
 typecheck = ["mypy"]
 
 [[package]]
-name = "bearer"
-version = "3.1.0"
-description = "Bearer python helper"
-optional = true
-python-versions = "*"
-files = [
-    {file = "bearer-3.1.0-py3-none-any.whl", hash = "sha256:0f61b1d8bdde4bf4ffc506de37aff039778687543d2d9bf0813d5e72c50904ed"},
-    {file = "bearer-3.1.0.tar.gz", hash = "sha256:3737cad0010d73890d026df536c7cd4ad0ce0996f86d8356a97848937a4d6a84"},
-]
-
-[package.dependencies]
-requests = {version = ">=2.9.1", extras = ["security"]}
-
-[[package]]
 name = "beautifulsoup4"
 version = "4.11.1"
 description = "Screen-scraping library"
@@ -4313,7 +4299,7 @@ test = ["coverage[toml] (==5.2.1)", "flake8 (==3.8.3)", "flake8-blind-except (==
 xmlsec = ["xmlsec (>=0.6.1)"]
 
 [extras]
-all = ["PyJWT", "PyMySQL", "awswrangler", "bearer", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "gspread", "lxml", "oauth2client", "oauthlib", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
+all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "gspread", "lxml", "oauth2client", "oauthlib", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
 awsathena = ["awswrangler"]
 azure-mssql = ["pyodbc"]
 clickhouse = ["clickhouse-driver"]
@@ -4342,4 +4328,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "44eee4086a0eaf5055f7e11ccd5b4c5973f0830375ca6d3786946c7f0f8da03d"
+content-hash = "fabf8fe5e34fe2c37ad1476b7a6ebf32e05f5aed7d37a3dd0da91d3a14d092f4"

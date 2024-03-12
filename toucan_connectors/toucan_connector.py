@@ -1,7 +1,6 @@
 import json
 import logging
 import operator
-import os
 import re
 import socket
 import uuid
@@ -24,12 +23,6 @@ from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.pagination import PaginationInfo, build_pagination_info
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.utils.datetime import sanitize_df_dates
-
-try:
-    from bearer import Bearer  # type: ignore[import-untyped]
-except ImportError:
-    pass
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -310,20 +303,6 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     # Used to defined the connection
     identifier: str | None = Field(None, **_UI_HIDDEN)  # type:ignore[pydantic-field]
     model_config = ConfigDict(extra="forbid", validate_assignment=True)
-
-    def bearer_oauth_get_endpoint(
-        self,
-        endpoint: str,
-        query: dict | None = None,
-    ):
-        """Generic method to get an endpoint for an OAuth API integrated with Bearer"""
-        return (
-            Bearer(os.environ.get("BEARER_API_KEY"))
-            .integration(self.bearer_integration)  # type: ignore[attr-defined]
-            .auth(self.bearer_auth_id)  # type: ignore[attr-defined]
-            .get(endpoint, query=query)
-            .json()
-        )
 
     @property
     def retry_decorator(self):
