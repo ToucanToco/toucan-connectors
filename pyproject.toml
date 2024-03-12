@@ -16,7 +16,7 @@ pydantic = "^2.4.2"
 requests = "^2.28.0"
 tenacity = "^8.0.1"
 aiohttp = "^3.8.4"
-python-slugify = "^8.0.4"
+python-slugify = ">=5.0.2"
 pandas = {version = "<2", python = "<3.12"}
 
 # Dependencies for extras

@@ -4282,4 +4282,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "b88b7f621c12143a9d3d3c251e52b100aaccbf65c33fc76f7a765f717bdb925b"
+content-hash = "250134c606607b4097e7677703537c9443d23763a01137a3f63f0227da3e4306"
