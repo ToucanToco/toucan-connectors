@@ -299,7 +299,7 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
 
                 if len(workbook_elements_list) > 1:
                     df_current[workbook_key_column] = workbook_element
-                df_all = df_all.append(df_current)
+                df_all = pd.concat([df_all, df_current])
 
         if data_source.parse_dates:
             for date_col in data_source.parse_dates:

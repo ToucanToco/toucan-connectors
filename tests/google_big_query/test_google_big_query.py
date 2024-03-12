@@ -12,7 +12,7 @@ from google.cloud.bigquery.job.query import QueryJob
 from google.cloud.bigquery.table import RowIterator
 from google.cloud.exceptions import Unauthorized
 from google.oauth2.service_account import Credentials
-from pandas.util.testing import assert_frame_equal  # <-- for testing dataframes
+from pandas.testing import assert_frame_equal  # <-- for testing dataframes
 from pydantic import ValidationError
 from pytest_mock import MockerFixture, MockFixture
 

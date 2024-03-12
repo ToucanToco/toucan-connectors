@@ -16,6 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.11']
+        pandas-version: ['<2','>=2']
 
     steps:
     - uses: actions/checkout@v4
@@ -50,10 +51,13 @@ jobs:
     - name: Install odbc dependencies
       run: sudo bash toucan_connectors/install_scripts/odbc.sh
 
-    - name: install
+    - name: Install
       run: make install
 
-    - name: lint
+    - name: Install pandas ${{ matrix.pandas-version }}
+      run: pip install "pandas${{ matrix.pandas-version }}"
+
+    - name: Lint
       run: make lint
 
     - name: Cache docker images
@@ -73,8 +77,8 @@ jobs:
         BEARER_AIRCALL_AUTH_ID: ${{ secrets.BEARER_AIRCALL_AUTH_ID }}
 
     - name: SonarCloud Scan
-      # Only executed for one of the tested python version
-      if: ${{ always() && matrix['python-version'] == 3.10 }}
+      # Only executed for one of the tested python version and pandas version
+      if: ${{ always() && matrix['python-version'] == 3.11 && matrix['pandas-version'] == '<2' }}
       uses: sonarsource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
