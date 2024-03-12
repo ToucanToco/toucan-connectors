@@ -76,7 +76,7 @@ class _Api(Protocol):  # pragma: no cover
     def get_all(self) -> list[_HubSpotObject]: ...
 
 
-def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:
+def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:  # pragma: no cover
     """Some clients have a '{name}_api' attribute.
 
     basic_api seems to be the default fallback
