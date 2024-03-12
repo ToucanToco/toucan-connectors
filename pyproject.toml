@@ -47,6 +47,7 @@ pyarrow = {version = "*", optional = true}
 peakina = {version = ">=0.11,<0.13", optional = true}
 aiohttp = "^3.8.4"
 python-slugify = "^8.0.4"
+pandas = {version = "<2", python = "<3.12"}
 
 [tool.poetry.dev-dependencies]
 Authlib = "^1.0.1"
