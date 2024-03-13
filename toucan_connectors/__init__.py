@@ -94,6 +94,11 @@ CONNECTORS_REGISTRY = {
         "label": "Http API",
         "logo": "http_api/http-api.png",
     },
+    "HubspotPrivateApp": {
+        "connector": "hubspot_private_app.hubspot_connector.HubspotConnector",
+        "label": "Hubspot (Private App)",
+        "logo": "hubspot_private_app/hubspot.png",
+    },
     "MongoDB": {
         "connector": "mongo.mongo_connector.MongoConnector",
         "logo": "mongo/mongo-db.png",
