@@ -185,7 +185,8 @@ class SnowflakeConnector(
         cls,
         by_alias: bool = True,
         ref_template: str = DEFAULT_REF_TEMPLATE,
-        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
+        # mypy misinterprets type as the ToucanConnector.type field rather than the type keyword
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,  # type:ignore[valid-type]
         mode: JsonSchemaMode = "validation",
     ) -> dict[str, Any]:
         schema = super().model_json_schema(
