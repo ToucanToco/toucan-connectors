@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- Restored the `HubspotPrivateApp`, which was deleted by error in v6.0.0
+- Restored the `HubspotPrivateApp` connector, which was deleted by error in v6.0.0
 
 ## [6.0.0] 2024-03-12
 
