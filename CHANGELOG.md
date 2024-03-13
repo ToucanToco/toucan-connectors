@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Added support for Python 3.12
+
 ### Fixed
 
 - Restored the `HubspotPrivateApp` connector, which was deleted by error in v6.0.0

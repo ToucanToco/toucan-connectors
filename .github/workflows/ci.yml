@@ -15,8 +15,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11']
+        python-version: ['3.11', '3.12']
         pandas-version: ['<2','>=2']
+        # Pandas<2 is not supported on Python 3.12
+        exclude:
+          - python-version: '3.12'
+            pandas-version: '<2'
 
     steps:
     - uses: actions/checkout@v4
@@ -33,7 +37,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install freetds-dev libsasl2-dev libpq-dev
-        pip install poetry
+        pip install -U poetry virtualenv
         poetry config virtualenvs.create false
 
     - name: Install oracle dependencies
