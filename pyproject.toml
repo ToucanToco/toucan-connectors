@@ -20,7 +20,6 @@ python-slugify = ">=5.0.2"
 pandas = {version = "<2", python = "<3.12"}
 
 # Dependencies for extras
-bearer = {version = "3.1.0", optional = true}
 oauthlib = {version = "3.2.2", optional = true}
 requests-oauthlib = {version = "1.4.0", optional = true}
 awswrangler = {version = "^3.0.0", optional = true}
@@ -108,7 +107,6 @@ snowflake = ["snowflake-connector-python", "PyJWT", "pyarrow"]
 # All
 all = [
     "awswrangler",
-    "bearer",
     "clickhouse-driver",
     "cx-Oracle",
     "dataiku-api-client",

@@ -12,7 +12,9 @@ updates:
         dependency-type: "development"
     ignore:
       - dependency-name: "elasticsearch"
-        versions: ["8.x", "9.x"]
+        versions: [">=8"]
+      - dependency-name: "pandas"
+        versions: [">=2"]
   # poetry LTS
   - package-ecosystem: "pip"
     directory: "/"
