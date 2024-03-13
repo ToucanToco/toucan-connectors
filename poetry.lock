@@ -1554,6 +1554,26 @@ files = [
 pyparsing = {version = ">=2.4.2,<3.0.0 || >3.0.0,<3.0.1 || >3.0.1,<3.0.2 || >3.0.2,<3.0.3 || >3.0.3,<4", markers = "python_version > \"3.0\""}
 
 [[package]]
+name = "hubspot-api-client"
+version = "8.2.1"
+description = "HubSpot API client"
+optional = true
+python-versions = ">=3.7"
+files = [
+    {file = "hubspot-api-client-8.2.1.tar.gz", hash = "sha256:8c3f92674195b105a8c27b46205fdd67078754a334f296ca7c171c040acd8278"},
+    {file = "hubspot_api_client-8.2.1-py3-none-any.whl", hash = "sha256:aa1d368690b079a12c4ea0593d13d358177d85566bbb056c8d21075d9fb65a7f"},
+]
+
+[package.dependencies]
+certifi = "*"
+python-dateutil = "*"
+six = ">=1.10"
+urllib3 = ">=1.15"
+
+[package.extras]
+dev = ["black", "pytest"]
+
+[[package]]
 name = "identify"
 version = "2.5.33"
 description = "File identification library for Python"
@@ -3091,18 +3111,18 @@ dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
 name = "pytest-rerunfailures"
-version = "13.0"
+version = "14.0"
 description = "pytest plugin to re-run tests to eliminate flaky failures"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pytest-rerunfailures-13.0.tar.gz", hash = "sha256:e132dbe420bc476f544b96e7036edd0a69707574209b6677263c950d19b09199"},
-    {file = "pytest_rerunfailures-13.0-py3-none-any.whl", hash = "sha256:34919cb3fcb1f8e5d4b940aa75ccdea9661bade925091873b7c6fa5548333069"},
+    {file = "pytest-rerunfailures-14.0.tar.gz", hash = "sha256:4a400bcbcd3c7a4ad151ab8afac123d90eca3abe27f98725dc4d9702887d2e92"},
+    {file = "pytest_rerunfailures-14.0-py3-none-any.whl", hash = "sha256:4197bdd2eaeffdbf50b5ea6e7236f47ff0e44d1def8dae08e409f536d84e7b32"},
 ]
 
 [package.dependencies]
 packaging = ">=17.1"
-pytest = ">=7"
+pytest = ">=7.2"
 
 [[package]]
 name = "python-dateutil"
@@ -4296,7 +4316,7 @@ test = ["coverage[toml] (==5.2.1)", "flake8 (==3.8.3)", "flake8-blind-except (==
 xmlsec = ["xmlsec (>=0.6.1)"]
 
 [extras]
-all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "gspread", "lxml", "oauth2client", "oauthlib", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
+all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "gspread", "hubspot-api-client", "lxml", "oauth2client", "oauthlib", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
 awsathena = ["awswrangler"]
 azure-mssql = ["pyodbc"]
 clickhouse = ["clickhouse-driver"]
@@ -4309,6 +4329,7 @@ google-cloud-mysql = ["PyMySQL"]
 google-sheets = ["google-api-python-client"]
 google-spreadsheet = ["gspread", "oauth2client"]
 http-api = ["oauthlib", "requests-oauthlib", "xmltodict"]
+hubspot = ["hubspot-api-client"]
 mongo = ["pymongo"]
 mssql = ["pyodbc"]
 mssql-tlsv1-0 = ["pyodbc"]
@@ -4325,4 +4346,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "fabf8fe5e34fe2c37ad1476b7a6ebf32e05f5aed7d37a3dd0da91d3a14d092f4"
+content-hash = "ed2939330b39cb831655e2e882ac7de5216adf38f01abf2bdc113dda650b3002"
