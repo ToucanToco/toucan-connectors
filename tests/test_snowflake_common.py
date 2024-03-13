@@ -1,4 +1,3 @@
-import sys
 from sqlite3 import ProgrammingError
 from unittest.mock import patch
 
@@ -266,8 +265,8 @@ def test_get_slice_metadata(snowflake_datasource, mocker):
     connect.cursor().execute().fetchall.return_value = [{"c1": 2}]
     ds: DataSlice = SnowflakeCommon().get_slice(connect, snowflake_datasource)
 
-    # big fun
-    expected_memory_size = 1364 if sys.version_info.minor == 11 else 1360
+    # testing this is stupid
+    expected_memory_size = 1364
     assert ds.stats.df_memory_size == expected_memory_size
     assert ds.pagination_info.pagination_info.total_rows == 14
 
