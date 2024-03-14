@@ -1,6 +1,6 @@
 from copy import deepcopy
 from enum import Enum
-from typing import List, Union
+from typing import List
 from urllib.parse import urlparse
 
 import pandas as pd
@@ -112,9 +112,9 @@ class SearchMethod(str, Enum):
 
 
 class ElasticsearchDataSource(ToucanDataSource):
-    search_method: SearchMethod
-    index: str = None
-    body: Union[dict, list]
+    search_method: SearchMethod = Field(SearchMethod.search, title="Search method")
+    index: str | None = Field(None, title="Index")
+    body: dict | list = Field({}, description="Body of elasticsearch query", widget="json")
 
 
 class ElasticsearchConnector(ToucanConnector, data_source_model=ElasticsearchDataSource):
