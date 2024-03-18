@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [6.1.1] 2024-03-18
+
+### Fixed
+
+- Elasticsearch: force `widget="json"` on `body` so the form is properly filled when updating a data source
+
 ## [6.1.0] 2024-03-13
 
 ### Changed
