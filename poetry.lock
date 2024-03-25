@@ -1178,13 +1178,13 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2,<1.0.dev0)"]
 
 [[package]]
 name = "google-api-python-client"
-version = "2.122.0"
+version = "2.123.0"
 description = "Google API Client Library for Python"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "google-api-python-client-2.122.0.tar.gz", hash = "sha256:77447bf2d6b6ea9e686fd66fc2f12ee7a63e3889b7427676429ebf09fcb5dcf9"},
-    {file = "google_api_python_client-2.122.0-py2.py3-none-any.whl", hash = "sha256:a5953e60394b77b98bcc7ff7c4971ed784b3b693e9a569c176eaccb1549330f2"},
+    {file = "google-api-python-client-2.123.0.tar.gz", hash = "sha256:a17226b02f71de581afe045437b441844110a9cd91580b73549d41108cf1b9f0"},
+    {file = "google_api_python_client-2.123.0-py2.py3-none-any.whl", hash = "sha256:1c2bcaa846acf5bac4d6f244d8373d4de9de73d64eb6e77b56767ab4cf681419"},
 ]
 
 [package.dependencies]
@@ -3344,13 +3344,13 @@ six = "*"
 
 [[package]]
 name = "requests-oauthlib"
-version = "1.4.0"
+version = "2.0.0"
 description = "OAuthlib authentication support for Requests."
 optional = true
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+python-versions = ">=3.4"
 files = [
-    {file = "requests-oauthlib-1.4.0.tar.gz", hash = "sha256:acee623221e4a39abcbb919312c8ff04bd44e7e417087fb4bd5e2a2f53d5e79a"},
-    {file = "requests_oauthlib-1.4.0-py2.py3-none-any.whl", hash = "sha256:7a3130d94a17520169e38db6c8d75f2c974643788465ecc2e4b36d288bf13033"},
+    {file = "requests-oauthlib-2.0.0.tar.gz", hash = "sha256:b3dffaebd884d8cd778494369603a9e7b58d29111bf6b41bdc2dcd87203af4e9"},
+    {file = "requests_oauthlib-2.0.0-py2.py3-none-any.whl", hash = "sha256:7dd8a5c40426b779b0868c404bdef9768deccf22749cde15852df527e6269b36"},
 ]
 
 [package.dependencies]
@@ -4346,4 +4346,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "e882133338a608f9fb630ca624995c39baca65b34a116155b2c466d54ff0e338"
+content-hash = "d39b52afc1afaf2b6a94ebbb40c26627b22b3d4d48b8b11680b11628f57b1b6b"
