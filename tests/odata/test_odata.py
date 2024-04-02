@@ -5,6 +5,7 @@ from odata.metadata import MetaData
 from toucan_connectors.odata.odata_connector import ODataConnector, ODataDataSource
 
 
+@pytest.mark.skip(reason="This tests makes a request to an API that returns a 500")
 def test_get_df(mocker):
     """
     It should make a query to the canonical service and return the right results
