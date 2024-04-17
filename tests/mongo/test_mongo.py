@@ -684,6 +684,7 @@ def test_get_form_query_with_good_database(mongo_connector):
         "title": "collection",
         "type": "string",
         "const": "test_col",
+        "enum": ["test_col"],
     }
 
 
