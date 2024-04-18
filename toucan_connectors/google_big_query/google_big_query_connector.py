@@ -376,8 +376,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    {dataset_id}.INFORMATION_SCHEMA.COLUMNS C
-    JOIN {dataset_id}.INFORMATION_SCHEMA.TABLES T
+    `{dataset_id}`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `{dataset_id}`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'

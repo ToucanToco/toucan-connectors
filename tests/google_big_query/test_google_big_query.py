@@ -399,8 +399,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    foooo.INFORMATION_SCHEMA.COLUMNS C
-    JOIN foooo.INFORMATION_SCHEMA.TABLES T
+    `foooo`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `foooo`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
@@ -416,8 +416,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    baarrrr.INFORMATION_SCHEMA.COLUMNS C
-    JOIN baarrrr.INFORMATION_SCHEMA.TABLES T
+    `baarrrr`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `baarrrr`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
@@ -433,8 +433,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    taar.INFORMATION_SCHEMA.COLUMNS C
-    JOIN taar.INFORMATION_SCHEMA.TABLES T
+    `taar`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `taar`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
@@ -460,8 +460,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    foooo.INFORMATION_SCHEMA.COLUMNS C
-    JOIN foooo.INFORMATION_SCHEMA.TABLES T
+    `foooo`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `foooo`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
@@ -478,8 +478,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    baarrrr.INFORMATION_SCHEMA.COLUMNS C
-    JOIN baarrrr.INFORMATION_SCHEMA.TABLES T
+    `baarrrr`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `baarrrr`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
@@ -496,8 +496,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    taar.INFORMATION_SCHEMA.COLUMNS C
-    JOIN taar.INFORMATION_SCHEMA.TABLES T
+    `taar`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `taar`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
@@ -528,8 +528,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    foooo.INFORMATION_SCHEMA.COLUMNS C
-    JOIN foooo.INFORMATION_SCHEMA.TABLES T
+    `foooo`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `foooo`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
@@ -642,8 +642,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    foooo.INFORMATION_SCHEMA.COLUMNS C
-    JOIN foooo.INFORMATION_SCHEMA.TABLES T
+    `foooo`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `foooo`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
@@ -659,8 +659,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    baarrrr.INFORMATION_SCHEMA.COLUMNS C
-    JOIN baarrrr.INFORMATION_SCHEMA.TABLES T
+    `baarrrr`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `baarrrr`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
@@ -680,8 +680,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    foooo.INFORMATION_SCHEMA.COLUMNS C
-    JOIN foooo.INFORMATION_SCHEMA.TABLES T
+    `foooo`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `foooo`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
@@ -701,8 +701,8 @@ SELECT
     C.column_name,
     C.data_type
 FROM
-    baarrrr.INFORMATION_SCHEMA.COLUMNS C
-    JOIN baarrrr.INFORMATION_SCHEMA.TABLES T
+    `baarrrr`.INFORMATION_SCHEMA.COLUMNS C
+    JOIN `baarrrr`.INFORMATION_SCHEMA.TABLES T
         ON C.table_name = T.table_name
 WHERE
     IS_SYSTEM_DEFINED = 'NO'
