@@ -37,7 +37,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install freetds-dev libsasl2-dev libpq-dev
-        pip install -U poetry virtualenv setuptools
+        pip install -U poetry virtualenv setuptools packaging
         poetry config virtualenvs.create false
 
     - name: Install oracle dependencies
