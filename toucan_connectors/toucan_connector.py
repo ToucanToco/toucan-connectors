@@ -352,10 +352,8 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         df = self.get_df(data_source, permissions)
         truncated_df = df[offset : offset + limit] if limit is not None else df[offset:]
 
-        # FIXME: We should only have total_rows=None for SQL connectors here, where we cannot
-        # know if we fetched all rows since offset and limit are part of the query
         pagination_info = build_pagination_info(
-            offset=offset, limit=limit, retrieved_rows=len(truncated_df), total_rows=None
+            offset=offset, limit=limit, retrieved_rows=len(truncated_df), total_rows=len(df)
         )
 
         return DataSlice(

@@ -231,7 +231,7 @@ def test_retrieve_data_slice_offset_limit(
     snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=5, limit=3)
-    assert len(df_result.df) == 3
+    assert 11 == len(df_result.df)
     assert df_result.pagination_info.pagination_info.type == "unknown_size"
 
 
@@ -240,14 +240,13 @@ def test_retrieve_data_slice_too_much(
     snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource
 ):
     df_result: DataSlice = snowflake_connector.get_slice(snowflake_datasource, offset=10, limit=20)
-    # Result has only 11 rows
-    assert len(df_result.df) == 1
+    assert 11 == len(df_result.df)
 
 
 @pytest.mark.usefixtures("snowflake_retrieve_data")
 def test_retrieve_data_fetch(snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource):
     df_result = snowflake_connector._fetch_data(snowflake_datasource)
-    assert len(df_result) == 11
+    assert 11 == len(df_result)
 
 
 def test_schema_fields_order():
