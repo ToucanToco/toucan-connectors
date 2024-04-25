@@ -249,22 +249,6 @@ def test_retrieve_data_fetch(snowflake_connector: SnowflakeConnector, snowflake_
     assert 11 == len(df_result)
 
 
-@pytest.mark.usefixtures("snowflake_retrieve_data")
-def test_retrieve_data_fetch_offset_limit(
-    snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource
-):
-    df_result = snowflake_connector._fetch_data(snowflake_datasource, offset=5, limit=3)
-    assert 11 == len(df_result)
-
-
-@pytest.mark.usefixtures("snowflake_retrieve_data")
-def test_retrieve_data_fetch_too_much(
-    snowflake_connector: SnowflakeConnector, snowflake_datasource: SnowflakeDataSource
-):
-    df_result = snowflake_connector._fetch_data(snowflake_datasource, offset=10, limit=20)
-    assert 11 == len(df_result)
-
-
 def test_schema_fields_order():
     schema_props_keys = list(JsonWrapper.loads(SnowflakeConnector.schema_json())["properties"].keys())
     ordered_keys = [

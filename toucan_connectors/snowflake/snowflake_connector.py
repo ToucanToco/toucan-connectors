@@ -410,17 +410,10 @@ class SnowflakeConnector(
         result = self._execute_query(query, database=database_name)
         return result["name"].to_list() if "name" in result.columns else []
 
-    def _fetch_data(
-        self,
-        data_source: SnowflakeDataSource,
-        offset: int | None = None,
-        limit: int | None = None,
-    ) -> pd.DataFrame:
+    def _fetch_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
         data_source = self._set_warehouse(data_source)
 
-        prepared_query, prepared_params = SqlQueryHelper.prepare_limit_query(
-            data_source.query, data_source.parameters, offset=offset, limit=limit
-        )
+        prepared_query, prepared_params = SqlQueryHelper.prepare_query(data_source.query, data_source.parameters)
         return self._execute_query(
             prepared_query,
             prepared_params,
@@ -439,8 +432,9 @@ class SnowflakeConnector(
         limit: int | None = None,
         get_row_count: bool | None = False,
     ) -> DataSlice:
-        # We assume permissions have been applied earlier
-        df = self._fetch_data(data_source, offset=offset, limit=limit)
+        # We assume permissions have been applied earlier and that OFFSET and LIMIT have been
+        # applied by the PyPika translator
+        df = self._fetch_data(data_source)
         return DataSlice(
             df=df,
             pagination_info=build_pagination_info(offset=0, limit=limit, total_rows=None, retrieved_rows=len(df)),
