@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Snowflake: it is now assumed that the weaverbird translator takes care of adding OFFSET and LIMIT to queries
+
 ## [6.1.2] 2024-04-18
 
 ### Fixed
