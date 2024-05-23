@@ -643,7 +643,7 @@ _COMMON_PARAMS = {
         (
             """SELECT %(user.email)s, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}} FROM City WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",
             _COMMON_PARAMS,
-            'SELECT %(__QUERY_PARAM_0__)s, %(__QUERY_PARAM_1__)s, %(__QUERY_PARAM_2__)s,  FROM City WHERE LifeExpectancy > %(__QUERY_PARAM_3__)s',
+            'SELECT %(__QUERY_PARAM_0__)s, %(__QUERY_PARAM_1__)s, %(__QUERY_PARAM_2__)s FROM City WHERE LifeExpectancy > %(__QUERY_PARAM_3__)s',
             {
                 '__QUERY_PARAM_0__': 'john@doe.com',
                 '__QUERY_PARAM_1__': 26,
@@ -656,7 +656,9 @@ _COMMON_PARAMS = {
 def test_prepare_query_and_params_for_pymysql(
     query: str, params: dict[str, Any], expected_query: str, expected_params: dict[str, Any]
 ) -> None:
-    assert prepare_query_and_params_for_pymysql(query, params) == (expected_query, expected_params)
+    query, params = prepare_query_and_params_for_pymysql(query, params)
+    assert query == expected_query
+    assert params == expected_params
 
 
 @pytest.mark.parametrize(

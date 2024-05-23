@@ -12,7 +12,12 @@ from cached_property import cached_property_with_ttl
 from pydantic import Field, SecretStr, constr, create_model, validator
 from pymysql.constants import CR, ER
 
-from toucan_connectors.common import ConnectorStatus, pandas_read_sql
+from toucan_connectors.common import (
+    ConnectorStatus,
+    convert_to_printf_templating_style,
+    nosql_apply_parameters_to_query,
+    pandas_read_sql,
+)
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
     TableInfo,
@@ -96,6 +101,9 @@ class SSLMode(str, Enum):
     REQUIRED = 'REQUIRED'
 
 
+# Matches {{}} with an unlimited number of characters between the brackets, as few times as
+# possible, ignoring whitespace
+_JINJA_PARAMS_REGEX = re.compile(r'{{\s*(.*?)\s*}}')
 # Matches %() suffixed with s, d, or f, and captures the variable name (as few chars as possibl),
 # ignoring trailing whitespace
 _PYFORMAT_PARAMS_REGEX = re.compile(r'%\(\s*(.*?)\s*\)([sdf])')
@@ -120,15 +128,35 @@ def prepare_query_and_params_for_pymysql(
        to support both queries interpolated with jinja (the modern way to do it), and queries with
        pyformat params (we might have some leftovers of that). See the PEP for details on supported
        param styles: https://peps.python.org/pep-0249/#paramstyle
-    2. Find all jinja variables containing dots or "['" or '["' . We want to support access by
-       attribute and by key
+    2. Find all jinja variables
     3. Rename the variables in the query string and build a parameter dict mapping the renamed
        variables to what they evaluate to (we will evaluate the expressions with jinja)
     4. convert the query back to pyformat param style
     """
-    # %()s -> {{}}
+    # %()[sdf] -> {{}}
     jinja_query = _pyformat_params_to_jinja(query)
-    raise NotImplementedError
+
+    # finding all jinja params as re.Match objects
+    variable_matches = _JINJA_PARAMS_REGEX.finditer(jinja_query)
+    substituted_params = {}
+    substituted_query = jinja_query
+    # Iterating over reversed matches, as we rebuild the string on-the-fly using match indices, so
+    # we need to destroy the end first in order not to impact other matches
+    for param_idx, match_ in reversed(list(enumerate(variable_matches))):
+        param_name = f'__QUERY_PARAM_{param_idx}__'
+        param_expr = match_.group()
+        # evalutating the jinja expr to get the param value
+        param_value = nosql_apply_parameters_to_query(param_expr, params)
+        substituted_params[param_name] = param_value
+        # replacing the previous expr with the new param name
+        new_param_repr = '{{ ' + param_name + ' }}'
+        substituted_query = (
+            substituted_query[: match_.start()] + new_param_repr + substituted_query[match_.end() :]
+        )
+
+    # {{}} -> %()s
+    final_query = convert_to_printf_templating_style(substituted_query)
+    return final_query, substituted_params
 
 
 class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineConnector):
