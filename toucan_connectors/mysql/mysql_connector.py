@@ -1,4 +1,5 @@
 import os
+import re
 from enum import Enum
 from itertools import groupby as groupby
 from tempfile import NamedTemporaryFile
@@ -95,9 +96,15 @@ class SSLMode(str, Enum):
     REQUIRED = 'REQUIRED'
 
 
+# Matches %() suffixed with s, d, or f, and captures the variable name (as few chars as possibl),
+# ignoring trailing whitespace
+_PYFORMAT_PARAMS_REGEX = re.compile(r'%\(\s*(.*?)\s*\)([sdf])')
+
+
 def _pyformat_params_to_jinja(query: str) -> str:
     """Convert %()[sdf] params to {{}}"""
-    raise NotImplementedError
+    # subsitute matches with {{ <content of the first capture group> }}
+    return _PYFORMAT_PARAMS_REGEX.sub(r'{{ \g<1> }}', query)
 
 
 def prepare_query_and_params_for_pymysql(
