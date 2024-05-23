@@ -638,6 +638,18 @@ _COMMON_PARAMS = {
                 '__QUERY_PARAM_2__': 26,
             },
         ),
+        # deep nesting
+        (
+            """SELECT %(user.email)s, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}} FROM City WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",
+            _COMMON_PARAMS,
+            'SELECT %(__QUERY_PARAM_0__)s, %(__QUERY_PARAM_1__)s, %(__QUERY_PARAM_2__)s,  FROM City WHERE LifeExpectancy > %(__QUERY_PARAM_3__)s',
+            {
+                '__QUERY_PARAM_0__': 'john@doe.com',
+                '__QUERY_PARAM_1__': 26,
+                '__QUERY_PARAM_2__': 2,
+                '__QUERY_PARAM_3__': 50,  # 5 * 10
+            },
+        ),
     ],
 )
 def test_prepare_query_and_params_for_pymysql(
