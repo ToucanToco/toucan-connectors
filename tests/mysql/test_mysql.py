@@ -691,3 +691,101 @@ def test_prepare_query_and_params_for_pymysql(
 )
 def test__pyformat_params_to_jinja(query: str, expected_query: str) -> None:
     assert _pyformat_params_to_jinja(query) == expected_query
+
+
+@pytest.mark.parametrize(
+    'query,params,expected',
+    [
+        # simple pyformat
+        (
+            'SELECT * FROM City WHERE Population > %(max_pop)s',
+            {'max_pop': 5_000_000},
+            {
+                'CountryCode': ['BRA'],
+                'District': ['Rio de Janeiro'],
+                'ID': [207],
+                'Name': ['Rio de Janeiro'],
+                'Population': [5598953],
+            },
+        ),
+        # simple jinja
+        (
+            'SELECT * FROM City WHERE Population > {{ max_pop }}',
+            {'max_pop': 5_000_000},
+            {
+                'CountryCode': ['BRA'],
+                'District': ['Rio de Janeiro'],
+                'ID': [207],
+                'Name': ['Rio de Janeiro'],
+                'Population': [5598953],
+            },
+        ),
+        # simple pyformat with "real-life" params
+        (
+            'SELECT * FROM City WHERE Population > %(max_pop)s',
+            _COMMON_PARAMS,
+            {
+                'CountryCode': ['BRA'],
+                'District': ['Rio de Janeiro'],
+                'ID': [207],
+                'Name': ['Rio de Janeiro'],
+                'Population': [5598953],
+            },
+        ),
+        # simple jinja with "real-life" params
+        (
+            'SELECT * FROM City WHERE Population > {{max_pop}}',
+            _COMMON_PARAMS,
+            {
+                'CountryCode': ['BRA'],
+                'District': ['Rio de Janeiro'],
+                'ID': [207],
+                'Name': ['Rio de Janeiro'],
+                'Population': [5598953],
+            },
+        ),
+        # repeated param. A double occurence should result in two distinct parameters
+        (
+            'SELECT {{max_pop}}, City.* FROM City WHERE Population > {{max_pop}}',
+            _COMMON_PARAMS,
+            {
+                '5000000': [5_000_000],
+                'CountryCode': ['BRA'],
+                'District': ['Rio de Janeiro'],
+                'ID': [207],
+                'Name': ['Rio de Janeiro'],
+                'Population': [5598953],
+            },
+        ),
+        # nesting and mixed jinja/qmark
+        (
+            """SELECT %(manif)s, {{ user['email']   }}, Country.Name FROM Country WHERE LifeExpectancy > {{user.attributes["age_years"]}}""",
+            _COMMON_PARAMS,
+            {
+                '2025-05-01 00:00:00': ['2025-05-01 00:00:00'],
+                'Name': ['Afghanistan'],
+                'john@doe.com': ['john@doe.com'],
+            },
+        ),
+        # deep nesting
+        (
+            """SELECT %(user.email)s, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}}, Name FROM Country WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",
+            _COMMON_PARAMS,
+            # first country with LifeExpectancy > 50
+            {'2': [2], '26': [26], 'Name': ['Anguilla'], 'john@doe.com': ['john@doe.com']},
+        ),
+    ],
+)
+def test_get_slice_with_variables(
+    query: str,
+    params: dict[str, Any],
+    expected: dict[str, Any],
+    mysql_connector: MySQLConnector,
+    mysql_datasource: MySQLDataSource,
+) -> None:
+    mysql_datasource.query = query
+    mysql_datasource.parameters = params
+
+    data_slice = mysql_connector.get_slice(mysql_datasource, limit=1, offset=1)
+    as_dict = data_slice.df.to_dict(orient='list')
+    assert as_dict == expected
