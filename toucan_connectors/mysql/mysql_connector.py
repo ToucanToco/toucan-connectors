@@ -401,13 +401,20 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
 
         connection = self._connect(database=datasource.database)
 
-        # ----- Prepare -----
-        # As long as frontend builds queries with '"' we need to replace them
-        query = datasource.query.replace('"', '`')
-        MySQLConnector.logger.debug(f'Executing query : {datasource.query}')
         query_params = datasource.parameters or {}
+        query = datasource.query
 
-        df = pandas_read_sql(query, con=connection, params=query_params)
+        # ----- Prepare -----
+        prepared_query, prepared_params = prepare_query_and_params_for_pymysql(query, query_params)
+
+        # As long as frontend builds queries with '"' we need to replace them
+        backticked_query = prepared_query.replace('"', '`')
+        MySQLConnector.logger.debug(
+            f'Executing query : {query} with params {query_params}. '
+            f'Prepared query: {prepared_query}. Prepared params: {prepared_params}'
+        )
+
+        df = pandas_read_sql(backticked_query, con=connection, params=prepared_params)
         df = self.decode_df(df)
         df = handle_date_0(df)
         connection.close()
