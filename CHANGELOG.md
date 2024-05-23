@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix
+
+- MySQL: Allow dict parameters to be used with PyMySQL 1.1.1
+
 ## [6.1.2] 2024-04-18
 
 ### Fixed

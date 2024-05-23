@@ -1,3 +1,5 @@
+# ruff: noqa: E501
+from datetime import datetime
 from typing import Any
 
 import pandas as pd
@@ -11,7 +13,9 @@ from toucan_connectors.mysql.mysql_connector import (
     MySQLConnector,
     MySQLDataSource,
     NoQuerySpecified,
+    _pyformat_params_to_jinja,
     handle_date_0,
+    prepare_query_and_params_for_pymysql,
 )
 from toucan_connectors.toucan_connector import MalformedVersion, UnavailableVersion
 
@@ -19,9 +23,15 @@ from toucan_connectors.toucan_connector import MalformedVersion, UnavailableVers
 @pytest.fixture(scope="module")
 def mysql_server(service_container):
     def check(host_port):
-        conn = pymysql.connect(host="127.0.0.1", port=host_port, user="ubuntu", password="ilovetoucan")
+        conn = pymysql.connect(
+            host="127.0.0.1",
+            port=host_port,
+            user="ubuntu",
+            password="ilovetoucan",
+            database="mysql_db",
+        )
         cur = conn.cursor()
-        cur.execute("SELECT 1;")
+        cur.execute("SELECT * FROM City LIMIT 1;")
         cur.close()
         conn.close()
 
@@ -196,7 +206,7 @@ def test_get_df(mocker: MockerFixture):
     )
     expected_query_str = (
         "select * from Country where test LIKE '%%test example%%' "
-        "AND test 'ok22%%' AND test LIKE '%(var)s' OR test LIKE '%%test' "
+        "AND test 'ok22%%' AND test LIKE '%(__QUERY_PARAM_0__)s' OR test LIKE '%%test' "
         "OR test LIKE '(this is %% a test'"
     )
     reasq.reset_mock()
@@ -207,50 +217,66 @@ def test_get_df(mocker: MockerFixture):
             "name": "Some MySQL provider",
             "database": "mysql_db",
             "query": query_str,
+            "parameters": {"var": 42},
         }
     )
     mysql_connector.get_df(data_source)
     reasq.assert_called_once_with(
         expected_query_str,
         con=snock(),
-        params={},
+        params={"__QUERY_PARAM_0__": 42},
     )
 
 
-def test_get_df_db(mysql_connector):
-    """ " It should extract the table City without merges"""
-    data_source_spec = {
-        "domain": "MySQL test",
-        "type": "external_database",
-        "name": "Some MySQL provider",
-        "database": "mysql_db",
-        "query": "SELECT * FROM City WHERE Population > %(max_pop)s",
-        "parameters": {"max_pop": 5000000},
-    }
+@pytest.fixture
+def mysql_datasource() -> MySQLDataSource:
+    return MySQLDataSource(
+        **{
+            "domain": "MySQL test",
+            "type": "external_database",
+            "name": "Some MySQL provider",
+            "database": "mysql_db",
+            "query": "SELECT * FROM City WHERE Population > {{max_pop}}",
+            "parameters": {"max_pop": 5_000_000},
+        }
+    )
 
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "SELECT * FROM City WHERE Population > %(max_pop)s",
+        "SELECT * FROM City WHERE Population > {{ max_pop }}",
+    ],
+)
+def test_get_df_db(mysql_connector: MySQLConnector, mysql_datasource: MySQLDataSource, query: str):
+    """It should extract the table City without merges.
+
+    It should work with both jinja and pyformat paramstyle
+    """
+
+    mysql_datasource.query = query
     expected_columns = {"ID", "Name", "CountryCode", "District", "Population"}
-    data_source = MySQLDataSource(**data_source_spec)
-    df = mysql_connector.get_df(data_source)
+    df = mysql_connector.get_df(mysql_datasource)
 
     assert not df.empty
     assert set(df.columns) == expected_columns
     assert df.shape == (24, 5)
 
 
-def test_get_df_forbidden_table_interpolation(mysql_connector):
-    data_source_spec = {
-        "domain": "MySQL test",
-        "type": "external_database",
-        "name": "Some MySQL provider",
-        "database": "mysql_db",
-        "query": "SELECT * FROM %(tablename)s WHERE Population > 5000000",
-        "parameters": {"tablename": "City"},
+def test_get_df_with_dict_parameter(mysql_connector: MySQLConnector, mysql_datasource: MySQLDataSource):
+    """It should work with dict parameters"""
+    # different kinds of param formatting on purpose
+    mysql_datasource.query = 'SELECT {{user.username}} "username", {{ today}} "today" FROM City WHERE Population > {{ user.attributes.population }}'
+    mysql_datasource.parameters = {
+        "user": {"username": "john@doe.com", "groups": [], "attributes": {"population": 5_000_000}},
+        "today": datetime(2024, 5, 22, 12, 3),
     }
 
-    data_source = MySQLDataSource(**data_source_spec)
-    with pytest.raises(pd.io.sql.DatabaseError) as e:
-        mysql_connector.get_df(data_source)
-    assert "interpolating table name is forbidden" in str(e.value)
+    df = mysql_connector.get_df(mysql_datasource)
+    assert df.columns.to_list() == ["username", "today"]
+    assert df["username"].to_list() == ["john@doe.com"] * 24
+    assert df["today"].to_list() == ["2024-05-22 12:03:00"] * 24
 
 
 def test_decode_df():
@@ -538,3 +564,212 @@ def test_ssl_parameters_required_mode(mocker: MockerFixture):
     assert kwargs["ssl_verify_cert"] is True
     for arg in ("ssl_ca", "ssl_cert", "ssl_key"):
         assert arg not in kwargs
+
+
+_COMMON_PARAMS = {
+    "max_pop": 5_000_000,
+    "user": {
+        "email": "john@doe.com",
+        "attributes": {"age_years": 26, "fib": [1, 1, 2, 3, 5, 8]},
+        "created_at": datetime(1997, 1, 1, 7, 8, 9),
+    },
+    "manif": datetime(2025, 5, 1),
+}
+
+
+@pytest.mark.parametrize(
+    "query,params,expected_query,expected_params",
+    [
+        # simple pyformat
+        (
+            "SELECT * FROM City WHERE Population > %(max_pop)s",
+            {"max_pop": 5_000_000},
+            "SELECT * FROM City WHERE Population > %(__QUERY_PARAM_0__)s",
+            {"__QUERY_PARAM_0__": 5_000_000},
+        ),
+        # simple jinja
+        (
+            "SELECT * FROM City WHERE Population > {{ max_pop }}",
+            {"max_pop": 5_000_000},
+            "SELECT * FROM City WHERE Population > %(__QUERY_PARAM_0__)s",
+            {"__QUERY_PARAM_0__": 5_000_000},
+        ),
+        # simple pyformat with "real-life" params
+        (
+            "SELECT * FROM City WHERE Population > %(max_pop)s",
+            _COMMON_PARAMS,
+            "SELECT * FROM City WHERE Population > %(__QUERY_PARAM_0__)s",
+            {"__QUERY_PARAM_0__": 5_000_000},
+        ),
+        # simple jinja with "real-life" params
+        (
+            "SELECT * FROM City WHERE Population > {{max_pop}}",
+            _COMMON_PARAMS,
+            "SELECT * FROM City WHERE Population > %(__QUERY_PARAM_0__)s",
+            {"__QUERY_PARAM_0__": 5_000_000},
+        ),
+        # repeated param. A double occurence should result in two distinct parameters
+        (
+            "SELECT {{max_pop}}, City.* FROM City WHERE Population > {{max_pop}}",
+            _COMMON_PARAMS,
+            "SELECT %(__QUERY_PARAM_0__)s, City.* FROM City WHERE Population > %(__QUERY_PARAM_1__)s",
+            {"__QUERY_PARAM_0__": 5_000_000, "__QUERY_PARAM_1__": 5_000_000},
+        ),
+        # nesting and mixed jinja/qmark
+        (
+            """SELECT %(manif)s, {{ user['email']   }}, City.* FROM City WHERE LifeExpectancy > {{user.attributes["age_years"]}}""",
+            _COMMON_PARAMS,
+            "SELECT %(__QUERY_PARAM_0__)s, %(__QUERY_PARAM_1__)s, City.* FROM City WHERE LifeExpectancy > %(__QUERY_PARAM_2__)s",
+            {
+                "__QUERY_PARAM_0__": datetime(2025, 5, 1),
+                "__QUERY_PARAM_1__": "john@doe.com",
+                "__QUERY_PARAM_2__": 26,
+            },
+        ),
+        # deep nesting
+        (
+            """SELECT %(user.email)s, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}} FROM City WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",
+            _COMMON_PARAMS,
+            "SELECT %(__QUERY_PARAM_0__)s, %(__QUERY_PARAM_1__)s, %(__QUERY_PARAM_2__)s FROM City WHERE LifeExpectancy > %(__QUERY_PARAM_3__)s",
+            {
+                "__QUERY_PARAM_0__": "john@doe.com",
+                "__QUERY_PARAM_1__": 26,
+                "__QUERY_PARAM_2__": 2,
+                "__QUERY_PARAM_3__": 50,  # 5 * 10
+            },
+        ),
+    ],
+)
+def test_prepare_query_and_params_for_pymysql(
+    query: str, params: dict[str, Any], expected_query: str, expected_params: dict[str, Any]
+) -> None:
+    query, params = prepare_query_and_params_for_pymysql(query, params)
+    assert query == expected_query
+    assert params == expected_params
+
+
+@pytest.mark.parametrize(
+    "query,expected_query",
+    [
+        (
+            "SELECT * FROM City WHERE Population > %(max_pop)s",
+            "SELECT * FROM City WHERE Population > {{ max_pop }}",
+        ),
+        (
+            "SELECT * FROM City WHERE Population > {{ max_pop }}",
+            "SELECT * FROM City WHERE Population > {{ max_pop }}",
+        ),
+        (
+            "SELECT %(max_pop)s, City.* FROM City WHERE Population > %(max_pop)d",
+            "SELECT {{ max_pop }}, City.* FROM City WHERE Population > {{ max_pop }}",
+        ),
+        (
+            """SELECT %( manif   )s, {{ user['email']   }}, City.* FROM City WHERE LifeExpectancy > {{user.attributes["age_years"]}}""",
+            """SELECT {{ manif }}, {{ user['email']   }}, City.* FROM City WHERE LifeExpectancy > {{user.attributes["age_years"]}}""",
+        ),
+        (
+            """SELECT %(user.email)s, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}} FROM City WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",
+            """SELECT {{ user.email }}, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}} FROM City WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",
+        ),
+    ],
+)
+def test__pyformat_params_to_jinja(query: str, expected_query: str) -> None:
+    assert _pyformat_params_to_jinja(query) == expected_query
+
+
+@pytest.mark.parametrize(
+    "query,params,expected",
+    [
+        # simple pyformat
+        (
+            "SELECT * FROM City WHERE Population > %(max_pop)s",
+            {"max_pop": 5_000_000},
+            {
+                "CountryCode": ["BRA"],
+                "District": ["Rio de Janeiro"],
+                "ID": [207],
+                "Name": ["Rio de Janeiro"],
+                "Population": [5598953],
+            },
+        ),
+        # simple jinja
+        (
+            "SELECT * FROM City WHERE Population > {{ max_pop }}",
+            {"max_pop": 5_000_000},
+            {
+                "CountryCode": ["BRA"],
+                "District": ["Rio de Janeiro"],
+                "ID": [207],
+                "Name": ["Rio de Janeiro"],
+                "Population": [5598953],
+            },
+        ),
+        # simple pyformat with "real-life" params
+        (
+            "SELECT * FROM City WHERE Population > %(max_pop)s",
+            _COMMON_PARAMS,
+            {
+                "CountryCode": ["BRA"],
+                "District": ["Rio de Janeiro"],
+                "ID": [207],
+                "Name": ["Rio de Janeiro"],
+                "Population": [5598953],
+            },
+        ),
+        # simple jinja with "real-life" params
+        (
+            "SELECT * FROM City WHERE Population > {{max_pop}}",
+            _COMMON_PARAMS,
+            {
+                "CountryCode": ["BRA"],
+                "District": ["Rio de Janeiro"],
+                "ID": [207],
+                "Name": ["Rio de Janeiro"],
+                "Population": [5598953],
+            },
+        ),
+        # repeated param. A double occurence should result in two distinct parameters
+        (
+            "SELECT {{max_pop}}, City.* FROM City WHERE Population > {{max_pop}}",
+            _COMMON_PARAMS,
+            {
+                "5000000": [5_000_000],
+                "CountryCode": ["BRA"],
+                "District": ["Rio de Janeiro"],
+                "ID": [207],
+                "Name": ["Rio de Janeiro"],
+                "Population": [5598953],
+            },
+        ),
+        # nesting and mixed jinja/qmark
+        (
+            """SELECT %(manif)s, {{ user['email']   }}, Country.Name FROM Country WHERE LifeExpectancy > {{user.attributes["age_years"]}}""",
+            _COMMON_PARAMS,
+            {
+                "2025-05-01 00:00:00": ["2025-05-01 00:00:00"],
+                "Name": ["Afghanistan"],
+                "john@doe.com": ["john@doe.com"],
+            },
+        ),
+        # deep nesting
+        (
+            """SELECT %(user.email)s, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}}, Name FROM Country WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",
+            _COMMON_PARAMS,
+            # first country with LifeExpectancy > 50
+            {"2": [2], "26": [26], "Name": ["Anguilla"], "john@doe.com": ["john@doe.com"]},
+        ),
+    ],
+)
+def test_get_slice_with_variables(
+    query: str,
+    params: dict[str, Any],
+    expected: dict[str, Any],
+    mysql_connector: MySQLConnector,
+    mysql_datasource: MySQLDataSource,
+) -> None:
+    mysql_datasource.query = query
+    mysql_datasource.parameters = params
+
+    data_slice = mysql_connector.get_slice(mysql_datasource, limit=1, offset=1)
+    as_dict = data_slice.df.to_dict(orient="list")
+    assert as_dict == expected
