@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- MySQL: Add an optional `charset_collation` to the connector, as PyMySQL >=1.1.0 always runs a `SET NAMES` on connection,
+  which breaks on servers using a non-default collation
+
 ### Fix
 
 - MySQL: Allow dict parameters to be used with PyMySQL 1.1.1

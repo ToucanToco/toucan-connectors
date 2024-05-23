@@ -5,6 +5,7 @@ from typing import Any
 import pandas as pd
 import pymysql
 import pytest
+from pandas.testing import assert_frame_equal
 from pydantic.error_wrappers import ValidationError
 from pytest_mock import MockerFixture
 
@@ -773,3 +774,25 @@ def test_get_slice_with_variables(
     data_slice = mysql_connector.get_slice(mysql_datasource, limit=1, offset=1)
     as_dict = data_slice.df.to_dict(orient="list")
     assert as_dict == expected
+
+
+def test_charset_collation(mysql_connector: MySQLConnector, mysql_datasource: MySQLDataSource) -> None:
+    mysql_datasource.query = "SELECT @@character_set_database, @@collation_database, @@collation_connection;"
+    # The DB & connection collection should match the server defaults (for MySQL 8)
+    expected = {
+        "@@character_set_database": ["utf8mb4"],
+        "@@collation_database": ["utf8mb4_0900_ai_ci"],
+        "@@collation_connection": ["utf8mb4_0900_ai_ci"],
+    }
+
+    df = mysql_connector.get_df(mysql_datasource)
+    assert_frame_equal(df, pd.DataFrame(expected))
+
+    # Setting the connection collation to mysql 5.7's and MariaDB's default
+    mysql_connector.charset_collation = "utf8mb4_general_ci"
+    expected["@@collation_connection"] = ["utf8mb4_general_ci"]
+
+    df = mysql_connector.get_df(mysql_datasource)
+    # the charset shouldn't be modified, nor should the db's collation. However, it should have been
+    # updated for the connection
+    assert_frame_equal(df, pd.DataFrame(expected))
