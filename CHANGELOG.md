@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## Unreleased
+
+### Fix
+
+- MySQL: Allow dict parameters to be used with PyMySQL 1.1.1
+
 ## [3.23.27] 2024-03-01
 
 ### Fix
