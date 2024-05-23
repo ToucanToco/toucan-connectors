@@ -179,6 +179,12 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
         title='Charset',
         description='Character encoding. You should generally let the default "utf8mb4" here.',
     )
+    charset_collation: str | None = Field(
+        None,
+        title='Charset collation',
+        description="The charset's collation for the connections to the server."
+        "Only set it here if your tables do not use your server's default value.",
+    )
     connect_timeout: int = Field(
         None,
         title='Connection timeout',
@@ -286,6 +292,7 @@ class MySQLConnector(ToucanConnector, DiscoverableConnector, VersionableEngineCo
             'connect_timeout': self.connect_timeout,
             'conv': conv,
             'cursorclass': cursorclass,
+            'collation': self.charset_collation,
         }
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}

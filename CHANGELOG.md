@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- MySQL: Add an optional `charset_collation` to the connector, as PyMySQL >=1.1.0 always runs a `SET NAMES` on connection,
+  which breaks on servers using a non-default collation
+
 ## [3.23.28] 2024-05-23
 
 ### Fix
