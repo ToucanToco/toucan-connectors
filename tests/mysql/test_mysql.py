@@ -23,10 +23,10 @@ from toucan_connectors.toucan_connector import MalformedVersion, UnavailableVers
 def mysql_server(service_container):
     def check(host_port):
         conn = pymysql.connect(
-            host='127.0.0.1', port=host_port, user='ubuntu', password='ilovetoucan'
+            host='127.0.0.1', port=host_port, user='ubuntu', password='ilovetoucan', database='mysql_db'
         )
         cur = conn.cursor()
-        cur.execute('SELECT 1;')
+        cur.execute('SELECT * FROM City LIMIT 1;')
         cur.close()
         conn.close()
 
