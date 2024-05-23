@@ -211,7 +211,7 @@ def test_get_df(mocker: MockerFixture):
     )
     expected_query_str = (
         "select * from Country where test LIKE '%%test example%%' "
-        "AND test 'ok22%%' AND test LIKE '%(var)s' OR test LIKE '%%test' "
+        "AND test 'ok22%%' AND test LIKE '%(__QUERY_PARAM_0__)s' OR test LIKE '%%test' "
         "OR test LIKE '(this is %% a test'"
     )
     reasq.reset_mock()
@@ -222,13 +222,14 @@ def test_get_df(mocker: MockerFixture):
             'name': 'Some MySQL provider',
             'database': 'mysql_db',
             'query': query_str,
+            'parameters': {'var': 42},
         }
     )
     mysql_connector.get_df(data_source)
     reasq.assert_called_once_with(
         expected_query_str,
         con=snock(),
-        params={},
+        params={'__QUERY_PARAM_0__': 42},
     )
 
 
@@ -273,18 +274,16 @@ def test_get_df_with_dict_parameter(
 ):
     """It should work with dict parameters"""
     # different kinds of param formatting on purpose
-    mysql_datasource.query = 'SELECT {{user.name}}, {{ today}} FROM City WHERE Population > {{ user.attributes.population }}'
+    mysql_datasource.query = 'SELECT {{user.username}} "username", {{ today}} "today" FROM City WHERE Population > {{ user.attributes.population }}'
     mysql_datasource.parameters = {
         'user': {'username': 'john@doe.com', 'groups': [], 'attributes': {'population': 5_000_000}},
         'today': datetime(2024, 5, 22, 12, 3),
     }
 
-    expected_columns = {'ID', 'Name', 'CountryCode', 'District', 'Population'}
     df = mysql_connector.get_df(mysql_datasource)
-
-    assert not df.empty
-    assert set(df.columns) == expected_columns
-    assert df.shape == (24, 5)
+    assert df.columns.to_list() == ['username', 'today']
+    assert df['username'].to_list() == ['john@doe.com'] * 24
+    assert df['today'].to_list() == ['2024-05-22 12:03:00'] * 24
 
 
 def test_decode_df():
