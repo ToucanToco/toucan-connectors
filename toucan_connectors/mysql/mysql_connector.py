@@ -102,11 +102,12 @@ def prepare_query_and_params_for_pymysql(
 
     Since version 1.1.1, pymysql does not support dicts in parameters anymore. They cause an
     exception, even if the parameter is not used. This function sanitizes the query and
-    parameters through the folowing steps:
+    parameters through the following steps:
 
     1. Convert params in pyformat style to jinja style, i.e. %(param)s to {{ param }}. This is done
        to support both queries interpolated with jinja (the modern way to do it), and queries with
-       qmark params (we might have some leftovers of that)
+       pyformat params (we might have some leftovers of that). See the PEP for details on supported
+       param styles: https://peps.python.org/pep-0249/#paramstyle
     2. Find all jinja variables containing dots or "['" or '["' . We want to support access by
        attribute and by key
     3. Rename the variables in the query string and build a parameter dict mapping the renamed
