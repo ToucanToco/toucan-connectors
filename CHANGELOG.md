@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.23.28] 2024-05-23
+
 ### Fix
 
 - MySQL: Allow dict parameters to be used with PyMySQL 1.1.1
