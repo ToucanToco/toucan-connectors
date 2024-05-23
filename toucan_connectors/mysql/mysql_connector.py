@@ -95,6 +95,11 @@ class SSLMode(str, Enum):
     REQUIRED = 'REQUIRED'
 
 
+def _pyformat_params_to_jinja(query: str) -> str:
+    """Convert %()[sdf] params to {{}}"""
+    raise NotImplementedError
+
+
 def prepare_query_and_params_for_pymysql(
     query: str, params: dict[str, Any]
 ) -> tuple[str, dict[str, Any]]:
@@ -114,6 +119,8 @@ def prepare_query_and_params_for_pymysql(
        variables to what they evaluate to (we will evaluate the expressions with jinja)
     4. convert the query back to pyformat param style
     """
+    # %()s -> {{}}
+    jinja_query = _pyformat_params_to_jinja(query)
     raise NotImplementedError
 
 
