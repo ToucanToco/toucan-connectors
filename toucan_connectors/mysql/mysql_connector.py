@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from enum import Enum
@@ -29,6 +30,17 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 from toucan_connectors.utils.pem import sanitize_spaces_pem
+
+_LOGGER = logging.getLogger(__name__)
+
+try:
+    if pd.__version__.startswith("2"):
+        _DEFAULT_CURSOR_CLASS = pymysql.cursors.Cursor
+    else:
+        _DEFAULT_CURSOR_CLASS = pymysql.cursors.DictCursor
+except Exception as exc:
+    _LOGGER.warning(f"Could not figure out pandas version, using DictCursor: {exc}", exc_info=exc)
+    _DEFAULT_CURSOR_CLASS = pymysql.cursors.DictCursor
 
 
 def handle_date_0(df: pd.DataFrame) -> pd.DataFrame:
@@ -271,7 +283,7 @@ class MySQLConnector(
     def project_tree(self, db_name: str | None = None) -> list[TableInfo]:
         return list(self._get_project_structure(db_name=db_name))
 
-    def get_connection_params(self, *, database: str | None = None, cursorclass=pymysql.cursors.DictCursor):
+    def get_connection_params(self, *, database: str | None = None, cursorclass=_DEFAULT_CURSOR_CLASS):
         conv = pymysql.converters.conversions.copy()
         conv[246] = float
         con_params = {
@@ -289,7 +301,7 @@ class MySQLConnector(
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _connect(self, *, database: str | None = None, cursorclass=pymysql.cursors.DictCursor) -> pymysql.Connection:
+    def _connect(self, *, database: str | None = None, cursorclass=_DEFAULT_CURSOR_CLASS) -> pymysql.Connection:
         connection_params = self.get_connection_params(database=database, cursorclass=cursorclass)
         if self.ssl_mode is not None:
             connection_params |= {

@@ -10,6 +10,7 @@
 ### Fix
 
 - MySQL: Allow dict parameters to be used with PyMySQL 1.1.1
+- MySQL: Use a regular PyMySQL Cursor rather than a DictCursor when pandas 2.x is used
 
 ## [6.1.2] 2024-04-18
 

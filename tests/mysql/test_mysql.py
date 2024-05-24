@@ -56,6 +56,7 @@ def test_datasource():
 
 
 def test_get_connection_params():
+    expected_cursor_class = pymysql.cursors.Cursor if pd.__version__.startswith("2") else pymysql.cursors.DictCursor
     connector = MySQLConnector(name="my_mysql_con", host="myhost", user="myuser")
     params = connector.get_connection_params()
     params.pop("conv")
@@ -63,7 +64,7 @@ def test_get_connection_params():
         "host": "myhost",
         "user": "myuser",
         "charset": "utf8mb4",
-        "cursorclass": pymysql.cursors.DictCursor,
+        "cursorclass": expected_cursor_class,
     }
 
     connector = MySQLConnector(
@@ -81,7 +82,7 @@ def test_get_connection_params():
         "host": "myhost",
         "user": "myuser",
         "charset": "utf8",
-        "cursorclass": pymysql.cursors.DictCursor,
+        "cursorclass": expected_cursor_class,
         "password": "mypass",
         "port": 123,
         "connect_timeout": 50,
