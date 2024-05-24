@@ -362,13 +362,18 @@ class MySQLConnector(
         except pymysql.err.OperationalError as e:
             error_code = e.args[0]
 
+            # Wrong user/password
+            if error_code == ER.ACCESS_DENIED_ERROR:
+                return ConnectorStatus(status=False, details=self._get_details(3, False), error=e.args[1])
+
             # Can't connect to full URI
             if error_code == CR.CR_CONN_HOST_ERROR:
                 return ConnectorStatus(status=False, details=self._get_details(2, False), error=e.args[1])
 
-            # Wrong user/password
-            if error_code == ER.ACCESS_DENIED_ERROR:
-                return ConnectorStatus(status=False, details=self._get_details(3, False), error=e.args[1])
+            # There can be other errors, in which case we consider that there is something wrong
+            # with the host connection
+            _LOGGER.warning(f"Unexpected MySQL error code {error_code}: {e}", exc_info=e)
+            return ConnectorStatus(status=False, details=self._get_details(2, False), error=e.args[1])
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 

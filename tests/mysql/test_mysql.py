@@ -166,9 +166,15 @@ def test_get_status_bad_connection(mysql_connector, unused_port, mocker):
     assert status.error.startswith("Can't connect to MySQL server on 'localhost'")
 
 
-def test_get_status_bad_authentication(mysql_connector):
-    mysql_connector.user = "pika"
-    assert mysql_connector.get_status() == ConnectorStatus(
+def test_get_status_bad_authentication(mysql_connector: MySQLConnector, mocker: MockerFixture):
+    mocker.patch.object(
+        mysql_connector,
+        "_connect",
+        side_effect=pymysql.OperationalError(pymysql.constants.ER.ACCESS_DENIED_ERROR, "this is the error message"),
+    )
+    status = mysql_connector.get_status()
+
+    assert status == ConnectorStatus(
         status=False,
         details=[
             ("Hostname resolved", True),
@@ -176,7 +182,28 @@ def test_get_status_bad_authentication(mysql_connector):
             ("Host connection", True),
             ("Authenticated", False),
         ],
-        error="Access denied for user 'pika'@'172.17.0.1' (using password: YES)",
+        error="this is the error message",
+    )
+
+
+def test_get_status_unknown_error(mysql_connector: MySQLConnector, mocker: MockerFixture):
+    mocker.patch.object(
+        mysql_connector,
+        "_connect",
+        side_effect=pymysql.OperationalError(pymysql.constants.CR.CR_COMPRESSION_WRONGLY_CONFIGURED, "this is bad"),
+    )
+    status = mysql_connector.get_status()
+
+    # The host connection should be considered invalid on an unknown error
+    assert status == ConnectorStatus(
+        status=False,
+        details=[
+            ("Hostname resolved", True),
+            ("Port opened", True),
+            ("Host connection", False),
+            ("Authenticated", None),
+        ],
+        error="this is bad",
     )
 
 
