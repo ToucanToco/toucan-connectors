@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix
+
+- MySQL: An unknown exception during the status check now makes the check fail
+
 ## [6.1.3] 2024-05-24
 
 ### Changed
