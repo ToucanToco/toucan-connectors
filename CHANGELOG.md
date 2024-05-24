@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [6.1.3] 2024-05-24
+
 ### Changed
 
 - MySQL: Add an optional `charset_collation` to the connector, as PyMySQL >=1.1.0 always runs a `SET NAMES` on connection,
