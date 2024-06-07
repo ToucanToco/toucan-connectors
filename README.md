@@ -78,6 +78,10 @@ or [MacOS](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/install-m
 On macOS, to test the `postgres` connector, you need to install `postgresql` by running for instance `brew install postgres`.
 You can then install the library with `env LDFLAGS='-L/usr/local/lib -L/usr/local/opt/openssl/lib -L/usr/local/opt/readline/lib' pip install psycopg2`
 
+#### Other
+
+You can find all connectors specific documentation [here](doc/connectors)
+
 ## Testing
 
 We are using `pytest` and various packages of its ecosystem.
