@@ -340,6 +340,45 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> tuple
     return re.sub(RE_NAMED_PARAM, "?", query_string), flattened_values
 
 
+def convert_to_numbered_vars_paramstyle(query_string: str, params_values: dict) -> tuple[str, tuple[Any]]:
+    """Takes a query in pyformat paramstyle and transforms it in numbered paramstyle
+       by replacing placeholders by :n and returning values in right order
+    ex :
+        ('select * from test where id > %(id_nb)s and price > %(price)s;', {"id_nb":1, "price":10}
+    returns:
+        ('select * from test where id > :1 and price > :2;', (1, 10))"""
+    extracted_params = re.findall(RE_NAMED_PARAM, query_string)
+    qparams = [get_param_name(m) for m in extracted_params]
+    ordered_values = [params_values.get(p) for p in qparams]
+
+    variable_idx = 1
+    for i, o in enumerate(ordered_values):
+        if isinstance(o, list):
+            # if param type is list replace parameter name in query_string by a list of n indexes where n is
+            # the length of the list
+            # example:
+            # query_string = "SELECT name FROM students WHERE age IN %(allowed_ages)"
+            # allowed_ages = [16, 17, 18]
+            # transformed query_string = "SELECT name FROM students WHERE age IN (:1,:2,:3)"
+            list_size = len(ordered_values[i])
+            variable_list = f'({",".join([f":{variable_idx + n}" for n in range(list_size)])})'
+            query_string = query_string.replace(extracted_params[i], variable_list)
+            variable_idx += list_size
+        else:
+            query_string = query_string.replace(extracted_params[i], f":{variable_idx}")
+            variable_idx += 1
+
+    flattened_values = []
+    for val in ordered_values:
+        if isinstance(val, list):
+            for v in val:
+                flattened_values.append(v)
+        else:
+            flattened_values.append(val)
+
+    return query_string, flattened_values
+
+
 def convert_to_printf_templating_style(query_string: str) -> str:
     """
     Replaces '{{ foo }}' by '%(foo)s' in the query.
@@ -407,6 +446,7 @@ def pandas_read_sql(
     adapt_params: bool = False,
     convert_to_qmark: bool = False,
     convert_to_printf: bool = True,
+    convert_to_numbered: bool = False,
     render_user: bool = False,
     **kwargs,
 ) -> pd.DataFrame:
@@ -416,6 +456,8 @@ def pandas_read_sql(
         query = Template(query).render({"user": params.get("user", {})})
     if convert_to_qmark:
         query, params = convert_to_qmark_paramstyle(query, params)
+    if convert_to_numbered:
+        query, params = convert_to_numbered_vars_paramstyle(query, params)
     if adapt_params:
         params = adapt_param_type(params)
 
