@@ -15,6 +15,7 @@ from toucan_connectors.common import (
     UndefinedVariableError,
     adapt_param_type,
     apply_query_parameters,
+    convert_to_numeric_paramstyle,
     convert_to_printf_templating_style,
     convert_to_qmark_paramstyle,
     extract_table_name,
@@ -550,3 +551,45 @@ def test_sanitize_query(query, init_params, transformer, expected_query, expecte
 def test_nosql_apply_parameters_to_query_root_undefined(query: Any, expected: Any, mocker: MockFixture):
     mocker.patch.object(common_mod, "_render_query", return_value=Undefined())
     assert nosql_apply_parameters_to_query(query=query, parameters={}, handle_errors=False) == expected
+
+
+@pytest.mark.parametrize(
+    "query, params, expected_query, expected_ordered_values",
+    [
+        (
+            "select * from test where id > %(id_nb)s and price > %(price)s;",
+            {"id_nb": 1, "price": 10},
+            "select * from test where id > :1 and price > :2;",
+            [1, 10],
+        ),
+        (
+            "select * from test where id > %(id_nb)s and id < %(id_nb)s + 1;",
+            {"id_nb": 1},
+            "select * from test where id > :1 and id < :1 + 1;",
+            [1, 1],
+        ),
+        (
+            "select * from test where id > %(id_nb)s and price > %(price)s;",
+            {"id_nb": 1},
+            "select * from test where id > :1 and price > :2;",
+            [1, None],
+        ),
+        (
+            "select * from inventory where quantity in %(quantities)s;",
+            {"quantities": [150, 154]},
+            "select * from inventory where quantity in (:1,:2);",
+            [150, 154],
+        ),
+        (
+            "select * from test where price > %(__front_var_0__)s;",
+            {"__front_var_0__": 1},
+            "select * from test where price > :1;",
+            [1],
+        ),
+    ],
+)
+def test_convert_pyformat_to_numeric(query, params, expected_query, expected_ordered_values):
+    """It should return query in numeric paramstyle and values of extracted params"""
+    converted_query, ordered_values = convert_to_numeric_paramstyle(query, params)
+    assert ordered_values == expected_ordered_values
+    assert converted_query == expected_query
