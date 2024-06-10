@@ -341,7 +341,7 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> tuple
 
 
 def convert_to_numeric_paramstyle(query_string: str, params_values: dict) -> tuple[str, tuple[Any]]:
-    """Takes a query in pyformat paramstyle and transforms it in numbered paramstyle
+    """Takes a query in pyformat paramstyle and transforms it in numeric paramstyle
        by replacing placeholders by :n and returning values in right order
     ex :
         ('select * from test where id > %(id_nb)s and price > %(price)s;', {"id_nb":1, "price":10}
