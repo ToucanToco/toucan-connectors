@@ -354,7 +354,7 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> tuple
     return re.sub(RE_NAMED_PARAM, '?', query_string), flattened_values
 
 
-def convert_to_numbered_vars_paramstyle(query_string: str, params_values: dict) -> tuple[str, tuple[Any]]:
+def convert_to_numeric_paramstyle(query_string: str, params_values: dict) -> tuple[str, tuple[Any]]:
     """Takes a query in pyformat paramstyle and transforms it in numbered paramstyle
        by replacing placeholders by :n and returning values in right order
     ex :
@@ -447,7 +447,7 @@ def pandas_read_sql(
     adapt_params: bool = False,
     convert_to_qmark: bool = False,
     convert_to_printf: bool = True,
-    convert_to_numbered: bool = False,
+    convert_to_numeric: bool = False,
     render_user: bool = False,
     **kwargs,
 ) -> pd.DataFrame:
@@ -457,8 +457,8 @@ def pandas_read_sql(
         query = Template(query).render({'user': params.get('user', {})})
     if convert_to_qmark:
         query, params = convert_to_qmark_paramstyle(query, params)
-    if convert_to_numbered:
-        query, params = convert_to_numbered_vars_paramstyle(query, params)
+    if convert_to_numeric:
+        query, params = convert_to_numeric_paramstyle(query, params)
     if adapt_params:
         params = adapt_param_type(params)
 

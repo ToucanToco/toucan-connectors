@@ -85,7 +85,8 @@ class OracleSQLConnector(ToucanConnector):
             con=connection,
             params=query_params,
             render_user=True,
-            convert_to_numbered=True,
+            convert_to_numeric=True,
+            convert_to_printf=False,
         )
 
         connection.close()
