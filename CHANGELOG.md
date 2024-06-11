@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- OracleSQL: Add variables templating support
+
 ### Fix
 
 - MySQL: An unknown exception during the status check now makes the check fail
