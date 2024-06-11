@@ -80,7 +80,15 @@ class OracleSQLConnector(ToucanConnector, data_source_model=OracleSQLDataSource)
         connection = cx_Oracle.connect(**self.get_connection_params())
 
         query = data_source.query[:-1] if data_source.query.endswith(";") else data_source.query
-        df = pandas_read_sql(query, con=connection)
+        query_params = data_source.parameters or {}
+        df = pandas_read_sql(
+            query,
+            con=connection,
+            params=query_params,
+            render_user=True,
+            convert_to_numeric=True,
+            convert_to_printf=False,
+        )
 
         connection.close()
 

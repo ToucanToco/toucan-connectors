@@ -40,7 +40,6 @@ def oracle_connector(oracle_server):
 def test_oracle_get_df(mocker: MockerFixture):
     snock = mocker.patch("cx_Oracle.connect")
     reasq = mocker.patch("pandas.read_sql")
-
     oracle_connector = OracleSQLConnector(
         name="my_oracle_sql_con", user="system", password="oracle", dsn="localhost:22/xe"
     )
@@ -51,13 +50,13 @@ def test_oracle_get_df(mocker: MockerFixture):
 
     snock.assert_called_once_with(user="system", password="oracle", dsn="localhost:22/xe")
 
-    reasq.assert_called_once_with("SELECT * FROM City", con=snock(), params=None)
+    reasq.assert_called_once_with("SELECT * FROM City", con=snock(), params=[])
 
     # With table
     reasq.reset_mock()
     oracle_connector.get_df(OracleSQLDataSource(domain="Oracle test", name="my_oracle_sql_con", table="Nation"))
 
-    reasq.assert_called_once_with("SELECT * FROM Nation", con=snock(), params=None)
+    reasq.assert_called_once_with("SELECT * FROM Nation", con=snock(), params=[])
 
     # With both: query must prevail
     reasq.reset_mock()
@@ -70,7 +69,65 @@ def test_oracle_get_df(mocker: MockerFixture):
         )
     )
 
-    reasq.assert_called_once_with("SELECT * FROM Food", con=snock(), params=None)
+    reasq.assert_called_once_with("SELECT * FROM Food", con=snock(), params=[])
+
+
+def test_oracle_get_df_with_variables(mocker):
+    """It should connect to the database and retrieve the response to the query"""
+    snock = mocker.patch("cx_Oracle.connect")
+    reasq = mocker.patch("pandas.read_sql")
+    oracle_connector = OracleSQLConnector(
+        name="my_oracle_sql_con", user="system", password="oracle", dsn="localhost:22/xe"
+    )
+    ds = OracleSQLDataSource(
+        query="SELECT * FROM City WHERE id > %(id_nb)s AND population < %(population)s;",
+        domain="Oracle test",
+        name="my_oracle_sql_con",
+        table="Cities",
+        parameters={"population": 40_000, "id_nb": 1},
+    )
+    oracle_connector.get_df(ds)
+    snock.assert_called_once_with(user="system", password="oracle", dsn="localhost:22/xe")
+    reasq.assert_called_once_with(
+        "SELECT * FROM City WHERE id > :1 AND population < :2", con=snock(), params=[1, 40_000]
+    )
+    reasq.reset_mock()
+    snock.reset_mock()
+
+    # test with array value
+    ds = OracleSQLDataSource(
+        query="SELECT * FROM City WHERE name in %(names)s AND population < %(population)s;",
+        domain="Oracle test",
+        name="my_oracle_sql_con",
+        table="Cities",
+        parameters={"population": 40_000, "names": ["Manhattan", "Kabul", "TaTaTin"]},
+    )
+    oracle_connector.get_df(ds)
+    snock.assert_called_once_with(user="system", password="oracle", dsn="localhost:22/xe")
+    reasq.assert_called_once_with(
+        "SELECT * FROM City WHERE name in (:1,:2,:3) AND population < :4",
+        con=snock(),
+        params=["Manhattan", "Kabul", "TaTaTin", 40_000],
+    )
+
+
+def test_oracle_get_df_with_variables_jinja_syntax(mocker):
+    """It should connect to the database and retrieve the response to the query"""
+    snock = mocker.patch("cx_Oracle.connect")
+    reasq = mocker.patch("pandas.read_sql")
+    oracle_connector = OracleSQLConnector(
+        name="my_oracle_sql_con", user="system", password="oracle", dsn="localhost:22/xe"
+    )
+    ds = OracleSQLDataSource(
+        query="SELECT * FROM City WHERE name = {{ user.attributes.address.city }};",
+        domain="Oracle test",
+        name="my_oracle_sql_con",
+        table="Cities",
+        parameters={"user": {"attributes": {"address": {"city": "Toulouse", "country": "FR"}}}},
+    )
+    oracle_connector.get_df(ds)
+    snock.assert_called_once_with(user="system", password="oracle", dsn="localhost:22/xe")
+    reasq.assert_called_once_with("SELECT * FROM City WHERE name = Toulouse", con=snock(), params=[])
 
 
 def test_get_df_db(oracle_connector):
@@ -92,6 +149,28 @@ def test_get_df_db(oracle_connector):
     assert set(df.columns) == {"ID", "NAME", "COUNTRYCODE", "DISTRICT", "POPULATION"}
 
     assert len(df[df["POPULATION"] > 500000]) == 5
+
+
+def test_get_df_db_with_variable(oracle_connector):
+    """It should extract the table City and make some merge with some foreign key"""
+    data_sources_spec = [
+        {
+            "domain": "Oracle test",
+            "type": "external_database",
+            "name": "my_oracle_sql_con",
+            "query": "SELECT * FROM City WHERE population < %(population)s;",
+            "parameters": {"population": 2346},
+        }
+    ]
+
+    data_source = OracleSQLDataSource(**data_sources_spec[0])
+    df = oracle_connector.get_df(data_source)
+
+    assert not df.empty
+    assert df.shape == (1, 5)
+    assert set(df.columns) == {"ID", "NAME", "COUNTRYCODE", "DISTRICT", "POPULATION"}
+    assert len(df) == 1
+    assert df["POPULATION"][0] == 2345
 
 
 def test_get_form_empty_query(oracle_connector):
