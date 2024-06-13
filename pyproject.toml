@@ -10,7 +10,7 @@ multi_line_output = 3
 
 [tool.poetry]
 name = "toucan-connectors"
-version = "3.23.29"
+version = "3.23.30"
 description = "Toucan Toco Connectors"
 authors = ["Toucan Toco <dev@toucantoco.com>"]
 license = "BSD"
