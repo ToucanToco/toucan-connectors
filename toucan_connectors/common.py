@@ -379,7 +379,7 @@ def convert_to_numeric_paramstyle(query_string: str, params_values: dict) -> tup
             query_string = query_string.replace(extracted_params[i], variable_list)
             variable_idx += list_size
         else:
-            query_string = query_string.replace(extracted_params[i], f":{variable_idx}")
+            query_string = query_string.replace(extracted_params[i], f':{variable_idx}')
             variable_idx += 1
 
     flattened_values = []

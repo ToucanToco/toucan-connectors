@@ -78,13 +78,12 @@ class OracleSQLConnector(ToucanConnector):
     def _retrieve_data(self, data_source: OracleSQLDataSource) -> pd.DataFrame:
         connection = cx_Oracle.connect(**self.get_connection_params())
 
-        query = data_source.query[:-1] if data_source.query.endswith(";") else data_source.query
+        query = data_source.query[:-1] if data_source.query.endswith(';') else data_source.query
         query_params = data_source.parameters or {}
         df = pandas_read_sql(
             query,
             con=connection,
             params=query_params,
-            render_user=True,
             convert_to_numeric=True,
             convert_to_printf=False,
         )
