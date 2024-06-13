@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.24.0] 2024-06-13
+
 ### Changed
 
 - OracleSQL: Add variables templating support
