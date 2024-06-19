@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Datetime series returned by our connectors don't have timezones anymore
+
 ## [6.2.0] 2024-06-12
 
 ### Changed

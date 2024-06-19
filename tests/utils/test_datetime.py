@@ -4,11 +4,11 @@ import pandas as pd
 import pytest
 from dateutil import tz
 from numpy import dtype
-from pandas.core.dtypes.dtypes import DatetimeTZDtype
-from pytz import utc
 from zoneinfo import ZoneInfo
 
 from toucan_connectors.utils.datetime import is_datetime_col, sanitize_df_dates
+
+DTYPE_DATETIME_WITHOUT_TIMEZONE = dtype("<M8[ns]")
 
 
 @pytest.mark.parametrize(
@@ -50,7 +50,7 @@ def test_sanitize_df_dates_with_dates():
     assert sanitize_df_dates(df).dtypes.to_list() == [
         dtype("int64"),
         dtype("object"),
-        DatetimeTZDtype(tz=utc),
+        DTYPE_DATETIME_WITHOUT_TIMEZONE,
     ]
 
 
@@ -66,7 +66,7 @@ def test_sanitize_df_dates_with_datetimes():
     assert sanitize_df_dates(df).dtypes.to_list() == [
         dtype("int64"),
         dtype("object"),
-        DatetimeTZDtype(tz=utc),
+        DTYPE_DATETIME_WITHOUT_TIMEZONE,
     ]
 
 
@@ -86,5 +86,5 @@ def test_sanitize_df_dates_with_tz_aware_datetimes():
     assert sanitize_df_dates(df).dtypes.to_list() == [
         dtype("int64"),
         dtype("object"),
-        DatetimeTZDtype(tz=utc),
+        DTYPE_DATETIME_WITHOUT_TIMEZONE,
     ]
