@@ -4,7 +4,6 @@ from unittest.mock import Mock
 import pytest
 from pytest import fixture
 from pytest_mock import MockerFixture
-from pytz import utc
 
 from toucan_connectors.common import HttpError
 from toucan_connectors.google_sheets_2.google_sheets_2_connector import (
@@ -297,4 +296,4 @@ def test_parse_datetime(mocker, con):
     mocker.patch(f"{import_path}.fetch", return_value=fake_result)
     ds = con.get_slice(ds, limit=2)
     # Using pytz.utc rather than STL here because that's what pandas does
-    assert ds.df["a_date"].iloc[0] == datetime.datetime(year=2001, month=2, day=2, tzinfo=utc)
+    assert ds.df["a_date"].iloc[0] == datetime.datetime(year=2001, month=2, day=2)
