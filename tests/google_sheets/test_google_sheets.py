@@ -12,7 +12,6 @@ from googleapiclient.http import HttpMock
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 from pytest_mock import MockFixture
-from pytz import utc
 
 from toucan_connectors.google_sheets.google_sheets_connector import (
     GoogleSheetsConnector,
@@ -71,10 +70,9 @@ def test_retrieve_data_with_dates(mocker: MockFixture):
         pd.DataFrame(
             columns=["label", "value", "date"],
             data=[
-                # NOTE: Using pytz.utc instead of STL here because that's what pandas uses
-                ["A", 1, datetime(2022, 1, 4, tzinfo=utc)],
-                ["B", 2, datetime(2022, 1, 26, tzinfo=utc)],
-                ["C", 3, datetime(2021, 11, 30, tzinfo=utc)],
+                ["A", 1, datetime(2022, 1, 4)],
+                ["B", 2, datetime(2022, 1, 26)],
+                ["C", 3, datetime(2021, 11, 30)],
             ],
         ),
     )

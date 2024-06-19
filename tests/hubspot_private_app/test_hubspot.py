@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock, call
 
@@ -36,7 +36,7 @@ def hubspot_full_page() -> _DictableDict:
                     "archived": False,
                     "archived_at": None,
                     "associations": None,
-                    "created_at": datetime(2023, 2, 21, 9, 50, 48, 148000, tzinfo=timezone.utc),
+                    "created_at": datetime(2023, 2, 21, 9, 50, 48, 148000),
                     "id": "1",
                     "properties": {
                         "createdate": "2023-02-21T09:50:48.148Z",
@@ -47,13 +47,13 @@ def hubspot_full_page() -> _DictableDict:
                         "lastname": "Johnson (Sample Contact)",
                     },
                     "properties_with_history": None,
-                    "updated_at": datetime(2023, 2, 21, 9, 50, 53, 651000, tzinfo=timezone.utc),
+                    "updated_at": datetime(2023, 2, 21, 9, 50, 53, 651000),
                 },
                 {
                     "archived": False,
                     "archived_at": None,
                     "associations": None,
-                    "created_at": datetime(2023, 2, 21, 9, 50, 48, 490000, tzinfo=timezone.utc),
+                    "created_at": datetime(2023, 2, 21, 9, 50, 48, 490000),
                     "id": "51",
                     "createdate": "2023-02-21T09:50:48.490Z",
                     "email": "bh@hubspot.com",
@@ -62,7 +62,7 @@ def hubspot_full_page() -> _DictableDict:
                     "lastmodifieddate": "2023-02-21T09:50:55.765Z",
                     "lastname": "Halligan (Sample Contact)",
                     "properties_with_history": None,
-                    "updated_at": datetime(2023, 2, 21, 9, 50, 55, 765000, tzinfo=timezone.utc),
+                    "updated_at": datetime(2023, 2, 21, 9, 50, 55, 765000),
                 },
             ],
         }
@@ -114,12 +114,12 @@ def expected_df() -> pd.DataFrame:
     df = pd.DataFrame(
         {
             "created_at": [
-                pd.Timestamp("2023-02-21 09:50:48.148000+0000", tz="UTC"),
-                pd.Timestamp("2023-02-21 09:50:48.490000+0000", tz="UTC"),
+                pd.Timestamp("2023-02-21 09:50:48.148000"),
+                pd.Timestamp("2023-02-21 09:50:48.490000"),
             ],
             "updated_at": [
-                pd.Timestamp("2023-02-21 09:50:53.651000+0000", tz="UTC"),
-                pd.Timestamp("2023-02-21 09:50:55.765000+0000", tz="UTC"),
+                pd.Timestamp("2023-02-21 09:50:53.651000"),
+                pd.Timestamp("2023-02-21 09:50:55.765000"),
             ],
             "id": ["1", "51"],
             "properties_with_history": [None, None],
