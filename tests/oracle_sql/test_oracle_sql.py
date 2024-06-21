@@ -115,6 +115,25 @@ def test_oracle_get_df_with_variables(mocker):
     )
 
 
+def test_oracle_get_df_with_variables_jinja_syntax(mocker):
+    """It should connect to the database and retrieve the response to the query"""
+    snock = mocker.patch('cx_Oracle.connect')
+    reasq = mocker.patch('pandas.read_sql')
+    oracle_connector = OracleSQLConnector(
+        name='my_oracle_sql_con', user='system', password='oracle', dsn='localhost:22/xe'
+    )
+    ds = OracleSQLDataSource(
+        query='SELECT * FROM City WHERE Name = {{ __front_var_0__ }}',
+        domain='Oracle test',
+        name='my_oracle_sql_con',
+        table='Cities',
+        parameters={'__front_var_0__': 'Kabul'},
+    )
+    oracle_connector.get_df(ds)
+    snock.assert_called_once_with(user='system', password='oracle', dsn='localhost:22/xe')
+    reasq.assert_called_once_with('SELECT * FROM City WHERE Name = :1', con=snock(), params=['Kabul'])
+
+
 def test_get_df_db(oracle_connector):
     """It should extract the table City and make some merge with some foreign key"""
     data_sources_spec = [
@@ -136,15 +155,24 @@ def test_get_df_db(oracle_connector):
     assert len(df[df['POPULATION'] > 500000]) == 5
 
 
-def test_get_df_db_with_variable(oracle_connector):
+@pytest.mark.parametrize(
+    'query,parameters',
+    [
+        ('SELECT * FROM City WHERE population < %(population)s;', {'population': 2346}),
+        ('SELECT * FROM City WHERE population < {{ __front_var_0__ }}', {'__front_var_0__': 2346}),
+        ('SELECT * FROM City WHERE Name = %(name)s;', {'name': 'Willemstad'}),
+        ('SELECT * FROM City WHERE Name = {{ __front_var_0__ }}', {'__front_var_0__': 'Willemstad'}),
+    ],
+)
+def test_get_df_db_with_variable(oracle_connector, query, parameters):
     """It should extract the table City and make some merge with some foreign key"""
     data_sources_spec = [
         {
             'domain': 'Oracle test',
             'type': 'external_database',
             'name': 'my_oracle_sql_con',
-            'query': 'SELECT * FROM City WHERE population < %(population)s;',
-            'parameters': {'population': 2346},
+            'query': query,
+            'parameters': parameters,
         }
     ]
 
