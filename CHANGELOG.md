@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [6.3.0] 2024-06-21
+
+### Fix
+
+- OracleSQL: Fix jinja templates and test string fixtures
+
 ### Changed
 
 - Datetime series returned by our connectors don't have timezones anymore
