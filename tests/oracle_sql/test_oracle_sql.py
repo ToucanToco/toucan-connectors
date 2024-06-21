@@ -131,7 +131,9 @@ def test_oracle_get_df_with_variables_jinja_syntax(mocker):
     )
     oracle_connector.get_df(ds)
     snock.assert_called_once_with(user='system', password='oracle', dsn='localhost:22/xe')
-    reasq.assert_called_once_with('SELECT * FROM City WHERE Name = :1', con=snock(), params=['Kabul'])
+    reasq.assert_called_once_with(
+        'SELECT * FROM City WHERE Name = :1', con=snock(), params=['Kabul']
+    )
 
 
 def test_get_df_db(oracle_connector):
@@ -161,7 +163,10 @@ def test_get_df_db(oracle_connector):
         ('SELECT * FROM City WHERE population < %(population)s;', {'population': 2346}),
         ('SELECT * FROM City WHERE population < {{ __front_var_0__ }}', {'__front_var_0__': 2346}),
         ('SELECT * FROM City WHERE Name = %(name)s;', {'name': 'Willemstad'}),
-        ('SELECT * FROM City WHERE Name = {{ __front_var_0__ }}', {'__front_var_0__': 'Willemstad'}),
+        (
+            'SELECT * FROM City WHERE Name = {{ __front_var_0__ }}',
+            {'__front_var_0__': 'Willemstad'},
+        ),
     ],
 )
 def test_get_df_db_with_variable(oracle_connector, query, parameters):
