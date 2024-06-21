@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.23.31] 2024-06-21
+
 ### Fix
 
 - OracleSQL: Fix jinja templates and test string fixtures
