@@ -1,6 +1,6 @@
 CREATE TABLE SYSTEM.City (
     ID int,
-    Name char(35),
+    Name varchar(35),
     CountryCode char(3),
     District char(20),
     Population int
