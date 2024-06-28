@@ -37,8 +37,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install freetds-dev libsasl2-dev libpq-dev
-        pip install -U poetry virtualenv setuptools packaging
-        poetry config virtualenvs.create false
+        pip install -U poetry
 
     - name: Install oracle dependencies
       run: sudo bash toucan_connectors/install_scripts/oracle.sh
@@ -59,7 +58,7 @@ jobs:
       run: make install
 
     - name: Install pandas ${{ matrix.pandas-version }}
-      run: pip install "pandas${{ matrix.pandas-version }}"
+      run: poetry run pip install "pandas${{ matrix.pandas-version }}"
 
     - name: Lint
       run: make lint

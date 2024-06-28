@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := all
-ruff = ruff check toucan_connectors tests
-format = ruff format toucan_connectors tests
-mypy = mypy
+ruff = poetry run ruff check toucan_connectors tests
+format = poetry run ruff format toucan_connectors tests
+mypy = poetry run mypy
 
 .PHONY: clean
 clean:
@@ -26,7 +26,7 @@ lint:
 
 .PHONY: test
 test:
-	pytest --junitxml=test-report.xml --cov=toucan_connectors --cov-report xml
+	poetry run pytest --junitxml=test-report.xml --cov=toucan_connectors --cov-report xml
 
 .PHONY: all
 all: test lint
