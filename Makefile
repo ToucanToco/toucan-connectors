@@ -26,7 +26,7 @@ lint:
 
 .PHONY: test
 test:
-	pytest --junitxml=test-report.xml --cov=toucan_connectors --cov-report xml
+	poetry run pytest --junitxml=test-report.xml --cov=toucan_connectors --cov-report xml
 
 .PHONY: all
 all: test lint
