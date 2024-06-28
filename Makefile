@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := all
-ruff = ruff check toucan_connectors tests
-format = ruff format toucan_connectors tests
-mypy = mypy
+ruff = poetry run ruff check toucan_connectors tests
+format = poetry run ruff format toucan_connectors tests
+mypy = poetry run mypy
 
 .PHONY: clean
 clean:
