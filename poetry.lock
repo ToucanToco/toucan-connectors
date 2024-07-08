@@ -3906,6 +3906,17 @@ files = [
 types-setuptools = "*"
 
 [[package]]
+name = "types-oauthlib"
+version = "3.2.0.20240217"
+description = "Typing stubs for oauthlib"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-oauthlib-3.2.0.20240217.tar.gz", hash = "sha256:2b58e68b549f37ea1fe725cd7e78661a58679c16d2e83d53f1e531588ad72223"},
+    {file = "types_oauthlib-3.2.0.20240217-py3-none-any.whl", hash = "sha256:aa8b50a6737a0c75ea2a19e4598cfabd767ca5fba8d5310dc736afaa179db14d"},
+]
+
+[[package]]
 name = "types-pyopenssl"
 version = "24.1.0.20240425"
 description = "Typing stubs for pyOpenSSL"
@@ -4405,4 +4416,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "6938b1964097d65547999c3db7fed44b4f29e21f5c83fc01c292a4ff6a0a580e"
+content-hash = "ca291b60a4340c36509572b1fa3c3d852eb654b94f80ec7cc7ff8579800d74cd"
