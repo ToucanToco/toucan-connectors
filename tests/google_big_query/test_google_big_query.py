@@ -16,6 +16,7 @@ from pandas.testing import assert_frame_equal  # <-- for testing dataframes
 from pydantic import ValidationError
 from pytest_mock import MockerFixture, MockFixture
 
+from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.google_big_query.google_big_query_connector import (
     GoogleBigQueryConnector,
     GoogleBigQueryDataSource,
@@ -135,15 +136,6 @@ def test_prepare_parameters_empty():
     query = "SELECT stuff FROM `useful-citizen-322414.test.test`"
     new_query, parameters = GoogleBigQueryConnector._prepare_query_and_parameters(query, None)
     assert len(parameters) == 0
-
-
-@patch("google.cloud.bigquery.Client", autospec=True)
-@patch("cryptography.hazmat.primitives.serialization.load_pem_private_key")
-def test_connect(load_pem_private_key, client, fixture_credentials, fixture_scope):
-    credentials = GoogleBigQueryConnector._get_google_credentials(fixture_credentials, fixture_scope)
-    assert isinstance(credentials, Credentials)
-    connection = GoogleBigQueryConnector._connect(credentials)
-    assert isinstance(connection, Client)
 
 
 def test__http_is_present_as_attr(
@@ -911,6 +903,7 @@ def test_get_status(mocker: MockerFixture, fixture_credentials: GoogleCredential
     status = connector.get_status()
     assert status.status is False
     assert status.details == [
+        ("Credentials provided", True),
         ("Private key validity", False),
         ("Sample BigQuery job", False),
     ]
@@ -930,6 +923,7 @@ def test_get_status(mocker: MockerFixture, fixture_credentials: GoogleCredential
     status = connector.get_status()
     assert status.status is False
     assert status.details == [
+        ("Credentials provided", True),
         ("Private key validity", True),
         ("Sample BigQuery job", False),
     ]
@@ -947,6 +941,7 @@ def test_get_status(mocker: MockerFixture, fixture_credentials: GoogleCredential
     status = connector.get_status()
     assert status.status is False
     assert status.details == [
+        ("Credentials provided", True),
         ("Private key validity", True),
         ("Sample BigQuery job", False),
     ]
@@ -964,7 +959,18 @@ def test_get_status(mocker: MockerFixture, fixture_credentials: GoogleCredential
     status = connector.get_status()
     assert status.status is True
     assert status.details == [
+        ("Credentials provided", True),
         ("Private key validity", True),
         ("Sample BigQuery job", True),
     ]
     assert status.error is None
+
+
+def test_get_status_with_jwt(mocker: MockerFixture, gbq_connector_with_jwt: GoogleBigQueryConnector) -> None:
+    http_connect_mock = mocker.patch.object(gbq_connector_with_jwt, "_http_connect")
+    status = gbq_connector_with_jwt.get_status()
+    http_connect_mock.assert_called_once_with(http_session=mocker.ANY, project_id="THE_JWT_project_id")
+    # no private key validity should appear here, as JWT auth was used
+    assert status == ConnectorStatus(
+        status=True, message=None, error=None, details=[("Credentials provided", True), ("Sample BigQuery job", True)]
+    )

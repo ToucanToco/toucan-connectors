@@ -160,11 +160,12 @@ warn_unused_ignores = true
 ignore_missing_imports = true
 files = [
       "toucan_connectors/auth.py",
-      "toucan_connectors/toucan_connector.py",
+      "toucan_connectors/google_big_query/google_big_query_connector.py",
       "toucan_connectors/hubspot_private_app/hubspot_connector.py",
-      "toucan_connectors/snowflake/snowflake_connector.py",
+      "toucan_connectors/mongo/mongo_connector.py",
       "toucan_connectors/peakina/peakina_connector.py",
-      "toucan_connectors/mongo/mongo_connector.py"
+      "toucan_connectors/snowflake/snowflake_connector.py",
+      "toucan_connectors/toucan_connector.py",
 ]
 
 [tool.ruff]
