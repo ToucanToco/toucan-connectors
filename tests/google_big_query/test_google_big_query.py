@@ -974,3 +974,14 @@ def test_get_status_with_jwt(mocker: MockerFixture, gbq_connector_with_jwt: Goog
     assert status == ConnectorStatus(
         status=True, message=None, error=None, details=[("Credentials provided", True), ("Sample BigQuery job", True)]
     )
+
+
+def test_get_status_no_creds() -> None:
+    conn = GoogleBigQueryConnector(name="woups", scopes=["https://www.googleapis.com/auth/bigquery"])
+
+    assert conn.get_status() == ConnectorStatus(
+        status=False,
+        message=None,
+        error="Either google credentials or a JWT token must be provided",
+        details=[("Credentials provided", False), ("Sample BigQuery job", False)],
+    )
