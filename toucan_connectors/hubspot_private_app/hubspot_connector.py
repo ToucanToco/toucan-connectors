@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Any, Generator, Protocol, TypeAlias
 
 import pandas as pd
-from hubspot import HubSpot  # type:ignore[import-untyped]
+from hubspot import HubSpot
 from pydantic import BaseModel, ConfigDict, Field
 
 from toucan_connectors.pagination import build_pagination_info

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import jwt
 import responses
 
-from toucan_connectors.auth import Auth, CustomTokenServer
+from toucan_connectors.auth import Auth, AuthType, CustomTokenServer
 
 
 class DummyRequest:
@@ -105,3 +105,10 @@ def test_oauth2_oidc():
         json={"id_token": "coucou"},
     )
     session = auth.get_session()
+
+
+def test_build_auth_kwargs_only() -> None:
+    auth = Auth(kwargs={"username": "a", "password": "b"}, type="basic")
+    assert auth.kwargs == {"username": "a", "password": "b"}
+    assert auth.args == []
+    assert auth.type == AuthType.basic

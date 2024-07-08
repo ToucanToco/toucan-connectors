@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import List
 
 import jq
 import jwt
@@ -94,22 +93,23 @@ class AuthType(str, Enum):
     custom_token_server = "custom_token_server"
 
 
-class Auth(BaseModel):
+# mypy complains about the `kwargs` field
+class Auth(BaseModel):  # type:ignore[no-redef]
     type: AuthType = Field(
         ...,
         description="As we rely on the python request library, we suggest that you "
         "refer to the dedicated "
         '<a href="https://2.python-requests.org/en/master/user/authentication/">documentation</a> '
         "for more details.",
-        description_mimetype="text/html",
+        description_mimetype="text/html",  # type:ignore[call-arg]
     )
-    args: List[str] = Field(
-        ...,
-        title="Positionnal arguments",
+    args: list[str] = Field(
+        default_factory=list,
+        title="Positional arguments",
         description="For example for a basic authentication, you can provide " "your username and password here",
     )
     kwargs: dict = Field(
-        None,
+        default_factory=dict,
         title="Named arguments",
         description="A JSON object with argument name as key and corresponding value as value",
     )
@@ -122,9 +122,8 @@ class Auth(BaseModel):
             "oauth2_backend": oauth2_backend,
             "oauth2_oidc": oauth2_oidc,
             "custom_token_server": CustomTokenServer,
-        }.get(self.type.value)
-        kwargs = {} if not self.kwargs else self.kwargs
-        auth_instance = auth_class(*self.args, **kwargs)
+        }[self.type.value]
+        auth_instance = auth_class(*self.args, **self.kwargs)
 
         # Some authentification mechanisms are built-in a Session...
         if isinstance(auth_instance, Session):

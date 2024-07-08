@@ -491,3 +491,15 @@ def test_response_json_fails(connector: HttpAPIConnector, mocker: MockFixture, d
     mocker.patch("toucan_connectors.http_api.http_api_connector.transform_with_jq", return_value=[{"a": 1}])
     connector.get_df(data_source)
     mocked_loads.assert_called_once()
+
+
+def test_instantiate_connector_basic_auth_by_kwargs() -> None:
+    conn = HttpAPIConnector(
+        **{
+            "name": "aaaa",
+            "baseroute": "https://jsonplaceholder.typicode.com/posts",
+            "auth": {"kwargs": {"username": "a", "password": "b"}, "type": "basic"},
+            "type": "HttpAPI",
+        }
+    )
+    assert conn.auth == Auth(type="basic", kwargs={"username": "a", "password": "b"})

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix
+
+- HTTP: allow connector to be instancioated without passing positional arguments to auth.
+
 ## [6.3.0] 2024-06-21
 
 ### Fix
