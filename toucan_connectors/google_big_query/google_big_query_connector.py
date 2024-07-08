@@ -5,7 +5,7 @@ from enum import Enum
 from functools import cached_property
 from itertools import groupby
 from timeit import default_timer as timer
-from typing import Any, Dict, Iterable, Union
+from typing import Any, Iterable, Union
 
 import pandas as pd
 import requests
@@ -83,16 +83,16 @@ class GoogleBigQueryDataSource(ToucanDataSource):
         ...,
         description="You can find details on the query syntax "
         '<a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax">here</a>',
-        widget="sql",
+        widget="sql",  # type:ignore[call-arg]
     )
-    query_object: Dict = Field(
+    query_object: dict | None = Field(  # type:ignore[pydantic-field]
         None,
         description="An object describing a simple select query This field is used internally",
-        **{"ui.hidden": True},
+        **{"ui.hidden": True},  # type:ignore[arg-type]
     )
-    language: str = Field("sql", **{"ui.hidden": True})
-    database: str = Field(None, **{"ui.hidden": True})
-    db_schema: str = Field(None, description="The name of the db_schema you want to query.")
+    language: str = Field("sql", **{"ui.hidden": True})  # type:ignore[arg-type,pydantic-field]
+    database: str | None = Field(None, **{"ui.hidden": True})  # type:ignore[arg-type,pydantic-field]
+    db_schema: str | None = Field(None, description="The name of the db_schema you want to query.")
 
     @classmethod
     def get_form(cls, connector: "GoogleBigQueryConnector", current_config: dict[str, Any]):
@@ -122,6 +122,7 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
         return bigquery_helpers.scalar_to_query_parameter(value=value, name=name)
 
 
+_CREDENTIALS_CHECK_NAME = "Credentials provided"
 _KEY_CHECK_NAME = "Private key validity"
 _SAMPLE_QUERY = "Sample BigQuery job"
 
@@ -143,7 +144,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
     jwt_credentials: JWTCredentials | None = Field(
         None,
         title="Google Credentials With JWT",
-        description="You need to signe a JWT token, that will be use here with the project_id",
+        description="You need to sign a JWT token, that will be used here with the project_id",
     )
 
     dialect: Dialect = Field(
@@ -204,10 +205,13 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
 
         return client
 
-    @staticmethod
-    def _connect(credentials: Credentials) -> bigquery.Client:
+    def _connect(self, credentials: Credentials | JWTCredentials) -> bigquery.Client:
         start = timer()
-        client = bigquery.Client(credentials=credentials)
+        if isinstance(credentials, Credentials):
+            client = bigquery.Client(credentials=credentials)
+        else:
+            session = CustomRequestSession(credentials.jwt_token)
+            client = self._http_connect(http_session=session, project_id=self._get_project_id())
         end = timer()
         _LOGGER.info(
             f"[benchmark][google_big_query] - connect {end - start} seconds",
@@ -241,8 +245,8 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
         try:
             start = timer()
             query = GoogleBigQueryConnector._clean_query(query)
-            result_iterator = (
-                client.query(
+            result_iterator: Iterable[pd.DataFrame] = (
+                client.query(  # type:ignore[assignment]
                     query,
                     job_config=bigquery.QueryJobConfig(query_parameters=parameters),
                 )
@@ -294,7 +298,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
         try:
             assert self.credentials is not None
             credentials = GoogleBigQueryConnector._get_google_credentials(self.credentials, self.scopes)
-            return GoogleBigQueryConnector._connect(credentials)
+            return self._connect(credentials)
         except AssertionError as excp:
             raise GoogleClientCreationError from excp
 
@@ -303,13 +307,13 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
         if self.jwt_credentials and self.jwt_credentials.jwt_token:
             try:
                 # We try to instantiate the bigquery.Client with the given jwt-token
-                _session = CustomRequestSession(self.jwt_credentials.jwt_token)
-                client = GoogleBigQueryConnector._http_connect(http_session=_session, project_id=self._get_project_id())
-                _LOGGER.info("bigqueryClient created with the JWT provided !")
+                session = CustomRequestSession(self.jwt_credentials.jwt_token)
+                client = GoogleBigQueryConnector._http_connect(http_session=session, project_id=self._get_project_id())
+                _LOGGER.debug("BigQuery client created using the provided JWT token")
 
                 return client
-            except InvalidJWTToken:
-                _LOGGER.info("JWT login failed, falling back to GoogleCredentials if they are presents")
+            except InvalidJWTToken as exc:
+                _LOGGER.warning("Login with JWT token failed, falling back to google credentials", exc_info=exc)
         # or we fallback on default google-credentials
         return self._bigquery_client_with_google_creds()
 
@@ -359,7 +363,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
 
         unformatted_db_tree["columns"] = unformatted_db_tree["columns"].apply(_format_columns)
         return (
-            unformatted_db_tree.groupby(["name", "schema", "database", "type"], group_keys=False)["columns"]
+            unformatted_db_tree.groupby(["name", "schema", "database", "type"], group_keys=False)["columns"]  # type:ignore[return-value]
             .apply(list)
             .reset_index()
             .to_dict(orient="records")
@@ -452,7 +456,7 @@ WHERE
         datasets = client.list_datasets(timeout=10)
         dataset_ids = (ds.dataset_id for ds in datasets)
 
-        return pd.Series(dataset_ids).values
+        return pd.Series(dataset_ids).values  # type:ignore[call-overload]
 
     def _get_project_structure(self, db_name: str | None = None, schema_name: str | None = None) -> list[TableInfo]:
         client = self._get_bigquery_client()
@@ -484,12 +488,32 @@ WHERE
         return self._get_project_structure(db_name, schema_name)
 
     def get_status(self) -> ConnectorStatus:
+        checks: list[tuple[str, bool | None]] = []
         try:
-            credentials = get_google_oauth2_credentials(self.credentials)
+            if self.credentials:
+                credentials = get_google_oauth2_credentials(self.credentials)
+                checks += [
+                    (_CREDENTIALS_CHECK_NAME, True),
+                    (_KEY_CHECK_NAME, True),
+                ]
+            elif self.jwt_credentials:
+                credentials = self.jwt_credentials
+                checks.append((_CREDENTIALS_CHECK_NAME, True))
+            else:
+                return ConnectorStatus(
+                    status=False,
+                    details=[
+                        (_CREDENTIALS_CHECK_NAME, False),
+                        (_SAMPLE_QUERY, False),
+                    ],
+                    error="Either google credentials or a JWT token must be provided",
+                )
+
         except Exception as exc:
             return ConnectorStatus(
                 status=False,
                 details=[
+                    (_CREDENTIALS_CHECK_NAME, True),
                     (_KEY_CHECK_NAME, False),
                     (_SAMPLE_QUERY, False),
                 ],
@@ -499,18 +523,12 @@ WHERE
         try:
             client = self._connect(credentials)
             client.query("SELECT SESSION_USER() as whoami")
+            checks.append((_SAMPLE_QUERY, True))
         except Exception as exc:
             return ConnectorStatus(
                 status=False,
-                details=[
-                    (_KEY_CHECK_NAME, True),
-                    (_SAMPLE_QUERY, False),
-                ],
+                details=[*checks, (_SAMPLE_QUERY, False)],
                 error=str(exc),
             )
 
-        return ConnectorStatus(
-            status=True,
-            details=[(_KEY_CHECK_NAME, True), (_SAMPLE_QUERY, True)],
-            error=None,
-        )
+        return ConnectorStatus(status=True, details=checks, error=None)
