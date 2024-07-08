@@ -4,7 +4,7 @@
 
 ### Fix
 
-- HTTP: allow connector to be instancioated without passing positional arguments to auth.
+- HTTP: allow connector to be instanciated without passing positional arguments to auth.
 
 ## [6.3.0] 2024-06-21
 
