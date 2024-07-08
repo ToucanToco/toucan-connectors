@@ -488,7 +488,7 @@ WHERE
         return self._get_project_structure(db_name, schema_name)
 
     def get_status(self) -> ConnectorStatus:
-        checks = []
+        checks: list[tuple[str, bool | None]] = []
         try:
             if self.credentials:
                 credentials = get_google_oauth2_credentials(self.credentials)
