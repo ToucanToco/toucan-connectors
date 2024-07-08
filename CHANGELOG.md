@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [6.3.1] 2024-07-08
+
 ### Fix
 
 - BigQuery: the JWT token auth method is now supported in the status check.
