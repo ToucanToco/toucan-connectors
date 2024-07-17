@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [6.3.2] 2024-07-17
+
+### Fix
+
+- Dependencies: removed the upper bound on peakina
+
 ## [6.3.1] 2024-07-08
 
 ### Fix
