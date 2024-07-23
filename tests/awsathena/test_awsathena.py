@@ -80,6 +80,7 @@ def test_get_df(
         boto3_session={"a": "b"},
         s3_output="s3://test/results/",
         ctas_approach=use_ctas,
+        paramstyle="named",
     )
 
     mocked_boto_session.assert_called_once()
@@ -107,6 +108,7 @@ def test_get_slice(mocker, athena_connector, data_source, mocked_read_sql_query,
         boto3_session={"a": "b"},
         s3_output="s3://test/results/",
         ctas_approach=False,
+        paramstyle="named",
     )
 
 
@@ -270,15 +272,16 @@ def test_no_sql_injection(athena_connector, mocker):
         query="SELECT * FROM Users WHERE UserId = {{ user_id }}",
         parameters={"user_id": "105 OR 1=1"},
     )
-    assert ds.query == "SELECT * FROM Users WHERE UserId = :__QUERY_PARAM_0__;"
+    assert ds.query == "SELECT * FROM Users WHERE UserId = :__QUERY_PARAM_0__"
     assert ds.parameters == {"user_id": "105 OR 1=1", "__QUERY_PARAM_0__": "105 OR 1=1"}
 
     athena_connector.get_df(ds)
     read_sql_mock.assert_called_once_with(
-        "SELECT * FROM Users WHERE UserId = :__QUERY_PARAM_0__;",
+        "SELECT * FROM Users WHERE UserId = :__QUERY_PARAM_0__",
         params={"user_id": "105 OR 1=1", "__QUERY_PARAM_0__": "105 OR 1=1"},
         database="db",
         boto3_session=mocker.ANY,
         s3_output=mocker.ANY,
         ctas_approach=mocker.ANY,
+        paramstyle="named",
     )
