@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 import awswrangler as wr
 import boto3
@@ -27,17 +27,18 @@ class AwsathenaDataSource(ToucanDataSource):
     database: Annotated[str, StringConstraints(min_length=1)] = Field(
         ..., description="The name of the database you want to query."
     )
-    table: str = Field(None, **{"ui.hidden": True})  # To avoid previous config migrations, won't be used
-    language: str = Field("sql", **{"ui.hidden": True})
-    query: Annotated[str, StringConstraints(min_length=1)] = Field(
+    # To avoid previous config migrations, won't be used
+    table: str | None = Field(None, **{"ui.hidden": True})  # type:ignore[arg-type,pydantic-field]
+    language: str = Field("sql", **{"ui.hidden": True})  # type:ignore[arg-type,pydantic-field]
+    query: Annotated[str | None, StringConstraints(min_length=1)] = Field(  # type:ignore[call-arg]
         None,
         description="The SQL query to execute.",
         widget="sql",
     )
-    query_object: dict = Field(
+    query_object: dict | None = Field(  # type:ignore[pydantic-field]
         None,
         description="An object describing a simple select query This field is used internally",
-        **{"ui.hidden": True},
+        **{"ui.hidden": True},  # type:ignore[arg-type]
     )
     use_ctas: bool = Field(
         False,
@@ -69,11 +70,12 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
 
     s3_output_bucket: str = Field(..., description="Your S3 Output bucket (where query results are stored.)")
     aws_access_key_id: str = Field(..., description="Your AWS access key ID")
-    aws_secret_access_key: PlainJsonSecretStr = Field(None, description="Your AWS secret key")
+    aws_secret_access_key: PlainJsonSecretStr | None = Field(None, description="Your AWS secret key")
     region_name: str = Field(..., description="Your AWS region name")
     model_config = ConfigDict(ignored_types=(cached_property_with_ttl,))
 
     def get_session(self) -> boto3.Session:
+        assert self.aws_secret_access_key is not None, "'aws_secret_access_key' is required"
         return boto3.Session(
             aws_access_key_id=self.aws_access_key_id,
             # This is required because this gets appended by boto3
@@ -88,7 +90,7 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
         return q[:-1] if q.endswith(";") else q
 
     @classmethod
-    def _add_pagination_to_query(cls, query: str, offset: int = 0, limit: Optional[int] = None) -> str:
+    def _add_pagination_to_query(cls, query: str, offset: int = 0, limit: int | None = None) -> str:
         if offset and limit:
             return f"SELECT * FROM ({cls._strip_trailing_semicolumn(query)}) OFFSET {offset} LIMIT {limit};"
         if limit:
@@ -103,8 +105,9 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
         self,
         data_source: AwsathenaDataSource,
         offset: int = 0,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> pd.DataFrame:
+        assert data_source.query is not None, "no query provided"
         df = wr.athena.read_sql_query(
             self._add_pagination_to_query(
                 data_source.query,
@@ -122,7 +125,7 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
     def _list_db_names(self) -> list[str]:
         return wr.catalog.databases(
             boto3_session=self.get_session(),
-        )["Database"].values
+        )["Database"].values.tolist()
 
     def _get_project_structure(self, db_name: str | None = None) -> list[TableInfo]:
         table_list: list[TableInfo] = []
@@ -134,8 +137,9 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
             )
             for table_object in tables:
                 if "temp_table" not in table_object["Table"]:
-                    columns = wr.catalog.get_table_types(
-                        boto3_session=session, database=db, table=table_object["Table"]
+                    columns = (
+                        wr.catalog.get_table_types(boto3_session=session, database=db, table=table_object["Table"])
+                        or {}
                     )
                     table_list.append(
                         {
@@ -150,17 +154,17 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
     def get_slice(
         self,
         data_source: AwsathenaDataSource,
-        permissions: Optional[dict] = None,
+        permissions: dict | None = None,
         offset: int = 0,
-        limit: Optional[int] = None,
-        get_row_count: Optional[bool] = False,
+        limit: int | None = None,
+        get_row_count: bool | None = False,
     ) -> DataSlice:
         df = self._retrieve_data(data_source, offset=offset, limit=limit)
         df.columns = df.columns.astype(str)
 
         if permissions is not None:
             permissions_query = PandasConditionTranslator.translate(permissions)
-            permissions_query = apply_query_parameters(permissions_query, data_source.parameters)
+            permissions_query = apply_query_parameters(permissions_query, data_source.parameters or {})
             df = df.query(permissions_query)
 
         return DataSlice(
