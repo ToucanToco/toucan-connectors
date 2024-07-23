@@ -62,7 +62,7 @@ class AwsathenaDataSource(ToucanDataSource):
 
 def athena_variable_transformer(variable: str):
     """Add surrounding for parameters injection"""
-    return f":{variable};"
+    return f":{variable}"
 
 
 class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_model=AwsathenaDataSource):
@@ -119,6 +119,7 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
             boto3_session=self.get_session(),
             s3_output=self.s3_output_bucket,
             ctas_approach=data_source.use_ctas,
+            paramstyle="named",
         )
         return df
 

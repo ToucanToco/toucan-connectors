@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix
+
+- Athena: params are now correctly interpolated
+
 ## [6.3.2] 2024-07-17
 
 ### Fix
