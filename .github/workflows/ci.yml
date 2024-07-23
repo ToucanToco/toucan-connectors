@@ -78,6 +78,12 @@ jobs:
       env:
         BEARER_API_KEY: ${{ secrets.BEARER_API_KEY }}
         BEARER_AIRCALL_AUTH_ID: ${{ secrets.BEARER_AIRCALL_AUTH_ID }}
+        # Athena
+        ATHENA_OUTPUT: '${{ secrets.ATHENA_OUTPUT }}'
+        ATHENA_DATABASE: '${{ secrets.ATHENA_DATABASE }}'
+        ATHENA_ACCESS_KEY_ID: '${{ secrets.ATHENA_ACCESS_KEY_ID }}'
+        ATHENA_SECRET_ACCESS_KEY: '${{ secrets.ATHENA_SECRET_ACCESS_KEY }}'
+        ATHENA_REGION: '${{ secrets.ATHENA_REGION }}'
 
     - name: SonarCloud Scan
       # Only executed for one of the tested python version and pandas version
