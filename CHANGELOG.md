@@ -1,6 +1,6 @@
 # Changelog (Pypi package)
 
-## Unreleased
+## [6.4.0] 2024-07-25
 
 ### Changed
 
@@ -21,7 +21,7 @@
 ### Fix
 
 - BigQuery: the JWT token auth method is now supported in the status check.
-- HTTP: allow connector to be instanciated without passing positional arguments to auth.
+- HTTP: allow connector to be instantiated without passing positional arguments to auth.
 
 ## [6.3.0] 2024-06-21
 
