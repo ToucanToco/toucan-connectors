@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Hubspot: added support for custom attributes
+
 ## [6.3.2] 2024-07-17
 
 ### Fix
