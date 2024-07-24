@@ -223,8 +223,8 @@ def test_get_slice_with_offset_and_limit_in_bounds(
     assert_frame_equal(result.df, expected_df[1:].reset_index(drop=True))
 
     assert hubspot_client.basic_api.get_page.call_args_list == [
-        call(after=None, limit=1),
-        call(after="1", limit=1),
+        call(after=None, limit=1, properties=[]),
+        call(after="1", limit=1, properties=[]),
     ]
     hubspot_client.get_all.assert_not_called()
 
@@ -242,7 +242,7 @@ def test_get_slice_with_offset_out_of_bounds(
 
     hubspot_client.get_all.assert_not_called()
     # Limit should have been truncated to 100 results
-    assert hubspot_client.basic_api.get_page.call_args_list == [call(after=None, limit=100)]
+    assert hubspot_client.basic_api.get_page.call_args_list == [call(after=None, limit=100, properties=[])]
 
 
 def test_get_slice_has_the_right_behaviour_even_when_too_many_results_are_returned(
@@ -259,4 +259,4 @@ def test_get_slice_has_the_right_behaviour_even_when_too_many_results_are_return
 
     hubspot_client.get_all.assert_not_called()
     # Limit should have been truncated to 100 results
-    assert hubspot_client.basic_api.get_page.call_args_list == [call(after=None, limit=1)]
+    assert hubspot_client.basic_api.get_page.call_args_list == [call(after=None, limit=1, properties=[])]

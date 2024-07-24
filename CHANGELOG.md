@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Hubspot: added support for custom attributes
+
 ### Fix
 
 - Athena: params are now correctly interpolated

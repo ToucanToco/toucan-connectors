@@ -25,6 +25,7 @@ class HubspotDataset(str, Enum):
 
 class HubspotDataSource(ToucanDataSource):
     dataset: HubspotDataset
+    properties: list[str] = Field(default_factory=list, description="List of all properties you want to retrieve")
 
 
 class _HubSpotPagingNext(BaseModel):
@@ -66,14 +67,14 @@ class _HubSpotObject(Protocol):  # pragma: no cover
 
 
 class _PageApi(Protocol):  # pragma: no cover
-    def get_page(self, after: str | None, limit: int | None) -> _HubSpotObject: ...
+    def get_page(self, after: str | None, limit: int | None, properties: list[str]) -> _HubSpotObject: ...
 
 
 class _Api(Protocol):  # pragma: no cover
     @property
     def basic_api(self) -> _PageApi: ...
 
-    def get_all(self) -> list[_HubSpotObject]: ...
+    def get_all(self, properties: list[str]) -> list[_HubSpotObject]: ...
 
 
 def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:  # pragma: no cover
@@ -90,12 +91,14 @@ def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:  # pragma: no
 class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
     access_token: PlainJsonSecretStr = Field(..., description="An API key for the target private app")
 
-    def _fetch_page(self, api: _PageApi, after: str | None = None, limit: int | None = None) -> _HubSpotResponse:
-        page = api.get_page(after=after, limit=limit)
+    def _fetch_page(
+        self, api: _PageApi, properties: list[str], after: str | None = None, limit: int | None = None
+    ) -> _HubSpotResponse:
+        page = api.get_page(after=after, limit=limit, properties=properties)
         return _HubSpotResponse(**page.to_dict())
 
-    def _fetch_all(self, api: _Api) -> list[_HubSpotResult]:
-        results = api.get_all()
+    def _fetch_all(self, api: _Api, properties: list[str]) -> list[_HubSpotResult]:
+        results = api.get_all(properties=properties)
         return [_HubSpotResult(**elem.to_dict()) for elem in results]
 
     def _api_for_dataset(self, object_type: HubspotDataset) -> _Api:  # pragma: no cover
@@ -104,10 +107,10 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
 
     def _retrieve_data(self, data_source: HubspotDataSource) -> pd.DataFrame:
         api = self._api_for_dataset(data_source.dataset)
-        return pd.DataFrame(r.to_dict() for r in self._fetch_all(api))
+        return pd.DataFrame(r.to_dict() for r in self._fetch_all(api, properties=data_source.properties))
 
     def _result_iterator(
-        self, api: _PageApi, max_results: int | None, limit: int | None
+        self, api: _PageApi, properties: list[str], max_results: int | None, limit: int | None
     ) -> Generator[_HubSpotResult, None, None]:
         after = None
         count = 0
@@ -115,7 +118,7 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
         if limit is not None:
             limit = min(limit, 100)
         while True:
-            page = self._fetch_page(api, after=after, limit=limit)
+            page = self._fetch_page(api, properties=properties, after=after, limit=limit)
             for result in page.results:
                 if max_results is not None and count >= max_results:
                     return
@@ -140,7 +143,12 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
             api = self._api_for_dataset(data_source.dataset)
             page_api = _page_api_for(api, data_source.dataset)
             results = []
-            result_iterator = self._result_iterator(page_api, max_results=offset + (limit or 0), limit=limit)
+            result_iterator = self._result_iterator(
+                page_api,
+                properties=data_source.properties,
+                max_results=offset + (limit or 0),
+                limit=limit,
+            )
             try:
                 for _ in range(offset):
                     next(result_iterator)
