@@ -25,7 +25,7 @@ class HubspotDataset(str, Enum):
 
 class HubspotDataSource(ToucanDataSource):
     dataset: HubspotDataset
-    properties: list[str] = Field([], description="List of all properties you want to retrieve")
+    properties: list[str] = Field(default_factory=list, description="List of all properties you want to retrieve")
 
 
 class _HubSpotPagingNext(BaseModel):
