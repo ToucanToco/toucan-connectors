@@ -1,5 +1,11 @@
 # Changelog (Pypi package)
 
+## Unreleased
+
+### Changed
+
+- Hubspot: added support for listing and selection of custom objects
+
 ## [6.4.0] 2024-07-25
 
 ### Changed
