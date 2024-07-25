@@ -70,13 +70,13 @@ class _HubSpotObject(Protocol):  # pragma: no cover
     def to_dict(self) -> _RawHubSpotResult: ...
 
 
-def _get_all(client: HubSpot, dataset: str) -> list[_HubSpotObject]:
+def _get_all(client: HubSpot, dataset: str) -> list[_HubSpotObject]:  # pragma: no cover
     return client.crm.objects.get_all(dataset)
 
 
 def _get_page(
     client: HubSpot, dataset: str, after: str | None, limit: int | None, properties: list[str]
-) -> _HubSpotObject:
+) -> _HubSpotObject:  # pragma: no cover
     return client.crm.objects.basic_api.get_page(dataset, after=after, limit=limit, properties=properties)
 
 
@@ -151,6 +151,6 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
             pagination_info=build_pagination_info(offset=offset, limit=limit, retrieved_rows=len(df), total_rows=None),
         )
 
-    def get_custom_objects(self) -> list[str]:
+    def get_custom_objects(self) -> list[str]:  # pragma: no cover
         client = HubSpot(access_token=self.access_token.get_secret_value())
         return [obj.fully_qualified_name for obj in client.crm.schemas.core_api.get_all().results]

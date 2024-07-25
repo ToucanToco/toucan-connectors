@@ -9,6 +9,7 @@ from pytest_mock import MockFixture
 
 from toucan_connectors.hubspot_private_app import hubspot_connector as connector_module
 from toucan_connectors.hubspot_private_app.hubspot_connector import (
+    HUBSPOT_DEFAULT_DATASETS,
     HubspotConnector,
     HubspotDataSource,
 )
@@ -266,3 +267,15 @@ def test_get_slice_has_the_right_behaviour_even_when_too_many_results_are_return
     assert get_page_mock.call_args_list == [
         call(client=ANY, dataset=hubspot_data_source.dataset, after=None, limit=1, properties=[])
     ]
+
+
+def test_get_form(
+    hubspot_connector: HubspotConnector,
+    hubspot_data_source: HubspotDataSource,
+    mocker: MockFixture,
+):
+    mocker.patch.object(HubspotConnector, "get_custom_objects", return_value=["myobject"])
+    form = hubspot_data_source.get_form(hubspot_connector, None)
+
+    assert "myobject" in str(form)
+    assert all(dataset in str(form) for dataset in HUBSPOT_DEFAULT_DATASETS)
