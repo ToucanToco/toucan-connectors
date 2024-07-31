@@ -1,15 +1,16 @@
 from datetime import datetime
 from typing import Any
-from unittest.mock import MagicMock, call
+from unittest.mock import ANY, MagicMock, call
 
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 from pytest_mock import MockFixture
 
+from toucan_connectors.hubspot_private_app import hubspot_connector as connector_module
 from toucan_connectors.hubspot_private_app.hubspot_connector import (
+    HUBSPOT_DEFAULT_DATASETS,
     HubspotConnector,
-    HubspotDataset,
     HubspotDataSource,
 )
 
@@ -95,18 +96,13 @@ def hubspot_all_results(hubspot_full_page: _DictableDict) -> list[_DictableDict]
 
 
 @pytest.fixture
-def hubspot_client(mocker: MockFixture) -> MagicMock:
-    basic_api = MagicMock()
-    api = MagicMock()
-    api.basic_api = basic_api
+def get_all_mock(mocker: MockFixture) -> MagicMock:
+    return mocker.patch.object(connector_module, "_get_all")
 
-    mocker.patch.object(HubspotConnector, "_api_for_dataset", return_value=api)
-    mocker.patch(
-        "toucan_connectors.hubspot_private_app.hubspot_connector._page_api_for",
-        return_value=basic_api,
-    )
 
-    return api
+@pytest.fixture
+def get_page_mock(mocker: MockFixture) -> MagicMock:
+    return mocker.patch.object(connector_module, "_get_page")
 
 
 @pytest.fixture
@@ -144,119 +140,142 @@ def hubspot_connector() -> HubspotConnector:
 
 @pytest.fixture
 def hubspot_data_source() -> HubspotDataSource:
-    return HubspotDataSource(name="hubspot", domain="coucou", dataset=HubspotDataset.contacts)
+    return HubspotDataSource(name="hubspot", domain="coucou", dataset="contacts")
 
 
 def test_get_df(
+    mocker: MockFixture,
     hubspot_connector: HubspotConnector,
     hubspot_data_source: HubspotDataSource,
-    hubspot_client: MagicMock,
+    get_all_mock: MagicMock,
     hubspot_all_results: list[_DictableDict],
     expected_df: pd.DataFrame,
 ):
-    hubspot_client.get_all.return_value = hubspot_all_results
+    get_all_mock.return_value = hubspot_all_results
 
     assert_frame_equal(hubspot_connector.get_df(hubspot_data_source), expected_df)
-    hubspot_client.get_all.assert_called_once()
+    get_all_mock.assert_called_once()
 
 
 def test_get_slice_no_limit_or_offset(
     hubspot_connector: HubspotConnector,
     hubspot_data_source: HubspotDataSource,
-    hubspot_client: MagicMock,
+    get_all_mock: MagicMock,
+    get_page_mock: MagicMock,
     hubspot_all_results: list[_DictableDict],
     expected_df: pd.DataFrame,
 ):
-    hubspot_client.get_all.return_value = hubspot_all_results
+    get_all_mock.return_value = hubspot_all_results
 
     result = hubspot_connector.get_slice(hubspot_data_source)
     assert_frame_equal(result.df, expected_df)
 
     # Since no limit was specified, we should have called get_all
-    hubspot_client.basic_api.get_page.assert_not_called()
-    hubspot_client.get_all.assert_called_once()
+    get_page_mock.assert_not_called()
+    get_all_mock.assert_called_once()
 
 
 def test_get_slice_with_offset_and_limit_greater_than_results(
     hubspot_connector: HubspotConnector,
     hubspot_data_source: HubspotDataSource,
-    hubspot_client: MagicMock,
+    get_all_mock: MagicMock,
+    get_page_mock: MagicMock,
     hubspot_full_page: _DictableDict,
     expected_df: pd.DataFrame,
 ):
-    hubspot_client.basic_api.get_page.return_value = hubspot_full_page
+    get_page_mock.return_value = hubspot_full_page
 
     result = hubspot_connector.get_slice(hubspot_data_source, offset=1, limit=2)
     assert_frame_equal(result.df, expected_df[1:].reset_index(drop=True))
 
-    hubspot_client.basic_api.get_page.assert_called_once()
-    hubspot_client.get_all.assert_not_called()
+    get_page_mock.assert_called_once()
+    get_all_mock.assert_not_called()
 
 
 def test_get_slice_with_offset_only(
     hubspot_connector: HubspotConnector,
     hubspot_data_source: HubspotDataSource,
-    hubspot_client: MagicMock,
+    get_all_mock: MagicMock,
+    get_page_mock: MagicMock,
     hubspot_all_results: list[_DictableDict],
     expected_df: pd.DataFrame,
 ):
-    hubspot_client.get_all.return_value = hubspot_all_results
+    get_all_mock.return_value = hubspot_all_results
 
     result = hubspot_connector.get_slice(hubspot_data_source, offset=1)
     assert_frame_equal(result.df, expected_df[1:].reset_index(drop=True))
 
-    hubspot_client.basic_api.get_page.assert_not_called()
-    hubspot_client.get_all.assert_called_once()
+    get_page_mock.assert_not_called()
+    get_all_mock.assert_called_once()
 
 
 def test_get_slice_with_offset_and_limit_in_bounds(
     hubspot_connector: HubspotConnector,
     hubspot_data_source: HubspotDataSource,
-    hubspot_client: MagicMock,
+    get_all_mock: MagicMock,
+    get_page_mock: MagicMock,
     hubspot_first_page: _DictableDict,
     hubspot_second_page: _DictableDict,
     expected_df: pd.DataFrame,
 ):
-    hubspot_client.basic_api.get_page.side_effect = [hubspot_first_page, hubspot_second_page]
+    get_page_mock.side_effect = [hubspot_first_page, hubspot_second_page]
 
     result = hubspot_connector.get_slice(hubspot_data_source, offset=1, limit=1)
     assert_frame_equal(result.df, expected_df[1:].reset_index(drop=True))
 
-    assert hubspot_client.basic_api.get_page.call_args_list == [
-        call(after=None, limit=1, properties=[]),
-        call(after="1", limit=1, properties=[]),
+    assert get_page_mock.call_args_list == [
+        call(client=ANY, dataset=hubspot_data_source.dataset, after=None, limit=1, properties=[]),
+        call(client=ANY, dataset=hubspot_data_source.dataset, after="1", limit=1, properties=[]),
     ]
-    hubspot_client.get_all.assert_not_called()
+    get_all_mock.assert_not_called()
 
 
 def test_get_slice_with_offset_out_of_bounds(
     hubspot_connector: HubspotConnector,
     hubspot_data_source: HubspotDataSource,
-    hubspot_client: MagicMock,
+    get_all_mock: MagicMock,
+    get_page_mock: MagicMock,
     hubspot_second_page: _DictableDict,
 ):
-    hubspot_client.basic_api.get_page.side_effect = [hubspot_second_page]
+    get_page_mock.side_effect = [hubspot_second_page]
 
     result = hubspot_connector.get_slice(hubspot_data_source, offset=140, limit=1000)
     assert_frame_equal(result.df, pd.DataFrame())
 
-    hubspot_client.get_all.assert_not_called()
+    get_all_mock.assert_not_called()
     # Limit should have been truncated to 100 results
-    assert hubspot_client.basic_api.get_page.call_args_list == [call(after=None, limit=100, properties=[])]
+    assert get_page_mock.call_args_list == [
+        call(client=ANY, dataset=hubspot_data_source.dataset, after=None, limit=100, properties=[])
+    ]
 
 
 def test_get_slice_has_the_right_behaviour_even_when_too_many_results_are_returned(
     hubspot_connector: HubspotConnector,
     hubspot_data_source: HubspotDataSource,
-    hubspot_client: MagicMock,
+    get_all_mock: MagicMock,
+    get_page_mock: MagicMock,
     hubspot_full_page: _DictableDict,
     expected_df: pd.DataFrame,
 ):
-    hubspot_client.basic_api.get_page.return_value = hubspot_full_page
+    get_page_mock.return_value = hubspot_full_page
 
     result = hubspot_connector.get_slice(hubspot_data_source, offset=0, limit=1)
     assert_frame_equal(result.df, expected_df[:1])
 
-    hubspot_client.get_all.assert_not_called()
+    get_all_mock.assert_not_called()
     # Limit should have been truncated to 100 results
-    assert hubspot_client.basic_api.get_page.call_args_list == [call(after=None, limit=1, properties=[])]
+    assert get_page_mock.call_args_list == [
+        call(client=ANY, dataset=hubspot_data_source.dataset, after=None, limit=1, properties=[])
+    ]
+
+
+def test_get_form(
+    hubspot_connector: HubspotConnector,
+    hubspot_data_source: HubspotDataSource,
+    mocker: MockFixture,
+):
+    mocker.patch.object(HubspotConnector, "get_custom_objects", return_value=["myobject"])
+    form = hubspot_data_source.get_form(hubspot_connector, None)
+
+    assert "myobject" in str(form)
+    assert all(dataset in str(form) for dataset in HUBSPOT_DEFAULT_DATASETS)

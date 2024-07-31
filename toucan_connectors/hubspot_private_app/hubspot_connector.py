@@ -1,10 +1,10 @@
+from contextlib import suppress
 from datetime import datetime
-from enum import Enum
 from typing import Any, Generator, Protocol, TypeAlias
 
 import pandas as pd
 from hubspot import HubSpot
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, create_model
 
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.toucan_connector import (
@@ -12,20 +12,24 @@ from toucan_connectors.toucan_connector import (
     PlainJsonSecretStr,
     ToucanConnector,
     ToucanDataSource,
+    strlist_to_enum,
 )
 
-
-class HubspotDataset(str, Enum):
-    contacts = "contacts"
-    companies = "companies"
-    deals = "deals"
-    quotes = "quotes"
-    owners = "owners"
+HUBSPOT_DEFAULT_DATASETS = ["contacts", "companies", "deals", "quotes", "owners"]
 
 
 class HubspotDataSource(ToucanDataSource):
-    dataset: HubspotDataset
+    dataset: str = Field(..., title="Dataset", description="The dataset to extract the data from")
     properties: list[str] = Field(default_factory=list, description="List of all properties you want to retrieve")
+
+    @classmethod
+    def get_form(cls, connector: "HubspotConnector", current_config, **kwargs):
+        constraints: Any = {"dataset": strlist_to_enum("dataset", HUBSPOT_DEFAULT_DATASETS)}
+        with suppress(Exception):
+            # try to retrieve user's custom defined objects
+            available_custom_objects = connector.get_custom_objects()
+            constraints["dataset"] = strlist_to_enum("dataset", HUBSPOT_DEFAULT_DATASETS + available_custom_objects)
+        return create_model("FormSchema", **constraints, __base__=cls).schema()
 
 
 class _HubSpotPagingNext(BaseModel):
@@ -66,51 +70,38 @@ class _HubSpotObject(Protocol):  # pragma: no cover
     def to_dict(self) -> _RawHubSpotResult: ...
 
 
-class _PageApi(Protocol):  # pragma: no cover
-    def get_page(self, after: str | None, limit: int | None, properties: list[str]) -> _HubSpotObject: ...
+def _get_all(client: HubSpot, dataset: str) -> list[_HubSpotObject]:  # pragma: no cover
+    return client.crm.objects.get_all(dataset)
 
 
-class _Api(Protocol):  # pragma: no cover
-    @property
-    def basic_api(self) -> _PageApi: ...
-
-    def get_all(self, properties: list[str]) -> list[_HubSpotObject]: ...
-
-
-def _page_api_for(api: _Api, dataset: HubspotDataset) -> _PageApi:  # pragma: no cover
-    """Some clients have a '{name}_api' attribute.
-
-    basic_api seems to be the default fallback
-    """
-    page_api_name = dataset.value + "_api"
-    if hasattr(api, page_api_name):
-        return getattr(api, page_api_name)
-    return api.basic_api
+def _get_page(
+    client: HubSpot, dataset: str, after: str | None, limit: int | None, properties: list[str]
+) -> _HubSpotObject:  # pragma: no cover
+    return client.crm.objects.basic_api.get_page(dataset, after=after, limit=limit, properties=properties)
 
 
 class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
     access_token: PlainJsonSecretStr = Field(..., description="An API key for the target private app")
 
     def _fetch_page(
-        self, api: _PageApi, properties: list[str], after: str | None = None, limit: int | None = None
+        self, dataset: str, properties: list[str], after: str | None = None, limit: int | None = None
     ) -> _HubSpotResponse:
-        page = api.get_page(after=after, limit=limit, properties=properties)
+        client = HubSpot(access_token=self.access_token.get_secret_value())
+        page = _get_page(client=client, dataset=dataset, after=after, limit=limit, properties=properties)
         return _HubSpotResponse(**page.to_dict())
 
-    def _fetch_all(self, api: _Api, properties: list[str]) -> list[_HubSpotResult]:
-        results = api.get_all(properties=properties)
+    def _fetch_all(self, dataset: str, properties: list[str]) -> list[_HubSpotResult]:
+        client = HubSpot(access_token=self.access_token.get_secret_value())
+        results = _get_all(client=client, dataset=dataset)
         return [_HubSpotResult(**elem.to_dict()) for elem in results]
 
-    def _api_for_dataset(self, object_type: HubspotDataset) -> _Api:  # pragma: no cover
-        client = HubSpot(access_token=self.access_token.get_secret_value())
-        return getattr(client.crm, object_type.value)
-
     def _retrieve_data(self, data_source: HubspotDataSource) -> pd.DataFrame:
-        api = self._api_for_dataset(data_source.dataset)
-        return pd.DataFrame(r.to_dict() for r in self._fetch_all(api, properties=data_source.properties))
+        return pd.DataFrame(
+            r.to_dict() for r in self._fetch_all(data_source.dataset, properties=data_source.properties)
+        )
 
     def _result_iterator(
-        self, api: _PageApi, properties: list[str], max_results: int | None, limit: int | None
+        self, dataset: str, properties: list[str], max_results: int | None, limit: int | None
     ) -> Generator[_HubSpotResult, None, None]:
         after = None
         count = 0
@@ -118,7 +109,7 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
         if limit is not None:
             limit = min(limit, 100)
         while True:
-            page = self._fetch_page(api, properties=properties, after=after, limit=limit)
+            page = self._fetch_page(dataset=dataset, properties=properties, after=after, limit=limit)
             for result in page.results:
                 if max_results is not None and count >= max_results:
                     return
@@ -140,11 +131,9 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
             df = self._retrieve_data(data_source)[offset:].reset_index(drop=True)
 
         else:
-            api = self._api_for_dataset(data_source.dataset)
-            page_api = _page_api_for(api, data_source.dataset)
             results = []
             result_iterator = self._result_iterator(
-                page_api,
+                dataset=data_source.dataset,
                 properties=data_source.properties,
                 max_results=offset + (limit or 0),
                 limit=limit,
@@ -161,3 +150,7 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
             df=df,
             pagination_info=build_pagination_info(offset=offset, limit=limit, retrieved_rows=len(df), total_rows=None),
         )
+
+    def get_custom_objects(self) -> list[str]:  # pragma: no cover
+        client = HubSpot(access_token=self.access_token.get_secret_value())
+        return [obj.fully_qualified_name for obj in client.crm.schemas.core_api.get_all().results]
