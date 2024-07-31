@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [6.5.0] 2024-07-31
+
 ### Changed
 
 - Hubspot: added support for listing and selection of custom objects
