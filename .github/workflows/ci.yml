@@ -71,7 +71,7 @@ jobs:
         key: ${{ runner.os }}-docker-images
 
     - name: Pulling all docker images
-      run: docker-compose -f tests/docker-compose.yml pull
+      run: docker compose -f tests/docker-compose.yml pull
 
     - name: test
       run: make test
