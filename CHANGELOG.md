@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [3.23.32] 2024-06-21
+
+### Changed
+
+- Big Query: Bumped `goole-cloud-bigquery` constraint from `^2` to `^3`.
+
 ## [3.23.31] 2024-06-21
 
 ### Fix
