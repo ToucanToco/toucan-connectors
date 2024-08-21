@@ -206,7 +206,7 @@ class PostgresConnector(
         for db in available_dbs:
             with suppress(pgsql.OperationalError):
                 databases_tree += self._list_tables_info(
-                    database_name=db, schema_name=schema_name, exclude_columns=exclude_columns
+                    database_name=db, schema_name=schema_name, table_name=table_name, exclude_columns=exclude_columns
                 )
         return DiscoverableConnector.format_db_model(databases_tree)
 
@@ -224,7 +224,7 @@ class PostgresConnector(
         for db in available_dbs:
             try:
                 databases_tree += self._list_tables_info(
-                    database_name=db, schema_name=schema_name, exclude_columns=exclude_columns
+                    database_name=db, schema_name=schema_name, table_name=table_name, exclude_columns=exclude_columns
                 )
             except pgsql.OperationalError:
                 failed_databases.append(db)
@@ -242,7 +242,7 @@ class PostgresConnector(
             return [db_name for (db_name,) in cursor.fetchall()]
 
     def _list_tables_info(
-        self, *, database_name: str | None, schema_name: str | None, exclude_columns: bool
+        self, *, database_name: str | None, schema_name: str | None, table_name: str | None, exclude_columns: bool
     ) -> list[tuple]:
         connection = pgsql.connect(
             **self.get_connection_params(database=self.default_database if not database_name else database_name)
@@ -252,6 +252,7 @@ class PostgresConnector(
                 build_database_model_extraction_query(
                     db_name=database_name,
                     schema_name=schema_name,
+                    table_name=table_name,
                     include_materialized_views=self.include_materialized_views,
                     exclude_columns=exclude_columns,
                 )
