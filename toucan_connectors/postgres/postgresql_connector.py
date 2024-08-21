@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import List, Optional
+from typing import Optional
 
 import psycopg2 as pgsql
 from pydantic import Field, StringConstraints, create_model
@@ -23,23 +23,23 @@ DEFAULT_DATABASE = "postgres"
 
 class PostgresDataSource(ToucanDataSource):
     database: str = Field(DEFAULT_DATABASE, description="The name of the database you want to query")
-    query: Annotated[str | None, StringConstraints(min_length=1)] = Field(
+    query: Annotated[str | None, StringConstraints(min_length=1)] = Field(  # type:ignore[call-arg]
         None,
         description="You can write a custom query against your "
         "database here. It will take precedence over "
         'the "table" parameter',
         widget="sql",
     )
-    query_object: dict | None = Field(
+    query_object: dict | None = Field(  # type:ignore[pydantic-field]
         None,
         description="An object describing a simple select query" "This field is used internally",
-        **{"ui.hidden": True},
+        **{"ui.hidden": True},  # type:ignore[arg-type]
     )
     table: Annotated[str | None, StringConstraints(min_length=1)] = Field(
         None,
         description="The name of the data table that you want to " 'get (equivalent to "SELECT * FROM ' 'your_table")',
     )
-    language: str = Field("sql", **{"ui.hidden": True})
+    language: str = Field("sql", **{"ui.hidden": True})  # type:ignore[pydantic-field,arg-type]
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -80,7 +80,7 @@ class PostgresDataSource(ToucanDataSource):
                     available_tables = [table_name for (_, table_name) in res]
                     constraints["table"] = strlist_to_enum("table", available_tables, None)
 
-        return create_model("FormSchema", **constraints, __base__=cls).schema()
+        return create_model("FormSchema", **constraints, __base__=cls).schema()  # type:ignore[call-overload]
 
 
 class PostgresConnector(
@@ -96,7 +96,7 @@ class PostgresConnector(
     host: str | None = Field(None, description="The listening address of your database server (IP adress or hostname)")
     port: int | None = Field(None, description="The listening port of your database server")
     user: str = Field(..., description="Your login username")
-    password: PlainJsonSecretStr = Field(None, description="Your login password")
+    password: PlainJsonSecretStr | None = Field(None, description="Your login password")
     default_database: str = Field(DEFAULT_DATABASE, description="Your default database")
 
     charset: str | None = Field(None, description="If you need to specify a specific character encoding.")
@@ -188,11 +188,18 @@ class PostgresConnector(
     def describe(self, data_source: PostgresDataSource):
         connection = pgsql.connect(**self.get_connection_params(database=data_source.database))
         with connection.cursor() as cursor:
+            assert data_source.query is not None, "no query provided"
             cursor.execute(f"""SELECT * FROM ({data_source.query.replace(';','')}) AS q LIMIT 0;""")
             res = cursor.description
         return {r.name: types.get(r.type_code) for r in res}
 
-    def get_model(self, db_name: str | None = None) -> List[TableInfo]:
+    def get_model(
+        self,
+        db_name: str | None = None,
+        schema_name: str | None = None,
+        table_name: str | None = None,
+        exclude_columns: bool = False,
+    ) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
         available_dbs = self._list_db_names() if db_name is None else [db_name]
         databases_tree = []
@@ -201,7 +208,13 @@ class PostgresConnector(
                 databases_tree += self._list_tables_info(db)
         return DiscoverableConnector.format_db_model(databases_tree)
 
-    def get_model_with_info(self, db_name: str | None = None) -> tuple[list[TableInfo], dict]:
+    def get_model_with_info(
+        self,
+        db_name: str | None = None,
+        schema_name: str | None = None,
+        table_name: str | None = None,
+        exclude_columns: bool = False,
+    ) -> tuple[list[TableInfo], dict]:
         """Retrieves the database tree structure using current connection"""
         available_dbs = self._list_db_names() if db_name is None else [db_name]
         databases_tree = []
@@ -218,13 +231,13 @@ class PostgresConnector(
             metadata["info"] = {"Could not reach databases": failed_databases}
         return (tables_info, metadata)
 
-    def _list_db_names(self) -> List[str]:
+    def _list_db_names(self) -> list[str]:
         connection = pgsql.connect(**self.get_connection_params(database=self.default_database))
         with connection.cursor() as cursor:
             cursor.execute("""select datname from pg_database where datistemplate = false;""")
             return [db_name for (db_name,) in cursor.fetchall()]
 
-    def _list_tables_info(self, database_name: str = None) -> List[tuple]:
+    def _list_tables_info(self, database_name: str | None = None) -> list[tuple]:
         connection = pgsql.connect(
             **self.get_connection_params(database=self.default_database if not database_name else database_name)
         )

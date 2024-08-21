@@ -208,6 +208,12 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
                     error=f"Cannot verify connection to Athena: {exc}, {sts_exc}",
                 )
 
-    def get_model(self, db_name: str | None = None) -> list[TableInfo]:
+    def get_model(
+        self,
+        db_name: str | None = None,
+        schema_name: str | None = None,
+        table_name: str | None = None,
+        exclude_columns: bool = False,
+    ) -> list[TableInfo]:
         """Retrieves the database tree structure using current session"""
         return self._get_project_structure(db_name)
