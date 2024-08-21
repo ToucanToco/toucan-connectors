@@ -603,18 +603,25 @@ types = {
 }
 
 
-def _build_materialized_views_info_extraction_query(db_name: str | None) -> str:
+def _build_materialized_views_info_extraction_query(db_name: str | None, exclude_columns: bool) -> str:
     # Here, we need to query pg_catalog because materialized views are not a standard SQL feature
     # and are thus not available in information_schema.
     # The WHERE condition filters to retrieve materialized views only and excludes system columns
     # (see https://www.postgresql.org/docs/current/catalog-pg-attribute.html).
     # The CASE statement is to format postgres types to sql types as found in information_schema
     database_name = f"'{db_name}'" if db_name else "NULL"
-    return f"""
+    return (
+        f"""
     SELECT {database_name} AS "database",
     ns.nspname AS "schema",
     'view' AS "table_type",
-    cls.relname AS table_name,
+    cls.relname AS table_name,"""
+        + (
+            # If we want to exclude the columns, we do not join on the pg_catalog.pg_type
+            # `information_schema.columns` table, and simply return an empty array
+            "array[]::json[] AS columns"
+            if exclude_columns
+            else """
     JSON_AGG(
         JSON_BUILD_OBJECT(
             'name', attr.attname,
@@ -626,18 +633,38 @@ def _build_materialized_views_info_extraction_query(db_name: str | None) -> str:
             ELSE tp.typname
             END
         )
-    ) AS columns
+    ) AS columns"""
+        )
+        + """
     FROM pg_catalog.pg_attribute AS attr
     JOIN pg_catalog.pg_class AS cls ON cls.oid = attr.attrelid
     JOIN pg_catalog.pg_namespace AS ns ON ns.oid = cls.relnamespace
-    JOIN pg_catalog.pg_type AS tp ON tp.oid = attr.atttypid
+    """
+        + ("" if exclude_columns else "JOIN pg_catalog.pg_type AS tp ON tp.oid = attr.atttypid\n")
+        + """
     WHERE cls.relname in (SELECT matviewname FROM pg_matviews) AND attr.attnum >= 0
     GROUP BY schema, database, table_name, table_type
     """
+    )
 
 
-def _build_regular_tables_model_extraction_query() -> str:
-    return """SELECT t.table_catalog AS database,
+def _build_regular_tables_model_extraction_query(exclude_columns: bool) -> str:
+    # If we want to exclude the columns, we do not join on the `information_schema.columns` table,
+    # and simply return an empty array
+    return (
+        """SELECT t.table_catalog AS database,
+    t.table_schema AS schema,
+    CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END AS type,
+    t.table_name AS name,
+    array[]::json[] AS columns
+    FROM
+        information_schema.tables t
+    WHERE t.table_type IN ('BASE TABLE', 'VIEW')
+    AND t.table_schema NOT IN  ('pg_catalog', 'information_schema', 'pg_internal')
+    GROUP BY t.table_schema, t.table_catalog, t.table_name, t.table_type
+    """
+        if exclude_columns
+        else """SELECT t.table_catalog AS database,
     t.table_schema AS schema,
     CASE WHEN t.table_type = 'BASE TABLE' THEN 'table' ELSE lower(t.table_type) END AS type,
     t.table_name AS name,
@@ -650,14 +677,17 @@ def _build_regular_tables_model_extraction_query() -> str:
     AND t.table_schema NOT IN  ('pg_catalog', 'information_schema', 'pg_internal')
     GROUP BY t.table_schema, t.table_catalog, t.table_name, t.table_type
     """
+    )
 
 
-def build_database_model_extraction_query(db_name: str | None, include_materialized_views: bool) -> str:
+def build_database_model_extraction_query(
+    *, db_name: str | None, schema_name: str | None, include_materialized_views: bool, exclude_columns: bool
+) -> str:
     return (
-        f"""{_build_regular_tables_model_extraction_query()}
+        f"""{_build_regular_tables_model_extraction_query(exclude_columns)}
         UNION ALL
-        {_build_materialized_views_info_extraction_query(db_name)};
+        {_build_materialized_views_info_extraction_query(db_name, exclude_columns)};
         """
         if include_materialized_views
-        else _build_regular_tables_model_extraction_query() + ";"
+        else _build_regular_tables_model_extraction_query(exclude_columns) + ";"
     )

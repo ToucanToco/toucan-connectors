@@ -466,6 +466,16 @@ def test_get_model(postgres_connector: PostgresConnector, postgres_db_model: lis
     assert postgres_connector.get_model(db_name="another_db") == []
 
 
+def test_get_model_exclude_columns(postgres_connector: PostgresConnector, postgres_db_model: list[dict]) -> None:
+    """Check that it returns the db tree structure"""
+    # We should not get any columns
+    for elem in postgres_db_model:
+        elem["columns"] = []
+    assert postgres_connector.get_model(exclude_columns=True) == postgres_db_model
+    assert postgres_connector.get_model(db_name="postgres_db", exclude_columns=True) == postgres_db_model
+    assert postgres_connector.get_model(db_name="another_db", exclude_columns=True) == []
+
+
 def test_get_model_with_materialized_views(
     postgres_connector: PostgresConnector, postgres_db_model_with_materialized_views: list[dict]
 ) -> None:
@@ -474,6 +484,21 @@ def test_get_model_with_materialized_views(
     assert postgres_connector.get_model() == postgres_db_model_with_materialized_views
     assert postgres_connector.get_model(db_name="postgres_db") == postgres_db_model_with_materialized_views
     assert postgres_connector.get_model(db_name="another_db") == []
+
+
+def test_get_model_with_materialized_views_exclude_columns(
+    postgres_connector: PostgresConnector, postgres_db_model_with_materialized_views: list[dict]
+) -> None:
+    # We should not get any columns
+    for elem in postgres_db_model_with_materialized_views:
+        elem["columns"] = []
+    postgres_connector.include_materialized_views = True
+    assert postgres_connector.get_model(exclude_columns=True) == postgres_db_model_with_materialized_views
+    assert (
+        postgres_connector.get_model(db_name="postgres_db", exclude_columns=True)
+        == postgres_db_model_with_materialized_views
+    )
+    assert postgres_connector.get_model(db_name="another_db", exclude_columns=True) == []
 
 
 def test_raised_error_for_get_model(mocker, postgres_connector):
