@@ -480,7 +480,7 @@ class DiscoverableConnector(ABC):
             pass
         return (
             df.groupby(by=["schema", "database", "type", "name"])["columns"]  # type: ignore[return-value]
-            .apply(sum)
+            .sum()
             .reset_index()
             .to_dict("records")
         )

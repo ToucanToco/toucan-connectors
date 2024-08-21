@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- DiscoverableConnector: `format_db_model` is now roughly 3x faster, resulting in performance gains in `get_model`
+
 ## [6.5.0] 2024-07-31
 
 ### Changed
