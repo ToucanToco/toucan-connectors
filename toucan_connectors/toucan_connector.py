@@ -475,7 +475,12 @@ class DiscoverableConnector(ABC):
     ) -> tuple[list[TableInfo], dict]:
         """Tries to get all tables that are available for the connector
         and gives back some infos about what happened"""
-        return (self.get_model(db_name=db_name), {})
+        return (
+            self.get_model(
+                db_name=db_name, schema_name=schema_name, table_name=table_name, exclude_columns=exclude_columns
+            ),
+            {},
+        )
 
     @staticmethod
     def format_db_model(
