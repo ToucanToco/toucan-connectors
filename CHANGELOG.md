@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [6.6.0] 2024-08-23
+
 ### Changed
 
 - `get_model` now alphabetically sorts the columns before returning them, in order to ensure result consistency.
