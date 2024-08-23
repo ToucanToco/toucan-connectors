@@ -165,6 +165,7 @@ files = [
       "toucan_connectors/hubspot_private_app/hubspot_connector.py",
       "toucan_connectors/mongo/mongo_connector.py",
       "toucan_connectors/peakina/peakina_connector.py",
+      "toucan_connectors/postgres/postgresql_connector.py",
       "toucan_connectors/snowflake/snowflake_connector.py",
       "toucan_connectors/toucan_connector.py",
 ]

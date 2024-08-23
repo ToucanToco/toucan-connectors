@@ -460,7 +460,13 @@ class SnowflakeConnector(
             "parameters": prepared_query_parameters,
         }
 
-    def get_model(self, db_name: str | None = None) -> list[TableInfo]:
+    def get_model(
+        self,
+        db_name: str | None = None,
+        schema_name: str | None = None,
+        table_name: str | None = None,
+        exclude_columns: bool = False,
+    ) -> list[TableInfo]:
         if db_name is None:
             databases = self._get_databases()
         else:

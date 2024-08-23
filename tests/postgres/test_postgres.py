@@ -52,10 +52,10 @@ def postgres_db_model() -> list[dict]:
             "type": "table",
             "name": "city",
             "columns": [
-                {"name": "id", "type": "integer"},
-                {"name": "nom", "type": "text"},
                 {"name": "code_pays", "type": "character"},
                 {"name": "districteuh", "type": "text"},
+                {"name": "id", "type": "integer"},
+                {"name": "nom", "type": "text"},
                 {"name": "populationg", "type": "integer"},
             ],
         },
@@ -65,11 +65,11 @@ def postgres_db_model() -> list[dict]:
             "type": "table",
             "name": "city",
             "columns": [
-                {"name": "name", "type": "text"},
                 {"name": "countrycode", "type": "character"},
                 {"name": "district", "type": "text"},
-                {"name": "population", "type": "integer"},
                 {"name": "id", "type": "integer"},
+                {"name": "name", "type": "text"},
+                {"name": "population", "type": "integer"},
             ],
         },
         {
@@ -78,21 +78,21 @@ def postgres_db_model() -> list[dict]:
             "type": "table",
             "name": "country",
             "columns": [
-                {"name": "localname", "type": "text"},
-                {"name": "governmentform", "type": "text"},
-                {"name": "headofstate", "type": "text"},
                 {"name": "capital", "type": "integer"},
-                {"name": "code2", "type": "character"},
-                {"name": "surfacearea", "type": "real"},
                 {"name": "code", "type": "character"},
-                {"name": "name", "type": "text"},
+                {"name": "code2", "type": "character"},
                 {"name": "continent", "type": "text"},
-                {"name": "region", "type": "text"},
-                {"name": "indepyear", "type": "smallint"},
-                {"name": "population", "type": "integer"},
-                {"name": "lifeexpectancy", "type": "real"},
                 {"name": "gnp", "type": "numeric"},
                 {"name": "gnpold", "type": "numeric"},
+                {"name": "governmentform", "type": "text"},
+                {"name": "headofstate", "type": "text"},
+                {"name": "indepyear", "type": "smallint"},
+                {"name": "lifeexpectancy", "type": "real"},
+                {"name": "localname", "type": "text"},
+                {"name": "name", "type": "text"},
+                {"name": "population", "type": "integer"},
+                {"name": "region", "type": "text"},
+                {"name": "surfacearea", "type": "real"},
             ],
         },
         {
@@ -102,8 +102,8 @@ def postgres_db_model() -> list[dict]:
             "name": "countrylanguage",
             "columns": [
                 {"name": "countrycode", "type": "character"},
-                {"name": "language", "type": "text"},
                 {"name": "isofficial", "type": "boolean"},
+                {"name": "language", "type": "text"},
                 {"name": "percentage", "type": "real"},
             ],
         },
@@ -112,31 +112,50 @@ def postgres_db_model() -> list[dict]:
 
 @pytest.fixture
 def postgres_db_model_with_materialized_views(postgres_db_model: list[dict]) -> list[dict]:
-    return postgres_db_model + [
-        {
-            "database": "postgres_db",
-            "name": "country_materialized_view",
-            "schema": "public",
-            "type": "view",
-            "columns": [
-                {"name": "code", "type": "character"},
-                {"name": "name", "type": "text"},
-                {"name": "continent", "type": "text"},
-                {"name": "region", "type": "text"},
-                {"name": "surfacearea", "type": "real"},
-                {"name": "indepyear", "type": "smallint"},
-                {"name": "population", "type": "integer"},
-                {"name": "lifeexpectancy", "type": "real"},
-                {"name": "gnp", "type": "numeric"},
-                {"name": "gnpold", "type": "numeric"},
-                {"name": "localname", "type": "text"},
-                {"name": "governmentform", "type": "text"},
-                {"name": "headofstate", "type": "text"},
-                {"name": "capital", "type": "integer"},
-                {"name": "code2", "type": "character"},
-            ],
-        }
-    ]
+    return (
+        [postgres_db_model[0]]
+        + [
+            {
+                "schema": "other_schema",
+                "database": "postgres_db",
+                "type": "view",
+                "name": "city_materialized_view",
+                "columns": [
+                    {"name": "code_pays", "type": "character"},
+                    {"name": "districteuh", "type": "text"},
+                    {"name": "id", "type": "integer"},
+                    {"name": "nom", "type": "text"},
+                    {"name": "populationg", "type": "integer"},
+                ],
+            },
+        ]
+        + postgres_db_model[1:]
+        + [
+            {
+                "database": "postgres_db",
+                "name": "country_materialized_view",
+                "schema": "public",
+                "type": "view",
+                "columns": [
+                    {"name": "capital", "type": "integer"},
+                    {"name": "code", "type": "character"},
+                    {"name": "code2", "type": "character"},
+                    {"name": "continent", "type": "text"},
+                    {"name": "gnp", "type": "numeric"},
+                    {"name": "gnpold", "type": "numeric"},
+                    {"name": "governmentform", "type": "text"},
+                    {"name": "headofstate", "type": "text"},
+                    {"name": "indepyear", "type": "smallint"},
+                    {"name": "lifeexpectancy", "type": "real"},
+                    {"name": "localname", "type": "text"},
+                    {"name": "name", "type": "text"},
+                    {"name": "population", "type": "integer"},
+                    {"name": "region", "type": "text"},
+                    {"name": "surfacearea", "type": "real"},
+                ],
+            }
+        ]
+    )
 
 
 def test_get_status_all_good(postgres_connector):
@@ -466,6 +485,91 @@ def test_get_model(postgres_connector: PostgresConnector, postgres_db_model: lis
     assert postgres_connector.get_model(db_name="another_db") == []
 
 
+def test_get_model_exclude_columns(postgres_connector: PostgresConnector, postgres_db_model: list[dict]) -> None:
+    """Check that it returns the db tree structure"""
+    # We should not get any columns
+    for elem in postgres_db_model:
+        elem["columns"] = []
+    assert postgres_connector.get_model(exclude_columns=True) == postgres_db_model
+    assert postgres_connector.get_model(db_name="postgres_db", exclude_columns=True) == postgres_db_model
+    assert postgres_connector.get_model(db_name="another_db", exclude_columns=True) == []
+
+
+def test_get_model_with_table_and_schema(postgres_connector: PostgresConnector) -> None:
+    city_tables = [
+        {
+            "schema": "other_schema",
+            "database": "postgres_db",
+            "type": "table",
+            "name": "city",
+            "columns": [
+                {"name": "code_pays", "type": "character"},
+                {"name": "districteuh", "type": "text"},
+                {"name": "id", "type": "integer"},
+                {"name": "nom", "type": "text"},
+                {"name": "populationg", "type": "integer"},
+            ],
+        },
+        {
+            "schema": "public",
+            "database": "postgres_db",
+            "type": "table",
+            "name": "city",
+            "columns": [
+                {"name": "countrycode", "type": "character"},
+                {"name": "district", "type": "text"},
+                {"name": "id", "type": "integer"},
+                {"name": "name", "type": "text"},
+                {"name": "population", "type": "integer"},
+            ],
+        },
+    ]
+
+    other_schema_tables = [
+        {
+            "schema": "other_schema",
+            "database": "postgres_db",
+            "type": "table",
+            "name": "city",
+            "columns": [
+                {"name": "code_pays", "type": "character"},
+                {"name": "districteuh", "type": "text"},
+                {"name": "id", "type": "integer"},
+                {"name": "nom", "type": "text"},
+                {"name": "populationg", "type": "integer"},
+            ],
+        },
+        {
+            "schema": "other_schema",
+            "database": "postgres_db",
+            "type": "view",
+            "name": "city_materialized_view",
+            "columns": [
+                {"name": "code_pays", "type": "character"},
+                {"name": "districteuh", "type": "text"},
+                {"name": "id", "type": "integer"},
+                {"name": "nom", "type": "text"},
+                {"name": "populationg", "type": "integer"},
+            ],
+        },
+    ]
+
+    assert postgres_connector.get_model(table_name="city") == city_tables
+    assert postgres_connector.get_model(table_name="city_materialized_view") == []
+    assert postgres_connector.get_model(schema_name="other_schema") == [other_schema_tables[0]]
+    assert postgres_connector.get_model(schema_name="other_schema", table_name="city") == [other_schema_tables[0]]
+    assert postgres_connector.get_model(schema_name="other_schema", table_name="city_materialized_view") == []
+
+    postgres_connector.include_materialized_views = True
+    assert postgres_connector.get_model(table_name="city") == city_tables
+    assert postgres_connector.get_model(table_name="city_materialized_view") == [other_schema_tables[1]]
+    assert postgres_connector.get_model(schema_name="other_schema") == other_schema_tables
+    assert postgres_connector.get_model(schema_name="other_schema", table_name="city") == [other_schema_tables[0]]
+    assert postgres_connector.get_model(schema_name="other_schema", table_name="city_materialized_view") == [
+        other_schema_tables[1]
+    ]
+
+
 def test_get_model_with_materialized_views(
     postgres_connector: PostgresConnector, postgres_db_model_with_materialized_views: list[dict]
 ) -> None:
@@ -474,6 +578,21 @@ def test_get_model_with_materialized_views(
     assert postgres_connector.get_model() == postgres_db_model_with_materialized_views
     assert postgres_connector.get_model(db_name="postgres_db") == postgres_db_model_with_materialized_views
     assert postgres_connector.get_model(db_name="another_db") == []
+
+
+def test_get_model_with_materialized_views_exclude_columns(
+    postgres_connector: PostgresConnector, postgres_db_model_with_materialized_views: list[dict]
+) -> None:
+    # We should not get any columns
+    for elem in postgres_db_model_with_materialized_views:
+        elem["columns"] = []
+    postgres_connector.include_materialized_views = True
+    assert postgres_connector.get_model(exclude_columns=True) == postgres_db_model_with_materialized_views
+    assert (
+        postgres_connector.get_model(db_name="postgres_db", exclude_columns=True)
+        == postgres_db_model_with_materialized_views
+    )
+    assert postgres_connector.get_model(db_name="another_db", exclude_columns=True) == []
 
 
 def test_raised_error_for_get_model(mocker, postgres_connector):

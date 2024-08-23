@@ -4,7 +4,12 @@
 
 ### Changed
 
-- DiscoverableConnector: `format_db_model` is now roughly 3x faster, resulting in performance gains in `get_model`
+- `get_model` now alphabetically sorts the columns before returning them, in order to ensure result consistency.
+- `get_model` now supports an `exclude_columns` argument defaulting to `False`. It allows to not retrieve columns in the model.
+  This is only implemented in the Postgres connector for now.
+- `get_model` now supports `schema_name` and `table_name` arguments, allowing to filter on a specific table and/or schema.
+  This is only implemented in the Postgres connector for now.
+- DiscoverableConnector: `format_db_model` is now roughly 3x faster, resulting in performance gains in `get_model`.
 
 ## [6.5.0] 2024-07-31
 

@@ -5401,3 +5401,4 @@ ANALYZE country;
 ANALYZE countrylanguage;
 
 CREATE MATERIALIZED VIEW country_materialized_view AS SELECT * FROM country;
+CREATE MATERIALIZED VIEW other_schema.city_materialized_view AS SELECT * FROM other_schema.city;

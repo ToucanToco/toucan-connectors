@@ -351,7 +351,13 @@ def test_default_implementation_of_discoverable_connector():
         def _retrieve_data(self, datasource):
             return pd.DataFrame()
 
-        def get_model(self, db_name: str | None = None) -> List[TableInfo]:
+        def get_model(
+            self,
+            db_name: str | None = None,
+            schema_name: str | None = None,
+            table_name: str | None = None,
+            exclude_columns: bool = False,
+        ) -> List[TableInfo]:
             model = [("database", "schema", "type", "name", [{"name": "column", "type": "type"}])]
             return DiscoverableConnector.format_db_model(model)
 
