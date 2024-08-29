@@ -89,7 +89,6 @@ class CustomTokenServer(AuthBase):
 
         # If a single string is returned by the filter default
         # on OAuth "Bearer" auth-scheme.
-
         if len(f"{token}".split(maxsplit=2)) == 1:
             token = f"Bearer {token}"
 
