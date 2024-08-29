@@ -54,7 +54,18 @@ class CustomTokenServer(AuthBase):
     Get a token from a request to a custom token server.
     """
 
-    def __init__(self, method, url, params=None, data=None, headers=None, auth=None, json=None, filter="."):
+    def __init__(
+        self,
+        method,
+        url,
+        params=None,
+        data=None,
+        headers=None,
+        auth=None,
+        json=None,
+        filter=".",
+        token_header_name: str = "Authorization",  # noqa: S107
+    ):
         self.request_kwargs = {
             "method": method,
             "url": url,
@@ -65,6 +76,7 @@ class CustomTokenServer(AuthBase):
         }
         self.auth = auth
         self.filter = filter
+        self.token_header_name = token_header_name
 
     def __call__(self, r):
         if self.auth:
@@ -77,10 +89,11 @@ class CustomTokenServer(AuthBase):
 
         # If a single string is returned by the filter default
         # on OAuth "Bearer" auth-scheme.
+
         if len(f"{token}".split(maxsplit=2)) == 1:
             token = f"Bearer {token}"
 
-        r.headers["Authorization"] = token
+        r.headers[self.token_header_name] = token
         return r
 
 
