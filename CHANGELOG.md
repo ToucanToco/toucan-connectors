@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- HTTP connectors with `CustomTokenServer` authentication accept `token_header_name` kwargs. It allows to override the default `Authorization` header.  
+
 ## [6.6.0] 2024-08-23
 
 ### Changed

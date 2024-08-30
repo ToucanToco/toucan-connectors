@@ -60,6 +60,27 @@ def test_custom_token_server_custom_auth_scheme():
 
 
 @responses.activate
+def test_custom_token_server_custom_auth_scheme_and_header_name():
+    auth = Auth(
+        type="custom_token_server",
+        args=["POST", "https://example.com"],
+        kwargs={
+            "data": {"user": "u", "password ": "p"},
+            "filter": '"CustomScheme \(.data.toucan_token)"',  # noqa: W605
+            "token_header_name": "CustomAuthorization",
+        },
+    )
+
+    session = auth.get_session()
+    assert isinstance(session.auth, CustomTokenServer)
+
+    responses.add(responses.POST, "https://example.com", json={"data": {"toucan_token": "1234567"}})
+
+    session.auth(DummyRequest())
+    assert DummyRequest.headers["CustomAuthorization"] == "CustomScheme 1234567"
+
+
+@responses.activate
 def test_custom_token_server_initial_basic():
     """
     Custom_token_server with its own auth class for the initial request
