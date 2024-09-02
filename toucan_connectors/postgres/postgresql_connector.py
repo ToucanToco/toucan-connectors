@@ -1,4 +1,4 @@
-from contextlib import suppress
+from logging import getLogger
 from typing import Optional
 
 import psycopg2 as pgsql
@@ -17,6 +17,8 @@ from toucan_connectors.toucan_connector import (
     VersionableEngineConnector,
     strlist_to_enum,
 )
+
+_LOGGER = getLogger(__name__)
 
 DEFAULT_DATABASE = "postgres"
 
@@ -60,7 +62,7 @@ class PostgresDataSource(ToucanDataSource):
         """
         constraints = {}
 
-        with suppress(Exception):
+        try:
             connection = pgsql.connect(
                 **connector.get_connection_params(database=current_config.get("database", DEFAULT_DATABASE))
             )
@@ -79,6 +81,8 @@ class PostgresDataSource(ToucanDataSource):
                     res = cursor.fetchall()
                     available_tables = [table_name for (_, table_name) in res]
                     constraints["table"] = strlist_to_enum("table", available_tables, None)
+        except Exception as exc:
+            _LOGGER.warning(f"Exception occured when retrieving Postregs form schema: {exc}", exc_info=exc)
 
         return create_model("FormSchema", **constraints, __base__=cls).schema()  # type:ignore[call-overload]
 
@@ -204,10 +208,12 @@ class PostgresConnector(
         available_dbs = self._list_db_names() if db_name is None else [db_name]
         databases_tree = []
         for db in available_dbs:
-            with suppress(pgsql.OperationalError):
+            try:
                 databases_tree += self._list_tables_info(
                     database_name=db, schema_name=schema_name, table_name=table_name, exclude_columns=exclude_columns
                 )
+            except pgsql.OperationalError as exc:
+                _LOGGER.warning(f"An error occured when retrieving table info for database {db}: {exc}", exc_info=exc)
         return DiscoverableConnector.format_db_model(databases_tree)
 
     def get_model_with_info(
