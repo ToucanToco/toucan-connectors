@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-- HTTP connectors with `CustomTokenServer` authentication accept `token_header_name` kwargs. It allows to override the default `Authorization` header.  
+### Changed
+
+- Postgres: Rather than being silently caught, exceptions happenning in `get_form` and `get_model` are now logged
+- HTTP: The `custom_token_server` authentication type now accepts a `token_header_name` kwarg. It allows to override the name of the
+  authorization header, which defaults to `Authorization`.
 
 ## [6.6.0] 2024-08-23
 
