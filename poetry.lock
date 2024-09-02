@@ -828,12 +828,12 @@ files = [
 
 [[package]]
 name = "dataiku-api-client"
-version = "13.1.1"
+version = "13.1.2"
 description = "Python API client for Dataiku APIs"
 optional = true
 python-versions = "*"
 files = [
-    {file = "dataiku-api-client-13.1.1.tar.gz", hash = "sha256:07c9290b50e1b586ce46a8dbab0ce4d9b728ff5954ee65bd0ccad7335fd2058f"},
+    {file = "dataiku-api-client-13.1.2.tar.gz", hash = "sha256:e3841082188bfd2842b9324fb192433573cf4fca77df15f4110bb71811a342d8"},
 ]
 
 [package.dependencies]
