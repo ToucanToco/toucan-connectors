@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [6.7.0] 2024-09-02
+
 ### Changed
 
 - Postgres: Rather than being silently caught, exceptions happenning in `get_form` and `get_model` are now logged
