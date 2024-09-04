@@ -4,6 +4,7 @@
 
 ### Changed
 
+- The deprecated `GoogleSpreadsheet` connector has been removed.
 - The deprecated `GoogleSheets2` connector has been removed.
 
 ## [6.7.0] 2024-09-02
