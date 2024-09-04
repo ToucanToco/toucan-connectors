@@ -7,9 +7,6 @@ import tenacity as tny
 from pydantic import create_model
 
 from toucan_connectors.common import ConnectorStatus
-from toucan_connectors.google_sheets_2.google_sheets_2_connector import GoogleSheets2Connector
-from toucan_connectors.mongo.mongo_connector import MongoConnector
-from toucan_connectors.oauth2_connector.oauth2connector import OAuth2ConnectorConfig
 from toucan_connectors.pagination import OffsetLimitInfo
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
@@ -19,7 +16,6 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
     UnavailableVersion,
     VersionableEngineConnector,
-    get_connector_secrets_form,
     strlist_to_enum,
 )
 
@@ -322,13 +318,6 @@ def test_strlist_to_enum_default_value():
         },
         "properties": {"pokemon": {"allOf": [{"$ref": "#/$defs/pokemon"}], "default": "pika"}},
     }
-
-
-def test_should_return_connector_config_form():
-    assert (
-        get_connector_secrets_form(GoogleSheets2Connector).secrets_schema == OAuth2ConnectorConfig.model_json_schema()
-    )
-    assert get_connector_secrets_form(MongoConnector) is None
 
 
 def test_get_df_int_column(mocker):

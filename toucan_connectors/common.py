@@ -10,7 +10,6 @@ from typing import Any, Callable
 
 import jq
 import pandas as pd
-from aiohttp import ClientSession
 from jinja2 import Environment, Template, Undefined, UndefinedError, meta
 from jinja2.nativetypes import NativeEnvironment
 from pydantic import Field
@@ -275,14 +274,6 @@ def get_loop():
         asyncio.set_event_loop(loop)
 
     return loop
-
-
-async def fetch(url: str, session: ClientSession):
-    """Fetch data from an API."""
-    async with session.get(url) as res:
-        if res.status != 200:
-            raise HttpError(f"Aborting request due to error from the API: {res.status}, {res.reason}")
-        return await res.json()
 
 
 class HttpError(Exception):

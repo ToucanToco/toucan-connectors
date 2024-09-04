@@ -3,7 +3,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from toucan_connectors.google_sheets_2.google_sheets_2_connector import GoogleSheets2Connector
 from toucan_connectors.http_api.http_api_connector import HttpAPIConnector
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -222,7 +221,6 @@ def test_should_throw_if_authflow_id_not_found(oauth2_connector, secrets_keeper)
 
 
 def test_should_return_if_is_instance_oauth2_connector(oauth2_connector):
-    assert get_oauth2_configuration(GoogleSheets2Connector) == (True, "instance")
     assert get_oauth2_configuration(HttpAPIConnector) == (False, None)
     assert get_oauth2_configuration(SnowflakeoAuth2Connector) == (True, "connector")
 
