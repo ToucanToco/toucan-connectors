@@ -3149,7 +3149,7 @@ dev = ["black", "flake8", "flake8-black", "flake8-docstrings", "flake8-isort", "
 name = "python-slugify"
 version = "8.0.4"
 description = "A Python slugify application that also handles Unicode"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "python-slugify-8.0.4.tar.gz", hash = "sha256:59202371d1d05b54a9e7720c5e038f928f45daaffe41dd10822f3907b937c856"},
@@ -3827,7 +3827,7 @@ test = ["pytest", "tornado (>=4.5)", "typeguard"]
 name = "text-unidecode"
 version = "1.3"
 description = "The most basic Text::Unidecode port"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
@@ -4340,10 +4340,10 @@ test = ["coverage[toml] (==5.2.1)", "flake8 (==3.8.3)", "flake8-blind-except (==
 xmlsec = ["xmlsec (>=0.6.1)"]
 
 [extras]
-all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "lxml", "oauth2client", "oauthlib", "pandas", "pandas", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
+all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "lxml", "oauth2client", "oauthlib", "pandas", "pandas", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "python-slugify", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
 awsathena = ["awswrangler"]
 azure-mssql = ["pyodbc"]
-base = ["pandas", "pandas"]
+base = ["pandas", "pandas", "python-slugify"]
 clickhouse = ["clickhouse-driver"]
 dataiku = ["dataiku-api-client"]
 elasticsearch = ["elasticsearch"]
@@ -4370,4 +4370,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "c3d1f6cc081ae56111cebae2ecbb7d63a49f759ad2ab2a34ea1f67dd1da065e8"
+content-hash = "0201d3299837791fbcfd9fec5b9ec6ce9c4e9adac5e2d04b00ab0d6f8a19a99f"
