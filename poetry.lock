@@ -1167,24 +1167,6 @@ google-auth = "*"
 httplib2 = ">=0.19.0"
 
 [[package]]
-name = "google-auth-oauthlib"
-version = "0.5.2"
-description = "Google Authentication Library"
-optional = true
-python-versions = ">=3.6"
-files = [
-    {file = "google-auth-oauthlib-0.5.2.tar.gz", hash = "sha256:d5e98a71203330699f92a26bc08847a92e8c3b1b8d82a021f1af34164db143ae"},
-    {file = "google_auth_oauthlib-0.5.2-py2.py3-none-any.whl", hash = "sha256:6d6161d0ec0a62e2abf2207c6071c117ec5897b300823c4bb2d963ee86e20e4f"},
-]
-
-[package.dependencies]
-google-auth = ">=1.0.0"
-requests-oauthlib = ">=0.7.0"
-
-[package.extras]
-tool = ["click (>=6.0.0)"]
-
-[[package]]
 name = "google-cloud-bigquery"
 version = "3.25.0"
 description = "Google BigQuery API client library"
@@ -1455,21 +1437,6 @@ files = [
 googleapis-common-protos = ">=1.5.5"
 grpcio = ">=1.53.2"
 protobuf = ">=4.21.6"
-
-[[package]]
-name = "gspread"
-version = "6.1.2"
-description = "Google Spreadsheets Python API"
-optional = true
-python-versions = ">=3.8"
-files = [
-    {file = "gspread-6.1.2-py3-none-any.whl", hash = "sha256:345996fbb74051ee574e3d330a375ac625774f289459f73cb1f8b6fb3cf4cac5"},
-    {file = "gspread-6.1.2.tar.gz", hash = "sha256:b147688b8c7a18c9835d5f998997ec17c97c0470babcab17f65ac2b3a32402b7"},
-]
-
-[package.dependencies]
-google-auth = ">=1.12.0"
-google-auth-oauthlib = ">=0.4.1"
 
 [[package]]
 name = "httplib2"
@@ -4373,7 +4340,7 @@ test = ["coverage[toml] (==5.2.1)", "flake8 (==3.8.3)", "flake8-blind-except (==
 xmlsec = ["xmlsec (>=0.6.1)"]
 
 [extras]
-all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "gspread", "hubspot-api-client", "lxml", "oauth2client", "oauthlib", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
+all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "lxml", "oauth2client", "oauthlib", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
 awsathena = ["awswrangler"]
 azure-mssql = ["pyodbc"]
 clickhouse = ["clickhouse-driver"]
@@ -4384,7 +4351,6 @@ google-analytics = ["google-api-python-client", "oauth2client"]
 google-big-query = ["google-cloud-bigquery"]
 google-cloud-mysql = ["PyMySQL"]
 google-sheets = ["google-api-python-client"]
-google-spreadsheet = ["gspread", "oauth2client"]
 http-api = ["oauthlib", "requests-oauthlib", "xmltodict"]
 hubspot = ["hubspot-api-client"]
 mongo = ["pymongo"]
@@ -4403,4 +4369,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "748b6868b00c70e12b97e4fb01b8a94ceb55cce5a3b6db8718279917b42c90bf"
+content-hash = "1496a17a25c9c9d7dd70004da9b28b5bb20bd042571ed30ee803262da329aa26"

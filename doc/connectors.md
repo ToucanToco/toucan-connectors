@@ -22,8 +22,6 @@
 
 * [GoogleSheetsConnector](connectors/google_sheets.md)
 
-* [GoogleSpreadsheetConnector](connectors/google_spreadsheet.md)
-
 * [MSSQLConnector](connectors/mssql.md)
 
 * [MongoConnector](connectors/mongo.md)

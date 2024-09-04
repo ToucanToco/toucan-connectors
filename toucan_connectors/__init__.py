@@ -79,11 +79,6 @@ CONNECTORS_REGISTRY = {
         "label": "Google Sheets",
         "logo": "google_sheets/google-sheets.png",
     },
-    "GoogleSpreadsheet": {
-        "connector": "google_spreadsheet.google_spreadsheet_connector.GoogleSpreadsheetConnector",
-        "label": "Google Spreadsheet",
-        "logo": "google_spreadsheet/google-spreadsheet.png",
-    },
     "HttpAPI": {
         "connector": "http_api.http_api_connector.HttpAPIConnector",
         "label": "Http API",
