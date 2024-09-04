@@ -1,7 +1,6 @@
 from datetime import datetime
 from enum import Enum
 
-import jq
 import jwt
 import requests
 from oauthlib.oauth2 import BackendApplicationClient
@@ -79,6 +78,8 @@ class CustomTokenServer(AuthBase):
         self.token_header_name = token_header_name
 
     def __call__(self, r):
+        import jq
+
         if self.auth:
             session = Auth(**self.auth).get_session()
         else:

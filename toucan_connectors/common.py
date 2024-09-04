@@ -8,7 +8,6 @@ from contextlib import suppress
 from copy import deepcopy
 from typing import Any, Callable
 
-import jq
 import pandas as pd
 from jinja2 import Environment, Template, Undefined, UndefinedError, meta
 from jinja2.nativetypes import NativeEnvironment
@@ -236,6 +235,8 @@ def apply_query_parameters(query: str, parameters: dict) -> str:
 
 
 def transform_with_jq(data: object, jq_filter: str) -> list:
+    import jq
+
     data = jq.all(jq_filter, data)
 
     # jq 'multiple outout': the data is already presented as a list of rows

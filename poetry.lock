@@ -1554,7 +1554,7 @@ files = [
 name = "jq"
 version = "1.8.0"
 description = "jq is a lightweight and flexible JSON processor."
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "jq-1.8.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:628848f92a0f24f5ca50c879d271555a63bf28746c1efd3571ee49e9a357b602"},
@@ -4340,10 +4340,10 @@ test = ["coverage[toml] (==5.2.1)", "flake8 (==3.8.3)", "flake8-blind-except (==
 xmlsec = ["xmlsec (>=0.6.1)"]
 
 [extras]
-all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "lxml", "oauth2client", "oauthlib", "pandas", "pandas", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "python-slugify", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
+all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "jq", "lxml", "oauth2client", "oauthlib", "pandas", "pandas", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "python-slugify", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
 awsathena = ["awswrangler"]
 azure-mssql = ["pyodbc"]
-base = ["pandas", "pandas", "python-slugify"]
+base = ["jq", "pandas", "pandas", "python-slugify"]
 clickhouse = ["clickhouse-driver"]
 dataiku = ["dataiku-api-client"]
 elasticsearch = ["elasticsearch"]
@@ -4370,4 +4370,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "0201d3299837791fbcfd9fec5b9ec6ce9c4e9adac5e2d04b00ab0d6f8a19a99f"
+content-hash = "c093816c6c04dc955b9797d142f74991f32a4973c5d6a0be160772fb673c9cdc"
