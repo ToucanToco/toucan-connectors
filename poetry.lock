@@ -211,7 +211,7 @@ tests-no-zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy 
 name = "authlib"
 version = "1.3.2"
 description = "The ultimate Python library in building OAuth and OpenID Connect servers and clients."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "Authlib-1.3.2-py2.py3-none-any.whl", hash = "sha256:ede026a95e9f5cdc2d4364a52103f5405e75aa156357e831ef2bfd0bc5094dfc"},
@@ -4340,10 +4340,10 @@ test = ["coverage[toml] (==5.2.1)", "flake8 (==3.8.3)", "flake8-blind-except (==
 xmlsec = ["xmlsec (>=0.6.1)"]
 
 [extras]
-all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "jq", "lxml", "oauth2client", "oauthlib", "pandas", "pandas", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "python-slugify", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
+all = ["Authlib", "PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "jq", "lxml", "oauth2client", "oauthlib", "pandas", "pandas", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "python-slugify", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
 awsathena = ["awswrangler"]
 azure-mssql = ["pyodbc"]
-base = ["jq", "pandas", "pandas", "python-slugify"]
+base = ["Authlib", "jq", "pandas", "pandas", "python-slugify"]
 clickhouse = ["clickhouse-driver"]
 dataiku = ["dataiku-api-client"]
 elasticsearch = ["elasticsearch"]
@@ -4370,4 +4370,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "c093816c6c04dc955b9797d142f74991f32a4973c5d6a0be160772fb673c9cdc"
+content-hash = "64346765df2753777ebd3784829a6f7b0c6299ad71f80c386f9e066f91e9058d"
