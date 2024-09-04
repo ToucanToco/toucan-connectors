@@ -20,8 +20,6 @@
 
 * [GoogleCloudMySQLConnector](connectors/google_cloud_mysql.md)
 
-* [GoogleSheets2Connector](connectors/google_sheets_2.md)
-
 * [GoogleSheetsConnector](connectors/google_sheets.md)
 
 * [GoogleSpreadsheetConnector](connectors/google_spreadsheet.md)

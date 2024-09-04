@@ -155,20 +155,6 @@ files = [
 ]
 
 [[package]]
-name = "aioresponses"
-version = "0.7.6"
-description = "Mock out requests made by ClientSession from aiohttp package"
-optional = false
-python-versions = "*"
-files = [
-    {file = "aioresponses-0.7.6-py2.py3-none-any.whl", hash = "sha256:d2c26defbb9b440ea2685ec132e90700907fd10bcca3e85ec2f157219f0d26f7"},
-    {file = "aioresponses-0.7.6.tar.gz", hash = "sha256:f795d9dbda2d61774840e7e32f5366f45752d1adc1b74c9362afd017296c7ee1"},
-]
-
-[package.dependencies]
-aiohttp = ">=3.3.0,<4.0.0"
-
-[[package]]
 name = "aiosignal"
 version = "1.2.0"
 description = "aiosignal: a list of registered asynchronous callbacks"
@@ -3092,25 +3078,6 @@ pluggy = ">=1.5,<2"
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
-name = "pytest-aiohttp"
-version = "1.0.5"
-description = "Pytest plugin for aiohttp support"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "pytest-aiohttp-1.0.5.tar.gz", hash = "sha256:880262bc5951e934463b15e3af8bb298f11f7d4d3ebac970aab425aff10a780a"},
-    {file = "pytest_aiohttp-1.0.5-py3-none-any.whl", hash = "sha256:63a5360fd2f34dda4ab8e6baee4c5f5be4cd186a403cabd498fced82ac9c561e"},
-]
-
-[package.dependencies]
-aiohttp = ">=3.8.1"
-pytest = ">=6.1.0"
-pytest-asyncio = ">=0.17.2"
-
-[package.extras]
-testing = ["coverage (==6.2)", "mypy (==0.931)"]
-
-[[package]]
 name = "pytest-asyncio"
 version = "0.24.0"
 description = "Pytest support for asyncio"
@@ -4436,4 +4403,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "5b0b837b39af2e425a86451e73953631f715cbc61742822214762f249e63d2ec"
+content-hash = "748b6868b00c70e12b97e4fb01b8a94ceb55cce5a3b6db8718279917b42c90bf"

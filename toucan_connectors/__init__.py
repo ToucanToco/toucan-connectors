@@ -79,11 +79,6 @@ CONNECTORS_REGISTRY = {
         "label": "Google Sheets",
         "logo": "google_sheets/google-sheets.png",
     },
-    "GoogleSheets2": {
-        "connector": "google_sheets_2.google_sheets_2_connector.GoogleSheets2Connector",
-        "label": "Google Sheets (custom OAuth2)",
-        "logo": "google_sheets/google-sheets.png",
-    },
     "GoogleSpreadsheet": {
         "connector": "google_spreadsheet.google_spreadsheet_connector.GoogleSpreadsheetConnector",
         "label": "Google Spreadsheet",
