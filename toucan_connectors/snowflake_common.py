@@ -2,17 +2,19 @@ import concurrent
 import json
 import logging
 from timeit import default_timer as timer
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-import pandas as pd
 from pydantic import Field, StringConstraints
-from snowflake.connector import DictCursor, SnowflakeConnection
 from typing_extensions import Annotated
 
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import DataSlice, DataStats, QueryMetadata, ToucanDataSource
+
+if TYPE_CHECKING:
+    import pandas as pd
+    from snowflake.connector import SnowflakeConnection
 
 type_code_mapping = {
     0: "float",
@@ -112,10 +114,12 @@ class SnowflakeCommon:
 
     def _execute_query_internal(
         self,
-        connection: SnowflakeConnection,
+        connection: "SnowflakeConnection",
         query: str,
         query_parameters: Optional[dict] = None,
-    ) -> pd.DataFrame:
+    ) -> "pd.DataFrame":
+        from snowflake.connector import DictCursor
+
         execution_start = timer()
         cursor = connection.cursor(DictCursor)
         query_res = cursor.execute(query, query_parameters)
@@ -165,7 +169,7 @@ class SnowflakeCommon:
 
     def _execute_parallelized_queries(
         self,
-        connection: SnowflakeConnection,
+        connection: "SnowflakeConnection",
         query: str,
         query_parameters: Optional[Dict] = None,
         offset: Optional[int] = None,
@@ -228,7 +232,7 @@ class SnowflakeCommon:
 
     def fetch_data(
         self,
-        connection: SnowflakeConnection,
+        connection: "SnowflakeConnection",
         data_source: SfDataSource,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
@@ -250,13 +254,13 @@ class SnowflakeCommon:
         return ds
 
     def retrieve_data(
-        self, connection: SnowflakeConnection, data_source: SfDataSource, get_row_count: bool = None
-    ) -> pd.DataFrame:
+        self, connection: "SnowflakeConnection", data_source: SfDataSource, get_row_count: bool = None
+    ) -> "pd.DataFrame":
         return self.fetch_data(connection, data_source, get_row_count=get_row_count).df
 
     def get_slice(
         self,
-        connection: SnowflakeConnection,
+        connection: "SnowflakeConnection",
         data_source: SfDataSource,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
@@ -283,14 +287,14 @@ class SnowflakeCommon:
             pagination_info=result.pagination_info,
         )
 
-    def get_warehouses(self, connection: SnowflakeConnection, warehouse_name: Optional[str] = None) -> List[str]:
+    def get_warehouses(self, connection: "SnowflakeConnection", warehouse_name: Optional[str] = None) -> List[str]:
         query = "SHOW WAREHOUSES"
         if warehouse_name:
             query = f"{query} LIKE '{warehouse_name}'"
         res = self._execute_query(connection, query).to_dict().get("name")
         return list(res.values()) if res else []
 
-    def get_databases(self, connection: SnowflakeConnection, database_name: Optional[str] = None) -> List[str]:
+    def get_databases(self, connection: "SnowflakeConnection", database_name: Optional[str] = None) -> List[str]:
         query = "SHOW DATABASES"
         if database_name:
             query = f"{query} LIKE '{database_name}'"
@@ -306,9 +310,11 @@ class SnowflakeCommon:
 
     def _describe(
         self,
-        connection: SnowflakeConnection,
+        connection: "SnowflakeConnection",
         query: str,
     ) -> Dict[str, str]:
+        from snowflake.connector import DictCursor
+
         description_start = timer()
         cursor = connection.cursor(DictCursor)
         describe_res = cursor.describe(query)
@@ -329,6 +335,6 @@ class SnowflakeCommon:
         res = {r.name: type_code_mapping.get(r.type_code) for r in describe_res}
         return res
 
-    def get_db_content(self, connection: SnowflakeConnection) -> List[Dict[str, Any]]:
+    def get_db_content(self, connection: "SnowflakeConnection") -> List[Dict[str, Any]]:
         query = build_database_model_extraction_query()
         return self._execute_query(connection, query)

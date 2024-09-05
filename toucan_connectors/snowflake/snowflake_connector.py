@@ -4,23 +4,11 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, ContextManager, Generator, Literal, overload
 
-import jwt
-import pandas as pd
-import requests
-import snowflake
-from jinja2 import Template
 from pydantic import Field, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
-from snowflake import connector as sf_connector
-from snowflake.connector import SnowflakeConnection
-from snowflake.connector.cursor import DictCursor as SfDictCursor
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.pagination import build_pagination_info
-from toucan_connectors.snowflake_common import (
-    build_database_model_extraction_query,
-    type_code_mapping,
-)
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     Category,
@@ -33,12 +21,33 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
-# TODO: Once we remove SnowflakeCommon, directly assign the query block here
-_DB_MODEL_EXTRACTION_QUERY = build_database_model_extraction_query()
-# TODO: Once we remove SnowflakeCommon, declare the mapping here
-_TYPE_CODE_MAPPING = type_code_mapping
+try:
+    import jwt
+    import pandas as pd
+    import requests
+    import snowflake
+    from jinja2 import Template
+    from snowflake import connector as sf_connector
+    from snowflake.connector import SnowflakeConnection
+    from snowflake.connector.cursor import DictCursor as SfDictCursor
+
+    from toucan_connectors.snowflake_common import (
+        build_database_model_extraction_query,
+        type_code_mapping,
+    )
+
+    # TODO: Once we remove SnowflakeCommon, directly assign the query block here
+    _DB_MODEL_EXTRACTION_QUERY = build_database_model_extraction_query()
+    # TODO: Once we remove SnowflakeCommon, declare the mapping here
+    _TYPE_CODE_MAPPING = type_code_mapping
+
+    CONNECTOR_OK = True
+except ImportError as exc:
+    _LOGGER.warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 
 _UI_HIDDEN: dict[str, Any] = {"ui.hidden": True}
 
@@ -98,7 +107,7 @@ class AuthenticationMethodValue(str, Enum):
 @contextmanager
 def _snowflake_connection(
     **args: str | int | None,
-) -> Generator[SnowflakeConnection, None, None]:
+) -> Generator["SnowflakeConnection", None, None]:
     """Returns a Snowflake connection and automatically closes it."""
     sf_connector.paramstyle = "qmark"
     conn = SnowflakeConnection(**args)  # type:ignore[arg-type]
@@ -329,11 +338,11 @@ class SnowflakeConnector(
 
     def _get_connection(
         self, database: str | None = None, warehouse: str | None = None
-    ) -> ContextManager[SnowflakeConnection]:
+    ) -> ContextManager["SnowflakeConnection"]:
         if self.authentication_method == AuthenticationMethod.OAUTH:
-            logger.info("Refreshing OAuth token...")
+            _LOGGER.info("Refreshing OAuth token...")
             self._refresh_oauth_token()
-            logger.info("Done refreshing OAuth token")
+            _LOGGER.info("Done refreshing OAuth token")
 
         return _snowflake_connection(**self.get_connection_params(), database=database, warehouse=warehouse)
 
@@ -351,8 +360,8 @@ class SnowflakeConnector(
         warehouse: str | None = None,
         database: str | None = None,
         as_df: Literal[True] = ...,
-        snowflake_connection: SnowflakeConnection | None = None,
-    ) -> pd.DataFrame: ...  # pragma: no cover
+        snowflake_connection: "SnowflakeConnection | None" = None,
+    ) -> "pd.DataFrame": ...  # pragma: no cover
 
     @overload
     def _execute_query(
@@ -363,7 +372,7 @@ class SnowflakeConnector(
         warehouse: str | None = None,
         database: str | None = None,
         as_df: Literal[False],
-        snowflake_connection: SnowflakeConnection | None = None,
+        snowflake_connection: "SnowflakeConnection | None" = None,
     ) -> list[dict]: ...  # pragma: no cover
 
     def _execute_query(
@@ -374,8 +383,8 @@ class SnowflakeConnector(
         warehouse: str | None = None,
         database: str | None = None,
         as_df: bool = True,
-        snowflake_connection: SnowflakeConnection | None = None,
-    ) -> pd.DataFrame | list[dict]:
+        snowflake_connection: "SnowflakeConnection | None" = None,
+    ) -> "pd.DataFrame | list[dict]":
         def _execute(conn: SnowflakeConnection) -> pd.DataFrame | list[dict]:
             curs = conn.cursor(SfDictCursor)
             query_result = curs.execute(query, parameters)
@@ -415,7 +424,7 @@ class SnowflakeConnector(
         data_source: SnowflakeDataSource,
         offset: int | None = None,
         limit: int | None = None,
-    ) -> pd.DataFrame:
+    ) -> "pd.DataFrame":
         data_source = self._set_warehouse(data_source)
 
         prepared_query, prepared_params = SqlQueryHelper.prepare_limit_query(
@@ -428,7 +437,7 @@ class SnowflakeConnector(
             warehouse=data_source.warehouse,
         )
 
-    def _retrieve_data(self, data_source: SnowflakeDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: SnowflakeDataSource) -> "pd.DataFrame":
         return self._fetch_data(data_source)
 
     def get_slice(

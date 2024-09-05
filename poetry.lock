@@ -4361,6 +4361,7 @@ mysql = ["PyMySQL"]
 odata = ["oauthlib", "requests-oauthlib", "tctc-odata"]
 odbc = []
 oracle-sql = ["cx-Oracle"]
+peakina = ["peakina"]
 postgres = ["psycopg2"]
 redshift = ["lxml", "redshift-connector"]
 sap-hana = ["pyhdb"]
@@ -4370,4 +4371,4 @@ soap = ["lxml", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "0f54f564eb992bf357228e51278d46dc9f8590237bfdd3c27d32baaeab47907e"
+content-hash = "19dc16c74a719b546ce5a16d75230167bfda6c403d58478b7a4ab2ba367e02cb"

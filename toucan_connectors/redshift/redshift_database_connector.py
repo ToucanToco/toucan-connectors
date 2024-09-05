@@ -5,8 +5,6 @@ from enum import Enum
 from functools import cached_property
 from typing import Any
 
-import pandas as pd
-import redshift_connector
 from pydantic import (
     ConfigDict,
     Field,
@@ -18,9 +16,20 @@ from pydantic import (
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from typing_extensions import Annotated
 
+try:
+    import pandas as pd
+    import redshift_connector
+
+    from toucan_connectors.redshift.utils import build_database_model_extraction_query, types_map
+
+    CONNECTOR_OK = True
+
+except ImportError as exc:
+    logging.getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.pagination import build_pagination_info
-from toucan_connectors.redshift.utils import build_database_model_extraction_query, types_map
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
     DataSlice,
@@ -57,8 +66,6 @@ ORDERED_KEYS = [
     "region",
     "enable_tcp_keepalive",
 ]
-
-logger = logging.getLogger(__name__)
 
 
 class AuthenticationMethod(str, Enum):
@@ -219,7 +226,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
             con_params["region"] = self.region
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _get_connection(self, database) -> redshift_connector.Connection:
+    def _get_connection(self, database) -> "redshift_connector.Connection":
         """Establish a connection to an Amazon Redshift cluster."""
         con = redshift_connector.connect(
             **self._get_connection_params(
@@ -242,7 +249,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
         get_row_count: bool = False,
         offset: int | None = None,
         limit: int | None = None,
-    ) -> pd.DataFrame:
+    ) -> "pd.DataFrame":
         if get_row_count:
             prepared_query, prepared_query_parameters = SqlQueryHelper.prepare_count_query(
                 datasource.query, datasource.parameters

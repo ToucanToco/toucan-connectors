@@ -6,14 +6,17 @@ import logging
 import re
 from contextlib import suppress
 from copy import deepcopy
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
-import pandas as pd
 from jinja2 import Environment, Template, Undefined, UndefinedError, meta
 from jinja2.nativetypes import NativeEnvironment
 from pydantic import Field
 
 from toucan_connectors.utils.slugify import slugify
+
+if TYPE_CHECKING:
+    import pandas as pd
+
 
 # Query interpolation
 
@@ -399,12 +402,14 @@ def is_interpolating_table_name(query: str) -> bool:
     return table_name.startswith("%(")
 
 
-def infer_datetime_dtype(df: pd.DataFrame) -> None:
+def infer_datetime_dtype(df: "pd.DataFrame") -> None:
     """
     Even if a RDBMS table's column has type `date NOT NULL`,
     we get a `object` dtype in the resulting pandas dataframe.
     This util allows to automatically convert it to `datetime64[ns]`.
     """
+    import pandas as pd
+
     for colname in df:
         if df[colname].dtype == "object":
             # get the first non-null value in the series.
@@ -418,13 +423,15 @@ def infer_datetime_dtype(df: pd.DataFrame) -> None:
                         df[colname] = pd.to_datetime(df[colname], errors="coerce")
 
 
-def rename_duplicate_columns(df: pd.DataFrame) -> None:
+def rename_duplicate_columns(df: "pd.DataFrame") -> None:
     """
     Check if there are duplicated columns in the dataframe.
     If there are, rename them.
     For example, if we have a dataframe with columns ['foo', 'foo'],
     we will rename them to ['foo_0', 'foo_1'].
     """
+    import pandas as pd
+
     cols = pd.Series(df.columns)
     for dup in df.columns[df.columns.duplicated(keep=False)]:
         cols[df.columns.get_loc(dup)] = [f"{dup}_{d_idx}" for d_idx in range(df.columns.get_loc(dup).sum())]
@@ -441,7 +448,9 @@ def pandas_read_sql(
     convert_to_numeric: bool = False,
     render_user: bool = False,
     **kwargs,
-) -> pd.DataFrame:
+) -> "pd.DataFrame":
+    import pandas as pd
+
     if convert_to_printf:
         query = convert_to_printf_templating_style(query)
     if render_user:

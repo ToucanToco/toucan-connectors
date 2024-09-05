@@ -8,9 +8,8 @@ from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
 from types import ModuleType
-from typing import Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
 
-import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, SecretStr
 from pydantic.fields import ModelPrivateAttr
 
@@ -23,6 +22,10 @@ from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.pagination import PaginationInfo, build_pagination_info
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.utils.datetime import sanitize_df_dates
+
+if TYPE_CHECKING:
+    import pandas as pd
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +55,7 @@ class DataSlice(NamedTuple):
     See the documentation (DataSlice.md) for details.
     """
 
-    df: pd.DataFrame  # the dataframe of the slice
+    df: "pd.DataFrame"  # the dataframe of the slice
     pagination_info: PaginationInfo  # Information about pagination
     input_parameters: dict | None = None
     stats: DataStats | None = None
@@ -320,7 +323,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         """Main method to retrieve a pandas dataframe"""
 
     @decorate_func_with_retry
-    def get_df(self, data_source: DS, permissions: dict | None = None) -> pd.DataFrame:
+    def get_df(self, data_source: DS, permissions: dict | None = None) -> "pd.DataFrame":
         """
         Method to retrieve the data as a pandas dataframe
         filtered by permissions
@@ -493,6 +496,8 @@ class DiscoverableConnector(ABC):
         # db, schema, type, name, columns as dict or json string
         unformatted_db_tree: list[tuple[str, str, str, str, list[dict[str, str]] | str]],
     ) -> list[TableInfo]:
+        import pandas as pd
+
         if not unformatted_db_tree:
             return []
         df = pd.DataFrame(unformatted_db_tree)

@@ -5,10 +5,7 @@ from contextlib import suppress
 from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional
 
-import pandas as pd
-import snowflake
 from pydantic import Field, PrivateAttr, create_model
-from snowflake.connector import SnowflakeConnection
 
 from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.json_wrapper import JsonWrapper
@@ -31,7 +28,18 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
+
+try:
+    import pandas as pd
+    import snowflake
+    from snowflake.connector import SnowflakeConnection
+
+    CONNECTOR_OK = True
+except ImportError as exc:
+    _LOGGER.warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 
 connection_manager = None
 if not connection_manager:
@@ -127,9 +135,9 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
     def get_access_token(self):
         return self._oauth2_connector.get_access_token()
 
-    def _get_connection(self, database: str = None, warehouse: str = None) -> SnowflakeConnection:
-        def connect_function() -> SnowflakeConnection:
-            logger.info("Connect at Snowflake")
+    def _get_connection(self, database: str = None, warehouse: str = None) -> "SnowflakeConnection":
+        def connect_function() -> "SnowflakeConnection":
+            _LOGGER.info("Connect at Snowflake")
             token_start = timer()
             tokens = self.get_access_token()
             token_end = timer()
@@ -141,7 +149,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                 "token": tokens,
                 "role": self.role if self.role else "",
             }
-            logger.info(
+            _LOGGER.info(
                 f"[benchmark][snowflake] - get_access_token {token_end - token_start} seconds",
                 extra={
                     "benchmark": {
@@ -152,11 +160,13 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                 },
             )
 
-            logger.info(f"Connect at Snowflake with {connection_params}, database {database} and warehouse {warehouse}")
+            _LOGGER.info(
+                f"Connect at Snowflake with {connection_params}, database {database} and warehouse {warehouse}"
+            )
             connect_start = timer()
             connection = snowflake.connector.connect(**connection_params, database=database, warehouse=warehouse)
             connect_end = timer()
-            logger.info(
+            _LOGGER.info(
                 f"[benchmark][snowflake] - connect {connect_end - connect_start} seconds",
                 extra={
                     "benchmark": {
@@ -169,7 +179,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
             return connection
 
         def alive_function(conn: SnowflakeConnection) -> Any:
-            logger.debug("Check Snowflake connection")
+            _LOGGER.debug("Check Snowflake connection")
             if hasattr(conn, "is_closed"):
                 try:
                     return not conn.is_closed()
@@ -177,13 +187,13 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                     raise TypeError("is_closed is not a function") from exc
 
         def close_function(conn: SnowflakeConnection) -> None:
-            logger.debug("Close Snowflake connection")
+            _LOGGER.debug("Close Snowflake connection")
             if hasattr(conn, "close"):
                 try:
                     close_start = timer()
                     r = conn.close()
                     close_end = timer()
-                    logger.info(
+                    _LOGGER.info(
                         f"[benchmark][snowflake] - close {close_end - close_start} seconds",
                         extra={
                             "benchmark": {
@@ -240,7 +250,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
             result = SnowflakeCommon().get_databases(connection, database_name)
         return result
 
-    def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: SnowflakeoAuth2DataSource) -> "pd.DataFrame":
         with self._get_connection(database=data_source.database, warehouse=data_source.warehouse) as connection:
             result = SnowflakeCommon().retrieve_data(connection, data_source)
         return result
@@ -290,5 +300,5 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                 if future.exception():
                     raise future.exception()
                 else:
-                    self.logger.info("query finished")
+                    self._LOGGER.info("query finished")
         return DiscoverableConnector.format_db_model(db_contents)

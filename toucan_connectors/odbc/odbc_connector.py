@@ -1,7 +1,16 @@
-import pandas as pd
-import pyodbc
+from logging import getLogger
+
 from pydantic import Field, StringConstraints
 from typing_extensions import Annotated
+
+try:
+    import pandas as pd
+    import pyodbc
+
+    CONNECTOR_OK = True
+except ImportError as exc:
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -32,7 +41,7 @@ class OdbcConnector(ToucanConnector, data_source_model=OdbcDataSource):
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _retrieve_data(self, datasource: OdbcDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, datasource: OdbcDataSource) -> "pd.DataFrame":
         connection = pyodbc.connect(self.connection_string, **self.get_connection_params())
         df = pandas_read_sql(datasource.query, con=connection, params=datasource.parameters, convert_to_qmark=True)
         connection.close()

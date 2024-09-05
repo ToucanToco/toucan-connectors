@@ -7,15 +7,6 @@ from itertools import groupby
 from timeit import default_timer as timer
 from typing import Any, Iterable, Union
 
-import pandas as pd
-import requests
-from google.api_core.exceptions import GoogleAPIError
-from google.api_core.exceptions import Unauthorized as GoogleUnauthorized
-from google.auth.transport.requests import TimeoutGuard
-from google.cloud import bigquery
-from google.cloud.bigquery.dbapi import _helpers as bigquery_helpers
-from google.cloud.bigquery.job import QueryJob
-from google.oauth2.service_account import Credentials
 from pydantic import ConfigDict, Field, create_model
 
 from toucan_connectors.common import ConnectorStatus, sanitize_query
@@ -34,13 +25,45 @@ from toucan_connectors.toucan_connector import (
 
 _LOGGER = logging.getLogger(__name__)
 
+try:
+    import pandas as pd
+    import requests
+    from google.api_core.exceptions import GoogleAPIError
+    from google.api_core.exceptions import Unauthorized as GoogleUnauthorized
+    from google.auth.transport.requests import TimeoutGuard
+    from google.cloud import bigquery
+    from google.cloud.bigquery.dbapi import _helpers as bigquery_helpers
+    from google.cloud.bigquery.job import QueryJob
+    from google.oauth2.service_account import Credentials
+
+    class InvalidJWTToken(GoogleUnauthorized):
+        """When the jwt-token is no longer valid (usualy from google as 401)"""
+
+    class CustomRequestSession(requests.Session):
+        """Needed because the `is_mtls` field is mandatory for the bigquery client"""
+
+        # https://github.com/googleapis/google-auth-library-python/blob/v1.35.0/google/auth/transport/requests.py#L535
+        is_mtls: bool = False
+
+        def __init__(self, jwt_token: str) -> None:
+            super().__init__()
+            self.headers.update(
+                {
+                    "Authorization": f"Bearer {jwt_token}",
+                    "content-type": "application/json",
+                }
+            )
+
+    CONNECTOR_OK = True
+
+except ImportError as exc:
+    _LOGGER.warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
+
 _PAGE_SIZE = 50
 _MAXIMUM_RESULTS_FETCHED = 2000
 _GBQ_TIMEOUT_HTTP_REQUEST = 30  # in seconds
-
-
-class InvalidJWTToken(GoogleUnauthorized):
-    """When the jwt-token is no longer valid (usualy from google as 401)"""
 
 
 class GoogleClientCreationError(Exception):
@@ -49,28 +72,6 @@ class GoogleClientCreationError(Exception):
 
 class NoDataFoundException(Exception):
     """When there is no data to Concatenate and send back to the user"""
-
-
-class CustomRequestSession(requests.Session):
-    """
-    Had to create this "weird" class that wraps requests.Session
-    because the field `is_mtls` is mandatory for google...request.Session model
-    such as AuthorizedSession, and  in order to have it works properly
-    inside bigquery.Client object functions
-
-    """
-
-    # https://github.com/googleapis/google-auth-library-python/blob/v1.35.0/google/auth/transport/requests.py#L535
-    is_mtls: bool = False
-
-    def __init__(self, jwt_token: str) -> None:
-        super().__init__()
-        self.headers.update(
-            {
-                "Authorization": f"Bearer {jwt_token}",
-                "content-type": "application/json",
-            }
-        )
 
 
 class Dialect(str, Enum):
@@ -107,7 +108,7 @@ class GoogleBigQueryDataSource(ToucanDataSource):
         return schema
 
 
-BigQueryParam = Union[bigquery.ScalarQueryParameter, bigquery.ArrayQueryParameter]
+BigQueryParam = Union["bigquery.ScalarQueryParameter", "bigquery.ArrayQueryParameter"]
 
 
 def _define_query_param(name: str, value: Any) -> BigQueryParam:
@@ -163,12 +164,12 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
     model_config = ConfigDict(ignored_types=(cached_property,))
 
     @staticmethod
-    def _get_google_credentials(credentials: GoogleCredentials, scopes: list[str]) -> Credentials:
+    def _get_google_credentials(credentials: GoogleCredentials, scopes: list[str]) -> "Credentials":
         credentials = get_google_oauth2_credentials(credentials).with_scopes(scopes)
         return credentials
 
     @staticmethod
-    def _http_connect(http_session: requests.Session, project_id: str) -> bigquery.Client:
+    def _http_connect(http_session: "requests.Session", project_id: str) -> "bigquery.Client":
         """
         Given a session that has a signed JWT in the headers,
         we can forward that `context requests` to create a bigquery.Client
@@ -205,7 +206,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
 
         return client
 
-    def _connect(self, credentials: Credentials | JWTCredentials) -> bigquery.Client:
+    def _connect(self, credentials: "Credentials | JWTCredentials") -> "bigquery.Client":
         start = timer()
         if isinstance(credentials, Credentials):
             client = bigquery.Client(credentials=credentials)
@@ -241,7 +242,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
         return re.sub(r"'(@__.*?__)'", r"\1", re.sub(r'"(.*?)"', r"`\1`", query))
 
     @staticmethod
-    def _execute_query(client: bigquery.Client, query: str, parameters: list) -> pd.DataFrame:
+    def _execute_query(client: "bigquery.Client", query: str, parameters: list) -> "pd.DataFrame":
         try:
             start = timer()
             query = GoogleBigQueryConnector._clean_query(query)
@@ -294,7 +295,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
         """Add surrounding for parameters injection"""
         return f"@{variable}"
 
-    def _bigquery_client_with_google_creds(self) -> bigquery.Client:
+    def _bigquery_client_with_google_creds(self) -> "bigquery.Client":
         try:
             assert self.credentials is not None
             credentials = GoogleBigQueryConnector._get_google_credentials(self.credentials, self.scopes)
@@ -303,7 +304,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
             raise GoogleClientCreationError from excp
 
     @cached_property
-    def _bigquery_client(self) -> bigquery.Client:
+    def _bigquery_client(self) -> "bigquery.Client":
         if self.jwt_credentials and self.jwt_credentials.jwt_token:
             try:
                 # We try to instantiate the bigquery.Client with the given jwt-token
@@ -329,7 +330,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
             # project-id is missing and it's mandatory
             raise GoogleClientCreationError
 
-    def _get_bigquery_client(self) -> bigquery.Client:
+    def _get_bigquery_client(self) -> "bigquery.Client":
         with suppress(Exception):
             if bigquery_client := self._bigquery_client:
                 return bigquery_client
@@ -338,7 +339,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
         self.__dict__.pop("_bigquery_client", None)
         return self._bigquery_client
 
-    def _retrieve_data(self, data_source: GoogleBigQueryDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GoogleBigQueryDataSource) -> "pd.DataFrame":
         _LOGGER.debug(f"Play request {data_source.query} with parameters {data_source.parameters}")
 
         query, parameters = GoogleBigQueryConnector._prepare_query_and_parameters(
@@ -351,7 +352,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
         return result
 
     @classmethod
-    def _format_db_model(cls, unformatted_db_tree: pd.DataFrame) -> list[TableInfo]:
+    def _format_db_model(cls, unformatted_db_tree: "pd.DataFrame") -> list[TableInfo]:
         def _format_columns(x: str):
             col = x.split()
             return {"name": col[0], "type": col[1]}
@@ -398,13 +399,13 @@ WHERE
             self._build_dataset_info_query_for_ds(dataset_id, db_name) for dataset_id in dataset_ids
         )
 
-    def _fetch_query_results(self, query_job: QueryJob) -> Iterable:  # pragma: no cover
+    def _fetch_query_results(self, query_job: "QueryJob") -> Iterable:  # pragma: no cover
         """Fetches query results in a paginated manner using a generator."""
         return query_job.result(page_size=_PAGE_SIZE, max_results=_MAXIMUM_RESULTS_FETCHED).to_dataframe_iterable()
 
     def _get_project_structure_fast(
-        self, client: bigquery.Client, db_name: str | None, dataset_ids: Iterable[str]
-    ) -> pd.DataFrame:
+        self, client: "bigquery.Client", db_name: str | None, dataset_ids: Iterable[str]
+    ) -> "pd.DataFrame":
         """Retrieves the project structure in a single query.
 
         Only works if all datasets are in the same location.
@@ -423,8 +424,8 @@ WHERE
             raise GoogleAPIError(f"An error occurred while executing the query: {exc}") from exc
 
     def _get_project_structure_slow(
-        self, client: bigquery.Client, db_name: str | None, dataset_ids: Iterable[str]
-    ) -> pd.DataFrame:
+        self, client: "bigquery.Client", db_name: str | None, dataset_ids: Iterable[str]
+    ) -> "pd.DataFrame":
         """Retrieves the project structure in multiple queries.
 
         Works even if the project's datasets are in different locations.

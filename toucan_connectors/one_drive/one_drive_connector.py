@@ -2,9 +2,17 @@ import logging
 import re
 from typing import List, Optional
 
-import pandas as pd
-import requests
 from pydantic import Field, PrivateAttr
+
+try:
+    import pandas as pd
+    import requests
+
+    CONNECTOR_OK = True
+except ImportError as exc:
+    logging.getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -255,7 +263,7 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
         else:
             raise NotFoundError("No matching file name")
 
-    def _retrieve_data(self, data_source: OneDriveDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: OneDriveDataSource) -> "pd.DataFrame":
         logging.getLogger(__name__).debug("_retrieve_data")
 
         if data_source.sheet and data_source.table:

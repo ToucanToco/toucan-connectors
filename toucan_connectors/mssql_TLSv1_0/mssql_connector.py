@@ -1,9 +1,16 @@
 import logging
 from contextlib import suppress
 
-import pyodbc
 from pydantic import Field, StringConstraints, create_model
 from typing_extensions import Annotated
+
+try:
+    import pyodbc
+
+    CONNECTOR_OK = True
+except ImportError as exc:
+    logging.getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import (

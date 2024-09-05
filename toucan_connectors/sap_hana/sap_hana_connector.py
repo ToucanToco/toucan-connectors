@@ -1,6 +1,16 @@
-import pyhdb
+from logging import getLogger
+
 from pydantic import Field, StringConstraints
 from typing_extensions import Annotated
+
+try:
+    import pyhdb
+
+    CONNECTOR_OK = True
+except ImportError as exc:
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource

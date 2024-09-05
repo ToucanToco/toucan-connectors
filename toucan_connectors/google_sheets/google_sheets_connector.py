@@ -1,13 +1,21 @@
 from contextlib import suppress
 from datetime import datetime
+from logging import getLogger
 from typing import Any, Callable, List, Optional
 
-import numpy as np
-import pandas as pd
-from dateutil.relativedelta import relativedelta
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.errors import Error as GoogleApiClientError
+try:
+    import numpy as np
+    import pandas as pd
+    from dateutil.relativedelta import relativedelta
+    from google.oauth2.credentials import Credentials
+    from googleapiclient.discovery import build
+    from googleapiclient.errors import Error as GoogleApiClientError
+
+    CONNECTOR_OK = True
+except ImportError as exc:
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 from pydantic import Field, PrivateAttr, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 
@@ -151,7 +159,7 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
         """
         return "SERIAL_NUMBER" if data_source.dates_as_float else "FORMATTED_STRING"
 
-    def _retrieve_data(self, data_source: GoogleSheetsDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GoogleSheetsDataSource) -> "pd.DataFrame":
         if data_source.sheet is None:
             # Select the first sheet by default
             sheet_names = self.list_sheets(data_source.spreadsheet_id)

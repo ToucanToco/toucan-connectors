@@ -7,12 +7,42 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Optional
 
-import numpy as np
-import pandas as pd
-import requests
 from dateutil import relativedelta
 from pydantic import Field, PrivateAttr, create_model
-from python_graphql_client import GraphqlClient
+
+try:
+    import numpy as np
+    import pandas as pd
+    import requests
+    from python_graphql_client import GraphqlClient
+
+    from .helpers import (
+        GithubError,
+        KeyNotFoundException,
+        RateLimitExhaustedException,
+        dataset_formatter,
+        extraction_funcs_names,
+        extraction_funcs_pages_1,
+        extraction_funcs_pages_2,
+        extraction_keys,
+        format_functions,
+        get_cursor,
+        get_data,
+        get_errors,
+        get_message,
+        get_nodes,
+        get_organization,
+        get_page_info,
+        get_rate_limit_info,
+        has_next_page,
+        queries_funcs_names,
+        queries_funcs_pages,
+    )
+
+    CONNECTOR_OK = True
+except ImportError as exc:
+    logging.getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 from toucan_connectors.common import ConnectorStatus, get_loop
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -25,29 +55,6 @@ from toucan_connectors.toucan_connector import (
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
-)
-
-from .helpers import (
-    GithubError,
-    KeyNotFoundException,
-    RateLimitExhaustedException,
-    dataset_formatter,
-    extraction_funcs_names,
-    extraction_funcs_pages_1,
-    extraction_funcs_pages_2,
-    extraction_keys,
-    format_functions,
-    get_cursor,
-    get_data,
-    get_errors,
-    get_message,
-    get_nodes,
-    get_organization,
-    get_page_info,
-    get_rate_limit_info,
-    has_next_page,
-    queries_funcs_names,
-    queries_funcs_pages,
 )
 
 AUTHORIZATION_URL: str = "https://github.com/login/oauth/authorize"
@@ -150,7 +157,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
 
     def get_names(
         self,
-        client: GraphqlClient,
+        client: "GraphqlClient",
         organization: str,
         dataset: str,
         names=None,
@@ -192,7 +199,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
     async def get_pages(
         self,
         name: str,
-        client: GraphqlClient,
+        client: "GraphqlClient",
         organization: str,
         dataset: str,
         page_limit: int,
@@ -337,11 +344,11 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
         self,
         dataset: GithubDataSet,
         organization: str,
-        client: GraphqlClient,
+        client: "GraphqlClient",
         page_limit: int,
         names_limit=None,
         latest_retrieved_object=None,
-    ) -> pd.DataFrame:
+    ) -> "pd.DataFrame":
         """
          Builds the coroutines ran by _retrieve_data
         :param dataset  GithubDataSet, the GithubDataSet to query
@@ -369,7 +376,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
         unformatted_data = await asyncio.gather(*subtasks)
         return dataset_formatter[dataset]([e for sublist in unformatted_data for e in sublist])
 
-    def _retrieve_data(self, data_source: GithubDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GithubDataSource) -> "pd.DataFrame":
         """
 
         :param data_source:  GithubDataSource, the GithubDataSource to query

@@ -1,9 +1,18 @@
 from contextlib import suppress
+from logging import getLogger
 
-import cx_Oracle
-import pandas as pd
 from pydantic import Field, StringConstraints, create_model
 from typing_extensions import Annotated
+
+try:
+    import cx_Oracle
+    import pandas as pd
+
+    CONNECTOR_OK = True
+except ImportError as exc:
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import (
@@ -76,7 +85,7 @@ class OracleSQLConnector(ToucanConnector, data_source_model=OracleSQLDataSource)
         }
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _retrieve_data(self, data_source: OracleSQLDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: OracleSQLDataSource) -> "pd.DataFrame":
         connection = cx_Oracle.connect(**self.get_connection_params())
 
         query = data_source.query[:-1] if data_source.query.endswith(";") else data_source.query

@@ -1,13 +1,21 @@
 import json
 from enum import Enum
+from logging import getLogger
 from typing import Any, List
 from xml.etree.ElementTree import ParseError, fromstring, tostring
 
-import pandas as pd
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
-from requests import Session
-from xmltodict import parse
+
+try:
+    import pandas as pd
+    from requests import Session
+    from xmltodict import parse
+
+    CONNECTOR_OK = True
+except ImportError as exc:
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 from toucan_connectors.auth import Auth
 from toucan_connectors.common import (
@@ -181,7 +189,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
             HttpAPIConnector.logger.error(f"Could not transform {data} using {jq_filter}")
             raise
 
-    def _retrieve_data(self, data_source: HttpAPIDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: HttpAPIDataSource) -> "pd.DataFrame":
         if self.auth:
             session = self.auth.get_session()
         else:
