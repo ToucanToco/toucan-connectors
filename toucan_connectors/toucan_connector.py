@@ -7,10 +7,10 @@ import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
+from types import ModuleType
 from typing import Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
 
 import pandas as pd
-import tenacity as tny
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, SecretStr
 from pydantic.fields import ModelPrivateAttr
 
@@ -136,13 +136,19 @@ class RetryPolicy(BaseModel):
         self.__dict__["logger"] = logger
 
     @property
+    def tny(self) -> ModuleType:
+        import tenacity
+
+        return tenacity
+
+    @property
     def tny_stop(self):
         """generate corresponding `stop` parameter for `tenacity.retry`"""
         stoppers = []
         if self.max_attempts > 1:
-            stoppers.append(tny.stop_after_attempt(self.max_attempts))
+            stoppers.append(self.tny.stop_after_attempt(self.max_attempts))
         if self.max_delay:
-            stoppers.append(tny.stop_after_delay(self.max_delay))
+            stoppers.append(self.tny.stop_after_delay(self.max_delay))
         if stoppers:
             return reduce(operator.or_, stoppers)
         return None
@@ -151,38 +157,38 @@ class RetryPolicy(BaseModel):
     def tny_retry(self):
         """generate corresponding `retry` parameter for `tenacity.retry`"""
         if self.retry_on:
-            return tny.retry_if_exception_type(self.retry_on)
+            return self.tny.retry_if_exception_type(self.retry_on)
         return None
 
     @property
     def tny_wait(self):
         """generate corresponding `wait` parameter for `tenacity.retry`"""
         if self.wait_time:
-            return tny.wait_fixed(self.wait_time)
+            return self.tny.wait_fixed(self.wait_time)
         return None
 
     @property
     def tny_after(self):
         """generate corresponding `after` parameter for `tenacity.retry`"""
         if self.logger:
-            return tny.after_log(self.logger, logging.DEBUG)
+            return self.tny.after_log(self.logger, logging.DEBUG)
         return None
 
     def retry_decorator(self):
         """build the `tenaticy.retry` decorator corresponding to policy"""
-        tny_kwargs = {}
+        self.tny_kwargs = {}
         for attr in dir(self):
             # the "after" hook is handled separately later to plug it only if
             # there is an actual retry policy
-            if attr.startswith("tny_") and attr != "tny_after":
+            if attr.startswith("self.tny_") and attr != "self.tny_after":
                 paramvalue = getattr(self, attr)
                 if paramvalue is not None:
-                    tny_kwargs[attr[4:]] = paramvalue
-        if tny_kwargs:
+                    self.tny_kwargs[attr[4:]] = paramvalue
+        if self.tny_kwargs:
             # plug the "after" hook if there's one
-            if self.tny_after:
-                tny_kwargs["after"] = self.tny_after
-            return tny.retry(reraise=True, **tny_kwargs)
+            if self.self.tny_after:
+                self.tny_kwargs["after"] = self.self.tny_after
+            return self.tny.retry(reraise=True, **self.tny_kwargs)
         return None
 
     def __call__(self, f):
