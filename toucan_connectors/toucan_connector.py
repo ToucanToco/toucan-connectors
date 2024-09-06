@@ -179,19 +179,19 @@ class RetryPolicy(BaseModel):
 
     def retry_decorator(self):
         """build the `tenaticy.retry` decorator corresponding to policy"""
-        self.tny_kwargs = {}
+        tny_kwargs = {}
         for attr in dir(self):
             # the "after" hook is handled separately later to plug it only if
             # there is an actual retry policy
-            if attr.startswith("self.tny_") and attr != "self.tny_after":
+            if attr.startswith("tny_") and attr != "tny_after":
                 paramvalue = getattr(self, attr)
                 if paramvalue is not None:
-                    self.tny_kwargs[attr[4:]] = paramvalue
-        if self.tny_kwargs:
+                    tny_kwargs[attr[4:]] = paramvalue
+        if tny_kwargs:
             # plug the "after" hook if there's one
-            if self.self.tny_after:
-                self.tny_kwargs["after"] = self.self.tny_after
-            return self.tny.retry(reraise=True, **self.tny_kwargs)
+            if self.tny_after:
+                tny_kwargs["after"] = self.tny_after
+            return self.tny.retry(reraise=True, **tny_kwargs)
         return None
 
     def __call__(self, f):
