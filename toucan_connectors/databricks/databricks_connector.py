@@ -18,6 +18,7 @@ try:
     CONNECTOR_OK = True
 except ImportError as exc:
     _LOGGER.warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 
 class DatabricksDataSource(ToucanDataSource):

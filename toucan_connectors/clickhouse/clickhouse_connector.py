@@ -8,7 +8,7 @@ try:
     CONNECTOR_OK = True
 except ImportError as exc:
     getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
-    CONNECTOR_OK = True
+    CONNECTOR_OK = False
 
 from pydantic import Field, StringConstraints, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
