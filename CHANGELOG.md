@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.0.0] 2024-09-06
+
 ### Changed
 
 - It is now possible to import all connectors models without having any extra installed
