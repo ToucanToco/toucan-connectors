@@ -11,7 +11,7 @@ try:
     from bson.son import SON
 
     CONNECTOR_OK = True
-except ImportError as exc:
+except ImportError as exc:  # pragma: no cover
     getLogger().warning(f"Missing dependencies for {__name__}: {exc}")
     CONNECTOR_OK = False
 

@@ -7,7 +7,7 @@ try:
     import pyhdb
 
     CONNECTOR_OK = True
-except ImportError as exc:
+except ImportError as exc:  # pragma: no cover
     getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
     CONNECTOR_OK = False
 

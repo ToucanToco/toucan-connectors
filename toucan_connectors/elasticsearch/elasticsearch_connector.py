@@ -10,7 +10,7 @@ try:
     from pandas import json_normalize
 
     CONNECTOR_OK = True
-except ImportError as exc:
+except ImportError as exc:  # pragma: no cover
     getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
     CONNECTOR_OK = False
 from pydantic import BaseModel, Field

@@ -60,7 +60,7 @@ try:
             r.headers[self.token_header_name] = token
             return r
 
-except ImportError as exc:
+except ImportError as exc:  # pragma: no cover
     getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
 
 

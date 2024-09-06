@@ -44,7 +44,7 @@ try:
     _TYPE_CODE_MAPPING = type_code_mapping
 
     CONNECTOR_OK = True
-except ImportError as exc:
+except ImportError as exc:  # pragma: no cover
     _LOGGER.warning(f"Missing dependencies for {__name__}: {exc}")
     CONNECTOR_OK = False
 

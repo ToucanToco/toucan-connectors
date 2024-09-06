@@ -16,7 +16,7 @@ try:
     from requests.auth import HTTPBasicAuth
 
     CONNECTOR_OK = True
-except ImportError as exc:
+except ImportError as exc:  # pragma: no cover
     _LOGGER.warning(f"Missing dependencies for {__name__}: {exc}")
     CONNECTOR_OK = False
 
