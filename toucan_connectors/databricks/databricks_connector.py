@@ -1,17 +1,24 @@
 import logging
 from typing import List, Optional, Tuple
 
-import pandas as pd
-import pyodbc
-import requests
 from pydantic import Field, StringConstraints
-from requests.auth import HTTPBasicAuth
 from typing_extensions import Annotated
 
 from toucan_connectors.common import ClusterStartException, ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
+
+try:
+    import pandas as pd
+    import pyodbc
+    import requests
+    from requests.auth import HTTPBasicAuth
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    _LOGGER.warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 
 class DatabricksDataSource(ToucanDataSource):
@@ -101,13 +108,13 @@ class DatabricksConnector(ToucanConnector, data_source_model=DatabricksDataSourc
         data = {"cluster_id": self.http_path.split("/")[-1]}
         resp = requests.post(endpoint, auth=auth, json=data)
         if resp.status_code == 200:
-            logger.info("Databricks cluster started")
+            _LOGGER.info("Databricks cluster started")
         else:
             message = resp.json().get("message", "Failed to start Databricks cluster")
-            logger.error(f"Error while starting cluster: {message}")
+            _LOGGER.error(f"Error while starting cluster: {message}")
             raise ClusterStartException(f"failed to start cluster: {message}")
 
-    def _retrieve_data(self, data_source: DatabricksDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: DatabricksDataSource) -> "pd.DataFrame":
         """
         The connector can face a shutdown cluster and must wait it to be started before querying.
         Try to trigger the query, if we receive an error wait for cluster to start then try again

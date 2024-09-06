@@ -3,15 +3,24 @@ import urllib.parse
 from contextlib import suppress
 from datetime import datetime
 from functools import cached_property
+from logging import getLogger
 from pathlib import Path
 from typing import Any
 
-import boto3
-import pandas as pd
-from dateutil.tz import tzutc
-from pandas.io.parsers.readers import TextFileReader
-from peakina import DataSource
 from pydantic import Field, validator
+
+try:
+    import boto3
+    import pandas as pd
+    from dateutil.tz import tzutc
+    from pandas.io.parsers.readers import TextFileReader
+    from peakina import DataSource
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -78,7 +87,7 @@ class S3Connector(ToucanConnector, data_source_model=S3DataSource):
         data_source: S3DataSource,
         offset: int = 0,
         limit: int | None = None,
-    ) -> pd.DataFrame | TextFileReader:
+    ) -> "pd.DataFrame | TextFileReader":
         credentials = self._get_assumed_sts_role()["Credentials"]
 
         # See the documentation here for the schema :

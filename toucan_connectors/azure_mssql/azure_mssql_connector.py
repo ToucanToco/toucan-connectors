@@ -1,7 +1,15 @@
 import re
+from logging import getLogger
 
-import pandas as pd
-import pyodbc
+try:
+    import pandas as pd
+    import pyodbc
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 from pydantic import Field, StringConstraints
 from typing_extensions import Annotated
 
@@ -56,7 +64,7 @@ class AzureMSSQLConnector(ToucanConnector, data_source_model=AzureMSSQLDataSourc
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _retrieve_data(self, datasource: AzureMSSQLDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, datasource: AzureMSSQLDataSource) -> "pd.DataFrame":
         connection = pyodbc.connect(**self.get_connection_params(database=datasource.database))
 
         query_params = datasource.parameters or {}

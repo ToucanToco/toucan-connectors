@@ -1,7 +1,15 @@
 from contextlib import suppress
+from logging import getLogger
 from typing import Any
 
-import clickhouse_driver
+try:
+    import clickhouse_driver
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 from pydantic import Field, StringConstraints, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 from typing_extensions import Annotated

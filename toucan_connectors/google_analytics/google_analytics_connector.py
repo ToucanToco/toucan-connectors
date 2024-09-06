@@ -1,7 +1,16 @@
 # ruff: noqa: N815,N806
-import pandas as pd
-from apiclient.discovery import build
-from oauth2client.service_account import ServiceAccountCredentials
+from logging import getLogger
+
+try:
+    import pandas as pd
+    from apiclient.discovery import build
+    from oauth2client.service_account import ServiceAccountCredentials
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
@@ -174,7 +183,7 @@ class GoogleAnalyticsConnector(ToucanConnector, data_source_model=GoogleAnalytic
         '<a href="https://developers.google.com/identity/protocols/googlescopes" target="_blank">documentation</a>',
     )
 
-    def _retrieve_data(self, data_source: GoogleAnalyticsDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GoogleAnalyticsDataSource) -> "pd.DataFrame":
         credentials = ServiceAccountCredentials.from_json_keyfile_dict(self.credentials.dict(), self.scope)
         service = build(API, VERSION, credentials=credentials)
         report_request = ReportRequest(

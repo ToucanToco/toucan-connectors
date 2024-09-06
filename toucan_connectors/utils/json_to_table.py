@@ -1,17 +1,19 @@
 import uuid
-from typing import Any, List, Union
+from typing import TYPE_CHECKING, Any, List, Union
 
-from pandas import DataFrame, Series, json_normalize
+if TYPE_CHECKING:  # pragma: no cover
+    from pandas import DataFrame, Series
+
 
 INTERNAL_SEP = str(uuid.uuid1())
 
 
-def _first_valid_value(serie: Series) -> Any:
+def _first_valid_value(serie: "Series") -> Any:
     first_valid_index = serie.first_valid_index()
     return serie[first_valid_index] if first_valid_index is not None else None
 
 
-def json_to_table(df: DataFrame, columns: Union[str, List[str]], sep: str = ".") -> DataFrame:
+def json_to_table(df: "DataFrame", columns: Union[str, List[str]], sep: str = ".") -> "DataFrame":
     """
     Flatten JSON into a table shape. Add lines for each element of a nested array.
     Add columns for each keys of a nested object / dict.
@@ -24,6 +26,7 @@ def json_to_table(df: DataFrame, columns: Union[str, List[str]], sep: str = ".")
     - `sep` (*str*) : separator used to build nested objects path in final output column names
                       (default is `.`)
     """
+    from pandas import json_normalize
 
     if isinstance(columns, str):  # support for a single column name as a string
         columns = [columns]

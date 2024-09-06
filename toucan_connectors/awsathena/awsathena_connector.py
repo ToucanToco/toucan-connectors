@@ -1,11 +1,19 @@
+import logging
 from typing import Any
 
-import awswrangler as wr
-import boto3
-import pandas as pd
 from cached_property import cached_property_with_ttl
 from pydantic import ConfigDict, Field, StringConstraints, create_model
 from typing_extensions import Annotated
+
+try:
+    import awswrangler as wr
+    import boto3
+    import pandas as pd
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    logging.getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 from toucan_connectors.common import ConnectorStatus, apply_query_parameters, sanitize_query
 from toucan_connectors.pagination import build_pagination_info
@@ -74,7 +82,7 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
     region_name: str = Field(..., description="Your AWS region name")
     model_config = ConfigDict(ignored_types=(cached_property_with_ttl,))
 
-    def get_session(self) -> boto3.Session:
+    def get_session(self) -> "boto3.Session":
         assert self.aws_secret_access_key is not None, "'aws_secret_access_key' is required"
         return boto3.Session(
             aws_access_key_id=self.aws_access_key_id,
@@ -106,7 +114,7 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
         data_source: AwsathenaDataSource,
         offset: int = 0,
         limit: int | None = None,
-    ) -> pd.DataFrame:
+    ) -> "pd.DataFrame":
         assert data_source.query is not None, "no query provided"
         df = wr.athena.read_sql_query(
             self._add_pagination_to_query(

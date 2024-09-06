@@ -38,7 +38,7 @@ def test_build_authorization_url(mocker, oauth2_connector, secrets_keeper):
     It should return the authorization URL
     """
     mock_create_authorization_url: Mock = mocker.patch(
-        "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.create_authorization_url",
+        "authlib.integrations.requests_client.OAuth2Session.create_authorization_url",
         return_value=("authorization_url", "state"),
     )
 
@@ -55,7 +55,7 @@ def test_retrieve_tokens(mocker, oauth2_connector, secrets_keeper):
     """
     secrets_keeper.save("test", {"state": JsonWrapper.dumps({"token": "the_token"})})
     mock_fetch_token: Mock = mocker.patch(
-        "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.fetch_token",
+        "authlib.integrations.requests_client.OAuth2Session.fetch_token",
         return_value={"access_token": "dummy_token"},
     )
 
@@ -96,7 +96,7 @@ def test_get_access_token_expired(mocker, oauth2_connector, secrets_keeper):
     )
 
     mock_refresh_token: Mock = mocker.patch(
-        "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token",
+        "authlib.integrations.requests_client.OAuth2Session.refresh_token",
         return_value={"access_token": "new_token"},
     )
     access_token = oauth2_connector.get_access_token()
@@ -118,7 +118,7 @@ def test_get_access_token_expired_int_type(mocker, oauth2_connector, secrets_kee
     )
 
     mock_refresh_token: Mock = mocker.patch(
-        "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token",
+        "authlib.integrations.requests_client.OAuth2Session.refresh_token",
         return_value={"access_token": "new_token"},
     )
     access_token = oauth2_connector.get_access_token()
@@ -140,7 +140,7 @@ def test_get_access_token_expired_bool_type(mocker, oauth2_connector, secrets_ke
     )
 
     mock_refresh_token: Mock = mocker.patch(
-        "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token",
+        "authlib.integrations.requests_client.OAuth2Session.refresh_token",
         return_value={"access_token": "new_token"},
     )
     access_token = oauth2_connector.get_access_token()
@@ -155,7 +155,7 @@ def test_get_access_token_expired_no_refresh_token(mocker, oauth2_connector, sec
     secrets_keeper.save("test", {"access_token": "dummy_token", "expires_at": datetime.fromtimestamp(0)})
 
     mock_refresh_token: Mock = mocker.patch(
-        "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token",
+        "authlib.integrations.requests_client.OAuth2Session.refresh_token",
         return_value={"access_token": "new_token"},
     )
     with pytest.raises(NoOAuth2RefreshToken):
@@ -165,7 +165,7 @@ def test_get_access_token_expired_no_refresh_token(mocker, oauth2_connector, sec
 
 def test_get_access_data(mocker, oauth2_connector, secrets_keeper):
     mocker.patch(
-        "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token",
+        "authlib.integrations.requests_client.OAuth2Session.refresh_token",
         return_value={
             "access_token": "new_access_token",
             "refresh_token": "new_refresh_token",
@@ -189,7 +189,7 @@ def test_get_access_data(mocker, oauth2_connector, secrets_keeper):
 
 def test_get_access_data_without_refresh(mocker, oauth2_connector, secrets_keeper):
     mock_refresh_token: Mock = mocker.patch(
-        "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token",
+        "authlib.integrations.requests_client.OAuth2Session.refresh_token",
         return_value={
             "access_token": "new_access_token",
             "refresh_token": "new_refresh_token",
@@ -205,7 +205,7 @@ def test_get_access_data_without_refresh(mocker, oauth2_connector, secrets_keepe
 
 def test_get_access_data_without_instance(mocker, oauth2_connector, secrets_keeper):
     mock_refresh_token: Mock = mocker.patch(
-        "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Session.refresh_token",
+        "authlib.integrations.requests_client.OAuth2Session.refresh_token",
         return_value={"access_token": "new_access_token", "refresh_token": "new_refresh_token"},
     )
 

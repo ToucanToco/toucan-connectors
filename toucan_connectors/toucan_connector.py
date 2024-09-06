@@ -7,10 +7,9 @@ import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 from functools import reduce, wraps
-from typing import Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
+from types import ModuleType
+from typing import TYPE_CHECKING, Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
 
-import pandas as pd
-import tenacity as tny
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, SecretStr
 from pydantic.fields import ModelPrivateAttr
 
@@ -23,6 +22,10 @@ from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.pagination import PaginationInfo, build_pagination_info
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.utils.datetime import sanitize_df_dates
+
+if TYPE_CHECKING:  # pragma: no cover
+    import pandas as pd
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +55,7 @@ class DataSlice(NamedTuple):
     See the documentation (DataSlice.md) for details.
     """
 
-    df: pd.DataFrame  # the dataframe of the slice
+    df: "pd.DataFrame"  # the dataframe of the slice
     pagination_info: PaginationInfo  # Information about pagination
     input_parameters: dict | None = None
     stats: DataStats | None = None
@@ -136,13 +139,19 @@ class RetryPolicy(BaseModel):
         self.__dict__["logger"] = logger
 
     @property
+    def tny(self) -> ModuleType:
+        import tenacity
+
+        return tenacity
+
+    @property
     def tny_stop(self):
         """generate corresponding `stop` parameter for `tenacity.retry`"""
         stoppers = []
         if self.max_attempts > 1:
-            stoppers.append(tny.stop_after_attempt(self.max_attempts))
+            stoppers.append(self.tny.stop_after_attempt(self.max_attempts))
         if self.max_delay:
-            stoppers.append(tny.stop_after_delay(self.max_delay))
+            stoppers.append(self.tny.stop_after_delay(self.max_delay))
         if stoppers:
             return reduce(operator.or_, stoppers)
         return None
@@ -151,21 +160,21 @@ class RetryPolicy(BaseModel):
     def tny_retry(self):
         """generate corresponding `retry` parameter for `tenacity.retry`"""
         if self.retry_on:
-            return tny.retry_if_exception_type(self.retry_on)
+            return self.tny.retry_if_exception_type(self.retry_on)
         return None
 
     @property
     def tny_wait(self):
         """generate corresponding `wait` parameter for `tenacity.retry`"""
         if self.wait_time:
-            return tny.wait_fixed(self.wait_time)
+            return self.tny.wait_fixed(self.wait_time)
         return None
 
     @property
     def tny_after(self):
         """generate corresponding `after` parameter for `tenacity.retry`"""
         if self.logger:
-            return tny.after_log(self.logger, logging.DEBUG)
+            return self.tny.after_log(self.logger, logging.DEBUG)
         return None
 
     def retry_decorator(self):
@@ -182,7 +191,7 @@ class RetryPolicy(BaseModel):
             # plug the "after" hook if there's one
             if self.tny_after:
                 tny_kwargs["after"] = self.tny_after
-            return tny.retry(reraise=True, **tny_kwargs)
+            return self.tny.retry(reraise=True, **tny_kwargs)
         return None
 
     def __call__(self, f):
@@ -314,7 +323,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         """Main method to retrieve a pandas dataframe"""
 
     @decorate_func_with_retry
-    def get_df(self, data_source: DS, permissions: dict | None = None) -> pd.DataFrame:
+    def get_df(self, data_source: DS, permissions: dict | None = None) -> "pd.DataFrame":
         """
         Method to retrieve the data as a pandas dataframe
         filtered by permissions
@@ -487,6 +496,8 @@ class DiscoverableConnector(ABC):
         # db, schema, type, name, columns as dict or json string
         unformatted_db_tree: list[tuple[str, str, str, str, list[dict[str, str]] | str]],
     ) -> list[TableInfo]:
+        import pandas as pd
+
         if not unformatted_db_tree:
             return []
         df = pd.DataFrame(unformatted_db_tree)

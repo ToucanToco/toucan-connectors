@@ -198,7 +198,7 @@ def test_cluster_start_failed(databricks_connector: DatabricksConnector, mocker:
         json={"message": "Failed to start Databricks cluster"},
         status=400,
     )
-    mockedlog = mocker.patch("toucan_connectors.databricks.databricks_connector.logger.error")
+    mockedlog = mocker.patch("toucan_connectors.databricks.databricks_connector._LOGGER.error")
     with pytest.raises(ClusterStartException):
         databricks_connector.start_cluster()
     mockedlog.assert_called_once_with("Error while starting cluster: Failed to start Databricks cluster")

@@ -1,12 +1,20 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from functools import _lru_cache_wrapper, cached_property, lru_cache
+from logging import getLogger
 from typing import Any, List, Optional, Pattern, Union
 from warnings import warn
 
-import pandas as pd
-import pymongo
-from bson.son import SON
+try:
+    import pandas as pd
+    import pymongo
+    from bson.son import SON
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger().warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 from pydantic import ConfigDict, Field, create_model, field_validator, model_validator
 
 from toucan_connectors.common import ConnectorStatus, nosql_apply_parameters_to_query
@@ -97,7 +105,7 @@ def apply_condition_filter(query, permissions_condition: dict):
     return query
 
 
-def validate_database(client: pymongo.MongoClient, database: str):
+def validate_database(client: "pymongo.MongoClient", database: str):
     if database not in client.list_database_names():
         raise UnkwownMongoDatabase(f"Database {database!r} doesn't exist")
 
@@ -225,7 +233,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
     @contextmanager
-    def client(self, client_args: dict[str, Any] | None = None) -> Generator[pymongo.MongoClient, None, None]:
+    def client(self, client_args: dict[str, Any] | None = None) -> Generator["pymongo.MongoClient", None, None]:
         client: pymongo.MongoClient = pymongo.MongoClient(
             **(self._get_mongo_client_kwargs() if client_args is None else client_args)
         )
@@ -235,14 +243,14 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
             client.close()
 
     @lru_cache(maxsize=32)  # noqa: B019
-    def _validate_database(self, client: pymongo.MongoClient, database: str):
+    def _validate_database(self, client: "pymongo.MongoClient", database: str):
         return validate_database(client, database)
 
     @lru_cache(maxsize=32)  # noqa: B019
-    def _validate_collection(self, client: pymongo.MongoClient, database: str, collection: str):
+    def _validate_collection(self, client: "pymongo.MongoClient", database: str, collection: str):
         return validate_collection(client, database, collection)
 
-    def validate_database_and_collection(self, client: pymongo.MongoClient, database: str, collection: str):
+    def validate_database_and_collection(self, client: "pymongo.MongoClient", database: str, collection: str):
         self._validate_database(client, database)
         self._validate_collection(client, database, collection)
 
@@ -359,7 +367,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
         permissions: Optional[str] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> pd.DataFrame:
+    ) -> "pd.DataFrame":
         return self.get_slice_with_regex(
             data_source=data_source,
             search=search,

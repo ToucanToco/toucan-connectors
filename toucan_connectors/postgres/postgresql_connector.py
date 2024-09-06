@@ -1,7 +1,6 @@
 from logging import getLogger
 from typing import Optional
 
-import psycopg2 as pgsql
 from pydantic import Field, StringConstraints, create_model
 from typing_extensions import Annotated
 
@@ -19,6 +18,15 @@ from toucan_connectors.toucan_connector import (
 )
 
 _LOGGER = getLogger(__name__)
+
+try:
+    import psycopg2 as pgsql
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    _LOGGER.warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 
 DEFAULT_DATABASE = "postgres"
 

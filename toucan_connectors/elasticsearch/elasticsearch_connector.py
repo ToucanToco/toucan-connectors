@@ -1,11 +1,18 @@
 from copy import deepcopy
 from enum import Enum
+from logging import getLogger
 from typing import List
 from urllib.parse import urlparse
 
-import pandas as pd
-from elasticsearch import Elasticsearch
-from pandas import json_normalize
+try:
+    import pandas as pd
+    from elasticsearch import Elasticsearch
+    from pandas import json_normalize
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 from pydantic import BaseModel, Field
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
@@ -120,7 +127,7 @@ class ElasticsearchDataSource(ToucanDataSource):
 class ElasticsearchConnector(ToucanConnector, data_source_model=ElasticsearchDataSource):
     hosts: List[ElasticsearchHost]
 
-    def _retrieve_data(self, data_source: ElasticsearchDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: ElasticsearchDataSource) -> "pd.DataFrame":
         data_source.body = nosql_apply_parameters_to_query(data_source.body, data_source.parameters)
         connection_params = []
         for host in self.hosts:

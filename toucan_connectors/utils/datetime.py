@@ -1,15 +1,20 @@
 from datetime import date
+from typing import TYPE_CHECKING
 
-import pandas as pd
-from pandas.api.types import is_datetime64_any_dtype as pd_is_datetime
+if TYPE_CHECKING:
+    import pandas as pd
 
 
-def is_datetime_col(col: pd.Series) -> bool:
+def is_datetime_col(col: "pd.Series") -> bool:
+    from pandas.api.types import is_datetime64_any_dtype as pd_is_datetime
+
     return pd_is_datetime(col) or all(isinstance(val, date) for val in col)
 
 
-def sanitize_df_dates(df: pd.DataFrame) -> pd.DataFrame:
+def sanitize_df_dates(df: "pd.DataFrame") -> "pd.DataFrame":
     """Converts all datetime columns to pd.datetime64"""
+    import pandas as pd
+
     for col in df.columns:
         if is_datetime_col(df[col]):
             df[col] = pd.to_datetime(df[col], utc=True).dt.tz_localize(

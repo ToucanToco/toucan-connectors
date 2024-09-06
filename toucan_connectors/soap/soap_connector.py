@@ -1,12 +1,20 @@
+from logging import getLogger
 from typing import Any
 
-import pandas as pd
 from pydantic import Field, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
-from requests import Session
-from zeep import Client
-from zeep.helpers import serialize_object
-from zeep.transports import Transport
+
+try:
+    import pandas as pd
+    from requests import Session
+    from zeep import Client
+    from zeep.helpers import serialize_object
+    from zeep.transports import Transport
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource, strlist_to_enum
 from toucan_connectors.utils.json_to_table import json_to_table
@@ -70,13 +78,13 @@ class SoapConnector(ToucanConnector, data_source_model=SoapDataSource):
     )
     endpoint: str = Field(..., title="WSDL Endpoint", description="The URL where the WSDL file is located")
 
-    def create_client(self) -> Client:
+    def create_client(self) -> "Client":
         session = Session()
         if self.headers:
             session.headers.update(self.headers)
         return Client(self.endpoint, transport=Transport(session=session))
 
-    def _retrieve_data(self, data_source: SoapDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: SoapDataSource) -> "pd.DataFrame":
         # Instantiate the SOAP client
 
         client = self.create_client()

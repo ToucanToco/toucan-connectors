@@ -192,23 +192,27 @@ def html_base64_image_src(image_path: str) -> str:
 for connector_type, connector_infos in CONNECTORS_REGISTRY.items():
     # Remove the path of the connector and set the connector class if available
     connector_path = connector_infos.pop("connector")
+    # laputa checks if "connector" is in the infos to determine wether a connector is available.
+    # We put the module path in another key for compatibility
+    connector_infos["connector_path"] = connector_path
     module_path, connector_cls_name = connector_path.rsplit(".", 1)
     try:
         mod = import_module(f".{module_path}", "toucan_connectors")
     except ImportError:
         pass
     else:
-        connector_cls = getattr(mod, connector_cls_name)
-        connector_infos["connector"] = connector_cls
-        with suppress(AttributeError):
-            connector_infos["bearer_integration"] = connector_cls.bearer_integration
-        with suppress(AttributeError):
-            connector_infos["_auth_flow"] = connector_cls._auth_flow
-        with suppress(AttributeError):
-            connector_infos["_managed_oauth_service_id"] = connector_cls._managed_oauth_service_id
-        # check if connector implements `get_status`,
-        # which is hence different from `ToucanConnector.get_status`
-        connector_infos["hasStatusCheck"] = connector_cls.get_status is not connector_cls.__bases__[0].get_status  # type: ignore[assignment]
+        if getattr(mod, "CONNECTOR_OK", False):
+            connector_cls = getattr(mod, connector_cls_name)
+            connector_infos["connector"] = connector_cls
+            with suppress(AttributeError):
+                connector_infos["bearer_integration"] = connector_cls.bearer_integration
+            with suppress(AttributeError):
+                connector_infos["_auth_flow"] = connector_cls._auth_flow
+            with suppress(AttributeError):
+                connector_infos["_managed_oauth_service_id"] = connector_cls._managed_oauth_service_id
+            # check if connector implements `get_status`,
+            # which is hence different from `ToucanConnector.get_status`
+            connector_infos["hasStatusCheck"] = connector_cls.get_status is not connector_cls.__bases__[0].get_status  # type: ignore[assignment]
 
     # Set default label if not set
     if "label" not in connector_infos:
