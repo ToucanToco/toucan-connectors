@@ -300,5 +300,5 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                 if future.exception():
                     raise future.exception()
                 else:
-                    self._LOGGER.info("query finished")
+                    _LOGGER.info("query finished")
         return DiscoverableConnector.format_db_model(db_contents)

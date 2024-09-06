@@ -118,6 +118,7 @@ class SnowflakeCommon:
         query: str,
         query_parameters: Optional[dict] = None,
     ) -> "pd.DataFrame":
+        from pandas import DataFrame
         from snowflake.connector import DictCursor
 
         execution_start = timer()
@@ -139,7 +140,7 @@ class SnowflakeCommon:
         self.set_query_generation_time(query_generation_time)
         convert_start = timer()
         # Here call our customized fetch
-        values = pd.DataFrame.from_dict(query_res.fetchall())
+        values = DataFrame.from_dict(query_res.fetchall())
 
         data_conversion_time = timer() - convert_start
         self.logger.info(

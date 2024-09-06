@@ -41,7 +41,7 @@ except ImportError as exc:
     CONNECTOR_OK = False
 
 try:
-    _DEFAULT_CURSOR_CLASS = pymysql.cursors.DictCursor
+    _DEFAULT_CURSOR_CLASS = None
     if pd.__version__.startswith("2"):
         _DEFAULT_CURSOR_CLASS = pymysql.cursors.Cursor
     else:
@@ -290,8 +290,7 @@ class MySQLConnector(
     def project_tree(self, db_name: str | None = None) -> list[TableInfo]:
         return list(self._get_project_structure(db_name=db_name))
 
-    def get_connection_params(self, *, database: str | None = None, cursorclass=None):
-        cursorclass = cursorclass or _DEFAULT_CURSOR_CLASS
+    def get_connection_params(self, *, database: str | None = None, cursorclass=_DEFAULT_CURSOR_CLASS):
         conv = pymysql.converters.conversions.copy()
         conv[246] = float
         con_params = {
@@ -310,7 +309,6 @@ class MySQLConnector(
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _connect(self, *, database: str | None = None, cursorclass=None) -> "pymysql.Connection":
-        cursorclass = cursorclass or _DEFAULT_CURSOR_CLASS
         connection_params = self.get_connection_params(database=database, cursorclass=cursorclass)
         if self.ssl_mode is not None:
             connection_params |= {
