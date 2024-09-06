@@ -12,7 +12,7 @@ from toucan_connectors.query_manager import QueryManager
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import DataSlice, DataStats, QueryMetadata, ToucanDataSource
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
     from snowflake.connector import SnowflakeConnection
 

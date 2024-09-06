@@ -1,7 +1,7 @@
 import uuid
 from typing import TYPE_CHECKING, Any, List, Union
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pandas import DataFrame, Series
 
 

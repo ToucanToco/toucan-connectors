@@ -23,7 +23,7 @@ from toucan_connectors.pagination import PaginationInfo, build_pagination_info
 from toucan_connectors.pandas_translator import PandasConditionTranslator
 from toucan_connectors.utils.datetime import sanitize_df_dates
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
 
 

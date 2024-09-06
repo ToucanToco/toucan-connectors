@@ -14,7 +14,7 @@ from pydantic import Field
 
 from toucan_connectors.utils.slugify import slugify
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
 
 

@@ -8,7 +8,7 @@ from pydantic import BaseModel, SecretStr
 
 from toucan_connectors.json_wrapper import JsonWrapper
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from authlib.integrations.requests_client import OAuth2Session
 
 
