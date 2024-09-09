@@ -432,7 +432,7 @@ def test_get_form_query_with_good_database(postgres_connector, mocker):
         "type": "string",
         "enum": ["postgres", "postgres_db"],
     }
-    assert form["properties"]["table"] == {"allOf": [{"$ref": "#/$defs/table"}], "default": None}
+    assert form["properties"]["table"] == {"$ref": "#/$defs/table", "default": None}
     assert form["$defs"]["table"] == {
         "title": "table",
         "type": "string",

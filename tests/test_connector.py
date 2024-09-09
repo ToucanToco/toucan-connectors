@@ -316,7 +316,7 @@ def test_strlist_to_enum_default_value():
                 "type": "string",
             }
         },
-        "properties": {"pokemon": {"allOf": [{"$ref": "#/$defs/pokemon"}], "default": "pika"}},
+        "properties": {"pokemon": {"$ref": "#/$defs/pokemon", "default": "pika"}},
     }
 
 
