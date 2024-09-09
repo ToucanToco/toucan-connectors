@@ -1,7 +1,15 @@
 from io import StringIO
+from logging import getLogger
 
-import dataikuapi
-import pandas as pd
+try:
+    import dataikuapi
+    import pandas as pd
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 from pydantic import Field
 
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
@@ -25,7 +33,7 @@ class DataikuConnector(ToucanConnector, data_source_model=DataikuDataSource):
     apiKey: str = Field(..., title="API key")  # noqa: N815
     project: str
 
-    def _retrieve_data(self, data_source: DataikuDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: DataikuDataSource) -> "pd.DataFrame":
         client = dataikuapi.DSSClient(self.host, self.apiKey)
         data_url = f"/projects/{self.project}/datasets/{data_source.dataset}/data/"
         stream = client._perform_raw("GET", data_url, params={"format": "tsv-excel-header"})

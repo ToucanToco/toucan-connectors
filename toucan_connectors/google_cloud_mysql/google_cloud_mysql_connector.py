@@ -1,7 +1,17 @@
-import pandas as pd
-import pymysql
+from logging import getLogger
+
 from pydantic import Field, StringConstraints
 from typing_extensions import Annotated
+
+try:
+    import pandas as pd
+    import pymysql
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
@@ -59,7 +69,7 @@ class GoogleCloudMySQLConnector(ToucanConnector, data_source_model=GoogleCloudMy
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _retrieve_data(self, data_source: GoogleCloudMySQLDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: GoogleCloudMySQLDataSource) -> "pd.DataFrame":
         connection = pymysql.connect(**self.get_connection_params(database=data_source.database))
 
         df = pandas_read_sql(data_source.query, con=connection)

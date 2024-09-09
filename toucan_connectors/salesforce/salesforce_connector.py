@@ -4,10 +4,17 @@ import os
 from pathlib import Path
 from typing import Optional
 
-import pandas as pd
-from authlib.integrations.base_client import OAuthError
 from pydantic import Field, PrivateAttr
-from requests import Session
+
+try:
+    import pandas as pd
+    from authlib.integrations.base_client import OAuthError
+    from requests import Session
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    logging.getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -97,7 +104,7 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
     def get_access_data(self):
         return self._oauth2_connector.get_access_data()
 
-    def _retrieve_data(self, data_source: SalesforceDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: SalesforceDataSource) -> "pd.DataFrame":
         logging.getLogger(__name__).info("_retrieve_data with Salesforce Connector")
         ts_start = datetime.datetime.now().timestamp()
         access_data = self.get_access_data()
@@ -127,7 +134,7 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
 
     def generate_rows(
         self,
-        session: Session,
+        session: "Session",
         data_source: SalesforceDataSource,
         instance_url: str,
         endpoint: str,
@@ -156,7 +163,7 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
 
     def make_request(
         self,
-        session: Session,
+        session: "Session",
         data_source: SalesforceDataSource,
         instance_url: str,
         endpoint: str,

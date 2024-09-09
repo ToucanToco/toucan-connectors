@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+## [7.0.0] 2024-09-06
+
 ### Changed
 
+- It is now possible to import all connectors models without having any extra installed
 - The deprecated `GoogleSpreadsheet` connector has been removed.
 - The deprecated `GoogleSheets2` connector has been removed.
 

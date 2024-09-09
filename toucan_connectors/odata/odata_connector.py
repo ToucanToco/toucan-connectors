@@ -1,21 +1,28 @@
-import pandas as pd
-from odata import ODataService
-from odata.metadata import MetaData
+from logging import getLogger
+
 from pydantic import Field, HttpUrl
+
+try:
+    import pandas as pd
+    from odata import ODataService
+    from odata.metadata import MetaData
+
+    # monkey patch MetaData's __init__
+    # (cf. https://github.com/tuomur/python-odata/issues/22)
+    def metadata_init_patched(self, service):
+        self._original_init(service)
+        self.url = service.url.rstrip("/") + "/$metadata"
+
+    MetaData._original_init = MetaData.__init__
+    MetaData.__init__ = metadata_init_patched
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 from toucan_connectors.auth import Auth
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
-
-
-# monkey patch MetaData's __init__
-# (cf. https://github.com/tuomur/python-odata/issues/22)
-def metadata_init_patched(self, service):
-    self._original_init(service)
-    self.url = service.url.rstrip("/") + "/$metadata"
-
-
-MetaData._original_init = MetaData.__init__
-MetaData.__init__ = metadata_init_patched
 
 
 class ODataDataSource(ToucanDataSource):
@@ -40,7 +47,7 @@ class ODataConnector(ToucanConnector, data_source_model=ODataDataSource):
     baseroute: HttpUrl = Field(..., title="API endpoint", description="Baseroute URL")
     auth: Auth | None = Field(None, title="Authentication type")
 
-    def _retrieve_data(self, data_source: ODataDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: ODataDataSource) -> "pd.DataFrame":
         if self.auth:
             session = self.auth.get_session()
         else:

@@ -211,7 +211,7 @@ tests-no-zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy 
 name = "authlib"
 version = "1.3.2"
 description = "The ultimate Python library in building OAuth and OpenID Connect servers and clients."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "Authlib-1.3.2-py2.py3-none-any.whl", hash = "sha256:ede026a95e9f5cdc2d4364a52103f5405e75aa156357e831ef2bfd0bc5094dfc"},
@@ -547,7 +547,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 name = "clickhouse-driver"
 version = "0.2.9"
 description = "Python driver with native interface for ClickHouse"
-optional = false
+optional = true
 python-versions = "<4,>=3.7"
 files = [
     {file = "clickhouse-driver-0.2.9.tar.gz", hash = "sha256:050ea4870ead993910b39e7fae965dc1c347b2e8191dcd977cd4b385f9e19f87"},
@@ -1512,7 +1512,7 @@ files = [
 name = "isodate"
 version = "0.6.1"
 description = "An ISO 8601 date/time/duration parser and formatter"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "isodate-0.6.1-py2.py3-none-any.whl", hash = "sha256:0751eece944162659049d35f4f549ed815792b38793f07cf73381c1c87cbed96"},
@@ -1554,7 +1554,7 @@ files = [
 name = "jq"
 version = "1.8.0"
 description = "jq is a lightweight and flexible JSON processor."
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "jq-1.8.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:628848f92a0f24f5ca50c879d271555a63bf28746c1efd3571ee49e9a357b602"},
@@ -1658,7 +1658,7 @@ files = [
 name = "lxml"
 version = "5.3.0"
 description = "Powerful and Pythonic XML processing library combining libxml2/libxslt with the ElementTree API."
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "lxml-5.3.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:dd36439be765e2dde7660212b5275641edbc813e7b24668831a5c8ac91180656"},
@@ -2237,7 +2237,7 @@ files = [
 name = "pandas"
 version = "1.5.3"
 description = "Powerful data structures for data analysis, time series, and statistics"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "pandas-1.5.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3749077d86e3a2f0ed51367f30bf5b82e131cc0f14260c4d3e499186fccc4406"},
@@ -2281,7 +2281,7 @@ test = ["hypothesis (>=5.5.3)", "pytest (>=6.0)", "pytest-xdist (>=1.31)"]
 name = "pandas"
 version = "2.1.4"
 description = "Powerful data structures for data analysis, time series, and statistics"
-optional = false
+optional = true
 python-versions = ">=3.9"
 files = [
     {file = "pandas-2.1.4-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:bdec823dc6ec53f7a6339a0e34c68b144a7a1fd28d80c260534c39c62c5bf8c9"},
@@ -2494,7 +2494,7 @@ files = [
 name = "psycopg2"
 version = "2.9.9"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "psycopg2-2.9.9-cp310-cp310-win32.whl", hash = "sha256:38a8dcc6856f569068b47de286b472b7c473ac7977243593a288ebce0dc89516"},
@@ -3117,7 +3117,7 @@ pytest = ">=7.2"
 name = "python-dateutil"
 version = "2.8.2"
 description = "Extensions to the standard Python datetime module"
-optional = false
+optional = true
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 files = [
     {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
@@ -3150,7 +3150,7 @@ dev = ["black", "flake8", "flake8-black", "flake8-docstrings", "flake8-isort", "
 name = "python-slugify"
 version = "8.0.4"
 description = "A Python slugify application that also handles Unicode"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "python-slugify-8.0.4.tar.gz", hash = "sha256:59202371d1d05b54a9e7720c5e038f928f45daaffe41dd10822f3907b937c856"},
@@ -3167,7 +3167,7 @@ unidecode = ["Unidecode (>=1.1.1)"]
 name = "pytz"
 version = "2022.1"
 description = "World timezone definitions, modern and historical"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "pytz-2022.1-py2.py3-none-any.whl", hash = "sha256:e68985985296d9a66a881eb3193b0906246245294a881e7c8afe623866ac6a5c"},
@@ -3178,7 +3178,7 @@ files = [
 name = "pytz-deprecation-shim"
 version = "0.1.0.post0"
 description = "Shims to make deprecation of pytz easier"
-optional = false
+optional = true
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
 files = [
     {file = "pytz_deprecation_shim-0.1.0.post0-py2.py3-none-any.whl", hash = "sha256:8314c9692a636c8eb3bda879b9f119e350e93223ae83e70e80c31675a0fdc1a6"},
@@ -3322,7 +3322,7 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 name = "requests-file"
 version = "1.5.1"
 description = "File transport adapter for Requests"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "requests-file-1.5.1.tar.gz", hash = "sha256:07d74208d3389d01c38ab89ef403af0cfec63957d53a0081d8eca738d0247d8e"},
@@ -3355,7 +3355,7 @@ rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
 name = "requests-toolbelt"
 version = "0.9.1"
 description = "A utility belt for advanced users of python-requests"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "requests-toolbelt-0.9.1.tar.gz", hash = "sha256:968089d4584ad4ad7c171454f0a5c6dac23971e9472521ea3b6d49d610aa6fc0"},
@@ -3671,7 +3671,7 @@ files = [
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 files = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
@@ -3813,7 +3813,7 @@ requests = ">=2.0"
 name = "tenacity"
 version = "9.0.0"
 description = "Retry code until it succeeds"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "tenacity-9.0.0-py3-none-any.whl", hash = "sha256:93de0c98785b27fcf659856aa9f54bfbd399e29969b0621bc7f762bd441b4539"},
@@ -3828,7 +3828,7 @@ test = ["pytest", "tornado (>=4.5)", "typeguard"]
 name = "text-unidecode"
 version = "1.3"
 description = "The most basic Text::Unidecode port"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
@@ -3970,7 +3970,7 @@ files = [
 name = "tzdata"
 version = "2022.2"
 description = "Provider of IANA time zone data"
-optional = false
+optional = true
 python-versions = ">=2"
 files = [
     {file = "tzdata-2022.2-py2.py3-none-any.whl", hash = "sha256:c3119520447d68ef3eb8187a55a4f44fa455f30eb1b4238fa5691ba094f2b05b"},
@@ -3981,7 +3981,7 @@ files = [
 name = "tzlocal"
 version = "4.2"
 description = "tzinfo object for the local timezone"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "tzlocal-4.2-py3-none-any.whl", hash = "sha256:89885494684c929d9191c57aa27502afc87a579be5cdd3225c77c463ea043745"},
@@ -4203,7 +4203,7 @@ test = ["pytest", "pytest-cov"]
 name = "xmltodict"
 version = "0.13.0"
 description = "Makes working with XML feel like you are working with JSON"
-optional = false
+optional = true
 python-versions = ">=3.4"
 files = [
     {file = "xmltodict-0.13.0-py2.py3-none-any.whl", hash = "sha256:aa89e8fd76320154a40d19a0df04a4695fb9dc5ba977cbb68ab3e4eb225e7852"},
@@ -4317,7 +4317,7 @@ multidict = ">=4.0"
 name = "zeep"
 version = "4.2.1"
 description = "A Python SOAP client"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "zeep-4.2.1-py3-none-any.whl", hash = "sha256:6754feb4c34a4b6d65fbc359252bf6654dcce3937bf1d95aae4402a60a8f5939"},
@@ -4341,33 +4341,35 @@ test = ["coverage[toml] (==5.2.1)", "flake8 (==3.8.3)", "flake8-blind-except (==
 xmlsec = ["xmlsec (>=0.6.1)"]
 
 [extras]
-all = ["PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "lxml", "oauth2client", "oauthlib", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "xmltodict", "zeep"]
-awsathena = ["awswrangler"]
-azure-mssql = ["pyodbc"]
-clickhouse = ["clickhouse-driver"]
-dataiku = ["dataiku-api-client"]
-elasticsearch = ["elasticsearch"]
-github = ["python-graphql-client"]
-google-analytics = ["google-api-python-client", "oauth2client"]
-google-big-query = ["google-cloud-bigquery"]
-google-cloud-mysql = ["PyMySQL"]
-google-sheets = ["google-api-python-client"]
-http-api = ["oauthlib", "requests-oauthlib", "xmltodict"]
-hubspot = ["hubspot-api-client"]
-mongo = ["pymongo"]
-mssql = ["pyodbc"]
-mssql-tlsv1-0 = ["pyodbc"]
-mysql = ["PyMySQL"]
-odata = ["oauthlib", "requests-oauthlib", "tctc-odata"]
-odbc = []
-oracle-sql = ["cx-Oracle"]
-postgres = ["psycopg2"]
-redshift = ["lxml", "redshift-connector"]
-sap-hana = ["pyhdb"]
-snowflake = ["PyJWT", "pyarrow", "snowflake-connector-python"]
-soap = ["lxml", "zeep"]
+all = ["Authlib", "PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "jq", "lxml", "oauth2client", "oauthlib", "pandas", "pandas", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "python-slugify", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "tenacity", "xmltodict", "zeep"]
+awsathena = ["awswrangler", "pandas", "pandas"]
+azure-mssql = ["pandas", "pandas", "pyodbc"]
+base = ["Authlib", "jq", "pandas", "pandas", "pandas", "pandas", "python-slugify", "tenacity"]
+clickhouse = ["clickhouse-driver", "pandas", "pandas"]
+dataiku = ["dataiku-api-client", "pandas", "pandas"]
+elasticsearch = ["elasticsearch", "pandas", "pandas"]
+github = ["pandas", "pandas", "python-graphql-client"]
+google-analytics = ["google-api-python-client", "oauth2client", "pandas", "pandas"]
+google-big-query = ["google-cloud-bigquery", "pandas", "pandas"]
+google-cloud-mysql = ["PyMySQL", "pandas", "pandas"]
+google-sheets = ["google-api-python-client", "pandas", "pandas"]
+http-api = ["oauthlib", "pandas", "pandas", "requests-oauthlib", "xmltodict"]
+hubspot = ["hubspot-api-client", "pandas", "pandas"]
+mongo = ["pandas", "pandas", "pymongo"]
+mssql = ["pandas", "pandas", "pyodbc"]
+mssql-tlsv1-0 = ["pandas", "pandas", "pyodbc"]
+mysql = ["PyMySQL", "pandas", "pandas"]
+odata = ["oauthlib", "pandas", "pandas", "requests-oauthlib", "tctc-odata"]
+odbc = ["pandas", "pandas"]
+oracle-sql = ["cx-Oracle", "pandas", "pandas"]
+peakina = ["pandas", "pandas", "peakina"]
+postgres = ["pandas", "pandas", "psycopg2"]
+redshift = ["lxml", "pandas", "pandas", "redshift-connector"]
+sap-hana = ["pandas", "pandas", "pyhdb"]
+snowflake = ["PyJWT", "pandas", "pandas", "pyarrow", "snowflake-connector-python"]
+soap = ["lxml", "pandas", "pandas", "zeep"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "1496a17a25c9c9d7dd70004da9b28b5bb20bd042571ed30ee803262da329aa26"
+content-hash = "b70cce022f3884fe363ce3f9fa5d1984d7fe4be664e35b189831850ba5363eb9"

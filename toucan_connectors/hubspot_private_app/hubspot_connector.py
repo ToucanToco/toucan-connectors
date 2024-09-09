@@ -1,10 +1,18 @@
 from contextlib import suppress
 from datetime import datetime
+from logging import getLogger
 from typing import Any, Generator, Protocol, TypeAlias
 
-import pandas as pd
-from hubspot import HubSpot
 from pydantic import BaseModel, ConfigDict, Field, create_model
+
+try:
+    import pandas as pd
+    from hubspot import HubSpot
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
 
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.toucan_connector import (
@@ -70,12 +78,12 @@ class _HubSpotObject(Protocol):  # pragma: no cover
     def to_dict(self) -> _RawHubSpotResult: ...
 
 
-def _get_all(client: HubSpot, dataset: str) -> list[_HubSpotObject]:  # pragma: no cover
+def _get_all(client: "HubSpot", dataset: str) -> list[_HubSpotObject]:  # pragma: no cover
     return client.crm.objects.get_all(dataset)
 
 
 def _get_page(
-    client: HubSpot, dataset: str, after: str | None, limit: int | None, properties: list[str]
+    client: "HubSpot", dataset: str, after: str | None, limit: int | None, properties: list[str]
 ) -> _HubSpotObject:  # pragma: no cover
     return client.crm.objects.basic_api.get_page(dataset, after=after, limit=limit, properties=properties)
 
@@ -95,7 +103,7 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
         results = _get_all(client=client, dataset=dataset)
         return [_HubSpotResult(**elem.to_dict()) for elem in results]
 
-    def _retrieve_data(self, data_source: HubspotDataSource) -> pd.DataFrame:
+    def _retrieve_data(self, data_source: HubspotDataSource) -> "pd.DataFrame":
         return pd.DataFrame(
             r.to_dict() for r in self._fetch_all(data_source.dataset, properties=data_source.properties)
         )

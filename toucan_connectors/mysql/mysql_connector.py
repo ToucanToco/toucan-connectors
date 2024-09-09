@@ -6,11 +6,8 @@ from itertools import groupby as groupby
 from tempfile import NamedTemporaryFile
 from typing import Any, Generator, Optional
 
-import pandas as pd
-import pymysql
 from cached_property import cached_property_with_ttl
 from pydantic import ConfigDict, Field, StringConstraints, create_model, model_validator
-from pymysql.constants import CR, ER
 from typing_extensions import Annotated
 
 from toucan_connectors.common import (
@@ -34,16 +31,26 @@ from toucan_connectors.utils.pem import sanitize_spaces_pem
 _LOGGER = logging.getLogger(__name__)
 
 try:
+    import pandas as pd
+    import pymysql
+    from pymysql.constants import CR, ER
+
+    CONNECTOR_OK = True
+except ImportError as exc:  # pragma: no cover
+    _LOGGER.warning(f"Missing dependencies for {__name__}: {exc}")
+    CONNECTOR_OK = False
+
+try:
+    _DEFAULT_CURSOR_CLASS = None
     if pd.__version__.startswith("2"):
         _DEFAULT_CURSOR_CLASS = pymysql.cursors.Cursor
     else:
         _DEFAULT_CURSOR_CLASS = pymysql.cursors.DictCursor
 except Exception as exc:
     _LOGGER.warning(f"Could not figure out pandas version, using DictCursor: {exc}", exc_info=exc)
-    _DEFAULT_CURSOR_CLASS = pymysql.cursors.DictCursor
 
 
-def handle_date_0(df: pd.DataFrame) -> pd.DataFrame:
+def handle_date_0(df: "pd.DataFrame") -> "pd.DataFrame":
     # Mysql driver doesnt translate date '0000-00-00 00:00:00'
     # to a datetime, so the Series has a 'object' dtype instead of 'datetime'.
     # This util fixes this behaviour, by replacing it with NaT.
@@ -301,7 +308,7 @@ class MySQLConnector(
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _connect(self, *, database: str | None = None, cursorclass=_DEFAULT_CURSOR_CLASS) -> pymysql.Connection:
+    def _connect(self, *, database: str | None = None, cursorclass=None) -> "pymysql.Connection":
         connection_params = self.get_connection_params(database=database, cursorclass=cursorclass)
         if self.ssl_mode is not None:
             connection_params |= {

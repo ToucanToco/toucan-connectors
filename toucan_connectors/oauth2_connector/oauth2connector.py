@@ -1,14 +1,29 @@
 import logging
 from abc import ABC, abstractmethod
 from time import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib import parse as url_parse
 
-from authlib.common.security import generate_token
-from authlib.integrations.requests_client import OAuth2Session
 from pydantic import BaseModel, SecretStr
 
 from toucan_connectors.json_wrapper import JsonWrapper
+
+if TYPE_CHECKING:  # pragma: no cover
+    from authlib.integrations.requests_client import OAuth2Session
+
+
+def _client(
+    *, client_id: str, client_secret: str, redirect_uri: str | None = None, scope: str | None = None
+) -> "OAuth2Session":
+    from authlib.integrations.requests_client import OAuth2Session
+
+    kwargs: dict[str, Any] = {"client_id": client_id, "client_secret": client_secret}
+    if redirect_uri is not None:
+        kwargs["redirect_uri"] = redirect_uri
+    if scope is not None:
+        kwargs["scope"] = scope
+
+    return OAuth2Session(**kwargs)
 
 
 class SecretsKeeper(ABC):
@@ -53,7 +68,9 @@ class OAuth2Connector:
 
     def build_authorization_url(self, **kwargs) -> str:
         """Build an authorization request that will be sent to the client."""
-        client = OAuth2Session(
+        from authlib.common.security import generate_token
+
+        client = _client(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
             redirect_uri=self.redirect_uri,
@@ -68,7 +85,7 @@ class OAuth2Connector:
     def retrieve_tokens(self, authorization_response: str, **kwargs):
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)
-        client = OAuth2Session(
+        client = _client(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
             redirect_uri=self.redirect_uri,
@@ -108,7 +125,7 @@ class OAuth2Connector:
             if is_expired:
                 if "refresh_token" not in token:
                     raise NoOAuth2RefreshToken
-                client = OAuth2Session(
+                client = _client(
                     client_id=self.config.client_id,
                     client_secret=self.config.client_secret.get_secret_value(),
                 )
@@ -131,7 +148,7 @@ class OAuth2Connector:
         if "instance_url" not in access_data:
             raise NoInstanceUrl
 
-        client = OAuth2Session(
+        client = _client(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
         )

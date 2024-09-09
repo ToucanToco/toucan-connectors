@@ -1,14 +1,67 @@
 from datetime import datetime
 from enum import Enum
+from logging import getLogger
 
-import jq
-import jwt
-import requests
-from oauthlib.oauth2 import BackendApplicationClient
 from pydantic import BaseModel, Field
-from requests import Session
-from requests.auth import AuthBase, HTTPBasicAuth, HTTPDigestAuth
-from requests_oauthlib import OAuth1, OAuth2Session
+
+try:
+    import jwt
+    import requests
+    from oauthlib.oauth2 import BackendApplicationClient
+    from requests import Session
+    from requests.auth import AuthBase, HTTPBasicAuth, HTTPDigestAuth
+    from requests_oauthlib import OAuth1, OAuth2Session
+
+    class CustomTokenServer(AuthBase):
+        """
+        Get a token from a request to a custom token server.
+        """
+
+        def __init__(
+            self,
+            method,
+            url,
+            params=None,
+            data=None,
+            headers=None,
+            auth=None,
+            json=None,
+            filter=".",
+            token_header_name: str = "Authorization",  # noqa: S107
+        ):
+            self.request_kwargs = {
+                "method": method,
+                "url": url,
+                "params": params,
+                "data": data,
+                "headers": headers,
+                "json": json,
+            }
+            self.auth = auth
+            self.filter = filter
+            self.token_header_name = token_header_name
+
+        def __call__(self, r):
+            import jq
+
+            if self.auth:
+                session = Auth(**self.auth).get_session()
+            else:
+                session = Session()
+
+            res = session.request(**self.request_kwargs)
+            token = jq.first(self.filter, res.json())
+
+            # If a single string is returned by the filter default
+            # on OAuth "Bearer" auth-scheme.
+            if len(f"{token}".split(maxsplit=2)) == 1:
+                token = f"Bearer {token}"
+
+            r.headers[self.token_header_name] = token
+            return r
+
+except ImportError as exc:  # pragma: no cover
+    getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
 
 
 def oauth2_backend(token_url, client_id, client_secret):
@@ -18,7 +71,7 @@ def oauth2_backend(token_url, client_id, client_secret):
     return OAuth2Session(client_id=client_id, token=token)
 
 
-def oauth2_oidc(*args, **kwargs) -> Session:
+def oauth2_oidc(*args, **kwargs) -> "Session":
     """
     Get a valid access token with the provided refresh_token
 
@@ -47,53 +100,6 @@ def oauth2_oidc(*args, **kwargs) -> Session:
     session = requests.Session()
     session.headers.update({"Authorization": f"Bearer {id_token}"})
     return session
-
-
-class CustomTokenServer(AuthBase):
-    """
-    Get a token from a request to a custom token server.
-    """
-
-    def __init__(
-        self,
-        method,
-        url,
-        params=None,
-        data=None,
-        headers=None,
-        auth=None,
-        json=None,
-        filter=".",
-        token_header_name: str = "Authorization",  # noqa: S107
-    ):
-        self.request_kwargs = {
-            "method": method,
-            "url": url,
-            "params": params,
-            "data": data,
-            "headers": headers,
-            "json": json,
-        }
-        self.auth = auth
-        self.filter = filter
-        self.token_header_name = token_header_name
-
-    def __call__(self, r):
-        if self.auth:
-            session = Auth(**self.auth).get_session()
-        else:
-            session = Session()
-
-        res = session.request(**self.request_kwargs)
-        token = jq.first(self.filter, res.json())
-
-        # If a single string is returned by the filter default
-        # on OAuth "Bearer" auth-scheme.
-        if len(f"{token}".split(maxsplit=2)) == 1:
-            token = f"Bearer {token}"
-
-        r.headers[self.token_header_name] = token
-        return r
 
 
 class AuthType(str, Enum):
@@ -126,7 +132,7 @@ class Auth(BaseModel):  # type:ignore[no-redef]
         description="A JSON object with argument name as key and corresponding value as value",
     )
 
-    def get_session(self) -> Session:
+    def get_session(self) -> "Session":
         auth_class = {
             "basic": HTTPBasicAuth,
             "digest": HTTPDigestAuth,

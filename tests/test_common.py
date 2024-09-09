@@ -398,7 +398,7 @@ def test_pandas_read_sql_forbidden_interpolation(mocker: MockFixture):
     """
     It should enhance the error provided by pandas' read_sql when someone tries to template a table name
     """
-    mocker.patch("toucan_connectors.common.pd.read_sql", side_effect=pd.io.sql.DatabaseError("Some error"))
+    mocker.patch("pandas.read_sql", side_effect=pd.io.sql.DatabaseError("Some error"))
     with pytest.raises(pd.io.sql.DatabaseError) as e:
         pandas_read_sql(
             query="SELECT * FROM %(tablename)s WHERE Population > 5000000",
@@ -412,7 +412,7 @@ def test_pandas_read_sql_error(mocker: MockFixture):
     """
     It should raise the error raised by pandas' read_sql
     """
-    mocker.patch("toucan_connectors.common.pd.read_sql", side_effect=pd.io.sql.DatabaseError("Some error"))
+    mocker.patch("pandas.read_sql", side_effect=pd.io.sql.DatabaseError("Some error"))
     with pytest.raises(pd.io.sql.DatabaseError) as e:
         pandas_read_sql(
             query="SELECT * FROM CITY WHERE Population > %(max_pop)s",
@@ -431,7 +431,7 @@ def test_pandas_read_sql_duplicate_columns(mocker: MockFixture):
         }
     )
     duplicate_cols_df.rename(columns={"id2": "id"}, inplace=True)
-    mocker.patch("toucan_connectors.common.pd.read_sql", return_value=duplicate_cols_df)
+    mocker.patch("pandas.read_sql", return_value=duplicate_cols_df)
     df = pandas_read_sql(query="SELECT * FROM CITY", con="sample_connection")
     assert_frame_equal(
         df,
