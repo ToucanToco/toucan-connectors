@@ -418,7 +418,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
             )
             return [db_name for (db_name,) in cursor.fetchall()]
 
-    def _list_tables_info(self, database: str) -> list[tuple]:
+    def _list_tables_info(self, database: str) -> list[tuple]:  # pragma: no cover
         with self._get_connection(database=database).cursor() as cursor:
             cursor.execute(build_database_model_extraction_query())
             return cursor.fetchall()
