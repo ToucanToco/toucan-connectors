@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.0.1] 2024-09-10
+
 ### Fix
 
 - MySQL / Redshift / Snowflake oAuth2 :: `get_model` now supports extra kwargs so it doesn't crash
