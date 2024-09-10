@@ -494,7 +494,7 @@ class DiscoverableConnector(ABC):
     @staticmethod
     def format_db_model(
         # db, schema, type, name, columns as dict or json string
-        unformatted_db_tree: list[tuple[str, str, str, str, list[dict[str, str]] | str]],
+        unformatted_db_tree: list[TableInfo] | list[tuple[str, str, str, str, list[dict[str, str]] | str]],
     ) -> list[TableInfo]:
         import pandas as pd
 
