@@ -65,35 +65,35 @@ class SnowflakeoAuth2DataSource(SfDataSource):
             constraints["database"] = strlist_to_enum("database", databases)
             constraints["warehouse"] = strlist_to_enum("warehouse", warehouses)
 
-        res = create_model("FormSchema", **constraints, __base__=cls).schema()
+        res = create_model("FormSchema", **constraints, __base__=cls).schema()  # type: ignore[call-overload]
         res["properties"]["warehouse"]["default"] = connector.default_warehouse
         return res
 
 
 class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth2DataSource):
-    client_id: str = Field(
+    client_id: str = Field(  # type: ignore[pydantic-field]
         "",
         title="Client ID",
         description="The client id of you Snowflake integration",
-        **{"ui.required": True},
+        **{"ui.required": True},  # type: ignore[arg-type]
     )
-    client_secret: PlainJsonSecretStr = Field(
+    client_secret: PlainJsonSecretStr = Field(  # type: ignore[pydantic-field]
         "",
         title="Client Secret",
         description="The client secret of your Snowflake integration",
-        **{"ui.required": True},
+        **{"ui.required": True},  # type: ignore[arg-type]
     )
-    authorization_url: str = Field(None, **{"ui.hidden": True})
-    scope: str = Field(None, Title="Scope", description="The scope the integration", placeholder="refresh_token")
-    token_url: str = Field(None, **{"ui.hidden": True})
-    auth_flow_id: str = Field(None, **{"ui.hidden": True})
+    authorization_url: str = Field(None, **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
+    scope: str = Field(None, Title="Scope", description="The scope the integration", placeholder="refresh_token")  # type: ignore[call-arg,assignment]
+    token_url: str = Field(None, **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
+    auth_flow_id: str = Field(None, **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
     _auth_flow = "oauth2"
     _oauth_trigger = "connector"
-    oauth2_version: str = Field("1", **{"ui.hidden": True})
-    redirect_uri: str = Field(None, **{"ui.hidden": True})
+    oauth2_version: str = Field("1", **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
+    redirect_uri: str = Field(None, **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
-    role: str = Field(
+    role: str = Field(  # type: ignore[call-arg]
         ...,
         title="Role",
         description="Role to use for queries",
@@ -108,7 +108,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',  # noqa: E501
     )
     default_warehouse: str = Field(..., description="The default warehouse that shall be used for any data source")
-    category: Category = Field(Category.SNOWFLAKE, title="category", **{"ui": {"checkbox": False}})
+    category: Category = Field(Category.SNOWFLAKE, title="category", **{"ui": {"checkbox": False}})  # type: ignore[pydantic-field,arg-type]
 
     def __init__(self, **kwargs):
         super().__init__(**{k: v for k, v in kwargs.items() if k != "secrets_keeper"})
@@ -136,7 +136,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
     def get_access_token(self):
         return self._oauth2_connector.get_access_token()
 
-    def _get_connection(self, database: str = None, warehouse: str = None) -> "SnowflakeConnection":
+    def _get_connection(self, database: str | None = None, warehouse: str | None = None) -> "SnowflakeConnection":
         def connect_function() -> "SnowflakeConnection":
             _LOGGER.info("Connect at Snowflake")
             token_start = timer()
@@ -192,7 +192,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
             if hasattr(conn, "close"):
                 try:
                     close_start = timer()
-                    r = conn.close()
+                    conn.close()
                     close_end = timer()
                     _LOGGER.info(
                         f"[benchmark][snowflake] - close {close_end - close_start} seconds",
@@ -204,10 +204,11 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                             }
                         },
                     )
-                    return r
+                    return None
                 except Exception as exc:
                     raise TypeError("close is not a function") from exc
 
+        assert connection_manager is not None
         connection: SnowflakeConnection = connection_manager.get(
             identifier=f"{self.get_identifier()}{database}{warehouse}",
             connect_method=connect_function,
@@ -270,7 +271,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                 data_source,
                 offset=offset,
                 limit=limit,
-                get_row_count=get_row_count,
+                get_row_count=bool(get_row_count),
             )
         return result
 
@@ -284,9 +285,9 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
     def get_connection_manager():
         return connection_manager
 
-    def _get_connection_and_db_content(self, database: str, db_contents: List):
+    def _get_connection_and_db_content(self, database: str, db_contents: list[dict[str, Any]]):
         with self._get_connection(database=database, warehouse=self.default_warehouse) as connection:
-            db_contents += SnowflakeCommon().get_db_content(connection).to_dict("records")
+            db_contents += SnowflakeCommon().get_db_content(connection).to_dict("records")  # type: ignore
 
     def get_model(
         self,
@@ -300,12 +301,12 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
         content_queries = []
         for _ in databases:
             content_queries.append(build_database_model_extraction_query())
-        db_contents = []
+        db_contents: list[dict[str, Any]] = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [executor.submit(self._get_connection_and_db_content, db, db_contents) for db in databases]
             for future in concurrent.futures.as_completed(futures):
                 if future.exception():
-                    raise future.exception()
+                    raise future.exception()  # type: ignore[misc]
                 else:
                     _LOGGER.info("query finished")
         return DiscoverableConnector.format_db_model(db_contents)

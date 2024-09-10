@@ -169,6 +169,8 @@ files = [
     "toucan_connectors/postgres/postgresql_connector.py",
     "toucan_connectors/mysql/mysql_connector.py",
     "toucan_connectors/snowflake/snowflake_connector.py",
+    "toucan_connectors/snowflake_oauth2/snowflake_oauth2_connector.py",
+    "toucan_connectors/redshift/redshift_database_connector.py",
     "toucan_connectors/toucan_connector.py",
 ]
 
