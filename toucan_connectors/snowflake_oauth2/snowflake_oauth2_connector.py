@@ -24,6 +24,7 @@ from toucan_connectors.toucan_connector import (
     DataSlice,
     DiscoverableConnector,
     PlainJsonSecretStr,
+    TableInfo,
     ToucanConnector,
     strlist_to_enum,
 )
@@ -287,7 +288,13 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
         with self._get_connection(database=database, warehouse=self.default_warehouse) as connection:
             db_contents += SnowflakeCommon().get_db_content(connection).to_dict("records")
 
-    def get_model(self, db_name: str | None = None):
+    def get_model(
+        self,
+        db_name: str | None = None,
+        schema_name: str | None = None,
+        table_name: str | None = None,
+        exclude_columns: bool = False,
+    ) -> list[TableInfo]:
         with self._get_connection() as connection:
             databases = SnowflakeCommon().get_databases(connection=connection)
         content_queries = []

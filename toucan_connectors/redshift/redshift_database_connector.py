@@ -370,7 +370,13 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
                 )
         return table_infos
 
-    def get_model(self, db_name: str | None = None) -> list[TableInfo]:
+    def get_model(
+        self,
+        db_name: str | None = None,
+        schema_name: str | None = None,
+        table_name: str | None = None,
+        exclude_columns: bool = False,
+    ) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
         tables_info = []
         dbs = self.available_dbs if db_name is None else [db_name]

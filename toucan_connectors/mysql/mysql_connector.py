@@ -384,7 +384,13 @@ class MySQLConnector(
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
-    def get_model(self, db_name: str | None = None) -> list[Any]:
+    def get_model(
+        self,
+        db_name: str | None = None,
+        schema_name: str | None = None,
+        table_name: str | None = None,
+        exclude_columns: bool = False,
+    ) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
         return DiscoverableConnector.format_db_model(self.project_tree(db_name=db_name))
 
