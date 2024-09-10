@@ -74,6 +74,7 @@ types-pyopenssl = "^24.1.0.20240722"
 types-python-slugify = "^8.0.2.20240310"
 types-requests = "^2.31.0.6"
 types-simplejson = "^3.19.0.20240801"
+types-pymysql = "^1.1.0.20240524"
 
 [tool.poetry.extras]
 awsathena = ["awswrangler", "pandas"]
@@ -166,7 +167,10 @@ files = [
     "toucan_connectors/mongo/mongo_connector.py",
     "toucan_connectors/peakina/peakina_connector.py",
     "toucan_connectors/postgres/postgresql_connector.py",
+    "toucan_connectors/mysql/mysql_connector.py",
     "toucan_connectors/snowflake/snowflake_connector.py",
+    "toucan_connectors/snowflake_oauth2/snowflake_oauth2_connector.py",
+    "toucan_connectors/redshift/redshift_database_connector.py",
     "toucan_connectors/toucan_connector.py",
 ]
 
