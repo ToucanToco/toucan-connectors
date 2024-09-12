@@ -6,6 +6,7 @@
 
 - jinja templates :: expressions containing parentheses or curly braces are not limited to output
   strings anymore.
+- Google BigQuery :: increase limits when fetching db tree structure
 
 ## [7.0.1] 2024-09-10
 
