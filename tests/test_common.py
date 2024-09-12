@@ -252,6 +252,16 @@ def test_apply_parameter_to_query_do_nothing():
             {"city": "Paris"},
             {"domain": "Test"},
         ),
+        (
+            {"answer": "{{ foo + bar }}"},
+            {"foo": 40, "bar": 2},
+            {"answer": 42},
+        ),
+        (
+            {"value": "{{ (user or dict()).get('attributes', dict()).get('LABEL', 250) }}"},
+            {},
+            {"value": 250},
+        ),
     ],
 )
 def test_nosql_apply_parameters_to_query(query, params, expected):

@@ -53,7 +53,13 @@ def is_jinja_alone(s: str) -> bool:
 
     In the 2nd case, we will always render the result as a string.
     """
-    return re.match(RE_JINJA_ALONE, s) or (s.startswith("{%") and s.endswith("%}"))
+    if s.startswith("{{") and s.endswith("}}"):
+        inside = s[2:-2]
+        return "{{" not in inside and "}}" not in inside
+    elif s.startswith("{%") and s.endswith("%}"):
+        return True
+    else:
+        return False
 
 
 def _has_parameters(query: dict | list[dict] | tuple | str) -> bool:
@@ -155,10 +161,9 @@ def _render_query(query: dict | list[dict] | tuple | str, parameters: dict | Non
 
         # Add quotes to string parameters to keep type if not complex
         clean_p = deepcopy(parameters)
-        if re.match(RE_JINJA_ALONE, query):
-            clean_p = _prepare_parameters(clean_p)
 
         if is_jinja_alone(query):
+            clean_p = _prepare_parameters(clean_p)
             env = NativeEnvironment()
         else:
             env = Environment()  # noqa: S701
