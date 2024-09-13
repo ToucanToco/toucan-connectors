@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- jinja templates :: expressions containing parentheses or curly braces are not limited to output
+  strings anymore.
+
 ## [7.0.1] 2024-09-10
 
 ### Fix
