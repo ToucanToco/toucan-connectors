@@ -26,6 +26,8 @@ from toucan_connectors.utils.datetime import sanitize_df_dates
 if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
 
+TIMEOUT_CHECK_PORT = 10  # consider port closed if > 10 seconds
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -383,6 +385,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     @staticmethod
     def check_port(host, port):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(TIMEOUT_CHECK_PORT)
             s.connect((host, port))
 
     def get_status(self) -> ConnectorStatus:
