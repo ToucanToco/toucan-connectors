@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix
+
+- When testing connection, set timeout to 10s when checking if port is opened.
+
 ## [7.0.2] 2024-09-13
 
 ### Changed
