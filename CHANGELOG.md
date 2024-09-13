@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.0.2] 2024-09-13
+
 ### Changed
 
 - jinja templates :: expressions containing parentheses or curly braces are not limited to output
