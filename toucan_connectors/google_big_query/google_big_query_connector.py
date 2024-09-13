@@ -61,8 +61,8 @@ except ImportError as exc:  # pragma: no cover
     CONNECTOR_OK = False
 
 
-_PAGE_SIZE = 50
-_MAXIMUM_RESULTS_FETCHED = 2000
+_PAGE_SIZE = 500
+_MAXIMUM_RESULTS_FETCHED = 20_000
 _GBQ_TIMEOUT_HTTP_REQUEST = 30  # in seconds
 
 
