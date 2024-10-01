@@ -8,6 +8,7 @@ import pymongo
 import pymongo.errors
 import pytest
 from bson.son import SON
+from pymongo import collection as pymongo_collection
 
 from toucan_connectors.common import ConnectorStatus
 from toucan_connectors.json_wrapper import JsonWrapper
@@ -125,7 +126,7 @@ def test_get_df_no_query(mongo_connector: MongoConnector, mongo_datasource: Call
 def test_get_df(mocker):
     class DatabaseMock:
         def __init__(self, collection):
-            self.collections = {collection: pymongo.collection.Collection}
+            self.collections = {collection: pymongo_collection.Collection}
 
         def __getitem__(self, col):
             return self.collections[col]
@@ -317,7 +318,7 @@ def test_get_slice_max_count(mongo_connector, mongo_datasource, mocker):
     We're not going to insert a million rows in mongo just for this test,
     so we mock the execution of the query.
     """
-    aggregate = mocker.spy(pymongo.collection.Collection, "aggregate")
+    aggregate = mocker.spy(pymongo_collection.Collection, "aggregate")
 
     datasource = mongo_datasource(collection="test_col", query={"domain": "unknown"})
     mongo_connector.get_slice(datasource, limit=50)
@@ -695,7 +696,7 @@ def test_get_multiple_dfs(mocker, mongo_connector, mongo_datasource):
     """
     mongo_client_close = mocker.spy(pymongo.MongoClient, "close")
     mongo_client = mocker.spy(pymongo, "MongoClient")
-    aggregate = mocker.spy(pymongo.collection.Collection, "aggregate")
+    aggregate = mocker.spy(pymongo_collection.Collection, "aggregate")
     validate_database = mocker.patch("toucan_connectors.mongo.mongo_connector.validate_database")
 
     queries = [
