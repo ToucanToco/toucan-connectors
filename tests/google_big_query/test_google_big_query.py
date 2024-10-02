@@ -1,14 +1,15 @@
-from typing import Any, Callable, Generator
+import json
+from os import environ
+from typing import Any, Generator
 from unittest.mock import patch
 
+import numpy as np
 import pandas
 import pandas as pd
 import pytest
 import requests
 from google.api_core.exceptions import NotFound
-from google.cloud import bigquery
 from google.cloud.bigquery import ArrayQueryParameter, Client, ScalarQueryParameter
-from google.cloud.bigquery.job.query import QueryJob
 from google.cloud.bigquery.table import RowIterator
 from google.cloud.exceptions import Unauthorized
 from google.oauth2.service_account import Credentials
@@ -178,16 +179,60 @@ def test_http_connect_on_invalid_token(
         gbq_connector_with_jwt._get_bigquery_client()
 
 
-@patch(
-    "google.cloud.bigquery.table.RowIterator.to_dataframe_iterable",
-    return_value=iter((pandas.DataFrame({"a": [1, 1], "b": [2, 2]}),)),
-)
-@patch("google.cloud.bigquery.job.query.QueryJob.result", return_value=RowIterator)
-@patch("google.cloud.bigquery.Client.query", return_value=QueryJob)
-@patch("google.cloud.bigquery.Client", autospec=True)
-def test_execute(client: bigquery.Client, execute: Callable, result: pd.DataFrame, to_dataframe: Callable):
-    result = GoogleBigQueryConnector._execute_query(client, "SELECT 1 FROM my_table", [])
-    assert_frame_equal(pandas.DataFrame({"a": [1, 1], "b": [2, 2]}), result)
+@pytest.fixture
+def gbq_credentials() -> Any:
+    raw_creds = environ["GOOGLE_BIG_QUERY_CREDENTIALS"]
+    return json.loads(raw_creds)
+
+
+@pytest.fixture
+def gbq_connector(gbq_credentials: Any) -> GoogleBigQueryConnector:
+    return GoogleBigQueryConnector(name="gqb-test-connector", credentials=gbq_credentials)
+
+
+@pytest.fixture
+def gbq_datasource() -> GoogleBigQueryDataSource:
+    return GoogleBigQueryDataSource(name="coucou", query="SELECT 1 AS `my_col`;", domain="test-domain")
+
+
+def test_get_df(gbq_connector: GoogleBigQueryConnector, gbq_datasource: GoogleBigQueryDataSource):
+    result = gbq_connector.get_df(gbq_datasource)
+    expected = pandas.DataFrame({"my_col": [1]})
+    assert_frame_equal(expected, result)
+
+
+def test_get_df_with_variables(gbq_connector: GoogleBigQueryConnector, gbq_datasource: GoogleBigQueryDataSource):
+    gbq_datasource.parameters = {"name": "Superstrong beer"}
+    gbq_datasource.query = "SELECT name, price_per_l FROM `beers`.`beers_tiny` WHERE name = {{name}};"
+    result = gbq_connector.get_df(gbq_datasource)
+    expected = pandas.DataFrame({"name": ["Superstrong beer"], "price_per_l": [0.16]})
+    assert_frame_equal(expected, result)
+
+
+def test_get_df_with_type_casts(gbq_connector: GoogleBigQueryConnector, gbq_datasource: GoogleBigQueryDataSource):
+    gbq_datasource.parameters = {"name": "Superstrong beer"}
+    gbq_datasource.query = """
+    WITH with_new_cols AS (
+        SELECT *,
+            CASE WHEN nullable_name IS NULL THEN NULL ELSE 1 END AS `nullable_int` ,
+            CASE WHEN nullable_name IS NULL THEN NULL ELSE 0.5 END AS `nullable_float`,
+        FROM `beers`.`beers_tiny` WHERE name = {{name}})
+    SELECT name, nullable_name, nullable_int, nullable_float FROM with_new_cols;
+    """
+    result = gbq_connector.get_df(gbq_datasource)
+
+    expected = pandas.DataFrame(
+        {
+            "name": ["Superstrong beer"],
+            "nullable_name": [None],
+            # We should have correct dtypes, not "object"
+            "nullable_int": pd.Series([None]).astype("Int64"),
+            "nullable_float": pd.Series([None]).astype("float64"),
+        }
+    )
+    assert_frame_equal(expected, result)
+    assert result.dtypes["nullable_int"] == pd.Int64Dtype()
+    assert result.dtypes["nullable_float"] == np.float64
 
 
 @patch(
