@@ -84,6 +84,8 @@ jobs:
         ATHENA_ACCESS_KEY_ID: '${{ secrets.ATHENA_ACCESS_KEY_ID }}'
         ATHENA_SECRET_ACCESS_KEY: '${{ secrets.ATHENA_SECRET_ACCESS_KEY }}'
         ATHENA_REGION: '${{ secrets.ATHENA_REGION }}'
+        # GBQ
+        GOOGLE_BIG_QUERY_CREDENTIALS: '${{ secrets.GOOGLE_BIG_QUERY_CREDENTIALS }}'
 
     - name: SonarCloud Scan
       # Only executed for one of the tested python version and pandas version
