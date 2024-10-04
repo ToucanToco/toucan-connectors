@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.0.3] 2024-10-04
+
 ### Fix
 
 - Google BigQuery: If the dtype of a column in the `DataFrame` returned by `_retrive_data` is `object`,
