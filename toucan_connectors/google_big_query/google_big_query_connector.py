@@ -35,6 +35,7 @@ try:
     from google.cloud.bigquery.dbapi import _helpers as bigquery_helpers
     from google.cloud.bigquery.job import QueryJob
     from google.oauth2.service_account import Credentials
+    from pandas.api.types import is_float_dtype, is_integer_dtype
 
     class InvalidJWTToken(GoogleUnauthorized):
         """When the jwt-token is no longer valid (usualy from google as 401)"""
@@ -126,6 +127,29 @@ def _define_query_param(name: str, value: Any) -> BigQueryParam:
 _CREDENTIALS_CHECK_NAME = "Credentials provided"
 _KEY_CHECK_NAME = "Private key validity"
 _SAMPLE_QUERY = "Sample BigQuery job"
+
+
+_GBQ_FLOAT_TYPES = ("FLOAT", "FLOAT64", "NUMERIC", "BIGNUMERIC")
+_GBQ_INT_TYPES = ("INTEGER", "INT64")
+
+
+def _ensure_numeric_columns_dtypes(df: "pd.DataFrame", schema: "list[bigquery.SchemaField]") -> "pd.DataFrame":
+    """Ensures that numeric columns have the right dtype.
+
+    In some cases (for example all-nulls columns), GBQ will set a numeric columns dtype to `object`,
+    even if the SQL type is known
+    """
+    for col in schema:
+        if col.field_type in _GBQ_INT_TYPES:
+            if not is_integer_dtype(df.dtypes[col.name]):
+                # WARNING: casing matters here, as Int64 is not int64:
+                # https://pandas.pydata.org/pandas-docs/version/1.5/user_guide/integer_na.html
+                df[col.name] = df[col.name].astype("Int64")
+        elif col.field_type in _GBQ_FLOAT_TYPES:
+            if not is_float_dtype(df.dtypes[col.name]):
+                df[col.name] = df[col.name].astype("float64")
+
+    return df
 
 
 class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_source_model=GoogleBigQueryDataSource):
@@ -246,14 +270,11 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
         try:
             start = timer()
             query = GoogleBigQueryConnector._clean_query(query)
-            result_iterator: Iterable[pd.DataFrame] = (
-                client.query(  # type:ignore[assignment]
-                    query,
-                    job_config=bigquery.QueryJobConfig(query_parameters=parameters),
-                )
-                .result()
-                .to_dataframe_iterable()
-            )
+            result = client.query(
+                query,
+                job_config=bigquery.QueryJobConfig(query_parameters=parameters),
+            ).result()
+            result_iterator = result.to_dataframe_iterable()
             end = timer()
             _LOGGER.info(
                 f"[benchmark][google_big_query] - execute {end - start} seconds",
@@ -267,7 +288,8 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
             )
 
             try:
-                return pd.concat((df for df in result_iterator), ignore_index=True)
+                df = pd.concat((df for df in result_iterator), ignore_index=True)  # type:ignore[misc]
+                return _ensure_numeric_columns_dtypes(df, result.schema)
             except ValueError as excp:  # pragma: no cover
                 raise NoDataFoundException("No data found, please check your config again.") from excp
         except TypeError as e:
@@ -298,7 +320,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
     def _bigquery_client_with_google_creds(self) -> "bigquery.Client":
         try:
             assert self.credentials is not None
-            credentials = GoogleBigQueryConnector._get_google_credentials(self.credentials, self.scopes)
+            credentials = self._get_google_credentials(self.credentials, self.scopes)
             return self._connect(credentials)
         except AssertionError as excp:
             raise GoogleClientCreationError from excp
@@ -309,7 +331,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
             try:
                 # We try to instantiate the bigquery.Client with the given jwt-token
                 session = CustomRequestSession(self.jwt_credentials.jwt_token)
-                client = GoogleBigQueryConnector._http_connect(http_session=session, project_id=self._get_project_id())
+                client = self._http_connect(http_session=session, project_id=self._get_project_id())
                 _LOGGER.debug("BigQuery client created using the provided JWT token")
 
                 return client
@@ -342,12 +364,9 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
     def _retrieve_data(self, data_source: GoogleBigQueryDataSource) -> "pd.DataFrame":
         _LOGGER.debug(f"Play request {data_source.query} with parameters {data_source.parameters}")
 
-        query, parameters = GoogleBigQueryConnector._prepare_query_and_parameters(
-            data_source.query, data_source.parameters
-        )
-
+        query, parameters = self._prepare_query_and_parameters(data_source.query, data_source.parameters)
         client = self._get_bigquery_client()
-        result = GoogleBigQueryConnector._execute_query(client, query, parameters)
+        result = self._execute_query(client, query, parameters)
 
         return result
 

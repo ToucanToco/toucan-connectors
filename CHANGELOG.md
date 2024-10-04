@@ -4,6 +4,8 @@
 
 ### Fix
 
+- Google BigQuery: If the dtype of a column in the `DataFrame` returned by `_retrive_data` is `object`,
+  it gets converted to `Int64` or `float64` when it is defined as a numeric dtype by Big Query.
 - When testing connection, set timeout to 10s when checking if port is opened.
 
 ## [7.0.2] 2024-09-13
