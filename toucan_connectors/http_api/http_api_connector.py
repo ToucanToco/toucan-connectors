@@ -8,7 +8,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 from requests.exceptions import HTTPError
 
 from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
-from toucan_connectors.http_api.pagination_configs import PaginationConfig
+from toucan_connectors.http_api.pagination_configs import HttpPagination, PaginationConfig
 
 try:
     import pandas as pd
@@ -70,7 +70,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         None,
         description="You can provide a custom template that will be used for every HTTP request",
     )
-    pagination_config: PaginationConfig = Field(PaginationConfig(), title="Pagination configuration")
+    http_pagination: HttpPagination = Field(HttpPagination(), title="Pagination configuration")
 
     def do_request(self, query, session):
         """
@@ -155,7 +155,9 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         try:
             results = pd.DataFrame(
                 self.perform_requests(
-                    data_source=data_source, session=session, pagination_config=self.pagination_config
+                    data_source=data_source,
+                    session=session,
+                    pagination_config=self.http_pagination.get_pagination_config(),
                 )
             )
         except HTTPError as exc:

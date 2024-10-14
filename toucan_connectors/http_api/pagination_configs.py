@@ -1,6 +1,7 @@
+from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from toucan_connectors.common import FilterSchema
 from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
@@ -96,3 +97,32 @@ class CursorBasedPaginationConfig(PaginationConfig):
 
     def get_pagination_info_filter(self) -> str:
         return self.cursor_filter
+
+
+class PaginationType(str, Enum):
+    nothing = "nothing"
+    offset_limit = "offset_limit"
+    cursor = "cursor"
+    page = "page"
+
+
+class HttpPagination(BaseModel):
+    type: PaginationType = Field(
+        PaginationType.nothing,
+        description="The kind of pagination that corresponds to your API pagination system",
+    )
+    kwargs: dict = Field(
+        default_factory=dict,
+        title="Named arguments",
+        description="A JSON object with argument name as key and corresponding value as value",
+    )
+
+    def get_pagination_config(self) -> PaginationConfig:
+        auth_class = {
+            PaginationType.nothing: PaginationConfig,
+            PaginationType.offset_limit: OffsetLimitPaginationConfig,
+            PaginationType.cursor: CursorBasedPaginationConfig,
+            PaginationType.page: PageBasedPaginationConfig,
+        }[self.type]
+        pagination_config = auth_class(**self.kwargs)
+        return pagination_config

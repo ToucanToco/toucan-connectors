@@ -7,7 +7,9 @@ from pytest_mock import MockFixture
 
 from toucan_connectors.common import transform_with_jq
 from toucan_connectors.http_api.http_api_connector import Auth, HttpAPIConnector, HttpAPIDataSource
-from toucan_connectors.http_api.pagination_configs import CursorBasedPaginationConfig, OffsetLimitPaginationConfig
+from toucan_connectors.http_api.pagination_configs import (
+    HttpPagination,
+)
 from toucan_connectors.json_wrapper import JsonWrapper
 
 
@@ -51,13 +53,15 @@ def auth():
 
 
 @pytest.fixture(scope="function")
-def offset_pagination():
-    return OffsetLimitPaginationConfig(offset_name="super_offset", limit_name="super_limit", limit=5)
+def offset_pagination() -> HttpPagination:
+    return HttpPagination(
+        type="offset_limit", kwargs={"offset_name": "super_offset", "limit_name": "super_limit", "limit": 5}
+    )
 
 
 @pytest.fixture(scope="function")
-def cursor_pagination():
-    return CursorBasedPaginationConfig(cursor_name="my_cursor", cursor_filter=".metadata.next_cursor")
+def cursor_pagination() -> HttpPagination:
+    return HttpPagination(type="cursor", kwargs={"cursor_name": "my_cursor", "cursor_filter": ".metadata.next_cursor"})
 
 
 def test_transform_with_jq():
@@ -94,7 +98,7 @@ def test_get_df_with_auth(connector, data_source, auth):
 
 @responses.activate
 def test_get_df_with_offset_pagination(
-    connector: HttpAPIConnector, data_source: HttpAPIDataSource, offset_pagination: OffsetLimitPaginationConfig
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, offset_pagination: HttpPagination
 ) -> None:
     # first page
     responses.add(
@@ -126,7 +130,7 @@ def test_get_df_with_offset_pagination(
         ],
     )
 
-    connector.pagination_config = offset_pagination
+    connector.http_pagination = offset_pagination
     df = connector.get_df(data_source)
     assert df.shape == (12, 2)
     assert len(responses.calls) == 3
@@ -134,7 +138,7 @@ def test_get_df_with_offset_pagination(
 
 @responses.activate
 def test_get_df_with_cursor_pagination(
-    connector: HttpAPIConnector, data_source: HttpAPIDataSource, cursor_pagination: CursorBasedPaginationConfig
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, cursor_pagination: HttpPagination
 ) -> None:
     # first page
     responses.add(
@@ -161,7 +165,7 @@ def test_get_df_with_cursor_pagination(
             "metadata": {"number_of_results": 4},
         },
     )
-    connector.pagination_config = cursor_pagination
+    connector.http_pagination = cursor_pagination
     data_source.filter = ".content"
     df = connector.get_df(data_source)
     assert df.shape == (4, 1)
@@ -549,7 +553,7 @@ def test_get_cache_key(connector, auth, data_source):
     data_source.parameters = {"first_name": "raphael"}
     key = connector.get_cache_key(data_source)
 
-    assert key == "511bbd78-3ea7-36b4-abc4-f54ead4d95b2"
+    assert key == "0209213d-0ca5-3422-8985-beb4ca6e81aa"
 
     data_source.headers = {"name": "{{ first_name }}"}  # change the templating style
     key2 = connector.get_cache_key(data_source)
