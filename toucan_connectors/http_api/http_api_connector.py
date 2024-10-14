@@ -3,9 +3,9 @@ from enum import Enum
 from logging import getLogger
 from typing import Any, List
 from xml.etree.ElementTree import ParseError, fromstring, tostring
-from requests.exceptions import HTTPError
 
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
+from requests.exceptions import HTTPError
 
 from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
 from toucan_connectors.http_api.pagination_configs import PaginationConfig
@@ -27,7 +27,6 @@ from toucan_connectors.common import (
 )
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.utils.json_to_table import json_to_table
-
 
 TOO_MANY_REQUESTS = 429
 
@@ -119,10 +118,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         return data
 
     def perform_requests(
-        self,
-        data_source: HttpAPIDataSource,
-        session: Session,
-        pagination_config: PaginationConfig
+        self, data_source: HttpAPIDataSource, session: Session, pagination_config: PaginationConfig
     ) -> list[Any]:
         data_source = pagination_config.apply_pagination_to_data_source(data_source)
         query = self._render_query(data_source)
@@ -141,13 +137,10 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
 
         results = []
         if next_pagination_config := pagination_config.get_next_pagination_config(
-            result=parsed_result,
-            pagination_info=parsed_pagination_info
+            result=parsed_result, pagination_info=parsed_pagination_info
         ):
             results += self.perform_requests(
-                data_source=data_source,
-                session=session,
-                pagination_config=next_pagination_config
+                data_source=data_source, session=session, pagination_config=next_pagination_config
             )
 
         results += parsed_result
@@ -162,9 +155,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         try:
             results = pd.DataFrame(
                 self.perform_requests(
-                    data_source=data_source,
-                    session=session,
-                    pagination_config=self.pagination_config
+                    data_source=data_source, session=session, pagination_config=self.pagination_config
                 )
             )
         except HTTPError as exc:

@@ -7,7 +7,7 @@ from pytest_mock import MockFixture
 
 from toucan_connectors.common import transform_with_jq
 from toucan_connectors.http_api.http_api_connector import Auth, HttpAPIConnector, HttpAPIDataSource
-from toucan_connectors.http_api.pagination_configs import OffsetLimitPaginationConfig, CursorBasedPaginationConfig
+from toucan_connectors.http_api.pagination_configs import CursorBasedPaginationConfig, OffsetLimitPaginationConfig
 from toucan_connectors.json_wrapper import JsonWrapper
 
 
@@ -94,21 +94,13 @@ def test_get_df_with_auth(connector, data_source, auth):
 
 @responses.activate
 def test_get_df_with_offset_pagination(
-    connector: HttpAPIConnector,
-    data_source: HttpAPIDataSource,
-    offset_pagination: OffsetLimitPaginationConfig
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, offset_pagination: OffsetLimitPaginationConfig
 ) -> None:
     # first page
     responses.add(
         responses.GET,
         "https://jsonplaceholder.typicode.com/comments?super_offset=0&super_limit=5",
-        json=[
-            {"a": 1},
-            {"a": 2},
-            {"a": 3},
-            {"a": 4},
-            {"a": 5}
-        ]
+        json=[{"a": 1}, {"a": 2}, {"a": 3}, {"a": 4}, {"a": 5}],
     )
 
     # second page
@@ -121,7 +113,7 @@ def test_get_df_with_offset_pagination(
             {"a": 8},
             {"b": 9},
             {"b": 10},
-        ]
+        ],
     )
 
     # last page
@@ -131,7 +123,7 @@ def test_get_df_with_offset_pagination(
         json=[
             {"b": 11},
             {"b": 12},
-        ]
+        ],
     )
 
     connector.pagination_config = offset_pagination
@@ -142,9 +134,7 @@ def test_get_df_with_offset_pagination(
 
 @responses.activate
 def test_get_df_with_cursor_pagination(
-    connector: HttpAPIConnector,
-    data_source: HttpAPIDataSource,
-    cursor_pagination: CursorBasedPaginationConfig
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, cursor_pagination: CursorBasedPaginationConfig
 ) -> None:
     # first page
     responses.add(
@@ -155,11 +145,8 @@ def test_get_df_with_cursor_pagination(
                 {"a": 1},
                 {"a": 2},
             ],
-            "metadata": {
-                "next_cursor": "super_cursor_22222",
-                "number_of_results": 4
-            }
-        }
+            "metadata": {"next_cursor": "super_cursor_22222", "number_of_results": 4},
+        },
     )
 
     # next page
@@ -171,10 +158,8 @@ def test_get_df_with_cursor_pagination(
                 {"a": 3},
                 {"a": 4},
             ],
-            "metadata": {
-                "number_of_results": 4
-            }
-        }
+            "metadata": {"number_of_results": 4},
+        },
     )
     connector.pagination_config = cursor_pagination
     data_source.filter = ".content"

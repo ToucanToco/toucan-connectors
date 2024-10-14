@@ -12,6 +12,7 @@ class PaginationConfig(BaseModel):
     Config applied for connectors without pagination configured.
     Useful for connectors that can return all results at once.
     """
+
     def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
         """Apply pagination to data source and return it"""
         return data_source
@@ -32,10 +33,7 @@ class OffsetLimitPaginationConfig(PaginationConfig):
     limit: int
 
     def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
-        offset_limit_params = {
-            self.offset_name: self.offset,
-            self.limit_name: self.limit
-        }
+        offset_limit_params = {self.offset_name: self.offset, self.limit_name: self.limit}
         if data_source.params is None:
             data_source.params = offset_limit_params
         else:

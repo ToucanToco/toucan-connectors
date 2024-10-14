@@ -1,9 +1,10 @@
-from toucan_connectors import ToucanDataSource
-from typing import Any
 from enum import Enum
+from typing import Any
+
 from pydantic import Field
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 
+from toucan_connectors import ToucanDataSource
 from toucan_connectors.common import (
     FilterSchema,
     XpathSchema,
