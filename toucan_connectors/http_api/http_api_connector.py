@@ -3,9 +3,12 @@ from enum import Enum
 from logging import getLogger
 from typing import Any, List
 from xml.etree.ElementTree import ParseError, fromstring, tostring
+from requests.exceptions import HTTPError
 
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
-from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
+
+from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
+from toucan_connectors.http_api.pagination_configs import PaginationConfig
 
 try:
     import pandas as pd
@@ -19,8 +22,6 @@ except ImportError as exc:  # pragma: no cover
 
 from toucan_connectors.auth import Auth
 from toucan_connectors.common import (
-    FilterSchema,
-    XpathSchema,
     nosql_apply_parameters_to_query,
     transform_with_jq,
 )
@@ -28,15 +29,12 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.utils.json_to_table import json_to_table
 
 
+TOO_MANY_REQUESTS = 429
+
+
 class ResponseType(str, Enum):
     json = "json"
     xml = "xml"
-
-
-class Method(str, Enum):
-    GET = "GET"
-    POST = "POST"
-    PUT = "PUT"
 
 
 class Template(BaseModel):
@@ -64,71 +62,6 @@ class Template(BaseModel):
     )
 
 
-class HttpAPIDataSource(ToucanDataSource):
-    url: str = Field(
-        ...,
-        title="Endpoint URL",
-        description="The URL path that will be appended to your baseroute URL. " 'For example "geo/countries"',
-    )
-    method: Method = Field(Method.GET, title="HTTP Method")
-    headers: dict | None = Field(
-        None,
-        description="You can also setup headers in the Template section of your Connector see: <br/>"
-        "https://docs.toucantoco.com/concepteur/tutorials/connectors/3-http-connector.html#template",
-        examples=['{ "content-type": "application/xml" }'],
-    )
-    params: dict | None = Field(
-        None,
-        title="URL params",
-        description="JSON object of parameters to send in the query string of this HTTP request "
-        '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
-        examples=['{ "offset": 100, "limit": 50 }'],
-    )
-    json_: dict | None = Field(
-        None,
-        alias="json",
-        title="Body",
-        description="JSON object of parameters to send in the body of every HTTP request",
-        examples=['{ "offset": 100, "limit": 50 }'],
-    )
-    proxies: dict | None = Field(
-        None,
-        description="JSON object expressing a mapping of protocol or host to corresponding proxy",
-        examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
-    )
-    data: str | dict | None = Field(None, description="JSON object to send in the body of the HTTP request")
-    xpath: str = XpathSchema
-    filter: str = FilterSchema
-    flatten_column: str | None = Field(None, description="Column containing nested rows")
-
-    @classmethod
-    def model_json_schema(
-        cls,
-        by_alias: bool = True,
-        ref_template: str = DEFAULT_REF_TEMPLATE,
-        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
-        mode: JsonSchemaMode = "validation",
-    ) -> dict[str, Any]:
-        schema = super().model_json_schema(
-            by_alias=by_alias,
-            ref_template=ref_template,
-            schema_generator=schema_generator,
-            mode=mode,
-        )
-        keys = schema["properties"].keys()
-        last_keys = [
-            "proxies",
-            "flatten_column",
-            "data",
-            "xpath",
-            "filter",
-            "validation",
-        ]
-        new_keys = [k for k in keys if k not in last_keys] + last_keys
-        schema["properties"] = {k: schema["properties"][k] for k in new_keys}
-        return schema
-
-
 class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
     responsetype: ResponseType = Field(ResponseType.json, title="Content-type of response")
     baseroute: AnyHttpUrl = Field(..., title="Baseroute URL", description="Baseroute URL")
@@ -138,6 +71,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         None,
         description="You can provide a custom template that will be used for every HTTP request",
     )
+    pagination_config: PaginationConfig = Field(PaginationConfig(), title="Pagination configuration")
 
     def do_request(self, query, session):
         """
@@ -148,7 +82,6 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         Returns:
             data (list): The response from the API in the form of a list of dict
         """
-        jq_filter = query["filter"]
         xpath = query["xpath"]
         available_params = ["url", "method", "params", "data", "json", "headers", "proxies"]
         query = {k: v for k, v in query.items() if k in available_params}
@@ -183,11 +116,42 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                         f'Cannot decode response content from query: method={query.get("method")} url={query.get("url")} response_status_code={res.status_code} response_reason=${res.reason}'  # noqa: E501
                     )
                     raise
+        return data
+
+    def perform_requests(
+        self,
+        data_source: HttpAPIDataSource,
+        session: Session,
+        pagination_config: PaginationConfig
+    ) -> list[Any]:
+        data_source = pagination_config.apply_pagination_to_data_source(data_source)
+        query = self._render_query(data_source)
+        jq_filter = query["filter"]
+        raw_result = self.do_request(query, session)
+
         try:
-            return transform_with_jq(data, jq_filter)
+            parsed_result = transform_with_jq(raw_result, jq_filter)
+            parsed_pagination_info = None
+            if jq_pagination_filter := pagination_config.get_pagination_info_filter():
+                # transform_with_jq search for all occurrences, it will always return a list of values
+                parsed_pagination_info = transform_with_jq(raw_result, jq_pagination_filter)[0]
         except ValueError:
-            HttpAPIConnector.logger.error(f"Could not transform {data} using {jq_filter}")
+            HttpAPIConnector.logger.error(f"Could not transform {raw_result} using {jq_filter}")
             raise
+
+        results = []
+        if next_pagination_config := pagination_config.get_next_pagination_config(
+            result=parsed_result,
+            pagination_info=parsed_pagination_info
+        ):
+            results += self.perform_requests(
+                data_source=data_source,
+                session=session,
+                pagination_config=next_pagination_config
+            )
+
+        results += parsed_result
+        return results
 
     def _retrieve_data(self, data_source: HttpAPIDataSource) -> "pd.DataFrame":
         if self.auth:
@@ -195,12 +159,26 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         else:
             session = Session()
 
-        query = self._render_query(data_source)
+        try:
+            results = pd.DataFrame(
+                self.perform_requests(
+                    data_source=data_source,
+                    session=session,
+                    pagination_config=self.pagination_config
+                )
+            )
+        except HTTPError as exc:
+            if exc.response.status_code == TOO_MANY_REQUESTS:
+                raise HTTPError(
+                    "Fails to retrieve data: the connector tried to perform too many requests."
+                    " Please check your API call limitations."
+                ) from exc
+            else:
+                raise
 
-        res = pd.DataFrame(self.do_request(query, session))
         if data_source.flatten_column:
-            return json_to_table(res, columns=[data_source.flatten_column])
-        return res
+            return json_to_table(results, columns=[data_source.flatten_column])
+        return results
 
     def _render_query(self, data_source):
         query = nosql_apply_parameters_to_query(

@@ -7,6 +7,7 @@ from pytest_mock import MockFixture
 
 from toucan_connectors.common import transform_with_jq
 from toucan_connectors.http_api.http_api_connector import Auth, HttpAPIConnector, HttpAPIDataSource
+from toucan_connectors.http_api.pagination_configs import OffsetLimitPaginationConfig, CursorBasedPaginationConfig
 from toucan_connectors.json_wrapper import JsonWrapper
 
 
@@ -49,6 +50,16 @@ def auth():
     return Auth(type="basic", args=["username", "password"])
 
 
+@pytest.fixture(scope="function")
+def offset_pagination():
+    return OffsetLimitPaginationConfig(offset_name="super_offset", limit_name="super_limit", limit=5)
+
+
+@pytest.fixture(scope="function")
+def cursor_pagination():
+    return CursorBasedPaginationConfig(cursor_name="my_cursor", cursor_filter=".metadata.next_cursor")
+
+
 def test_transform_with_jq():
     assert transform_with_jq(data=[1, 2, 3], jq_filter=".[]+1") == [2, 3, 4]
     assert transform_with_jq([[1, 2, 3]], ".[]") == [1, 2, 3]
@@ -82,7 +93,98 @@ def test_get_df_with_auth(connector, data_source, auth):
 
 
 @responses.activate
-def test_get_df_with_parameters(connector, data_source, mocker):
+def test_get_df_with_offset_pagination(
+    connector: HttpAPIConnector,
+    data_source: HttpAPIDataSource,
+    offset_pagination: OffsetLimitPaginationConfig
+) -> None:
+    # first page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?super_offset=0&super_limit=5",
+        json=[
+            {"a": 1},
+            {"a": 2},
+            {"a": 3},
+            {"a": 4},
+            {"a": 5}
+        ]
+    )
+
+    # second page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?super_offset=5&super_limit=5",
+        json=[
+            {"a": 6},
+            {"a": 7},
+            {"a": 8},
+            {"b": 9},
+            {"b": 10},
+        ]
+    )
+
+    # last page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?super_offset=10&super_limit=5",
+        json=[
+            {"b": 11},
+            {"b": 12},
+        ]
+    )
+
+    connector.pagination_config = offset_pagination
+    df = connector.get_df(data_source)
+    assert df.shape == (12, 2)
+    assert len(responses.calls) == 3
+
+
+@responses.activate
+def test_get_df_with_cursor_pagination(
+    connector: HttpAPIConnector,
+    data_source: HttpAPIDataSource,
+    cursor_pagination: CursorBasedPaginationConfig
+) -> None:
+    # first page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments",
+        json={
+            "content": [
+                {"a": 1},
+                {"a": 2},
+            ],
+            "metadata": {
+                "next_cursor": "super_cursor_22222",
+                "number_of_results": 4
+            }
+        }
+    )
+
+    # next page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?my_cursor=super_cursor_22222",
+        json={
+            "content": [
+                {"a": 3},
+                {"a": 4},
+            ],
+            "metadata": {
+                "number_of_results": 4
+            }
+        }
+    )
+    connector.pagination_config = cursor_pagination
+    data_source.filter = ".content"
+    df = connector.get_df(data_source)
+    assert df.shape == (4, 1)
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_get_df_with_parameters(connector, data_source):
     data_source.parameters = {"first_name": "raphael"}
     data_source.headers = {"name": "%(first_name)s"}
 
@@ -462,7 +564,7 @@ def test_get_cache_key(connector, auth, data_source):
     data_source.parameters = {"first_name": "raphael"}
     key = connector.get_cache_key(data_source)
 
-    assert key == "f24af0b5-f745-3961-8aec-a27d44543fb9"
+    assert key == "511bbd78-3ea7-36b4-abc4-f54ead4d95b2"
 
     data_source.headers = {"name": "{{ first_name }}"}  # change the templating style
     key2 = connector.get_cache_key(data_source)
