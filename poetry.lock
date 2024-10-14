@@ -814,12 +814,12 @@ files = [
 
 [[package]]
 name = "dataiku-api-client"
-version = "13.1.4"
+version = "13.2.0"
 description = "Python API client for Dataiku APIs"
 optional = true
 python-versions = "*"
 files = [
-    {file = "dataiku-api-client-13.1.4.tar.gz", hash = "sha256:1f9f84e876aaa57f77690e10455adf5809299bba885d3cfc47308597f7f08db4"},
+    {file = "dataiku-api-client-13.2.0.tar.gz", hash = "sha256:ff0b721c477caa708146e3127df9d7f20522789556dbb985a17e97939e677c75"},
 ]
 
 [package.dependencies]
@@ -1112,13 +1112,13 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2,<1.0.dev0)"]
 
 [[package]]
 name = "google-api-python-client"
-version = "2.147.0"
+version = "2.149.0"
 description = "Google API Client Library for Python"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "google_api_python_client-2.147.0-py2.py3-none-any.whl", hash = "sha256:c6ecfa193c695baa41e84562d8f8f244fcd164419eca3fc9fd7565646668f9b2"},
-    {file = "google_api_python_client-2.147.0.tar.gz", hash = "sha256:e864c2cf61d34c00f05278b8bdb72b93b6fa34f0de9ead51d20435f3b65f91be"},
+    {file = "google_api_python_client-2.149.0-py2.py3-none-any.whl", hash = "sha256:1a5232e9cfed8c201799d9327e4d44dc7ea7daa3c6e1627fca41aa201539c0da"},
+    {file = "google_api_python_client-2.149.0.tar.gz", hash = "sha256:b9d68c6b14ec72580d66001bd33c5816b78e2134b93ccc5cf8f624516b561750"},
 ]
 
 [package.dependencies]
@@ -1454,13 +1454,13 @@ pyparsing = {version = ">=2.4.2,<3.0.0 || >3.0.0,<3.0.1 || >3.0.1,<3.0.2 || >3.0
 
 [[package]]
 name = "hubspot-api-client"
-version = "9.0.0"
+version = "10.0.0"
 description = "HubSpot API client"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "hubspot-api-client-9.0.0.tar.gz", hash = "sha256:dfd0cd025659f4e7eb578eb029b6529649c7b8dddc916613d52b44665533dd8d"},
-    {file = "hubspot_api_client-9.0.0-py3-none-any.whl", hash = "sha256:9a75452a975142148aeee6ce612d6bf6f939974ada2687183791c600872317db"},
+    {file = "hubspot_api_client-10.0.0-py3-none-any.whl", hash = "sha256:3b397c5fefc6ab12d8805e7cb147bfdbe3cacafa5deb70d2467f515955d6d566"},
+    {file = "hubspot_api_client-10.0.0.tar.gz", hash = "sha256:00174bc291cadbbe80d8448d7475a3ac92bb196ab078047c2a8464b9cffa7edf"},
 ]
 
 [package.dependencies]
@@ -4221,13 +4221,13 @@ test = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "xmltodict"
-version = "0.13.0"
+version = "0.14.1"
 description = "Makes working with XML feel like you are working with JSON"
 optional = true
-python-versions = ">=3.4"
+python-versions = ">=3.6"
 files = [
-    {file = "xmltodict-0.13.0-py2.py3-none-any.whl", hash = "sha256:aa89e8fd76320154a40d19a0df04a4695fb9dc5ba977cbb68ab3e4eb225e7852"},
-    {file = "xmltodict-0.13.0.tar.gz", hash = "sha256:341595a488e3e01a85a9d8911d8912fd922ede5fecc4dce437eb4b6c8d037e56"},
+    {file = "xmltodict-0.14.1-py2.py3-none-any.whl", hash = "sha256:3ef4a7b71c08f19047fcbea572e1d7f4207ab269da1565b5d40e9823d3894e63"},
+    {file = "xmltodict-0.14.1.tar.gz", hash = "sha256:338c8431e4fc554517651972d62f06958718f6262b04316917008e8fd677a6b0"},
 ]
 
 [[package]]
@@ -4335,13 +4335,13 @@ multidict = ">=4.0"
 
 [[package]]
 name = "zeep"
-version = "4.2.1"
+version = "4.3.0"
 description = "A Python SOAP client"
 optional = true
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "zeep-4.2.1-py3-none-any.whl", hash = "sha256:6754feb4c34a4b6d65fbc359252bf6654dcce3937bf1d95aae4402a60a8f5939"},
-    {file = "zeep-4.2.1.tar.gz", hash = "sha256:72093acfdb1d8360ed400869b73fbf1882b95c4287f798084c42ee0c1ff0e425"},
+    {file = "zeep-4.3.0-py3-none-any.whl", hash = "sha256:4bafaf1997a46b5560c5e928f2bc1b04f04c31dad121ecbe1e952f23aee4c19e"},
+    {file = "zeep-4.3.0.tar.gz", hash = "sha256:26a1658057411fb331ee0602633c31b5c754ff1d7b9b38a15e83737597c080eb"},
 ]
 
 [package.dependencies]
@@ -4357,7 +4357,7 @@ requests-toolbelt = ">=0.7.1"
 [package.extras]
 async = ["httpx (>=0.15.0)"]
 docs = ["sphinx (>=1.4.0)"]
-test = ["coverage[toml] (==5.2.1)", "flake8 (==3.8.3)", "flake8-blind-except (==0.1.1)", "flake8-debugger (==3.2.1)", "flake8-imports (==0.1.1)", "freezegun (==0.3.15)", "isort (==5.3.2)", "pretend (==1.0.9)", "pytest (==6.2.5)", "pytest-asyncio", "pytest-cov (==2.8.1)", "pytest-httpx", "requests-mock (>=0.7.0)"]
+test = ["coverage[toml] (==7.6.2)", "flake8 (==7.1.1)", "flake8-blind-except (==0.2.1)", "flake8-debugger (==4.1.2)", "flake8-imports (==0.1.1)", "freezegun (==1.5.1)", "isort (==5.13.2)", "pretend (==1.0.9)", "pytest (==8.3.3)", "pytest-asyncio", "pytest-cov (==5.0.0)", "pytest-httpx", "requests-mock (==1.12.1)"]
 xmlsec = ["xmlsec (>=0.6.1)"]
 
 [extras]
@@ -4392,4 +4392,4 @@ soap = ["lxml", "pandas", "pandas", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "22a5cbdaa81395c18ba216d161182438fe49c5d9dcdf82a781a840314384534d"
+content-hash = "2bfb11407bed16e85706df6e4317abb04935903da16cd5cb7db544c68742f32b"
