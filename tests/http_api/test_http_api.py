@@ -8,7 +8,10 @@ from pytest_mock import MockFixture
 from toucan_connectors.common import transform_with_jq
 from toucan_connectors.http_api.http_api_connector import Auth, HttpAPIConnector, HttpAPIDataSource
 from toucan_connectors.http_api.pagination_configs import (
-    HttpPagination,
+    CursorBasedPaginationConfig,
+    HyperMediaPaginationConfig,
+    OffsetLimitPaginationConfig,
+    PageBasedPaginationConfig,
 )
 from toucan_connectors.json_wrapper import JsonWrapper
 
@@ -53,15 +56,23 @@ def auth():
 
 
 @pytest.fixture(scope="function")
-def offset_pagination() -> HttpPagination:
-    return HttpPagination(
-        type="offset_limit", kwargs={"offset_name": "super_offset", "limit_name": "super_limit", "limit": 5}
-    )
+def offset_pagination() -> OffsetLimitPaginationConfig:
+    return OffsetLimitPaginationConfig(offset_name="super_offset", limit_name="super_limit", limit=5)
 
 
 @pytest.fixture(scope="function")
-def cursor_pagination() -> HttpPagination:
-    return HttpPagination(type="cursor", kwargs={"cursor_name": "my_cursor", "cursor_filter": ".metadata.next_cursor"})
+def page_pagination() -> PageBasedPaginationConfig:
+    return PageBasedPaginationConfig(page_name="my_page", per_page_name="my_per_page", per_page=2, page=1)
+
+
+@pytest.fixture(scope="function")
+def cursor_pagination() -> CursorBasedPaginationConfig:
+    return CursorBasedPaginationConfig(cursor_name="my_cursor", cursor_filter=".metadata.next_cursor")
+
+
+@pytest.fixture(scope="function")
+def hyper_media_pagination() -> HyperMediaPaginationConfig:
+    return HyperMediaPaginationConfig(next_link_filter=".metadata.next_link")
 
 
 def test_transform_with_jq():
@@ -98,7 +109,7 @@ def test_get_df_with_auth(connector, data_source, auth):
 
 @responses.activate
 def test_get_df_with_offset_pagination(
-    connector: HttpAPIConnector, data_source: HttpAPIDataSource, offset_pagination: HttpPagination
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, offset_pagination: OffsetLimitPaginationConfig
 ) -> None:
     # first page
     responses.add(
@@ -130,15 +141,99 @@ def test_get_df_with_offset_pagination(
         ],
     )
 
-    connector.http_pagination = offset_pagination
+    connector.http_pagination_config = offset_pagination
     df = connector.get_df(data_source)
     assert df.shape == (12, 2)
     assert len(responses.calls) == 3
 
 
 @responses.activate
+def test_get_df_with_page_pagination(
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, page_pagination: PageBasedPaginationConfig
+) -> None:
+    page_pagination.max_page_filter = ".metadata.number_of_pages"
+
+    # first page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?my_page=1&my_per_page=2",
+        json={
+            "content": [
+                {"a": 1},
+                {"a": 2},
+            ],
+            "metadata": {"number_of_pages": 2},
+        },
+    )
+
+    # next page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?my_page=2&my_per_page=2",
+        json={
+            "content": [
+                {"a": 3},
+                {"a": 4},
+            ],
+            "metadata": {"number_of_pages": 2},
+        },
+    )
+
+    data_source.filter = ".content"
+    connector.http_pagination_config = page_pagination
+    df = connector.get_df(data_source)
+    assert df.shape == (4, 1)
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_get_df_with_page_pagination_which_can_raise(
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, page_pagination: PageBasedPaginationConfig
+) -> None:
+    page_pagination.can_raise_not_found = True
+
+    # first page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?my_page=1&my_per_page=2",
+        json={
+            "content": [
+                {"a": 1},
+                {"a": 2},
+            ],
+        },
+    )
+
+    # next page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?my_page=2&my_per_page=2",
+        json={
+            "content": [
+                {"a": 3},
+                {"a": 4},
+            ],
+        },
+    )
+
+    # not found
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?my_page=3&my_per_page=2",
+        json={"error": "not found"},
+        status=404,
+    )
+
+    data_source.filter = ".content"
+    connector.http_pagination_config = page_pagination
+    df = connector.get_df(data_source)
+    assert df.shape == (4, 1)
+    assert len(responses.calls) == 3
+
+
+@responses.activate
 def test_get_df_with_cursor_pagination(
-    connector: HttpAPIConnector, data_source: HttpAPIDataSource, cursor_pagination: HttpPagination
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, cursor_pagination: CursorBasedPaginationConfig
 ) -> None:
     # first page
     responses.add(
@@ -165,8 +260,48 @@ def test_get_df_with_cursor_pagination(
             "metadata": {"number_of_results": 4},
         },
     )
-    connector.http_pagination = cursor_pagination
+    connector.http_pagination_config = cursor_pagination
     data_source.filter = ".content"
+    df = connector.get_df(data_source)
+    assert df.shape == (4, 1)
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_get_df_with_hyper_media_pagination(
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, hyper_media_pagination: HyperMediaPaginationConfig
+) -> None:
+    # first page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments",
+        json={
+            "content": [
+                {"a": 1},
+                {"a": 2},
+            ],
+            "metadata": {
+                "next_link": "https://jsonplaceholder.typicode.com/comments/next_link?token=12341243&custom=yes",
+                "number_of_results": 4,
+            },
+        },
+    )
+
+    # next page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments/next_link?token=12341243&custom=yes",
+        json={
+            "content": [
+                {"a": 3},
+                {"a": 4},
+            ],
+            "metadata": {"number_of_results": 4},
+        },
+    )
+    connector.http_pagination_config = hyper_media_pagination
+    data_source.filter = ".content"
+    data_source.params = {"custom": "yes"}
     df = connector.get_df(data_source)
     assert df.shape == (4, 1)
     assert len(responses.calls) == 2
@@ -553,7 +688,7 @@ def test_get_cache_key(connector, auth, data_source):
     data_source.parameters = {"first_name": "raphael"}
     key = connector.get_cache_key(data_source)
 
-    assert key == "0209213d-0ca5-3422-8985-beb4ca6e81aa"
+    assert key == "4144192b-8b40-3664-aa10-e14484938b23"
 
     data_source.headers = {"name": "{{ first_name }}"}  # change the templating style
     key2 = connector.get_cache_key(data_source)

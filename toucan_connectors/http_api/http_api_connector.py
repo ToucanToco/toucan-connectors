@@ -8,7 +8,11 @@ from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 from requests.exceptions import HTTPError
 
 from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
-from toucan_connectors.http_api.pagination_configs import HttpPagination, PaginationConfig
+from toucan_connectors.http_api.pagination_configs import (
+    HttpPaginationConfig,
+    NoopPaginationConfig,
+    extract_pagination_info_from_result,
+)
 
 try:
     import pandas as pd
@@ -29,6 +33,10 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.utils.json_to_table import json_to_table
 
 TOO_MANY_REQUESTS = 429
+
+
+class HttpAPIConnectorError(Exception):
+    """Raised when an error occurs while fetching data from an HTTP API"""
 
 
 class ResponseType(str, Enum):
@@ -70,7 +78,9 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         None,
         description="You can provide a custom template that will be used for every HTTP request",
     )
-    http_pagination: HttpPagination = Field(HttpPagination(), title="Pagination configuration")
+    http_pagination_config: HttpPaginationConfig = Field(
+        default_factory=NoopPaginationConfig, title="Pagination configuration"
+    )
 
     def do_request(self, query, session):
         """
@@ -93,6 +103,8 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         HttpAPIConnector.logger.debug(f'>> Request:  method={query.get("method")} url={query.get("url")}')
         res = session.request(**query)
         HttpAPIConnector.logger.debug(f"<< Response: status_code={res.status_code} reason={res.reason}")
+
+        res.raise_for_status()
 
         if self.responsetype == "xml":
             try:
@@ -118,32 +130,39 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         return data
 
     def perform_requests(
-        self, data_source: HttpAPIDataSource, session: Session, pagination_config: PaginationConfig
+        self, data_source: HttpAPIDataSource, session: Session, pagination_config: HttpPaginationConfig
     ) -> list[Any]:
-        data_source = pagination_config.apply_pagination_to_data_source(data_source)
-        query = self._render_query(data_source)
-        jq_filter = query["filter"]
-        raw_result = self.do_request(query, session)
-
-        try:
-            parsed_result = transform_with_jq(raw_result, jq_filter)
+        results = []
+        while pagination_config is not None:
+            data_source = pagination_config.apply_pagination_to_data_source(data_source)
+            query = self._render_query(data_source)
+            jq_filter = query["filter"]
+            # Retrieve data
+            try:
+                raw_result = self.do_request(query, session)
+            except HTTPError as exc:
+                if whitelisted_status_codes := pagination_config.get_error_status_whitelist():
+                    if exc.response.status_code in whitelisted_status_codes:
+                        # If a whitelisted error occurs, we want to stop paginated data retrieving iteration
+                        break
+                    else:
+                        raise
+                else:
+                    raise
+            # Parse retrieved data with JQ filter
+            try:
+                parsed_result = transform_with_jq(raw_result, jq_filter)
+            except ValueError:
+                HttpAPIConnector.logger.error(f"Could not transform {raw_result} using {jq_filter}")
+                raise
+            # Prepare next pagination config
             parsed_pagination_info = None
             if jq_pagination_filter := pagination_config.get_pagination_info_filter():
-                # transform_with_jq search for all occurrences, it will always return a list of values
-                parsed_pagination_info = transform_with_jq(raw_result, jq_pagination_filter)[0]
-        except ValueError:
-            HttpAPIConnector.logger.error(f"Could not transform {raw_result} using {jq_filter}")
-            raise
-
-        results = []
-        if next_pagination_config := pagination_config.get_next_pagination_config(
-            result=parsed_result, pagination_info=parsed_pagination_info
-        ):
-            results += self.perform_requests(
-                data_source=data_source, session=session, pagination_config=next_pagination_config
+                parsed_pagination_info = extract_pagination_info_from_result(raw_result, jq_pagination_filter)
+            pagination_config = pagination_config.get_next_pagination_config(
+                result=parsed_result, pagination_info=parsed_pagination_info
             )
-
-        results += parsed_result
+            results += parsed_result
         return results
 
     def _retrieve_data(self, data_source: HttpAPIDataSource) -> "pd.DataFrame":
@@ -157,13 +176,13 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                 self.perform_requests(
                     data_source=data_source,
                     session=session,
-                    pagination_config=self.http_pagination.get_pagination_config(),
+                    pagination_config=self.http_pagination_config,
                 )
             )
         except HTTPError as exc:
             if exc.response.status_code == TOO_MANY_REQUESTS:
-                raise HTTPError(
-                    "Fails to retrieve data: the connector tried to perform too many requests."
+                raise HttpAPIConnectorError(
+                    "Failed to retrieve data: the connector tried to perform too many requests."
                     " Please check your API call limitations."
                 ) from exc
             else:
