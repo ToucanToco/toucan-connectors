@@ -5,7 +5,14 @@ from typing import Any, List
 from xml.etree.ElementTree import ParseError, fromstring, tostring
 
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
-from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
+from requests.exceptions import HTTPError
+
+from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
+from toucan_connectors.http_api.pagination_configs import (
+    HttpPaginationConfig,
+    NoopPaginationConfig,
+    extract_pagination_info_from_result,
+)
 
 try:
     import pandas as pd
@@ -19,24 +26,22 @@ except ImportError as exc:  # pragma: no cover
 
 from toucan_connectors.auth import Auth
 from toucan_connectors.common import (
-    FilterSchema,
-    XpathSchema,
     nosql_apply_parameters_to_query,
     transform_with_jq,
 )
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.utils.json_to_table import json_to_table
 
+TOO_MANY_REQUESTS = 429
+
+
+class HttpAPIConnectorError(Exception):
+    """Raised when an error occurs while fetching data from an HTTP API"""
+
 
 class ResponseType(str, Enum):
     json = "json"
     xml = "xml"
-
-
-class Method(str, Enum):
-    GET = "GET"
-    POST = "POST"
-    PUT = "PUT"
 
 
 class Template(BaseModel):
@@ -64,71 +69,6 @@ class Template(BaseModel):
     )
 
 
-class HttpAPIDataSource(ToucanDataSource):
-    url: str = Field(
-        ...,
-        title="Endpoint URL",
-        description="The URL path that will be appended to your baseroute URL. " 'For example "geo/countries"',
-    )
-    method: Method = Field(Method.GET, title="HTTP Method")
-    headers: dict | None = Field(
-        None,
-        description="You can also setup headers in the Template section of your Connector see: <br/>"
-        "https://docs.toucantoco.com/concepteur/tutorials/connectors/3-http-connector.html#template",
-        examples=['{ "content-type": "application/xml" }'],
-    )
-    params: dict | None = Field(
-        None,
-        title="URL params",
-        description="JSON object of parameters to send in the query string of this HTTP request "
-        '(e.g. "offset" and "limit" in https://www/api-aseroute/data&offset=100&limit=50)',
-        examples=['{ "offset": 100, "limit": 50 }'],
-    )
-    json_: dict | None = Field(
-        None,
-        alias="json",
-        title="Body",
-        description="JSON object of parameters to send in the body of every HTTP request",
-        examples=['{ "offset": 100, "limit": 50 }'],
-    )
-    proxies: dict | None = Field(
-        None,
-        description="JSON object expressing a mapping of protocol or host to corresponding proxy",
-        examples=['{"http": "foo.bar:3128", "http://host.name": "foo.bar:4012"}'],
-    )
-    data: str | dict | None = Field(None, description="JSON object to send in the body of the HTTP request")
-    xpath: str = XpathSchema
-    filter: str = FilterSchema
-    flatten_column: str | None = Field(None, description="Column containing nested rows")
-
-    @classmethod
-    def model_json_schema(
-        cls,
-        by_alias: bool = True,
-        ref_template: str = DEFAULT_REF_TEMPLATE,
-        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,
-        mode: JsonSchemaMode = "validation",
-    ) -> dict[str, Any]:
-        schema = super().model_json_schema(
-            by_alias=by_alias,
-            ref_template=ref_template,
-            schema_generator=schema_generator,
-            mode=mode,
-        )
-        keys = schema["properties"].keys()
-        last_keys = [
-            "proxies",
-            "flatten_column",
-            "data",
-            "xpath",
-            "filter",
-            "validation",
-        ]
-        new_keys = [k for k in keys if k not in last_keys] + last_keys
-        schema["properties"] = {k: schema["properties"][k] for k in new_keys}
-        return schema
-
-
 class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
     responsetype: ResponseType = Field(ResponseType.json, title="Content-type of response")
     baseroute: AnyHttpUrl = Field(..., title="Baseroute URL", description="Baseroute URL")
@@ -137,6 +77,9 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
     template: Template | None = Field(
         None,
         description="You can provide a custom template that will be used for every HTTP request",
+    )
+    http_pagination_config: HttpPaginationConfig = Field(
+        default_factory=NoopPaginationConfig, title="Pagination configuration"
     )
 
     def do_request(self, query, session):
@@ -148,7 +91,6 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         Returns:
             data (list): The response from the API in the form of a list of dict
         """
-        jq_filter = query["filter"]
         xpath = query["xpath"]
         available_params = ["url", "method", "params", "data", "json", "headers", "proxies"]
         query = {k: v for k, v in query.items() if k in available_params}
@@ -161,6 +103,8 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         HttpAPIConnector.logger.debug(f'>> Request:  method={query.get("method")} url={query.get("url")}')
         res = session.request(**query)
         HttpAPIConnector.logger.debug(f"<< Response: status_code={res.status_code} reason={res.reason}")
+
+        res.raise_for_status()
 
         if self.responsetype == "xml":
             try:
@@ -183,11 +127,43 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                         f'Cannot decode response content from query: method={query.get("method")} url={query.get("url")} response_status_code={res.status_code} response_reason=${res.reason}'  # noqa: E501
                     )
                     raise
-        try:
-            return transform_with_jq(data, jq_filter)
-        except ValueError:
-            HttpAPIConnector.logger.error(f"Could not transform {data} using {jq_filter}")
-            raise
+        return data
+
+    def perform_requests(
+        self, data_source: HttpAPIDataSource, session: Session, pagination_config: HttpPaginationConfig
+    ) -> list[Any]:
+        results = []
+        while pagination_config is not None:
+            data_source = pagination_config.apply_pagination_to_data_source(data_source)
+            query = self._render_query(data_source)
+            jq_filter = query["filter"]
+            # Retrieve data
+            try:
+                raw_result = self.do_request(query, session)
+            except HTTPError as exc:
+                if whitelisted_status_codes := pagination_config.get_error_status_whitelist():
+                    if exc.response.status_code in whitelisted_status_codes:
+                        # If a whitelisted error occurs, we want to stop paginated data retrieving iteration
+                        break
+                    else:
+                        raise
+                else:
+                    raise
+            # Parse retrieved data with JQ filter
+            try:
+                parsed_result = transform_with_jq(raw_result, jq_filter)
+            except ValueError:
+                HttpAPIConnector.logger.error(f"Could not transform {raw_result} using {jq_filter}")
+                raise
+            # Prepare next pagination config
+            parsed_pagination_info = None
+            if jq_pagination_filter := pagination_config.get_pagination_info_filter():
+                parsed_pagination_info = extract_pagination_info_from_result(raw_result, jq_pagination_filter)
+            pagination_config = pagination_config.get_next_pagination_config(
+                result=parsed_result, pagination_info=parsed_pagination_info
+            )
+            results += parsed_result
+        return results
 
     def _retrieve_data(self, data_source: HttpAPIDataSource) -> "pd.DataFrame":
         if self.auth:
@@ -195,12 +171,26 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         else:
             session = Session()
 
-        query = self._render_query(data_source)
+        try:
+            results = pd.DataFrame(
+                self.perform_requests(
+                    data_source=data_source,
+                    session=session,
+                    pagination_config=self.http_pagination_config,
+                )
+            )
+        except HTTPError as exc:
+            if exc.response.status_code == TOO_MANY_REQUESTS:
+                raise HttpAPIConnectorError(
+                    "Failed to retrieve data: the connector tried to perform too many requests."
+                    " Please check your API call limitations."
+                ) from exc
+            else:
+                raise
 
-        res = pd.DataFrame(self.do_request(query, session))
         if data_source.flatten_column:
-            return json_to_table(res, columns=[data_source.flatten_column])
-        return res
+            return json_to_table(results, columns=[data_source.flatten_column])
+        return results
 
     def _render_query(self, data_source):
         query = nosql_apply_parameters_to_query(
