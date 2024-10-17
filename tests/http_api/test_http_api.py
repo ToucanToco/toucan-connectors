@@ -6,7 +6,12 @@ import responses
 from pytest_mock import MockFixture
 
 from toucan_connectors.common import transform_with_jq
-from toucan_connectors.http_api.http_api_connector import Auth, HttpAPIConnector, HttpAPIDataSource
+from toucan_connectors.http_api.http_api_connector import (
+    Auth,
+    HttpAPIConnector,
+    HttpAPIConnectorError,
+    HttpAPIDataSource,
+)
 from toucan_connectors.http_api.pagination_configs import (
     CursorBasedPaginationConfig,
     HyperMediaPaginationConfig,
@@ -274,7 +279,7 @@ def test_get_df_with_hyper_media_pagination(
     # first page
     responses.add(
         responses.GET,
-        "https://jsonplaceholder.typicode.com/comments",
+        "https://jsonplaceholder.typicode.com/comments?custom=yes",
         json={
             "content": [
                 {"a": 1},
@@ -305,6 +310,77 @@ def test_get_df_with_hyper_media_pagination(
     df = connector.get_df(data_source)
     assert df.shape == (4, 1)
     assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_hyper_media_pagination_raise_if_bad_next_link(
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, hyper_media_pagination: HyperMediaPaginationConfig
+) -> None:
+    # first page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?custom=yes",
+        json={
+            "content": [
+                {"a": 1},
+                {"a": 2},
+            ],
+            "metadata": {
+                "next_link": {"real_link": "my_link"},
+                "number_of_results": 4,
+            },
+        },
+    )
+
+    connector.http_pagination_config = hyper_media_pagination
+    data_source.filter = ".content"
+    data_source.params = {"custom": "yes"}
+    with pytest.raises(ValueError) as exc:
+        connector.get_df(data_source)
+    assert str(exc.value) == (
+        "Invalid next link value. Link can't be a complex value," " got: {'real_link': 'my_link'}"
+    )
+
+
+@responses.activate
+def test_ignore_if_cant_parse_next_pagination_info(
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, hyper_media_pagination: HyperMediaPaginationConfig
+) -> None:
+    # first page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments",
+        json=[
+            {"a": 1},
+            {"a": 2},
+        ],
+    )
+
+    connector.http_pagination_config = hyper_media_pagination  # needs a 'metadata' field to retrieve the next link
+    # Ok even if 'metadata' is missing in the API response
+    df = connector.get_df(data_source)
+    assert df.shape == (2, 1)
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_raises_http_error_on_too_many_requests(connector: HttpAPIConnector, data_source: HttpAPIDataSource) -> None:
+    # first page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments",
+        json=[
+            {"a": 1},
+            {"a": 2},
+        ],
+        status=429,
+    )
+    with pytest.raises(HttpAPIConnectorError) as exc:
+        connector.get_df(data_source)
+    assert str(exc.value) == (
+        "Failed to retrieve data: the connector tried to perform too many requests."
+        " Please check your API call limitations."
+    )
 
 
 @responses.activate

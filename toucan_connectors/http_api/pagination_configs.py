@@ -150,13 +150,9 @@ class HyperMediaPaginationConfig(PaginationConfig):
 
     def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
         if self.next_link:
-            try:
-                url_chunks = urlparse(self.next_link)
-                url_parameters = parse_qs(url_chunks.query) | (data_source.params or {})
-                return data_source.model_copy(update={"url": url_chunks.path, "params": url_parameters})
-            except ValueError:
-                _LOGGER.error(f"Can't parse next link pagination='{self.next_link}'")
-                raise
+            url_chunks = urlparse(self.next_link)
+            url_parameters = parse_qs(url_chunks.query) | (data_source.params or {})
+            return data_source.model_copy(update={"url": url_chunks.path, "params": url_parameters})
         else:
             return data_source
 
