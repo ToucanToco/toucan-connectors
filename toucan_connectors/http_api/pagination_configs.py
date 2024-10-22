@@ -1,4 +1,5 @@
 import logging
+from abc import ABC, abstractmethod
 from typing import Any, Optional
 from urllib.parse import parse_qs, urlparse
 
@@ -10,31 +11,33 @@ from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
 _LOGGER = logging.getLogger(__name__)
 
 
-class PaginationConfig(BaseModel):
-    """Base class for pagination configs.
+class PaginationConfig(BaseModel, ABC):
+    """Base class for pagination configs"""
+
+    @abstractmethod
+    def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
+        """Apply pagination to data source and return it"""
+
+    @abstractmethod
+    def get_next_pagination_config(self, result: Any, pagination_info: Any | None) -> Optional["PaginationConfig"]:
+        """Computes next pagination config based on the parsed API responses"""
+
+    @abstractmethod
+    def get_pagination_info_filter(self) -> str | None:
+        """Returns the JQ filter that must be applied to the raw API result to retrieve pagination info"""
+
+    @abstractmethod
+    def get_error_status_whitelist(self) -> list[str] | None:
+        """Returns the list of the error statuses which means the end of data fetching, and so to ignore"""
+
+
+class NoopPaginationConfig(PaginationConfig):
+    """Pagination config without effects
 
     Config applied for connectors without pagination configured.
     Useful for connectors that can return all results at once.
     """
 
-    def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
-        """Apply pagination to data source and return it"""
-        pass
-
-    def get_next_pagination_config(self, result: Any, pagination_info: Any | None) -> Optional["PaginationConfig"]:
-        """Computes next pagination config based on the parsed API responses"""
-        pass
-
-    def get_pagination_info_filter(self) -> str | None:
-        """Returns the JQ filter that must be applied to the raw API result to retrieve pagination info"""
-        pass
-
-    def get_error_status_whitelist(self) -> list[str] | None:
-        """Returns the list of the error statuses which means the end of data fetching, and so to ignore"""
-        pass
-
-
-class NoopPaginationConfig(PaginationConfig):
     def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
         return data_source
 
@@ -42,6 +45,9 @@ class NoopPaginationConfig(PaginationConfig):
         return None
 
     def get_pagination_info_filter(self) -> str | None:
+        return None
+
+    def get_error_status_whitelist(self) -> list[str] | None:
         return None
 
 
@@ -66,6 +72,12 @@ class OffsetLimitPaginationConfig(PaginationConfig):
             return None
         else:
             return self.model_copy(update={"offset": self.offset + self.limit})
+
+    def get_error_status_whitelist(self) -> list[str] | None:
+        return None
+
+    def get_pagination_info_filter(self) -> str | None:
+        return None
 
 
 class PageBasedPaginationConfig(PaginationConfig):
@@ -143,6 +155,9 @@ class CursorBasedPaginationConfig(PaginationConfig):
     def get_pagination_info_filter(self) -> str:
         return self.cursor_filter
 
+    def get_error_status_whitelist(self) -> list[str] | None:
+        return None
+
 
 class HyperMediaPaginationConfig(PaginationConfig):
     next_link_filter: str
@@ -168,6 +183,9 @@ class HyperMediaPaginationConfig(PaginationConfig):
 
     def get_pagination_info_filter(self) -> str:
         return self.next_link_filter
+
+    def get_error_status_whitelist(self) -> list[str] | None:
+        return None
 
 
 HttpPaginationConfig = (

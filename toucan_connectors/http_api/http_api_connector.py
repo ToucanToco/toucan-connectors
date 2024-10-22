@@ -26,6 +26,7 @@ except ImportError as exc:  # pragma: no cover
 
 from toucan_connectors.auth import Auth
 from toucan_connectors.common import (
+    HttpError,
     nosql_apply_parameters_to_query,
     transform_with_jq,
 )
@@ -37,6 +38,10 @@ TOO_MANY_REQUESTS = 429
 
 class HttpAPIConnectorError(Exception):
     """Raised when an error occurs while fetching data from an HTTP API"""
+
+    def __init__(self, message: str, original_exc: HttpError) -> None:
+        super().__init__(message)
+        self.original_exc = original_exc
 
 
 class ResponseType(str, Enum):
@@ -182,8 +187,9 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         except HTTPError as exc:
             if exc.response.status_code == TOO_MANY_REQUESTS:
                 raise HttpAPIConnectorError(
-                    "Failed to retrieve data: the connector tried to perform too many requests."
-                    " Please check your API call limitations."
+                    message="Failed to retrieve data: the connector tried to perform too many requests."
+                    " Please check your API call limitations.",
+                    original_exc=exc,
                 ) from exc
             else:
                 raise
