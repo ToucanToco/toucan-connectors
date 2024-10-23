@@ -1,11 +1,11 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 from urllib.parse import parse_qs, urlparse
 
 from pydantic import BaseModel, Field
 
-from toucan_connectors.common import FilterSchema
+from toucan_connectors.common import UI_HIDDEN, FilterSchemaDescription
 from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +38,8 @@ class NoopPaginationConfig(PaginationConfig):
     Useful for connectors that can return all results at once.
     """
 
+    kind: Literal["NoopPaginationConfig"] = Field("NoopPaginationConfig", **UI_HIDDEN)
+
     def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
         return data_source
 
@@ -52,8 +54,9 @@ class NoopPaginationConfig(PaginationConfig):
 
 
 class OffsetLimitPaginationConfig(PaginationConfig):
+    kind: Literal["OffsetLimitPaginationConfig"] = Field("OffsetLimitPaginationConfig", **UI_HIDDEN)
     offset_name: str = "offset"
-    offset: int = 0
+    offset: int = Field(0, **UI_HIDDEN)
     limit_name: str = "limit"
     limit: int
 
@@ -81,11 +84,12 @@ class OffsetLimitPaginationConfig(PaginationConfig):
 
 
 class PageBasedPaginationConfig(PaginationConfig):
+    kind: Literal["PageBasedPaginationConfig"] = Field("PageBasedPaginationConfig", **UI_HIDDEN)
     page_name: str = "page"
     page: int = 0
     per_page_name: str | None = None
     per_page: int | None = None
-    max_page_filter: str | None = None
+    max_page_filter: str | None = Field(None, description=FilterSchemaDescription)
     can_raise_not_found: bool = Field(
         False,
         description="Some APIs can raise a not found error (404) when requesting the next page.",
@@ -127,9 +131,10 @@ class PageBasedPaginationConfig(PaginationConfig):
 
 
 class CursorBasedPaginationConfig(PaginationConfig):
+    kind: Literal["CursorBasedPaginationConfig"] = Field("CursorBasedPaginationConfig", **UI_HIDDEN)
     cursor_name: str = "cursor"
-    cursor: str | None = None
-    cursor_filter: str = FilterSchema
+    cursor: str | None = Field(None, **UI_HIDDEN)
+    cursor_filter: str = Field(..., description=FilterSchemaDescription)
 
     def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
         if self.cursor:
@@ -160,7 +165,8 @@ class CursorBasedPaginationConfig(PaginationConfig):
 
 
 class HyperMediaPaginationConfig(PaginationConfig):
-    next_link_filter: str
+    kind: Literal["HyperMediaPaginationConfig"] = Field("HyperMediaPaginationConfig", **UI_HIDDEN)
+    next_link_filter: str = Field(..., description=FilterSchemaDescription)
     next_link: str | None = None
 
     def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
@@ -189,11 +195,7 @@ class HyperMediaPaginationConfig(PaginationConfig):
 
 
 HttpPaginationConfig = (
-    CursorBasedPaginationConfig
-    | PageBasedPaginationConfig
-    | OffsetLimitPaginationConfig
-    | NoopPaginationConfig
-    | HyperMediaPaginationConfig
+    CursorBasedPaginationConfig | PageBasedPaginationConfig | OffsetLimitPaginationConfig | HyperMediaPaginationConfig
 )
 
 

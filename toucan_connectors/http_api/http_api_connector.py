@@ -83,9 +83,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         None,
         description="You can provide a custom template that will be used for every HTTP request",
     )
-    http_pagination_config: HttpPaginationConfig = Field(
-        default_factory=NoopPaginationConfig, title="Pagination configuration"
-    )
+    http_pagination_config: HttpPaginationConfig | None = Field(None, title="Pagination configuration")
 
     def do_request(self, query, session):
         """
@@ -181,7 +179,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                 self.perform_requests(
                     data_source=data_source,
                     session=session,
-                    pagination_config=self.http_pagination_config,
+                    pagination_config=self.http_pagination_config or NoopPaginationConfig(),
                 )
             )
         except HTTPError as exc:
