@@ -5,7 +5,7 @@ from urllib.parse import parse_qs, urlparse
 
 from pydantic import BaseModel, Field
 
-from toucan_connectors.common import UI_HIDDEN, FilterSchemaDescription
+from toucan_connectors.common import UI_HIDDEN, UI_REQUIRED, FilterSchemaDescription
 from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,8 +38,6 @@ class NoopPaginationConfig(PaginationConfig):
     Useful for connectors that can return all results at once.
     """
 
-    kind: Literal["NoopPaginationConfig"] = Field("NoopPaginationConfig", **UI_HIDDEN)
-
     def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
         return data_source
 
@@ -54,7 +52,7 @@ class NoopPaginationConfig(PaginationConfig):
 
 
 class OffsetLimitPaginationConfig(PaginationConfig):
-    kind: Literal["OffsetLimitPaginationConfig"] = Field("OffsetLimitPaginationConfig", **UI_HIDDEN)
+    kind: Literal["OffsetLimitPaginationConfig"] = Field("OffsetLimitPaginationConfig", **UI_HIDDEN, **UI_REQUIRED)
     offset_name: str = "offset"
     offset: int = Field(0, **UI_HIDDEN)
     limit_name: str = "limit"
@@ -84,7 +82,7 @@ class OffsetLimitPaginationConfig(PaginationConfig):
 
 
 class PageBasedPaginationConfig(PaginationConfig):
-    kind: Literal["PageBasedPaginationConfig"] = Field("PageBasedPaginationConfig", **UI_HIDDEN)
+    kind: Literal["PageBasedPaginationConfig"] = Field("PageBasedPaginationConfig", **UI_HIDDEN, **UI_REQUIRED)
     page_name: str = "page"
     page: int = 0
     per_page_name: str | None = None
@@ -131,7 +129,7 @@ class PageBasedPaginationConfig(PaginationConfig):
 
 
 class CursorBasedPaginationConfig(PaginationConfig):
-    kind: Literal["CursorBasedPaginationConfig"] = Field("CursorBasedPaginationConfig", **UI_HIDDEN)
+    kind: Literal["CursorBasedPaginationConfig"] = Field("CursorBasedPaginationConfig", **UI_HIDDEN, **UI_REQUIRED)
     cursor_name: str = "cursor"
     cursor: str | None = Field(None, **UI_HIDDEN)
     cursor_filter: str = Field(..., description=FilterSchemaDescription)
@@ -165,7 +163,7 @@ class CursorBasedPaginationConfig(PaginationConfig):
 
 
 class HyperMediaPaginationConfig(PaginationConfig):
-    kind: Literal["HyperMediaPaginationConfig"] = Field("HyperMediaPaginationConfig", **UI_HIDDEN)
+    kind: Literal["HyperMediaPaginationConfig"] = Field("HyperMediaPaginationConfig", **UI_HIDDEN, **UI_REQUIRED)
     next_link_filter: str = Field(..., description=FilterSchemaDescription)
     next_link: str | None = None
 
