@@ -38,6 +38,8 @@ class NoopPaginationConfig(PaginationConfig):
     Useful for connectors that can return all results at once.
     """
 
+    kind: Literal["NoopPaginationConfig"] = Field("NoopPaginationConfig", **UI_HIDDEN)
+
     def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
         return data_source
 
@@ -52,7 +54,7 @@ class NoopPaginationConfig(PaginationConfig):
 
 
 class OffsetLimitPaginationConfig(PaginationConfig):
-    kind: Literal["OffsetLimitPaginationConfig"] = "OffsetLimitPaginationConfig"
+    kind: Literal["OffsetLimitPaginationConfig"] = Field("OffsetLimitPaginationConfig", **UI_HIDDEN)
     offset_name: str = "offset"
     offset: int = Field(0, **UI_HIDDEN)
     limit_name: str = "limit"
@@ -82,7 +84,7 @@ class OffsetLimitPaginationConfig(PaginationConfig):
 
 
 class PageBasedPaginationConfig(PaginationConfig):
-    kind: Literal["PageBasedPaginationConfig"] = "PageBasedPaginationConfig"
+    kind: Literal["PageBasedPaginationConfig"] = Field("PageBasedPaginationConfig", **UI_HIDDEN)
     page_name: str = "page"
     page: int = 0
     per_page_name: str | None = None
@@ -129,7 +131,7 @@ class PageBasedPaginationConfig(PaginationConfig):
 
 
 class CursorBasedPaginationConfig(PaginationConfig):
-    kind: Literal["CursorBasedPaginationConfig"] = "CursorBasedPaginationConfig"
+    kind: Literal["CursorBasedPaginationConfig"] = Field("CursorBasedPaginationConfig", **UI_HIDDEN)
     cursor_name: str = "cursor"
     cursor: str | None = Field(None, **UI_HIDDEN)
     cursor_filter: str = Field(..., description=FilterSchemaDescription)
@@ -163,7 +165,7 @@ class CursorBasedPaginationConfig(PaginationConfig):
 
 
 class HyperMediaPaginationConfig(PaginationConfig):
-    kind: Literal["HyperMediaPaginationConfig"] = "HyperMediaPaginationConfig"
+    kind: Literal["HyperMediaPaginationConfig"] = Field("HyperMediaPaginationConfig", **UI_HIDDEN)
     next_link_filter: str = Field(..., description=FilterSchemaDescription)
     next_link: str | None = None
 
