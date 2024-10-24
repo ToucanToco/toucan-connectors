@@ -7,7 +7,7 @@ from typing import Any, ContextManager, Generator, Literal, overload
 from pydantic import Field, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 
-from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.common import UI_HIDDEN, ConnectorStatus
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.sql_query_helper import SqlQueryHelper
 from toucan_connectors.toucan_connector import (
@@ -49,9 +49,6 @@ except ImportError as exc:  # pragma: no cover
     CONNECTOR_OK = False
 
 
-_UI_HIDDEN: dict[str, Any] = {"ui.hidden": True}
-
-
 class SnowflakeDataSource(ToucanDataSource["SnowflakeConnector"]):
     database: str = Field(..., description="The name of the database you want to query")
     warehouse: str | None = Field(None, description="The name of the warehouse you want to query")
@@ -63,16 +60,16 @@ class SnowflakeDataSource(ToucanDataSource["SnowflakeConnector"]):
         widget="sql",  # type:ignore[call-arg]
     )
 
-    # Pydantic sees **_UI_HIDDEN as the third argument (the default factory) and raises an error
+    # Pydantic sees **UI_HIDDEN as the third argument (the default factory) and raises an error
     query_object: dict | None = Field(  # type: ignore[pydantic-field]
         None,
         description="An object describing a simple select query"
         "For example "
         '{"schema": "SHOW_SCHEMA", "table": "MY_TABLE", "columns": ["col1", "col2"]}'
         "This field is used internally",
-        **_UI_HIDDEN,
+        **UI_HIDDEN,
     )
-    language: str = Field("sql", **_UI_HIDDEN)  # type: ignore[pydantic-field]
+    language: str = Field("sql", **UI_HIDDEN)  # type: ignore[pydantic-field]
 
     @classmethod
     def _get_databases(cls, connector: "SnowflakeConnector"):

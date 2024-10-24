@@ -259,11 +259,15 @@ def transform_with_jq(data: object, jq_filter: str) -> list:
     return data
 
 
+FilterSchemaDescription: str = (
+    "You can apply filters to json response if data is nested. As we rely on a "
+    "library called jq, we suggest the refer to the dedicated "
+    '<a href="https://stedolan.github.io/jq/manual/">documentation</a>'
+)
+
 FilterSchema = Field(
     ".",
-    description="You can apply filters to json response if data is nested. As we rely on a "
-    "library called jq, we suggest the refer to the dedicated "
-    '<a href="https://stedolan.github.io/jq/manual/">documentation</a>',
+    description=FilterSchemaDescription,
 )
 
 XpathSchema = Field(
@@ -272,6 +276,8 @@ XpathSchema = Field(
     "For reference visit: "
     '<a href="https://developer.mozilla.org/en-US/docs/Web/XPath">documentation</a>',
 )
+
+UI_HIDDEN: dict[str, Any] = {"ui.hidden": True}
 
 
 def get_loop():
