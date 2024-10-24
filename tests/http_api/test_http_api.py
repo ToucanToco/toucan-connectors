@@ -62,22 +62,28 @@ def auth():
 
 @pytest.fixture(scope="function")
 def offset_pagination() -> OffsetLimitPaginationConfig:
-    return OffsetLimitPaginationConfig(offset_name="super_offset", limit_name="super_limit", limit=5)
+    return OffsetLimitPaginationConfig(
+        kind="OffsetLimitPaginationConfig", offset_name="super_offset", limit_name="super_limit", limit=5
+    )
 
 
 @pytest.fixture(scope="function")
 def page_pagination() -> PageBasedPaginationConfig:
-    return PageBasedPaginationConfig(page_name="my_page", per_page_name="my_per_page", per_page=2, page=1)
+    return PageBasedPaginationConfig(
+        kind="PageBasedPaginationConfig", page_name="my_page", per_page_name="my_per_page", per_page=2, page=1
+    )
 
 
 @pytest.fixture(scope="function")
 def cursor_pagination() -> CursorBasedPaginationConfig:
-    return CursorBasedPaginationConfig(cursor_name="my_cursor", cursor_filter=".metadata.next_cursor")
+    return CursorBasedPaginationConfig(
+        kind="CursorBasedPaginationConfig", cursor_name="my_cursor", cursor_filter=".metadata.next_cursor"
+    )
 
 
 @pytest.fixture(scope="function")
 def hyper_media_pagination() -> HyperMediaPaginationConfig:
-    return HyperMediaPaginationConfig(next_link_filter=".metadata.next_link")
+    return HyperMediaPaginationConfig(kind="HyperMediaPaginationConfig", next_link_filter=".metadata.next_link")
 
 
 def test_transform_with_jq():

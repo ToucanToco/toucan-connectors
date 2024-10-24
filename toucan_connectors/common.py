@@ -278,7 +278,6 @@ XpathSchema = Field(
 )
 
 UI_HIDDEN: dict[str, Any] = {"ui.hidden": True}
-UI_REQUIRED: dict[str, Any] = {"ui.required": True}
 
 
 def get_loop():
