@@ -51,7 +51,7 @@ class NoopPaginationConfig(PaginationConfig):
 
 
 class OffsetLimitPaginationConfig(PaginationConfig):
-    kind: Literal["OffsetLimitPaginationConfig"]
+    kind: Literal["OffsetLimitPaginationConfig"] = Field(..., **UI_HIDDEN)
     offset_name: str = "offset"
     offset: int = Field(0, **UI_HIDDEN)
     limit_name: str = "limit"
@@ -81,7 +81,7 @@ class OffsetLimitPaginationConfig(PaginationConfig):
 
 
 class PageBasedPaginationConfig(PaginationConfig):
-    kind: Literal["PageBasedPaginationConfig"]
+    kind: Literal["PageBasedPaginationConfig"] = Field(..., **UI_HIDDEN)
     page_name: str = "page"
     page: int = 0
     per_page_name: str | None = None
@@ -128,7 +128,7 @@ class PageBasedPaginationConfig(PaginationConfig):
 
 
 class CursorBasedPaginationConfig(PaginationConfig):
-    kind: Literal["CursorBasedPaginationConfig"]
+    kind: Literal["CursorBasedPaginationConfig"] = Field(..., **UI_HIDDEN)
     cursor_name: str = "cursor"
     cursor: str | None = Field(None, **UI_HIDDEN)
     cursor_filter: str = Field(..., description=FilterSchemaDescription)
@@ -162,7 +162,7 @@ class CursorBasedPaginationConfig(PaginationConfig):
 
 
 class HyperMediaPaginationConfig(PaginationConfig):
-    kind: Literal["HyperMediaPaginationConfig"]
+    kind: Literal["HyperMediaPaginationConfig"] = Field(..., **UI_HIDDEN)
     next_link_filter: str = Field(..., description=FilterSchemaDescription)
     next_link: str | None = None
 
