@@ -7,9 +7,8 @@ from xml.etree.ElementTree import ParseError, fromstring, tostring
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 from requests.exceptions import HTTPError
 
-from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
+from toucan_connectors.http_api.http_api_data_source import HttpAPIDataSource, apply_pagination_to_data_source
 from toucan_connectors.http_api.pagination_configs import (
-    HttpPaginationConfig,
     NoopPaginationConfig,
     extract_pagination_info_from_result,
 )
@@ -83,9 +82,6 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         None,
         description="You can provide a custom template that will be used for every HTTP request",
     )
-    http_pagination_config: HttpPaginationConfig | None = Field(
-        None, title="Pagination configuration", discriminator="kind"
-    )
 
     def do_request(self, query, session):
         """
@@ -134,14 +130,15 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                     raise
         return data
 
-    def perform_requests(
-        self, data_source: HttpAPIDataSource, session: Session, pagination_config: HttpPaginationConfig
-    ) -> list[Any]:
+    def perform_requests(self, data_source: HttpAPIDataSource, session: Session) -> list[Any]:
         results = []
+        # Extract first http_pagination_config from data_source
+        pagination_config = data_source.http_pagination_config or NoopPaginationConfig()
         while pagination_config is not None:
-            data_source = pagination_config.apply_pagination_to_data_source(data_source)
+            data_source = apply_pagination_to_data_source(data_source, pagination_config)
             query = self._render_query(data_source)
             jq_filter = query["filter"]
+            query.pop("http_pagination_config")
             # Retrieve data
             try:
                 raw_result = self.do_request(query, session)
@@ -162,6 +159,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                 raise
             # Prepare next pagination config
             parsed_pagination_info = None
+            # Extract pagination metadata from api response if needed
             if jq_pagination_filter := pagination_config.get_pagination_info_filter():
                 parsed_pagination_info = extract_pagination_info_from_result(raw_result, jq_pagination_filter)
             pagination_config = pagination_config.get_next_pagination_config(
@@ -175,13 +173,12 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
             session = self.auth.get_session()
         else:
             session = Session()
-
+        # Try retrieve dataset
         try:
             results = pd.DataFrame(
                 self.perform_requests(
                     data_source=data_source,
                     session=session,
-                    pagination_config=self.http_pagination_config or NoopPaginationConfig(),
                 )
             )
         except HTTPError as exc:

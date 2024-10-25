@@ -6,7 +6,6 @@ from urllib.parse import parse_qs, urlparse
 from pydantic import BaseModel, Field
 
 from toucan_connectors.common import UI_HIDDEN, FilterSchemaDescription
-from toucan_connectors.http_api.http_api_data_souce import HttpAPIDataSource
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,8 +14,8 @@ class PaginationConfig(BaseModel, ABC):
     """Base class for pagination configs"""
 
     @abstractmethod
-    def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
-        """Apply pagination to data source and return it"""
+    def plan_pagination_updates_to_data_source(self, request_params: dict[str, Any] | None) -> dict[str, Any]:
+        """Plans pagination updates for data source"""
 
     @abstractmethod
     def get_next_pagination_config(self, result: Any, pagination_info: Any | None) -> Optional["PaginationConfig"]:
@@ -38,8 +37,8 @@ class NoopPaginationConfig(PaginationConfig):
     Useful for connectors that can return all results at once.
     """
 
-    def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
-        return data_source
+    def plan_pagination_updates_to_data_source(self, request_params: dict[str, Any] | None) -> dict[str, Any]:
+        return {}
 
     def get_next_pagination_config(self, result: Any, pagination_info: Any | None) -> Optional["PaginationConfig"]:
         return None
@@ -58,13 +57,13 @@ class OffsetLimitPaginationConfig(PaginationConfig):
     limit_name: str = "limit"
     limit: int
 
-    def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
+    def plan_pagination_updates_to_data_source(self, request_params: dict[str, Any] | None) -> dict[str, Any]:
         offset_limit_params = {self.offset_name: self.offset, self.limit_name: self.limit}
-        if data_source.params is None:
+        if request_params is None:
             data_source_params = offset_limit_params
         else:
-            data_source_params = data_source.params | offset_limit_params
-        return data_source.model_copy(update={"params": data_source_params})
+            data_source_params = request_params | offset_limit_params
+        return {"params": data_source_params}
 
     def get_next_pagination_config(
         self, result: Any, pagination_info: Any | None
@@ -93,15 +92,15 @@ class PageBasedPaginationConfig(PaginationConfig):
         description="Some APIs can raise a not found error (404) when requesting the next page.",
     )
 
-    def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
+    def plan_pagination_updates_to_data_source(self, request_params: dict[str, Any] | None) -> dict[str, Any]:
         page_based_params = {self.page_name: self.page}
         if self.per_page_name:
             page_based_params |= {self.per_page_name: self.per_page}
-        if data_source.params is None:
+        if request_params is None:
             data_source_params = page_based_params
         else:
-            data_source_params = data_source.params | page_based_params
-        return data_source.model_copy(update={"params": data_source_params})
+            data_source_params = request_params | page_based_params
+        return {"params": data_source_params}
 
     def get_next_pagination_config(
         self, result: Any, pagination_info: Any | None
@@ -134,16 +133,16 @@ class CursorBasedPaginationConfig(PaginationConfig):
     cursor: str | None = Field(None, **UI_HIDDEN)
     cursor_filter: str = Field(..., description=FilterSchemaDescription)
 
-    def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
+    def plan_pagination_updates_to_data_source(self, request_params: dict[str, Any] | None) -> dict[str, Any]:
         if self.cursor:
             cursor_params = {self.cursor_name: self.cursor}
-            if data_source.params is None:
+            if request_params is None:
                 data_source_params = cursor_params
             else:
-                data_source_params = data_source.params | cursor_params
-            return data_source.model_copy(update={"params": data_source_params})
+                data_source_params = request_params | cursor_params
+            return {"params": data_source_params}
         else:
-            return data_source
+            return {}
 
     def get_next_pagination_config(
         self, result: Any, pagination_info: Any | None
@@ -167,13 +166,13 @@ class HyperMediaPaginationConfig(PaginationConfig):
     next_link_filter: str = Field(..., description=FilterSchemaDescription)
     next_link: str | None = None
 
-    def apply_pagination_to_data_source(self, data_source: HttpAPIDataSource) -> HttpAPIDataSource:
+    def plan_pagination_updates_to_data_source(self, request_params: dict[str, Any] | None) -> dict[str, Any]:
         if self.next_link:
             url_chunks = urlparse(self.next_link)
-            url_parameters = parse_qs(url_chunks.query) | (data_source.params or {})
-            return data_source.model_copy(update={"url": url_chunks.path, "params": url_parameters})
+            url_parameters = parse_qs(url_chunks.query) | (request_params or {})
+            return {"url": url_chunks.path, "params": url_parameters}
         else:
-            return data_source
+            return {}
 
     def get_next_pagination_config(
         self, result: Any, pagination_info: Any | None

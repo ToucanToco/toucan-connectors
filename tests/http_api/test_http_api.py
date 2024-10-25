@@ -152,7 +152,7 @@ def test_get_df_with_offset_pagination(
         ],
     )
 
-    connector.http_pagination_config = offset_pagination
+    data_source.http_pagination_config = offset_pagination
     df = connector.get_df(data_source)
     assert df.shape == (12, 2)
     assert len(responses.calls) == 3
@@ -191,7 +191,7 @@ def test_get_df_with_page_pagination(
     )
 
     data_source.filter = ".content"
-    connector.http_pagination_config = page_pagination
+    data_source.http_pagination_config = page_pagination
     df = connector.get_df(data_source)
     assert df.shape == (4, 1)
     assert len(responses.calls) == 2
@@ -236,7 +236,7 @@ def test_get_df_with_page_pagination_which_can_raise(
     )
 
     data_source.filter = ".content"
-    connector.http_pagination_config = page_pagination
+    data_source.http_pagination_config = page_pagination
     df = connector.get_df(data_source)
     assert df.shape == (4, 1)
     assert len(responses.calls) == 3
@@ -271,7 +271,7 @@ def test_get_df_with_cursor_pagination(
             "metadata": {"number_of_results": 4},
         },
     )
-    connector.http_pagination_config = cursor_pagination
+    data_source.http_pagination_config = cursor_pagination
     data_source.filter = ".content"
     df = connector.get_df(data_source)
     assert df.shape == (4, 1)
@@ -310,7 +310,7 @@ def test_get_df_with_hyper_media_pagination(
             "metadata": {"number_of_results": 4},
         },
     )
-    connector.http_pagination_config = hyper_media_pagination
+    data_source.http_pagination_config = hyper_media_pagination
     data_source.filter = ".content"
     data_source.params = {"custom": "yes"}
     df = connector.get_df(data_source)
@@ -338,7 +338,7 @@ def test_hyper_media_pagination_raise_if_bad_next_link(
         },
     )
 
-    connector.http_pagination_config = hyper_media_pagination
+    data_source.http_pagination_config = hyper_media_pagination
     data_source.filter = ".content"
     data_source.params = {"custom": "yes"}
     with pytest.raises(ValueError) as exc:
@@ -362,7 +362,7 @@ def test_ignore_if_cant_parse_next_pagination_info(
         ],
     )
 
-    connector.http_pagination_config = hyper_media_pagination  # needs a 'metadata' field to retrieve the next link
+    data_source.http_pagination_config = hyper_media_pagination  # needs a 'metadata' field to retrieve the next link
     # Ok even if 'metadata' is missing in the API response
     df = connector.get_df(data_source)
     assert df.shape == (2, 1)
@@ -770,7 +770,7 @@ def test_get_cache_key(connector, auth, data_source):
     data_source.parameters = {"first_name": "raphael"}
     key = connector.get_cache_key(data_source)
 
-    assert key == "96f415db-63dc-37e4-96df-cb346942c815"
+    assert key == "9ef95981-2aab-3f7f-89d1-b0a300d16f14"
 
     data_source.headers = {"name": "{{ first_name }}"}  # change the templating style
     key2 = connector.get_cache_key(data_source)

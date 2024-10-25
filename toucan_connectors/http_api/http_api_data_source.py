@@ -9,6 +9,10 @@ from toucan_connectors.common import (
     FilterSchema,
     XpathSchema,
 )
+from toucan_connectors.http_api.pagination_configs import (
+    HttpPaginationConfig,
+    PaginationConfig,
+)
 
 
 class Method(str, Enum):
@@ -53,6 +57,9 @@ class HttpAPIDataSource(ToucanDataSource):
     xpath: str = XpathSchema
     filter: str = FilterSchema
     flatten_column: str | None = Field(None, description="Column containing nested rows")
+    http_pagination_config: HttpPaginationConfig | None = Field(
+        None, title="Pagination configuration", discriminator="kind"
+    )
 
     @classmethod
     def model_json_schema(
@@ -80,3 +87,11 @@ class HttpAPIDataSource(ToucanDataSource):
         new_keys = [k for k in keys if k not in last_keys] + last_keys
         schema["properties"] = {k: schema["properties"].get(k) for k in new_keys}
         return schema
+
+
+def apply_pagination_to_data_source(
+    data_source: HttpAPIDataSource, pagination_config: PaginationConfig
+) -> HttpAPIDataSource:
+    """Apply http pagination config to its parameters"""
+    updates = pagination_config.plan_pagination_updates_to_data_source(request_params=data_source.params)
+    return data_source.model_copy(update=updates)
