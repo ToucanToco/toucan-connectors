@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix
+
+- HTTP API: Missing dependencies for the HTTP API connector do not prevent the import of the lib anymore
+
 ## [7.1.0] 2024-10-28
 
 ### Changed
