@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.1.1] 2024-10-28
+
 ### Fix
 
 - HTTP API: Missing dependencies for the HTTP API connector do not prevent the import of the lib anymore
