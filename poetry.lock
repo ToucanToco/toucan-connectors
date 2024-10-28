@@ -398,13 +398,13 @@ crt = ["awscrt (==0.14.0)"]
 
 [[package]]
 name = "cached-property"
-version = "1.5.2"
+version = "2.0.1"
 description = "A decorator for caching properties in classes."
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 files = [
-    {file = "cached-property-1.5.2.tar.gz", hash = "sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130"},
-    {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
+    {file = "cached_property-2.0.1-py3-none-any.whl", hash = "sha256:f617d70ab1100b7bcf6e42228f9ddcb78c676ffa167278d9f730d1c2fba69ccb"},
+    {file = "cached_property-2.0.1.tar.gz", hash = "sha256:484d617105e3ee0e4f1f58725e72a8ef9e93deee462222dbd51cd91230897641"},
 ]
 
 [[package]]
@@ -4400,4 +4400,4 @@ soap = ["lxml", "pandas", "pandas", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "70ea14adadf947cda692732088dc9d5fa79cd796834399307d0045cbae1ca978"
+content-hash = "fa1404605dffd5c6917ff57d8e56d6d0a834e55007ffeb389f9a3be616bb9868"
