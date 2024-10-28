@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- HTTP API: Add a `PaginationConfig` to `HttpAPIDataSource` in order to handle API pagination and fetch all data. It supports the following kinds of pagination: page-based, cursor-based, offset-limit and hypermedia.
+
 ## [7.0.3] 2024-10-04
 
 ### Fix
