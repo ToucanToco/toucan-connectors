@@ -2,21 +2,23 @@ import json
 from enum import Enum
 from logging import getLogger
 from typing import Any, List
-from xml.etree.ElementTree import ParseError, fromstring, tostring
 
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
-from requests.exceptions import HTTPError
 
 from toucan_connectors.http_api.http_api_data_source import HttpAPIDataSource, apply_pagination_to_data_source
-from toucan_connectors.http_api.pagination_configs import (
-    NoopPaginationConfig,
-    extract_pagination_info_from_result,
-)
 
 try:
+    from xml.etree.ElementTree import ParseError, fromstring, tostring
+
     import pandas as pd
     from requests import Session
+    from requests.exceptions import HTTPError
     from xmltodict import parse
+
+    from toucan_connectors.http_api.pagination_configs import (
+        NoopPaginationConfig,
+        extract_pagination_info_from_result,
+    )
 
     CONNECTOR_OK = True
 except ImportError as exc:  # pragma: no cover
@@ -130,7 +132,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                     raise
         return data
 
-    def perform_requests(self, data_source: HttpAPIDataSource, session: Session) -> list[Any]:
+    def perform_requests(self, data_source: HttpAPIDataSource, session: "Session") -> list[Any]:
         results = []
         # Extract first http_pagination_config from data_source
         pagination_config = data_source.http_pagination_config or NoopPaginationConfig()
