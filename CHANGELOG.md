@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fix
+
+- HTTP API: Extract API results dataframes separately and merge them after.
+- HTTP API: Add `data_length_filter` offset pagination config field to determine which part of data must be used to compute the data length.
+
 ## [7.1.1] 2024-10-28
 
 ### Fix
