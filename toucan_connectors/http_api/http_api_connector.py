@@ -1,3 +1,4 @@
+import functools
 import json
 from enum import Enum
 from logging import getLogger
@@ -167,7 +168,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
             pagination_config = pagination_config.get_next_pagination_config(
                 result=parsed_result, pagination_info=parsed_pagination_info
             )
-            results += parsed_result
+            results.append(parsed_result)
         return results
 
     def _retrieve_data(self, data_source: HttpAPIDataSource) -> "pd.DataFrame":
@@ -177,12 +178,11 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
             session = Session()
         # Try retrieve dataset
         try:
-            results = pd.DataFrame(
-                self.perform_requests(
-                    data_source=data_source,
-                    session=session,
-                )
+            results = self.perform_requests(
+                data_source=data_source,
+                session=session,
             )
+            dfs = [pd.DataFrame(result) for result in results]
         except HTTPError as exc:
             if exc.response.status_code == TOO_MANY_REQUESTS:
                 raise HttpAPIConnectorError(
@@ -192,10 +192,9 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                 ) from exc
             else:
                 raise
-
         if data_source.flatten_column:
-            return json_to_table(results, columns=[data_source.flatten_column])
-        return results
+            dfs = [json_to_table(df, columns=[data_source.flatten_column]) for df in dfs]
+        return functools.reduce(lambda df, df_second: df.append(df_second), dfs)
 
     def _render_query(self, data_source):
         query = nosql_apply_parameters_to_query(
