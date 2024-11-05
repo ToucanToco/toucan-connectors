@@ -1,4 +1,3 @@
-import functools
 import json
 from enum import Enum
 from logging import getLogger
@@ -20,7 +19,6 @@ try:
         NoopPaginationConfig,
         extract_pagination_info_from_result,
     )
-    from toucan_connectors.utils.dataframe import append_dataframes
 
     CONNECTOR_OK = True
 except ImportError as exc:  # pragma: no cover
@@ -195,7 +193,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                 raise
         if data_source.flatten_column:
             dfs = [json_to_table(df, columns=[data_source.flatten_column]) for df in dfs]
-        return functools.reduce(append_dataframes, dfs)
+        return pd.concat(dfs)
 
     def _render_query(self, data_source):
         query = nosql_apply_parameters_to_query(

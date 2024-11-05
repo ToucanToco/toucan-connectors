@@ -215,7 +215,7 @@ def test_get_df_with_offset_pagination_and_flatten_option(
             },
         },
     )
-    offset_pagination.data_length_filter = ".items.products"
+    offset_pagination.data_filter = ".items.products"
     data_source.filter = ".items"
     data_source.flatten_column = "products"
     data_source.http_pagination_config = offset_pagination

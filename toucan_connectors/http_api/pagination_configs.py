@@ -56,10 +56,10 @@ class OffsetLimitPaginationConfig(PaginationConfig):
     offset: int = Field(0, **UI_HIDDEN)
     limit_name: str = "limit"
     limit: int
-    data_length_filter: str = Field(
+    data_filter: str = Field(
         ".",
         description=(
-            "Filter to determine the data length and compare it to the limit value. "
+            "Filter to access the received data. Allows to compare its length to the limit value. "
             "It must point to a list of results. " + FilterSchemaDescription
         ),
     )
@@ -84,7 +84,7 @@ class OffsetLimitPaginationConfig(PaginationConfig):
         return None
 
     def get_pagination_info_filter(self) -> str | None:
-        return self.data_length_filter
+        return self.data_filter
 
 
 class PageBasedPaginationConfig(PaginationConfig):
