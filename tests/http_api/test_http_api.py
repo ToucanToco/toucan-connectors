@@ -159,6 +159,72 @@ def test_get_df_with_offset_pagination(
 
 
 @responses.activate
+def test_get_df_with_offset_pagination_and_flatten_option(
+    connector: HttpAPIConnector, data_source: HttpAPIDataSource, offset_pagination: OffsetLimitPaginationConfig
+) -> None:
+    # first page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?super_offset=0&super_limit=5",
+        json={
+            "totalItems": 12,
+            "items": {
+                "product_category": "sofa",
+                "products": [
+                    {"name": "p1", "price": 1},
+                    {"name": "p2", "price": 1},
+                    {"name": "p3", "price": 1},
+                    {"name": "p4", "price": 1},
+                    {"name": "p5", "price": 1},
+                ],
+            },
+        },
+    )
+
+    # second page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?super_offset=5&super_limit=5",
+        json={
+            "totalItems": 12,
+            "items": {
+                "product_category": "kitchen",
+                "products": [
+                    {"name": "p6", "price": 1},
+                    {"name": "p7", "price": 1},
+                    {"name": "p8", "price": 1},
+                    {"name": "p9", "price": 1},
+                    {"name": "p10", "price": 1},
+                ],
+            },
+        },
+    )
+
+    # last page
+    responses.add(
+        responses.GET,
+        "https://jsonplaceholder.typicode.com/comments?super_offset=10&super_limit=5",
+        json={
+            "totalItems": 12,
+            "items": {
+                "product_category": "bedroom",
+                "products": [
+                    {"name": "p11", "price": 1},
+                    {"name": "p12", "price": 1},
+                ],
+            },
+        },
+    )
+    offset_pagination.data_filter = ".items.products"
+    data_source.filter = ".items"
+    data_source.flatten_column = "products"
+    data_source.http_pagination_config = offset_pagination
+    df = connector.get_df(data_source)
+    assert df.shape == (12, 4)
+    assert len(responses.calls) == 3
+
+
+@responses.activate
 def test_get_df_with_page_pagination(
     connector: HttpAPIConnector, data_source: HttpAPIDataSource, page_pagination: PageBasedPaginationConfig
 ) -> None:

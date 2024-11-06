@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Fix
+
+- HTTP API: API results are now correctly merged even if they need to be filtered or flattened. 
+
+### Added
+
+- HTTP API: Add `data_filter` offset pagination config field to determine which part of data must be used to compute the data length.
+
 ## [7.1.1] 2024-10-28
 
 ### Fix

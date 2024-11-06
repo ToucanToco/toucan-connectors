@@ -56,6 +56,13 @@ class OffsetLimitPaginationConfig(PaginationConfig):
     offset: int = Field(0, **UI_HIDDEN)
     limit_name: str = "limit"
     limit: int
+    data_filter: str = Field(
+        ".",
+        description=(
+            "Filter to access the received data. Allows to compare its length to the limit value. "
+            "It must point to a list of results. " + FilterSchemaDescription
+        ),
+    )
 
     def plan_pagination_updates_to_data_source(self, request_params: dict[str, Any] | None) -> dict[str, Any]:
         offset_limit_params = {self.offset_name: self.offset, self.limit_name: self.limit}
@@ -68,7 +75,7 @@ class OffsetLimitPaginationConfig(PaginationConfig):
     def get_next_pagination_config(
         self, result: Any, pagination_info: Any | None
     ) -> Optional["OffsetLimitPaginationConfig"]:
-        if len(result) < self.limit:
+        if len(pagination_info) < self.limit:
             return None
         else:
             return self.model_copy(update={"offset": self.offset + self.limit})
@@ -77,7 +84,7 @@ class OffsetLimitPaginationConfig(PaginationConfig):
         return None
 
     def get_pagination_info_filter(self) -> str | None:
-        return None
+        return self.data_filter
 
 
 class PageBasedPaginationConfig(PaginationConfig):
