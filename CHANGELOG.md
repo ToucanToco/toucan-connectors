@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.2.0] 2024-11-06
+
 ### Fix
 
 - HTTP API: API results are now correctly merged even if they need to be filtered or flattened. 
