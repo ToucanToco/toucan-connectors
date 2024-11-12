@@ -823,12 +823,12 @@ files = [
 
 [[package]]
 name = "dataiku-api-client"
-version = "13.2.1"
+version = "13.2.2.1"
 description = "Python API client for Dataiku APIs"
 optional = true
 python-versions = "*"
 files = [
-    {file = "dataiku-api-client-13.2.1.tar.gz", hash = "sha256:f55bdd4acdfa2996a28c36bdc3415edb2f1074f6db23115880742c563b95f554"},
+    {file = "dataiku-api-client-13.2.2.1.tar.gz", hash = "sha256:3cf03ed7cf562a053ee742674f8e0585bc9b873776b9a4694eb18574f505ceb0"},
 ]
 
 [package.dependencies]
@@ -1177,13 +1177,13 @@ httplib2 = ">=0.19.0"
 
 [[package]]
 name = "google-cloud-bigquery"
-version = "3.26.0"
+version = "3.27.0"
 description = "Google BigQuery API client library"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "google_cloud_bigquery-3.26.0-py2.py3-none-any.whl", hash = "sha256:e0e9ad28afa67a18696e624cbccab284bf2c0a3f6eeb9eeb0426c69b943793a8"},
-    {file = "google_cloud_bigquery-3.26.0.tar.gz", hash = "sha256:edbdc788beea659e04c0af7fe4dcd6d9155344b98951a0d5055bd2f15da4ba23"},
+    {file = "google_cloud_bigquery-3.27.0-py2.py3-none-any.whl", hash = "sha256:b53b0431e5ba362976a4cd8acce72194b4116cdf8115030c7b339b884603fcc3"},
+    {file = "google_cloud_bigquery-3.27.0.tar.gz", hash = "sha256:379c524054d7b090fa56d0c22662cc6e6458a6229b6754c0e7177e3a73421d2c"},
 ]
 
 [package.dependencies]
