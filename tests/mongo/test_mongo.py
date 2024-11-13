@@ -156,6 +156,7 @@ def test_get_df(mocker):
     snock = mocker.patch("pymongo.MongoClient")
     snock.return_value = MongoMock("toucan", "test_col")
     aggregate = mocker.patch("pymongo.collection.Collection.aggregate")
+    aggregate.return_value = [{"foo": 42}]
 
     mongo_connector = MongoConnector(name="mycon", host="localhost", port=22, username="ubuntu", password="ilovetoucan")
 
