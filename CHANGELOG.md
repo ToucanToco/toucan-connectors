@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [7.3.0] 2024-11-13
+
+### Added
+
+- Mongo: Added an optional `chunk_size` param to get_df, to create the dataframe chunk by chunk (saves memory)
+
 ## [7.2.0] 2024-11-06
 
 ### Fix
