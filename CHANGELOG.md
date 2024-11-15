@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## [7.3.1] 2024-11-14
+
+### Fixed
+
+- Mongo: correctly type the aggregation pipeline, expected when `query` is a `list`
+
+
 ## [7.3.0] 2024-11-13
 
 ### Added
@@ -12,7 +19,7 @@
 
 ### Fix
 
-- HTTP API: API results are now correctly merged even if they need to be filtered or flattened. 
+- HTTP API: API results are now correctly merged even if they need to be filtered or flattened.
 
 ### Added
 
