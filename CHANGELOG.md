@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.3.2] 2024-11-19
+
 ### Fixed
 
 - Mongo: when reading data by chunk, ignore each individual chunk index when concatenating them.
