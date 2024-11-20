@@ -269,7 +269,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
             chunks = []
             while (chunk := list(itertools.islice(data, chunk_size))):
                 chunks.append(pd.DataFrame.from_records(chunk))
-            return pd.concat(chunks) if chunks else pd.DataFrame()
+            return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
         else:
             return pd.DataFrame.from_records(data)
 
