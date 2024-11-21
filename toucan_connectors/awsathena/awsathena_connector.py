@@ -36,17 +36,17 @@ class AwsathenaDataSource(ToucanDataSource):
         ..., description="The name of the database you want to query."
     )
     # To avoid previous config migrations, won't be used
-    table: str | None = Field(None, **{"ui.hidden": True})  # type:ignore[arg-type,pydantic-field]
-    language: str = Field("sql", **{"ui.hidden": True})  # type:ignore[arg-type,pydantic-field]
-    query: Annotated[str | None, StringConstraints(min_length=1)] = Field(  # type:ignore[call-arg]
+    table: str | None = Field(None, **{"ui.hidden": True})  # type: ignore[call-overload]
+    language: str = Field("sql", **{"ui.hidden": True})  # type: ignore[call-overload]
+    query: Annotated[str | None, StringConstraints(min_length=1)] = Field(  # type: ignore[call-overload]
         None,
         description="The SQL query to execute.",
         widget="sql",
     )
-    query_object: dict | None = Field(  # type:ignore[pydantic-field]
+    query_object: dict | None = Field(  # type: ignore[call-overload]
         None,
         description="An object describing a simple select query This field is used internally",
-        **{"ui.hidden": True},  # type:ignore[arg-type]
+        **{"ui.hidden": True},
     )
     use_ctas: bool = Field(
         False,

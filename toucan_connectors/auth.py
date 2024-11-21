@@ -113,13 +113,13 @@ class AuthType(str, Enum):
 
 # mypy complains about the `kwargs` field
 class Auth(BaseModel):  # type:ignore[no-redef]
-    type: AuthType = Field(
+    type: AuthType = Field(  # type:ignore[call-overload]
         ...,
         description="As we rely on the python request library, we suggest that you "
         "refer to the dedicated "
         '<a href="https://2.python-requests.org/en/master/user/authentication/">documentation</a> '
         "for more details.",
-        description_mimetype="text/html",  # type:ignore[call-arg]
+        description_mimetype="text/html",
     )
     args: list[str] = Field(
         default_factory=list,

@@ -71,29 +71,29 @@ class SnowflakeoAuth2DataSource(SfDataSource):
 
 
 class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth2DataSource):
-    client_id: str = Field(  # type: ignore[pydantic-field]
+    client_id: str = Field(  # type: ignore[call-overload]
         "",
         title="Client ID",
         description="The client id of you Snowflake integration",
-        **{"ui.required": True},  # type: ignore[arg-type]
+        **{"ui.required": True},
     )
-    client_secret: PlainJsonSecretStr = Field(  # type: ignore[pydantic-field]
+    client_secret: PlainJsonSecretStr = Field(  # type: ignore[call-overload]
         "",
         title="Client Secret",
         description="The client secret of your Snowflake integration",
-        **{"ui.required": True},  # type: ignore[arg-type]
+        **{"ui.required": True},
     )
-    authorization_url: str = Field(None, **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
-    scope: str = Field(None, Title="Scope", description="The scope the integration", placeholder="refresh_token")  # type: ignore[call-arg,assignment]
-    token_url: str = Field(None, **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
-    auth_flow_id: str = Field(None, **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
+    authorization_url: str = Field(None, **{"ui.hidden": True})  # type: ignore[call-overload]
+    scope: str = Field(None, Title="Scope", description="The scope the integration", placeholder="refresh_token")  # type: ignore[call-overload]
+    token_url: str = Field(None, **{"ui.hidden": True})  # type: ignore[call-overload]
+    auth_flow_id: str = Field(None, **{"ui.hidden": True})  # type: ignore[call-overload]
     _auth_flow = "oauth2"
     _oauth_trigger = "connector"
-    oauth2_version: str = Field("1", **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
-    redirect_uri: str = Field(None, **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
+    oauth2_version: str = Field("1", **{"ui.hidden": True})  # type: ignore[call-overload]
+    redirect_uri: str = Field(None, **{"ui.hidden": True})  # type: ignore[call-overload]
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
-    role: str = Field(  # type: ignore[call-arg]
+    role: str = Field(  # type: ignore[call-overload]
         ...,
         title="Role",
         description="Role to use for queries",
@@ -108,7 +108,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',  # noqa: E501
     )
     default_warehouse: str = Field(..., description="The default warehouse that shall be used for any data source")
-    category: Category = Field(Category.SNOWFLAKE, title="category", **{"ui": {"checkbox": False}})  # type: ignore[pydantic-field,arg-type]
+    category: Category = Field(Category.SNOWFLAKE, title="category", **{"ui": {"checkbox": False}})  # type: ignore[call-overload]
 
     def __init__(self, **kwargs):
         super().__init__(**{k: v for k, v in kwargs.items() if k != "secrets_keeper"})

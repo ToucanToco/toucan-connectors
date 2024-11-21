@@ -33,23 +33,23 @@ DEFAULT_DATABASE = "postgres"
 
 class PostgresDataSource(ToucanDataSource):
     database: str = Field(DEFAULT_DATABASE, description="The name of the database you want to query")
-    query: Annotated[str | None, StringConstraints(min_length=1)] = Field(  # type:ignore[call-arg]
+    query: Annotated[str | None, StringConstraints(min_length=1)] = Field(  # type: ignore[call-overload]
         None,
         description="You can write a custom query against your "
         "database here. It will take precedence over "
         'the "table" parameter',
         widget="sql",
     )
-    query_object: dict | None = Field(  # type:ignore[pydantic-field]
+    query_object: dict | None = Field(  # type: ignore[call-overload]
         None,
         description="An object describing a simple select query" "This field is used internally",
-        **{"ui.hidden": True},  # type:ignore[arg-type]
+        **{"ui.hidden": True},
     )
     table: Annotated[str | None, StringConstraints(min_length=1)] = Field(
         None,
         description="The name of the data table that you want to " 'get (equivalent to "SELECT * FROM ' 'your_table")',
     )
-    language: str = Field("sql", **{"ui.hidden": True})  # type:ignore[pydantic-field,arg-type]
+    language: str = Field("sql", **{"ui.hidden": True})  # type: ignore[call-overload]
 
     def __init__(self, **data):
         super().__init__(**data)

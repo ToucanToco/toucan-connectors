@@ -196,7 +196,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
     def _get_mongo_client_kwargs(self) -> dict[str, Any]:
         # We don't want parent class attributes nor the `client` property
         # nor attributes with `None` value
-        to_exclude = set(ToucanConnector.model_fields.keys()) | {"client", "max_pool_size"}
+        to_exclude = set(ToucanConnector.__pydantic_fields__.keys()) | {"client", "max_pool_size"}
         mongo_client_kwargs = self.model_dump(exclude=to_exclude, exclude_none=True).copy()
 
         if "password" in mongo_client_kwargs:
@@ -267,7 +267,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
 
         if chunk_size:
             chunks = []
-            while (chunk := list(itertools.islice(data, chunk_size))):
+            while chunk := list(itertools.islice(data, chunk_size)):
                 chunks.append(pd.DataFrame.from_records(chunk))
             return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
         else:
