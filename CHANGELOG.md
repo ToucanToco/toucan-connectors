@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [7.3.3] 2024-11-21
+
+### Fixed
+
+- The lib is now compatible with pydantic 2.10
+
 ## [7.3.2] 2024-11-19
 
 ### Fixed
