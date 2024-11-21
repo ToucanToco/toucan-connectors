@@ -64,7 +64,7 @@ def test_get_form(mocker, connector, create_datasource):
     mocker.patch(f"{import_path}.SoapDataSource._get_methods_docs", return_value={"fake_func": "coucou"})
     form = create_datasource.get_form(connector, {})
     assert form["properties"]["parameters"]["description"] == "Services documentation: <br> coucou"
-    assert form["$defs"]["method"]["const"] == "fake_func"
+    assert form["$defs"]["method"] == {"enum": ["fake_func"], "title": "method", "type": "string"}
 
 
 def test_create_client(mocker, connector):

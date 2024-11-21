@@ -156,7 +156,7 @@ def test_get_form_query_with_good_database(clickhouse_connector):
         "type": "string",
     }
     assert form["properties"]["table"] == {"$ref": "#/$defs/table", "default": None}
-    assert form["$defs"]["table"] == {"const": "city", "enum": ["city"], "title": "table", "type": "string"}
+    assert form["$defs"]["table"] == {"enum": ["city"], "title": "table", "type": "string"}
     assert form["required"] == ["domain", "name", "database"]
 
 

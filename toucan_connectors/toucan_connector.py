@@ -300,7 +300,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     retry_policy: RetryPolicy | None = RetryPolicy()
     _retry_on: Iterable[Type[BaseException]] = ()
     type: str | None = None
-    secrets_storage_version: str = Field("1", **UI_HIDDEN)  # type:ignore[pydantic-field]
+    secrets_storage_version: str = Field("1", **UI_HIDDEN)
 
     # Default ttl for all connector's queries (overridable at the data_source level)
     # /!\ cache ttl is used by the caching system which is not implemented in toucan_connectors.
@@ -311,7 +311,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
     )
 
     # Used to defined the connection
-    identifier: str | None = Field(None, **UI_HIDDEN)  # type:ignore[pydantic-field]
+    identifier: str | None = Field(None, **UI_HIDDEN)
     model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
     @property

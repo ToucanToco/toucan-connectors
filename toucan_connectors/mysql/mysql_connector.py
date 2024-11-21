@@ -68,25 +68,25 @@ class MySQLDataSource(ToucanDataSource):
     """
 
     database: str = Field(..., description="The name of the database you want to query")
-    follow_relations: bool | None = Field(  # type: ignore[pydantic-field]
+    follow_relations: bool | None = Field(  # type: ignore[call-overload]
         None,
-        **{"ui.hidden": True},  # type: ignore[arg-type]
+        **{"ui.hidden": True},
         description="Deprecated, kept for compatibility purpose with old data sources configs",
     )
-    table: str | None = Field(None, **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
-    query: Annotated[str, StringConstraints(min_length=1)] | None = Field(  # type: ignore[call-arg]
+    table: str | None = Field(None, **{"ui.hidden": True})  # type: ignore[call-overload]
+    query: Annotated[str, StringConstraints(min_length=1)] | None = Field(  # type: ignore[call-overload]
         None,
         description="You can write a custom query against your "
         "database here. It will take precedence over "
         'the "table" parameter',
         widget="sql",
     )
-    query_object: dict | None = Field(  # type: ignore[pydantic-field]
+    query_object: dict | None = Field(  # type: ignore[call-overload]
         None,
         description="An object describing a simple select query" "This field is used internally",
-        **{"ui.hidden": True},  # type: ignore[arg-type]
+        **{"ui.hidden": True},
     )
-    language: str = Field("sql", **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
+    language: str = Field("sql", **{"ui.hidden": True})  # type: ignore[call-overload]
 
     @classmethod
     def get_form(cls, connector: "MySQLConnector", current_config: dict[str, Any]) -> dict:

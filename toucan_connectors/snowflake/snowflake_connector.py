@@ -53,15 +53,15 @@ class SnowflakeDataSource(ToucanDataSource["SnowflakeConnector"]):
     database: str = Field(..., description="The name of the database you want to query")
     warehouse: str | None = Field(None, description="The name of the warehouse you want to query")
 
-    query: str = Field(
+    query: str = Field(  # type:ignore[call-overload]
         ...,
         description="You can write your SQL query here",
         min_length=1,
-        widget="sql",  # type:ignore[call-arg]
+        widget="sql",
     )
 
     # Pydantic sees **UI_HIDDEN as the third argument (the default factory) and raises an error
-    query_object: dict | None = Field(  # type: ignore[pydantic-field]
+    query_object: dict | None = Field(
         None,
         description="An object describing a simple select query"
         "For example "
@@ -69,7 +69,7 @@ class SnowflakeDataSource(ToucanDataSource["SnowflakeConnector"]):
         "This field is used internally",
         **UI_HIDDEN,
     )
-    language: str = Field("sql", **UI_HIDDEN)  # type: ignore[pydantic-field]
+    language: str = Field("sql", **UI_HIDDEN)
 
     @classmethod
     def _get_databases(cls, connector: "SnowflakeConnector"):
@@ -147,20 +147,20 @@ class SnowflakeConnector(
     sso_credentials_keeper: Any = None
     user_tokens_keeper: Any = None
 
-    account: str = Field(
+    account: str = Field(  # type:ignore[call-overload]
         ...,
         description="The full name of your Snowflake account. "
         "It might require the region and cloud platform where your account is located, "
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',  # noqa: E501
-        placeholder="your_account_name.region_id.cloud_platform",  # type:ignore[call-arg]
+        placeholder="your_account_name.region_id.cloud_platform",
     )
 
-    authentication_method: AuthenticationMethod = Field(
+    authentication_method: AuthenticationMethod = Field(  # type:ignore[call-overload]
         AuthenticationMethod.PLAIN,
         title="Authentication Method",
         description="The authentication mechanism that will be used to connect to your snowflake data source",
-        ui={"checkbox": False},  # type:ignore[call-arg]
+        ui={"checkbox": False},
     )
 
     user: str = Field(..., description="Your login username")
@@ -180,10 +180,10 @@ class SnowflakeConnector(
     default_warehouse: str | None = Field(
         None, description="The default warehouse that shall be used for any data source"
     )
-    category: Category = Field(
+    category: Category = Field(  # type:ignore[call-overload]
         Category.SNOWFLAKE,
         title="category",
-        ui={"checkbox": False},  # type:ignore[call-arg]
+        ui={"checkbox": False},
     )
 
     @classmethod

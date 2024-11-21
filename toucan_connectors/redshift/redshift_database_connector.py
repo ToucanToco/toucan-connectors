@@ -85,19 +85,19 @@ class AuthenticationMethodError(str, Enum):
 
 class RedshiftDataSource(ToucanDataSource):
     database: str = Field(DEFAULT_DATABASE, description="The name of the database you want to query")
-    query: Annotated[str, StringConstraints(min_length=1)] = Field(  # type: ignore[call-arg,assignment]
+    query: Annotated[str, StringConstraints(min_length=1)] = Field(  # type: ignore[call-overload]
         None,
         description="You can write a custom query against your "
         "database here. It will take precedence over "
         "the table parameter",
         widget="sql",
     )
-    query_object: dict[str, Any] = Field(  # type: ignore[pydantic-field]
+    query_object: dict[str, Any] = Field(  # type: ignore[call-overload]
         None,
         description="An object describing a simple select query, this field is used internally",
-        **{"ui.hidden": True},  # type: ignore[arg-type]
+        **{"ui.hidden": True},
     )
-    language: str = Field("sql", **{"ui.hidden": True})  # type: ignore[pydantic-field,arg-type]
+    language: str = Field("sql", **{"ui.hidden": True})  # type: ignore[call-overload]
 
     @classmethod
     def get_form(cls, connector: "RedshiftConnector", current_config: dict[str, Any]):
@@ -114,11 +114,11 @@ class RedshiftDataSource(ToucanDataSource):
 
 
 class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_model=RedshiftDataSource):
-    authentication_method: AuthenticationMethod = Field(  # type: ignore[pydantic-field]
+    authentication_method: AuthenticationMethod = Field(  # type: ignore[call-overload]
         None,
         title="Authentication Method",
         description="The authentication mechanism that will be used to connect to your redshift data source",
-        **{"ui": {"checkbox": False}},  # type: ignore[arg-type]
+        **{"ui": {"checkbox": False}},
     )
     host: str = Field(..., description="The hostname of the Amazon Redshift cluster")
     port: int = Field(5439, description="The listening port of your Redshift Database")

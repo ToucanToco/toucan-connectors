@@ -81,19 +81,19 @@ class Dialect(str, Enum):
 
 
 class GoogleBigQueryDataSource(ToucanDataSource):
-    query: str = Field(
+    query: str = Field(  # type: ignore[call-overload]
         ...,
         description="You can find details on the query syntax "
         '<a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax">here</a>',
-        widget="sql",  # type:ignore[call-arg]
+        widget="sql",
     )
-    query_object: dict | None = Field(  # type:ignore[pydantic-field]
+    query_object: dict | None = Field(  # type: ignore[call-overload]
         None,
         description="An object describing a simple select query This field is used internally",
-        **{"ui.hidden": True},  # type:ignore[arg-type]
+        **{"ui.hidden": True},
     )
-    language: str = Field("sql", **{"ui.hidden": True})  # type:ignore[arg-type,pydantic-field]
-    database: str | None = Field(None, **{"ui.hidden": True})  # type:ignore[arg-type,pydantic-field]
+    language: str = Field("sql", **{"ui.hidden": True})  # type: ignore[call-overload]
+    database: str | None = Field(None, **{"ui.hidden": True})  # type: ignore[call-overload]
     db_schema: str | None = Field(None, description="The name of the db_schema you want to query.")
 
     @classmethod
