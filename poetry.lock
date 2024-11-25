@@ -2229,13 +2229,13 @@ invoke = ["invoke (>=2.0)"]
 
 [[package]]
 name = "peakina"
-version = "0.14.0"
+version = "0.15.0"
 description = "pandas readers on steroids (remote files, glob patterns, cache, etc.)"
 optional = true
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "peakina-0.14.0-py3-none-any.whl", hash = "sha256:d760d06f5ac5781ed830686aaf03513dd15c72c78596cfa6dc8c0ecb04e4186b"},
-    {file = "peakina-0.14.0.tar.gz", hash = "sha256:90a040edcbd8353434745cd46b28b8f9f1e9630d07671de6b820902a5d1f8bf1"},
+    {file = "peakina-0.15.0-py3-none-any.whl", hash = "sha256:6f15dcf417b53a1e054f21b3a899cc7537a1e2347d343a0d0eca3ded1e3a61cd"},
+    {file = "peakina-0.15.0.tar.gz", hash = "sha256:631f68c73ac82f60b4658ac8435ce15864c53f6ac4d3c36a0d16517f51cac83d"},
 ]
 
 [package.dependencies]
