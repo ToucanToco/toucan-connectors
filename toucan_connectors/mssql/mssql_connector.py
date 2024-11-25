@@ -1,8 +1,8 @@
 from contextlib import suppress
 from logging import getLogger
+from typing import Annotated
 
 from pydantic import Field, StringConstraints, create_model
-from typing_extensions import Annotated
 
 try:
     import pyodbc

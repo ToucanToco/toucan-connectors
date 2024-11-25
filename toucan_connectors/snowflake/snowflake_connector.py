@@ -1,8 +1,9 @@
 import logging
-from contextlib import contextmanager, suppress
+from collections.abc import Generator
+from contextlib import AbstractContextManager, contextmanager, suppress
 from datetime import datetime
 from enum import Enum
-from typing import Any, ContextManager, Generator, Literal, overload
+from typing import Any, Literal, overload
 
 from pydantic import Field, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
@@ -335,7 +336,7 @@ class SnowflakeConnector(
 
     def _get_connection(
         self, database: str | None = None, warehouse: str | None = None
-    ) -> ContextManager["SnowflakeConnection"]:
+    ) -> AbstractContextManager["SnowflakeConnection"]:
         if self.authentication_method == AuthenticationMethod.OAUTH:
             _LOGGER.info("Refreshing OAuth token...")
             self._refresh_oauth_token()

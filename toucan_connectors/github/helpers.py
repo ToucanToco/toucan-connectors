@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from typing import List
 
 import pandas as pd
 
@@ -199,7 +198,7 @@ def format_pr_row(pr_row: dict):
     return current_record
 
 
-def format_pr_rows(pr_nodes: dict, repo_name: str) -> List[dict]:
+def format_pr_rows(pr_nodes: dict, repo_name: str) -> list[dict]:
     """
     A wrapper function to multiprocess the pull requests formatting
     :param pr_rows: pull requests extracted from Github's API
@@ -229,7 +228,7 @@ def format_team_row(members: dict, team_name: str) -> dict:
     return devs.to_dict().get("variable")
 
 
-def format_team_df(team_rows: List[dict]) -> pd.DataFrame:
+def format_team_df(team_rows: list[dict]) -> pd.DataFrame:
     """
     Builds a Pandas DataFrame from members rows.
     :param team_rows: a list of dict with login as key and list
@@ -312,7 +311,7 @@ def get_teams(organization: dict):
         raise KeyNotFoundException("No teams Key Available")
 
 
-def get_nodes(response: dict) -> List[dict]:
+def get_nodes(response: dict) -> list[dict]:
     """
     Extracts value from a dict with nodes key or raises an error if the key is not available
     :param response: a response from Github's API
@@ -322,7 +321,7 @@ def get_nodes(response: dict) -> List[dict]:
     return nodes
 
 
-def get_edges(data: dict) -> List[dict]:
+def get_edges(data: dict) -> list[dict]:
     """
     Extracts value from a dict with edges key or raises an error if the key is not available
     :param data: data extracted from Github's API

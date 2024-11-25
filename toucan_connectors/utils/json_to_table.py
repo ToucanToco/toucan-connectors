@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import TYPE_CHECKING, Any, Union
 
 if TYPE_CHECKING:  # pragma: no cover
     from pandas import DataFrame, Series
@@ -13,7 +13,7 @@ def _first_valid_value(serie: "Series") -> Any:
     return serie[first_valid_index] if first_valid_index is not None else None
 
 
-def json_to_table(df: "DataFrame", columns: Union[str, List[str]], sep: str = ".") -> "DataFrame":
+def json_to_table(df: "DataFrame", columns: Union[str, list[str]], sep: str = ".") -> "DataFrame":
     """
     Flatten JSON into a table shape. Add lines for each element of a nested array.
     Add columns for each keys of a nested object / dict.

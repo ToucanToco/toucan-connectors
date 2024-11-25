@@ -1,7 +1,8 @@
+from collections.abc import Generator
 from contextlib import suppress
 from datetime import datetime
 from logging import getLogger
-from typing import Any, Generator, Protocol, TypeAlias
+from typing import Any, Protocol, TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Field, create_model
 

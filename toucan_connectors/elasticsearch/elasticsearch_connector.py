@@ -1,7 +1,6 @@
 from copy import deepcopy
 from enum import Enum
 from logging import getLogger
-from typing import List
 from urllib.parse import urlparse
 
 try:
@@ -125,7 +124,7 @@ class ElasticsearchDataSource(ToucanDataSource):
 
 
 class ElasticsearchConnector(ToucanConnector, data_source_model=ElasticsearchDataSource):
-    hosts: List[ElasticsearchHost]
+    hosts: list[ElasticsearchHost]
 
     def _retrieve_data(self, data_source: ElasticsearchDataSource) -> "pd.DataFrame":
         data_source.body = nosql_apply_parameters_to_query(data_source.body, data_source.parameters)

@@ -1,7 +1,7 @@
 from contextlib import suppress
 from datetime import datetime
 from logging import getLogger
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Optional
 
 try:
     import numpy as np
@@ -110,7 +110,7 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
     def build_oauth2(self):
         return build("oauth2", "v2", cache_discovery=False, **self._google_client_build_kwargs())
 
-    def list_sheets(self, spreadsheet_id: str) -> List[str]:
+    def list_sheets(self, spreadsheet_id: str) -> list[str]:
         """
         List available sheets
         """

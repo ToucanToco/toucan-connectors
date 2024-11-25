@@ -1,8 +1,7 @@
 from logging import getLogger
-from typing import Optional
+from typing import Annotated, Optional
 
 from pydantic import Field, StringConstraints, create_model
-from typing_extensions import Annotated
 
 from toucan_connectors.common import ConnectorStatus, pandas_read_sql
 from toucan_connectors.postgres.utils import build_database_model_extraction_query, types

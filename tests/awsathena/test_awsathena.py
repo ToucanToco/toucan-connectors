@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import Optional
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -48,7 +48,7 @@ def mocked_boto_session(mocker):
 
 
 @pytest.fixture
-def status_checks() -> List[str]:
+def status_checks() -> list[str]:
     return [
         "Host resolved",
         "Port opened",

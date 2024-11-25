@@ -1,11 +1,12 @@
 import logging
 import re
+from collections.abc import Iterable
 from contextlib import suppress
 from enum import Enum
 from functools import cached_property
 from itertools import groupby
 from timeit import default_timer as timer
-from typing import Any, Iterable, Union
+from typing import Any, Union
 
 from pydantic import ConfigDict, Field, create_model
 

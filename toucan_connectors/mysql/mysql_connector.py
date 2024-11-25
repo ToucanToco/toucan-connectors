@@ -1,14 +1,14 @@
 import logging
 import os
 import re
+from collections.abc import Generator
 from enum import Enum
 from itertools import groupby as groupby
 from tempfile import NamedTemporaryFile
-from typing import Any, Generator, Optional
+from typing import Annotated, Any, Optional
 
 from cached_property import cached_property_with_ttl
 from pydantic import ConfigDict, Field, StringConstraints, create_model, model_validator
-from typing_extensions import Annotated
 
 from toucan_connectors.common import (
     ConnectorStatus,

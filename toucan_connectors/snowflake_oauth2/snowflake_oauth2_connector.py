@@ -3,7 +3,7 @@ import logging
 import uuid
 from contextlib import suppress
 from timeit import default_timer as timer
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import Field, PrivateAttr, create_model
 
@@ -236,7 +236,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
     def _get_unique_datasource_identifier(self, data_source: SnowflakeoAuth2DataSource) -> dict:
         return SnowflakeCommon().render_datasource(data_source)
 
-    def _get_warehouses(self, warehouse_name: Optional[str] = None) -> List[str]:
+    def _get_warehouses(self, warehouse_name: Optional[str] = None) -> list[str]:
         with self._get_connection(warehouse=warehouse_name) as connection:
             result = SnowflakeCommon().get_warehouses(connection, warehouse_name)
         return result
@@ -247,7 +247,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
             data_source.warehouse = self.default_warehouse
         return data_source
 
-    def _get_databases(self, database_name: Optional[str] = None) -> List[str]:
+    def _get_databases(self, database_name: Optional[str] = None) -> list[str]:
         with self._get_connection(database=database_name) as connection:
             result = SnowflakeCommon().get_databases(connection, database_name)
         return result
@@ -275,7 +275,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
             )
         return result
 
-    def describe(self, data_source: SnowflakeoAuth2DataSource) -> Dict[str, str]:
+    def describe(self, data_source: SnowflakeoAuth2DataSource) -> dict[str, str]:
         data_source = self._set_warehouse(data_source)
         with self._get_connection(data_source.database, data_source.warehouse) as connection:
             result = SnowflakeCommon().describe(connection, data_source.query)

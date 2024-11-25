@@ -3,7 +3,7 @@ import re
 from contextlib import suppress
 from enum import Enum
 from functools import cached_property
-from typing import Any, Type
+from typing import Annotated, Any
 
 from pydantic import (
     ConfigDict,
@@ -14,7 +14,6 @@ from pydantic import (
     model_validator,
 )
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
-from typing_extensions import Annotated
 
 try:
     import pandas as pd
@@ -160,7 +159,8 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
         cls,
         by_alias: bool = True,
         ref_template: str = DEFAULT_REF_TEMPLATE,
-        schema_generator: Type[GenerateJsonSchema] = GenerateJsonSchema,
+        # mypy thinkgs that `type` refers to ToucanConnector.type
+        schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,  # type:ignore[valid-type]
         mode: JsonSchemaMode = "validation",
     ) -> dict[str, Any]:
         schema = super().model_json_schema(

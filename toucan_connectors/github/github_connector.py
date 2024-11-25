@@ -5,7 +5,7 @@ from contextlib import suppress
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from dateutil import relativedelta
 from pydantic import Field, PrivateAttr, create_model
@@ -209,7 +209,7 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
         retries=0,
         retry_limit=2,
         latest_retrieved_object=None,
-    ) -> List[dict]:
+    ) -> list[dict]:
         """
         Extracts pages of either members or pull requests
         :param name a str representing the repo name

@@ -10,9 +10,10 @@ except ImportError as exc:  # pragma: no cover
     getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
     CONNECTOR_OK = False
 
+from typing import Annotated
+
 from pydantic import Field, StringConstraints, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
-from typing_extensions import Annotated
 
 from toucan_connectors.common import pandas_read_sql
 from toucan_connectors.toucan_connector import (
