@@ -1,7 +1,7 @@
 import json
 from enum import Enum
 from logging import getLogger
-from typing import Any, List
+from typing import Any
 
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 
@@ -78,7 +78,7 @@ class Template(BaseModel):
 class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
     responsetype: ResponseType = Field(ResponseType.json, title="Content-type of response")
     baseroute: AnyHttpUrl = Field(..., title="Baseroute URL", description="Baseroute URL")
-    cert: List[FilePath] | None = Field(None, title="Certificate", description="File path of your certificate if any")
+    cert: list[FilePath] | None = Field(None, title="Certificate", description="File path of your certificate if any")
     auth: Auth | None = Field(None, title="Authentication type")
     template: Template | None = Field(
         None,

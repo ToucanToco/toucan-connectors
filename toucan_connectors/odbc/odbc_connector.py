@@ -1,7 +1,7 @@
 from logging import getLogger
+from typing import Annotated
 
 from pydantic import Field, StringConstraints
-from typing_extensions import Annotated
 
 try:
     import pandas as pd

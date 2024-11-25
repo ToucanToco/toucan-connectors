@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Dict
 
 from pydantic import SecretStr
 
@@ -88,7 +87,7 @@ class JsonWrapper:
         parse_constant=None,
         object_pairs_hook=None,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         return JsonWrapper.loads(
             fp.read(),
             cls=cls,
@@ -111,7 +110,7 @@ class JsonWrapper:
         parse_constant=None,
         object_pairs_hook=None,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         logging.getLogger(__name__).debug(f"Stringify JSON {s}")
         result = json.loads(
             s,

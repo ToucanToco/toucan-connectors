@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import Field, PrivateAttr
 
@@ -58,7 +58,7 @@ class OneDriveDataSource(ToucanDataSource):
         description="Read one table or append multiple tables",
         placeholder="Enter a table or a comma separated list of tables",
     )
-    parse_dates: Optional[List[str]] = Field(
+    parse_dates: Optional[list[str]] = Field(
         [],
         Title="Date columns",
         description="By default, dates are converted in the number of days since 1900/01/01",
@@ -224,7 +224,7 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
 
         return response.json()
 
-    def _retrieve_files_path(self, data_source: OneDriveDataSource) -> List[str]:
+    def _retrieve_files_path(self, data_source: OneDriveDataSource) -> list[str]:
         logging.getLogger(__name__).debug("_retrieve_files_path")
         path = None
         # Split the "file" input to retrieve the path & the pattern

@@ -5,10 +5,11 @@ import re
 import socket
 import uuid
 from abc import ABC, ABCMeta, abstractmethod
+from collections.abc import Iterable
 from enum import Enum
 from functools import reduce, wraps
 from types import ModuleType
-from typing import TYPE_CHECKING, Annotated, Any, Generic, Iterable, NamedTuple, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Annotated, Any, Generic, NamedTuple, TypeVar, Union
 
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, SecretStr
 from pydantic.fields import ModelPrivateAttr
@@ -298,7 +299,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
 
     name: str = Field(...)
     retry_policy: RetryPolicy | None = RetryPolicy()
-    _retry_on: Iterable[Type[BaseException]] = ()
+    _retry_on: Iterable[type[BaseException]] = ()
     type: str | None = None
     secrets_storage_version: str = Field("1", **UI_HIDDEN)
 

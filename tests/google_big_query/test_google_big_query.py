@@ -1,6 +1,7 @@
 import json
+from collections.abc import Generator
 from os import environ
-from typing import Any, Generator
+from typing import Any
 from unittest.mock import patch
 
 import numpy as np

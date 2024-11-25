@@ -1,6 +1,7 @@
 import tempfile
+from collections.abc import Generator
 from datetime import datetime, timedelta
-from typing import Any, Generator
+from typing import Any
 
 import openpyxl
 import pandas as pd

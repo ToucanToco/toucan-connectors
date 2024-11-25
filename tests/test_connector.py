@@ -1,5 +1,4 @@
 from time import time
-from typing import List
 
 import pandas as pd
 import pytest
@@ -346,7 +345,7 @@ def test_default_implementation_of_discoverable_connector():
             schema_name: str | None = None,
             table_name: str | None = None,
             exclude_columns: bool = False,
-        ) -> List[TableInfo]:
+        ) -> list[TableInfo]:
             model = [("database", "schema", "type", "name", [{"name": "column", "type": "type"}])]
             return DiscoverableConnector.format_db_model(model)
 

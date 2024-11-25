@@ -1,8 +1,7 @@
 import logging
-from typing import List, Optional, Tuple
+from typing import Annotated, Optional
 
 from pydantic import Field, StringConstraints
-from typing_extensions import Annotated
 
 from toucan_connectors.common import ClusterStartException, ConnectorStatus, pandas_read_sql
 from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
@@ -69,7 +68,7 @@ class DatabricksConnector(ToucanConnector, data_source_model=DatabricksDataSourc
         return ";".join(f"{k}={v}" for k, v in connection_params.items() if v is not None)
 
     @staticmethod
-    def _get_details(index: int, status: Optional[bool]) -> List[Tuple[str, bool]]:
+    def _get_details(index: int, status: Optional[bool]) -> list[tuple[str, bool]]:
         checks = ["Host resolved", "Port opened", "Connected to Databricks", "Authenticated"]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)

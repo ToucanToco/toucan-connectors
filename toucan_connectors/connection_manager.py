@@ -4,7 +4,7 @@ import threading
 import time
 import types
 from enum import Enum
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class ConnectionBO:
 class ConnectionManager:
     def __init__(self, **kwargs):
         self.name: str = "connection_manager"
-        self.connection_list: Dict[str, ConnectionBO] = {}
+        self.connection_list: dict[str, ConnectionBO] = {}
 
         self.timeout = 5
         self.wait = 0.2

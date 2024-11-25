@@ -1,9 +1,8 @@
 import logging
-from typing import Any
+from typing import Annotated, Any
 
 from cached_property import cached_property_with_ttl
 from pydantic import ConfigDict, Field, StringConstraints, create_model
-from typing_extensions import Annotated
 
 try:
     import awswrangler as wr

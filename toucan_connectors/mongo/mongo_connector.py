@@ -3,7 +3,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from functools import _lru_cache_wrapper, cached_property, lru_cache
 from logging import getLogger
-from typing import Any, List, Optional, Pattern, Union
+from re import Pattern
+from typing import Any, Optional, Union
 from warnings import warn
 
 try:
@@ -337,7 +338,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
     def get_slice_with_regex(
         self,
         data_source: MongoDataSource,
-        search: dict[str, List[dict[str, Pattern]]],
+        search: dict[str, list[dict[str, Pattern]]],
         permissions: Optional[str] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
@@ -372,7 +373,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
     def get_df_with_regex(
         self,
         data_source: MongoDataSource,
-        search: dict[str, List[dict[str, Pattern]]],
+        search: dict[str, list[dict[str, Pattern]]],
         permissions: Optional[str] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,

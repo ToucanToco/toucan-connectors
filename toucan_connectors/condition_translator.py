@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, List, Literal, TypeVar, Union
+from typing import Any, Literal, TypeVar, Union
 
 from pydantic import BaseModel
 
@@ -86,7 +86,7 @@ class ConditionTranslator(ABC):
 
     @classmethod
     @abstractmethod
-    def join_clauses(cls, clauses: List[ClauseType], logical_operator: LogicalOperator):
+    def join_clauses(cls, clauses: list[ClauseType], logical_operator: LogicalOperator):
         """
         Join multiple clauses with `and` or `or`.
         """
@@ -142,13 +142,13 @@ class ConditionTranslator(ABC):
 
     @classmethod
     @abstractmethod
-    def IN(cls, column: str, values: List[str]) -> ClauseType:
+    def IN(cls, column: str, values: list[str]) -> ClauseType:
         """`column` values in `values`"""
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
-    def NOT_IN(cls, column: str, values: List[str]) -> ClauseType:
+    def NOT_IN(cls, column: str, values: list[str]) -> ClauseType:
         """`column` values not in `values`"""
         raise NotImplementedError
 

@@ -2,10 +2,9 @@ import concurrent
 import json
 import logging
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Annotated, Any, Optional
 
 from pydantic import Field, StringConstraints
-from typing_extensions import Annotated
 
 from toucan_connectors.pagination import build_pagination_info
 from toucan_connectors.query_manager import QueryManager
@@ -50,7 +49,7 @@ class SfDataSource(ToucanDataSource):
         ..., description="You can write your SQL query here", widget="sql"
     )
 
-    query_object: Dict = Field(
+    query_object: dict = Field(
         None,
         description="An object describing a simple select query"
         "For example "
@@ -87,7 +86,7 @@ class SnowflakeCommon:
         self.data_conversion_time: Optional[float] = None
         self.data_filtered_from_permission_time: Optional[float] = None
         self.compute_stats_time: Optional[float] = None
-        self.column_names_and_types: Optional[Dict[str, str]] = None
+        self.column_names_and_types: Optional[dict[str, str]] = None
 
     def set_data(self, data):
         self.data = data.result()
@@ -104,7 +103,7 @@ class SnowflakeCommon:
     def set_data_conversion_time(self, data_conversion_time):
         self.data_conversion_time = data_conversion_time
 
-    def _execute_query(self, connection, query: str, query_parameters: Optional[Dict] = None):
+    def _execute_query(self, connection, query: str, query_parameters: Optional[dict] = None):
         return QueryManager().execute(
             execute_method=self._execute_query_internal,
             connection=connection,
@@ -172,7 +171,7 @@ class SnowflakeCommon:
         self,
         connection: "SnowflakeConnection",
         query: str,
-        query_parameters: Optional[Dict] = None,
+        query_parameters: Optional[dict] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
         get_row_count=False,
@@ -288,14 +287,14 @@ class SnowflakeCommon:
             pagination_info=result.pagination_info,
         )
 
-    def get_warehouses(self, connection: "SnowflakeConnection", warehouse_name: Optional[str] = None) -> List[str]:
+    def get_warehouses(self, connection: "SnowflakeConnection", warehouse_name: Optional[str] = None) -> list[str]:
         query = "SHOW WAREHOUSES"
         if warehouse_name:
             query = f"{query} LIKE '{warehouse_name}'"
         res = self._execute_query(connection, query).to_dict().get("name")
         return list(res.values()) if res else []
 
-    def get_databases(self, connection: "SnowflakeConnection", database_name: Optional[str] = None) -> List[str]:
+    def get_databases(self, connection: "SnowflakeConnection", database_name: Optional[str] = None) -> list[str]:
         query = "SHOW DATABASES"
         if database_name:
             query = f"{query} LIKE '{database_name}'"
@@ -313,7 +312,7 @@ class SnowflakeCommon:
         self,
         connection: "SnowflakeConnection",
         query: str,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         from snowflake.connector import DictCursor
 
         description_start = timer()
@@ -336,6 +335,6 @@ class SnowflakeCommon:
         res = {r.name: type_code_mapping.get(r.type_code) for r in describe_res}
         return res
 
-    def get_db_content(self, connection: "SnowflakeConnection") -> List[Dict[str, Any]]:
+    def get_db_content(self, connection: "SnowflakeConnection") -> list[dict[str, Any]]:
         query = build_database_model_extraction_query()
         return self._execute_query(connection, query)
