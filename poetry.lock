@@ -4466,7 +4466,7 @@ test = ["coverage[toml] (==7.6.2)", "flake8 (==7.1.1)", "flake8-blind-except (==
 xmlsec = ["xmlsec (>=0.6.1)"]
 
 [extras]
-all = ["Authlib", "PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "jq", "lxml", "oauth2client", "oauthlib", "pandas", "pandas", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "python-slugify", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "tctc-odata", "tenacity", "xmltodict", "zeep"]
+all = ["Authlib", "PyJWT", "PyMySQL", "awswrangler", "clickhouse-driver", "cx-Oracle", "dataiku-api-client", "elasticsearch", "google-api-python-client", "google-cloud-bigquery", "hubspot-api-client", "jq", "lxml", "oauth2client", "oauthlib", "pandas", "pandas", "peakina", "psycopg2", "pyarrow", "pyhdb", "pymongo", "pyodbc", "python-graphql-client", "python-slugify", "redshift-connector", "requests-oauthlib", "simplejson", "snowflake-connector-python", "sqlalchemy", "tctc-odata", "tenacity", "xmltodict", "zeep"]
 awsathena = ["awswrangler", "pandas", "pandas"]
 azure-mssql = ["pandas", "pandas", "pyodbc", "sqlalchemy"]
 base = ["Authlib", "jq", "pandas", "pandas", "pandas", "pandas", "python-slugify", "tenacity"]
@@ -4497,4 +4497,4 @@ soap = ["lxml", "pandas", "pandas", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "85f50d9fea826dd1c3c05165fb3802179506e84d8f29dea916f287e0a997ccd3"
+content-hash = "525fb15be21b02f048a8077b8b372bd49a40460dfd6c7d8bd11a17790c6c5105"

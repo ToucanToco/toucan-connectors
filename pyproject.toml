@@ -107,8 +107,8 @@ soap = ["zeep", "lxml", "pandas"]
 
 # All
 all = [
-    "awswrangler",
     "Authlib",
+    "awswrangler",
     "clickhouse-driver",
     "cx-Oracle",
     "dataiku-api-client",
@@ -121,12 +121,12 @@ all = [
     "oauth2client",
     "oauthlib",
     "openpyxl",
+    "pandas",
     "peakina",
     "psycopg2",
     "pyarrow",
     "pyhdb",
     "PyJWT",
-    "pandas",
     "pymongo",
     "PyMySQL",
     "pyodbc",
@@ -136,8 +136,9 @@ all = [
     "requests-oauthlib",
     "simplejson",
     "snowflake-connector-python",
-    "tenacity",
+    "sqlalchemy",
     "tctc-odata",
+    "tenacity",
     "xmltodict",
     "zeep",
 ]
