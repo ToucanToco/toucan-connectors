@@ -16,6 +16,7 @@ from toucan_connectors.utils.slugify import slugify
 
 if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
+    import sqlalchemy as sa
 
 
 # Query interpolation
@@ -316,6 +317,16 @@ def get_param_name(printf_style_argument: str) -> str:
     return printf_style_argument[2:-2]
 
 
+def convert_jinja_params_to_sqlalchemy_named(query: str) -> str:
+    """Converts jinja params to SQLAlchemy named parameters.
+
+    Naively transforms '{{ foo }}' to :foo using regex substitution.
+
+    Note that the resulting query should not be used directly, but wrapped with `sqlalchemy.text`
+    """
+    return re.sub(RE_SINGLE_VAR_JINJA, r":\g<1>", query)
+
+
 def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> tuple[str, list[Any]]:
     """Takes a query in pyformat paramstyle and transforms it in qmark
        by replacing placeholders by ? and returning values in right order
@@ -402,15 +413,14 @@ def adapt_param_type(params):
     return {k: (tuple(v) if isinstance(v, list) else v) for (k, v) in params.items()}
 
 
-def extract_table_name(query: str) -> str:
+def extract_table_name(query: str) -> str | None:
     m = re.search(r"from\s*(?P<table>[^\s;]+)\s*(where|order by|group by|limit)?", query, re.I)
-    table = m.group("table")
-    return table
+    return m.group("table") if m else None
 
 
 def is_interpolating_table_name(query: str) -> bool:
     table_name = extract_table_name(query)
-    return table_name.startswith("%(")
+    return bool(table_name and table_name.startswith("%("))
 
 
 def infer_datetime_dtype(df: "pd.DataFrame") -> None:
@@ -481,6 +491,39 @@ def pandas_read_sql(
         query = re.sub(r"%[^(%]", r"%\g<0>", query)
         df = pd.read_sql(query, con=con, params=params, **kwargs)
     except pd.io.sql.DatabaseError as exc:
+        if is_interpolating_table_name(query):
+            errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
+            raise pd.io.sql.DatabaseError(errmsg) from exc
+        else:
+            raise
+
+    rename_duplicate_columns(df)
+    infer_datetime_dtype(df)
+    return df
+
+
+def create_sqlalchemy_engine(url: "sa.URL") -> "sa.Engine":
+    """Creates an SQLAlchemy engine for the given URL.
+
+    Sets sensible connector-specific defaults, such as disabling conneciton pooling.
+    """
+    import sqlalchemy as sa
+
+    return sa.create_engine(url, poolclass=sa.NullPool)
+
+
+def pandas_read_sqlalchemy_query(
+    *, query: str, engine: "sa.Engine", params: dict[str, Any] | None = None
+) -> "pd.DataFrame":
+    import pandas as pd
+    import sqlalchemy as sa
+
+    sa_query = sa.text(query)
+
+    try:
+        conn = engine.connect()
+        df = pd.read_sql_query(sa_query, conn, params=params)
+    except (pd.io.sql.DatabaseError, sa.exc.SQLAlchemyError) as exc:
         if is_interpolating_table_name(query):
             errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
             raise pd.io.sql.DatabaseError(errmsg) from exc

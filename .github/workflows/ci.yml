@@ -86,6 +86,11 @@ jobs:
         ATHENA_REGION: '${{ secrets.ATHENA_REGION }}'
         # GBQ
         GOOGLE_BIG_QUERY_CREDENTIALS: '${{ secrets.GOOGLE_BIG_QUERY_CREDENTIALS }}'
+        # Azure MSSQL
+        AZURE_MSSQL_USER: '${{ secrets.AZURE_MSSQL_USER }}'
+        AZURE_MSSQL_PASSWORD: '${{ secrets.AZURE_MSSQL_PASSWORD }}'
+        AZURE_MSSQL_HOST: '${{ secrets.AZURE_MSSQL_HOST }}'
+        AZURE_MSSQL_DATABASE: '${{ secrets.AZURE_MSSQL_DATABASE }}'
 
     - name: SonarCloud Scan
       # Only executed for one of the tested python version and pandas version

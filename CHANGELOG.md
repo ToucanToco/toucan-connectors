@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- The Azure MSSQL connector now uses `sqlalchemy` to connect to MSSQL.
+
 ## [7.3.3] 2024-11-21
 
 ### Fixed

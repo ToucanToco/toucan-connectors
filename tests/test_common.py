@@ -14,6 +14,7 @@ from toucan_connectors.common import (
     UndefinedVariableError,
     adapt_param_type,
     apply_query_parameters,
+    convert_jinja_params_to_sqlalchemy_named,
     convert_to_numeric_paramstyle,
     convert_to_printf_templating_style,
     convert_to_qmark_paramstyle,
@@ -563,3 +564,18 @@ def test_convert_pyformat_to_numeric(query, params, expected_query, expected_ord
     converted_query, ordered_values = convert_to_numeric_paramstyle(query, params)
     assert ordered_values == expected_ordered_values
     assert converted_query == expected_query
+
+
+@pytest.mark.parametrize(
+    "query,expected",
+    [
+        ("SELECT * FROM my_table;", "SELECT * FROM my_table;"),
+        (
+            "SELECT name, population FROM City WHERE name SIMILAR TO '%aastri%' AND population >= {{min_pop}}",
+            "SELECT name, population FROM City WHERE name SIMILAR TO '%aastri%' AND population >= :min_pop",
+        ),
+    ],
+)
+def test_convert_jinja_params_to_sqlalchemy_named(query: str, expected: str) -> None:
+    result = convert_jinja_params_to_sqlalchemy_named(query)
+    assert result == expected
