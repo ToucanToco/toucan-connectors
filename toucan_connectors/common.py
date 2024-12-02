@@ -506,7 +506,7 @@ def pandas_read_sql(
 def create_sqlalchemy_engine(url: "sa.URL") -> "sa.Engine":
     """Creates an SQLAlchemy engine for the given URL.
 
-    Sets sensible connector-specific defaults, such as disabling conneciton pooling.
+    Sets sensible connector-specific defaults, such as disabling connection pooling.
     """
     import sqlalchemy as sa
 
