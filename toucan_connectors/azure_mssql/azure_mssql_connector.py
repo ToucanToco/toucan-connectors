@@ -11,7 +11,7 @@ except ImportError as exc:  # pragma: no cover
 
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import Field, StringConstraints
+from pydantic import Field, SecretStr, StringConstraints
 
 from toucan_connectors.common import (
     convert_jinja_params_to_sqlalchemy_named,
@@ -29,7 +29,7 @@ CLOUD_HOST = "database.windows.net"
 class AzureMSSQLDataSource(ToucanDataSource):
     database: str = Field(..., description="The name of the database you want to query")
     query: Annotated[str, StringConstraints(min_length=1)] = Field(
-        ..., description="You can write your SQL query here", widget="sql"
+        ..., description="You can write your SQL query here", json_schema_extra={"widget": "sql"}
     )
 
 
@@ -45,8 +45,8 @@ class AzureMSSQLConnector(ToucanConnector, data_source_model=AzureMSSQLDataSourc
     )
 
     user: str = Field(..., description="Your login username")
-    password: PlainJsonSecretStr = Field("", description="Your login password")
-    connect_timeout: int = Field(
+    password: PlainJsonSecretStr = Field(SecretStr(""), description="Your login password")
+    connect_timeout: int | None = Field(
         None,
         title="Connection timeout",
         description="You can set a connection timeout in seconds here, i.e. the maximum length of "
