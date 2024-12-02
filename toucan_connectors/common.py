@@ -16,6 +16,7 @@ from toucan_connectors.utils.slugify import slugify
 
 if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
+    import sqlalchemy as sa
 
 
 # Query interpolation
@@ -62,12 +63,12 @@ def is_jinja_alone(s: str) -> bool:
         return False
 
 
-def _has_parameters(query: dict | list[dict] | tuple | str) -> bool:
+def _has_parameters(query: str) -> bool:
     t = Environment().parse(query)  # noqa: S701
     return bool(meta.find_undeclared_variables(t) or re.search(RE_PARAM, query))
 
 
-def _prepare_parameters(p: dict | list[dict] | tuple | str) -> dict | list[dict] | tuple | str:
+def _prepare_parameters(p: dict | list[dict] | tuple | str) -> dict | list[Any] | tuple | str:
     if isinstance(p, str):
         return repr(p)
     elif isinstance(p, list):
@@ -78,7 +79,7 @@ def _prepare_parameters(p: dict | list[dict] | tuple | str) -> dict | list[dict]
         return p
 
 
-def _prepare_result(res: dict | list[dict] | tuple | str) -> dict | list[dict] | tuple | str:
+def _prepare_result(res: dict | list[dict] | tuple | str) -> dict | list[Any] | tuple | str:
     if isinstance(res, str):
         return ast.literal_eval(res)
     elif isinstance(res, list):
@@ -163,8 +164,8 @@ def _render_query(query: dict | list[dict] | tuple | str, parameters: dict | Non
         clean_p = deepcopy(parameters)
 
         if is_jinja_alone(query):
-            clean_p = _prepare_parameters(clean_p)
-            env = NativeEnvironment()
+            clean_p = _prepare_parameters(clean_p)  # type:ignore[assignment]
+            env: Environment | NativeEnvironment = NativeEnvironment()
         else:
             env = Environment()  # noqa: S701
 
@@ -242,7 +243,7 @@ def apply_query_parameters(query: str, parameters: dict) -> str:
 # jq filtering
 
 
-def transform_with_jq(data: object, jq_filter: str) -> list:
+def transform_with_jq(data: Any, jq_filter: str) -> list:
     import jq
 
     data = jq.all(jq_filter, data)
@@ -316,6 +317,16 @@ def get_param_name(printf_style_argument: str) -> str:
     return printf_style_argument[2:-2]
 
 
+def convert_jinja_params_to_sqlalchemy_named(query: str) -> str:
+    """Converts jinja params to SQLAlchemy named parameters.
+
+    Naively transforms '{{ foo }}' to :foo using regex substitution.
+
+    Note that the resulting query should not be used directly, but wrapped with `sqlalchemy.text`
+    """
+    return re.sub(RE_SINGLE_VAR_JINJA, r":\g<1>", query)
+
+
 def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> tuple[str, list[Any]]:
     """Takes a query in pyformat paramstyle and transforms it in qmark
        by replacing placeholders by ? and returning values in right order
@@ -333,7 +344,7 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> tuple
         if isinstance(o, list):
             # in the query string, replace the ? at index i by the number of item
             # in the provided parameter of type list
-            query_string = query_string.replace(extracted_params[i], f'({",".join(len(ordered_values[i])*["?"])})')
+            query_string = query_string.replace(extracted_params[i], f'({",".join(len(o)*["?"])})')
 
     flattened_values = []
     for val in ordered_values:
@@ -366,7 +377,7 @@ def convert_to_numeric_paramstyle(query_string: str, params_values: dict) -> tup
             # query_string = "SELECT name FROM students WHERE age IN %(allowed_ages)"
             # allowed_ages = [16, 17, 18]
             # transformed query_string = "SELECT name FROM students WHERE age IN (:1,:2,:3)"
-            list_size = len(ordered_values[i])
+            list_size = len(o)
             variable_list = f'({",".join([f":{variable_idx + n}" for n in range(list_size)])})'
             query_string = query_string.replace(extracted_params[i], variable_list)
             variable_idx += list_size
@@ -382,7 +393,8 @@ def convert_to_numeric_paramstyle(query_string: str, params_values: dict) -> tup
         else:
             flattened_values.append(val)
 
-    return query_string, flattened_values
+    # NOTE: we should probably return tuple(flattened_values) here but it could be breaking
+    return query_string, flattened_values  # type:ignore[return-value]
 
 
 def convert_to_printf_templating_style(query_string: str) -> str:
@@ -402,15 +414,14 @@ def adapt_param_type(params):
     return {k: (tuple(v) if isinstance(v, list) else v) for (k, v) in params.items()}
 
 
-def extract_table_name(query: str) -> str:
+def extract_table_name(query: str) -> str | None:
     m = re.search(r"from\s*(?P<table>[^\s;]+)\s*(where|order by|group by|limit)?", query, re.I)
-    table = m.group("table")
-    return table
+    return m.group("table") if m else None
 
 
 def is_interpolating_table_name(query: str) -> bool:
     table_name = extract_table_name(query)
-    return table_name.startswith("%(")
+    return bool(table_name and table_name.startswith("%("))
 
 
 def infer_datetime_dtype(df: "pd.DataFrame") -> None:
@@ -445,8 +456,8 @@ def rename_duplicate_columns(df: "pd.DataFrame") -> None:
 
     cols = pd.Series(df.columns)
     for dup in df.columns[df.columns.duplicated(keep=False)]:
-        cols[df.columns.get_loc(dup)] = [f"{dup}_{d_idx}" for d_idx in range(df.columns.get_loc(dup).sum())]
-    df.columns = cols
+        cols[df.columns.get_loc(dup)] = [f"{dup}_{d_idx}" for d_idx in range(df.columns.get_loc(dup).sum())]  # type:ignore[union-attr]
+    df.columns = cols  # type:ignore[assignment]
 
 
 def pandas_read_sql(
@@ -480,10 +491,43 @@ def pandas_read_sql(
         query = query.replace("%%", "%")
         query = re.sub(r"%[^(%]", r"%\g<0>", query)
         df = pd.read_sql(query, con=con, params=params, **kwargs)
-    except pd.io.sql.DatabaseError as exc:
+    except pd.errors.DatabaseError as exc:
         if is_interpolating_table_name(query):
             errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
-            raise pd.io.sql.DatabaseError(errmsg) from exc
+            raise pd.errors.DatabaseError(errmsg) from exc
+        else:
+            raise
+
+    rename_duplicate_columns(df)
+    infer_datetime_dtype(df)
+    return df
+
+
+def create_sqlalchemy_engine(url: "sa.URL") -> "sa.Engine":
+    """Creates an SQLAlchemy engine for the given URL.
+
+    Sets sensible connector-specific defaults, such as disabling connection pooling.
+    """
+    import sqlalchemy as sa
+
+    return sa.create_engine(url, poolclass=sa.NullPool)
+
+
+def pandas_read_sqlalchemy_query(
+    *, query: str, engine: "sa.Engine", params: dict[str, Any] | None = None
+) -> "pd.DataFrame":
+    import pandas as pd
+    import sqlalchemy as sa
+
+    sa_query = sa.text(query)
+
+    try:
+        conn = engine.connect()
+        df = pd.read_sql_query(sa_query, conn, params=params)
+    except (pd.errors.DatabaseError, sa.exc.SQLAlchemyError) as exc:
+        if is_interpolating_table_name(query):
+            errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
+            raise pd.errors.DatabaseError(errmsg) from exc
         else:
             raise
 
