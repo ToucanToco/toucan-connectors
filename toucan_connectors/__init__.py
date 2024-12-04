@@ -81,6 +81,9 @@ CONNECTORS_REGISTRY = {
     },
     "HttpAPI": {
         "connector": "http_api.http_api_connector.HttpAPIConnector",
+        "authentications": {
+          "oauth2": "http_api.http_api_connector.authentication_configs.OAuth2"
+        },
         "label": "Http API",
         "logo": "http_api/http-api.png",
     },
