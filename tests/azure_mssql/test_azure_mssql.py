@@ -3,6 +3,7 @@ from os import environ
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
+from tenacity import retry, stop_after_delay, wait_fixed
 
 from toucan_connectors.azure_mssql.azure_mssql_connector import (
     AzureMSSQLConnector,
@@ -24,19 +25,33 @@ def datasource() -> AzureMSSQLDataSource:
     return AzureMSSQLDataSource(domain="azure-mssql-ci", name="Azure MSSQL CI", database=database, query="SELECT 1;")
 
 
-def test_azure_get_df_simple(connector: AzureMSSQLConnector, datasource: AzureMSSQLDataSource) -> None:
+# Retrying every 5 seconds for 60 seconds
+@retry(stop=stop_after_delay(60), wait=wait_fixed(5))
+def _ready_connector(connector: AzureMSSQLConnector, datasource: AzureMSSQLDataSource) -> AzureMSSQLConnector:
+    datasource = datasource.model_copy(update={"query": 'SELECT 1 "1";'})
+    df = connector._retrieve_data(datasource)
+    assert_frame_equal(df, pd.DataFrame({"1": [1]}))
+    return connector
+
+
+@pytest.fixture
+def ready_connector(connector: AzureMSSQLConnector, datasource: AzureMSSQLDataSource) -> AzureMSSQLConnector:
+    return _ready_connector(connector, datasource)
+
+
+def test_azure_get_df_simple(ready_connector: AzureMSSQLConnector, datasource: AzureMSSQLDataSource) -> None:
     datasource.query = "SELECT name, population FROM City WHERE name = 'Maastricht';"
-    df = connector.get_df(datasource)
+    df = ready_connector.get_df(datasource)
     expected = pd.DataFrame({"name": ["Maastricht"], "population": [122_087]})
     assert_frame_equal(df, expected)
 
 
 def test_azure_get_df_with_parameters_and_modulo(
-    connector: AzureMSSQLConnector, datasource: AzureMSSQLDataSource
+    ready_connector: AzureMSSQLConnector, datasource: AzureMSSQLDataSource
 ) -> None:
     datasource.query = "SELECT * FROM City WHERE CountryCode = {{ Code }} AND Population % 1000 >= 700"
     datasource.parameters = {"Code": "AFG"}
-    df = connector.get_df(datasource)
+    df = ready_connector.get_df(datasource)
     assert_frame_equal(
         df,
         pd.DataFrame(
