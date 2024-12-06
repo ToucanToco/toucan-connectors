@@ -28,7 +28,7 @@ def datasource() -> AzureMSSQLDataSource:
 # Retrying every 5 seconds for 60 seconds
 @retry(stop=stop_after_delay(60), wait=wait_fixed(5))
 def _ready_connector(connector: AzureMSSQLConnector, datasource: AzureMSSQLDataSource) -> AzureMSSQLConnector:
-    datasource = datasource.model_copy(update={"query": "SELECT 1 AS 1;"})
+    datasource = datasource.model_copy(update={"query": 'SELECT 1 "1";'})
     df = connector._retrieve_data(datasource)
     assert_frame_equal(df, pd.DataFrame({"1": [1]}))
     return connector
