@@ -11,7 +11,7 @@ from typing import Any, Callable
 import jq
 import pandas as pd
 from aiohttp import ClientSession
-from jinja2 import Environment, StrictUndefined, Template, meta
+from jinja2 import StrictUndefined, Template, meta
 from jinja2.nativetypes import NativeEnvironment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from pydantic import Field
