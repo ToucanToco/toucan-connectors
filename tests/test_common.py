@@ -267,7 +267,7 @@ def test_nosql_apply_parameters_to_query_unsafe():
             {'var': 'plop'},
         )
     with pytest.raises(jinja2.exceptions.SecurityError):
-        nosql_apply_parameters_to_query({'test': "{{ var.__class__.mro()[-1] }}"}, {'var': 'plop'})
+        nosql_apply_parameters_to_query({'test': '{{ var.__class__.mro()[-1] }}'}, {'var': 'plop'})
 
 
 def test_nosql_apply_parameters_to_query_dot():
