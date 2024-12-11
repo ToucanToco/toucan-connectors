@@ -8,8 +8,9 @@ from contextlib import suppress
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any, Callable
 
-from jinja2 import Environment, Template, Undefined, UndefinedError, meta
+from jinja2 import Environment, Undefined, UndefinedError, meta
 from jinja2.nativetypes import NativeEnvironment
+from jinja2.sandbox import ImmutableSandboxedEnvironment
 from pydantic import Field
 
 from toucan_connectors.utils.slugify import slugify
@@ -18,6 +19,11 @@ if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
     import sqlalchemy as sa
 
+
+class NativeImmutableSandboxedEnvironment(NativeEnvironment, ImmutableSandboxedEnvironment): ...
+
+
+jinja_env = ImmutableSandboxedEnvironment()
 
 # Query interpolation
 
@@ -64,7 +70,7 @@ def is_jinja_alone(s: str) -> bool:
 
 
 def _has_parameters(query: str) -> bool:
-    t = Environment().parse(query)  # noqa: S701
+    t = ImmutableSandboxedEnvironment().parse(query)  # noqa: S701
     return bool(meta.find_undeclared_variables(t) or re.search(RE_PARAM, query))
 
 
@@ -165,9 +171,9 @@ def _render_query(query: dict | list[dict] | tuple | str, parameters: dict | Non
 
         if is_jinja_alone(query):
             clean_p = _prepare_parameters(clean_p)  # type:ignore[assignment]
-            env: Environment | NativeEnvironment = NativeEnvironment()
+            env: Environment | NativeEnvironment = NativeImmutableSandboxedEnvironment()
         else:
-            env = Environment()  # noqa: S701
+            env = jinja_env  # noqa: S701
 
         try:
             res = env.from_string(query).render(clean_p)
@@ -237,7 +243,7 @@ def apply_query_parameters(query: str, parameters: dict) -> str:
         parameters.update(p_keep_type)
 
     logging.getLogger(__name__).debug(f"Render query: {query} with parameters {parameters}")
-    return Template(query).render(parameters)
+    return jinja_env.from_string(query).render(parameters)
 
 
 # jq filtering
@@ -476,7 +482,7 @@ def pandas_read_sql(
     if convert_to_printf:
         query = convert_to_printf_templating_style(query)
     if render_user:
-        query = Template(query).render({"user": params.get("user", {})})
+        query = jinja_env.from_string(query).render({"user": params.get("user", {})})
     if convert_to_qmark:
         query, params = convert_to_qmark_paramstyle(query, params)
     if convert_to_numeric:
