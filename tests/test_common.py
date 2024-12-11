@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 
+import jinja2
 import numpy as np
 import pandas as pd
 import pytest
@@ -252,6 +253,21 @@ def test_apply_parameter_to_query_do_nothing():
 )
 def test_nosql_apply_parameters_to_query(query, params, expected):
     assert nosql_apply_parameters_to_query(query, params) == expected
+
+
+def test_nosql_apply_parameters_to_query_unsafe():
+    """
+    It should prevent any code execution, by using Jinja's sandboxed environement
+    """
+    with pytest.raises(jinja2.exceptions.SecurityError):
+        nosql_apply_parameters_to_query(
+            {
+                'test': "{% for x in var.__class__.__base__.__subclasses__() %}{% if 'warning' in x.__name__ %}{{x()._module.__builtins__ ['__import__']('os').popen('ls').read()}}{% endif %}{% endfor %}"
+            },
+            {'var': 'plop'},
+        )
+    with pytest.raises(jinja2.exceptions.SecurityError):
+        nosql_apply_parameters_to_query({'test': "{{ var.__class__.mro()[-1] }}"}, {'var': 'plop'})
 
 
 def test_nosql_apply_parameters_to_query_dot():

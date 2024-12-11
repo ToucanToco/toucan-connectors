@@ -11,7 +11,7 @@ import jwt
 import pandas as pd
 import requests
 import snowflake
-from jinja2 import Template
+from jinja2.sandbox import ImmutableSandboxedEnvironment
 from pydantic import Field, SecretStr, create_model
 from snowflake.connector import SnowflakeConnection
 
@@ -220,7 +220,7 @@ class SnowflakeConnector(ToucanConnector):
 
     def get_connection_params(self):
         params = {
-            'user': Template(self.user).render(),
+            'user': ImmutableSandboxedEnvironment().from_string(self.user).render(),
             'account': self.account,
             'authenticator': self.authentication_method,
             # hard Snowflake params
