@@ -11,10 +11,16 @@ from typing import Any, Callable
 import jq
 import pandas as pd
 from aiohttp import ClientSession
-from jinja2 import Environment, StrictUndefined, Template, meta
+from jinja2 import StrictUndefined, Template, meta
 from jinja2.nativetypes import NativeEnvironment
+from jinja2.sandbox import ImmutableSandboxedEnvironment
 from pydantic import Field
 from toucan_data_sdk.utils.helpers import slugify
+
+
+class NativeImmutableSandboxedEnvironment(NativeEnvironment, ImmutableSandboxedEnvironment):
+    ...
+
 
 # Query interpolation
 
@@ -62,7 +68,7 @@ def is_jinja_alone(s: str) -> bool:
 
 
 def _has_parameters(query: dict | list[dict] | tuple | str) -> bool:
-    t = Environment().parse(query)
+    t = ImmutableSandboxedEnvironment().parse(query)
     return bool(meta.find_undeclared_variables(t) or re.search(RE_PARAM, query))
 
 
@@ -129,9 +135,9 @@ def _render_query(query: dict | list[dict] | tuple | str, parameters: dict):
             clean_p = _prepare_parameters(clean_p)
 
         if is_jinja_alone(query):
-            env = NativeEnvironment()
+            env = NativeImmutableSandboxedEnvironment()
         else:
-            env = Environment()
+            env = ImmutableSandboxedEnvironment()
 
         res = env.from_string(query).render(clean_p)
         # NativeEnvironment's render() isn't recursive, so we need to
