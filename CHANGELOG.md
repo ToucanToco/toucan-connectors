@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [7.4.1] 2024-12-12
+
+### Fixed
+
+- Prevent injection in Jinja templates
+
 ## [7.4.0] 2024-12-02
 
 ### Changed
