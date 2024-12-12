@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "toucan-connectors"
-version = "7.4.0"
+version = "7.4.1"
 description = "Toucan Toco Connectors"
 authors = ["Toucan Toco <dev@toucantoco.com>"]
 license = "BSD"
