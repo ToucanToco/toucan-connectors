@@ -1,17 +1,83 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Callable
 
-from pydantic import BaseModel, Field
-from urllib import parse as url_parse
+from pydantic import BaseModel, Field, SecretStr, ValidationError
+from datetime import datetime, timedelta
 
 from toucan_connectors.common import UI_HIDDEN
 from requests import Session
 
 from toucan_connectors.json_wrapper import JsonWrapper
-from toucan_connectors.oauth2_connector.oauth2connector import SecretsKeeper, oauth_client
+from toucan_connectors.oauth2_connector.oauth2connector import oauth_client
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class Oauth2Error(Exception):
+    """Base class for oauth2 related errors"""
+
+
+class MissingRefreshTokenError(Oauth2Error):
+    """Raised when refresh token is missing from saved token"""
+
+
+class MissingOauthWorkflowError(Oauth2Error):
+    """Raised when the oauth2 workflow is missing from saved session."""
+
+
+def _extract_expires_at_from_token_response(token_response: dict[str, Any], default_lifetime: int) -> datetime:
+    if "expires_at" in token_response:
+        if isinstance(token_response["expires_at"], str):
+            try:
+                return datetime.strptime(token_response["expires_at"], "%FT%T")
+            except ValueError as exc:
+                _LOGGER.error(
+                    "Can't parse the oauth2 token expiration date",
+                    exc_info=exc
+                )
+                raise
+        return datetime.fromtimestamp(int(token_response["expires_at"]))
+    else:
+        return (
+            datetime.now() + timedelta(0, int(token_response.get("expires_in", default_lifetime)))
+        )
+
+
+class OAuth2SecretData(BaseModel):
+    workflow_token: str
+    access_token: str
+    refresh_token: str
+    expires_at: float
+
+
+class HttpOauth2SecretsKeeper(BaseModel):
+    default_token_lifetime_seconds: int = 3600
+    save_callback: Callable[[str, dict[str, Any]], None]
+    delete_callback: Callable[[str], None]
+    load_callback: Callable[[str], dict[str, Any] | None]
+
+    def save(self, key: str, value: dict) -> None:
+        """Save secrets in a secrets repository"""
+        expires_at = _extract_expires_at_from_token_response(
+            token_response=value,
+            default_lifetime=self.token_lifetime_seconds
+        )
+        _LOGGER.info(f"EXPIRES AT: {expires_at}")
+        try:
+            secret_data = OAuth2SecretData(**value, expires_at=expires_at.timestamp())
+        except ValidationError as exc:
+            _LOGGER.error(f"Can't instantiate oauth secret data with value_keys={list(value.keys())}", exc_info=exc)
+            raise
+        # remove existing secrets
+        self.delete_callback(key)
+        _LOGGER.info(f"SAVE KEY: {key}")
+        # save new secrets
+        self.save_callback(key, secret_data.model_dump())
+
+    def load(self, key: str) -> Any:
+        """Load secrets from the secrets repository"""
+        self.load_callback(key)
 
 
 class AuthenticationConfig(BaseModel, ABC):
@@ -21,88 +87,54 @@ class AuthenticationConfig(BaseModel, ABC):
     def authenticate_session(self) -> Session:
         """Create authenticated request session"""
 
-    @abstractmethod
-    def is_oauth_config(self) -> bool:
+    @staticmethod
+    def is_oauth_config() -> bool:
         """Return true if authentication is OAuth based"""
-
-
-class CustomTokenServer(AuthenticationConfig):
-    kind: Literal["CustomTokenServer"] = Field(..., **UI_HIDDEN)
-
-    def authenticate_session(self) -> Session:
-        return Session()
-
-    def is_oauth_config(self) -> bool:
         return False
 
 
 class BaseOAuth2Config(AuthenticationConfig, ABC):
     """Base class for OAuth2 authentication configs"""
+    client_id: str
+    authentication_url: str
+    token_url: str
+    scope: str
 
     # Mandatory hidden fields for oauth2 dance which must be setup by the backend and not by the end-user
-    auth_flow_id: str | None = Field(None, **UI_HIDDEN)
-    redirect_uri: str | None = Field(None, **UI_HIDDEN)
-    secrets_keeper: SecretsKeeper | None = Field(None, **UI_HIDDEN)
+    _auth_flow_id: str | None = None
+    _redirect_uri: str | None = None
+    _secrets_keeper: HttpOauth2SecretsKeeper | None = None
+
+    @staticmethod
+    def is_oauth_config() -> bool:
+        return True
 
     @abstractmethod
     def build_authorization_uri(self, **kwargs):
         pass
 
     @abstractmethod
-    def retrieve_token(self, authorization_response: str, **kwargs):
+    def retrieve_token(self, response_params: dict[str, Any]):
         pass
 
     @abstractmethod
-    def secrets_names(self):
+    def secrets_names(self) -> list[str]:
         pass
 
 
-class OAuth2(BaseOAuth2Config):
-    kind: Literal["OAuth2"] = Field(..., **UI_HIDDEN)
+class OAuth2Config(BaseOAuth2Config):
+    kind: Literal["OAuth2Config"] = Field(..., **UI_HIDDEN)
 
-    client_id: str
-    client_secret: str
-    authentication_url: str
-    token_url: str
-    scope: str
+    # Allows to instantiate authentication config without secrets
+    client_secret: SecretStr | None
 
     def secrets_names(self) -> list[str]:
         return ["client_secret"]
 
     def authenticate_session(self) -> Session:
-
-
-    def get_access_token(self):
-        """
-        Methods returns only access_token
-        instance_url parameters are return by service, better to use it
-        new method get_access_data return all information to connect (secret and instance_url)
-        """
-        token = self.secrets_keeper.load(self.auth_flow_id)
-
-        if "expires_at" in token:
-            expires_at = token["expires_at"]
-            if isinstance(expires_at, bool):
-                is_expired = expires_at
-            elif isinstance(expires_at, (int, float)):
-                is_expired = expires_at < time()
-            else:
-                is_expired = expires_at.timestamp() < time()
-
-            if is_expired:
-                if "refresh_token" not in token:
-                    raise NoOAuth2RefreshToken
-                client = _client(
-                    client_id=self.config.client_id,
-                    client_secret=self.config.client_secret.get_secret_value(),
-                )
-                new_token = client.refresh_token(self.token_url, refresh_token=token["refresh_token"])
-                self.secrets_keeper.save(self.auth_flow_id, new_token)
-
-        return self.secrets_keeper.load(self.auth_flow_id)["access_token"]
-
-    def is_oauth_config(self) -> bool:
-        return True
+        session = Session()
+        session.headers.update({"Authorization": f"Bearer {self._get_access_token()}"})
+        return session
 
     def build_authorization_uri(self, **kwargs):
         """Build an authorization request that will be sent to the client.
@@ -114,27 +146,52 @@ class OAuth2(BaseOAuth2Config):
 
         client = oauth_client(
             client_id=self.client_id,
-            client_secret=self.client_secret,
-            redirect_uri=self.redirect_uri,
+            client_secret=self.client_secret.get_secret_value(),
+            redirect_uri=self._redirect_uri,
             scope=self.scope,
         )
-        state = {"token": generate_token(), **kwargs}
+        state = {"workflow_token": generate_token(), **kwargs}
         uri, state = client.create_authorization_url(self.authorization_url, state=JsonWrapper.dumps(state))
-
-        self.secrets_keeper.save(self.auth_flow_id, {"state": state})
+        _LOGGER.info(f"AUTHORIZATION URL: {uri}")
+        tmp_oauth_secrets = {
+            "workflow_token": state["workflow_token"],
+            "access_token": "__UNKNOWN__",
+            "refresh_token": "__UNKNOWN__",
+        }
+        self._secrets_keeper.save(self._auth_flow_id, tmp_oauth_secrets)
         return uri
 
-    def retrieve_token(self, response_query_params: dict[str, Any]):
+    def _get_access_token(self):
+        """
+        Methods returns only access_token
+        instance_url parameters are return by service, better to use it
+        new method get_access_data return all information to connect (secret and instance_url)
+        """
+        oauth_token_info = self._secrets_keeper.load(self._auth_flow_id)
+        if "expires_at" in oauth_token_info:
+            expires_at = oauth_token_info["expires_at"]
+            if datetime.fromtimestamp(expires_at) < datetime.now():
+                client = oauth_client(
+                    client_id=self.config.client_id,
+                    client_secret=self.client_secret.get_secret_value(),
+                )
+                new_token = client.refresh_token(self.token_url, refresh_token=oauth_token_info["refresh_token"])
+                self._secrets_keeper.save(self._auth_flow_id, new_token)
+        return self._secrets_keeper.load(self._auth_flow_id)["access_token"]
+
+    def retrieve_token(self, response_params: dict[str, Any]):
         client = oauth_client(
             client_id=self.config.client_id,
-            client_secret=self.client_secret,
-            redirect_uri=self.redirect_uri,
+            client_secret=self.client_secret.get_secret_value(),
+            redirect_uri=self._redirect_uri,
         )
-        saved_flow = self.secrets_keeper.load(self.auth_flow_id)
-        # if saved_flow is None:
-        #     raise AuthFlowNotFound()
+        saved_flow = self._secrets_keeper.load(self._auth_flow_id)
+        if saved_flow is None:
+            raise MissingOauthWorkflowError()
+
+        # Verify the oauth2 workflow token
         assert JsonWrapper.loads(saved_flow["state"])["token"] == JsonWrapper.loads(
-            response_query_params["state"][0]
+            response_params["state"][0]
         )["token"]
 
         token = client.fetch_token(
@@ -142,9 +199,7 @@ class OAuth2(BaseOAuth2Config):
             client_id=self.config.client_id,
             client_secret=self.client_secret.get_secret_value(),
         )
-        self.secrets_keeper.save(self.auth_flow_id, token)
+        self._secrets_keeper.save(self._auth_flow_id, token)
 
 
-HttpAuthenticationConfig = (
-    CustomTokenServer | OAuth2
-)
+HttpAuthenticationConfig = OAuth2Config
