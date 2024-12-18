@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from authlib.integrations.requests_client import OAuth2Session
 
 
-def _client(
+def oauth_client(
     *, client_id: str, client_secret: str, redirect_uri: str | None = None, scope: str | None = None
 ) -> "OAuth2Session":
     from authlib.integrations.requests_client import OAuth2Session
@@ -70,7 +70,7 @@ class OAuth2Connector:
         """Build an authorization request that will be sent to the client."""
         from authlib.common.security import generate_token
 
-        client = _client(
+        client = oauth_client(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
             redirect_uri=self.redirect_uri,
@@ -85,7 +85,7 @@ class OAuth2Connector:
     def retrieve_tokens(self, authorization_response: str, **kwargs):
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)
-        client = _client(
+        client = oauth_client(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
             redirect_uri=self.redirect_uri,
@@ -125,7 +125,7 @@ class OAuth2Connector:
             if is_expired:
                 if "refresh_token" not in token:
                     raise NoOAuth2RefreshToken
-                client = _client(
+                client = oauth_client(
                     client_id=self.config.client_id,
                     client_secret=self.config.client_secret.get_secret_value(),
                 )
@@ -148,7 +148,7 @@ class OAuth2Connector:
         if "instance_url" not in access_data:
             raise NoInstanceUrl
 
-        client = _client(
+        client = oauth_client(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
         )
