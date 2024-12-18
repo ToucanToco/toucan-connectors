@@ -1,13 +1,13 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Literal, Callable
+from datetime import datetime, timedelta
+from typing import Any, Callable, Literal
+from urllib import parse as url_parse
 
 from pydantic import BaseModel, Field, SecretStr, ValidationError
-from datetime import datetime, timedelta
-
-from toucan_connectors.common import UI_HIDDEN
 from requests import Session
 
+from toucan_connectors.common import UI_HIDDEN
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import oauth_client
 
@@ -32,20 +32,15 @@ def _extract_expires_at_from_token_response(token_response: dict[str, Any], defa
             try:
                 return datetime.strptime(token_response["expires_at"], "%FT%T")
             except ValueError as exc:
-                _LOGGER.error(
-                    "Can't parse the oauth2 token expiration date",
-                    exc_info=exc
-                )
+                _LOGGER.error("Can't parse the oauth2 token expiration date", exc_info=exc)
                 raise
         return datetime.fromtimestamp(int(token_response["expires_at"]))
     else:
-        return (
-            datetime.now() + timedelta(0, int(token_response.get("expires_in", default_lifetime)))
-        )
+        return datetime.now() + timedelta(0, int(token_response.get("expires_in", default_lifetime)))
 
 
 class OAuth2SecretData(BaseModel):
-    workflow_token: str
+    workflow_token: str | None = None
     access_token: str
     refresh_token: str
     expires_at: float
@@ -57,15 +52,14 @@ class HttpOauth2SecretsKeeper(BaseModel):
     delete_callback: Callable[[str], None]
     load_callback: Callable[[str], dict[str, Any] | None]
 
-    def save(self, key: str, value: dict) -> None:
+    def save(self, key: str, value: dict[str, Any]) -> None:
         """Save secrets in a secrets repository"""
-        expires_at = _extract_expires_at_from_token_response(
-            token_response=value,
-            default_lifetime=self.token_lifetime_seconds
-        )
-        _LOGGER.info(f"EXPIRES AT: {expires_at}")
+        value["expires_at"] = _extract_expires_at_from_token_response(
+            token_response=value, default_lifetime=self.default_token_lifetime_seconds
+        ).timestamp()
         try:
-            secret_data = OAuth2SecretData(**value, expires_at=expires_at.timestamp())
+            _LOGGER.info(f"DATA = {value}")
+            secret_data = OAuth2SecretData(**value)
         except ValidationError as exc:
             _LOGGER.error(f"Can't instantiate oauth secret data with value_keys={list(value.keys())}", exc_info=exc)
             raise
@@ -75,9 +69,9 @@ class HttpOauth2SecretsKeeper(BaseModel):
         # save new secrets
         self.save_callback(key, secret_data.model_dump())
 
-    def load(self, key: str) -> Any:
+    def load(self, key: str) -> dict[str, Any] | None:
         """Load secrets from the secrets repository"""
-        self.load_callback(key)
+        return self.load_callback(key)
 
 
 class AuthenticationConfig(BaseModel, ABC):
@@ -95,10 +89,17 @@ class AuthenticationConfig(BaseModel, ABC):
 
 class BaseOAuth2Config(AuthenticationConfig, ABC):
     """Base class for OAuth2 authentication configs"""
+
     client_id: str
     authentication_url: str
     token_url: str
     scope: str
+    additional_auth_params: dict = Field(
+        default_factory=dict,
+        title="Additional authentication params",
+        description="A JSON object that represents additional arguments that must be passed as query params"
+        " to the Oauth2 backend during token exchanges",
+    )
 
     # Mandatory hidden fields for oauth2 dance which must be setup by the backend and not by the end-user
     _auth_flow_id: str | None = None
@@ -121,12 +122,23 @@ class BaseOAuth2Config(AuthenticationConfig, ABC):
     def secrets_names(self) -> list[str]:
         pass
 
+    def set_secret_keeper(self, secret_keeper: HttpOauth2SecretsKeeper):
+        self._secrets_keeper = secret_keeper
+
+    def set_redirect_uri(self, redirect_uri: str):
+        self._redirect_uri = redirect_uri
+
+    def set_auth_flow_id(self, auth_flow_id: str):
+        self._auth_flow_id = auth_flow_id
+
 
 class OAuth2Config(BaseOAuth2Config):
+    """Authorization code configuration type"""
+
     kind: Literal["OAuth2Config"] = Field(..., **UI_HIDDEN)
 
     # Allows to instantiate authentication config without secrets
-    client_secret: SecretStr | None
+    client_secret: SecretStr | None = None
 
     def secrets_names(self) -> list[str]:
         return ["client_secret"]
@@ -150,11 +162,14 @@ class OAuth2Config(BaseOAuth2Config):
             redirect_uri=self._redirect_uri,
             scope=self.scope,
         )
-        state = {"workflow_token": generate_token(), **kwargs}
-        uri, state = client.create_authorization_url(self.authorization_url, state=JsonWrapper.dumps(state))
-        _LOGGER.info(f"AUTHORIZATION URL: {uri}")
+        workflow_token = generate_token()
+        state = {"workflow_token": workflow_token, **kwargs}
+        uri, state = client.create_authorization_url(
+            self.authentication_url, state=JsonWrapper.dumps(state), **self.additional_auth_params
+        )
+
         tmp_oauth_secrets = {
-            "workflow_token": state["workflow_token"],
+            "workflow_token": workflow_token,
             "access_token": "__UNKNOWN__",
             "refresh_token": "__UNKNOWN__",
         }
@@ -172,32 +187,37 @@ class OAuth2Config(BaseOAuth2Config):
             expires_at = oauth_token_info["expires_at"]
             if datetime.fromtimestamp(expires_at) < datetime.now():
                 client = oauth_client(
-                    client_id=self.config.client_id,
+                    client_id=self.client_id,
                     client_secret=self.client_secret.get_secret_value(),
                 )
                 new_token = client.refresh_token(self.token_url, refresh_token=oauth_token_info["refresh_token"])
-                self._secrets_keeper.save(self._auth_flow_id, new_token)
+                self._secrets_keeper.save(
+                    self._auth_flow_id,
+                    # refresh call doesn't always contain the refresh_token
+                    new_token | {"refresh_token": oauth_token_info["refresh_token"]},
+                )
         return self._secrets_keeper.load(self._auth_flow_id)["access_token"]
 
-    def retrieve_token(self, response_params: dict[str, Any]):
+    def retrieve_token(self, authorization_response: str):
+        url = url_parse.urlparse(authorization_response)
+        url_params = url_parse.parse_qs(url.query)
         client = oauth_client(
-            client_id=self.config.client_id,
+            client_id=self.client_id,
             client_secret=self.client_secret.get_secret_value(),
-            redirect_uri=self._redirect_uri,
         )
         saved_flow = self._secrets_keeper.load(self._auth_flow_id)
         if saved_flow is None:
             raise MissingOauthWorkflowError()
 
         # Verify the oauth2 workflow token
-        assert JsonWrapper.loads(saved_flow["state"])["token"] == JsonWrapper.loads(
-            response_params["state"][0]
-        )["token"]
+        assert saved_flow["workflow_token"] == JsonWrapper.loads(url_params["state"][0])["workflow_token"]
 
         token = client.fetch_token(
             self.token_url,
-            client_id=self.config.client_id,
-            client_secret=self.client_secret.get_secret_value(),
+            authorization_response=authorization_response,
+            # Some oauth applications needs redirect_uri in fetch_token params.
+            # authorization_response does not carry it natively.
+            body=url_parse.urlencode({"redirect_uri": self._redirect_uri}),
         )
         self._secrets_keeper.save(self._auth_flow_id, token)
 

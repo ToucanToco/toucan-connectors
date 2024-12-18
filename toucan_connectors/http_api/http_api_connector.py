@@ -5,7 +5,6 @@ from typing import Any
 
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 
-from toucan_connectors.http_api.authentication_configs import AuthenticationConfig
 from toucan_connectors.http_api.http_api_data_source import HttpAPIDataSource, apply_pagination_to_data_source
 
 try:
@@ -16,12 +15,11 @@ try:
     from requests.exceptions import HTTPError
     from xmltodict import parse
 
+    from toucan_connectors.http_api.authentication_configs import HttpAuthenticationConfig
     from toucan_connectors.http_api.pagination_configs import (
         NoopPaginationConfig,
         extract_pagination_info_from_result,
     )
-
-    from toucan_connectors.http_api.authentication_configs import HttpAuthenticationConfig
 
     CONNECTOR_OK = True
 except ImportError as exc:  # pragma: no cover
@@ -86,7 +84,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         None,
         title="Authentication type",
         deprecated=True,
-        description="Deprecated authentication config. Please use 'Authentication' section."
+        description="Deprecated authentication config. Please use 'Authentication' section.",
     )  # Deprecated
 
     authentication: HttpAuthenticationConfig | None = Field(

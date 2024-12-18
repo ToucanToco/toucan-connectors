@@ -1,12 +1,17 @@
 import json
 import logging
+from enum import Enum
 
-from pydantic import SecretStr
+from pydantic import AnyHttpUrl, SecretStr
 
 
 def custom_json_serializer(obj):
     if isinstance(obj, SecretStr):
         return obj.get_secret_value()
+    if isinstance(obj, Enum):
+        return obj.value
+    if isinstance(obj, AnyHttpUrl):
+        return str(obj)
     return obj
 
 

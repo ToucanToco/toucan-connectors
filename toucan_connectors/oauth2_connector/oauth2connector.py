@@ -125,7 +125,7 @@ class OAuth2Connector:
             if is_expired:
                 if "refresh_token" not in token:
                     raise NoOAuth2RefreshToken
-                client = _client(
+                client = oauth_client(
                     client_id=self.config.client_id,
                     client_secret=self.config.client_secret.get_secret_value(),
                 )
@@ -148,7 +148,7 @@ class OAuth2Connector:
         if "instance_url" not in access_data:
             raise NoInstanceUrl
 
-        client = _client(
+        client = oauth_client(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
         )
