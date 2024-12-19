@@ -11,7 +11,7 @@ fi
 
 apt-get update
 apt-get install -fyq --no-install-recommends gnupg curl ca-certificates
-curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --batch --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
 source /etc/os-release
 
 curl "https://packages.microsoft.com/config/${ID}/${VERSION_ID}/prod.list" \
