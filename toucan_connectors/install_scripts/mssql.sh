@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 set -e
 
@@ -11,8 +11,8 @@ fi
 
 apt-get update
 apt-get install -fyq --no-install-recommends gnupg curl ca-certificates
-echo "TEST KEY"
 curl -fsSL https://packages.microsoft.com/keys/microsoft.asc -o /tmp/microsoft-key.asc
+cat  /tmp/microsoft-key.asc
 gpg --batch --dearmor -o /usr/share/keyrings/microsoft-prod.gpg /tmp/microsoft-key.asc
 rm -f /tmp/microsoft-key.asc
 
