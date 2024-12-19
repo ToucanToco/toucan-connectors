@@ -16,7 +16,7 @@ def mssql_server(service_container):
         but also feeds the database once it's up !
         """
         conn = pyodbc.connect(
-            driver="{ODBC Driver 17 for SQL Server}",
+            driver="{ODBC Driver 18 for SQL Server}",
             server=f"127.0.0.1,{host_port}",
             user="SA",
             password="Il0veT0uc@n!",
@@ -63,7 +63,7 @@ def test_datasource():
 def test_connection_params():
     connector = MSSQLConnector(name="my_mssql_con", host="myhost", user="myuser")
     assert connector.get_connection_params(None) == {
-        "driver": "{ODBC Driver 17 for SQL Server}",
+        "driver": "{ODBC Driver 18 for SQL Server}",
         "server": "myhost",
         "user": "myuser",
         "as_dict": True,
@@ -77,7 +77,7 @@ def test_connection_params():
         connect_timeout=60,
     )
     assert connector.get_connection_params("mydb") == {
-        "driver": "{ODBC Driver 17 for SQL Server}",
+        "driver": "{ODBC Driver 18 for SQL Server}",
         "server": "myhost,123",
         "user": "myuser",
         "as_dict": True,
@@ -101,7 +101,7 @@ def test_mssql_get_df(mocker):
     mssql_connector.get_df(datasource)
 
     snock.assert_called_once_with(
-        driver="{ODBC Driver 17 for SQL Server}",
+        driver="{ODBC Driver 18 for SQL Server}",
         as_dict=True,
         server="127.0.0.1,22",
         user="SA",

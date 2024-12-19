@@ -63,7 +63,7 @@ class AzureMSSQLConnector(ToucanConnector, data_source_model=AzureMSSQLDataSourc
         password = self.password.get_secret_value() if self.password else None
 
         query_params: dict[str, str] = {
-            "driver": "ODBC Driver 17 for SQL Server",
+            "driver": "ODBC Driver 18 for SQL Server",
         }
         if self.connect_timeout:
             query_params["timeout"] = str(self.connect_timeout)

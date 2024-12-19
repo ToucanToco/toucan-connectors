@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- MSSQL and Azure MSQQL connectors now use the ODBC 18 driver
+- The Oracle connector install script no longer installs `libaio1`
+
 ## [7.4.1] 2024-12-12
 
 ### Fixed
