@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 set -e
 
@@ -12,8 +12,8 @@ fi
 apt-get update
 apt-get install -fyq --no-install-recommends gnupg curl ca-certificates
 curl -fsSL https://packages.microsoft.com/keys/microsoft.asc -o /tmp/microsoft-key.asc
-cat  /tmp/microsoft-key.asc
-gpg --batch --dearmor -o /usr/share/keyrings/microsoft-prod.gpg /tmp/microsoft-key.asc
+# --batch to disable TTY and --yes to overwrite the file if it exists
+gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg /tmp/microsoft-key.asc
 rm -f /tmp/microsoft-key.asc
 
 source /etc/os-release
