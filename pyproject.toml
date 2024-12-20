@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "toucan-connectors"
-version = "7.3.3"
+version = "7.4.1"
 description = "Toucan Toco Connectors"
 authors = ["Toucan Toco <dev@toucantoco.com>"]
 license = "BSD"
@@ -26,7 +26,7 @@ google-cloud-bigquery = { version = ">=3,<4", extras = [
     "bqstorage",
     "pandas",
 ], optional = true }
-hubspot-api-client = { version = ">=7.4,<11.0", optional = true }
+hubspot-api-client = { version = ">=7.4,<12.0", optional = true }
 jq = { version = "^1.2.2", optional = true }
 lxml = { version = ">=4.6.5,<6.0.0", optional = true }
 oauth2client = { version = "^4.1.3", optional = true }
@@ -49,6 +49,7 @@ redshift-connector = { version = "^2.0.907", optional = true }
 requests-oauthlib = { version = "2.0.0", optional = true }
 simplejson = { version = "^3.17.6", optional = true }
 snowflake-connector-python = { version = ">=2.7.12,<4.0.0", optional = true }
+sqlalchemy = { version = "^2", optional = true }
 tctc-odata = { version = ">=0.3,<1.0", optional = true }
 tenacity = { version = ">=8.0.1,<10.0.0", optional = true }
 xmltodict = { version = ">=0.13.0,<1.0", optional = true }
@@ -61,8 +62,8 @@ cryptography = ">=40.0.2"
 docker = "^7.1.0"
 mock = "^5.1.0"
 mypy = "^1.13"
-pandas-stubs = "^2.2.3.241009"
-pytest = "^8.3.3"
+pandas-stubs = "^2.2.3.241126"
+pytest = "^8.3.4"
 pytest-asyncio = ">=0.19.0,<1"
 pytest-cov = "^6.0.0"
 pytest-mock = "^3.14.0"
@@ -78,36 +79,36 @@ types-pymysql = "^1.1.0.20241103"
 
 [tool.poetry.extras]
 awsathena = ["awswrangler", "pandas"]
-azure_mssql = ["pyodbc", "pandas"]
+azure_mssql = ["pyodbc", "pandas", "sqlalchemy"]
 base = ["Authlib", "jq", "pandas", "python-slugify", "tenacity", "pandas"]
-clickhouse = ["clickhouse-driver", "pandas"]
+clickhouse = ["clickhouse-driver", "pandas", "sqlalchemy"]
 dataiku = ["dataiku-api-client", "pandas"]
 elasticsearch = ["elasticsearch", "pandas"]
 github = ["python-graphql-client", "pandas"]
 google_analytics = ["google-api-python-client", "oauth2client", "pandas"]
 google_big_query = ["google-cloud-bigquery", "pandas"]
-google_cloud_mysql = ["PyMySQL", "pandas"]
+google_cloud_mysql = ["PyMySQL", "pandas", "sqlalchemy"]
 google_sheets = ["google-api-python-client", "pandas"]
 http_api = ["oauthlib", "requests-oauthlib", "xmltodict", "pandas"]
 hubspot = ["hubspot-api-client", "pandas"]
 mongo = ["pymongo", "pandas"]
-mssql = ["pyodbc", "pandas"]
+mssql = ["pyodbc", "pandas", "sqlalchemy"]
 mssql_TLSv1_0 = ["pyodbc", "pandas"]
-mysql = ["PyMySQL", "pandas"]
+mysql = ["PyMySQL", "pandas", "sqlalchemy"]
 odata = ["oauthlib", "requests-oauthlib", "tctc_odata", "pandas"]
 odbc = ["pydobc", "pandas"]
-oracle_sql = ["cx_Oracle", "pandas"]
+oracle_sql = ["cx_Oracle", "pandas", "sqlalchemy"]
 peakina = ["peakina", "pandas"]
-postgres = ["psycopg2", "pandas"]
+postgres = ["psycopg2", "pandas", "sqlalchemy"]
 Redshift = ["redshift_connector", "lxml", "pandas"]
-sap_hana = ["pyhdb", "pandas"]
+sap_hana = ["pyhdb", "pandas", "sqlalchemy"]
 snowflake = ["snowflake-connector-python", "PyJWT", "pyarrow", "pandas"]
 soap = ["zeep", "lxml", "pandas"]
 
 # All
 all = [
-    "awswrangler",
     "Authlib",
+    "awswrangler",
     "clickhouse-driver",
     "cx-Oracle",
     "dataiku-api-client",
@@ -120,12 +121,12 @@ all = [
     "oauth2client",
     "oauthlib",
     "openpyxl",
+    "pandas",
     "peakina",
     "psycopg2",
     "pyarrow",
     "pyhdb",
     "PyJWT",
-    "pandas",
     "pymongo",
     "PyMySQL",
     "pyodbc",
@@ -135,8 +136,9 @@ all = [
     "requests-oauthlib",
     "simplejson",
     "snowflake-connector-python",
-    "tenacity",
+    "sqlalchemy",
     "tctc-odata",
+    "tenacity",
     "xmltodict",
     "zeep",
 ]
@@ -162,15 +164,17 @@ ignore_missing_imports = true
 files = [
     "toucan_connectors/auth.py",
     "toucan_connectors/awsathena/awsathena_connector.py",
+    "toucan_connectors/azure_mssql/azure_mssql_connector.py",
+    "toucan_connectors/common.py",
     "toucan_connectors/google_big_query/google_big_query_connector.py",
     "toucan_connectors/hubspot_private_app/hubspot_connector.py",
     "toucan_connectors/mongo/mongo_connector.py",
+    "toucan_connectors/mysql/mysql_connector.py",
     "toucan_connectors/peakina/peakina_connector.py",
     "toucan_connectors/postgres/postgresql_connector.py",
-    "toucan_connectors/mysql/mysql_connector.py",
+    "toucan_connectors/redshift/redshift_database_connector.py",
     "toucan_connectors/snowflake/snowflake_connector.py",
     "toucan_connectors/snowflake_oauth2/snowflake_oauth2_connector.py",
-    "toucan_connectors/redshift/redshift_database_connector.py",
     "toucan_connectors/toucan_connector.py",
 ]
 

@@ -29,7 +29,7 @@ try:
     import pandas as pd
     import requests
     import snowflake
-    from jinja2 import Template
+    from jinja2.sandbox import ImmutableSandboxedEnvironment
     from snowflake import connector as sf_connector
     from snowflake.connector import SnowflakeConnection
     from snowflake.connector.cursor import DictCursor as SfDictCursor
@@ -268,7 +268,7 @@ class SnowflakeConnector(
 
     def get_connection_params(self) -> dict[str, str | int | None]:
         params: dict[str, str | int | None] = {
-            "user": Template(self.user).render(),
+            "user": ImmutableSandboxedEnvironment().from_string(self.user).render(),
             "account": self.account,
             "authenticator": self.authentication_method,
             # hard Snowflake params

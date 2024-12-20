@@ -3,19 +3,25 @@ from logging import getLogger
 
 try:
     import pandas as pd
-    import pyodbc
 
     CONNECTOR_OK = True
 except ImportError as exc:  # pragma: no cover
     getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
     CONNECTOR_OK = False
 
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
-from pydantic import Field, StringConstraints
+from pydantic import Field, SecretStr, StringConstraints
 
-from toucan_connectors.common import pandas_read_sql
+from toucan_connectors.common import (
+    convert_jinja_params_to_sqlalchemy_named,
+    create_sqlalchemy_engine,
+    pandas_read_sqlalchemy_query,
+)
 from toucan_connectors.toucan_connector import PlainJsonSecretStr, ToucanConnector, ToucanDataSource
+
+if TYPE_CHECKING:
+    import sqlalchemy as sa
 
 CLOUD_HOST = "database.windows.net"
 
@@ -23,7 +29,7 @@ CLOUD_HOST = "database.windows.net"
 class AzureMSSQLDataSource(ToucanDataSource):
     database: str = Field(..., description="The name of the database you want to query")
     query: Annotated[str, StringConstraints(min_length=1)] = Field(
-        ..., description="You can write your SQL query here", widget="sql"
+        ..., description="You can write your SQL query here", json_schema_extra={"widget": "sql"}
     )
 
 
@@ -39,43 +45,46 @@ class AzureMSSQLConnector(ToucanConnector, data_source_model=AzureMSSQLDataSourc
     )
 
     user: str = Field(..., description="Your login username")
-    password: PlainJsonSecretStr = Field("", description="Your login password")
-    connect_timeout: int = Field(
+    password: PlainJsonSecretStr = Field(SecretStr(""), description="Your login password")
+    connect_timeout: int | None = Field(
         None,
         title="Connection timeout",
         description="You can set a connection timeout in seconds here, i.e. the maximum length of "
         "time you want to wait for the server to respond. None by default",
     )
 
-    def get_connection_params(self, *, database=None):
+    def _create_engine(self, database: str | None) -> "sa.Engine":
+        from sqlalchemy.engine import URL
+
         base_host = re.sub(f".{CLOUD_HOST}$", "", self.host)
+        host = f"{base_host}.{CLOUD_HOST}"
         user = f"{self.user}@{base_host}" if "@" not in self.user else self.user
 
-        if not self.password:
-            self.password = PlainJsonSecretStr("")
+        password = self.password.get_secret_value() if self.password else None
 
-        con_params = {
-            "driver": "{ODBC Driver 17 for SQL Server}",
-            "server": f"{base_host}.{CLOUD_HOST}",
-            "database": database,
-            "user": user,
-            "password": self.password.get_secret_value(),
-            "timeout": self.connect_timeout,
+        query_params: dict[str, str] = {
+            "driver": "ODBC Driver 18 for SQL Server",
         }
-        # remove None values
-        return {k: v for k, v in con_params.items() if v is not None}
+        if self.connect_timeout:
+            query_params["timeout"] = str(self.connect_timeout)
+
+        connection_url = URL.create(
+            "mssql+pyodbc",
+            username=user,
+            password=password,
+            host=host,
+            database=database,
+            query=query_params,
+        )
+        return create_sqlalchemy_engine(connection_url)
 
     def _retrieve_data(self, datasource: AzureMSSQLDataSource) -> "pd.DataFrame":
-        connection = pyodbc.connect(**self.get_connection_params(database=datasource.database))
+        sa_engine = self._create_engine(database=datasource.database)
 
         query_params = datasource.parameters or {}
-        df = pandas_read_sql(
-            datasource.query,
-            con=connection,
-            params=query_params,
-            convert_to_qmark=True,
-            render_user=True,
-        )
+        # {{param}} -> :param
+        query = convert_jinja_params_to_sqlalchemy_named(datasource.query)
 
-        connection.close()
+        df = pandas_read_sqlalchemy_query(query=query, engine=sa_engine, params=query_params)
+
         return df
