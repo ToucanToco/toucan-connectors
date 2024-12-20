@@ -114,6 +114,14 @@ class BaseOAuth2Config(AuthenticationConfig, ABC):
     )
     client_id: str
 
+    # Mandatory fields for oauth2 dance which must be setup by the backend and not by the end-user
+    auth_flow_id: str | None = Field(None, **UI_HIDDEN)
+    redirect_uri: str | None = Field(None, **UI_HIDDEN)
+    _secrets_keeper: HttpOauth2SecretsKeeper | None = None
+
+    def set_secret_keeper(self, secret_keeper: HttpOauth2SecretsKeeper):
+        self._secrets_keeper = secret_keeper
+
     @staticmethod
     def is_oauth_config() -> bool:
         return True
@@ -137,20 +145,6 @@ class BaseOAuth2Config(AuthenticationConfig, ABC):
         """Return the list of the secret fields names"""
         pass
 
-    # Mandatory hidden fields for oauth2 dance which must be setup by the backend and not by the end-user
-    _auth_flow_id: str | None = None
-    _redirect_uri: str | None = None
-    _secrets_keeper: HttpOauth2SecretsKeeper | None = None
-
-    def set_secret_keeper(self, secret_keeper: HttpOauth2SecretsKeeper):
-        self._secrets_keeper = secret_keeper
-
-    def set_redirect_uri(self, redirect_uri: str):
-        self._redirect_uri = redirect_uri
-
-    def set_auth_flow_id(self, auth_flow_id: str):
-        self._auth_flow_id = auth_flow_id
-
 
 class AuthorizationCodeOauth2(BaseOAuth2Config):
     """Authorization code configuration type"""
@@ -172,7 +166,7 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
         client = oauth_client(
             client_id=self.client_id,
             client_secret=self.client_secret.get_secret_value(),
-            redirect_uri=self._redirect_uri,
+            redirect_uri=self.redirect_uri,
             scope=self.scope,
         )
         workflow_token = generate_token()
@@ -186,7 +180,7 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
             "access_token": "__UNKNOWN__",
             "refresh_token": "__UNKNOWN__",
         }
-        self._secrets_keeper.save(self._auth_flow_id, tmp_oauth_secrets)
+        self._secrets_keeper.save(self.auth_flow_id, tmp_oauth_secrets)
         return uri
 
     def _get_access_token(self) -> str:
@@ -194,7 +188,7 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
 
         Call refresh token route if the access token has expired.
         """
-        oauth_token_info = self._secrets_keeper.load(self._auth_flow_id)
+        oauth_token_info = self._secrets_keeper.load(self.auth_flow_id)
         if "expires_at" in oauth_token_info:
             expires_at = oauth_token_info["expires_at"]
             if datetime.fromtimestamp(expires_at) < datetime.now():
@@ -204,11 +198,11 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
                 )
                 new_token = client.refresh_token(self.token_url, refresh_token=oauth_token_info["refresh_token"])
                 self._secrets_keeper.save(
-                    self._auth_flow_id,
+                    self.auth_flow_id,
                     # refresh call doesn't always contain the refresh_token
                     new_token | {"refresh_token": oauth_token_info["refresh_token"]},
                 )
-        return self._secrets_keeper.load(self._auth_flow_id)["access_token"]
+        return self._secrets_keeper.load(self.auth_flow_id)["access_token"]
 
     def retrieve_token(self, authorization_response: str) -> None:
         url = url_parse.urlparse(authorization_response)
@@ -217,7 +211,7 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
             client_id=self.client_id,
             client_secret=self.client_secret.get_secret_value(),
         )
-        saved_flow = self._secrets_keeper.load(self._auth_flow_id)
+        saved_flow = self._secrets_keeper.load(self.auth_flow_id)
         if saved_flow is None:
             raise MissingOauthWorkflowError()
 
@@ -229,9 +223,9 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
             authorization_response=authorization_response,
             # Some oauth applications needs redirect_uri in fetch_token params.
             # authorization_response does not carry it natively.
-            body=url_parse.urlencode({"redirect_uri": self._redirect_uri}),
+            body=url_parse.urlencode({"redirect_uri": self.redirect_uri}),
         )
-        self._secrets_keeper.save(self._auth_flow_id, token)
+        self._secrets_keeper.save(self.auth_flow_id, token)
 
 
 HttpAuthenticationConfig = AuthorizationCodeOauth2

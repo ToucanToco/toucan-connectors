@@ -40,8 +40,24 @@ def scope() -> str:
 
 
 @pytest.fixture
+def auth_flow_id() -> str:
+    return "my_secret_key"
+
+
+@pytest.fixture
+def redirect_uri() -> str:
+    return "http://redirect-url"
+
+
+@pytest.fixture
 def oauth2_authentication_config(
-    client_id: str, client_secret: str, authentication_url: str, token_url: str, scope: str
+    client_id: str,
+    client_secret: str,
+    authentication_url: str,
+    token_url: str,
+    scope: str,
+    auth_flow_id: str,
+    redirect_uri: str,
 ) -> AuthorizationCodeOauth2:
     return AuthorizationCodeOauth2(
         kind="AuthorizationCodeOauth2",
@@ -50,6 +66,8 @@ def oauth2_authentication_config(
         authentication_url=authentication_url,
         token_url=token_url,
         scope=scope,
+        auth_flow_id=auth_flow_id,
+        redirect_uri=redirect_uri,
     )
 
 
@@ -93,11 +111,9 @@ def test_secret_names(oauth2_authentication_config: AuthorizationCodeOauth2) -> 
 
 @pytest.mark.usefixtures("clear_fake_secret_database")
 def test_authenticate_session_with_valid_access_token(
-    oauth2_authentication_config: AuthorizationCodeOauth2, secret_keeper: HttpOauth2SecretsKeeper
+    oauth2_authentication_config: AuthorizationCodeOauth2, auth_flow_id: str, secret_keeper: HttpOauth2SecretsKeeper
 ) -> None:
-    auth_flow_id = "my_secret_key"
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
-    oauth2_authentication_config.set_auth_flow_id(auth_flow_id=auth_flow_id)
 
     # Create and save fake secret data
     secrets = OAuth2SecretData(
@@ -118,11 +134,10 @@ def test_authenticate_session_with_expired_access_token(
     client_id: str,
     client_secret: str,
     token_url: str,
+    auth_flow_id: str,
     mocker: MockFixture,
 ) -> None:
-    auth_flow_id = "my_secret_key"
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
-    oauth2_authentication_config.set_auth_flow_id(auth_flow_id=auth_flow_id)
 
     # Create and save fake secret data
     secrets = OAuth2SecretData(
@@ -154,19 +169,19 @@ def test_authenticate_session_with_expired_access_token(
 def test_build_authorization_url(
     authentication_url: str,
     client_id: str,
+    auth_flow_id: str,
     oauth2_authentication_config: AuthorizationCodeOauth2,
     secret_keeper: HttpOauth2SecretsKeeper,
     mocker: MockFixture,
 ):
-    auth_flow_id = "my_secret_key"
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
-    oauth2_authentication_config.set_auth_flow_id(auth_flow_id=auth_flow_id)
     workflow_token = "generated_token_667"
     mocker.patch("toucan_connectors.http_api.authentication_configs.generate_token", return_value=workflow_token)
     assert secret_keeper.load(auth_flow_id) is None
     auth_url = oauth2_authentication_config.build_authorization_uri(random="content", other_token="super_123")
     assert auth_url == (
         f"{authentication_url}?response_type=code&client_id={client_id}"
+        "&redirect_uri=http%3A%2F%2Fredirect-url"
         f"&scope=ACCESS%3A%3AREAD%2C+ACCESS%3A%3AWRITE&state=%7B%22"
         f"workflow_token%22%3A%22{workflow_token}%22%2C%22"
         f"random%22%3A%22content%22%2C%22other_token%22%3A%22super_123%22%7D"  # additional values correctly added
@@ -180,13 +195,12 @@ def test_retrieve_oauth2_token(
     client_id: str,
     client_secret: str,
     token_url: str,
+    auth_flow_id: str,
+    redirect_uri: str,
     oauth2_authentication_config: AuthorizationCodeOauth2,
     secret_keeper: HttpOauth2SecretsKeeper,
     mocker: MockFixture,
 ) -> None:
-    auth_flow_id = "my_secret_key"
-    redirect_uri = "http://redirect-url"
-
     json_str_state = JsonWrapper.dumps({"workflow_token": "workflow_token_123", "random": "laputa stuff"})
     authorization_response = (
         "http://laputa/my_small_app/connectors/http/authentication/redirect?"
@@ -196,8 +210,6 @@ def test_retrieve_oauth2_token(
     )
 
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
-    oauth2_authentication_config.set_auth_flow_id(auth_flow_id=auth_flow_id)
-    oauth2_authentication_config.set_redirect_uri(redirect_uri=redirect_uri)
 
     # As this time, we only know workflow_token
     secrets = OAuth2SecretData(
@@ -235,12 +247,11 @@ def test_raise_exception_on_refresh_token_when_saved_workflow_differs(
     client_id: str,
     client_secret: str,
     token_url: str,
+    auth_flow_id: str,
+    redirect_uri: str,
     oauth2_authentication_config: AuthorizationCodeOauth2,
     secret_keeper: HttpOauth2SecretsKeeper,
 ) -> None:
-    auth_flow_id = "my_secret_key"
-    redirect_uri = "http://redirect-url"
-
     json_str_state = JsonWrapper.dumps({"workflow_token": "invalid_workflow_token", "random": "laputa stuff"})
     authorization_response = (
         "http://laputa/my_small_app/connectors/http/authentication/redirect?"
@@ -250,8 +261,6 @@ def test_raise_exception_on_refresh_token_when_saved_workflow_differs(
     )
 
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
-    oauth2_authentication_config.set_auth_flow_id(auth_flow_id=auth_flow_id)
-    oauth2_authentication_config.set_redirect_uri(redirect_uri=redirect_uri)
 
     # As this time, we only know workflow_token
     secrets = OAuth2SecretData(
@@ -271,12 +280,11 @@ def test_raise_exception_on_refresh_token_when_secret_keeper_is_empty(
     client_id: str,
     client_secret: str,
     token_url: str,
+    auth_flow_id: str,
+    redirect_uri: str,
     oauth2_authentication_config: AuthorizationCodeOauth2,
     secret_keeper: HttpOauth2SecretsKeeper,
 ) -> None:
-    auth_flow_id = "my_secret_key"
-    redirect_uri = "http://redirect-url"
-
     json_str_state = JsonWrapper.dumps({"workflow_token": "invalid_workflow_token", "random": "laputa stuff"})
     authorization_response = (
         "http://laputa/my_small_app/connectors/http/authentication/redirect?"
@@ -286,8 +294,6 @@ def test_raise_exception_on_refresh_token_when_secret_keeper_is_empty(
     )
 
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
-    oauth2_authentication_config.set_auth_flow_id(auth_flow_id=auth_flow_id)
-    oauth2_authentication_config.set_redirect_uri(redirect_uri=redirect_uri)
 
     with pytest.raises(MissingOauthWorkflowError):
         oauth2_authentication_config.retrieve_token(authorization_response=authorization_response)
