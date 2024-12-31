@@ -57,11 +57,11 @@ zeep = { version = "^4.1.0", optional = true }
 
 
 [tool.poetry.dev-dependencies]
-click = "^8.1.7"
+click = "^8.1.8"
 cryptography = ">=40.0.2"
 docker = "^7.1.0"
 mock = "^5.1.0"
-mypy = "^1.13"
+mypy = "^1.14"
 pandas-stubs = "^2.2.3.241126"
 pytest = "^8.3.4"
 pytest-asyncio = ">=0.19.0,<1"
@@ -74,7 +74,7 @@ responses = ">=0.21.0,<1"
 types-pyopenssl = "^24.1.0.20240722"
 types-python-slugify = "^8.0.2.20240310"
 types-requests = "^2.31.0.6"
-types-simplejson = "^3.19.0.20240801"
+types-simplejson = "^3.19.0.20241221"
 types-pymysql = "^1.1.0.20241103"
 
 [tool.poetry.extras]
