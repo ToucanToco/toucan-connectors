@@ -17,7 +17,7 @@ jobs:
       - name: install poetry
         run: |
           pip install -U pip
-          pip install -U poetry
+          pip install -U 'poetry>=1.8,<1.9'
       - name: publish
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}

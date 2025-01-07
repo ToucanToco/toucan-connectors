@@ -37,7 +37,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install freetds-dev libsasl2-dev libpq-dev
-        pip install -U poetry
+        pip install -U 'poetry>=1.8,<1.9'
 
     - name: Install oracle dependencies
       run: sudo bash toucan_connectors/install_scripts/oracle.sh
