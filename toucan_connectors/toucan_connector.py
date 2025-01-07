@@ -50,7 +50,7 @@ class QueryMetadata(NamedTuple):
 
 
 class Category(str, Enum):
-    SNOWFLAKE: str = "Snowflake"
+    SNOWFLAKE = "Snowflake"
 
 
 class DataSlice(NamedTuple):
