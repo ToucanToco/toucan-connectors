@@ -68,18 +68,16 @@ ORDERED_KEYS = [
 
 
 class AuthenticationMethod(str, Enum):
-    DB_CREDENTIALS: str = "db_credentials"
-    AWS_CREDENTIALS: str = "aws_credentials"
-    AWS_PROFILE: str = "aws_profile"
+    DB_CREDENTIALS = "db_credentials"
+    AWS_CREDENTIALS = "aws_credentials"
+    AWS_PROFILE = "aws_profile"
 
 
 class AuthenticationMethodError(str, Enum):
-    DB_CREDENTIALS: str = f"User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}"
-    AWS_CREDENTIALS: str = (
-        f"AccessKeyId, SecretAccessKey & db_user are required for {AuthenticationMethod.AWS_CREDENTIALS}"
-    )
-    AWS_PROFILE: str = f"Profile & db_user are required for {AuthenticationMethod.AWS_PROFILE}"
-    UNKNOWN: str = "Unknown AuthenticationMethod"
+    DB_CREDENTIALS = f"User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}"
+    AWS_CREDENTIALS = f"AccessKeyId, SecretAccessKey & db_user are required for {AuthenticationMethod.AWS_CREDENTIALS}"
+    AWS_PROFILE = f"Profile & db_user are required for {AuthenticationMethod.AWS_PROFILE}"
+    UNKNOWN = "Unknown AuthenticationMethod"
 
 
 class RedshiftDataSource(ToucanDataSource):

@@ -93,13 +93,13 @@ class SnowflakeDataSource(ToucanDataSource["SnowflakeConnector"]):
 
 
 class AuthenticationMethod(str, Enum):
-    PLAIN: str = "Snowflake (ID + Password)"
-    OAUTH: str = "oAuth"
+    PLAIN = "Snowflake (ID + Password)"
+    OAUTH = "oAuth"
 
 
 class AuthenticationMethodValue(str, Enum):
-    PLAIN: str = "snowflake"
-    OAUTH: str = "oauth"
+    PLAIN = "snowflake"
+    OAUTH = "oauth"
 
 
 @contextmanager
