@@ -71,14 +71,12 @@ class HttpOauth2SecretsKeeper(BaseModel):
             token_response=value, default_lifetime=self.default_token_lifetime_seconds
         ).timestamp()
         try:
-            _LOGGER.info(f"DATA = {value}")
             secret_data = OAuth2SecretData(**value)
         except ValidationError as exc:
             _LOGGER.error(f"Can't instantiate oauth secret data with value_keys={list(value.keys())}", exc_info=exc)
             raise
         # remove existing secrets
         self.delete_callback(key)
-        _LOGGER.info(f"SAVE KEY: {key}")
         # save new secrets
         self.save_callback(key, secret_data.model_dump())
 
@@ -140,11 +138,6 @@ class BaseOAuth2Config(AuthenticationConfig, ABC):
         """Retrieve authorization token from oauth2 backend"""
         pass
 
-    @abstractmethod
-    def secrets_names(self) -> list[str]:
-        """Return the list of the secret fields names"""
-        pass
-
 
 class AuthorizationCodeOauth2(BaseOAuth2Config):
     """Authorization code configuration type"""
@@ -153,9 +146,6 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
 
     # Allows to instantiate authentication config without secrets
     client_secret: SecretStr | None = None
-
-    def secrets_names(self) -> list[str]:
-        return ["client_secret"]
 
     def authenticate_session(self) -> Session:
         session = Session()

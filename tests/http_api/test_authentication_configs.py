@@ -105,10 +105,6 @@ def secret_keeper(clear_fake_secret_database: None) -> HttpOauth2SecretsKeeper:
     return HttpOauth2SecretsKeeper(save_callback=_fake_saver, delete_callback=_fake_remover, load_callback=_fake_loader)
 
 
-def test_secret_names(oauth2_authentication_config: AuthorizationCodeOauth2) -> None:
-    assert oauth2_authentication_config.secrets_names() == ["client_secret"]
-
-
 @pytest.mark.usefixtures("clear_fake_secret_database")
 def test_authenticate_session_with_valid_access_token(
     oauth2_authentication_config: AuthorizationCodeOauth2, auth_flow_id: str, secret_keeper: HttpOauth2SecretsKeeper
