@@ -223,30 +223,30 @@ cryptography = "*"
 
 [[package]]
 name = "awswrangler"
-version = "3.10.1"
+version = "3.11.0"
 description = "Pandas on AWS."
 optional = true
-python-versions = "<4.0,>=3.8"
+python-versions = "<4.0,>=3.9"
 files = [
-    {file = "awswrangler-3.10.1-py3-none-any.whl", hash = "sha256:050e9190e1211f6bb901f44241237e7310a8a71191bb31cb35779f795644209f"},
-    {file = "awswrangler-3.10.1.tar.gz", hash = "sha256:2c12c522ddf4f59214bb7b79ecab585fa8bb96ea6300e48126962485f1598ddf"},
+    {file = "awswrangler-3.11.0-py3-none-any.whl", hash = "sha256:ca7a1027a33a8c8fcc140e30b5fb284e20e8ee2f74069e0e84d8a4d5cc788a12"},
+    {file = "awswrangler-3.11.0.tar.gz", hash = "sha256:bdd05a96907a9d71896b80ec109b2fbc700427ebc2e3e6ed11a0490e135242a6"},
 ]
 
 [package.dependencies]
 boto3 = ">=1.20.32,<2.0.0"
 botocore = ">=1.23.32,<2.0.0"
-numpy = {version = ">=1.26,<3.0", markers = "python_version >= \"3.9\""}
+numpy = {version = ">=1.26,<3.0", markers = "python_version >= \"3.10\""}
 packaging = ">=21.1,<25.0"
-pandas = {version = ">=1.2.0,<3.0.0", markers = "python_version >= \"3.9\""}
-pyarrow = ">=8.0.0"
+pandas = ">=1.2.0,<3.0.0"
+pyarrow = {version = ">=8.0.0,<19.0.0", markers = "python_version < \"3.13\""}
 setuptools = {version = "*", markers = "python_version >= \"3.12\""}
 typing-extensions = ">=4.4.0,<5.0.0"
 
 [package.extras]
-deltalake = ["deltalake (>=0.18.0,<0.22.0)"]
+deltalake = ["deltalake (>=0.18.0,<0.24.0)"]
 geopandas = ["geopandas (>=0.13.2,<0.14.0)", "geopandas (>=0.14.1,<0.15.0)"]
 gremlin = ["aiohttp (>=3.9.0,<4.0.0)", "async-timeout (>=4.0.3,<6.0.0)", "gremlinpython (>=3.7.1,<4.0.0)", "requests (>=2.0.0,<3.0.0)"]
-modin = ["modin (==0.23.1post0)", "modin (>=0.31.0,<0.32.0)"]
+modin = ["modin (>=0.31,<0.33)"]
 mysql = ["pymysql (>=1.0.0,<2.0.0)"]
 opencypher = ["requests (>=2.0.0,<3.0.0)"]
 openpyxl = ["openpyxl (>=3.0.0,<4.0.0)"]
@@ -254,7 +254,7 @@ opensearch = ["jsonpath-ng (>=1.5.3,<2.0.0)", "opensearch-py (>=2.0.0,<3.0.0)", 
 oracle = ["oracledb (>=1,<3)"]
 postgres = ["pg8000 (>=1.29.0,<2.0.0)"]
 progressbar = ["progressbar2 (>=4.0.0,<5.0.0)"]
-ray = ["ray[data,default] (>=2.30.0,<3.0.0)"]
+ray = ["ray[data,default] (>=2.30.0,<2.38.0)"]
 redshift = ["redshift-connector (>=2.0.0,<3.0.0)"]
 sparql = ["SPARQLWrapper (>=2.0.0,<3.0.0)", "requests (>=2.0.0,<3.0.0)"]
 sqlserver = ["pyodbc (>=4,<6)"]
