@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from typing import Any, Callable, Literal
 from urllib import parse as url_parse
 
-from authlib.common.security import generate_token
 from pydantic import BaseModel, Field, SecretStr, ValidationError
 from requests import Session
 
@@ -13,6 +12,14 @@ from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import oauth_client
 
 _LOGGER = logging.getLogger(__name__)
+
+
+try:
+    # Module can be missing if toucan-connectors is installed in light mode
+    # Those missing modules must be also included to HttpApiConnector module dependencies
+    from authlib.common.security import generate_token
+except ImportError as exc:
+    _LOGGER.warning("Missing dependencies for HttpApi Connector authentication")
 
 
 class Oauth2Error(Exception):
@@ -53,7 +60,6 @@ def _extract_expires_at_from_token_response(token_response: dict[str, Any], defa
 
 
 class OAuth2SecretData(BaseModel):
-    workflow_token: str | None = None
     access_token: str
     refresh_token: str
     expires_at: float
@@ -61,9 +67,10 @@ class OAuth2SecretData(BaseModel):
 
 class HttpOauth2SecretsKeeper(BaseModel):
     default_token_lifetime_seconds: int = 3600
-    save_callback: Callable[[str, dict[str, Any]], None]
-    delete_callback: Callable[[str], None]
-    load_callback: Callable[[str], dict[str, Any] | None]
+    save_callback: Callable[[str, dict[str, Any], dict[str, Any] | None], None]
+    delete_callback: Callable[[str, dict[str, Any] | None], None]
+    load_callback: Callable[[str, dict[str, Any] | None], dict[str, Any] | None]
+    context: dict[str, Any] | None = None
 
     def save(self, key: str, value: dict[str, Any]) -> None:
         """Save secrets in a secrets repository"""
@@ -76,13 +83,13 @@ class HttpOauth2SecretsKeeper(BaseModel):
             _LOGGER.error(f"Can't instantiate oauth secret data with value_keys={list(value.keys())}", exc_info=exc)
             raise
         # remove existing secrets
-        self.delete_callback(key)
+        self.delete_callback(key, self.context)
         # save new secrets
-        self.save_callback(key, secret_data.model_dump())
+        self.save_callback(key, secret_data.model_dump(), self.context)
 
     def load(self, key: str) -> dict[str, Any] | None:
         """Load secrets from the secrets repository"""
-        return self.load_callback(key)
+        return self.load_callback(key, self.context)
 
 
 class AuthenticationConfig(BaseModel, ABC):
@@ -125,16 +132,32 @@ class BaseOAuth2Config(AuthenticationConfig, ABC):
         return True
 
     @abstractmethod
-    def build_authorization_uri(self, **kwargs):
+    def build_authorization_uri(
+        self,
+        workflow_token_saver_callback: Callable[[str, str, dict[str, Any]], None],
+        workflow_callback_context: dict[str, Any],
+        **kwargs
+    ):
         """Build an authorization request that will be used to initialize oauth2 dance.
 
         :param kwargs: Additional values that will be passed to the authorization url and retrieved in
          the 'state' query param when calling the redirect uri. That 'state' query param will be sent as a json string.
+
+        :param workflow_token_saver_callback: function used to save the generated workflow token.
+        The workflow token is used in redirect callback (once the user has logged in with the external service)
+        to check if it is a legit oauth workflow.
+
+        :param workflow_callback_context: the context which will be passed to the workflow token saver callback
         """
         pass
 
     @abstractmethod
-    def retrieve_token(self, response_params: dict[str, Any]):
+    def retrieve_token(
+        self,
+        workflow_token_loader_callback: Callable[[str, dict[str, Any]], str | None],
+        workflow_callback_context: dict[str, Any],
+        authorization_response: str
+    ):
         """Retrieve authorization token from oauth2 backend"""
         pass
 
@@ -152,7 +175,12 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
         session.headers.update({"Authorization": f"Bearer {self._get_access_token()}"})
         return session
 
-    def build_authorization_uri(self, **kwargs) -> str:
+    def build_authorization_uri(
+        self,
+        workflow_token_saver_callback: Callable[[str, str, dict[str, Any]], None],
+        workflow_callback_context: dict[str, Any],
+        **kwargs
+    ) -> str:
         client = oauth_client(
             client_id=self.client_id,
             client_secret=self.client_secret.get_secret_value(),
@@ -164,13 +192,7 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
         uri, state = client.create_authorization_url(
             self.authentication_url, state=JsonWrapper.dumps(state), **self.additional_auth_params
         )
-
-        tmp_oauth_secrets = {
-            "workflow_token": workflow_token,
-            "access_token": "__UNKNOWN__",
-            "refresh_token": "__UNKNOWN__",
-        }
-        self._secrets_keeper.save(self.auth_flow_id, tmp_oauth_secrets)
+        workflow_token_saver_callback(self.auth_flow_id, workflow_token, workflow_callback_context)
         return uri
 
     def _get_access_token(self) -> str:
@@ -194,19 +216,24 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
                 )
         return self._secrets_keeper.load(self.auth_flow_id)["access_token"]
 
-    def retrieve_token(self, authorization_response: str) -> None:
+    def retrieve_token(
+        self,
+        workflow_token_loader_callback: Callable[[str, dict[str, Any]], str | None],
+        workflow_callback_context: dict[str, Any],
+        authorization_response: str
+    ) -> None:
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)
         client = oauth_client(
             client_id=self.client_id,
             client_secret=self.client_secret.get_secret_value(),
         )
-        saved_flow = self._secrets_keeper.load(self.auth_flow_id)
-        if saved_flow is None:
+        workflow_token = workflow_token_loader_callback(self.auth_flow_id, workflow_callback_context)
+        if workflow_token is None:
             raise MissingOauthWorkflowError()
 
         # Verify the oauth2 workflow token
-        assert saved_flow["workflow_token"] == JsonWrapper.loads(url_params["state"][0])["workflow_token"]
+        assert workflow_token == JsonWrapper.loads(url_params["state"][0])["workflow_token"]
 
         token = client.fetch_token(
             self.token_url,

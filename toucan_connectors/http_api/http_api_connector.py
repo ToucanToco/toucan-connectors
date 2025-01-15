@@ -6,6 +6,7 @@ from typing import Any
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 
 from toucan_connectors.http_api.http_api_data_source import HttpAPIDataSource, apply_pagination_to_data_source
+from toucan_connectors.http_api.authentication_configs import HttpAuthenticationConfig
 
 try:
     from xml.etree.ElementTree import ParseError, fromstring, tostring
@@ -14,8 +15,8 @@ try:
     from requests import Session
     from requests.exceptions import HTTPError
     from xmltodict import parse
+    from authlib.common.security import generate_token
 
-    from toucan_connectors.http_api.authentication_configs import HttpAuthenticationConfig
     from toucan_connectors.http_api.pagination_configs import (
         NoopPaginationConfig,
         extract_pagination_info_from_result,
