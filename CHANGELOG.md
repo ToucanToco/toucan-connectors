@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.5.0] 2025-01-15
+
 ### Changed
 
 - MSSQL and Azure MSQQL connectors now use the ODBC 18 driver
