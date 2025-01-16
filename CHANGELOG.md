@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [7.6.0] 2025-01-16
+
+### Changed
+
+- Added support for Python 3.13
+
 ## [7.5.0] 2025-01-15
 
 ### Changed
