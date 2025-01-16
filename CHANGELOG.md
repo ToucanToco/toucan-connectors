@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## [7.5.0] 2025-01-15
+
+### Changed
+
+- MSSQL and Azure MSQQL connectors now use the ODBC 18 driver
+- The Oracle connector install script is now compatible with Ubuntu 24.04
+
+## [7.4.1] 2024-12-12
+
+### Fixed
+
+- Prevent injection in Jinja templates
+
 ## [7.4.0] 2024-12-02
 
 ### Changed
