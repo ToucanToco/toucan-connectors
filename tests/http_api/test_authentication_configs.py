@@ -75,29 +75,40 @@ class KeyAlreadyExistsInDatabase(Exception):
     pass
 
 
-_SAVED_CONTENT = {}
+_SAVED_OAUTH_CONTENT = {}
+_SAVE_WORKFLOW_TOKEN = {}
 
 
-def _fake_saver(key: str, value: dict[str, Any]) -> None:
-    if key in _SAVED_CONTENT:
+def _fake_saver(key: str, value: dict[str, Any], context: dict[str, Any]) -> None:
+    if key in _SAVED_OAUTH_CONTENT:
         # Should not happen! This means that old secrets have not been
         # removed from the DB
         raise KeyAlreadyExistsInDatabase(f"key={key}")
-    _SAVED_CONTENT[key] = value
+    _SAVED_OAUTH_CONTENT[key] = value
 
 
-def _fake_loader(key: str) -> dict[str, Any] | None:
-    return _SAVED_CONTENT.get(key, None)
+def _fake_loader(key: str, context: dict[str, Any]) -> dict[str, Any] | None:
+    return _SAVED_OAUTH_CONTENT.get(key, None)
 
 
-def _fake_remover(key: str) -> None:
-    if key in _SAVED_CONTENT:
-        _SAVED_CONTENT.pop(key)
+def _fake_remover(key: str, context: dict[str, Any]) -> None:
+    if key in _SAVED_OAUTH_CONTENT:
+        _SAVED_OAUTH_CONTENT.pop(key)
+
+
+def _fake_workflow_saver(key: str, workflow_token: str, context: dict[str, Any]) -> None:
+    _SAVE_WORKFLOW_TOKEN[key] = workflow_token
+
+
+def _fake_workflow_loader(key: str, context: dict[str]) -> str | None:
+    if key in _SAVE_WORKFLOW_TOKEN:
+        return _SAVE_WORKFLOW_TOKEN[key]
 
 
 @pytest.fixture
 def clear_fake_secret_database() -> None:
-    _SAVED_CONTENT.clear()
+    _SAVED_OAUTH_CONTENT.clear()
+    _SAVE_WORKFLOW_TOKEN.clear()
 
 
 @pytest.fixture
@@ -174,7 +185,12 @@ def test_build_authorization_url(
     workflow_token = "generated_token_667"
     mocker.patch("toucan_connectors.http_api.authentication_configs.generate_token", return_value=workflow_token)
     assert secret_keeper.load(auth_flow_id) is None
-    auth_url = oauth2_authentication_config.build_authorization_uri(random="content", other_token="super_123")
+    auth_url = oauth2_authentication_config.build_authorization_uri(
+        workflow_token_saver_callback=_fake_workflow_saver,
+        workflow_callback_context={},
+        random="content",
+        other_token="super_123"
+    )
     assert auth_url == (
         f"{authentication_url}?response_type=code&client_id={client_id}"
         "&redirect_uri=http%3A%2F%2Fredirect-url"
@@ -183,7 +199,7 @@ def test_build_authorization_url(
         f"random%22%3A%22content%22%2C%22other_token%22%3A%22super_123%22%7D"  # additional values correctly added
     )
     # workflow correctly saved
-    assert secret_keeper.load(auth_flow_id)["workflow_token"] == workflow_token
+    assert _fake_workflow_loader(auth_flow_id, context={}) == workflow_token
 
 
 @pytest.mark.usefixtures("clear_fake_secret_database")
@@ -207,11 +223,8 @@ def test_retrieve_oauth2_token(
 
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
 
-    # As this time, we only know workflow_token
-    secrets = OAuth2SecretData(
-        workflow_token="workflow_token_123", access_token="__UNKNOWN__", refresh_token="__UNKNOWN__", expires_at=0
-    ).model_dump()
-    secret_keeper.save(auth_flow_id, secrets)
+    # As this time, workflow_token is saved
+    _fake_workflow_saver(auth_flow_id, "workflow_token_123", {})
 
     # Expects a call to refresh the expired access token
     mocked_client = mocker.MagicMock(name="mocked_client")
@@ -224,7 +237,11 @@ def test_retrieve_oauth2_token(
     }
 
     mock = mocker.patch("toucan_connectors.http_api.authentication_configs.oauth_client", return_value=mocked_client)
-    oauth2_authentication_config.retrieve_token(authorization_response=authorization_response)
+    oauth2_authentication_config.retrieve_token(
+        workflow_token_loader_callback=_fake_workflow_loader,
+        workflow_callback_context={},
+        authorization_response=authorization_response
+    )
 
     # Check if fetched tokens are correctly saved
     assert secret_keeper.load(auth_flow_id)["access_token"] == "my_access_token"
@@ -258,17 +275,15 @@ def test_raise_exception_on_refresh_token_when_saved_workflow_differs(
 
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
 
-    # As this time, we only know workflow_token
-    secrets = OAuth2SecretData(
-        workflow_token="workflow_token_123", access_token="__UNKNOWN__", refresh_token="__UNKNOWN__", expires_at=0
-    ).model_dump()
-    secret_keeper.save(auth_flow_id, secrets)
-    with pytest.raises(AssertionError):
-        oauth2_authentication_config.retrieve_token(authorization_response=authorization_response)
+    # As this time, workflow_token is saved
+    _fake_workflow_saver(auth_flow_id, "workflow_token_123", {})
 
-    # Still nothing
-    assert secret_keeper.load(auth_flow_id)["access_token"] == "__UNKNOWN__"
-    assert secret_keeper.load(auth_flow_id)["refresh_token"] == "__UNKNOWN__"
+    with pytest.raises(AssertionError):
+        oauth2_authentication_config.retrieve_token(
+            workflow_token_loader_callback=_fake_workflow_loader,
+            workflow_callback_context={},
+            authorization_response=authorization_response,
+        )
 
 
 @pytest.mark.usefixtures("clear_fake_secret_database")
@@ -292,7 +307,11 @@ def test_raise_exception_on_refresh_token_when_secret_keeper_is_empty(
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
 
     with pytest.raises(MissingOauthWorkflowError):
-        oauth2_authentication_config.retrieve_token(authorization_response=authorization_response)
+        oauth2_authentication_config.retrieve_token(
+            workflow_token_loader_callback=_fake_workflow_loader,
+            workflow_callback_context={},
+            authorization_response=authorization_response
+        )
 
 
 @pytest.fixture
