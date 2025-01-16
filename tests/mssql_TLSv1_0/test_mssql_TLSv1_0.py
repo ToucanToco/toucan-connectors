@@ -98,7 +98,7 @@ def test_mssql_get_df(mocker):
         name="mycon",
         domain="mydomain",
         database="mydb",
-        query="SELECT Name, CountryCode, Population " "FROM City WHERE ID BETWEEN 1 AND 3",
+        query="SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
     )
     mssql_connector.get_df(datasource)
 
@@ -124,7 +124,7 @@ def test_get_df(mssql_connector):
     datasource = MSSQLDataSource(
         name="mycon",
         domain="mydomain",
-        query="SELECT Name, CountryCode, Population " "FROM City WHERE ID BETWEEN 1 AND 3",
+        query="SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
         database="master",
     )
 

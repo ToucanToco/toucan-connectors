@@ -36,7 +36,7 @@ class GoogleSheetsDataSource(ToucanDataSource):
     spreadsheet_id: str = Field(
         ...,
         title="ID of the spreadsheet",
-        description="Can be found in your URL: " "https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...",
+        description="Can be found in your URL: https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...",
     )
     sheet: Optional[str] = Field(None, title="Sheet title", description="Title of the desired sheet")
     header_row: int = Field(0, title="Header row", description="Row of the header of the spreadsheet")

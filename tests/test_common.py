@@ -330,7 +330,7 @@ def test_render_raw_permission():
         'indic2 == "yo_{{my_indic[2]}}" and indic_list == {{my_indic}}'
     )
     params = {"my_indic": ["0", 1, "2"]}
-    expected = '(indic0 == "0" or indic1 == 1) and ' "indic2 == \"yo_2\" and indic_list == ['0', 1, '2']"
+    expected = "(indic0 == \"0\" or indic1 == 1) and indic2 == \"yo_2\" and indic_list == ['0', 1, '2']"
     assert apply_query_parameters(query, params) == expected
 
 

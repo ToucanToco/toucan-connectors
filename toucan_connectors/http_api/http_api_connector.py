@@ -5,17 +5,17 @@ from typing import Any
 
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 
-from toucan_connectors.http_api.http_api_data_source import HttpAPIDataSource, apply_pagination_to_data_source
 from toucan_connectors.http_api.authentication_configs import HttpAuthenticationConfig
+from toucan_connectors.http_api.http_api_data_source import HttpAPIDataSource, apply_pagination_to_data_source
 
 try:
     from xml.etree.ElementTree import ParseError, fromstring, tostring
 
     import pandas as pd
+    from authlib.common.security import generate_token  # noqa: F401
     from requests import Session
     from requests.exceptions import HTTPError
     from xmltodict import parse
-    from authlib.common.security import generate_token
 
     from toucan_connectors.http_api.pagination_configs import (
         NoopPaginationConfig,
@@ -115,7 +115,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates
             query["cert"] = [str(c) for c in self.cert]
 
-        HttpAPIConnector.logger.debug(f'>> Request:  method={query.get("method")} url={query.get("url")}')
+        HttpAPIConnector.logger.debug(f">> Request:  method={query.get('method')} url={query.get('url')}")
         res = session.request(**query)
         HttpAPIConnector.logger.debug(f"<< Response: status_code={res.status_code} reason={res.reason}")
 
@@ -139,7 +139,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                     data = json.loads(res.content)
                 except ValueError:
                     HttpAPIConnector.logger.error(
-                        f'Cannot decode response content from query: method={query.get("method")} url={query.get("url")} response_status_code={res.status_code} response_reason=${res.reason}'  # noqa: E501
+                        f"Cannot decode response content from query: method={query.get('method')} url={query.get('url')} response_status_code={res.status_code} response_reason=${res.reason}"  # noqa: E501
                     )
                     raise
         return data

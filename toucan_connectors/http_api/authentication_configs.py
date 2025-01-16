@@ -18,7 +18,7 @@ try:
     # Module can be missing if toucan-connectors is installed in light mode
     # Those missing modules must be also included to HttpApiConnector module dependencies
     from authlib.common.security import generate_token
-except ImportError as exc:
+except ImportError:
     _LOGGER.warning("Missing dependencies for HttpApi Connector authentication")
 
 
@@ -136,7 +136,7 @@ class BaseOAuth2Config(AuthenticationConfig, ABC):
         self,
         workflow_token_saver_callback: Callable[[str, str, dict[str, Any]], None],
         workflow_callback_context: dict[str, Any],
-        **kwargs
+        **kwargs,
     ):
         """Build an authorization request that will be used to initialize oauth2 dance.
 
@@ -156,7 +156,7 @@ class BaseOAuth2Config(AuthenticationConfig, ABC):
         self,
         workflow_token_loader_callback: Callable[[str, dict[str, Any]], str | None],
         workflow_callback_context: dict[str, Any],
-        authorization_response: str
+        authorization_response: str,
     ):
         """Retrieve authorization token from oauth2 backend"""
         pass
@@ -179,7 +179,7 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
         self,
         workflow_token_saver_callback: Callable[[str, str, dict[str, Any]], None],
         workflow_callback_context: dict[str, Any],
-        **kwargs
+        **kwargs,
     ) -> str:
         client = oauth_client(
             client_id=self.client_id,
@@ -220,7 +220,7 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
         self,
         workflow_token_loader_callback: Callable[[str, dict[str, Any]], str | None],
         workflow_callback_context: dict[str, Any],
-        authorization_response: str
+        authorization_response: str,
     ) -> None:
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)

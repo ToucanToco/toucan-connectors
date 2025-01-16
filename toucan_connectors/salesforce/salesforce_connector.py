@@ -113,7 +113,7 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         if not access_data:
             raise NoCredentialsError(NO_CREDENTIALS_ERROR)
         headers = {
-            "Authorization": f'Bearer {access_data["access_token"]}',
+            "Authorization": f"Bearer {access_data['access_token']}",
             "Content-type": "application/json",
             "Accept-Encoding": "gzip",
         }
@@ -145,10 +145,9 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
 
         if isinstance(results, list) and "errorCode" in results[0]:
             logging.getLogger(__name__).error(
-                f'Impossible to retrieve data with error {results[0]["errorCode"]} '
-                f'and message {results[0]["message"]}'
+                f"Impossible to retrieve data with error {results[0]['errorCode']} and message {results[0]['message']}"
             )
-            error = f'[{results[0]["errorCode"]}] {results[0]["message"]}'
+            error = f"[{results[0]['errorCode']}] {results[0]['message']}"
             raise SalesforceApiError(error)
 
         results.get("records", None)
@@ -170,7 +169,7 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
         data: dict | None = None,
     ):
         logging.getLogger(__name__).info(
-            f"Generate Salesforce request " f"{instance_url}/{endpoint} with params {str(data)}"
+            f"Generate Salesforce request {instance_url}/{endpoint} with params {str(data)}"
         )
         r = session.request("GET", url=f"{instance_url}/{endpoint}", params=data or {}).json()
         return r

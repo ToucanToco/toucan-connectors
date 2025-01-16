@@ -30,7 +30,7 @@ requests = [
 def test_prepare_query_with_limit():
     for request in requests:
         new_request = SqlQueryHelper().prepare_limit_query(query_string=request, limit=10)
-        assert f'SELECT * FROM ({request.replace(";", "")}) LIMIT 10;' == new_request[0]
+        assert f"SELECT * FROM ({request.replace(';', '')}) LIMIT 10;" == new_request[0]
 
 
 def test_prepare_query_show():
@@ -41,15 +41,15 @@ def test_prepare_query_show():
 def test_prepare_count_query():
     request_sum = "SELECT nom, num_departement, surface FROM communes ORDER BY surface LIMIT 10;"
     new_request_sum = SqlQueryHelper().prepare_count_query(query_string=request_sum)
-    assert f'SELECT COUNT(*) AS TOTAL_ROWS FROM ({request_sum.replace(";", "")});' == new_request_sum[0]
+    assert f"SELECT COUNT(*) AS TOTAL_ROWS FROM ({request_sum.replace(';', '')});" == new_request_sum[0]
 
     request_sum = "SELECT nom, num_departement,population_2010 FROM communes ORDER BY population_2010 DESC LIMIT 10;"
     new_request_sum = SqlQueryHelper().prepare_count_query(query_string=request_sum)
-    assert f'SELECT COUNT(*) AS TOTAL_ROWS FROM ({request_sum.replace(";", "")});' == new_request_sum[0]
+    assert f"SELECT COUNT(*) AS TOTAL_ROWS FROM ({request_sum.replace(';', '')});" == new_request_sum[0]
 
     request_sum = "SELECT nom, population_2010/surface AS densité FROM communes WHERE num_departement=44 ORDER BY densité DESC LIMIT 12;"
     new_request_sum = SqlQueryHelper().prepare_count_query(query_string=request_sum)
-    assert f'SELECT COUNT(*) AS TOTAL_ROWS FROM ({request_sum.replace(";", "")});' == new_request_sum[0]
+    assert f"SELECT COUNT(*) AS TOTAL_ROWS FROM ({request_sum.replace(';', '')});" == new_request_sum[0]
 
 
 def test_extract_limit():

@@ -83,7 +83,7 @@ class MySQLDataSource(ToucanDataSource):
     )
     query_object: dict | None = Field(  # type: ignore[call-overload]
         None,
-        description="An object describing a simple select query" "This field is used internally",
+        description="An object describing a simple select queryThis field is used internally",
         **{"ui.hidden": True},
     )
     language: str = Field("sql", **{"ui.hidden": True})  # type: ignore[call-overload]

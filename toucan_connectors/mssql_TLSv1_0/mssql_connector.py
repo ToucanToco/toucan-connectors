@@ -31,7 +31,7 @@ class MSSQLDataSource(ToucanDataSource):
     )
     table: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
-        description="The name of the data table that you want to " 'get (equivalent to "SELECT * FROM ' 'your_table")',
+        description='The name of the data table that you want to get (equivalent to "SELECT * FROM your_table")',
     )
     query: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,

@@ -25,7 +25,7 @@ class HttpAPIDataSource(ToucanDataSource):
     url: str = Field(
         ...,
         title="Endpoint URL",
-        description="The URL path that will be appended to your baseroute URL. " 'For example "geo/countries"',
+        description='The URL path that will be appended to your baseroute URL. For example "geo/countries"',
     )
     method: Method = Field(Method.GET, title="HTTP Method")
     headers: dict | None = Field(

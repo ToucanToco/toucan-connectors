@@ -371,7 +371,7 @@ def test_snowflake_connection_alive(is_closed, close, connect, get_token, snowfl
 @patch("snowflake.connector.connection.SnowflakeConnection.close", return_value=None)
 @patch(
     "snowflake.connector.connection.SnowflakeConnection.is_closed",
-    side_effect=TypeError("is_closed is not a " "function"),
+    side_effect=TypeError("is_closed is not a function"),
 )
 def test_snowflake_connection_alive_exception(is_closed, close, connect, get_token, snowflake_oauth2_connector):
     cm = SnowflakeoAuth2Connector.get_connection_manager()

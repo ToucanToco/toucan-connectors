@@ -348,7 +348,7 @@ def convert_to_qmark_paramstyle(query_string: str, params_values: dict) -> tuple
         if isinstance(o, list):
             # in the query string, replace the ? at index i by the number of item
             # in the provided parameter of type list
-            query_string = query_string.replace(extracted_params[i], f'({",".join(len(o)*["?"])})')
+            query_string = query_string.replace(extracted_params[i], f"({','.join(len(o) * ['?'])})")
 
     flattened_values = []
     for val in ordered_values:
@@ -382,7 +382,7 @@ def convert_to_numeric_paramstyle(query_string: str, params_values: dict) -> tup
             # allowed_ages = [16, 17, 18]
             # transformed query_string = "SELECT name FROM students WHERE age IN (:1,:2,:3)"
             list_size = len(o)
-            variable_list = f'({",".join([f":{variable_idx + n}" for n in range(list_size)])})'
+            variable_list = f"({','.join([f':{variable_idx + n}' for n in range(list_size)])})"
             query_string = query_string.replace(extracted_params[i], variable_list)
             variable_idx += list_size
         else:

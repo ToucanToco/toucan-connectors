@@ -189,7 +189,7 @@ def test_build_authorization_url(
         workflow_token_saver_callback=_fake_workflow_saver,
         workflow_callback_context={},
         random="content",
-        other_token="super_123"
+        other_token="super_123",
     )
     assert auth_url == (
         f"{authentication_url}?response_type=code&client_id={client_id}"
@@ -240,7 +240,7 @@ def test_retrieve_oauth2_token(
     oauth2_authentication_config.retrieve_token(
         workflow_token_loader_callback=_fake_workflow_loader,
         workflow_callback_context={},
-        authorization_response=authorization_response
+        authorization_response=authorization_response,
     )
 
     # Check if fetched tokens are correctly saved
@@ -310,7 +310,7 @@ def test_raise_exception_on_refresh_token_when_secret_keeper_is_empty(
         oauth2_authentication_config.retrieve_token(
             workflow_token_loader_callback=_fake_workflow_loader,
             workflow_callback_context={},
-            authorization_response=authorization_response
+            authorization_response=authorization_response,
         )
 
 

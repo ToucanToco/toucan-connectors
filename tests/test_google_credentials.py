@@ -15,4 +15,4 @@ def test_unespace_break_lines():
         "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/xxx.iam.gserviceaccount.com",  # noqa: E501
     }
     credentials = GoogleCredentials(**conf)
-    assert credentials.private_key == "-----BEGIN PRIVATE KEY-----\n" "aaa\n" "bbb\n" "-----END PRIVATE KEY-----\n"
+    assert credentials.private_key == "-----BEGIN PRIVATE KEY-----\naaa\nbbb\n-----END PRIVATE KEY-----\n"
