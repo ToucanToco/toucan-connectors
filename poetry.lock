@@ -238,7 +238,10 @@ botocore = ">=1.23.32,<2.0.0"
 numpy = {version = ">=1.26,<3.0", markers = "python_version >= \"3.10\""}
 packaging = ">=21.1,<25.0"
 pandas = ">=1.2.0,<3.0.0"
-pyarrow = {version = ">=8.0.0,<19.0.0", markers = "python_version < \"3.13\""}
+pyarrow = [
+    {version = ">=8.0.0,<19.0.0", markers = "python_version < \"3.13\""},
+    {version = ">=18.0.0,<19.0.0", markers = "python_version >= \"3.13\""},
+]
 setuptools = {version = "*", markers = "python_version >= \"3.12\""}
 typing-extensions = ">=4.4.0,<5.0.0"
 
@@ -4643,4 +4646,4 @@ soap = ["lxml", "pandas", "pandas", "zeep"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.14"
-content-hash = "3321a9079987b48b51ce1702b8e5144a1623765601378031f225fea9e3e4d369"
+content-hash = "97e9f4de9d70307475a88ea8dee69bad1990c4517b19787f6d267a7e2b62b14e"
