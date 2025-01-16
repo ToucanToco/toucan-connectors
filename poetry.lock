@@ -2644,20 +2644,20 @@ files = [
 
 [[package]]
 name = "proto-plus"
-version = "1.23.0"
+version = "1.25.0"
 description = "Beautiful, Pythonic protocol buffers."
 optional = true
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "proto-plus-1.23.0.tar.gz", hash = "sha256:89075171ef11988b3fa157f5dbd8b9cf09d65fffee97e29ce403cd8defba19d2"},
-    {file = "proto_plus-1.23.0-py3-none-any.whl", hash = "sha256:a829c79e619e1cf632de091013a4173deed13a55f326ef84f05af6f50ff4c82c"},
+    {file = "proto_plus-1.25.0-py3-none-any.whl", hash = "sha256:c91fc4a65074ade8e458e95ef8bac34d4008daa7cce4a12d6707066fca648961"},
+    {file = "proto_plus-1.25.0.tar.gz", hash = "sha256:fbb17f57f7bd05a68b7707e745e26528b0b3c34e378db91eef93912c54982d91"},
 ]
 
 [package.dependencies]
-protobuf = ">=3.19.0,<5.0.0dev"
+protobuf = ">=3.19.0,<6.0.0dev"
 
 [package.extras]
-testing = ["google-api-core[grpc] (>=1.31.5)"]
+testing = ["google-api-core (>=1.31.5)"]
 
 [[package]]
 name = "protobuf"
