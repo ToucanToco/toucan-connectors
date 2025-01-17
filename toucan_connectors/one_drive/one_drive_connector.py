@@ -230,7 +230,7 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
         # Split the "file" input to retrieve the path & the pattern
         splitted = data_source.file.split("/")
         if len(splitted) > 1:
-            path = f"/{('/').join(splitted[:len(splitted)-1])}:"
+            path = f"/{('/').join(splitted[: len(splitted) - 1])}:"
             pattern = splitted[-1]
         else:
             pattern = splitted[0]
@@ -257,7 +257,7 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
                 )
             )
             if path:
-                return [f'{path[1:-1] if path else ""}/{v}' for v in val]
+                return [f"{path[1:-1] if path else ''}/{v}" for v in val]
             else:
                 return [f"/{v}" for v in val]
         else:

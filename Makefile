@@ -22,6 +22,7 @@ format:
 .PHONY: lint
 lint:
 	$(ruff)
+	$(format) --check
 	$(mypy)
 
 .PHONY: test

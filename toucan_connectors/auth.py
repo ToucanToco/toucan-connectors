@@ -124,7 +124,7 @@ class Auth(BaseModel):  # type:ignore[no-redef]
     args: list[str] = Field(
         default_factory=list,
         title="Positional arguments",
-        description="For example for a basic authentication, you can provide " "your username and password here",
+        description="For example for a basic authentication, you can provide your username and password here",
     )
     kwargs: dict = Field(
         default_factory=dict,

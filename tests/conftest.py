@@ -80,7 +80,7 @@ def container_starter(request, docker, docker_pull):
             volumes = [
                 vol.replace(
                     "/workspaces/toucan-connectors/tests/.",
-                    f'{getenv("LOCAL_WORKSPACE_FOLDER")}/tests',
+                    f"{getenv('LOCAL_WORKSPACE_FOLDER')}/tests",
                 )
                 for vol in volumes
             ]

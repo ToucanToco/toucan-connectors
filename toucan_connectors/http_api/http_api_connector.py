@@ -103,7 +103,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates
             query["cert"] = [str(c) for c in self.cert]
 
-        HttpAPIConnector.logger.debug(f'>> Request:  method={query.get("method")} url={query.get("url")}')
+        HttpAPIConnector.logger.debug(f">> Request:  method={query.get('method')} url={query.get('url')}")
         res = session.request(**query)
         HttpAPIConnector.logger.debug(f"<< Response: status_code={res.status_code} reason={res.reason}")
 
@@ -127,7 +127,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                     data = json.loads(res.content)
                 except ValueError:
                     HttpAPIConnector.logger.error(
-                        f'Cannot decode response content from query: method={query.get("method")} url={query.get("url")} response_status_code={res.status_code} response_reason=${res.reason}'  # noqa: E501
+                        f"Cannot decode response content from query: method={query.get('method')} url={query.get('url')} response_status_code={res.status_code} response_reason=${res.reason}"  # noqa: E501
                     )
                     raise
         return data

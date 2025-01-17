@@ -122,7 +122,7 @@ class MongoDataSource(ToucanDataSource):
     collection: str = Field(..., description="The name of the collection you want to query")
     query: Union[dict, list[dict]] = Field(
         {},
-        description="A mongo query. See more details on the Mongo " "Aggregation Pipeline in the MongoDB documentation",
+        description="A mongo query. See more details on the Mongo Aggregation Pipeline in the MongoDB documentation",
     )
 
     # FIXME: This is needed for now because with we rely on empty queries being dicts. In pydantic

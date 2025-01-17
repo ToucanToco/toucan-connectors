@@ -396,7 +396,7 @@ def get_errors(data: dict):
     errors = data.get("errors")
     if errors:
         for error in errors:
-            logging.getLogger(__name__).error(f"A Github error occured:" f" {error}")
+            logging.getLogger(__name__).error(f"A Github error occured: {error}")
         raise GithubError(f"Retrying query due to {errors}")
 
 
@@ -438,7 +438,7 @@ def get_message(response: dict):
     message = response.get("message")
 
     if message:
-        logging.getLogger(__name__).error(f"A Github error occured:" f" {message}")
+        logging.getLogger(__name__).error(f"A Github error occured: {message}")
         raise GithubError(f"API sent {message}")
 
 

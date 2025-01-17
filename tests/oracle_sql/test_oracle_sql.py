@@ -33,7 +33,7 @@ def oracle_connector(oracle_server):
         name="my_oracle_sql_con",
         user="system",
         password="oracle",
-        dsn=f'localhost:{oracle_server["port"]}/xe',
+        dsn=f"localhost:{oracle_server['port']}/xe",
     )
 
 
