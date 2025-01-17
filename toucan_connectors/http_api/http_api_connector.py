@@ -5,12 +5,14 @@ from typing import Any
 
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 
+from toucan_connectors.http_api.authentication_configs import HttpAuthenticationConfig
 from toucan_connectors.http_api.http_api_data_source import HttpAPIDataSource, apply_pagination_to_data_source
 
 try:
     from xml.etree.ElementTree import ParseError, fromstring, tostring
 
     import pandas as pd
+    from authlib.common.security import generate_token  # noqa: F401
     from requests import Session
     from requests.exceptions import HTTPError
     from xmltodict import parse
@@ -79,7 +81,17 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
     responsetype: ResponseType = Field(ResponseType.json, title="Content-type of response")
     baseroute: AnyHttpUrl = Field(..., title="Baseroute URL", description="Baseroute URL")
     cert: list[FilePath] | None = Field(None, title="Certificate", description="File path of your certificate if any")
-    auth: Auth | None = Field(None, title="Authentication type")
+    auth: Auth | None = Field(
+        None,
+        title="Authentication type",
+        deprecated=True,
+        description="Deprecated authentication config. Please use 'Authentication' section.",
+    )  # Deprecated
+
+    authentication: HttpAuthenticationConfig | None = Field(
+        None, title="Authentication", discriminator="kind", description="Authentication configuration section"
+    )
+
     template: Template | None = Field(
         None,
         description="You can provide a custom template that will be used for every HTTP request",
@@ -171,7 +183,10 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
         return results
 
     def _retrieve_data(self, data_source: HttpAPIDataSource) -> "pd.DataFrame":
-        if self.auth:
+        if self.authentication:
+            # New authentication has priority
+            session = self.authentication.authenticate_session()
+        elif self.auth:
             session = self.auth.get_session()
         else:
             session = Session()
