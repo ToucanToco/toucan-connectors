@@ -8,7 +8,7 @@ from toucan_connectors.http_api.authentication_configs import (
     AuthorizationCodeOauth2,
     HttpOauth2SecretsKeeper,
     MissingOauthWorkflowError,
-    OAuth2SecretData,
+    OauthTokenSecretData,
     _extract_expires_at_from_token_response,
 )
 from toucan_connectors.json_wrapper import JsonWrapper
@@ -123,7 +123,7 @@ def test_authenticate_session_with_valid_access_token(
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
 
     # Create and save fake secret data
-    secrets = OAuth2SecretData(
+    secrets = OauthTokenSecretData(
         access_token="my_awesome_token",
         refresh_token="my_awesome_refresh_token",
         expires_at=(datetime.now() + timedelta(0, 3600)).timestamp(),
@@ -147,7 +147,7 @@ def test_authenticate_session_with_expired_access_token(
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
 
     # Create and save fake secret data
-    secrets = OAuth2SecretData(
+    secrets = OauthTokenSecretData(
         access_token="my_awesome_token",
         refresh_token="my_awesome_refresh_token",
         expires_at=(datetime.now() - timedelta(0, 3600)).timestamp(),
@@ -244,8 +244,8 @@ def test_retrieve_oauth2_token(
     )
 
     # Check if fetched tokens are correctly saved
-    assert secret_keeper.load(auth_flow_id)["access_token"] == "my_access_token"
-    assert secret_keeper.load(auth_flow_id)["refresh_token"] == "my_refresh_token"
+    assert secret_keeper.load(auth_flow_id).access_token == "my_access_token"
+    assert secret_keeper.load(auth_flow_id).refresh_token == "my_refresh_token"
 
     assert mock.call_count == 1
     assert mock.call_args[1] == {"client_id": client_id, "client_secret": client_secret}

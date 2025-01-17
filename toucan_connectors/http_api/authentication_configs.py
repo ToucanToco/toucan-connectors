@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any, Callable, Literal
 from urllib import parse as url_parse
 
-from pydantic import BaseModel, Field, SecretStr, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 from requests import Session
 
 from toucan_connectors.common import UI_HIDDEN
@@ -59,10 +59,12 @@ def _extract_expires_at_from_token_response(token_response: dict[str, Any], defa
         return datetime.now() + timedelta(0, int(token_response.get("expires_in", default_lifetime)))
 
 
-class OAuth2SecretData(BaseModel):
-    access_token: str
-    refresh_token: str
-    expires_at: float
+class OauthTokenSecretData(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    access_token: str = Field(..., alias="accessToken")
+    refresh_token: str = Field(..., alias="refreshToken")
+    expires_at: float = Field(..., alias="expiresAt")  # timestamp
 
 
 class HttpOauth2SecretsKeeper(BaseModel):
@@ -72,13 +74,13 @@ class HttpOauth2SecretsKeeper(BaseModel):
     load_callback: Callable[[str, dict[str, Any] | None], dict[str, Any] | None]
     context: dict[str, Any] | None = None
 
-    def save(self, key: str, value: dict[str, Any]) -> None:
+    def save(self, key: str, value: dict[str, Any]) -> OauthTokenSecretData:
         """Save secrets in a secrets repository"""
         value["expires_at"] = _extract_expires_at_from_token_response(
             token_response=value, default_lifetime=self.default_token_lifetime_seconds
         ).timestamp()
         try:
-            secret_data = OAuth2SecretData(**value)
+            secret_data = OauthTokenSecretData(**value)
         except ValidationError as exc:
             _LOGGER.error(f"Can't instantiate oauth secret data with value_keys={list(value.keys())}", exc_info=exc)
             raise
@@ -86,10 +88,13 @@ class HttpOauth2SecretsKeeper(BaseModel):
         self.delete_callback(key, self.context)
         # save new secrets
         self.save_callback(key, secret_data.model_dump(), self.context)
+        return secret_data
 
-    def load(self, key: str) -> dict[str, Any] | None:
+    def load(self, key: str) -> OauthTokenSecretData | None:
         """Load secrets from the secrets repository"""
-        return self.load_callback(key, self.context)
+        oauth_token = self.load_callback(key, self.context)
+        if oauth_token:
+            return OauthTokenSecretData(**oauth_token)
 
 
 class AuthenticationConfig(BaseModel, ABC):
@@ -200,21 +205,19 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
 
         Call refresh token route if the access token has expired.
         """
-        oauth_token_info = self._secrets_keeper.load(self.auth_flow_id)
-        if "expires_at" in oauth_token_info:
-            expires_at = oauth_token_info["expires_at"]
-            if datetime.fromtimestamp(expires_at) < datetime.now():
-                client = oauth_client(
-                    client_id=self.client_id,
-                    client_secret=self.client_secret.get_secret_value(),
-                )
-                new_token = client.refresh_token(self.token_url, refresh_token=oauth_token_info["refresh_token"])
-                self._secrets_keeper.save(
-                    self.auth_flow_id,
-                    # refresh call doesn't always contain the refresh_token
-                    new_token | {"refresh_token": oauth_token_info["refresh_token"]},
-                )
-        return self._secrets_keeper.load(self.auth_flow_id)["access_token"]
+        oauth_token = self._secrets_keeper.load(self.auth_flow_id)
+        if datetime.fromtimestamp(oauth_token.expires_at) < datetime.now():
+            client = oauth_client(
+                client_id=self.client_id,
+                client_secret=self.client_secret.get_secret_value(),
+            )
+            new_token = client.refresh_token(self.token_url, refresh_token=oauth_token.refresh_token)
+            oauth_token = self._secrets_keeper.save(
+                self.auth_flow_id,
+                # refresh call doesn't always contain the refresh_token
+                new_token | {"refresh_token": oauth_token.refresh_token},
+            )
+        return oauth_token.access_token
 
     def retrieve_token(
         self,
