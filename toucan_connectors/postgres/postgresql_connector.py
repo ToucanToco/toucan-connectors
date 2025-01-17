@@ -41,12 +41,12 @@ class PostgresDataSource(ToucanDataSource):
     )
     query_object: dict | None = Field(  # type: ignore[call-overload]
         None,
-        description="An object describing a simple select query" "This field is used internally",
+        description="An object describing a simple select queryThis field is used internally",
         **{"ui.hidden": True},
     )
     table: Annotated[str | None, StringConstraints(min_length=1)] = Field(
         None,
-        description="The name of the data table that you want to " 'get (equivalent to "SELECT * FROM ' 'your_table")',
+        description='The name of the data table that you want to get (equivalent to "SELECT * FROM your_table")',
     )
     language: str = Field("sql", **{"ui.hidden": True})  # type: ignore[call-overload]
 
@@ -200,7 +200,7 @@ class PostgresConnector(
         connection = pgsql.connect(**self.get_connection_params(database=data_source.database))
         with connection.cursor() as cursor:
             assert data_source.query is not None, "no query provided"
-            cursor.execute(f"""SELECT * FROM ({data_source.query.replace(';','')}) AS q LIMIT 0;""")
+            cursor.execute(f"""SELECT * FROM ({data_source.query.replace(";", "")}) AS q LIMIT 0;""")
             res = cursor.description
         return {r.name: types.get(r.type_code) for r in res}
 

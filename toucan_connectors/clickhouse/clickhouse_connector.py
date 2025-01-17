@@ -35,7 +35,7 @@ class ClickhouseDataSource(ToucanDataSource):
     )
     table: Annotated[str, StringConstraints(min_length=1)] = Field(
         None,
-        description="The name of the data table that you want to " 'get (equivalent to "SELECT * FROM ' 'your_table")',
+        description='The name of the data table that you want to get (equivalent to "SELECT * FROM your_table")',
     )
 
     @classmethod
@@ -120,7 +120,7 @@ class ClickhouseConnector(ToucanConnector, data_source_model=ClickhouseDataSourc
 
     def get_connection_url(self, *, database="default"):
         proto = "clickhouses" if self.ssl_connection else "clickhouse"
-        return f'{proto}://{self.user}:{self.password.get_secret_value() if self.password else ""}@{self.host}:{self.port}/{database}'  # noqa: E501
+        return f"{proto}://{self.user}:{self.password.get_secret_value() if self.password else ''}@{self.host}:{self.port}/{database}"  # noqa: E501
 
     def _retrieve_data(self, data_source):
         connection = clickhouse_driver.connect(self.get_connection_url(database=data_source.database))

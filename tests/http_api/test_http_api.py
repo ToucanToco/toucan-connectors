@@ -409,9 +409,7 @@ def test_hyper_media_pagination_raise_if_bad_next_link(
     data_source.params = {"custom": "yes"}
     with pytest.raises(ValueError) as exc:
         connector.get_df(data_source)
-    assert str(exc.value) == (
-        "Invalid next link value. Link can't be a complex value," " got: {'real_link': 'my_link'}"
-    )
+    assert str(exc.value) == ("Invalid next link value. Link can't be a complex value, got: {'real_link': 'my_link'}")
 
 
 @responses.activate
