@@ -18,7 +18,7 @@ class JWTCredentials(BaseModel):
     jwt_token: str = Field(
         ...,
         title="JSON web token (JWT) signed",
-        description="JWT signed with your service_account credentials,see the docs of the connector for that.",
+        description="JWT signed with your service_account credentials, see the docs of the connector for that.",
     )
 
 
