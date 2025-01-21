@@ -191,7 +191,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
     @staticmethod
     def _get_google_credentials(credentials: GoogleCredentials, scopes: list[str]) -> "Credentials":
         credentials = get_google_oauth2_credentials(credentials).with_scopes(scopes)
-        return credentials
+        return credentials  # type:ignore[return-value]
 
     @staticmethod
     def _http_connect(http_session: "requests.Session", project_id: str) -> "bigquery.Client":
@@ -524,7 +524,7 @@ WHERE
                     (_KEY_CHECK_NAME, True),
                 ]
             elif self.jwt_credentials:
-                credentials = self.jwt_credentials
+                credentials = self.jwt_credentials  # type:ignore[assignment]
                 checks.append((_CREDENTIALS_CHECK_NAME, True))
             else:
                 return ConnectorStatus(

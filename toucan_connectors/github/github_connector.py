@@ -5,7 +5,6 @@ from contextlib import suppress
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 from dateutil import relativedelta
 from pydantic import Field, PrivateAttr, create_model
@@ -77,7 +76,7 @@ class GithubDataSet(str, Enum):
 
 class GithubDataSource(ToucanDataSource):
     dataset: GithubDataSet = GithubDataSet("teams")
-    organization: Optional[str] = Field(
+    organization: str | None = Field(
         None, title="Organization", description="The organization to extract the data from"
     )
     page_limit: int = Field(10, description="Limit of entries (default is 10 pages)", ge=0)
@@ -102,7 +101,7 @@ class GithubDataSource(ToucanDataSource):
 
 class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
     _auth_flow = "oauth2"
-    auth_flow_id: Optional[str] = None
+    auth_flow_id: str | None = None
     _oauth_trigger = "instance"
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
@@ -405,10 +404,10 @@ class GithubConnector(ToucanConnector, data_source_model=GithubDataSource):
     def get_slice(
         self,
         data_source: GithubDataSource,
-        permissions: Optional[dict] = None,
+        permissions: dict | None = None,
         offset: int = 0,
-        limit: Optional[int] = None,
-        get_row_count: Optional[bool] = False,
+        limit: int | None = None,
+        get_row_count: bool | None = False,
     ) -> DataSlice:
         """
         Method to retrieve a part of the data as a pandas dataframe

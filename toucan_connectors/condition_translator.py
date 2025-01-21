@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Literal, TypeVar, Union
+from typing import Any, Literal, TypeAlias, TypeVar
 
 from pydantic import BaseModel
 
-Number = Union[int, float]
+Number: TypeAlias = int | float
 
 ClauseType = TypeVar("ClauseType")
 
 
-LogicalOperator = Union[Literal["and"], Literal["or"]]
+LogicalOperator: TypeAlias = Literal["and", "or"]
 
 
 class ConditionOperator(Enum):

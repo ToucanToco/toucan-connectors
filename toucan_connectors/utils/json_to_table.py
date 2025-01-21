@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover
     from pandas import DataFrame, Series
@@ -13,7 +13,7 @@ def _first_valid_value(serie: "Series") -> Any:
     return serie[first_valid_index] if first_valid_index is not None else None
 
 
-def json_to_table(df: "DataFrame", columns: Union[str, list[str]], sep: str = ".") -> "DataFrame":
+def json_to_table(df: "DataFrame", columns: str | list[str], sep: str = ".") -> "DataFrame":
     """
     Flatten JSON into a table shape. Add lines for each element of a nested array.
     Add columns for each keys of a nested object / dict.
@@ -31,7 +31,7 @@ def json_to_table(df: "DataFrame", columns: Union[str, list[str]], sep: str = ".
     if isinstance(columns, str):  # support for a single column name as a string
         columns = [columns]
 
-    merge_on = [c for c in df.columns if not isinstance(_first_valid_value(df[c]), (list, dict))]
+    merge_on = [c for c in df.columns if not isinstance(_first_valid_value(df[c]), list | dict)]
     if merge_on == []:
         raise ValueError("Data should have at least one column with simple data type (not list or dict)")
 
@@ -42,7 +42,7 @@ def json_to_table(df: "DataFrame", columns: Union[str, list[str]], sep: str = ".
         serie = df[col]
         first_valid_value = _first_valid_value(serie)
 
-        if not isinstance(first_valid_value, (list, dict)):
+        if not isinstance(first_valid_value, list | dict):
             continue
 
         elif isinstance(first_valid_value, dict):  # creates new columns
@@ -61,7 +61,7 @@ def json_to_table(df: "DataFrame", columns: Union[str, list[str]], sep: str = ".
         new_cols = [c for c in df_nz.columns if c.startswith(f"{col}{INTERNAL_SEP}")]
 
         # which columns still need to be processed ?
-        compound_types_cols = [c for c in new_cols if isinstance(_first_valid_value(df_nz[c]), (list, dict))]
+        compound_types_cols = [c for c in new_cols if isinstance(_first_valid_value(df_nz[c]), list | dict)]
 
         ret_data = (
             df_nz[[c for c in df_nz.columns if c in merge_on or c in new_cols]]

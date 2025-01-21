@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from enum import Enum
 from functools import reduce, wraps
 from types import ModuleType
-from typing import TYPE_CHECKING, Annotated, Any, Generic, NamedTuple, TypeVar, Union
+from typing import TYPE_CHECKING, Annotated, Any, Generic, NamedTuple, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, SecretStr
 from pydantic.fields import ModelPrivateAttr
@@ -464,7 +464,7 @@ class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
         """ """
 
 
-TableInfo = dict[str, Union[str, list[dict[str, str]]]]
+TableInfo = dict[str, str | list[dict[str, str]]]
 
 
 class DiscoverableConnector(ABC):

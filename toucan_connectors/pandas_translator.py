@@ -1,7 +1,8 @@
 # ruff: noqa: N802
 from ast import literal_eval
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable, TypeAlias
+from typing import TypeAlias
 
 from toucan_connectors.condition_translator import ConditionTranslator, Number
 

@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Annotated, Optional
+from typing import Annotated
 
 from pydantic import Field, StringConstraints, create_model
 
@@ -146,7 +146,7 @@ class PostgresConnector(
         return df
 
     @staticmethod
-    def _get_details(index: int, status: Optional[bool]):
+    def _get_details(index: int, status: bool | None):
         checks = [
             "Host resolved",
             "Port opened",

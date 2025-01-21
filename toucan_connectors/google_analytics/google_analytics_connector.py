@@ -125,7 +125,7 @@ def get_dict_from_response(report, request_date_ranges):
         dateRangeValues = row.get("metrics", [])
 
         for i, values in enumerate(dateRangeValues):
-            for metricHeader, value in zip(metricHeaders, values.get("values")):
+            for metricHeader, value in zip(metricHeaders, values.get("values"), strict=False):
                 row_dict = {
                     "row_index": row_index,
                     "date_range_id": i,
@@ -143,7 +143,7 @@ def get_dict_from_response(report, request_date_ranges):
                 else:
                     row_dict["metric_value"] = value
 
-                for dimension_name, dimension_value in zip(dimensionHeaders, dimensions):
+                for dimension_name, dimension_value in zip(dimensionHeaders, dimensions, strict=False):
                     row_dict[dimension_name] = dimension_value
 
                 all_rows.append(row_dict)

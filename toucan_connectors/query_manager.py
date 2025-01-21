@@ -1,6 +1,5 @@
 import logging
 import types
-from typing import Optional
 
 from toucan_connectors import DataSlice
 
@@ -12,7 +11,7 @@ class QueryManager:
         self.query: dict[str, DataSlice] = {}
 
     @staticmethod
-    def _execute(execute_method, connection, query: str, parameters: Optional[dict] = None):
+    def _execute(execute_method, connection, query: str, parameters: dict | None = None):
         logger.debug("call execute method")
         if isinstance(execute_method, types.MethodType) or isinstance(execute_method, types.FunctionType):
             result = execute_method(connection, query, parameters)
@@ -20,7 +19,7 @@ class QueryManager:
         else:
             raise TypeError("execute_method is not callable")
 
-    def execute(self, execute_method, connection, query: str, query_parameters: Optional[dict] = None):
+    def execute(self, execute_method, connection, query: str, query_parameters: dict | None = None):
         result = QueryManager._execute(execute_method, connection, query, query_parameters)
         return result
 
