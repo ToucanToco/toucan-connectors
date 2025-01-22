@@ -1,11 +1,9 @@
-from typing import Optional
-
 import pytest
 
 from toucan_connectors.query_manager import QueryManager
 
 
-def fixture_execute_method(execute_method, query: str, query_parameters: Optional[dict]):
+def fixture_execute_method(execute_method, query: str, query_parameters: dict | None):
     return True
 
 

@@ -2,7 +2,7 @@ import concurrent
 import json
 import logging
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Annotated, Any, Optional
+from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import Field, StringConstraints
 
@@ -79,14 +79,14 @@ class SnowflakeCommon:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.data: pd.DataFrame
-        self.total_rows_count: Optional[int] = -1
-        self.total_returned_rows_count: Optional[int] = -1
-        self.query_generation_time: Optional[float] = None
-        self.data_extraction_time: Optional[float] = None
-        self.data_conversion_time: Optional[float] = None
-        self.data_filtered_from_permission_time: Optional[float] = None
-        self.compute_stats_time: Optional[float] = None
-        self.column_names_and_types: Optional[dict[str, str]] = None
+        self.total_rows_count: int | None = -1
+        self.total_returned_rows_count: int | None = -1
+        self.query_generation_time: float | None = None
+        self.data_extraction_time: float | None = None
+        self.data_conversion_time: float | None = None
+        self.data_filtered_from_permission_time: float | None = None
+        self.compute_stats_time: float | None = None
+        self.column_names_and_types: dict[str, str] | None = None
 
     def set_data(self, data):
         self.data = data.result()
@@ -103,7 +103,7 @@ class SnowflakeCommon:
     def set_data_conversion_time(self, data_conversion_time):
         self.data_conversion_time = data_conversion_time
 
-    def _execute_query(self, connection, query: str, query_parameters: Optional[dict] = None):
+    def _execute_query(self, connection, query: str, query_parameters: dict | None = None):
         return QueryManager().execute(
             execute_method=self._execute_query_internal,
             connection=connection,
@@ -115,7 +115,7 @@ class SnowflakeCommon:
         self,
         connection: "SnowflakeConnection",
         query: str,
-        query_parameters: Optional[dict] = None,
+        query_parameters: dict | None = None,
     ) -> "pd.DataFrame":
         from pandas import DataFrame
         from snowflake.connector import DictCursor
@@ -171,9 +171,9 @@ class SnowflakeCommon:
         self,
         connection: "SnowflakeConnection",
         query: str,
-        query_parameters: Optional[dict] = None,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
+        query_parameters: dict | None = None,
+        offset: int | None = None,
+        limit: int | None = None,
         get_row_count=False,
     ) -> DataSlice:
         """Call parallelized execute query to extract data & row count from query"""
@@ -234,8 +234,8 @@ class SnowflakeCommon:
         self,
         connection: "SnowflakeConnection",
         data_source: SfDataSource,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
+        offset: int | None = None,
+        limit: int | None = None,
         get_row_count: bool = False,
     ) -> DataSlice:
         extraction_start = timer()
@@ -262,8 +262,8 @@ class SnowflakeCommon:
         self,
         connection: "SnowflakeConnection",
         data_source: SfDataSource,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
+        offset: int | None = None,
+        limit: int | None = None,
         get_row_count: bool = False,
     ) -> DataSlice:
         result = self.fetch_data(connection, data_source, offset, limit, get_row_count)
@@ -287,14 +287,14 @@ class SnowflakeCommon:
             pagination_info=result.pagination_info,
         )
 
-    def get_warehouses(self, connection: "SnowflakeConnection", warehouse_name: Optional[str] = None) -> list[str]:
+    def get_warehouses(self, connection: "SnowflakeConnection", warehouse_name: str | None = None) -> list[str]:
         query = "SHOW WAREHOUSES"
         if warehouse_name:
             query = f"{query} LIKE '{warehouse_name}'"
         res = self._execute_query(connection, query).to_dict().get("name")
         return list(res.values()) if res else []
 
-    def get_databases(self, connection: "SnowflakeConnection", database_name: Optional[str] = None) -> list[str]:
+    def get_databases(self, connection: "SnowflakeConnection", database_name: str | None = None) -> list[str]:
         query = "SHOW DATABASES"
         if database_name:
             query = f"{query} LIKE '{database_name}'"

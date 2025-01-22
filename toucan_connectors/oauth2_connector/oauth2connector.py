@@ -117,7 +117,7 @@ class OAuth2Connector:
             expires_at = token["expires_at"]
             if isinstance(expires_at, bool):
                 is_expired = expires_at
-            elif isinstance(expires_at, (int, float)):
+            elif isinstance(expires_at, int | float):
                 is_expired = expires_at < time()
             else:
                 is_expired = expires_at.timestamp() < time()

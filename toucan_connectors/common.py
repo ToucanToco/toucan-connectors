@@ -4,9 +4,10 @@ import dataclasses
 import datetime
 import logging
 import re
+from collections.abc import Callable
 from contextlib import suppress
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from jinja2 import Environment, Undefined, UndefinedError, meta
 from jinja2.nativetypes import NativeEnvironment
@@ -100,7 +101,7 @@ def _flatten_rendered_nested_list(origin: list, rendered: list) -> list:
     as in toucan frontend's templates.
     """
     result = []
-    for elem, rendered_elem in zip(origin, rendered):
+    for elem, rendered_elem in zip(origin, rendered, strict=False):
         if isinstance(elem, str) and isinstance(rendered_elem, list):
             # a list has been rendered: flatten the result
             result += rendered_elem
@@ -183,7 +184,7 @@ def _render_query(query: dict | list[dict] | tuple | str, parameters: dict | Non
             return _raise_or_return_undefined(res, handle_errors)
         # NativeEnvironment's render() isn't recursive, so we need to
         # apply recursively the literal_eval by hand for lists and dicts:
-        if isinstance(res, (list, dict)):
+        if isinstance(res, list | dict):
             return _prepare_result(res)
         return res
     else:
@@ -444,7 +445,7 @@ def infer_datetime_dtype(df: "pd.DataFrame") -> None:
             idx = s.first_valid_index()
             if idx is not None:
                 first_value = s.loc[idx]
-                if isinstance(first_value, (datetime.datetime, datetime.date)):
+                if isinstance(first_value, datetime.datetime | datetime.date):
                     with suppress(Exception):
                         df[colname] = pd.to_datetime(df[colname], errors="coerce")
 

@@ -131,9 +131,12 @@ class AwsathenaConnector(ToucanConnector, DiscoverableConnector, data_source_mod
         return df
 
     def _list_db_names(self) -> list[str]:
-        return wr.catalog.databases(
-            boto3_session=self.get_session(),
-        )["Database"].values.tolist()
+        return [
+            str(value)
+            for value in wr.catalog.databases(
+                boto3_session=self.get_session(),
+            )["Database"].values.tolist()
+        ]
 
     def _get_project_structure(self, db_name: str | None = None) -> list[TableInfo]:
         table_list: list[TableInfo] = []

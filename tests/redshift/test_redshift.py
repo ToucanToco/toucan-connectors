@@ -81,7 +81,7 @@ def redshift_datasource():
 
 def test_model_json_schema():
     schema = RedshiftConnector.model_json_schema()
-    for key, expected_key in zip(schema["properties"].keys(), ORDERED_KEYS):
+    for key, expected_key in zip(schema["properties"].keys(), ORDERED_KEYS, strict=False):
         assert key == expected_key
 
 

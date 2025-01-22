@@ -164,7 +164,7 @@ class ElasticsearchConnector(ToucanConnector, data_source_model=ElasticsearchDat
             res = []
             # Body alternate index and query `[index, query, index, query...]`
             queries = data_source.body[1::2]
-            for _query, data in zip(queries, response["responses"]):
+            for _query, data in zip(queries, response["responses"], strict=False):
                 res += _read_response(data)
         else:
             res = _read_response(response)

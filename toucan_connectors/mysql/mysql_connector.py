@@ -5,7 +5,7 @@ from collections.abc import Generator
 from enum import Enum
 from itertools import groupby as groupby
 from tempfile import NamedTemporaryFile
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any
 
 from cached_property import cached_property_with_ttl
 from pydantic import ConfigDict, Field, StringConstraints, create_model, model_validator
@@ -281,7 +281,7 @@ class MySQLConnector(
         # Grouping by DB name, schema name, Table type, Table name
         for group, grouper in groupby(sorted(results), key=lambda x: x[:4]):
             col_info = [{"name": x[4], "type": x[5]} for x in grouper]
-            yield dict(zip(column_names, group + (col_info,)))
+            yield dict(zip(column_names, group + (col_info,), strict=False))
 
     @cached_property_with_ttl(ttl=10)
     def available_dbs(self) -> list[str]:
@@ -343,7 +343,7 @@ class MySQLConnector(
         return pymysql.connect(**connection_params)
 
     @staticmethod
-    def _get_details(index: int, status: Optional[bool]):
+    def _get_details(index: int, status: bool | None):
         checks = ["Hostname resolved", "Port opened", "Host connection", "Authenticated"]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)

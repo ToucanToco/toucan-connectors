@@ -1,5 +1,4 @@
 import time
-from typing import Optional
 from unittest.mock import patch
 
 import pytest
@@ -38,8 +37,8 @@ def connection_manager_with_error():
 def _get_connection(
     cm: ConnectionManager,
     identifier: str,
-    sleep: Optional[int] = 0,
-    enabled_alive: Optional[bool] = True,
+    sleep: int | None = 0,
+    enabled_alive: bool | None = True,
 ):
     def __connect():
         if 0 < sleep:

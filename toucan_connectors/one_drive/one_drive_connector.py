@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 from pydantic import Field, PrivateAttr
 
@@ -27,13 +26,13 @@ class NotFoundError(Exception):
 
 
 class OneDriveDataSource(ToucanDataSource):
-    site_url: Optional[str] = Field(
+    site_url: str | None = Field(
         None,
         Title="Site URL",
         description="Access a sharePoint site using the site url (company_name.sharepoint.com/sites/site_name)",
         placeholder="Only for SharePoint",
     )
-    document_library: Optional[str] = Field(
+    document_library: str | None = Field(
         None,
         Title="Document Library",
         description="Access a sharePoint library (Documents)",
@@ -45,20 +44,20 @@ class OneDriveDataSource(ToucanDataSource):
         placeholder="Enter your path file",
     )
     match: bool = Field(False, Title="Match", description="Try to match files using provided file name")
-    sheet: Optional[str] = Field(
+    sheet: str | None = Field(
         None,
         Title="Sheets",
         description="Read one sheet or append multiple sheets",
         placeholder="Enter a sheet or a comma separated list of sheets",
     )
-    range: Optional[str] = None
-    table: Optional[str] = Field(
+    range: str | None = None
+    table: str | None = Field(
         None,
         Title="Tables",
         description="Read one table or append multiple tables",
         placeholder="Enter a table or a comma separated list of tables",
     )
-    parse_dates: Optional[list[str]] = Field(
+    parse_dates: list[str] | None = Field(
         [],
         Title="Date columns",
         description="By default, dates are converted in the number of days since 1900/01/01",
@@ -81,7 +80,7 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
     _auth_flow = "oauth2"
     _oauth_trigger = "connector"
     oauth2_version: str = Field("1", **{"ui.hidden": True})
-    auth_flow_id: Optional[str] = None
+    auth_flow_id: str | None = None
 
     authorization_url: str = Field(None, **{"ui.hidden": True})
     token_url: str = Field(None, **{"ui.hidden": True})

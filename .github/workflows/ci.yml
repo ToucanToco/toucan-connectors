@@ -35,11 +35,16 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Install uv
+      env:
+        UV_VERSION: "0.5.20"
+      run: |
+        curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install freetds-dev libsasl2-dev libpq-dev
-        pip install -U 'poetry>=1.8,<1.9'
 
     - name: Install oracle dependencies
       run: sudo bash toucan_connectors/install_scripts/oracle.sh
@@ -60,7 +65,7 @@ jobs:
       run: make install
 
     - name: Install pandas ${{ matrix.pandas-version }}
-      run: poetry run pip install "pandas${{ matrix.pandas-version }}"
+      run: uv pip install "pandas${{ matrix.pandas-version }}"
 
     - name: Lint
       run: make lint

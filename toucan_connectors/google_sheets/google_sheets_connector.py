@@ -1,7 +1,8 @@
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
 from logging import getLogger
-from typing import Any, Callable, Optional
+from typing import Any
 
 try:
     import numpy as np
@@ -38,7 +39,7 @@ class GoogleSheetsDataSource(ToucanDataSource):
         title="ID of the spreadsheet",
         description="Can be found in your URL: https://docs.google.com/spreadsheets/d/<ID of the spreadsheet>/...",
     )
-    sheet: Optional[str] = Field(None, title="Sheet title", description="Title of the desired sheet")
+    sheet: str | None = Field(None, title="Sheet title", description="Title of the desired sheet")
     header_row: int = Field(0, title="Header row", description="Row of the header of the spreadsheet")
     dates_as_float: bool = Field(
         True, title="Dates as floats", description="Render Date as Floats or String from the sheet"
@@ -226,11 +227,7 @@ def parse_cell_value(value: Any, format_: dict[str, Any] | None = None) -> Any:
     """
     Use the format (if provided) to parse the value in its intended type
     """
-    if (
-        isinstance(value, (int, float))
-        and format_ is not None
-        and format_.get("numberFormat", {}).get("type") == "DATE"
-    ):
+    if isinstance(value, int | float) and format_ is not None and format_.get("numberFormat", {}).get("type") == "DATE":
         return serial_number_to_date(value)
     elif isinstance(value, str) and value == "":
         return np.nan
