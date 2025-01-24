@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import pytest
+from freezegun import freeze_time
 from pytest_mock import MockFixture
 
 from toucan_connectors.http_api.authentication_configs import (
@@ -9,7 +10,7 @@ from toucan_connectors.http_api.authentication_configs import (
     HttpOauth2SecretsKeeper,
     MissingOauthWorkflowError,
     OauthTokenSecretData,
-    _extract_expires_at_from_token_response,
+    _extract_expiration_timestamp_from_token_response,
 )
 from toucan_connectors.json_wrapper import JsonWrapper
 
@@ -152,7 +153,9 @@ def test_authenticate_session_with_expired_access_token(
         refresh_token="my_awesome_refresh_token",
         expires_at=(datetime.now() - timedelta(0, 3600)).timestamp(),
     ).model_dump()
-    secret_keeper.save(auth_flow_id, secrets)
+
+    # We are using directly the keeper callback because we can't save an expired token
+    _fake_saver(auth_flow_id, secrets, context={})
 
     # Expects a call to refresh the expired access token
     mocked_client = mocker.MagicMock(name="mocked_client")
@@ -194,9 +197,9 @@ def test_build_authorization_url(
     assert auth_url == (
         f"{authentication_url}?response_type=code&client_id={client_id}"
         "&redirect_uri=http%3A%2F%2Fredirect-url"
-        f"&scope=ACCESS%3A%3AREAD%2C+ACCESS%3A%3AWRITE&state=%7B%22"
-        f"workflow_token%22%3A%22{workflow_token}%22%2C%22"
-        f"random%22%3A%22content%22%2C%22other_token%22%3A%22super_123%22%7D"  # additional values correctly added
+        f"&scope=ACCESS%3A%3AREAD%2C+ACCESS%3A%3AWRITE"
+        f"&state=%7B%22random%22%3A%22content%22%2C%22other_token%22%3A%22super_123%22%2C%22"
+        f"workflow_token%22%3A%22{workflow_token}%22%7D"
     )
     # workflow correctly saved
     assert _fake_workflow_loader(auth_flow_id, context={}) == workflow_token
@@ -319,40 +322,60 @@ def expires_at_expectations() -> dict[str, Any]:
     return {
         "with_expires_in": {
             "response": {"expires_in": 2000},
-            "expected_datetime": datetime.now() + timedelta(0, 2000),
+            "expected_timestamp": 1737643520.0,  # 2025-01-23 14:45:20 (UTC)
             "must_raise": False,
         },
         "with_empty_response": {
             "response": {},
             # Use default token lifetime value
-            "expected_datetime": (datetime.now() + timedelta(0, 3600)),
+            "expected_timestamp": 1737645120.0,  # 2025-01-23 15:12:00 (UTC)
             "must_raise": False,
         },
         "with_expires_at": {
-            "response": {"expires_at": "2024-12-18T00:00:00"},
-            "expected_datetime": (datetime(2024, 12, 18, 0, 0, 0)),
+            "response": {"expires_at": "2025-02-25 08:06:00"},
+            "expected_timestamp": 1740467160.0,  # 2025-02-25 08:06:00 (UTC)
+            "must_raise": False,
+        },
+        "with_expires_at_timestamp": {
+            "response": {"expires_at": 1740467160.0},  # 2025-02-25 08:06:00 (Paris UTC+1)
+            "expected_timestamp": 1740463560.0,  # 2025-02-25 07:06:00 (UTC)
+            "must_raise": False,
+        },
+        "with_expires_at_with_timezone": {
+            "response": {"expires_at": "2025-02-25 10:06:00+02:00"},
+            "expected_timestamp": 1740467160.0,  # 2025-02-25 08:06:00 (UTC)
             "must_raise": False,
         },
         "with_unsupported_format": {
             "response": {"expires_at": "2024,12,18"},
-            "expected_datetime": None,
+            "expected_timestamp": None,
+            "must_raise": True,
+        },
+        "with_past_token": {
+            "response": {"expires_at": "2024-12-18 00:00:00"},
+            "expected_timestamp": None,
             "must_raise": True,
         },
     }
 
 
 @pytest.mark.parametrize(
-    "case_name", ["with_expires_in", "with_empty_response", "with_expires_at", "with_unsupported_format"]
+    "case_name",
+    [
+        "with_expires_in",
+        "with_empty_response",
+        "with_expires_at",
+        "with_expires_at_timestamp",
+        "with_expires_at_with_timezone",
+        "with_unsupported_format",
+        "with_past_token",
+    ],
 )
+@freeze_time("2025-01-23 14:12:00")
 def test_expires_at_works_as_expected(case_name: str, expires_at_expectations: dict[str, Any]) -> None:
     if expires_at_expectations[case_name]["must_raise"]:
         with pytest.raises(ValueError):
-            _extract_expires_at_from_token_response(expires_at_expectations[case_name]["response"], 3600)
+            _extract_expiration_timestamp_from_token_response(expires_at_expectations[case_name]["response"], 3600)
     else:
-        result = _extract_expires_at_from_token_response(expires_at_expectations[case_name]["response"], 3600)
-        assert expires_at_expectations[case_name]["expected_datetime"].year == result.year
-        assert expires_at_expectations[case_name]["expected_datetime"].month == result.month
-        assert expires_at_expectations[case_name]["expected_datetime"].day == result.day
-        assert expires_at_expectations[case_name]["expected_datetime"].hour == result.hour
-        assert expires_at_expectations[case_name]["expected_datetime"].minute == result.minute
-        assert expires_at_expectations[case_name]["expected_datetime"].second == result.second
+        result = _extract_expiration_timestamp_from_token_response(expires_at_expectations[case_name]["response"], 3600)
+        assert expires_at_expectations[case_name]["expected_timestamp"] == result

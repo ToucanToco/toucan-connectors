@@ -19,6 +19,7 @@ try:
 
     from toucan_connectors.http_api.pagination_configs import (
         NoopPaginationConfig,
+        PaginationConfig,
         extract_pagination_info_from_result,
     )
 
@@ -29,7 +30,6 @@ except ImportError as exc:  # pragma: no cover
 
 from toucan_connectors.auth import Auth
 from toucan_connectors.common import (
-    HttpError,
     nosql_apply_parameters_to_query,
     transform_with_jq,
 )
@@ -37,12 +37,13 @@ from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.utils.json_to_table import json_to_table
 
 TOO_MANY_REQUESTS = 429
+_LOGGER = getLogger(__name__)
 
 
 class HttpAPIConnectorError(Exception):
     """Raised when an error occurs while fetching data from an HTTP API"""
 
-    def __init__(self, message: str, original_exc: HttpError) -> None:
+    def __init__(self, message: str, original_exc: HTTPError) -> None:
         super().__init__(message)
         self.original_exc = original_exc
 
@@ -115,9 +116,9 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
             # `cert` is a list of PosixPath. `request` needs a list of strings for certificates
             query["cert"] = [str(c) for c in self.cert]
 
-        HttpAPIConnector.logger.debug(f">> Request:  method={query.get('method')} url={query.get('url')}")
+        _LOGGER.debug(f">> Request:  method={query.get('method')} url={query.get('url')}")
         res = session.request(**query)
-        HttpAPIConnector.logger.debug(f"<< Response: status_code={res.status_code} reason={res.reason}")
+        _LOGGER.debug(f"<< Response: status_code={res.status_code} reason={res.reason}")
 
         res.raise_for_status()
 
@@ -126,19 +127,19 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                 data = fromstring(res.content)  # noqa: S314
                 data = parse(tostring(data.find(xpath), method="xml"), attr_prefix="")
             except ParseError:
-                HttpAPIConnector.logger.error(f"Could not decode {res.content!r}")
+                _LOGGER.error(f"Could not decode {res.content!r}")
                 raise
 
         else:
             try:
                 data = res.json()
             except ValueError:
-                HttpAPIConnector.logger.error("Could not decode content using response.json()")
+                _LOGGER.error("Could not decode content using response.json()")
                 try:
                     # sometimes when the content is too big res.json() fails but json.loads works
                     data = json.loads(res.content)
                 except ValueError:
-                    HttpAPIConnector.logger.error(
+                    _LOGGER.error(
                         f"Cannot decode response content from query: method={query.get('method')} url={query.get('url')} response_status_code={res.status_code} response_reason=${res.reason}"  # noqa: E501
                     )
                     raise
@@ -147,7 +148,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
     def perform_requests(self, data_source: HttpAPIDataSource, session: "Session") -> list[Any]:
         results = []
         # Extract first http_pagination_config from data_source
-        pagination_config = data_source.http_pagination_config or NoopPaginationConfig()
+        pagination_config: PaginationConfig | None = data_source.http_pagination_config or NoopPaginationConfig()
         while pagination_config is not None:
             data_source = apply_pagination_to_data_source(data_source, pagination_config)
             query = self._render_query(data_source)
@@ -169,7 +170,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
             try:
                 parsed_result = transform_with_jq(raw_result, jq_filter)
             except ValueError:
-                HttpAPIConnector.logger.error(f"Could not transform {raw_result} using {jq_filter}")
+                _LOGGER.error(f"Could not transform {raw_result} using {jq_filter}")
                 raise
             # Prepare next pagination config
             parsed_pagination_info = None

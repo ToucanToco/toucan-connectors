@@ -1,10 +1,11 @@
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
-from typing import Any, Callable, Literal
+from datetime import UTC, datetime
+from typing import Annotated, Any, Callable, Literal
 from urllib import parse as url_parse
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
+from dateutil.relativedelta import relativedelta
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, SecretStr, ValidationError
 from requests import Session
 
 from toucan_connectors.common import UI_HIDDEN
@@ -34,29 +35,55 @@ class MissingOauthWorkflowError(Oauth2Error):
     """Raised when the oauth2 workflow is missing from saved session."""
 
 
-_SUPPORTED_EXPIRATION_FORMATS = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%d/%m/%Y %H:%M:%S"]
+def validate_expires_at(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime) and value.tzinfo:
+        # Convert expiration date into utc if timezone present and then remove timezone for simple date comparison
+        value = value.astimezone(UTC).replace(tzinfo=None)
+    if value < datetime.utcnow():
+        raise ValueError(f"Token expiration date {value} cannot be a past date.")
+    return value
 
 
-def _extract_expires_at_from_token_response(token_response: dict[str, Any], default_lifetime: int) -> datetime:
-    """Read token expiration info from oauth2 dance response and return a computed datetime.
+def validate_expires_in(value: int | None) -> int | None:
+    if value is None:
+        return None
+    parsed_value = datetime.utcnow() + relativedelta(seconds=int(value))
+    if parsed_value < datetime.utcnow():
+        raise ValueError(f"Token expiration date {value} cannot be a past date.")
+    return value
 
-    It can raise an exception if the expiration date has un unexpected format.
-    """
-    if "expires_at" in token_response:
-        if isinstance(token_response["expires_at"], str):
-            expires_at = None
-            for date_format in _SUPPORTED_EXPIRATION_FORMATS:
-                try:
-                    expires_at = datetime.strptime(token_response["expires_at"], date_format)
-                    break
-                except ValueError:
-                    continue
-            if expires_at is not None:
-                return expires_at
-            raise ValueError(f"Can't parse the oauth2 token expiration: {token_response['expires_at']}")
-        return datetime.fromtimestamp(int(token_response["expires_at"]))
+
+class TokenExpiration(BaseModel):
+    expires_at: Annotated[datetime | None, AfterValidator(validate_expires_at)] = None
+    expires_in: Annotated[int | None, AfterValidator(validate_expires_in)] = None
+
+    def expires_at_timestamp(self) -> float:
+        """Returns expires_at value as timestamp"""
+        if self.expires_at is None:
+            # For mypy, method will not be called if expires_at is None
+            return datetime.utcnow().timestamp()
+        if isinstance(self.expires_at, datetime):
+            return self.expires_at.timestamp()
+        else:
+            return self.expires_at
+
+    def expires_in_timestamp(self) -> float:
+        """Returns expires_in value as timestamp"""
+        return (datetime.utcnow() + relativedelta(seconds=(self.expires_in or 0))).timestamp()
+
+
+def _extract_expiration_timestamp_from_token_response(token_response: dict[str, Any], default_lifetime: int) -> float:
+    """Read token expiration info from oauth2 dance response and return computed expiration timestamp."""
+    token_expiration = TokenExpiration(**token_response)
+    if token_expiration.expires_at:
+        return token_expiration.expires_at_timestamp()
+    elif token_expiration.expires_in:
+        return token_expiration.expires_in_timestamp()
     else:
-        return datetime.now() + timedelta(0, int(token_response.get("expires_in", default_lifetime)))
+        _LOGGER.warning("Can't extract token expiration dates from oauth2 response, using default.")
+        return (datetime.utcnow() + relativedelta(seconds=default_lifetime)).timestamp()
 
 
 class OauthTokenSecretData(BaseModel):
@@ -65,6 +92,10 @@ class OauthTokenSecretData(BaseModel):
     access_token: str = Field(..., alias="accessToken")
     refresh_token: str = Field(..., alias="refreshToken")
     expires_at: float = Field(..., alias="expiresAt")  # timestamp
+
+
+class OauthStateParams(BaseModel):
+    workflow_token: str
 
 
 class HttpOauth2SecretsKeeper(BaseModel):
@@ -76,9 +107,9 @@ class HttpOauth2SecretsKeeper(BaseModel):
 
     def save(self, key: str, value: dict[str, Any]) -> OauthTokenSecretData:
         """Save secrets in a secrets repository"""
-        value["expires_at"] = _extract_expires_at_from_token_response(
+        value["expires_at"] = _extract_expiration_timestamp_from_token_response(
             token_response=value, default_lifetime=self.default_token_lifetime_seconds
-        ).timestamp()
+        )
         try:
             secret_data = OauthTokenSecretData(**value)
         except ValidationError as exc:
@@ -95,6 +126,7 @@ class HttpOauth2SecretsKeeper(BaseModel):
         oauth_token = self.load_callback(key, self.context)
         if oauth_token:
             return OauthTokenSecretData(**oauth_token)
+        return None
 
 
 class AuthenticationConfig(BaseModel, ABC):
@@ -142,7 +174,7 @@ class BaseOAuth2Config(AuthenticationConfig, ABC):
         workflow_token_saver_callback: Callable[[str, str, dict[str, Any]], None],
         workflow_callback_context: dict[str, Any],
         **kwargs,
-    ):
+    ) -> str:
         """Build an authorization request that will be used to initialize oauth2 dance.
 
         :param kwargs: Additional values that will be passed to the authorization url and retrieved in
@@ -154,7 +186,6 @@ class BaseOAuth2Config(AuthenticationConfig, ABC):
 
         :param workflow_callback_context: the context which will be passed to the workflow token saver callback
         """
-        pass
 
     @abstractmethod
     def retrieve_token(
@@ -162,9 +193,8 @@ class BaseOAuth2Config(AuthenticationConfig, ABC):
         workflow_token_loader_callback: Callable[[str, dict[str, Any]], str | None],
         workflow_callback_context: dict[str, Any],
         authorization_response: str,
-    ):
-        """Retrieve authorization token from oauth2 backend"""
-        pass
+    ) -> None:
+        """Retrieve authorization token from oauth2 backend and save it."""
 
 
 class AuthorizationCodeOauth2(BaseOAuth2Config):
@@ -180,37 +210,49 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
         session.headers.update({"Authorization": f"Bearer {self._get_access_token()}"})
         return session
 
+    def _init_oauth_client(self, **kwargs) -> Any:
+        if self.client_secret is None:
+            raise ValueError("Client secret field is missing to build oauth client.")
+        return oauth_client(client_id=self.client_id, client_secret=self.client_secret.get_secret_value(), **kwargs)
+
     def build_authorization_uri(
         self,
         workflow_token_saver_callback: Callable[[str, str, dict[str, Any]], None],
         workflow_callback_context: dict[str, Any],
         **kwargs,
     ) -> str:
-        client = oauth_client(
-            client_id=self.client_id,
-            client_secret=self.client_secret.get_secret_value(),
+        if self.auth_flow_id is None:
+            raise ValueError("Auth flow id field is missing to build authorization uri.")
+        client = self._init_oauth_client(
             redirect_uri=self.redirect_uri,
             scope=self.scope,
         )
-        workflow_token = generate_token()
-        state = {"workflow_token": workflow_token, **kwargs}
-        uri, state = client.create_authorization_url(
-            self.authentication_url, state=JsonWrapper.dumps(state), **self.additional_auth_params
+        oauth_state = OauthStateParams(workflow_token=generate_token())
+        uri, _ = client.create_authorization_url(
+            self.authentication_url,
+            state=JsonWrapper.dumps({**kwargs} | oauth_state.model_dump()),
+            **self.additional_auth_params,
         )
-        workflow_token_saver_callback(self.auth_flow_id, workflow_token, workflow_callback_context)
+        workflow_token_saver_callback(self.auth_flow_id, oauth_state.workflow_token, workflow_callback_context)
         return uri
 
     def _get_access_token(self) -> str:
         """Get access token from secrets keeper.
 
         Call refresh token route if the access token has expired.
+        Raises if oauth token is missing.
         """
+        # Check that backend fields are set
+        if self.auth_flow_id is None:
+            raise ValueError("Auth flow id field is missing to get access_token.")
+        if self._secrets_keeper is None:
+            raise ValueError("Secret Keeper not initialized.")
+
         oauth_token = self._secrets_keeper.load(self.auth_flow_id)
-        if datetime.fromtimestamp(oauth_token.expires_at) < datetime.now():
-            client = oauth_client(
-                client_id=self.client_id,
-                client_secret=self.client_secret.get_secret_value(),
-            )
+        if oauth_token is None:
+            raise ValueError("No oauth token found. Please refresh your oauth2 access.")
+        if datetime.fromtimestamp(oauth_token.expires_at) < datetime.utcnow():
+            client = self._init_oauth_client()
             new_token = client.refresh_token(self.token_url, refresh_token=oauth_token.refresh_token)
             oauth_token = self._secrets_keeper.save(
                 self.auth_flow_id,
@@ -225,18 +267,22 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
         workflow_callback_context: dict[str, Any],
         authorization_response: str,
     ) -> None:
+        # Check that backend fields are set
+        if self.auth_flow_id is None:
+            raise ValueError("Auth flow id field is missing to retrieve oauth tokens.")
+        if self._secrets_keeper is None:
+            raise ValueError("Secret Keeper not initialized.")
+
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)
-        client = oauth_client(
-            client_id=self.client_id,
-            client_secret=self.client_secret.get_secret_value(),
-        )
+        client = self._init_oauth_client()
         workflow_token = workflow_token_loader_callback(self.auth_flow_id, workflow_callback_context)
         if workflow_token is None:
             raise MissingOauthWorkflowError()
 
         # Verify the oauth2 workflow token
-        assert workflow_token == JsonWrapper.loads(url_params["state"][0])["workflow_token"]
+        oauth_state = OauthStateParams(**JsonWrapper.loads(url_params["state"][0]))
+        assert workflow_token == oauth_state.workflow_token
 
         token = client.fetch_token(
             self.token_url,
