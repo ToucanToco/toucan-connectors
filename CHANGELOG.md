@@ -6,6 +6,10 @@
 
 - Switched from `poetry` to `uv` for package management
 
+### Fixed
+
+- Fixed google credentials import for Gooble Big Query and Google Translator connectors
+
 ## [7.6.0] 2025-01-16
 
 ### Changed
