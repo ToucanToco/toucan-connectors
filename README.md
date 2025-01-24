@@ -23,10 +23,10 @@ The Toucan Toco platform instantiates these classes using values provided by Tou
 
 ## Installing for development
 
-We use `poetry` for packaging and development. Use the following command to install the project for development:
+We use [uv](https://docs.astral.sh/uv/) for packaging and development. Use the following command to install the project for development:
 
 ```
-poetry install -E all
+uv sync --all-extras
 ```
 
 ## Dependencies
@@ -214,7 +214,7 @@ Make sure your new code is properly formatted by running `make lint`. If it's no
 ## Publishing a release
 
 1. Create a pull request updating **only** the [changelog](CHANGELOG.md) and the `version`
-   attribute of the `[tool.poetry]` section in the `pyproject.toml` file.
+   attribute of the `[project]` section in the `pyproject.toml` file.
 
 2. Once the pull request is approved, merge it using the **squash and merge** strategy.
 

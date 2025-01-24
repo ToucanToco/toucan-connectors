@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -78,7 +78,7 @@ def test_sanitize_df_dates_with_tz_aware_datetimes():
             "c": [
                 datetime(2022, 7, 21, tzinfo=ZoneInfo("Europe/Paris")),
                 datetime(2022, 7, 22, tzinfo=tz.tzoffset("Europe/Paris", 3600)),
-                datetime(2022, 7, 22, tzinfo=timezone.utc),
+                datetime(2022, 7, 22, tzinfo=UTC),
             ],
         }
     )

@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from functools import _lru_cache_wrapper, cached_property, lru_cache
 from logging import getLogger
 from re import Pattern
-from typing import Any, Optional, Union
+from typing import Any
 from warnings import warn
 
 try:
@@ -120,7 +120,7 @@ def validate_collection(client, database: str, collection: str):
 class MongoDataSource(ToucanDataSource):
     database: str = Field(..., description="The name of the database you want to query")
     collection: str = Field(..., description="The name of the collection you want to query")
-    query: Union[dict, list[dict]] = Field(
+    query: dict | list[dict] = Field(
         {},
         description="A mongo query. See more details on the Mongo Aggregation Pipeline in the MongoDB documentation",
     )
@@ -163,10 +163,10 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
         description="The domain name (preferred option as more dynamic) or "
         "the hardcoded IP address of your database server",
     )
-    port: Optional[int] = Field(None, description="The listening port of your database server")
-    username: Optional[str] = Field(None, description="Your login username")
-    password: Optional[PlainJsonSecretStr] = Field(None, description="Your login password")
-    ssl: Optional[bool] = Field(None, description="Create the connection to the server using SSL")
+    port: int | None = Field(None, description="The listening port of your database server")
+    username: str | None = Field(None, description="Your login username")
+    password: PlainJsonSecretStr | None = Field(None, description="Your login password")
+    ssl: bool | None = Field(None, description="Create the connection to the server using SSL")
     model_config = ConfigDict(ignored_types=(cached_property, _lru_cache_wrapper))
     max_pool_size: int = Field(1, alias="maxPoolSize")
 
@@ -187,7 +187,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
         pass
 
     @staticmethod
-    def _get_details(index: int, status: Optional[bool]):
+    def _get_details(index: int, status: bool | None):
         checks = ["Hostname resolved", "Port opened", "Host connection", "Authenticated"]
         ok_checks = [(c, True) for i, c in enumerate(checks) if i < index]
         new_check = (checks[index], status)
@@ -339,9 +339,9 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
         self,
         data_source: MongoDataSource,
         search: dict[str, list[dict[str, Pattern]]],
-        permissions: Optional[str] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
+        permissions: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> DataSlice:
         # Create a copy in order to keep the original (deepcopy-like)
         data_source = data_source.model_copy(deep=True)
@@ -374,9 +374,9 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
         self,
         data_source: MongoDataSource,
         search: dict[str, list[dict[str, Pattern]]],
-        permissions: Optional[str] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
+        permissions: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> "pd.DataFrame":
         return self.get_slice_with_regex(
             data_source=data_source,

@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := all
-ruff = poetry run ruff check toucan_connectors tests
-format = poetry run ruff format toucan_connectors tests
-mypy = poetry run mypy
+ruff = uv run ruff check toucan_connectors tests
+format = uv run ruff format toucan_connectors tests
+mypy = uv run mypy
 
 .PHONY: clean
 clean:
@@ -12,7 +12,7 @@ clean:
 .PHONY: install
 install:
 	sudo apt-get install libxml2-dev libxslt-dev unixodbc-dev
-	poetry install -E all
+	uv sync --all-extras
 
 .PHONY: format
 format:
@@ -27,7 +27,7 @@ lint:
 
 .PHONY: test
 test:
-	poetry run pytest --junitxml=test-report.xml --cov=toucan_connectors --cov-report xml
+	uv run pytest --junitxml=test-report.xml --cov=toucan_connectors --cov-report xml
 
 .PHONY: all
 all: test lint
@@ -44,11 +44,3 @@ new_connector:  # $ make new_connector type=Magento
 	m4 -DTYPE=${type} templates/connector.py.m4 > toucan_connectors/${MODULE}/${MODULE}_connector.py
 	mkdir tests/${MODULE}
 	m4 -DTYPE=${type} templates/tests.py.m4 > tests/${MODULE}/test_${MODULE}.py
-
-.PHONY: build
-build:
-	poetry build
-
-.PHONY: upload
-upload:
-	poetry publish --build

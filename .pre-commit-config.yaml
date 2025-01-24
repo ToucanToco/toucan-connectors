@@ -9,12 +9,12 @@ repos:
   hooks:
   - id: system
     name: Lint with Ruff
-    entry: poetry run ruff check --fix
+    entry: uv run ruff check --fix
     types: [python]
     language: system
 
   - id: system
     name: Lint with Ruff format
-    entry: poetry run ruff format
+    entry: uv run ruff format
     types: [python]
     language: system

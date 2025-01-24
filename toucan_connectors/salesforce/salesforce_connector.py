@@ -2,7 +2,6 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field, PrivateAttr
 
@@ -58,7 +57,7 @@ class SalesforceDataSource(ToucanDataSource):
 
 class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSource):
     _auth_flow = "oauth2"
-    auth_flow_id: Optional[str] = None
+    auth_flow_id: str | None = None
     instance_url: str = Field(
         None,
         title="instance url",

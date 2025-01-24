@@ -4,7 +4,7 @@ import threading
 import time
 import types
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +31,13 @@ class ConnectionBO:
         self.t_get: float = time.time()
 
         # method to check if connection is open or closed
-        self.alive: Optional[Union[types.FunctionType, types.MethodType]] = None
+        self.alive: types.FunctionType | types.MethodType | None = None
 
         # method to close the connection
-        self.close: Optional[Union[types.FunctionType, types.MethodType]] = None
+        self.close: types.FunctionType | types.MethodType | None = None
 
         # method to open the connection
-        self.connect: Optional[Union[types.FunctionType, types.MethodType]] = None
+        self.connect: types.FunctionType | types.MethodType | None = None
 
         # The connection
         self.connection: Optional = None
@@ -163,7 +163,7 @@ class ConnectionManager:
         self.clean_active = False
         self._activate_clean()
 
-    def _activate_clean(self, active: Optional[bool] = False):
+    def _activate_clean(self, active: bool | None = False):
         if len(self.connection_list) > 0 and (not self.clean_active or active):
             self.clean_active = True
             t_clean = threading.Timer(self.time_between_clean, self._clean)
@@ -173,7 +173,7 @@ class ConnectionManager:
 
     def _create(
         self,
-        identifier: Optional[str],
+        identifier: str | None,
         connect_method,
         alive_method,
         close_method,

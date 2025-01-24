@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from toucan_connectors.common import convert_to_printf_templating_style, convert_to_qmark_paramstyle
 
@@ -14,7 +13,7 @@ class SqlQueryHelper:
         return bool(re.search(r"select.*", query, re.I))
 
     @staticmethod
-    def prepare_count_query(query_string: str, query_parameters: Optional[dict] = None) -> tuple[str, list]:
+    def prepare_count_query(query_string: str, query_parameters: dict | None = None) -> tuple[str, list]:
         """Build the count(*) query by removing the limit and the offset and adding a count query above from input
         query"""
         prepared_query, prepared_values = SqlQueryHelper.prepare_query(query_string, query_parameters)
@@ -25,9 +24,9 @@ class SqlQueryHelper:
     @staticmethod
     def prepare_limit_query(
         query_string: str,
-        query_parameters: Optional[dict] = None,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
+        query_parameters: dict | None = None,
+        offset: int | None = None,
+        limit: int | None = None,
     ) -> tuple[str, list]:
         """Build a new query by adding a select query with a limit above from input query"""
         prepared_query, prepared_values = SqlQueryHelper.prepare_query(query_string, query_parameters)
@@ -43,14 +42,14 @@ class SqlQueryHelper:
         return prepared_query, prepared_values
 
     @staticmethod
-    def prepare_query(query: str, query_parameters: Optional[dict] = None) -> tuple[str, list]:
+    def prepare_query(query: str, query_parameters: dict | None = None) -> tuple[str, list]:
         """Prepare actual query by applying parameters and limit / offset restrictions"""
         query = convert_to_printf_templating_style(query)
         converted_query, ordered_values = convert_to_qmark_paramstyle(query, query_parameters)
         return converted_query, ordered_values
 
     @staticmethod
-    def extract_offset(query: str) -> Optional[int]:
+    def extract_offset(query: str) -> int | None:
         m = re.search(r"(?<=\soffset)\s*\d*\s*", query, re.I)
         if m:
             try:
@@ -61,7 +60,7 @@ class SqlQueryHelper:
             return None
 
     @staticmethod
-    def extract_limit(query: str) -> Optional[int]:
+    def extract_limit(query: str) -> int | None:
         m = re.search(r"(?<=\slimit)\s*\d*\s*", query, re.I)
         if m:
             try:

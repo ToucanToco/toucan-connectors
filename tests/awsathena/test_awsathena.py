@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -165,7 +164,7 @@ def test_get_status_ko(mocker, athena_connector, status_checks):
         (" SELECT * FROM toto; ", 5, 100, "SELECT * FROM (SELECT * FROM toto) OFFSET 5 LIMIT 100;"),
     ],
 )
-def test_add_pagination_to_query(athena_connector, query: str, offset: int, limit: Optional[int], expected: str):
+def test_add_pagination_to_query(athena_connector, query: str, offset: int, limit: int | None, expected: str):
     assert athena_connector._add_pagination_to_query(query, offset=offset, limit=limit) == expected
 
 
