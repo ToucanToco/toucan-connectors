@@ -1,7 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Annotated, Any, Callable, Literal
+from typing import Annotated, Any, Literal
 from urllib import parse as url_parse
 
 from dateutil.relativedelta import relativedelta
