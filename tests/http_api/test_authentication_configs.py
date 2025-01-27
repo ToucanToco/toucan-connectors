@@ -3,9 +3,12 @@ from typing import Any
 
 import pytest
 from freezegun import freeze_time
+from pydantic import ValidationError
 from pytest_mock import MockFixture
+from requests import Session
 
 from toucan_connectors.http_api.authentication_configs import (
+    AuthenticationConfig,
     AuthorizationCodeOauth2,
     HttpOauth2SecretsKeeper,
     MissingOauthWorkflowError,
@@ -117,6 +120,15 @@ def secret_keeper(clear_fake_secret_database: None) -> HttpOauth2SecretsKeeper:
     return HttpOauth2SecretsKeeper(save_callback=_fake_saver, delete_callback=_fake_remover, load_callback=_fake_loader)
 
 
+class DummyAuthConfig(AuthenticationConfig):
+    def authenticate_session(self) -> Session:
+        return Session()
+
+
+def test_base_authentication_config_not_oauth() -> None:
+    assert not DummyAuthConfig().is_oauth_config()
+
+
 @pytest.mark.usefixtures("clear_fake_secret_database")
 def test_authenticate_session_with_valid_access_token(
     oauth2_authentication_config: AuthorizationCodeOauth2, auth_flow_id: str, secret_keeper: HttpOauth2SecretsKeeper
@@ -173,6 +185,47 @@ def test_authenticate_session_with_expired_access_token(
     assert mocked_client.refresh_token.call_args[0][0] == token_url
     assert mocked_client.refresh_token.call_args[1]["refresh_token"] == "my_awesome_refresh_token"
     assert retrieved_session.headers["Authorization"] == "Bearer new_access_token"
+
+
+def test_validation_error_on_bad_oauth_tokens(secret_keeper: HttpOauth2SecretsKeeper) -> None:
+    with pytest.raises(ValidationError):
+        secret_keeper.save(key="random_key", value={"expires_at": "2025-01-25 00:00:00", "missing": "token"})
+
+
+def test_cant_build_session_without_auth_flow_id(
+    oauth2_authentication_config: AuthorizationCodeOauth2, secret_keeper: HttpOauth2SecretsKeeper
+) -> None:
+    oauth2_authentication_config.auth_flow_id = None
+    oauth2_authentication_config.set_secret_keeper(secret_keeper)
+    with pytest.raises(ValueError):
+        oauth2_authentication_config.authenticate_session()
+
+
+def test_cant_build_session_without_secret_keeper(oauth2_authentication_config: AuthorizationCodeOauth2) -> None:
+    with pytest.raises(ValueError):
+        oauth2_authentication_config.authenticate_session()
+
+
+def test_cant_build_auth_uri_without_auth_flow_id(oauth2_authentication_config: AuthorizationCodeOauth2) -> None:
+    oauth2_authentication_config.auth_flow_id = None
+    with pytest.raises(ValueError):
+        oauth2_authentication_config.build_authorization_uri(
+            workflow_token_saver_callback=_fake_workflow_saver,
+            workflow_callback_context={},
+            random="content",
+            other_token="super_123",
+        )
+
+
+def test_cant_build_auth_uri_without_client_secret(oauth2_authentication_config: AuthorizationCodeOauth2) -> None:
+    oauth2_authentication_config.client_secret = None
+    with pytest.raises(ValueError):
+        oauth2_authentication_config.build_authorization_uri(
+            workflow_token_saver_callback=_fake_workflow_saver,
+            workflow_callback_context={},
+            random="content",
+            other_token="super_123",
+        )
 
 
 @pytest.mark.usefixtures("clear_fake_secret_database")
