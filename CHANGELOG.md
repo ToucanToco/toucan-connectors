@@ -2,9 +2,12 @@
 
 ## Unreleased
 
+## [7.7.0] 2025-01-27
+
 ### Changed
 
 - Switched from `poetry` to `uv` for package management
+- HTTP API: Added support for OAuth2 authentication
 
 ### Fixed
 
