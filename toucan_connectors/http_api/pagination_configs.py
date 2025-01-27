@@ -26,7 +26,7 @@ class PaginationConfig(BaseModel, ABC):
         """Returns the JQ filter that must be applied to the raw API result to retrieve pagination info"""
 
     @abstractmethod
-    def get_error_status_whitelist(self) -> list[str] | None:
+    def get_error_status_whitelist(self) -> list[int] | None:
         """Returns the list of the error statuses which means the end of data fetching, and so to ignore"""
 
 
@@ -46,7 +46,7 @@ class NoopPaginationConfig(PaginationConfig):
     def get_pagination_info_filter(self) -> str | None:
         return None
 
-    def get_error_status_whitelist(self) -> list[str] | None:
+    def get_error_status_whitelist(self) -> list[int] | None:
         return None
 
 
@@ -75,12 +75,14 @@ class OffsetLimitPaginationConfig(PaginationConfig):
     def get_next_pagination_config(
         self, result: Any, pagination_info: Any | None
     ) -> Optional["OffsetLimitPaginationConfig"]:
+        if not isinstance(pagination_info, list):
+            return None
         if len(pagination_info) < self.limit:
             return None
         else:
             return self.model_copy(update={"offset": self.offset + self.limit})
 
-    def get_error_status_whitelist(self) -> list[str] | None:
+    def get_error_status_whitelist(self) -> list[int] | None:
         return None
 
     def get_pagination_info_filter(self) -> str | None:
@@ -101,7 +103,7 @@ class PageBasedPaginationConfig(PaginationConfig):
 
     def plan_pagination_updates_to_data_source(self, request_params: dict[str, Any] | None) -> dict[str, Any]:
         page_based_params = {self.page_name: self.page}
-        if self.per_page_name:
+        if self.per_page_name and self.per_page:
             page_based_params |= {self.per_page_name: self.per_page}
         if request_params is None:
             data_source_params = page_based_params
@@ -125,7 +127,7 @@ class PageBasedPaginationConfig(PaginationConfig):
         else:
             return self.model_copy(update={"page": self.page + 1})
 
-    def get_pagination_info_filter(self) -> str:
+    def get_pagination_info_filter(self) -> str | None:
         return self.max_page_filter
 
     def get_error_status_whitelist(self) -> list[int] | None:
@@ -164,7 +166,7 @@ class CursorBasedPaginationConfig(PaginationConfig):
     def get_pagination_info_filter(self) -> str:
         return self.cursor_filter
 
-    def get_error_status_whitelist(self) -> list[str] | None:
+    def get_error_status_whitelist(self) -> list[int] | None:
         return None
 
 
@@ -194,7 +196,7 @@ class HyperMediaPaginationConfig(PaginationConfig):
     def get_pagination_info_filter(self) -> str:
         return self.next_link_filter
 
-    def get_error_status_whitelist(self) -> list[str] | None:
+    def get_error_status_whitelist(self) -> list[int] | None:
         return None
 
 

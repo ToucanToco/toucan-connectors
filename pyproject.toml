@@ -114,6 +114,7 @@ dev = [
     "click<9.0.0,>=8.1.8",
     "cryptography>=40.0.2",
     "docker<8.0.0,>=7.1.0",
+    "freezegun<1.6,>=1.5.1",
     "mock<6.0.0,>=5.1.0",
     "mypy<2.0,>=1.14",
     "pandas-stubs<3.0.0.0,>=2.2.3.241126",
@@ -133,6 +134,7 @@ dev = [
     "ruff<0.10.0,>=0.6.1",
     "pre-commit<5.0,>=3.6",
     "types-oauthlib<4.0.0.0,>=3.2.0.20240217",
+    "types-python-dateutil<2.10.0,>=2.9.0"
 ]
 
 [tool.mypy]
@@ -150,6 +152,9 @@ files = [
     "toucan_connectors/azure_mssql/azure_mssql_connector.py",
     "toucan_connectors/common.py",
     "toucan_connectors/google_big_query/google_big_query_connector.py",
+    "toucan_connectors/http_api/authentication_configs.py",
+    "toucan_connectors/http_api/http_api_connector.py",
+    "toucan_connectors/http_api/pagination_configs.py",
     "toucan_connectors/hubspot_private_app/hubspot_connector.py",
     "toucan_connectors/mongo/mongo_connector.py",
     "toucan_connectors/mysql/mysql_connector.py",

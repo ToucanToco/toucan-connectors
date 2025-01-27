@@ -4,8 +4,10 @@ import pytest
 import requests
 import responses
 from pytest_mock import MockFixture
+from requests import Session
 
 from toucan_connectors.common import transform_with_jq
+from toucan_connectors.http_api.authentication_configs import AuthorizationCodeOauth2
 from toucan_connectors.http_api.http_api_connector import (
     Auth,
     HttpAPIConnector,
@@ -58,6 +60,18 @@ def data_source():
 @pytest.fixture(scope="function")
 def auth():
     return Auth(type="basic", args=["username", "password"])
+
+
+@pytest.fixture(scope="function")
+def oauth2_authentication_config() -> AuthorizationCodeOauth2:
+    return AuthorizationCodeOauth2(
+        kind="AuthorizationCodeOauth2",
+        client_id="client_id",
+        client_secret="client_secret",
+        authentication_url="authentication_url",
+        token_url="token_url",
+        scope="scope",
+    )
 
 
 @pytest.fixture(scope="function")
@@ -454,6 +468,26 @@ def test_raises_http_error_on_too_many_requests(connector: HttpAPIConnector, dat
 
 
 @responses.activate
+def test_authentication_priority(
+    connector: HttpAPIConnector,
+    data_source: HttpAPIDataSource,
+    auth: Auth,
+    oauth2_authentication_config: AuthorizationCodeOauth2,
+    mocker: MockFixture,
+) -> None:
+    responses.add(responses.GET, "https://jsonplaceholder.typicode.com/comments", json=[{"a": 1}])
+    oauth_session = Session()
+    oauth_session.headers.update({"Authorization": "Bearer oauth2_access_token"})
+    oauth_mock = mocker.patch.object(AuthorizationCodeOauth2, "authenticate_session", return_value=oauth_session)
+    connector.auth = auth
+    connector.authentication = oauth2_authentication_config
+    connector.get_df(data_source)
+    assert oauth_mock.call_count == 1
+    assert "Authorization" in responses.calls[0].request.headers
+    assert responses.calls[0].request.headers["Authorization"] == "Bearer oauth2_access_token"
+
+
+@responses.activate
 def test_get_df_with_parameters(connector, data_source):
     data_source.parameters = {"first_name": "raphael"}
     data_source.headers = {"name": "%(first_name)s"}
@@ -833,8 +867,7 @@ def test_get_cache_key(connector, auth, data_source):
     data_source.headers = {"name": "%(first_name)s"}
     data_source.parameters = {"first_name": "raphael"}
     key = connector.get_cache_key(data_source)
-
-    assert key == "9ef95981-2aab-3f7f-89d1-b0a300d16f14"
+    assert key == "3080d595-0918-3278-b230-ed3fd0c282ee"
 
     data_source.headers = {"name": "{{ first_name }}"}  # change the templating style
     key2 = connector.get_cache_key(data_source)
