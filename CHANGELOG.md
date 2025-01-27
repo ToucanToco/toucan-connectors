@@ -8,7 +8,7 @@
 
 ### Fixed
 
-- Fixed google credentials import for Gooble Big Query and Google Translator connectors
+- Fixed google credentials import for Google Big Query and Google Translator connectors
 
 ## [7.6.0] 2025-01-16
 
