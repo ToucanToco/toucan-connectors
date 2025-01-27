@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Wheels include `png`, `md` and `sh` files again
+
 ## [7.7.0] 2025-01-27
 
 ### Changed
