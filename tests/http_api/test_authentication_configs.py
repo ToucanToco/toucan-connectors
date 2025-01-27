@@ -338,7 +338,7 @@ def expires_at_expectations() -> dict[str, Any]:
         },
         "with_expires_at_timestamp": {
             "response": {"expires_at": 1740467160.0},  # 2025-02-25 08:06:00
-            "expected_datetime": datetime(2025, 2, 25, 8, 6).astimezone(UTC),
+            "expected_datetime": datetime(2025, 2, 25, 7, 6, tzinfo=UTC),
             "must_raise": False,
         },
         "with_unsupported_format": {
