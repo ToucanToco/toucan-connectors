@@ -21,7 +21,6 @@ include-package-data = true
 # FIXME: temporary workaround until https://github.com/pypa/setuptools/issues/4759 is fixed
 license-files = []
 
-
 [tool.uv]
 package = true
 
