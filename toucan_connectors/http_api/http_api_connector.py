@@ -1,7 +1,7 @@
 import json
 from enum import Enum
 from logging import getLogger
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 
@@ -36,6 +36,9 @@ from toucan_connectors.common import (
 from toucan_connectors.toucan_connector import ToucanConnector, ToucanDataSource
 from toucan_connectors.utils.json_to_table import json_to_table
 
+if TYPE_CHECKING:
+    from requests.exceptions import HTTPError
+
 TOO_MANY_REQUESTS = 429
 _LOGGER = getLogger(__name__)
 
@@ -43,7 +46,7 @@ _LOGGER = getLogger(__name__)
 class HttpAPIConnectorError(Exception):
     """Raised when an error occurs while fetching data from an HTTP API"""
 
-    def __init__(self, message: str, original_exc: HTTPError) -> None:
+    def __init__(self, message: str, original_exc: "HTTPError") -> None:
         super().__init__(message)
         self.original_exc = original_exc
 
