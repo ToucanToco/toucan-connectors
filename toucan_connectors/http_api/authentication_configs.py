@@ -39,10 +39,7 @@ class MissingOauthWorkflowError(Oauth2Error):
 def validate_expires_at(value: datetime | None) -> datetime | None:
     if value is None:
         return None
-    if isinstance(value, datetime) and value.tzinfo:
-        # Convert expiration date into utc if timezone present and then remove timezone for simple date comparison
-        value = value.astimezone(UTC).replace(tzinfo=None)
-    if value < datetime.utcnow():
+    if value.astimezone(UTC) < datetime.now().astimezone(UTC):
         raise ValueError(f"Token expiration date {value} cannot be a past date.")
     return value
 
@@ -50,8 +47,8 @@ def validate_expires_at(value: datetime | None) -> datetime | None:
 def validate_expires_in(value: int | None) -> int | None:
     if value is None:
         return None
-    parsed_value = datetime.utcnow() + relativedelta(seconds=int(value))
-    if parsed_value < datetime.utcnow():
+    parsed_value = datetime.now() + relativedelta(seconds=int(value))
+    if parsed_value < datetime.now():
         raise ValueError(f"Token expiration date {value} cannot be a past date.")
     return value
 
@@ -64,15 +61,12 @@ class TokenExpiration(BaseModel):
         """Returns expires_at value as timestamp"""
         if self.expires_at is None:
             # For mypy, method will not be called if expires_at is None
-            return datetime.utcnow().timestamp()
-        if isinstance(self.expires_at, datetime):
-            return self.expires_at.timestamp()
-        else:
-            return self.expires_at
+            return datetime.now().timestamp()
+        return self.expires_at.timestamp()
 
     def expires_in_timestamp(self) -> float:
         """Returns expires_in value as timestamp"""
-        return (datetime.utcnow() + relativedelta(seconds=(self.expires_in or 0))).timestamp()
+        return (datetime.now() + relativedelta(seconds=(self.expires_in or 0))).timestamp()
 
 
 def _extract_expiration_timestamp_from_token_response(token_response: dict[str, Any], default_lifetime: int) -> float:
@@ -84,7 +78,7 @@ def _extract_expiration_timestamp_from_token_response(token_response: dict[str, 
         return token_expiration.expires_in_timestamp()
     else:
         _LOGGER.warning("Can't extract token expiration dates from oauth2 response, using default.")
-        return (datetime.utcnow() + relativedelta(seconds=default_lifetime)).timestamp()
+        return (datetime.now() + relativedelta(seconds=default_lifetime)).timestamp()
 
 
 class OauthTokenSecretData(BaseModel):

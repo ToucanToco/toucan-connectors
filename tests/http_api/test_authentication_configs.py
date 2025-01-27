@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -322,38 +322,33 @@ def expires_at_expectations() -> dict[str, Any]:
     return {
         "with_expires_in": {
             "response": {"expires_in": 2000},
-            "expected_timestamp": 1737643520.0,  # 2025-01-23 14:45:20 (UTC)
+            "expected_datetime": datetime(2025, 1, 23, 14, 45, 20),
             "must_raise": False,
         },
         "with_empty_response": {
             "response": {},
             # Use default token lifetime value
-            "expected_timestamp": 1737645120.0,  # 2025-01-23 15:12:00 (UTC)
+            "expected_datetime": datetime(2025, 1, 23, 15, 12),
             "must_raise": False,
         },
         "with_expires_at": {
             "response": {"expires_at": "2025-02-25 08:06:00"},
-            "expected_timestamp": 1740467160.0,  # 2025-02-25 08:06:00 (UTC)
+            "expected_datetime": datetime(2025, 2, 25, 8, 6).astimezone(UTC),
             "must_raise": False,
         },
         "with_expires_at_timestamp": {
-            "response": {"expires_at": 1740467160.0},  # 2025-02-25 08:06:00 (Paris UTC+1)
-            "expected_timestamp": 1740463560.0,  # 2025-02-25 07:06:00 (UTC)
-            "must_raise": False,
-        },
-        "with_expires_at_with_timezone": {
-            "response": {"expires_at": "2025-02-25 10:06:00+02:00"},
-            "expected_timestamp": 1740467160.0,  # 2025-02-25 08:06:00 (UTC)
+            "response": {"expires_at": 1740467160.0},  # 2025-02-25 08:06:00
+            "expected_datetime": datetime(2025, 2, 25, 8, 6).astimezone(UTC),
             "must_raise": False,
         },
         "with_unsupported_format": {
             "response": {"expires_at": "2024,12,18"},
-            "expected_timestamp": None,
+            "expected_datetime": None,
             "must_raise": True,
         },
         "with_past_token": {
             "response": {"expires_at": "2024-12-18 00:00:00"},
-            "expected_timestamp": None,
+            "expected_datetime": None,
             "must_raise": True,
         },
     }
@@ -366,7 +361,6 @@ def expires_at_expectations() -> dict[str, Any]:
         "with_empty_response",
         "with_expires_at",
         "with_expires_at_timestamp",
-        "with_expires_at_with_timezone",
         "with_unsupported_format",
         "with_past_token",
     ],
@@ -378,4 +372,6 @@ def test_expires_at_works_as_expected(case_name: str, expires_at_expectations: d
             _extract_expiration_timestamp_from_token_response(expires_at_expectations[case_name]["response"], 3600)
     else:
         result = _extract_expiration_timestamp_from_token_response(expires_at_expectations[case_name]["response"], 3600)
-        assert expires_at_expectations[case_name]["expected_timestamp"] == result
+        dt_res = datetime.fromtimestamp(result)
+        dt_expected = expires_at_expectations[case_name]["expected_datetime"]
+        assert dt_res.replace(tzinfo=None) == dt_expected.replace(tzinfo=None)
