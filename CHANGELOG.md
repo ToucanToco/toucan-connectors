@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.7.2] 2025-01-27
+
 ### Fixed
 
 - Fixed HTTP API connector import error
