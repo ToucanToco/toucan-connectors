@@ -16,6 +16,9 @@ readme = "README.md"
 [tool.setuptools.packages.find]
 include = ["toucan_connectors*"]
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.uv]
 package = true
 
