@@ -1,0 +1,2 @@
+recursive-include toucan_connectors *.png *.md
+include toucan_connectors/install_scripts/*.sh

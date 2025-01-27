@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [7.7.1] 2025-01-27
+
+### Fixed
+
+- `uv` package now includes `png`, `md` and `sh` files
+
 ## [7.7.0] 2025-01-27
 
 ### Changed

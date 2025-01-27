@@ -9,29 +9,17 @@ dependencies = [
     "requests<3.0.0,>=2.28.0",
 ]
 name = "toucan-connectors"
-version = "7.7.0"
+version = "7.7.1"
 description = "Toucan Toco Connectors"
 readme = "README.md"
 
 [tool.setuptools.packages.find]
 include = ["toucan_connectors*"]
 
-[tool.setuptools.package-data]
-"*" = ["*.png", "*.md"]
-
 [tool.setuptools]
 include-package-data = true
 # FIXME: temporary workaround until https://github.com/pypa/setuptools/issues/4759 is fixed
 license-files = []
-script-files = [
-    "toucan_connectors/install_scripts/azure_mssql.sh",
-    "toucan_connectors/install_scripts/databricks.sh",
-    "toucan_connectors/install_scripts/mssql.sh",
-    "toucan_connectors/install_scripts/mssql_TLSv1_0.sh",
-    "toucan_connectors/install_scripts/odbc.sh",
-    "toucan_connectors/install_scripts/oracle.sh",
-]
-
 
 [tool.uv]
 package = true
