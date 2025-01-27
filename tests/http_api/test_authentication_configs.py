@@ -228,6 +228,34 @@ def test_cant_build_auth_uri_without_client_secret(oauth2_authentication_config:
         )
 
 
+def test_validation_fails_on_invalid_state(
+    oauth2_authentication_config: AuthorizationCodeOauth2,
+    secret_keeper: HttpOauth2SecretsKeeper,
+    auth_flow_id: str,
+) -> None:
+    # state must contain workflow-token
+    json_str_state = JsonWrapper.dumps({"invalid": "state"})
+
+    authorization_response = (
+        "http://laputa/my_small_app/connectors/http/authentication/redirect?"
+        f"state={json_str_state}"
+        "&code=oauth_authorization_code_444"
+        "&scope=ACCESS::READ-ACCESS::WRITE"
+    )
+
+    oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
+
+    # As this time, workflow_token is saved
+    _fake_workflow_saver(auth_flow_id, "workflow_token_123", {})
+
+    with pytest.raises(ValidationError):
+        oauth2_authentication_config.retrieve_token(
+            workflow_token_loader_callback=_fake_workflow_loader,
+            workflow_callback_context={},
+            authorization_response=authorization_response,
+        )
+
+
 @pytest.mark.usefixtures("clear_fake_secret_database")
 def test_build_authorization_url(
     authentication_url: str,

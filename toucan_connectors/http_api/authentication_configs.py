@@ -276,8 +276,8 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
             raise MissingOauthWorkflowError()
 
         # Verify the oauth2 workflow token
-        oauth_state = OauthStateParams(**JsonWrapper.loads(url_params["state"][0]))
-        assert workflow_token == oauth_state.workflow_token
+        oauth_state = OauthStateParams.model_validate_json(url_params["state"][0])
+        assert workflow_token == oauth_state.workflow_token, "Saved workflow token differs from received one."
 
         token = client.fetch_token(
             self.token_url,
