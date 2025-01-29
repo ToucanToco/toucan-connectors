@@ -340,6 +340,84 @@ def test_retrieve_oauth2_token(
 
 
 @pytest.mark.usefixtures("clear_fake_secret_database")
+def test_retrieve_oauth2_token_without_expiration_date(
+    client_id: str,
+    client_secret: str,
+    token_url: str,
+    auth_flow_id: str,
+    redirect_uri: str,
+    oauth2_authentication_config: AuthorizationCodeOauth2,
+    secret_keeper: HttpOauth2SecretsKeeper,
+    mocker: MockFixture,
+) -> None:
+    json_str_state = JsonWrapper.dumps({"workflow_token": "workflow_token_123", "random": "laputa stuff"})
+    authorization_response = (
+        "http://laputa/my_small_app/connectors/http/authentication/redirect?"
+        f"state={json_str_state}"
+        "&code=oauth_authorization_code_444"
+        "&scope=ACCESS::READ-ACCESS::WRITE"
+    )
+
+    oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
+
+    # As this time, workflow_token is saved
+    _fake_workflow_saver(auth_flow_id, "workflow_token_123", {})
+
+    mocked_client = mocker.MagicMock(name="mocked_client")
+    mocked_client.fetch_token.return_value = {
+        "access_token": "my_access_token",
+        "token_type": "Bearer",
+    }
+
+    mocker.patch("toucan_connectors.http_api.authentication_configs.oauth_client", return_value=mocked_client)
+    oauth2_authentication_config.retrieve_token(
+        workflow_token_loader_callback=_fake_workflow_loader,
+        workflow_callback_context={},
+        authorization_response=authorization_response,
+    )
+
+    # Check if fetched tokens are correctly saved
+    assert secret_keeper.load(auth_flow_id).access_token == "my_access_token"
+    assert secret_keeper.load(auth_flow_id).refresh_token is None
+
+
+@pytest.mark.usefixtures("clear_fake_secret_database")
+def test_get_access_token_with_infinite_token(
+    auth_flow_id: str,
+    oauth2_authentication_config: AuthorizationCodeOauth2,
+    secret_keeper: HttpOauth2SecretsKeeper,
+) -> None:
+    oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
+    _fake_saver(auth_flow_id, {"access_token": "444"}, context={})
+    assert "444" == oauth2_authentication_config._get_access_token()
+
+
+@pytest.mark.usefixtures("clear_fake_secret_database")
+@freeze_time("2025-01-29 16:00:00")
+def test_get_access_token_refresh_token_30_seconds_earlier(
+    auth_flow_id: str,
+    oauth2_authentication_config: AuthorizationCodeOauth2,
+    secret_keeper: HttpOauth2SecretsKeeper,
+    mocker: MockFixture,
+) -> None:
+    # token will expire soon
+    expires_at = (datetime.now() + timedelta(seconds=29)).timestamp()
+    oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
+    _fake_saver(auth_flow_id, {"access_token": "444", "expires_at": expires_at, "refresh_token": "refresh"}, context={})
+    mocked_client = mocker.MagicMock(name="mocked_client")
+    mocked_client.refresh_token.return_value = {
+        "access_token": "updated_access_token",
+        "expires_in": 3600,
+        "token_type": "Bearer",
+    }
+    mocker.patch("toucan_connectors.http_api.authentication_configs.oauth_client", return_value=mocked_client)
+    assert "updated_access_token" == oauth2_authentication_config._get_access_token()
+    oauth_token = secret_keeper.load(auth_flow_id)
+    assert oauth_token.access_token == "updated_access_token"
+    assert oauth_token.refresh_token == "refresh"
+
+
+@pytest.mark.usefixtures("clear_fake_secret_database")
 def test_raise_exception_on_refresh_token_when_saved_workflow_differs(
     client_id: str,
     client_secret: str,
