@@ -383,18 +383,38 @@ def test_retrieve_oauth2_token_without_expiration_date(
 
 @pytest.mark.usefixtures("clear_fake_secret_database")
 def test_get_access_token_with_infinite_token(
-    client_id: str,
-    client_secret: str,
-    token_url: str,
     auth_flow_id: str,
-    redirect_uri: str,
     oauth2_authentication_config: AuthorizationCodeOauth2,
     secret_keeper: HttpOauth2SecretsKeeper,
 ) -> None:
     oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
-    # Expires date will be ignored because refresh-token is missing
-    _fake_saver(auth_flow_id, {"access_token": "444", "expires_at": 1}, context={})
+    _fake_saver(auth_flow_id, {"access_token": "444"}, context={})
     assert "444" == oauth2_authentication_config._get_access_token()
+
+
+@pytest.mark.usefixtures("clear_fake_secret_database")
+@freeze_time("2025-01-29 16:00:00")
+def test_get_access_token_refresh_token_30_seconds_earlier(
+    auth_flow_id: str,
+    oauth2_authentication_config: AuthorizationCodeOauth2,
+    secret_keeper: HttpOauth2SecretsKeeper,
+    mocker: MockFixture,
+) -> None:
+    # token will expire soon
+    expires_at = (datetime.now() + timedelta(seconds=29)).timestamp()
+    oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
+    _fake_saver(auth_flow_id, {"access_token": "444", "expires_at": expires_at, "refresh_token": "refresh"}, context={})
+    mocked_client = mocker.MagicMock(name="mocked_client")
+    mocked_client.refresh_token.return_value = {
+        "access_token": "updated_access_token",
+        "expires_in": 3600,
+        "token_type": "Bearer",
+    }
+    mocker.patch("toucan_connectors.http_api.authentication_configs.oauth_client", return_value=mocked_client)
+    assert "updated_access_token" == oauth2_authentication_config._get_access_token()
+    oauth_token = secret_keeper.load(auth_flow_id)
+    assert oauth_token.access_token == "updated_access_token"
+    assert oauth_token.refresh_token == "refresh"
 
 
 @pytest.mark.usefixtures("clear_fake_secret_database")

@@ -54,8 +54,10 @@ def validate_expires_in(value: int | None) -> int | None:
 
 
 class TokenExpiration(BaseModel):
-    expires_at: Annotated[datetime | None, AfterValidator(validate_expires_at)] = None
-    expires_in: Annotated[int | None, AfterValidator(validate_expires_in)] = None
+    model_config = ConfigDict(populate_by_name=True)
+
+    expires_at: Annotated[datetime | None, AfterValidator(validate_expires_at)] = Field(None, alias="expiresAt")
+    expires_in: Annotated[int | None, AfterValidator(validate_expires_in)] = Field(None, alias="expiresIn")
 
     def expires_at_timestamp(self) -> float:
         """Returns expires_at value as timestamp"""
@@ -85,11 +87,10 @@ class OauthTokenSecretData(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     access_token: str = Field(..., alias="accessToken")
-    # Can't be None because the secret keeper will set a default value if it is missing
-    expires_at: float  # timestamp
 
     # Not mandatory because oauth2 token providers can return an access_token which cannot expire.
     refresh_token: str | None = Field(None, alias="refreshToken")
+    expires_at: float | None = None  # timestamp
 
 
 class OauthStateParams(BaseModel):
@@ -105,14 +106,17 @@ class HttpOauth2SecretsKeeper(BaseModel):
 
     def save(self, key: str, value: dict[str, Any]) -> OauthTokenSecretData:
         """Save secrets in a secrets repository"""
-        value["expires_at"] = _extract_expiration_timestamp_from_token_response(
-            token_response=value, default_lifetime=self.default_token_lifetime_seconds
-        )
         try:
             secret_data = OauthTokenSecretData(**value)
         except ValidationError as exc:
             _LOGGER.error(f"Can't instantiate oauth secret data with value_keys={list(value.keys())}", exc_info=exc)
             raise
+
+        if secret_data.refresh_token:
+            secret_data.expires_at = _extract_expiration_timestamp_from_token_response(
+                token_response=value, default_lifetime=self.default_token_lifetime_seconds
+            )
+
         # remove existing secrets
         self.delete_callback(key, self.context)
         # save new secrets
@@ -249,10 +253,10 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
         oauth_token = self._secrets_keeper.load(self.auth_flow_id)
         if oauth_token is None:
             raise ValueError("No oauth token found. Please refresh your oauth2 access.")
-        if oauth_token.refresh_token:
+        if oauth_token.refresh_token and oauth_token.expires_at:
             # If refresh token exists, we want to verify if the access_token is still valid
             # or if it must be refreshed.
-            if datetime.fromtimestamp(oauth_token.expires_at) < datetime.utcnow():
+            if datetime.fromtimestamp(oauth_token.expires_at) <= (datetime.utcnow() + relativedelta(seconds=30)):
                 client = self._init_oauth_client()
                 new_token = client.refresh_token(self.token_url, refresh_token=oauth_token.refresh_token)
                 oauth_token = self._secrets_keeper.save(
