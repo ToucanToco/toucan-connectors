@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.7.3] 2025-01-29
+
 ### Changed
 
 - HTTP API: Oauth2 secret tokens now accepts null refresh-token. Some oauth2 token providers can return un-expirable access_tokens. 
