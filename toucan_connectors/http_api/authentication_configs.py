@@ -85,8 +85,11 @@ class OauthTokenSecretData(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     access_token: str = Field(..., alias="accessToken")
-    refresh_token: str = Field(..., alias="refreshToken")
-    expires_at: float = Field(..., alias="expiresAt")  # timestamp
+    # Can't be None because the secret keeper will set a default value if it is missing
+    expires_at: float  # timestamp
+
+    # Not mandatory because oauth2 token providers can return an access_token which cannot expire.
+    refresh_token: str | None = Field(None, alias="refreshToken")
 
 
 class OauthStateParams(BaseModel):
@@ -246,14 +249,17 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
         oauth_token = self._secrets_keeper.load(self.auth_flow_id)
         if oauth_token is None:
             raise ValueError("No oauth token found. Please refresh your oauth2 access.")
-        if datetime.fromtimestamp(oauth_token.expires_at) < datetime.utcnow():
-            client = self._init_oauth_client()
-            new_token = client.refresh_token(self.token_url, refresh_token=oauth_token.refresh_token)
-            oauth_token = self._secrets_keeper.save(
-                self.auth_flow_id,
-                # refresh call doesn't always contain the refresh_token
-                new_token | {"refresh_token": oauth_token.refresh_token},
-            )
+        if oauth_token.refresh_token:
+            # If refresh token exists, we want to verify if the access_token is still valid
+            # or if it must be refreshed.
+            if datetime.fromtimestamp(oauth_token.expires_at) < datetime.utcnow():
+                client = self._init_oauth_client()
+                new_token = client.refresh_token(self.token_url, refresh_token=oauth_token.refresh_token)
+                oauth_token = self._secrets_keeper.save(
+                    self.auth_flow_id,
+                    # refresh call doesn't always contain the refresh_token
+                    new_token | {"refresh_token": oauth_token.refresh_token},
+                )
         return oauth_token.access_token
 
     def retrieve_token(
