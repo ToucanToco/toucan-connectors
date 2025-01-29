@@ -90,7 +90,7 @@ class OauthTokenSecretData(BaseModel):
 
     # Not mandatory because oauth2 token providers can return an access_token which cannot expire.
     refresh_token: str | None = Field(None, alias="refreshToken")
-    expires_at: float | None = None  # timestamp
+    expires_at: float | None = Field(None, alias="expiresAt")  # timestamp
 
 
 class OauthStateParams(BaseModel):
