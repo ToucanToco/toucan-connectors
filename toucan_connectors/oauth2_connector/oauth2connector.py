@@ -55,8 +55,8 @@ class OAuth2Connector:
         scope: str,
         config: OAuth2ConnectorConfig,
         redirect_uri: str,
-        secrets_keeper: SecretsKeeper,
         token_url: str,
+        secrets_keeper: SecretsKeeper | None = None,
     ):
         self.auth_flow_id = auth_flow_id
         self.authorization_url = authorization_url
@@ -69,6 +69,9 @@ class OAuth2Connector:
     def build_authorization_url(self, **kwargs) -> str:
         """Build an authorization request that will be sent to the client."""
         from authlib.common.security import generate_token
+
+        if self.secrets_keeper is None:
+            raise ValueError("Secret Keeper not initialized.")
 
         client = oauth_client(
             client_id=self.config.client_id,
@@ -83,6 +86,9 @@ class OAuth2Connector:
         return uri
 
     def retrieve_tokens(self, authorization_response: str, **kwargs):
+        if self.secrets_keeper is None:
+            raise ValueError("Secret Keeper not initialized.")
+
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)
         client = oauth_client(
@@ -111,6 +117,9 @@ class OAuth2Connector:
         instance_url parameters are return by service, better to use it
         new method get_access_data return all information to connect (secret and instance_url)
         """
+        if self.secrets_keeper is None:
+            raise ValueError("Secret Keeper not initialized.")
+
         token = self.secrets_keeper.load(self.auth_flow_id)
 
         if "expires_at" in token:
@@ -139,6 +148,9 @@ class OAuth2Connector:
         Returns the access_token to use to access resources
         If necessary, this token will be refreshed
         """
+        if self.secrets_keeper is None:
+            raise ValueError("Secret Keeper not initialized.")
+
         access_data = self.secrets_keeper.load(self.auth_flow_id)
 
         logging.getLogger(__name__).debug("Refresh and get access data")
@@ -165,6 +177,9 @@ class OAuth2Connector:
         """
         Return the refresh token, used to obtain an access token
         """
+        if self.secrets_keeper is None:
+            raise ValueError("Secret Keeper not initialized.")
+
         return self.secrets_keeper.load(self.auth_flow_id)["refresh_token"]
 
 

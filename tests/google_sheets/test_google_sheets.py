@@ -8,6 +8,7 @@ from os import path
 
 import numpy as np
 import pandas as pd
+import pytest
 from googleapiclient.http import HttpMock
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
@@ -16,6 +17,7 @@ from pytest_mock import MockFixture
 from toucan_connectors.google_sheets.google_sheets_connector import (
     GoogleSheetsConnector,
     GoogleSheetsDataSource,
+    GoogleSheetsInvalidConfiguration,
     parse_cell_value,
     serial_number_to_date,
 )
@@ -328,3 +330,20 @@ def test_default_format():
     value = 44303  # Example serial number representing a date
     result = parse_cell_value(value)
     assert result == value
+
+
+def test_can_instantiate_without_retrieve_token_callback():
+    gsheet_connector = GoogleSheetsConnector(
+        name="test_connector",
+        auth_id="test_auth_id",
+    )
+    assert gsheet_connector
+
+
+def test_raise_when_trying_to_retrieve_token_if_callable_missing():
+    gsheet_connector = GoogleSheetsConnector(
+        name="test_connector",
+        auth_id="test_auth_id",
+    )
+    with pytest.raises(GoogleSheetsInvalidConfiguration):
+        gsheet_connector.get_status()

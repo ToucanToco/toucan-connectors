@@ -33,6 +33,18 @@ def oauth2_connector(secrets_keeper):
     )
 
 
+@pytest.fixture
+def oauth2_connector_without_secret_keeper():
+    return OAuth2Connector(
+        auth_flow_id="test",
+        authorization_url=FAKE_AUTHORIZATION_URL,
+        scope=SCOPE,
+        config=OAuth2ConnectorConfig(client_id="", client_secret=""),
+        redirect_uri="",
+        token_url=FAKE_TOKEN_URL,
+    )
+
+
 def test_build_authorization_url(mocker, oauth2_connector, secrets_keeper):
     """
     It should return the authorization URL
@@ -234,3 +246,20 @@ def test_get_refresh_token(mocker, oauth2_connector):
     mocked_load.return_value = {"refresh_token": "bla"}
     token = oauth2_connector.get_refresh_token()
     assert token == "bla"
+
+
+def test_raise_error_if_secret_keeper_not_set(oauth2_connector_without_secret_keeper: OAuth2Connector):
+    with pytest.raises(ValueError):
+        oauth2_connector_without_secret_keeper.get_access_token()
+
+    with pytest.raises(ValueError):
+        oauth2_connector_without_secret_keeper.retrieve_tokens(authorization_response="")
+
+    with pytest.raises(ValueError):
+        oauth2_connector_without_secret_keeper.build_authorization_url()
+
+    with pytest.raises(ValueError):
+        oauth2_connector_without_secret_keeper.get_access_data()
+
+    with pytest.raises(ValueError):
+        oauth2_connector_without_secret_keeper.get_refresh_token()
