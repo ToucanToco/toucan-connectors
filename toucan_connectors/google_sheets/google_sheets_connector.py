@@ -111,7 +111,7 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
     def _call_retrieve_token(self) -> str:
         """Retrieve the access token for Google Sheets
 
-        Raise an GoogleSheetsInvalidConfiguration if something missing to retrieve the token
+        Raise an GoogleSheetsInvalidConfiguration if retrieve_token callback is not set
         Raise an GoogleSheetsRetrieveTokenError if an error is encountered while retrieving the token
         """
         if self._retrieve_token is None:
