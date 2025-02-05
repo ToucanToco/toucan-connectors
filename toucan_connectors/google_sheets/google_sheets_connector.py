@@ -17,10 +17,10 @@ except ImportError as exc:  # pragma: no cover
     getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
     CONNECTOR_OK = False
 
-from pydantic import Field, PrivateAttr, create_model
+from pydantic import Field, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 
-from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.common import UI_HIDDEN, ConnectorStatus
 from toucan_connectors.toucan_connector import (
     PlainJsonSecretStr,
     ToucanConnector,
@@ -100,26 +100,22 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
     _auth_flow = "managed_oauth2"
     _managed_oauth_service_id = "google-sheets"
     _oauth_trigger = "retrieve_token"
-    _retrieve_token: Callable[[str, str], str] | None = PrivateAttr()
 
+    retrieve_token: Callable[[str, str], str] | None = Field(None, **UI_HIDDEN)
     auth_id: PlainJsonSecretStr = None
 
-    def __init__(self, retrieve_token: Callable[[str, str], str] | None = None, *args, **kwargs):
-        super().__init__(**kwargs)
-        self._retrieve_token = retrieve_token  # Could be async
-
     def _call_retrieve_token(self) -> str:
-        """Retrieve the access token for Google Sheets
+        """Retrieves the access token for Google Sheets
 
-        Raise an GoogleSheetsInvalidConfiguration if retrieve_token callback is not set
-        Raise an GoogleSheetsRetrieveTokenError if an error is encountered while retrieving the token
+        Raises a GoogleSheetsInvalidConfiguration if retrieve_token callback is not set
+        Raises a GoogleSheetsRetrieveTokenError if an error is encountered while retrieving the token
         """
-        if self._retrieve_token is None:
+        if self.retrieve_token is None:
             raise GoogleSheetsInvalidConfiguration(
                 "Retrieve token callback function is not configured. Please provide it at instantiation."
             )
         try:
-            return self._retrieve_token(self._managed_oauth_service_id, self.auth_id.get_secret_value())
+            return self.retrieve_token(self._managed_oauth_service_id, self.auth_id.get_secret_value())
         except Exception as exc:
             raise GoogleSheetsRetrieveTokenError(str(exc)) from exc
 

@@ -40,6 +40,10 @@ class SecretsKeeper(ABC):
         """
 
 
+class SecretKeeperMissingError(Exception):
+    """Raised when secret_keeper is not set on oauth2 connector"""
+
+
 class OAuth2ConnectorConfig(BaseModel):
     client_id: str
     client_secret: SecretStr
@@ -66,13 +70,15 @@ class OAuth2Connector:
         self.token_url = token_url
         self.redirect_uri = redirect_uri
 
+    def _check_secret_keeper_exists(self) -> None:
+        if self.secrets_keeper is None:
+            raise SecretKeeperMissingError("Secret keeper is not set on oauth2 connector.")
+
     def build_authorization_url(self, **kwargs) -> str:
         """Build an authorization request that will be sent to the client."""
         from authlib.common.security import generate_token
 
-        if self.secrets_keeper is None:
-            raise ValueError("Secret Keeper not initialized.")
-
+        self._check_secret_keeper_exists()
         client = oauth_client(
             client_id=self.config.client_id,
             client_secret=self.config.client_secret.get_secret_value(),
@@ -86,9 +92,7 @@ class OAuth2Connector:
         return uri
 
     def retrieve_tokens(self, authorization_response: str, **kwargs):
-        if self.secrets_keeper is None:
-            raise ValueError("Secret Keeper not initialized.")
-
+        self._check_secret_keeper_exists()
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)
         client = oauth_client(
@@ -117,9 +121,7 @@ class OAuth2Connector:
         instance_url parameters are return by service, better to use it
         new method get_access_data return all information to connect (secret and instance_url)
         """
-        if self.secrets_keeper is None:
-            raise ValueError("Secret Keeper not initialized.")
-
+        self._check_secret_keeper_exists()
         token = self.secrets_keeper.load(self.auth_flow_id)
 
         if "expires_at" in token:
@@ -148,9 +150,7 @@ class OAuth2Connector:
         Returns the access_token to use to access resources
         If necessary, this token will be refreshed
         """
-        if self.secrets_keeper is None:
-            raise ValueError("Secret Keeper not initialized.")
-
+        self._check_secret_keeper_exists()
         access_data = self.secrets_keeper.load(self.auth_flow_id)
 
         logging.getLogger(__name__).debug("Refresh and get access data")
@@ -177,9 +177,7 @@ class OAuth2Connector:
         """
         Return the refresh token, used to obtain an access token
         """
-        if self.secrets_keeper is None:
-            raise ValueError("Secret Keeper not initialized.")
-
+        self._check_secret_keeper_exists()
         return self.secrets_keeper.load(self.auth_flow_id)["refresh_token"]
 
 

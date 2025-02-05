@@ -337,10 +337,11 @@ def test_can_instantiate_without_retrieve_token_callback():
         name="test_connector",
         auth_id="test_auth_id",
     )
-    assert gsheet_connector
+    assert gsheet_connector.auth_id.get_secret_value() == "test_auth_id"
+    assert gsheet_connector.retrieve_token is None
 
 
-def test_raise_when_trying_to_retrieve_token_if_callable_missing():
+def test_raises_when_trying_to_retrieve_token_if_callable_missing():
     gsheet_connector = GoogleSheetsConnector(
         name="test_connector",
         auth_id="test_auth_id",

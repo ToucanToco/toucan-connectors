@@ -11,6 +11,7 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
     NoOAuth2RefreshToken,
     OAuth2Connector,
     OAuth2ConnectorConfig,
+    SecretKeeperMissingError,
 )
 from toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector import SnowflakeoAuth2Connector
 from toucan_connectors.toucan_connector import get_oauth2_configuration
@@ -248,18 +249,18 @@ def test_get_refresh_token(mocker, oauth2_connector):
     assert token == "bla"
 
 
-def test_raise_error_if_secret_keeper_not_set(oauth2_connector_without_secret_keeper: OAuth2Connector):
-    with pytest.raises(ValueError):
+def test_raises_exception_if_secret_keeper_not_set(oauth2_connector_without_secret_keeper: OAuth2Connector):
+    with pytest.raises(SecretKeeperMissingError):
         oauth2_connector_without_secret_keeper.get_access_token()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SecretKeeperMissingError):
         oauth2_connector_without_secret_keeper.retrieve_tokens(authorization_response="")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SecretKeeperMissingError):
         oauth2_connector_without_secret_keeper.build_authorization_url()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SecretKeeperMissingError):
         oauth2_connector_without_secret_keeper.get_access_data()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SecretKeeperMissingError):
         oauth2_connector_without_secret_keeper.get_refresh_token()
