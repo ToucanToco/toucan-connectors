@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.7.4] 2025-02-06
+
 ### Fixed
 
 - Oauth2 & GoogleSheets: can now instantiate connectors without providing secret keeper or callback functions.  
