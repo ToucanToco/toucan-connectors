@@ -17,16 +17,28 @@ except ImportError as exc:  # pragma: no cover
     getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
     CONNECTOR_OK = False
 
-from pydantic import Field, PrivateAttr, create_model
+from pydantic import Field, create_model
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 
-from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.common import UI_HIDDEN, ConnectorStatus
 from toucan_connectors.toucan_connector import (
     PlainJsonSecretStr,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
 )
+
+
+class GoogleSheetsError(Exception):
+    """Base class for Google Sheets errors"""
+
+
+class GoogleSheetsRetrieveTokenError(GoogleSheetsError):
+    """Raised when an error occurs while retrieving access token"""
+
+
+class GoogleSheetsInvalidConfiguration(GoogleSheetsError):
+    """Raised when the connector configuration is invalid"""
 
 
 class GoogleSheetsDataSource(ToucanDataSource):
@@ -88,17 +100,28 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
     _auth_flow = "managed_oauth2"
     _managed_oauth_service_id = "google-sheets"
     _oauth_trigger = "retrieve_token"
-    _retrieve_token: Callable[[str, str], str] = PrivateAttr()
 
+    retrieve_token: Callable[[str, str], str] | None = Field(None, **UI_HIDDEN)
     auth_id: PlainJsonSecretStr = None
 
-    def __init__(self, retrieve_token: Callable[[str, str], str], *args, **kwargs):
-        super().__init__(**kwargs)
-        self._retrieve_token = retrieve_token  # Could be async
+    def _call_retrieve_token(self) -> str:
+        """Retrieves the access token for Google Sheets
+
+        Raises a GoogleSheetsInvalidConfiguration if retrieve_token callback is not set
+        Raises a GoogleSheetsRetrieveTokenError if an error is encountered while retrieving the token
+        """
+        if self.retrieve_token is None:
+            raise GoogleSheetsInvalidConfiguration(
+                "Retrieve token callback function is not configured. Please provide it at instantiation."
+            )
+        try:
+            return self.retrieve_token(self._managed_oauth_service_id, self.auth_id.get_secret_value())
+        except Exception as exc:
+            raise GoogleSheetsRetrieveTokenError(str(exc)) from exc
 
     def _google_client_build_kwargs(self):  # pragma: no cover
         # Override it for testing purposes
-        access_token = self._retrieve_token(self._managed_oauth_service_id, self.auth_id.get_secret_value())
+        access_token = self._call_retrieve_token()
         return {"credentials": Credentials(token=access_token)}
 
     def _google_client_request_kwargs(self):  # pragma: no cover
@@ -138,8 +161,8 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
         If successful, returns a message with the email of the connected user account.
         """
         try:
-            access_token = self._retrieve_token(self._managed_oauth_service_id, self.auth_id.get_secret_value())
-        except Exception:
+            access_token = self._call_retrieve_token()
+        except GoogleSheetsRetrieveTokenError:
             return ConnectorStatus(status=False, error="Credentials are missing")
 
         if not access_token:

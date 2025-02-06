@@ -40,6 +40,10 @@ class SecretsKeeper(ABC):
         """
 
 
+class SecretKeeperMissingError(Exception):
+    """Raised when secret_keeper is not set on oauth2 connector"""
+
+
 class OAuth2ConnectorConfig(BaseModel):
     client_id: str
     client_secret: SecretStr
@@ -55,8 +59,8 @@ class OAuth2Connector:
         scope: str,
         config: OAuth2ConnectorConfig,
         redirect_uri: str,
-        secrets_keeper: SecretsKeeper,
         token_url: str,
+        secrets_keeper: SecretsKeeper | None = None,
     ):
         self.auth_flow_id = auth_flow_id
         self.authorization_url = authorization_url
@@ -65,6 +69,11 @@ class OAuth2Connector:
         self.secrets_keeper = secrets_keeper
         self.token_url = token_url
         self.redirect_uri = redirect_uri
+
+    def _secrets_keeper(self) -> SecretsKeeper:
+        if self.secrets_keeper is None:
+            raise SecretKeeperMissingError("Secret keeper is not set on oauth2 connector.")
+        return self.secrets_keeper
 
     def build_authorization_url(self, **kwargs) -> str:
         """Build an authorization request that will be sent to the client."""
@@ -79,7 +88,7 @@ class OAuth2Connector:
         state = {"token": generate_token(), **kwargs}
         uri, state = client.create_authorization_url(self.authorization_url, state=JsonWrapper.dumps(state))
 
-        self.secrets_keeper.save(self.auth_flow_id, {"state": state})
+        self._secrets_keeper().save(self.auth_flow_id, {"state": state})
         return uri
 
     def retrieve_tokens(self, authorization_response: str, **kwargs):
@@ -90,7 +99,7 @@ class OAuth2Connector:
             client_secret=self.config.client_secret.get_secret_value(),
             redirect_uri=self.redirect_uri,
         )
-        saved_flow = self.secrets_keeper.load(self.auth_flow_id)
+        saved_flow = self._secrets_keeper().load(self.auth_flow_id)
         if saved_flow is None:
             raise AuthFlowNotFound()
         assert JsonWrapper.loads(saved_flow["state"])["token"] == JsonWrapper.loads(url_params["state"][0])["token"]
@@ -102,7 +111,7 @@ class OAuth2Connector:
             client_secret=self.config.client_secret.get_secret_value(),
             **kwargs,
         )
-        self.secrets_keeper.save(self.auth_flow_id, token)
+        self._secrets_keeper().save(self.auth_flow_id, token)
 
     # Deprecated
     def get_access_token(self) -> str:
@@ -111,7 +120,7 @@ class OAuth2Connector:
         instance_url parameters are return by service, better to use it
         new method get_access_data return all information to connect (secret and instance_url)
         """
-        token = self.secrets_keeper.load(self.auth_flow_id)
+        token = self._secrets_keeper().load(self.auth_flow_id)
 
         if "expires_at" in token:
             expires_at = token["expires_at"]
@@ -130,16 +139,16 @@ class OAuth2Connector:
                     client_secret=self.config.client_secret.get_secret_value(),
                 )
                 new_token = client.refresh_token(self.token_url, refresh_token=token["refresh_token"])
-                self.secrets_keeper.save(self.auth_flow_id, new_token)
+                self._secrets_keeper().save(self.auth_flow_id, new_token)
 
-        return self.secrets_keeper.load(self.auth_flow_id)["access_token"]
+        return self._secrets_keeper().load(self.auth_flow_id)["access_token"]
 
     def get_access_data(self):
         """
         Returns the access_token to use to access resources
         If necessary, this token will be refreshed
         """
-        access_data = self.secrets_keeper.load(self.auth_flow_id)
+        access_data = self._secrets_keeper().load(self.auth_flow_id)
 
         logging.getLogger(__name__).debug("Refresh and get access data")
 
@@ -155,8 +164,8 @@ class OAuth2Connector:
         connection_data = client.refresh_token(self.token_url, refresh_token=access_data["refresh_token"])
         logging.getLogger(__name__).debug(f"Refresh and get access data new token {str(connection_data)}")
 
-        self.secrets_keeper.save(self.auth_flow_id, connection_data)
-        secrets = self.secrets_keeper.load(self.auth_flow_id)
+        self._secrets_keeper().save(self.auth_flow_id, connection_data)
+        secrets = self._secrets_keeper().load(self.auth_flow_id)
 
         logging.getLogger(__name__).debug("Refresh and get data finished")
         return secrets
@@ -165,7 +174,7 @@ class OAuth2Connector:
         """
         Return the refresh token, used to obtain an access token
         """
-        return self.secrets_keeper.load(self.auth_flow_id)["refresh_token"]
+        return self._secrets_keeper().load(self.auth_flow_id)["refresh_token"]
 
 
 class NoOAuth2RefreshToken(Exception):
