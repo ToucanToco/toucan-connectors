@@ -341,6 +341,17 @@ def test_can_instantiate_without_retrieve_token_callback():
     assert gsheet_connector.retrieve_token is None
 
 
+def test_json_schema_excludes_retrieve_token_callback():
+    def _dummy_callback(a: str, b: str) -> str:
+        return a + b
+
+    gsheet_connector = GoogleSheetsConnector(
+        name="test_connector", auth_id="test_auth_id", retrieve_token=_dummy_callback
+    )
+    assert "auth_id" in gsheet_connector.schema()["properties"]
+    assert "retrieve_token" not in gsheet_connector.schema()["properties"]
+
+
 def test_raises_when_trying_to_retrieve_token_if_callable_missing():
     gsheet_connector = GoogleSheetsConnector(
         name="test_connector",
