@@ -2608,7 +2608,7 @@ wheels = [
 
 [[package]]
 name = "toucan-connectors"
-version = "7.7.4"
+version = "7.7.5"
 source = { editable = "." }
 dependencies = [
     { name = "cached-property" },
