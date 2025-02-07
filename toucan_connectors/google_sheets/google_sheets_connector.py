@@ -18,7 +18,7 @@ except ImportError as exc:  # pragma: no cover
     CONNECTOR_OK = False
 
 from pydantic import Field, create_model
-from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
+from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode, SkipJsonSchema
 
 from toucan_connectors.common import UI_HIDDEN, ConnectorStatus
 from toucan_connectors.toucan_connector import (
@@ -101,7 +101,7 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
     _managed_oauth_service_id = "google-sheets"
     _oauth_trigger = "retrieve_token"
 
-    retrieve_token: Callable[[str, str], str] | None = Field(None, **UI_HIDDEN)
+    retrieve_token: SkipJsonSchema[Callable[[str, str], str]] | None = Field(None, **UI_HIDDEN)
     auth_id: PlainJsonSecretStr = None
 
     def _call_retrieve_token(self) -> str:
