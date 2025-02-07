@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- GoogleSheets: can generate connector's pydantic schema again.
+
 ## [7.7.4] 2025-02-06
 
 ### Fixed
