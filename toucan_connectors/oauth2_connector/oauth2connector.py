@@ -44,6 +44,10 @@ class SecretKeeperMissingError(Exception):
     """Raised when secret_keeper is not set on oauth2 connector"""
 
 
+class OAuth2ConnectorConfigMissingError(Exception):
+    """Raised when config is not set on oauth2 connector"""
+
+
 class OAuth2ConnectorConfig(BaseModel):
     client_id: str
     client_secret: SecretStr
@@ -57,9 +61,9 @@ class OAuth2Connector:
         auth_flow_id: str,
         authorization_url: str,
         scope: str,
-        config: OAuth2ConnectorConfig,
-        redirect_uri: str,
         token_url: str,
+        config: OAuth2ConnectorConfig | None = None,
+        redirect_uri: str | None = None,
         secrets_keeper: SecretsKeeper | None = None,
     ):
         self.auth_flow_id = auth_flow_id
@@ -75,13 +79,18 @@ class OAuth2Connector:
             raise SecretKeeperMissingError("Secret keeper is not set on oauth2 connector.")
         return self.secrets_keeper
 
+    def _oauth_config(self) -> OAuth2ConnectorConfig:
+        if self.config is None:
+            raise OAuth2ConnectorConfigMissingError("Oauth2 Connector Config is not set on oauth2 connector.")
+        return self.config
+
     def build_authorization_url(self, **kwargs) -> str:
         """Build an authorization request that will be sent to the client."""
         from authlib.common.security import generate_token
 
         client = oauth_client(
-            client_id=self.config.client_id,
-            client_secret=self.config.client_secret.get_secret_value(),
+            client_id=self._oauth_config().client_id,
+            client_secret=self._oauth_config().client_secret.get_secret_value(),
             redirect_uri=self.redirect_uri,
             scope=self.scope,
         )
@@ -95,8 +104,8 @@ class OAuth2Connector:
         url = url_parse.urlparse(authorization_response)
         url_params = url_parse.parse_qs(url.query)
         client = oauth_client(
-            client_id=self.config.client_id,
-            client_secret=self.config.client_secret.get_secret_value(),
+            client_id=self._oauth_config().client_id,
+            client_secret=self._oauth_config().client_secret.get_secret_value(),
             redirect_uri=self.redirect_uri,
         )
         saved_flow = self._secrets_keeper().load(self.auth_flow_id)
@@ -107,8 +116,8 @@ class OAuth2Connector:
         token = client.fetch_token(
             self.token_url,
             authorization_response=authorization_response,
-            client_id=self.config.client_id,
-            client_secret=self.config.client_secret.get_secret_value(),
+            client_id=self._oauth_config().client_id,
+            client_secret=self._oauth_config().client_secret.get_secret_value(),
             **kwargs,
         )
         self._secrets_keeper().save(self.auth_flow_id, token)
@@ -135,8 +144,8 @@ class OAuth2Connector:
                 if "refresh_token" not in token:
                     raise NoOAuth2RefreshToken
                 client = oauth_client(
-                    client_id=self.config.client_id,
-                    client_secret=self.config.client_secret.get_secret_value(),
+                    client_id=self._oauth_config().client_id,
+                    client_secret=self._oauth_config().client_secret.get_secret_value(),
                 )
                 new_token = client.refresh_token(self.token_url, refresh_token=token["refresh_token"])
                 self._secrets_keeper().save(self.auth_flow_id, new_token)
@@ -158,8 +167,8 @@ class OAuth2Connector:
             raise NoInstanceUrl
 
         client = oauth_client(
-            client_id=self.config.client_id,
-            client_secret=self.config.client_secret.get_secret_value(),
+            client_id=self._oauth_config().client_id,
+            client_secret=self._oauth_config().client_secret.get_secret_value(),
         )
         connection_data = client.refresh_token(self.token_url, refresh_token=access_data["refresh_token"])
         logging.getLogger(__name__).debug(f"Refresh and get access data new token {str(connection_data)}")

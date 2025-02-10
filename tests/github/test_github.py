@@ -557,3 +557,8 @@ def test_get_rate_limit_exhausted(
     )
     assert mockedsleep.call_count == 3
     assert mockedsleep.call_args_list[1][0][0] == 48
+
+
+def test_instantiate_github_connector_without_oauth_parameters() -> None:
+    github = GithubConnector(name="github", auth_flow_id="uuid-1234")
+    assert github.auth_flow_id == "uuid-1234"

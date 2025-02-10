@@ -596,3 +596,16 @@ def test_get_model_exception(
         snowflake_oauth2_connector.get_model()
     mocked_common_get_databases.assert_called_once()
     cm.force_clean()
+
+
+def test_can_instantiate_light_snowflake_connector() -> None:
+    light_connector = SnowflakeoAuth2Connector(
+        name="snowflake_oauth2",
+        scope="scope",
+        role="super_role",
+        account="my_account",
+        default_warehouse="my_warehouse",
+    )
+
+    assert light_connector.scope == "scope"
+    assert light_connector._oauth2_connector.secrets_keeper is None

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed 
+
+- Github & Snowflake & OneDrive & Salesforce: can instantiate connectors in light mode (without backend fields or secrets keeper)
+
 ## [7.7.5] 2025-02-07
 
 ### Fixed

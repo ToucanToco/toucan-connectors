@@ -82,9 +82,10 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
     oauth2_version: str = Field("1", **{"ui.hidden": True})
     auth_flow_id: str | None = None
 
+    # Set by backend during oauth2 dance
     authorization_url: str = Field(None, **{"ui.hidden": True})
     token_url: str = Field(None, **{"ui.hidden": True})
-    redirect_uri: str = Field(None, **{"ui.hidden": True})
+    redirect_uri: str | None = Field(None, **{"ui.hidden": True})
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     client_id: str = Field(
@@ -132,7 +133,7 @@ class OneDriveConnector(ToucanConnector, data_source_model=OneDriveDataSource):
                 client_id=self.client_id,
                 client_secret=self.client_secret,
             ),
-            secrets_keeper=kwargs["secrets_keeper"],
+            secrets_keeper=kwargs.get("secrets_keeper", None),
         )
 
     def build_authorization_url(self, **kwargs):

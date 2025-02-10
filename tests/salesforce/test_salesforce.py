@@ -174,3 +174,11 @@ def test__retrieve_data_no_secret(sc, ds, remove_secrets):
     """Checks that we have an exception as we secret was removed"""
     with pytest.raises(NoOAuth2RefreshToken):
         sc._retrieve_data(sc)
+
+
+def test_can_instantiate_light_salesforce_connector() -> None:
+    light_connector = SalesforceConnector(name="salesforce", auth_flow_id="auth-flow-id", instance_url="super_url")
+
+    assert light_connector.auth_flow_id == "auth-flow-id"
+    assert light_connector._oauth2_connector.secrets_keeper is None
+    assert light_connector._oauth2_connector.config is None

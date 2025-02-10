@@ -76,17 +76,21 @@ class SalesforceConnector(ToucanConnector, data_source_model=SalesforceDataSourc
 
     def __init__(self, **kwargs):
         super().__init__(**{k: v for k, v in kwargs.items() if k not in OAuth2Connector.init_params})
+        oauth_config = None
+        if "client_id" in kwargs and "client_secret" in kwargs:
+            oauth_config = OAuth2ConnectorConfig(
+                client_id=kwargs["client_id"],
+                client_secret=kwargs["client_secret"],
+            )
+
         self._oauth2_connector = OAuth2Connector(
             auth_flow_id=self.auth_flow_id,
             authorization_url=AUTHORIZATION_URL_SANDBOX if self.type == "SalesforceSandbox" else AUTHORIZATION_URL_PROD,
             scope=SCOPE,
             token_url=TOKEN_URL_SANDBOX if self.type == "SalesforceSandbox" else TOKEN_URL_PROD,
-            secrets_keeper=kwargs["secrets_keeper"],
-            redirect_uri=kwargs["redirect_uri"],
-            config=OAuth2ConnectorConfig(
-                client_id=kwargs["client_id"],
-                client_secret=kwargs["client_secret"],
-            ),
+            secrets_keeper=kwargs.get("secrets_keeper", None),
+            redirect_uri=kwargs.get("redirect_uri", None),
+            config=oauth_config,
         )
 
     def build_authorization_url(self, **kwargs):
