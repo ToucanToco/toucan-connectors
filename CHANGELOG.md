@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- GoogleSheets: can generate connector's unique identifier 
+- GoogleSheets: can export the connector as JSON format
 
 ## [7.7.6] 2025-02-11
 

@@ -361,7 +361,7 @@ def test_raises_when_trying_to_retrieve_token_if_callable_missing():
         gsheet_connector.get_status()
 
 
-def test_can_model_dump_connector() -> None:
+def test_can_get_unique_identifier() -> None:
     gsheet_connector = GoogleSheetsConnector(
         name="test_connector",
         retrieve_token=lambda _a, _b: None,
