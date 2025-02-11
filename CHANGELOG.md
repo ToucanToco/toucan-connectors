@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- GoogleSheets: can generate connector's unique identifier 
+
 ## [7.7.6] 2025-02-11
 
 ### Fixed 

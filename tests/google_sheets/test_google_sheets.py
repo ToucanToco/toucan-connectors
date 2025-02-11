@@ -359,3 +359,12 @@ def test_raises_when_trying_to_retrieve_token_if_callable_missing():
     )
     with pytest.raises(GoogleSheetsInvalidConfiguration):
         gsheet_connector.get_status()
+
+
+def test_can_model_dump_connector() -> None:
+    gsheet_connector = GoogleSheetsConnector(
+        name="test_connector",
+        retrieve_token=lambda _a, _b: None,
+        auth_id="test_auth_id",
+    )
+    assert '"name":"test_connector"' in gsheet_connector.get_unique_identifier()
