@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- GoogleSheets: can export the connector as JSON format
+- GoogleSheets: the `retrieve_token` field is now excluded when serializing an instance of the connector
 
 ## [7.7.6] 2025-02-11
 
