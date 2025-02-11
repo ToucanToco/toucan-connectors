@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from tests.conftest import SimpleSecretsKeeper
 from toucan_connectors.http_api.http_api_connector import HttpAPIConnector
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import (
@@ -11,6 +12,7 @@ from toucan_connectors.oauth2_connector.oauth2connector import (
     NoOAuth2RefreshToken,
     OAuth2Connector,
     OAuth2ConnectorConfig,
+    OAuth2ConnectorConfigMissingError,
     SecretKeeperMissingError,
 )
 from toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector import SnowflakeoAuth2Connector
@@ -264,3 +266,15 @@ def test_raises_exception_if_secret_keeper_not_set(oauth2_connector_without_secr
 
     with pytest.raises(SecretKeeperMissingError):
         oauth2_connector_without_secret_keeper.get_refresh_token()
+
+
+def test_raises_exception_if_config_not_set(secrets_keeper: SimpleSecretsKeeper):
+    oauth2_connector_without_config = OAuth2Connector(
+        auth_flow_id="test",
+        authorization_url=FAKE_AUTHORIZATION_URL,
+        scope=SCOPE,
+        token_url=FAKE_TOKEN_URL,
+        secrets_keeper=secrets_keeper,
+    )
+    with pytest.raises(OAuth2ConnectorConfigMissingError):
+        oauth2_connector_without_config._oauth_config()

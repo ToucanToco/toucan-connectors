@@ -149,20 +149,21 @@ def service_container(unused_port, container_starter):
     return f
 
 
+class SimpleSecretsKeeper(SecretsKeeper):
+    def __init__(self):
+        self.store = {}
+
+    def load(self, key: str, **kwargs) -> Any:
+        if key not in self.store:
+            return None
+        return self.store[key]
+
+    def save(self, key: str, value: Any, **kwargs):
+        self.store[key] = value
+
+
 @pytest.fixture
-def secrets_keeper():
-    class SimpleSecretsKeeper(SecretsKeeper):
-        def __init__(self):
-            self.store = {}
-
-        def load(self, key: str) -> Any:
-            if key not in self.store:
-                return None
-            return self.store[key]
-
-        def save(self, key: str, value: Any):
-            self.store[key] = value
-
+def secrets_keeper() -> SimpleSecretsKeeper:
     return SimpleSecretsKeeper()
 
 

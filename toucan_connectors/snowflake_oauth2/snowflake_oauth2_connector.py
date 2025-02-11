@@ -90,7 +90,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
     _auth_flow = "oauth2"
     _oauth_trigger = "connector"
     oauth2_version: str = Field("1", **{"ui.hidden": True})  # type: ignore[call-overload]
-    redirect_uri: str = Field(None, **{"ui.hidden": True})  # type: ignore[call-overload]
+    redirect_uri: str | None = Field(None, **{"ui.hidden": True})  # type: ignore[call-overload]
     _oauth2_connector: OAuth2Connector = PrivateAttr()
 
     role: str = Field(  # type: ignore[call-overload]
@@ -124,7 +124,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                 client_id=self.client_id,
                 client_secret=self.client_secret,
             ),
-            secrets_keeper=kwargs["secrets_keeper"],
+            secrets_keeper=kwargs.get("secrets_keeper", None),
         )
 
     def build_authorization_url(self, **kwargs):

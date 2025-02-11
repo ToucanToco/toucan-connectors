@@ -629,3 +629,11 @@ def test__run_fetch_failed(con, mocker, ds_with_site):
     mocker.patch.object(OneDriveConnector, "_run_fetch", side_effect=requests.exceptions.HTTPError)
     df = con._retrieve_data(ds_with_site)
     assert df.empty
+
+
+def test_instantiate_light_one_drive_connector():
+    light_connector = OneDriveConnector(
+        name="my one drive", auth_flow_id="uuid", scope="scope", client_id="client_id", tenant="tenant"
+    )
+    assert light_connector.auth_flow_id == "uuid"
+    assert light_connector._oauth2_connector.secrets_keeper is None
