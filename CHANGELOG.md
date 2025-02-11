@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.7.6] 2025-02-11
+
 ### Fixed 
 
 - Github & Snowflake & OneDrive & Salesforce connectors can now be instantiated without backend fields or a secrets keeper
