@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.7.7] 2025-02-13
+
 ### Fixed
 
 - GoogleSheets: the `retrieve_token` field is now excluded when serializing an instance of the connector
