@@ -101,7 +101,7 @@ class GoogleSheetsConnector(ToucanConnector, data_source_model=GoogleSheetsDataS
     _managed_oauth_service_id = "google-sheets"
     _oauth_trigger = "retrieve_token"
 
-    retrieve_token: SkipJsonSchema[Callable[[str, str], str]] | None = Field(None, **UI_HIDDEN)
+    retrieve_token: SkipJsonSchema[Callable[[str, str], str]] | None = Field(None, **UI_HIDDEN, exclude=True)
     auth_id: PlainJsonSecretStr = None
 
     def _call_retrieve_token(self) -> str:
