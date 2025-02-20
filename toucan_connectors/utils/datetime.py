@@ -1,3 +1,4 @@
+from contextlib import suppress
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -17,8 +18,9 @@ def sanitize_df_dates(df: "pd.DataFrame") -> "pd.DataFrame":
 
     for col in df.columns:
         if is_datetime_col(df[col]):
-            df[col] = pd.to_datetime(df[col], utc=True).dt.tz_localize(
-                None  # we don't want timezones in datetime series returned by connectors
-            )
+            with suppress(Exception):
+                df[col] = pd.to_datetime(df[col], utc=True, errors="coerce").dt.tz_localize(
+                    None  # we don't want timezones in datetime series returned by connectors
+                )
 
     return df

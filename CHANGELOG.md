@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Datetime sanitization does not fail on out-of-bounds dates anymore. Instead, they get coerced to pandas `NaT` objects
+
 ## [7.7.7] 2025-02-13
 
 ### Fixed
@@ -10,7 +14,7 @@
 
 ## [7.7.6] 2025-02-11
 
-### Fixed 
+### Fixed
 
 - Github & Snowflake & OneDrive & Salesforce connectors can now be instantiated without backend fields or a secrets keeper
 
@@ -24,13 +28,13 @@
 
 ### Fixed
 
-- Oauth2 & GoogleSheets: can now instantiate connectors without providing secret keeper or callback functions.  
+- Oauth2 & GoogleSheets: can now instantiate connectors without providing secret keeper or callback functions.
 
 ## [7.7.3] 2025-01-29
 
 ### Changed
 
-- HTTP API: Oauth2 secret tokens now accepts null refresh-token. Some oauth2 token providers can return un-expirable access_tokens. 
+- HTTP API: Oauth2 secret tokens now accepts null refresh-token. Some oauth2 token providers can return un-expirable access_tokens.
 
 ## [7.7.2] 2025-01-27
 
