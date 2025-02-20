@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.7.8] 2025-02-13
+
 ### Fixed
 
 - Datetime sanitization does not fail on out-of-bounds dates anymore. Instead, they get coerced to pandas `NaT` objects
