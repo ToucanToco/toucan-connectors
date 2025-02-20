@@ -60,14 +60,20 @@ def test_sanitize_df_dates_with_datetimes():
             "a": [1, 2, 3],
             "b": ["a", "b", "c"],
             "c": [datetime(2022, 7, 21), datetime(2022, 7, 22), datetime(2022, 7, 23)],
+            "d": [datetime(9999, 7, 21), datetime(9999, 7, 22), datetime(9999, 7, 23)],
         }
     )
-    assert df.dtypes.to_list() == [dtype("int64"), dtype("object"), dtype("datetime64[ns]")]
-    assert sanitize_df_dates(df).dtypes.to_list() == [
+    # d has "object" dtype because it contains objects which cannot be represented as pd.Timestamp
+    # in pandas 1.x (out of bounds)
+    assert df.dtypes.to_list() == [dtype("int64"), dtype("object"), dtype("datetime64[ns]"), dtype("object")]
+    sanitized = sanitize_df_dates(df)
+    assert sanitized.dtypes.to_list() == [
         dtype("int64"),
         dtype("object"),
         DTYPE_DATETIME_WITHOUT_TIMEZONE,
+        DTYPE_DATETIME_WITHOUT_TIMEZONE,
     ]
+    assert sanitized["d"].to_list() == [pd.NaT, pd.NaT, pd.NaT]
 
 
 def test_sanitize_df_dates_with_tz_aware_datetimes():
