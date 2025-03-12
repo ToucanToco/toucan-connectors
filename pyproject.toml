@@ -19,7 +19,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 # <3.11 required by awswrangler
 python = ">=3.10,<3.11"
-Authlib = "^1.0.1"
+Authlib = "^1.5.1"
 aiohttp = "^3.8.1"
 cached-property = "^1.5.2"
 Jinja2 = "^3.0.3"
