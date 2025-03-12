@@ -91,7 +91,7 @@ xmltodict = ">=0.13.0,<1"
 python-graphql-client = ">=0.4.3,<1"
 clickhouse-driver = ">=0.2.3,<1"
 lxml = "4.9.3"
-zeep = "^4.1.0"
+zeep = "^4.3.1"
 
 [tool.poetry.extras]
 adobe = ["adobe-analytics"]
