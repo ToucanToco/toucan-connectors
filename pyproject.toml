@@ -60,7 +60,7 @@ PyJWT = {version = ">=1.5.3,<3", optional = true}
 simplejson = {version = "^3.17.6", optional = true}
 pyhdb = {version = ">=0.3.4,<1.0", optional = true}
 zeep = {version = "^4.1.0", optional = true}
-snowflake-connector-python = {version = "^2.7.12", optional = true}
+snowflake-connector-python = {version = ">=2.7.12,<4.0.0", optional = true}
 pyarrow = {version = "<9", optional = true}
 toucan-client = {version = "^1.0.1", optional = true}
 hubspot-api-client = {version = "^7.4.0", optional = true}
