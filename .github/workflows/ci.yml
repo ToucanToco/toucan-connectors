@@ -37,7 +37,7 @@ jobs:
 
     - name: Install uv
       env:
-        UV_VERSION: "0.5.20"
+        UV_VERSION: "0.6.9"
       run: |
         curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
 
@@ -61,8 +61,19 @@ jobs:
     - name: Install odbc dependencies
       run: sudo bash toucan_connectors/install_scripts/odbc.sh
 
+    - name: Print ODBC config
+      run: |
+        odbcinst -j
+        cat /etc/odbcinst.ini
+
     - name: Install
       run: make install
+
+    - name: Print ODBC config again
+      run: |
+        odbcinst -j
+        cat /etc/odbcinst.ini
+        ls -R /opt/microsoft/
 
     - name: Install pandas ${{ matrix.pandas-version }}
       run: uv pip install "pandas${{ matrix.pandas-version }}"
