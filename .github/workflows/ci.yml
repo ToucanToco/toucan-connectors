@@ -61,6 +61,11 @@ jobs:
     - name: Install odbc dependencies
       run: sudo bash toucan_connectors/install_scripts/odbc.sh
 
+    - name: Print ODBC config
+      run: |
+        odbcinst -j
+        cat /etc/odbcinst.ini
+
     - name: Install
       run: make install
 
