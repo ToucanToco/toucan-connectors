@@ -3,7 +3,6 @@
 [![Pypi-l](https://img.shields.io/pypi/l/toucan-connectors.svg)](https://pypi.python.org/pypi/toucan-connectors)
 [![Pypi-wheel](https://img.shields.io/pypi/wheel/toucan-connectors.svg)](https://pypi.python.org/pypi/toucan-connectors)
 [![GitHub Actions](https://github.com/ToucanToco/toucan-connectors/workflows/CI/badge.svg)](https://github.com/ToucanToco/toucan-connectors/actions?query=workflow%3ACI)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ToucanToco_toucan-connectors&metric=coverage)](https://sonarcloud.io/dashboard?id=ToucanToco_toucan-connectors)
 
 # Toucan Connectors
 [Toucan Toco](https://toucantoco.com/fr/) data connectors are plugins to the Toucan Toco platform. Their role is to return [Pandas DataFrames](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) from many different sources.

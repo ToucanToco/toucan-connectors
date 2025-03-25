@@ -26,9 +26,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        # Disabling shallow clone is recommended for improving relevancy of sonar reporting
-        fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -98,11 +95,3 @@ jobs:
         AZURE_MSSQL_PASSWORD: '${{ secrets.AZURE_MSSQL_PASSWORD }}'
         AZURE_MSSQL_HOST: '${{ secrets.AZURE_MSSQL_HOST }}'
         AZURE_MSSQL_DATABASE: '${{ secrets.AZURE_MSSQL_DATABASE }}'
-
-    - name: SonarCloud Scan
-      # Only executed for one of the tested python version and pandas version
-      if: ${{ always() && matrix['python-version'] == 3.11 && matrix['pandas-version'] == '<2' }}
-      uses: sonarsource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

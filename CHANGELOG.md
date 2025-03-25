@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [7.8.0] 2025-03-25
+
 ### Fixed
 
 - The ODBC install script now relies on the distro's install script rather than Toucan's.
