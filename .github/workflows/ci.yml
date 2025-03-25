@@ -61,19 +61,8 @@ jobs:
     - name: Install odbc dependencies
       run: sudo bash toucan_connectors/install_scripts/odbc.sh
 
-    - name: Print ODBC config
-      run: |
-        odbcinst -j
-        cat /etc/odbcinst.ini
-
     - name: Install
       run: make install
-
-    - name: Print ODBC config again
-      run: |
-        odbcinst -j
-        cat /etc/odbcinst.ini
-        ls -R /opt/microsoft/
 
     - name: Install pandas ${{ matrix.pandas-version }}
       run: uv pip install "pandas${{ matrix.pandas-version }}"
