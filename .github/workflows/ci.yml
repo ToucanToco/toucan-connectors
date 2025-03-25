@@ -69,6 +69,12 @@ jobs:
     - name: Install
       run: make install
 
+    - name: Print ODBC config again
+      run: |
+        odbcinst -j
+        cat /etc/odbcinst.ini
+        ls -R /opt/microsoft/
+
     - name: Install pandas ${{ matrix.pandas-version }}
       run: uv pip install "pandas${{ matrix.pandas-version }}"
 
