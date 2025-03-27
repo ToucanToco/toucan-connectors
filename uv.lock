@@ -540,13 +540,13 @@ sdist = { url = "https://files.pythonhosted.org/packages/e8/16/13c265afc984796fe
 
 [[package]]
 name = "dataiku-api-client"
-version = "13.4.1"
+version = "13.4.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "python-dateutil" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4a/c6/3c16974aa483fb48c33236d274b4fed42382b921926b2ef6aa971c0ae722/dataiku_api_client-13.4.1.tar.gz", hash = "sha256:0752e194c640072b3ebcb20e4cecea512418820e2373118de6c4d5ebf6efc89a", size = 311080 }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/8b/8a79c22fe5b9f17702ce048f14edc07f280ae88be03ce8e5187976bdc96b/dataiku_api_client-13.4.3.tar.gz", hash = "sha256:b871cf06262e7a8b96598e9c6bd02c49db7afabe46d51805b24dcfcadf946a70", size = 312504 }
 
 [[package]]
 name = "db-dtypes"
@@ -746,7 +746,7 @@ grpc = [
 
 [[package]]
 name = "google-api-python-client"
-version = "2.165.0"
+version = "2.166.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "google-api-core" },
@@ -755,9 +755,9 @@ dependencies = [
     { name = "httplib2" },
     { name = "uritemplate" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d5/b5/46e6a866407e1d620d6722e7f5e076c3908801b6bc122e0908ea92b9d78f/google_api_python_client-2.165.0.tar.gz", hash = "sha256:0d2aee76727a104705630bebbc43669c864b766924e9329051ef7b7e2468eb72", size = 12636391 }
+sdist = { url = "https://files.pythonhosted.org/packages/c4/c9/eac7b4e843039f0a54a563c2328d43de6f02e426a11b6a7e378996f667db/google_api_python_client-2.166.0.tar.gz", hash = "sha256:b8cf843bd9d736c134aef76cf1dc7a47c9283a2ef24267b97207b9dd43b30ef7", size = 12680525 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/dc/432b2b61e2335dc20196f543b5c84400d246c8cdfb8169fea183e7a0c52d/google_api_python_client-2.165.0-py2.py3-none-any.whl", hash = "sha256:4eaab7d4a20be0d3d1dde462fa95e9e0ccc2a3e177a656701bf73fe738ddef7d", size = 13147588 },
+    { url = "https://files.pythonhosted.org/packages/b4/44/ae1528a6ca296d89704c8febb72b3e263c28b4e50ab29b9202df7a0f273d/google_api_python_client-2.166.0-py2.py3-none-any.whl", hash = "sha256:dd8cc74d9fc18538ab05cbd2e93cb4f82382f910c5f6945db06c91f1deae6e45", size = 13190078 },
 ]
 
 [[package]]
