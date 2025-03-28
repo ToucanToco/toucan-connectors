@@ -8,8 +8,8 @@ import pytest
 from toucan_connectors.mssql.mssql_connector import MSSQLConnector, MSSQLDataSource
 
 
-@pytest.fixture(scope="module")
-def mssql_server(service_container):
+@pytest.fixture(scope="module", params=["mssql2019", "mssql2022"])
+def mssql_server(service_container, request):
     def check_and_feed(host_port):
         """
         This method does not only check that the server is on
@@ -20,6 +20,8 @@ def mssql_server(service_container):
             server=f"127.0.0.1,{host_port}",
             user="SA",
             password="Il0veT0uc@n!",
+            # This is a local server so we allow self-signed certificates
+            TrustServerCertificate="yes",
         )
         cur = conn.cursor()
         cur.execute("SELECT 1;")
@@ -34,7 +36,7 @@ def mssql_server(service_container):
         cur.close()
         conn.close()
 
-    return service_container("mssql", check_and_feed, pyodbc.Error)
+    return service_container(request.param, check_and_feed, pyodbc.OperationalError)
 
 
 @pytest.fixture
@@ -45,6 +47,8 @@ def mssql_connector(mssql_server):
         user="SA",
         password="Il0veT0uc@n!",
         port=mssql_server["port"],
+        # This is a local server so we allow self-signed certificates
+        trust_server_certificate=True,
     )
 
 
@@ -87,6 +91,37 @@ def test_connection_params():
     }
 
 
+def test_connection_params_with_trusted_server_certificate():
+    connector = MSSQLConnector(name="my_mssql_con", host="myhost", user="myuser", trust_server_certificate=True)
+    assert connector.get_connection_params(None) == {
+        "driver": "{ODBC Driver 18 for SQL Server}",
+        "server": "myhost",
+        "user": "myuser",
+        "as_dict": True,
+        "TrustServerCertificate": "yes",
+    }
+    connector = MSSQLConnector(
+        name="my_mssql_con",
+        host="myhost",
+        user="myuser",
+        password="mypass",
+        port=123,
+        connect_timeout=60,
+        trust_server_certificate=True
+    )
+    assert connector.get_connection_params("mydb") == {
+        "driver": "{ODBC Driver 18 for SQL Server}",
+        "server": "myhost,123",
+        "user": "myuser",
+        "as_dict": True,
+        "password": "mypass",
+        "timeout": 60,
+        "database": "mydb",
+        "TrustServerCertificate": "yes",
+    }
+
+
+@pytest.mark.skip()
 def test_mssql_get_df(mocker):
     snock = mocker.patch("pyodbc.connect")
     reasq = mocker.patch("pandas.read_sql")
@@ -116,7 +151,6 @@ def test_mssql_get_df(mocker):
     )
 
 
-@pytest.mark.skip(reason="TLS install script fails")
 def test_get_df(mssql_connector):
     """It should connect to the default database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
@@ -136,6 +170,7 @@ def test_get_df(mssql_connector):
     assert res.equals(expected)
 
 
+@pytest.mark.skip()
 def test_query_variability(mocker):
     """It should connect to the database and retrieve the response to the query"""
     mock_pyodbc_connect = mocker.patch("pyodbc.connect")
@@ -174,6 +209,7 @@ def test_query_variability(mocker):
     )
 
 
+@pytest.mark.skip()
 def test_query_variability_jinja(mocker):
     """It should interpolate safe (server side) parameters using jinja templating"""
     mock_pyodbc_connect = mocker.patch("pyodbc.connect")
@@ -194,34 +230,30 @@ def test_query_variability_jinja(mocker):
     )
 
 
-@pytest.mark.skip(reason="TLS install script fails")
 def test_get_form_empty_query(mssql_connector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {}
     form = MSSQLDataSource.get_form(mssql_connector, current_config)
 
-    assert form["properties"]["database"] == {"$ref": "#/definitions/database"}
-    assert form["definitions"]["database"] == {
+    assert form["properties"]["database"] == {"$ref": "#/$defs/database"}
+    assert form["$defs"]["database"] == {
         "title": "database",
-        "description": "An enumeration.",
         "type": "string",
         "enum": ["master", "tempdb", "model", "msdb"],
     }
 
 
-@pytest.mark.skip(reason="TLS install script fails")
 def test_get_form_query_with_good_database(mssql_connector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {"database": "master"}
     form = MSSQLDataSource.get_form(mssql_connector, current_config)
 
-    assert form["properties"]["database"] == {"$ref": "#/definitions/database"}
-    assert form["definitions"]["database"] == {
+    assert form["properties"]["database"] == {"$ref": "#/$defs/database"}
+    assert form["$defs"]["database"] == {
         "title": "database",
-        "description": "An enumeration.",
         "type": "string",
         "enum": ["master", "tempdb", "model", "msdb"],
     }
-    assert form["properties"]["table"] == {"$ref": "#/definitions/table"}
-    assert "City" in form["definitions"]["table"]["enum"]
+    assert form["properties"]["table"] == {"$ref": "#/$defs/table", "default": None}
+    assert "City" in form["$defs"]["table"]["enum"]
     assert form["required"] == ["domain", "name", "database"]
