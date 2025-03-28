@@ -1,24 +1,32 @@
 from contextlib import suppress
 from logging import getLogger
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import Field, StringConstraints, create_model
+from sqlalchemy.orm import Session
 
 try:
-    import pyodbc
+    import pandas as pd
 
     CONNECTOR_OK = True
 except ImportError as exc:  # pragma: no cover
     getLogger(__name__).warning(f"Missing dependencies for {__name__}: {exc}")
     CONNECTOR_OK = False
 
-from toucan_connectors.common import pandas_read_sql
+from toucan_connectors.common import (
+    convert_jinja_params_to_sqlalchemy_named,
+    create_sqlalchemy_engine,
+    pandas_read_sqlalchemy_query,
+)
 from toucan_connectors.toucan_connector import (
     PlainJsonSecretStr,
     ToucanConnector,
     ToucanDataSource,
     strlist_to_enum,
 )
+
+if TYPE_CHECKING:
+    import sqlalchemy as sa
 
 
 class MSSQLDataSource(ToucanDataSource):
@@ -61,21 +69,25 @@ class MSSQLDataSource(ToucanDataSource):
         constraints = {}
 
         with suppress(Exception):
-            connection = pyodbc.connect(
-                **connector.get_connection_params(database=current_config.get("database", "tempdb"))
-            )
-            # # Always add the suggestions for the available databases
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT name FROM sys.databases;")
-                res = cursor.fetchall()
-                available_dbs = [r[0] for r in res]
-                constraints["database"] = strlist_to_enum("database", available_dbs)
+            sa_engine = connector._create_engine(database=current_config.get("database", "tempdb"))
 
-                if "database" in current_config:
-                    cursor.execute("SELECT TABLE_NAME FROM  INFORMATION_SCHEMA.TABLES;")
+            # Always add the suggestions for the available databases
+            with Session(sa_engine) as session:
+                with session.connection() as connection:
+                    cursor = connection.connection.cursor()
+                    cursor.execute("SELECT name FROM sys.databases")
                     res = cursor.fetchall()
-                    available_tables = [table_name for (table_name,) in res]
-                    constraints["table"] = strlist_to_enum("table", available_tables, None)
+                    available_dbs = [r[0] for r in res]
+
+                    constraints["database"] = strlist_to_enum("database", available_dbs)
+
+                    if "database" in current_config:
+                        cursor.execute("SELECT TABLE_NAME FROM  INFORMATION_SCHEMA.TABLES;")
+                        res = cursor.fetchall()
+                        available_tables = [table_name for (table_name,) in res]
+                        constraints["table"] = strlist_to_enum("table", available_tables, None)
+
+                    cursor.close()
 
         return create_model("FormSchema", **constraints, __base__=cls).schema()
 
@@ -91,14 +103,20 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
         "the hardcoded IP address of your database server",
     )
 
-    port: int = Field(None, description="The listening port of your database server")
+    port: int | None = Field(None, description="The listening port of your database server")
     user: str = Field(..., description="Your login username")
-    password: PlainJsonSecretStr = Field(None, description="Your login password")
-    connect_timeout: int = Field(
+    password: PlainJsonSecretStr | None = Field(None, description="Your login password")
+    connect_timeout: int | None = Field(
         None,
         title="Connection timeout",
         description="You can set a connection timeout in seconds here, i.e. the maximum length "
         "of time you want to wait for the server to respond. None by default",
+    )
+    trust_server_certificate: bool = Field(
+        False,
+        title="Trust server certificate",
+        description="This allow to disable the check on the server certificate, which can be "
+        "required for custom and self-signed certificates. Connection is still encrypted.",
     )
 
     def get_connection_params(self, database):
@@ -107,6 +125,7 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
             server = "127.0.0.1"  # localhost is not understood by pyodbc
         if self.port is not None:
             server += f",{self.port}"
+
         con_params = {
             "driver": "{ODBC Driver 18 for SQL Server}",
             "server": server,
@@ -116,20 +135,48 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
             "timeout": self.connect_timeout,
             "as_dict": True,
         }
+
+        if self.trust_server_certificate:
+            con_params["TrustServerCertificate"] = "yes"
+
         # remove None values
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _retrieve_data(self, datasource):
-        connection = pyodbc.connect(**self.get_connection_params(datasource.database))
+    def _get_query_params(self) -> dict[str, str]:
+        params = {"driver": "ODBC Driver 18 for SQL Server"}
+
+        if self.connect_timeout:
+            params["timeout"] = str(self.connect_timeout)
+
+        if self.trust_server_certificate:
+            params["TrustServerCertificate"] = "yes"
+
+        return params
+
+    def _create_engine(self, database: str | None) -> "sa.Engine":
+        from sqlalchemy.engine import URL
+
+        con_params = self.get_connection_params(database)
+
+        # user = self.user #f"{self.user}@{host}" if "@" not in self.user else self.user
+
+        connection_url = URL.create(
+            "mssql+pyodbc",
+            username=con_params["user"],
+            password=con_params["password"],
+            host=con_params["server"],
+            database=con_params["database"],
+            query=self._get_query_params(),
+        )
+        return create_sqlalchemy_engine(connection_url)
+
+    def _retrieve_data(self, datasource: MSSQLDataSource) -> "pd.DataFrame":
+        sa_engine = self._create_engine(database=datasource.database)
 
         query_params = datasource.parameters or {}
-        df = pandas_read_sql(
-            datasource.query,
-            con=connection,
-            params=query_params,
-            convert_to_qmark=True,
-            render_user=True,
-        )
+        # {{param}} -> :param
+        query = convert_jinja_params_to_sqlalchemy_named(datasource.query)
 
-        connection.close()
+        df = pandas_read_sqlalchemy_query(query=query, engine=sa_engine, params=query_params)
+
         return df
