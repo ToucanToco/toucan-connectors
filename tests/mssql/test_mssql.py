@@ -2,8 +2,9 @@ import os
 
 import pandas as pd
 import pydantic
-import pyodbc
 import pytest
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from toucan_connectors.mssql.mssql_connector import MSSQLConnector, MSSQLDataSource
 
@@ -15,28 +16,32 @@ def mssql_server(service_container, request):
         This method does not only check that the server is on
         but also feeds the database once it's up !
         """
-        conn = pyodbc.connect(
-            driver="{ODBC Driver 18 for SQL Server}",
-            server=f"127.0.0.1,{host_port}",
+        sa_engine = MSSQLConnector(
+            name="mycon",
+            host="localhost",
+            port=host_port,
             user="SA",
             password="Il0veT0uc@n!",
             # This is a local server so we allow self-signed certificates
-            TrustServerCertificate="yes",
-        )
-        cur = conn.cursor()
-        cur.execute("SELECT 1;")
+            trust_server_certificate=True,
+        )._create_engine("master")
 
-        # Feed the database
-        sql_query_path = f"{os.path.dirname(__file__)}/fixtures/world.sql"
-        with open(sql_query_path) as f:
-            sql_query = f.read()
-        cur.execute(sql_query)
-        conn.commit()
+        # Always add the suggestions for the available databases
+        with Session(sa_engine) as session:
+            with session.connection() as conn:
+                cur = conn.connection.cursor()
+                cur.execute("SELECT 1;")
 
-        cur.close()
-        conn.close()
+                # Feed the database
+                sql_query_path = f"{os.path.dirname(__file__)}/fixtures/world.sql"
+                with open(sql_query_path) as f:
+                    sql_query = f.read()
+                cur.execute(sql_query)
+                conn.commit()
 
-    return service_container(request.param, check_and_feed, pyodbc.OperationalError)
+                cur.close()
+
+    return service_container(request.param, check_and_feed, OperationalError)
 
 
 @pytest.fixture
