@@ -112,7 +112,7 @@ def test_connection_params_with_trusted_server_certificate():
         password="mypass",
         port=123,
         connect_timeout=60,
-        trust_server_certificate=True
+        trust_server_certificate=True,
     )
     assert connector.get_connection_params("mydb") == {
         "driver": "{ODBC Driver 18 for SQL Server}",
