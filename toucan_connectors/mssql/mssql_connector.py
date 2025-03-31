@@ -82,7 +82,7 @@ class MSSQLDataSource(ToucanDataSource):
                     constraints["database"] = strlist_to_enum("database", available_dbs)
 
                     if "database" in current_config:
-                        cursor.execute("SELECT TABLE_NAME FROM  INFORMATION_SCHEMA.TABLES;")
+                        cursor.execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;")
                         res = cursor.fetchall()
                         available_tables = [table_name for (table_name,) in res]
                         constraints["table"] = strlist_to_enum("table", available_tables, None)

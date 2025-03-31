@@ -110,7 +110,7 @@ def test_connection_params_with_trusted_server_certificate():
         host="myhost",
         user="myuser",
         password="mypass",
-        port=123,
+        port=12345,
         connect_timeout=60,
         trust_server_certificate=True,
     )
