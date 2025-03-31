@@ -103,12 +103,12 @@ def test_get_form():
             "load": {"default": True, "title": "Load", "type": "boolean"},
             "live_data": {"default": False, "title": "Live Data", "type": "boolean"},
             "validation": {
-                "anyOf": [{"type": "object"}, {"type": "null"}],
+                "anyOf": [{"type": "object", "additionalProperties": True}, {"type": "null"}],
                 "default": None,
                 "title": "Validation",
             },
             "parameters": {
-                "anyOf": [{"type": "object"}, {"type": "null"}],
+                "anyOf": [{"type": "object", "additionalProperties": True}, {"type": "null"}],
                 "default": None,
                 "title": "Parameters",
             },
