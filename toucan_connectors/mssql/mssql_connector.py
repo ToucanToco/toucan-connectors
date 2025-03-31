@@ -3,10 +3,10 @@ from logging import getLogger
 from typing import TYPE_CHECKING, Annotated
 
 from pydantic import Field, StringConstraints, create_model
-from sqlalchemy.orm import Session
 
 try:
     import pandas as pd
+    from sqlalchemy.orm import Session
 
     CONNECTOR_OK = True
 except ImportError as exc:  # pragma: no cover
