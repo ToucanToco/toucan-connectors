@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Native SQL Connectors : `_retrieve_data` now raises an error if selected column names are parametrized in the query. 
+
 ## [7.8.0] 2025-03-25
 
 ### Fixed

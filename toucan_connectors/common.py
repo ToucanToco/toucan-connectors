@@ -465,6 +465,10 @@ def rename_duplicate_columns(df: "pd.DataFrame") -> None:
     df.columns = cols  # type:ignore[assignment]
 
 
+class SelectedColumnInterpolationError(Exception):
+    """Raised when the query contains parametrized selected columns."""
+
+
 def pandas_read_sql(
     query: str,
     con,
@@ -496,6 +500,8 @@ def pandas_read_sql(
         query = query.replace("%%", "%")
         query = re.sub(r"%[^(%]", r"%\g<0>", query)
         df = pd.read_sql(query, con=con, params=params, **kwargs)
+        if "?column?" in df.columns:
+            raise SelectedColumnInterpolationError("Selected column names cannot be parametrized.")
     except pd.errors.DatabaseError as exc:
         if is_interpolating_table_name(query):
             errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
