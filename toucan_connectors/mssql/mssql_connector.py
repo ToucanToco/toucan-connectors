@@ -126,21 +126,16 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
         if self.port is not None:
             server += f",{self.port}"
 
-        user = self.user
-        password = self.password.get_secret_value() if self.password else None
-
         query_params: dict[str, str] = {"driver": "ODBC Driver 18 for SQL Server"}
         if self.connect_timeout:
             query_params["timeout"] = str(self.connect_timeout)
         if self.trust_server_certificate:
             query_params["TrustServerCertificate"] = "yes"
 
-        # user = self.user #f"{self.user}@{host}" if "@" not in self.user else self.user
-
         connection_url = URL.create(
             "mssql+pyodbc",
-            username=user,
-            password=password,
+            username=self.user,
+            password=self.password.get_secret_value() if self.password else None,
             host=server,
             database=database,
             query=query_params,
