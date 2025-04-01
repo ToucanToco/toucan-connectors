@@ -68,26 +68,25 @@ class MSSQLDataSource(ToucanDataSource):
         """
         constraints = {}
 
-        with suppress(Exception):
-            sa_engine = connector._create_engine(database=current_config.get("database", "tempdb"))
+        sa_engine = connector._create_engine(database=current_config.get("database", "tempdb"))
 
-            # Always add the suggestions for the available databases
-            with Session(sa_engine) as session:
-                with session.connection() as connection:
-                    cursor = connection.connection.cursor()
-                    cursor.execute("SELECT name FROM sys.databases")
+        # Always add the suggestions for the available databases
+        with Session(sa_engine) as session:
+            with session.connection() as connection:
+                cursor = connection.connection.cursor()
+                cursor.execute("SELECT name FROM sys.databases")
+                res = cursor.fetchall()
+                available_dbs = [r[0] for r in res]
+
+                constraints["database"] = strlist_to_enum("database", available_dbs)
+
+                if "database" in current_config:
+                    cursor.execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;")
                     res = cursor.fetchall()
-                    available_dbs = [r[0] for r in res]
+                    available_tables = [table_name for (table_name,) in res]
+                    constraints["table"] = strlist_to_enum("table", available_tables, None)
 
-                    constraints["database"] = strlist_to_enum("database", available_dbs)
-
-                    if "database" in current_config:
-                        cursor.execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;")
-                        res = cursor.fetchall()
-                        available_tables = [table_name for (table_name,) in res]
-                        constraints["table"] = strlist_to_enum("table", available_tables, None)
-
-                    cursor.close()
+                cursor.close()
 
         return create_model("FormSchema", **constraints, __base__=cls).schema()
 
