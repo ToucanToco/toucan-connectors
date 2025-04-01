@@ -82,7 +82,7 @@ def test_connection_params():
         host="myhost",
         user="myuser",
         password="mypass",
-        port=123,
+        port=12345,
         connect_timeout=60,
     )
     assert connector.get_connection_params("mydb") == {
