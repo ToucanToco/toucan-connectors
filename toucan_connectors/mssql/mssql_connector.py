@@ -87,7 +87,7 @@ class MSSQLDataSource(ToucanDataSource):
 
                 cursor.close()
 
-        return create_model("FormSchema", **constraints, __base__=cls).schema() # type:ignore[call-overload]
+        return create_model("FormSchema", **constraints, __base__=cls).schema()  # type:ignore[call-overload]
 
 
 class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
@@ -117,54 +117,33 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
         "required for custom and self-signed certificates. Connection is still encrypted.",
     )
 
-    def get_connection_params(self, database):
+    def _create_engine(self, database: str | None) -> "sa.Engine":
+        from sqlalchemy.engine import URL
+
         server = self.host
         if server == "localhost":
             server = "127.0.0.1"  # localhost is not understood by pyodbc
         if self.port is not None:
             server += f",{self.port}"
 
-        con_params = {
-            "driver": "{ODBC Driver 18 for SQL Server}",
-            "server": server,
-            "database": database,
-            "user": self.user,
-            "password": self.password.get_secret_value() if self.password else None,
-            "timeout": self.connect_timeout,
-            "as_dict": True,
-        }
+        user = self.user
+        password = self.password.get_secret_value() if self.password else None
 
-        if self.trust_server_certificate:
-            con_params["TrustServerCertificate"] = "yes"
-
-        # remove None values
-        return {k: v for k, v in con_params.items() if v is not None}
-
-    def _get_query_params(self) -> dict[str, str]:
-        params = {"driver": "ODBC Driver 18 for SQL Server"}
-
+        query_params: dict[str, str] = {"driver": "ODBC Driver 18 for SQL Server"}
         if self.connect_timeout:
-            params["timeout"] = str(self.connect_timeout)
-
+            query_params["timeout"] = str(self.connect_timeout)
         if self.trust_server_certificate:
-            params["TrustServerCertificate"] = "yes"
-
-        return params
-
-    def _create_engine(self, database: str | None) -> "sa.Engine":
-        from sqlalchemy.engine import URL
-
-        con_params = self.get_connection_params(database)
+            query_params["TrustServerCertificate"] = "yes"
 
         # user = self.user #f"{self.user}@{host}" if "@" not in self.user else self.user
 
         connection_url = URL.create(
             "mssql+pyodbc",
-            username=con_params["user"],
-            password=con_params["password"],
-            host=con_params["server"],
-            database=con_params["database"],
-            query=self._get_query_params(),
+            username=user,
+            password=password,
+            host=server,
+            database=database,
+            query=query_params,
         )
         return create_sqlalchemy_engine(connection_url)
 

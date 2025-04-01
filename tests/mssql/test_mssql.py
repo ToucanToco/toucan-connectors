@@ -69,63 +69,6 @@ def test_datasource():
     assert ds.query == "select * from test;"
 
 
-def test_connection_params():
-    connector = MSSQLConnector(name="my_mssql_con", host="myhost", user="myuser")
-    assert connector.get_connection_params(None) == {
-        "driver": "{ODBC Driver 18 for SQL Server}",
-        "server": "myhost",
-        "user": "myuser",
-        "as_dict": True,
-    }
-    connector = MSSQLConnector(
-        name="my_mssql_con",
-        host="myhost",
-        user="myuser",
-        password="mypass",
-        port=12345,
-        connect_timeout=60,
-    )
-    assert connector.get_connection_params("mydb") == {
-        "driver": "{ODBC Driver 18 for SQL Server}",
-        "server": "myhost,123",
-        "user": "myuser",
-        "as_dict": True,
-        "password": "mypass",
-        "timeout": 60,
-        "database": "mydb",
-    }
-
-
-def test_connection_params_with_trusted_server_certificate():
-    connector = MSSQLConnector(name="my_mssql_con", host="myhost", user="myuser", trust_server_certificate=True)
-    assert connector.get_connection_params(None) == {
-        "driver": "{ODBC Driver 18 for SQL Server}",
-        "server": "myhost",
-        "user": "myuser",
-        "as_dict": True,
-        "TrustServerCertificate": "yes",
-    }
-    connector = MSSQLConnector(
-        name="my_mssql_con",
-        host="myhost",
-        user="myuser",
-        password="mypass",
-        port=12345,
-        connect_timeout=60,
-        trust_server_certificate=True,
-    )
-    assert connector.get_connection_params("mydb") == {
-        "driver": "{ODBC Driver 18 for SQL Server}",
-        "server": "myhost,123",
-        "user": "myuser",
-        "as_dict": True,
-        "password": "mypass",
-        "timeout": 60,
-        "database": "mydb",
-        "TrustServerCertificate": "yes",
-    }
-
-
 @pytest.mark.skip()
 def test_mssql_get_df(mocker):
     snock = mocker.patch("pyodbc.connect")
