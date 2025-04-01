@@ -40,6 +40,10 @@ services:
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=Il0veT0uc@n!
+    volumes:
+      - ./mssql/conf/mssql2022.conf:/var/opt/mssql/mssql.conf:ro
+      - ./mssql/conf/mssql2022.dummy.pem:/var/opt/mssql/mssql.pem:ro
+      - ./mssql/conf/mssql2022.dummy.key:/var/opt/mssql/mssql.key:ro
     ports:
       - 1433:1433
 
