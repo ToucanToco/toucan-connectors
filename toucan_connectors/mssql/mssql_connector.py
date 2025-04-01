@@ -113,7 +113,7 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
     trust_server_certificate: bool = Field(
         False,
         title="Trust server certificate",
-        description="This allow to disable the check on the server certificate, which can be "
+        description="This allows to disable server certificate validation, which can be "
         "required for custom and self-signed certificates. Connection is still encrypted.",
     )
 
