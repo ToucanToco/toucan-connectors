@@ -10,7 +10,7 @@ from toucan_connectors.mssql.mssql_connector import MSSQLConnector, MSSQLDataSou
 
 
 @pytest.fixture(scope="module", params=["mssql2019", "mssql2022"])
-def mssql_server(service_container, request):
+def mssql_server(service_container, request: pytest.FixtureRequest):
     def check_and_feed(host_port):
         """
         This method does not only check that the server is on
