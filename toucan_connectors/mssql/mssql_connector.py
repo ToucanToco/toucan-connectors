@@ -1,4 +1,3 @@
-from contextlib import suppress
 from logging import getLogger
 from typing import TYPE_CHECKING, Annotated
 
@@ -32,21 +31,21 @@ if TYPE_CHECKING:
 class MSSQLDataSource(ToucanDataSource):
     # By default SQL Server selects the database which is set
     # as default for specific user
-    database: str = Field(
+    database: str | None = Field(
         None,
         description="The name of the database you want to query. "
         "By default SQL Server selects the user's default database",
     )
-    table: Annotated[str, StringConstraints(min_length=1)] = Field(
+    table: Annotated[str, StringConstraints(min_length=1)] | None = Field(
         None,
         description='The name of the data table that you want to get (equivalent to "SELECT * FROM your_table")',
     )
-    query: Annotated[str, StringConstraints(min_length=1)] = Field(
+    query: Annotated[str, StringConstraints(min_length=1)] | None = Field(
         None,
         description="You can write a custom query against your "
         "database here. It will take precedence over "
         'the "table" parameter above',
-        widget="sql",
+        json_schema_extra={"widget": "sql"},
     )
 
     def __init__(self, **data):
@@ -88,7 +87,7 @@ class MSSQLDataSource(ToucanDataSource):
 
                 cursor.close()
 
-        return create_model("FormSchema", **constraints, __base__=cls).schema()
+        return create_model("FormSchema", **constraints, __base__=cls).schema() # type:ignore[call-overload]
 
 
 class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
@@ -174,6 +173,11 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
 
         query_params = datasource.parameters or {}
         # {{param}} -> :param
+
+        # This should not happen as it is checked at init already
+        if datasource.query is None:
+            raise ValueError("'query' or 'table' must be set")
+
         query = convert_jinja_params_to_sqlalchemy_named(datasource.query)
 
         df = pandas_read_sqlalchemy_query(query=query, engine=sa_engine, params=query_params)

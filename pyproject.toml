@@ -159,6 +159,7 @@ files = [
     "toucan_connectors/http_api/pagination_configs.py",
     "toucan_connectors/hubspot_private_app/hubspot_connector.py",
     "toucan_connectors/mongo/mongo_connector.py",
+    "toucan_connectors/mssql/mssql_connector.py",
     "toucan_connectors/mysql/mysql_connector.py",
     "toucan_connectors/peakina/peakina_connector.py",
     "toucan_connectors/postgres/postgresql_connector.py",
