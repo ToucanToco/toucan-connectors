@@ -13,9 +13,11 @@ except ImportError as exc:  # pragma: no cover
     CONNECTOR_OK = False
 
 from toucan_connectors.common import (
-    convert_jinja_params_to_sqlalchemy_named,
+    convert_to_printf_templating_style,
+    convert_to_qmark_paramstyle,
     create_sqlalchemy_engine,
     pandas_read_sqlalchemy_query,
+    render_user_in_query,
 )
 from toucan_connectors.toucan_connector import (
     PlainJsonSecretStr,
@@ -145,15 +147,18 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
     def _retrieve_data(self, datasource: MSSQLDataSource) -> "pd.DataFrame":
         sa_engine = self._create_engine(database=datasource.database)
 
-        query_params = datasource.parameters or {}
-        # {{param}} -> :param
+        params = datasource.parameters or {}
 
         # This should not happen as it is checked at init already
         if datasource.query is None:
             raise ValueError("'query' or 'table' must be set")
 
-        query = convert_jinja_params_to_sqlalchemy_named(datasource.query)
+        # Trusted jinja parameters like {{ user.attribute.whatever }}
+        query = render_user_in_query(datasource.query, params)
 
-        df = pandas_read_sqlalchemy_query(query=query, engine=sa_engine, params=query_params)
+        # Untrusted `%(params)` to `?` or `%(list)` to `(?,?,?...)`
+        query, params = convert_to_qmark_paramstyle(query, params)
+
+        df = pandas_read_sqlalchemy_query(query=query, engine=sa_engine, params=tuple(params))
 
         return df

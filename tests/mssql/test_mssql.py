@@ -1,8 +1,10 @@
 import os
+from unittest.mock import ANY, MagicMock
 
 import pandas as pd
 import pydantic
 import pytest
+from pandas.testing import assert_frame_equal
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -69,112 +71,127 @@ def test_datasource():
     assert ds.query == "select * from test;"
 
 
-@pytest.mark.skip()
-def test_mssql_get_df(mocker):
-    snock = mocker.patch("pyodbc.connect")
-    reasq = mocker.patch("pandas.read_sql")
+def assert_get_df(
+    mocker: MagicMock,
+    mssql_connector: MSSQLConnector,
+    datasource: MSSQLDataSource,
+    expected_query: str,
+    expected_params: tuple,
+    expected_df: pd.DataFrame,
+):
+    import toucan_connectors.mssql.mssql_connector as mod
 
-    mssql_connector = MSSQLConnector(name="mycon", host="localhost", user="SA", password="Il0veT0uc@n!", port=22)
-    datasource = MSSQLDataSource(
-        name="mycon",
-        domain="mydomain",
-        database="mydb",
-        query="SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
-    )
-    mssql_connector.get_df(datasource)
+    mock_pandas_read_sqlalchemy_query = mocker.spy(mod, "pandas_read_sqlalchemy_query")
 
-    snock.assert_called_once_with(
-        driver="{ODBC Driver 18 for SQL Server}",
-        as_dict=True,
-        server="127.0.0.1,22",
-        user="SA",
-        password="Il0veT0uc@n!",
-        database="mydb",
-    )
+    assert_frame_equal(mssql_connector.get_df(datasource), expected_df)
 
-    reasq.assert_called_once_with(
-        "SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
-        con=snock(),
-        params=[],
+    mock_pandas_read_sqlalchemy_query.assert_called_once_with(
+        query=expected_query,
+        engine=ANY,
+        params=expected_params,
     )
 
 
-def test_get_df(mssql_connector):
+def test_get_df_without_params(mssql_connector):
     """It should connect to the default database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
         name="mycon",
         domain="mydomain",
-        query="SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
         database="master",
+        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
     )
-
-    expected = pd.DataFrame({"Name": ["Kabul", "Qandahar", "Herat"], "Population": [1780000, 237500, 186800]})
-    expected["CountryCode"] = "AFG"
-    expected = expected[["Name", "CountryCode", "Population"]]
 
     # LIMIT 2 is not possible for MSSQL
-    res = mssql_connector.get_df(datasource)
-    res["Name"] = res["Name"].str.rstrip()
-    assert res.equals(expected)
+    assert_frame_equal(
+        mssql_connector.get_df(datasource),
+        pd.DataFrame(
+            {
+                "Name": ["Kabul", "Qandahar", "Herat"],
+                "CountryCode": ["AFG", "AFG", "AFG"],
+                "Population": [1780000, 237500, 186800],
+            }
+        ),
+    )
 
 
-@pytest.mark.skip()
-def test_query_variability(mocker):
+def test_get_df_with_scalar_params(mssql_connector, mocker):
     """It should connect to the database and retrieve the response to the query"""
-    mock_pyodbc_connect = mocker.patch("pyodbc.connect")
-    mock_pandas_read_sql = mocker.patch("pandas.read_sql")
-    con = MSSQLConnector(name="mycon", host="localhost", user="SA", password="Il0veT0uc@n!", port=22)
-
-    # Test with integer values
-    ds = MSSQLDataSource(
-        query="select * from test where id_nb > %(id_nb)s and price > %(price)s;",
-        domain="test",
-        name="test",
-        parameters={"price": 10, "id_nb": 1},
-        database="db",
-    )
-    con.get_df(ds)
-    mock_pandas_read_sql.assert_called_once_with(
-        "select * from test where id_nb > ? and price > ?;",
-        con=mock_pyodbc_connect(),
-        params=[1, 10],
+    datasource = MSSQLDataSource(
+        name="mycon",
+        domain="mydomain",
+        database="master",
+        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City "
+        "WHERE CountryCode = %(code)s AND Population > %(population)s;",
+        parameters={"code": "AFG", "population": 1000000},
     )
 
-    # Test when the value is an array
-    mock_pandas_read_sql = mocker.patch("pandas.read_sql")
-    ds = MSSQLDataSource(
-        query="select * from test where id_nb in %(ids)s;",
-        domain="test",
-        name="test",
-        database="db",
-        parameters={"ids": [1, 2]},
-    )
-    con.get_df(ds)
-    mock_pandas_read_sql.assert_called_once_with(
-        "select * from test where id_nb in (?,?);",
-        con=mock_pyodbc_connect(),
-        params=[1, 2],
+    assert_get_df(
+        mocker=mocker,
+        mssql_connector=mssql_connector,
+        datasource=datasource,
+        expected_query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE "
+        "CountryCode = ? AND Population > ?;",
+        expected_params=("AFG", 1000000),
+        expected_df=pd.DataFrame(
+            {
+                "Name": ["Kabul"],
+                "CountryCode": ["AFG"],
+                "Population": [1780000],
+            }
+        ),
     )
 
 
-@pytest.mark.skip()
-def test_query_variability_jinja(mocker):
+def test_get_df_with_array_param(mssql_connector, mocker):
+    """It should connect to the database and retrieve the response to the query"""
+    datasource = MSSQLDataSource(
+        name="mycon",
+        domain="mydomain",
+        database="master",
+        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE Id IN %(ids)s;",
+        parameters={"ids": [1, 3]},
+    )
+
+    assert_get_df(
+        mocker=mocker,
+        mssql_connector=mssql_connector,
+        datasource=datasource,
+        expected_query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE Id IN (?,?);",
+        expected_params=(1, 3),
+        expected_df=pd.DataFrame(
+            {
+                "Name": ["Kabul", "Herat"],
+                "CountryCode": ["AFG", "AFG"],
+                "Population": [1780000, 186800],
+            }
+        ),
+    )
+
+
+def test_get_df_with_jinja_variable_and_array_param(mssql_connector, mocker):
     """It should interpolate safe (server side) parameters using jinja templating"""
-    mock_pyodbc_connect = mocker.patch("pyodbc.connect")
-    mock_pandas_read_sql = mocker.patch("pandas.read_sql")
-    con = MSSQLConnector(name="mycon", host="localhost", user="SA", password="Il0veT0uc@n!", port=22)
-    ds = MSSQLDataSource(
-        query="select * from {{user.attributes.table_name}} where id_nb in %(ids)s;",
-        domain="test",
-        name="test",
-        database="db",
-        parameters={"ids": [1, 2], "user": {"attributes": {"table_name": "blah"}}},
+    datasource = MSSQLDataSource(
+        name="mycon",
+        domain="mydomain",
+        database="master",
+        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM {{user.attributes.table_name}} "
+        "WHERE Id IN %(ids)s;",
+        parameters={"ids": [1, 3], "user": {"attributes": {"table_name": "City"}}},
     )
-    con.get_df(ds)
-    mock_pandas_read_sql.assert_called_once_with(
-        "select * from blah where id_nb in (?,?);",
-        con=mock_pyodbc_connect(),
-        params=[1, 2],
+
+    assert_get_df(
+        mocker=mocker,
+        mssql_connector=mssql_connector,
+        datasource=datasource,
+        expected_query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE Id IN (?,?);",
+        expected_params=(1, 3),
+        expected_df=pd.DataFrame(
+            {
+                "Name": ["Kabul", "Herat"],
+                "CountryCode": ["AFG", "AFG"],
+                "Population": [1780000, 186800],
+            }
+        ),
     )
 
 

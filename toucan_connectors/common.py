@@ -465,6 +465,10 @@ def rename_duplicate_columns(df: "pd.DataFrame") -> None:
     df.columns = cols  # type:ignore[assignment]
 
 
+def render_user_in_query(query: str, params: dict[str, Any]) -> str:
+    return ImmutableSandboxedEnvironment().from_string(query).render({"user": params.get("user", {})})
+
+
 def pandas_read_sql(
     query: str,
     con,
@@ -519,16 +523,14 @@ def create_sqlalchemy_engine(url: "sa.URL") -> "sa.Engine":
 
 
 def pandas_read_sqlalchemy_query(
-    *, query: str, engine: "sa.Engine", params: dict[str, Any] | None = None
+    *, query: str, engine: "sa.Engine", params: dict[str, Any] | tuple[Any] | None = None
 ) -> "pd.DataFrame":
     import pandas as pd
     import sqlalchemy as sa
 
-    sa_query = sa.text(query)
-
     try:
         conn = engine.connect()
-        df = pd.read_sql_query(sa_query, conn, params=params)
+        df = pd.read_sql(query, conn, params=params)
     except (pd.errors.DatabaseError, sa.exc.SQLAlchemyError) as exc:
         if is_interpolating_table_name(query):
             errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
