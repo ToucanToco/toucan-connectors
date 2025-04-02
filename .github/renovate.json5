@@ -29,6 +29,5 @@
   "lockFileMaintenance": {
     "enabled": true,
   },
-  "prHourlyLimit": 5,
-  "ignoreDeps": ["pandas", "numpy"]
+  "prHourlyLimit": 5
 }
