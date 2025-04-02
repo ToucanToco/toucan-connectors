@@ -528,9 +528,11 @@ def pandas_read_sqlalchemy_query(
     import pandas as pd
     import sqlalchemy as sa
 
+    sa_query = sa.text(query)
+
     try:
         conn = engine.connect()
-        df = pd.read_sql(query, conn, params=params)
+        df = pd.read_sql_query(sa_query, conn, params=params)
     except (pd.errors.DatabaseError, sa.exc.SQLAlchemyError) as exc:
         if is_interpolating_table_name(query):
             errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
