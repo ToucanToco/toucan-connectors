@@ -1,10 +1,11 @@
 import pandas as pd
 import psycopg2
 import pytest
+from pandas.errors import DatabaseError as PandasDatabaseError
 from pydantic import ValidationError
 from pytest_mock import MockFixture
 
-from toucan_connectors.common import ConnectorStatus
+from toucan_connectors.common import ConnectorStatus, SelectedColumnInterpolationError
 from toucan_connectors.postgres.postgresql_connector import (
     PostgresConnector,
     PostgresDataSource,
@@ -378,6 +379,36 @@ def test_get_df_db_jinja_syntax(postgres_connector):
     assert not df.empty
     assert set(df.columns) == expected_columns
     assert df.shape == (24, 5)
+
+
+def test_get_df_with_column_interpolation_raises_error(postgres_connector):
+    data_source_spec = {
+        "domain": "Postgres test",
+        "type": "external_database",
+        "name": "Some Postgres provider",
+        "database": "postgres_db",
+        "query": "SELECT {{ column_var }}, countrycode FROM City WHERE Population > 50000",
+        "parameters": {"column_var": "name"},
+    }
+    data_source = PostgresDataSource(**data_source_spec)
+    with pytest.raises(SelectedColumnInterpolationError) as e:
+        postgres_connector.get_df(data_source)
+    assert "Selected column names cannot be parametrized." in str(e.value)
+
+
+def test_get_df_with_unknown_column_raises_database_error(postgres_connector):
+    data_source_spec = {
+        "domain": "Postgres test",
+        "type": "external_database",
+        "name": "Some Postgres provider",
+        "database": "postgres_db",
+        "query": "SELECT column_var, countrycode FROM City WHERE Population > 50000",
+        "parameters": {"column_var": "name"},
+    }
+    data_source = PostgresDataSource(**data_source_spec)
+    with pytest.raises(PandasDatabaseError) as e:
+        postgres_connector.get_df(data_source)
+    assert "Execution failed on sql" in str(e.value)
 
 
 def test_get_df_forbidden_table_interpolation(postgres_connector):
