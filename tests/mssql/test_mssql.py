@@ -28,7 +28,6 @@ def mssql_server(service_container, request: pytest.FixtureRequest):
             trust_server_certificate=True,
         )._create_engine("master")
 
-        # Always add the suggestions for the available databases
         with Session(sa_engine) as session:
             with session.connection() as conn:
                 cur = conn.connection.cursor()
