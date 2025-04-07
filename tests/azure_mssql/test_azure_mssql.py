@@ -22,7 +22,7 @@ def connector() -> AzureMSSQLConnector:
 @pytest.fixture
 def datasource() -> AzureMSSQLDataSource:
     database = environ["AZURE_MSSQL_DATABASE"]
-    return AzureMSSQLDataSource(domain="azure-mssql-ci", name="Azure MSSQL CI", database=database, query="SELECT 1;")
+    return AzureMSSQLDataSource(domain="azure-mssql-ci", name="Azure MSSQL CI", database=database, query='SELECT "1";')
 
 
 # Retrying every 5 seconds for 60 seconds
