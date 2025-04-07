@@ -13,7 +13,7 @@ from toucan_connectors.mssql.mssql_connector import MSSQLConnector, MSSQLDataSou
 
 @pytest.fixture(scope="module", params=["mssql2019", "mssql2022"])
 def mssql_server(service_container, request: pytest.FixtureRequest):
-    def check_and_feed(host_port):
+    def check_and_feed(host_port: int):
         """
         This method does not only check that the server is on
         but also feeds the database once it's up !
@@ -47,7 +47,7 @@ def mssql_server(service_container, request: pytest.FixtureRequest):
 
 
 @pytest.fixture
-def mssql_connector(mssql_server):
+def mssql_connector(mssql_server) -> MSSQLConnector:
     return MSSQLConnector(
         name="mycon",
         host="localhost",
@@ -92,7 +92,7 @@ def assert_get_df(
     )
 
 
-def test_get_df_without_params(mssql_connector):
+def test_get_df_without_params(mssql_connector: MSSQLConnector):
     """It should connect to the default database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
         name="mycon",
@@ -114,7 +114,7 @@ def test_get_df_without_params(mssql_connector):
     )
 
 
-def test_get_df_with_scalar_params(mssql_connector, mocker):
+def test_get_df_with_scalar_params(mssql_connector: MSSQLConnector, mocker: MagicMock):
     """It should connect to the database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
         name="mycon",
@@ -142,7 +142,7 @@ def test_get_df_with_scalar_params(mssql_connector, mocker):
     )
 
 
-def test_get_df_with_array_param(mssql_connector, mocker):
+def test_get_df_with_array_param(mssql_connector: MSSQLConnector, mocker: MagicMock):
     """It should connect to the database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
         name="mycon",
@@ -168,7 +168,7 @@ def test_get_df_with_array_param(mssql_connector, mocker):
     )
 
 
-def test_get_df_with_jinja_variable_and_array_param(mssql_connector, mocker):
+def test_get_df_with_jinja_variable_and_array_param(mssql_connector: MSSQLConnector, mocker: MagicMock):
     """It should interpolate safe (server side) parameters using jinja templating"""
     datasource = MSSQLDataSource(
         name="mycon",
@@ -195,7 +195,7 @@ def test_get_df_with_jinja_variable_and_array_param(mssql_connector, mocker):
     )
 
 
-def test_get_form_empty_query(mssql_connector):
+def test_get_form_empty_query(mssql_connector: MSSQLConnector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {}
     form = MSSQLDataSource.get_form(mssql_connector, current_config)
@@ -208,7 +208,7 @@ def test_get_form_empty_query(mssql_connector):
     }
 
 
-def test_get_form_query_with_good_database(mssql_connector):
+def test_get_form_query_with_good_database(mssql_connector: MSSQLConnector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {"database": "master"}
     form = MSSQLDataSource.get_form(mssql_connector, current_config)
