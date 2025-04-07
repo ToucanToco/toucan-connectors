@@ -49,8 +49,8 @@ def test_azure_get_df_simple(ready_connector: AzureMSSQLConnector, datasource: A
 def test_azure_get_df_with_parameters_and_modulo(
     ready_connector: AzureMSSQLConnector, datasource: AzureMSSQLDataSource
 ) -> None:
-    datasource.query = "SELECT * FROM City WHERE CountryCode = {{ user.attribute.Code }} AND Population % 1000 >= 700"
-    datasource.parameters = {"user": {"attribute": {"Code": "AFG"}}}
+    datasource.query = "SELECT * FROM City WHERE CountryCode = {{ Code }} AND Population % 1000 >= 700"
+    datasource.parameters = {"Code": "AFG"}
     df = ready_connector.get_df(datasource)
     assert_frame_equal(
         df,
