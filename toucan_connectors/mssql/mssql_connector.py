@@ -13,10 +13,10 @@ except ImportError as exc:  # pragma: no cover
     CONNECTOR_OK = False
 
 from toucan_connectors.common import (
+    convert_to_printf_templating_style,
     convert_to_qmark_paramstyle,
     create_sqlalchemy_engine,
     pandas_read_sqlalchemy_query,
-    render_user_in_query,
 )
 from toucan_connectors.toucan_connector import (
     PlainJsonSecretStr,
@@ -152,8 +152,8 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
         if datasource.query is None:
             raise ValueError("'query' or 'table' must be set")
 
-        # Trusted jinja parameters like {{ user.attribute.whatever }}
-        query = render_user_in_query(datasource.query, params)
+        # Jinja parameters `{{ something }}` to printf `%(something)`
+        query = convert_to_printf_templating_style(datasource.query)
 
         # Untrusted `%(params)` to `?` and `%(list)` to `(?,?,?...)`
         query, query_params = convert_to_qmark_paramstyle(query, params)

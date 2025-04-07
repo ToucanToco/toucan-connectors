@@ -167,33 +167,6 @@ def test_get_df_with_array_param(mssql_connector: MSSQLConnector, mocker: MagicM
     )
 
 
-def test_get_df_with_jinja_variable_and_array_param(mssql_connector: MSSQLConnector, mocker: MagicMock):
-    """It should interpolate safe (server side) parameters using jinja templating"""
-    datasource = MSSQLDataSource(
-        name="mycon",
-        domain="mydomain",
-        database="master",
-        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM {{user.attributes.table_name}} "
-        "WHERE Id IN %(ids)s;",
-        parameters={"ids": [1, 3], "user": {"attributes": {"table_name": "City"}}},
-    )
-
-    assert_get_df(
-        mocker=mocker,
-        mssql_connector=mssql_connector,
-        datasource=datasource,
-        expected_query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE Id IN (?,?);",
-        expected_params=(1, 3),
-        expected_df=pd.DataFrame(
-            {
-                "Name": ["Kabul", "Herat"],
-                "CountryCode": ["AFG", "AFG"],
-                "Population": [1780000, 186800],
-            }
-        ),
-    )
-
-
 def test_get_form_empty_query(mssql_connector: MSSQLConnector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {}
