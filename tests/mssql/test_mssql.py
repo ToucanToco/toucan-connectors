@@ -1,18 +1,20 @@
 import os
-from unittest.mock import ANY, MagicMock
+from unittest.mock import ANY
 
 import pandas as pd
 import pydantic
 import pytest
 from pandas.testing import assert_frame_equal
+from pytest_mock import MockerFixture
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from tests.conftest import DockerContainer, ServiceContainerStarter
 from toucan_connectors.mssql.mssql_connector import MSSQLConnector, MSSQLDataSource
 
 
 @pytest.fixture(scope="module", params=["mssql2019", "mssql2022"])
-def mssql_server(service_container, request: pytest.FixtureRequest):
+def mssql_server(service_container: ServiceContainerStarter, request: pytest.FixtureRequest) -> DockerContainer:
     def check_and_feed(host_port: int):
         """
         This method does not only check that the server is on
@@ -46,7 +48,7 @@ def mssql_server(service_container, request: pytest.FixtureRequest):
 
 
 @pytest.fixture
-def mssql_connector(mssql_server) -> MSSQLConnector:
+def mssql_connector(mssql_server: DockerContainer) -> MSSQLConnector:
     return MSSQLConnector(
         name="mycon",
         host="localhost",
@@ -71,7 +73,7 @@ def test_datasource():
 
 
 def assert_get_df(
-    mocker: MagicMock,
+    mocker: MockerFixture,
     mssql_connector: MSSQLConnector,
     datasource: MSSQLDataSource,
     expected_query: str,
@@ -113,7 +115,7 @@ def test_get_df_without_params(mssql_connector: MSSQLConnector):
     )
 
 
-def test_get_df_with_scalar_params(mssql_connector: MSSQLConnector, mocker: MagicMock):
+def test_get_df_with_scalar_params(mssql_connector: MSSQLConnector, mocker: MockerFixture):
     """It should connect to the database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
         name="mycon",
@@ -141,7 +143,7 @@ def test_get_df_with_scalar_params(mssql_connector: MSSQLConnector, mocker: Magi
     )
 
 
-def test_get_df_with_array_param(mssql_connector: MSSQLConnector, mocker: MagicMock):
+def test_get_df_with_array_param(mssql_connector: MSSQLConnector, mocker: MockerFixture):
     """It should connect to the database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
         name="mycon",

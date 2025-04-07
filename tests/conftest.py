@@ -1,9 +1,10 @@
 import socket
 import time
+from collections.abc import Callable
 from contextlib import suppress
 from os import environ, getenv, path
 from os.path import dirname, join
-from typing import Any
+from typing import Any, TypedDict
 
 import pytest
 import yaml
@@ -24,7 +25,7 @@ def docker_pull(request):
 
 
 @pytest.fixture(scope="session")
-def docker():
+def docker() -> APIClient:
     docker_kwargs = {"version": "auto"}
     if "DOCKER_HOST" in environ:
         docker_kwargs["base_url"] = environ["DOCKER_HOST"]
@@ -35,8 +36,11 @@ def docker():
     return APIClient(**docker_kwargs)
 
 
+UnusedPort = Callable[[], int]
+
+
 @pytest.fixture(scope="session")
-def unused_port():
+def unused_port() -> UnusedPort:
     def f():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(("127.0.0.1", 0))
@@ -45,7 +49,22 @@ def unused_port():
     return f
 
 
-def wait_for_container(checker_callable, host_port, image, skip_exception=None, timeout=60):
+class DockerContainer(TypedDict):
+    host: int
+
+
+ContainerChecker = Callable[[int], None]
+ContainerStarter = Callable[..., DockerContainer]
+ServiceContainerStarter = Callable[..., DockerContainer]
+
+
+def wait_for_container(
+    checker_callable: ContainerChecker,
+    host_port: int,
+    image: str,
+    skip_exception: type[Exception] | None = None,
+    timeout: int = 60,
+):
     skip_exception = skip_exception or Exception
     for _i in range(timeout):
         try:
@@ -59,18 +78,18 @@ def wait_for_container(checker_callable, host_port, image, skip_exception=None, 
 
 
 @pytest.fixture(scope="module")
-def container_starter(request, docker, docker_pull):
+def container_starter(request: pytest.FixtureRequest, docker: APIClient, docker_pull) -> ContainerStarter:
     def f(
-        image,
-        internal_port,
-        host_port,
+        image: str,
+        internal_port: int,
+        host_port: int,
         env=None,
-        volumes=None,
+        volumes: list[str] | None = None,
         command=None,
-        checker_callable=None,
-        skip_exception=None,
-        timeout=None,
-    ):
+        checker_callable: ContainerChecker | None = None,
+        skip_exception: type[Exception] | None = None,
+        timeout: int | None = None,
+    ) -> ContainerStarter:
         if docker_pull:
             print(f"Pulling {image} image")
             docker.pull(image)
@@ -124,8 +143,8 @@ def container_starter(request, docker, docker_pull):
 
 
 @pytest.fixture(scope="module")
-def service_container(unused_port, container_starter):
-    def f(service_name, checker_callable=None, skip_exception=None, timeout=60):
+def service_container(unused_port, container_starter: ContainerStarter) -> ServiceContainerStarter:
+    def f(service_name, checker_callable=None, skip_exception=None, timeout=60) -> ServiceContainerStarter:
         with open(f"{path.dirname(__file__)}/docker-compose.yml") as docker_comppse_yml:
             docker_conf = yaml.safe_load(docker_comppse_yml)
         service_conf = docker_conf["services"][service_name]
