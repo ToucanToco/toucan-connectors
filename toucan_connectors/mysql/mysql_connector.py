@@ -54,7 +54,7 @@ def handle_date_0(df: "pd.DataFrame") -> "pd.DataFrame":
     # Mysql driver doesnt translate date '0000-00-00 00:00:00'
     # to a datetime, so the Series has a 'object' dtype instead of 'datetime'.
     # This util fixes this behaviour, by replacing it with NaT.
-    return df.replace({"0000-00-00 00:00:00": pd.NaT}).infer_objects()
+    return df.replace({"0000-00-00 00:00:00": pd.NaT}).infer_objects()  # type:ignore[dict-item]
 
 
 class NoQuerySpecified(Exception):
