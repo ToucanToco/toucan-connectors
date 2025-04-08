@@ -103,7 +103,6 @@ def test_get_df_without_params(mssql_connector: MSSQLConnector):
         query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
     )
 
-    # LIMIT 2 is not possible for MSSQL
     assert_frame_equal(
         mssql_connector.get_df(datasource),
         pd.DataFrame(
