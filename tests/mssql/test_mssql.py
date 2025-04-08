@@ -172,6 +172,35 @@ def test_get_df_with_array_param(mssql_connector: MSSQLConnector, mocker: Mocker
     )
 
 
+@pytest.mark.skip("Jinja params are now regular SQL variables and SQL Server does not allow this for tables names.")
+def test_get_df_with_jinja_variable_and_array_param(mssql_connector: MSSQLConnector, mocker: MockerFixture):
+    """It should interpolate safe (server side) parameters using jinja templating"""
+    datasource = MSSQLDataSource(
+        name="mycon",
+        domain="mydomain",
+        database="master",
+        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM {{user.attributes.table_name}} "
+        "WHERE CountryCode = %(code)s AND Population > %(population)s;",
+        parameters={"code": "AFG", "population": 1000000, "user": {"attributes": {"table_name": "City"}}},
+    )
+
+    assert_get_df(
+        mocker=mocker,
+        mssql_connector=mssql_connector,
+        datasource=datasource,
+        expected_query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM :__QUERY_PARAM_0__ WHERE "
+        "CountryCode = :__QUERY_PARAM_1__ AND Population > :__QUERY_PARAM_2__;",
+        expected_params={"__QUERY_PARAM_0__": "City", "__QUERY_PARAM_1__": "AFG", "__QUERY_PARAM_2__": 1000000},
+        expected_df=pd.DataFrame(
+            {
+                "Name": ["Kabul"],
+                "CountryCode": ["AFG"],
+                "Population": [1780000],
+            }
+        ),
+    )
+
+
 def test_get_form_empty_query(mssql_connector: MSSQLConnector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {}
