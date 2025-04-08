@@ -1,7 +1,7 @@
 from logging import getLogger
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import Field, StringConstraints, create_model
+from pydantic import Field, StringConstraints, create_model, model_validator
 
 try:
     import pandas as pd
@@ -49,14 +49,13 @@ class MSSQLDataSource(ToucanDataSource):
         json_schema_extra={"widget": "sql"},
     )
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        query = data.get("query")
-        table = data.get("table")
-        if query is None and table is None:
+    @model_validator(mode="after")
+    def table_or_query(self):
+        if self.query is None and self.table is None:
             raise ValueError("'query' or 'table' must be set")
-        elif query is None and table is not None:
-            self.query = f"select * from {table};"
+        elif self.query is None and self.table is not None:
+            self.query = f"select * from {self.table};"
+        return self
 
     @classmethod
     def get_form(cls, connector: "MSSQLConnector", current_config):
