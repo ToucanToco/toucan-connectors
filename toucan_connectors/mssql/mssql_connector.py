@@ -13,10 +13,11 @@ except ImportError as exc:  # pragma: no cover
     CONNECTOR_OK = False
 
 from toucan_connectors.common import (
-    convert_to_printf_templating_style,
-    convert_to_qmark_paramstyle,
+    convert_jinja_params_to_sqlalchemy_named,
     create_sqlalchemy_engine,
     pandas_read_sqlalchemy_query,
+    pyformat_params_to_jinja,
+    unnest_sql_jinja_parameters,
 )
 from toucan_connectors.toucan_connector import (
     PlainJsonSecretStr,
@@ -145,18 +146,15 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
     def _retrieve_data(self, datasource: MSSQLDataSource) -> "pd.DataFrame":
         sa_engine = self._create_engine(database=datasource.database)
 
-        params = datasource.parameters or {}
-
-        # This should not happen as it is checked at init already
+        # This should not happen as it is checked by the data sources' model validator
         if datasource.query is None:
             raise ValueError("'query' or 'table' must be set")
 
-        # Jinja parameters `{{ something }}` to printf `%(something)`
-        query = convert_to_printf_templating_style(datasource.query)
+        # %()s -> {{}}
+        jinja_query = pyformat_params_to_jinja(datasource.query)
+        flattened_query, flattened_params = unnest_sql_jinja_parameters(jinja_query, datasource.parameters or {})
+        final_query = convert_jinja_params_to_sqlalchemy_named(flattened_query)
 
-        # Untrusted `%(params)` to `?` and `%(list)` to `(?,?,?...)`
-        query, query_params = convert_to_qmark_paramstyle(query, params)
-
-        df = pandas_read_sqlalchemy_query(query=query, engine=sa_engine, params=tuple(query_params))
+        df = pandas_read_sqlalchemy_query(query=final_query, engine=sa_engine, params=flattened_params)
 
         return df

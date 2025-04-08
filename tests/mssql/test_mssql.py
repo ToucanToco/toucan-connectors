@@ -1,4 +1,5 @@
 import os
+from typing import Any
 from unittest.mock import ANY
 
 import pandas as pd
@@ -77,7 +78,7 @@ def assert_get_df(
     mssql_connector: MSSQLConnector,
     datasource: MSSQLDataSource,
     expected_query: str,
-    expected_params: tuple,
+    expected_params: dict[str, Any],
     expected_df: pd.DataFrame,
 ):
     import toucan_connectors.mssql.mssql_connector as mod
@@ -131,8 +132,8 @@ def test_get_df_with_scalar_params(mssql_connector: MSSQLConnector, mocker: Mock
         mssql_connector=mssql_connector,
         datasource=datasource,
         expected_query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE "
-        "CountryCode = ? AND Population > ?;",
-        expected_params=("AFG", 1000000),
+        "CountryCode = :__QUERY_PARAM_0__ AND Population > :__QUERY_PARAM_1__;",
+        expected_params={"__QUERY_PARAM_0__": "AFG", "__QUERY_PARAM_1__": 1000000},
         expected_df=pd.DataFrame(
             {
                 "Name": ["Kabul"],
@@ -143,13 +144,15 @@ def test_get_df_with_scalar_params(mssql_connector: MSSQLConnector, mocker: Mock
     )
 
 
+# Keeping this code to know why this does not work the next time we have a question
+@pytest.mark.skip("This is not possible with SQL server: https://www.sommarskog.se/arrays-in-sql.html")
 def test_get_df_with_array_param(mssql_connector: MSSQLConnector, mocker: MockerFixture):
     """It should connect to the database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
         name="mycon",
         domain="mydomain",
         database="master",
-        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE Id IN %(ids)s;",
+        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE Id IN {{ ids }};",
         parameters={"ids": [1, 3]},
     )
 
