@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 from collections.abc import Generator
 from enum import Enum
 from itertools import groupby as groupby
@@ -13,8 +12,9 @@ from pydantic import ConfigDict, Field, StringConstraints, create_model, model_v
 from toucan_connectors.common import (
     ConnectorStatus,
     convert_to_printf_templating_style,
-    nosql_apply_parameters_to_query,
     pandas_read_sql,
+    pyformat_params_to_jinja,
+    unnest_sql_jinja_parameters,
 )
 from toucan_connectors.toucan_connector import (
     DiscoverableConnector,
@@ -119,20 +119,6 @@ class SSLMode(str, Enum):
     REQUIRED = "REQUIRED"
 
 
-# Matches {{}} with an unlimited number of characters between the brackets, as few times as
-# possible, ignoring whitespace
-_JINJA_PARAMS_REGEX = re.compile(r"{{\s*(.*?)\s*}}")
-# Matches %() suffixed with s, d, or f, and captures the variable name (as few chars as possibl),
-# ignoring trailing whitespace
-_PYFORMAT_PARAMS_REGEX = re.compile(r"%\(\s*(.*?)\s*\)([sdf])")
-
-
-def _pyformat_params_to_jinja(query: str) -> str:
-    """Convert %()[sdf] params to {{}}"""
-    # subsitute matches with {{ <content of the first capture group> }}
-    return _PYFORMAT_PARAMS_REGEX.sub(r"{{ \g<1> }}", query)
-
-
 def prepare_query_and_params_for_pymysql(query: str, params: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     """Prepares the query and params to a format that is well supported by pymysql.
 
@@ -150,24 +136,9 @@ def prepare_query_and_params_for_pymysql(query: str, params: dict[str, Any]) -> 
     4. convert the query back to pyformat param style
     """
     # %()[sdf] -> {{}}
-    jinja_query = _pyformat_params_to_jinja(query)
+    jinja_query = pyformat_params_to_jinja(query)
 
-    # finding all jinja params as re.Match objects
-    variable_matches = _JINJA_PARAMS_REGEX.finditer(jinja_query)
-    substituted_params = {}
-    substituted_query = jinja_query
-    # Iterating over reversed matches, as we rebuild the string on-the-fly using match indices, so
-    # we need to destroy the end first in order not to impact other matches
-    for param_idx, match_ in reversed(list(enumerate(variable_matches))):
-        param_name = f"__QUERY_PARAM_{param_idx}__"
-        param_expr = match_.group()
-        # evalutating the jinja expr to get the param value
-        param_value = nosql_apply_parameters_to_query(param_expr, params)
-        substituted_params[param_name] = param_value
-        # replacing the previous expr with the new param name
-        new_param_repr = "{{ " + param_name + " }}"
-        substituted_query = substituted_query[: match_.start()] + new_param_repr + substituted_query[match_.end() :]
-
+    substituted_query, substituted_params = unnest_sql_jinja_parameters(jinja_query, params)
     # {{}} -> %()s
     final_query = convert_to_printf_templating_style(substituted_query)
     return final_query, substituted_params

@@ -465,6 +465,55 @@ def rename_duplicate_columns(df: "pd.DataFrame") -> None:
     df.columns = cols  # type:ignore[assignment]
 
 
+def render_user_in_query(query: str, params: dict[str, Any]) -> str:
+    return ImmutableSandboxedEnvironment().from_string(query).render({"user": params.get("user", {})})
+
+
+# Matches {{}} with an unlimited number of characters between the brackets, as few times as
+# possible, ignoring whitespace
+_JINJA_PARAMS_REGEX = re.compile(r"{{\s*(.*?)\s*}}")
+
+
+# Matches %() suffixed with s, d, or f, and captures the variable name (as few chars as possibl),
+# ignoring trailing whitespace
+_PYFORMAT_PARAMS_REGEX = re.compile(r"%\(\s*(.*?)\s*\)([sdf])")
+
+
+def pyformat_params_to_jinja(query: str) -> str:
+    """Convert %()[sdf] params to {{}}"""
+    # subsitute matches with {{ <content of the first capture group> }}
+    return _PYFORMAT_PARAMS_REGEX.sub(r"{{ \g<1> }}", query)
+
+
+def unnest_sql_jinja_parameters(query: str, params: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    """Finds all jinja variables in `query`, evaluates them, and flattens their key.
+
+    This will transform `"SELECT * FROM my_table WHERE attr IN {{user.attributes}}"` along with
+    `{"user": {"attributes": [1, 2, 3, 4]}}` into
+    `"SELECT * FROM my_table WHERE attr IN {{ __QUERY_PARAM_0__ }}"` and
+    `{"__QUERY_PARAM_0__": [1, 2, 3, 4]}`.
+
+    This allows to then convert the parameters into any PEP249 paramstyle.
+    """
+    # finding all jinja params as re.Match objects
+    variable_matches = _JINJA_PARAMS_REGEX.finditer(query)
+    substituted_params = {}
+    substituted_query = query
+    # Iterating over reversed matches, as we rebuild the string on-the-fly using match indices, so
+    # we need to destroy the end first in order not to impact other matches
+    for param_idx, match_ in reversed(list(enumerate(variable_matches))):
+        param_name = f"__QUERY_PARAM_{param_idx}__"
+        param_expr = match_.group()
+        # evalutating the jinja expr to get the param value
+        param_value = nosql_apply_parameters_to_query(param_expr, params)
+        substituted_params[param_name] = param_value
+        # replacing the previous expr with the new param name
+        new_param_repr = "{{ " + param_name + " }}"
+        substituted_query = substituted_query[: match_.start()] + new_param_repr + substituted_query[match_.end() :]
+
+    return substituted_query, substituted_params
+
+
 def pandas_read_sql(
     query: str,
     con,
@@ -519,7 +568,7 @@ def create_sqlalchemy_engine(url: "sa.URL") -> "sa.Engine":
 
 
 def pandas_read_sqlalchemy_query(
-    *, query: str, engine: "sa.Engine", params: dict[str, Any] | None = None
+    *, query: str, engine: "sa.Engine", params: dict[str, Any] | tuple[Any] | None = None
 ) -> "pd.DataFrame":
     import pandas as pd
     import sqlalchemy as sa
@@ -528,7 +577,7 @@ def pandas_read_sqlalchemy_query(
 
     try:
         conn = engine.connect()
-        df = pd.read_sql_query(sa_query, conn, params=params)
+        df = pd.read_sql(sa_query, conn, params=params)
     except (pd.errors.DatabaseError, sa.exc.SQLAlchemyError) as exc:
         if is_interpolating_table_name(query):
             errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"

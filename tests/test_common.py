@@ -25,6 +25,7 @@ from toucan_connectors.common import (
     is_interpolating_table_name,
     nosql_apply_parameters_to_query,
     pandas_read_sql,
+    pyformat_params_to_jinja,
     sanitize_query,
 )
 
@@ -599,3 +600,32 @@ def test_convert_pyformat_to_numeric(query, params, expected_query, expected_ord
 def test_convert_jinja_params_to_sqlalchemy_named(query: str, expected: str) -> None:
     result = convert_jinja_params_to_sqlalchemy_named(query)
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "query,expected_query",
+    [
+        (
+            "SELECT * FROM City WHERE Population > %(max_pop)s",
+            "SELECT * FROM City WHERE Population > {{ max_pop }}",
+        ),
+        (
+            "SELECT * FROM City WHERE Population > {{ max_pop }}",
+            "SELECT * FROM City WHERE Population > {{ max_pop }}",
+        ),
+        (
+            "SELECT %(max_pop)s, City.* FROM City WHERE Population > %(max_pop)d",
+            "SELECT {{ max_pop }}, City.* FROM City WHERE Population > {{ max_pop }}",
+        ),
+        (
+            """SELECT %( manif   )s, {{ user['email']   }}, City.* FROM City WHERE LifeExpectancy > {{user.attributes["age_years"]}}""",  # noqa:E501
+            """SELECT {{ manif }}, {{ user['email']   }}, City.* FROM City WHERE LifeExpectancy > {{user.attributes["age_years"]}}""",  # noqa:E501
+        ),
+        (
+            """SELECT %(user.email)s, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}} FROM City WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",  # noqa:E501
+            """SELECT {{ user.email }}, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}} FROM City WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",  # noqa:E501
+        ),
+    ],
+)
+def test_pyformat_params_to_jinja(query: str, expected_query: str) -> None:
+    assert pyformat_params_to_jinja(query) == expected_query

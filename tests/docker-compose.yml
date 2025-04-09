@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   elasticsearch7:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.16.0
@@ -27,11 +27,23 @@ services:
     ports:
       - 27017:27017
 
-  mssql:
+  mssql2019:
     image: mcr.microsoft.com/mssql/server:2019-latest
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=Il0veT0uc@n!
+    ports:
+      - 1433:1433
+
+  mssql2022:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Il0veT0uc@n!
+    volumes:
+      - ./mssql/conf/mssql2022.conf:/var/opt/mssql/mssql.conf:ro
+      - ./mssql/conf/mssql2022.dummy.pem:/var/opt/mssql/mssql.pem:ro
+      - ./mssql/conf/mssql2022.dummy.key:/var/opt/mssql/mssql.key:ro
     ports:
       - 1433:1433
 

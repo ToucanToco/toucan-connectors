@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- MSSQL: it is now possible to trust self-signed certificates via the new `trust_server_certificate` parameter
+
+### Changed
+
+- **Breaking**: MSSQL user attributes are now interpreted as regular SQL variables
+
 ## [7.8.0] 2025-03-25
 
 ### Fixed

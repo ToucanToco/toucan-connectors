@@ -1,50 +1,63 @@
 import os
+from typing import Any
+from unittest.mock import ANY
 
 import pandas as pd
 import pydantic
-import pyodbc
 import pytest
+from pandas.testing import assert_frame_equal
+from pytest_mock import MockerFixture
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
+from tests.conftest import DockerContainer, ServiceContainerStarter
 from toucan_connectors.mssql.mssql_connector import MSSQLConnector, MSSQLDataSource
 
 
-@pytest.fixture(scope="module")
-def mssql_server(service_container):
-    def check_and_feed(host_port):
+@pytest.fixture(scope="module", params=["mssql2019", "mssql2022"])
+def mssql_server(service_container: ServiceContainerStarter, request: pytest.FixtureRequest) -> DockerContainer:
+    def check_and_feed(host_port: int):
         """
         This method does not only check that the server is on
         but also feeds the database once it's up !
         """
-        conn = pyodbc.connect(
-            driver="{ODBC Driver 18 for SQL Server}",
-            server=f"127.0.0.1,{host_port}",
+        sa_engine = MSSQLConnector(
+            name="mycon",
+            host="localhost",
+            port=host_port,
             user="SA",
             password="Il0veT0uc@n!",
-        )
-        cur = conn.cursor()
-        cur.execute("SELECT 1;")
+            # This is a local server so we allow self-signed certificates
+            trust_server_certificate=True,
+        )._create_engine("master")
 
-        # Feed the database
-        sql_query_path = f"{os.path.dirname(__file__)}/fixtures/world.sql"
-        with open(sql_query_path) as f:
-            sql_query = f.read()
-        cur.execute(sql_query)
-        conn.commit()
+        with Session(sa_engine) as session:
+            with session.connection() as conn:
+                cur = conn.connection.cursor()
+                cur.execute("SELECT 1;")
 
-        cur.close()
-        conn.close()
+                # Feed the database
+                sql_query_path = f"{os.path.dirname(__file__)}/fixtures/world.sql"
+                with open(sql_query_path) as f:
+                    sql_query = f.read()
+                cur.execute(sql_query)
+                conn.commit()
 
-    return service_container("mssql", check_and_feed, pyodbc.Error)
+                cur.close()
+
+    return service_container(request.param, check_and_feed, OperationalError)
 
 
 @pytest.fixture
-def mssql_connector(mssql_server):
+def mssql_connector(mssql_server: DockerContainer) -> MSSQLConnector:
     return MSSQLConnector(
         name="mycon",
         host="localhost",
         user="SA",
         password="Il0veT0uc@n!",
         port=mssql_server["port"],
+        # This is a local server so we allow self-signed certificates
+        trust_server_certificate=True,
     )
 
 
@@ -60,168 +73,157 @@ def test_datasource():
     assert ds.query == "select * from test;"
 
 
-def test_connection_params():
-    connector = MSSQLConnector(name="my_mssql_con", host="myhost", user="myuser")
-    assert connector.get_connection_params(None) == {
-        "driver": "{ODBC Driver 18 for SQL Server}",
-        "server": "myhost",
-        "user": "myuser",
-        "as_dict": True,
-    }
-    connector = MSSQLConnector(
-        name="my_mssql_con",
-        host="myhost",
-        user="myuser",
-        password="mypass",
-        port=123,
-        connect_timeout=60,
-    )
-    assert connector.get_connection_params("mydb") == {
-        "driver": "{ODBC Driver 18 for SQL Server}",
-        "server": "myhost,123",
-        "user": "myuser",
-        "as_dict": True,
-        "password": "mypass",
-        "timeout": 60,
-        "database": "mydb",
-    }
+def assert_get_df(
+    mocker: MockerFixture,
+    mssql_connector: MSSQLConnector,
+    datasource: MSSQLDataSource,
+    expected_query: str,
+    expected_params: dict[str, Any],
+    expected_df: pd.DataFrame,
+):
+    import toucan_connectors.mssql.mssql_connector as mod
 
+    mock_pandas_read_sqlalchemy_query = mocker.spy(mod, "pandas_read_sqlalchemy_query")
 
-def test_mssql_get_df(mocker):
-    snock = mocker.patch("pyodbc.connect")
-    reasq = mocker.patch("pandas.read_sql")
+    assert_frame_equal(mssql_connector.get_df(datasource), expected_df)
 
-    mssql_connector = MSSQLConnector(name="mycon", host="localhost", user="SA", password="Il0veT0uc@n!", port=22)
-    datasource = MSSQLDataSource(
-        name="mycon",
-        domain="mydomain",
-        database="mydb",
-        query="SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
-    )
-    mssql_connector.get_df(datasource)
-
-    snock.assert_called_once_with(
-        driver="{ODBC Driver 18 for SQL Server}",
-        as_dict=True,
-        server="127.0.0.1,22",
-        user="SA",
-        password="Il0veT0uc@n!",
-        database="mydb",
-    )
-
-    reasq.assert_called_once_with(
-        "SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
-        con=snock(),
-        params=[],
+    mock_pandas_read_sqlalchemy_query.assert_called_once_with(
+        query=expected_query,
+        engine=ANY,
+        params=expected_params,
     )
 
 
-@pytest.mark.skip(reason="TLS install script fails")
-def test_get_df(mssql_connector):
+def test_get_df_without_params(mssql_connector: MSSQLConnector):
     """It should connect to the default database and retrieve the response to the query"""
     datasource = MSSQLDataSource(
         name="mycon",
         domain="mydomain",
-        query="SELECT Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
         database="master",
+        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE ID BETWEEN 1 AND 3",
     )
 
-    expected = pd.DataFrame({"Name": ["Kabul", "Qandahar", "Herat"], "Population": [1780000, 237500, 186800]})
-    expected["CountryCode"] = "AFG"
-    expected = expected[["Name", "CountryCode", "Population"]]
+    assert_frame_equal(
+        mssql_connector.get_df(datasource),
+        pd.DataFrame(
+            {
+                "Name": ["Kabul", "Qandahar", "Herat"],
+                "CountryCode": ["AFG", "AFG", "AFG"],
+                "Population": [1780000, 237500, 186800],
+            }
+        ),
+    )
 
-    # LIMIT 2 is not possible for MSSQL
-    res = mssql_connector.get_df(datasource)
-    res["Name"] = res["Name"].str.rstrip()
-    assert res.equals(expected)
 
-
-def test_query_variability(mocker):
+def test_get_df_with_scalar_params(mssql_connector: MSSQLConnector, mocker: MockerFixture):
     """It should connect to the database and retrieve the response to the query"""
-    mock_pyodbc_connect = mocker.patch("pyodbc.connect")
-    mock_pandas_read_sql = mocker.patch("pandas.read_sql")
-    con = MSSQLConnector(name="mycon", host="localhost", user="SA", password="Il0veT0uc@n!", port=22)
-
-    # Test with integer values
-    ds = MSSQLDataSource(
-        query="select * from test where id_nb > %(id_nb)s and price > %(price)s;",
-        domain="test",
-        name="test",
-        parameters={"price": 10, "id_nb": 1},
-        database="db",
-    )
-    con.get_df(ds)
-    mock_pandas_read_sql.assert_called_once_with(
-        "select * from test where id_nb > ? and price > ?;",
-        con=mock_pyodbc_connect(),
-        params=[1, 10],
+    datasource = MSSQLDataSource(
+        name="mycon",
+        domain="mydomain",
+        database="master",
+        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City "
+        "WHERE CountryCode = %(code)s AND Population > %(population)s;",
+        parameters={"code": "AFG", "population": 1000000},
     )
 
-    # Test when the value is an array
-    mock_pandas_read_sql = mocker.patch("pandas.read_sql")
-    ds = MSSQLDataSource(
-        query="select * from test where id_nb in %(ids)s;",
-        domain="test",
-        name="test",
-        database="db",
-        parameters={"ids": [1, 2]},
-    )
-    con.get_df(ds)
-    mock_pandas_read_sql.assert_called_once_with(
-        "select * from test where id_nb in (?,?);",
-        con=mock_pyodbc_connect(),
-        params=[1, 2],
+    assert_get_df(
+        mocker=mocker,
+        mssql_connector=mssql_connector,
+        datasource=datasource,
+        expected_query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE "
+        "CountryCode = :__QUERY_PARAM_0__ AND Population > :__QUERY_PARAM_1__;",
+        expected_params={"__QUERY_PARAM_0__": "AFG", "__QUERY_PARAM_1__": 1000000},
+        expected_df=pd.DataFrame(
+            {
+                "Name": ["Kabul"],
+                "CountryCode": ["AFG"],
+                "Population": [1780000],
+            }
+        ),
     )
 
 
-def test_query_variability_jinja(mocker):
+# Keeping this code to know why this does not work the next time we have a question
+@pytest.mark.skip("This is not possible with SQL server: https://www.sommarskog.se/arrays-in-sql.html")
+def test_get_df_with_array_param(mssql_connector: MSSQLConnector, mocker: MockerFixture):
+    """It should connect to the database and retrieve the response to the query"""
+    datasource = MSSQLDataSource(
+        name="mycon",
+        domain="mydomain",
+        database="master",
+        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE Id IN {{ ids }};",
+        parameters={"ids": [1, 3]},
+    )
+
+    assert_get_df(
+        mocker=mocker,
+        mssql_connector=mssql_connector,
+        datasource=datasource,
+        expected_query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM City WHERE Id IN (?,?);",
+        expected_params=(1, 3),
+        expected_df=pd.DataFrame(
+            {
+                "Name": ["Kabul", "Herat"],
+                "CountryCode": ["AFG", "AFG"],
+                "Population": [1780000, 186800],
+            }
+        ),
+    )
+
+
+@pytest.mark.skip("Jinja params are now regular SQL variables and SQL Server does not allow this for tables names.")
+def test_get_df_with_jinja_variable_and_array_param(mssql_connector: MSSQLConnector, mocker: MockerFixture):
     """It should interpolate safe (server side) parameters using jinja templating"""
-    mock_pyodbc_connect = mocker.patch("pyodbc.connect")
-    mock_pandas_read_sql = mocker.patch("pandas.read_sql")
-    con = MSSQLConnector(name="mycon", host="localhost", user="SA", password="Il0veT0uc@n!", port=22)
-    ds = MSSQLDataSource(
-        query="select * from {{user.attributes.table_name}} where id_nb in %(ids)s;",
-        domain="test",
-        name="test",
-        database="db",
-        parameters={"ids": [1, 2], "user": {"attributes": {"table_name": "blah"}}},
+    datasource = MSSQLDataSource(
+        name="mycon",
+        domain="mydomain",
+        database="master",
+        query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM {{user.attributes.table_name}} "
+        "WHERE CountryCode = %(code)s AND Population > %(population)s;",
+        parameters={"code": "AFG", "population": 1000000, "user": {"attributes": {"table_name": "City"}}},
     )
-    con.get_df(ds)
-    mock_pandas_read_sql.assert_called_once_with(
-        "select * from blah where id_nb in (?,?);",
-        con=mock_pyodbc_connect(),
-        params=[1, 2],
+
+    assert_get_df(
+        mocker=mocker,
+        mssql_connector=mssql_connector,
+        datasource=datasource,
+        expected_query="SELECT TRIM(Name) AS Name, CountryCode, Population FROM :__QUERY_PARAM_0__ WHERE "
+        "CountryCode = :__QUERY_PARAM_1__ AND Population > :__QUERY_PARAM_2__;",
+        expected_params={"__QUERY_PARAM_0__": "City", "__QUERY_PARAM_1__": "AFG", "__QUERY_PARAM_2__": 1000000},
+        expected_df=pd.DataFrame(
+            {
+                "Name": ["Kabul"],
+                "CountryCode": ["AFG"],
+                "Population": [1780000],
+            }
+        ),
     )
 
 
-@pytest.mark.skip(reason="TLS install script fails")
-def test_get_form_empty_query(mssql_connector):
+def test_get_form_empty_query(mssql_connector: MSSQLConnector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {}
     form = MSSQLDataSource.get_form(mssql_connector, current_config)
 
-    assert form["properties"]["database"] == {"$ref": "#/definitions/database"}
-    assert form["definitions"]["database"] == {
+    assert form["properties"]["database"] == {"$ref": "#/$defs/database"}
+    assert form["$defs"]["database"] == {
         "title": "database",
-        "description": "An enumeration.",
         "type": "string",
         "enum": ["master", "tempdb", "model", "msdb"],
     }
 
 
-@pytest.mark.skip(reason="TLS install script fails")
-def test_get_form_query_with_good_database(mssql_connector):
+def test_get_form_query_with_good_database(mssql_connector: MSSQLConnector):
     """It should give suggestions of the databases without changing the rest"""
     current_config = {"database": "master"}
     form = MSSQLDataSource.get_form(mssql_connector, current_config)
 
-    assert form["properties"]["database"] == {"$ref": "#/definitions/database"}
-    assert form["definitions"]["database"] == {
+    assert form["properties"]["database"] == {"$ref": "#/$defs/database"}
+    assert form["$defs"]["database"] == {
         "title": "database",
-        "description": "An enumeration.",
         "type": "string",
         "enum": ["master", "tempdb", "model", "msdb"],
     }
-    assert form["properties"]["table"] == {"$ref": "#/definitions/table"}
-    assert "City" in form["definitions"]["table"]["enum"]
+    assert form["properties"]["table"] == {"$ref": "#/$defs/table", "default": None}
+    assert "City" in form["$defs"]["table"]["enum"]
     assert form["required"] == ["domain", "name", "database"]

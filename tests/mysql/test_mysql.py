@@ -14,7 +14,6 @@ from toucan_connectors.mysql.mysql_connector import (
     MySQLConnector,
     MySQLDataSource,
     NoQuerySpecified,
-    _pyformat_params_to_jinja,
     handle_date_0,
     prepare_query_and_params_for_pymysql,
 )
@@ -675,35 +674,6 @@ def test_prepare_query_and_params_for_pymysql(
     query, params = prepare_query_and_params_for_pymysql(query, params)
     assert query == expected_query
     assert params == expected_params
-
-
-@pytest.mark.parametrize(
-    "query,expected_query",
-    [
-        (
-            "SELECT * FROM City WHERE Population > %(max_pop)s",
-            "SELECT * FROM City WHERE Population > {{ max_pop }}",
-        ),
-        (
-            "SELECT * FROM City WHERE Population > {{ max_pop }}",
-            "SELECT * FROM City WHERE Population > {{ max_pop }}",
-        ),
-        (
-            "SELECT %(max_pop)s, City.* FROM City WHERE Population > %(max_pop)d",
-            "SELECT {{ max_pop }}, City.* FROM City WHERE Population > {{ max_pop }}",
-        ),
-        (
-            """SELECT %( manif   )s, {{ user['email']   }}, City.* FROM City WHERE LifeExpectancy > {{user.attributes["age_years"]}}""",
-            """SELECT {{ manif }}, {{ user['email']   }}, City.* FROM City WHERE LifeExpectancy > {{user.attributes["age_years"]}}""",
-        ),
-        (
-            """SELECT %(user.email)s, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}} FROM City WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",
-            """SELECT {{ user.email }}, {{user.attributes["age_years"]}}, {{ user.attributes.fib[2]}} FROM City WHERE LifeExpectancy > {{user.attributes.fib[4] * 10}}""",
-        ),
-    ],
-)
-def test__pyformat_params_to_jinja(query: str, expected_query: str) -> None:
-    assert _pyformat_params_to_jinja(query) == expected_query
 
 
 @pytest.mark.parametrize(
