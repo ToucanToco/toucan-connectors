@@ -9,7 +9,6 @@
 ### Changed
 
 - **Breaking**: MSSQL user attributes are now interpreted as regular SQL variables
-- Azure MSSQL connector: supports the printf style parameters
 
 ## [7.8.0] 2025-03-25
 
