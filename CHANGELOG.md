@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [8.0.0] 2025-04-09
+
 ### Added
 
 - MSSQL: it is now possible to trust self-signed certificates via the new `trust_server_certificate` parameter
@@ -800,7 +802,109 @@ Some DataStats properties changed in the naming and some of them was added, see 
 - Added filenames_to_match param to extract multiple files on connectors sharepoint and onedrive.
 - Added a dev container for developping safely on connectors.
 
-
+[8.0.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.8.0...v8.0.0
+[7.8.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.7.8...v7.8.0
+[7.7.8]: https://github.com/ToucanToco/toucan-connectors/compare/v7.7.7...v7.7.8
+[7.7.7]: https://github.com/ToucanToco/toucan-connectors/compare/v7.7.6...v7.7.7
+[7.7.6]: https://github.com/ToucanToco/toucan-connectors/compare/v7.7.5...v7.7.6
+[7.7.5]: https://github.com/ToucanToco/toucan-connectors/compare/v7.7.4...v7.7.5
+[7.7.4]: https://github.com/ToucanToco/toucan-connectors/compare/v7.7.3...v7.7.4
+[7.7.3]: https://github.com/ToucanToco/toucan-connectors/compare/v7.7.2...v7.7.3
+[7.7.2]: https://github.com/ToucanToco/toucan-connectors/compare/v7.7.1...v7.7.2
+[7.7.1]: https://github.com/ToucanToco/toucan-connectors/compare/v7.7.0...v7.7.1
+[7.7.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.6.0...v7.7.0
+[7.6.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.5.0...v7.6.0
+[7.5.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.4.1...v7.5.0
+[7.4.1]: https://github.com/ToucanToco/toucan-connectors/compare/v7.4.0...v7.4.1
+[7.4.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.3.3...v7.4.0
+[7.3.3]: https://github.com/ToucanToco/toucan-connectors/compare/v7.3.2...v7.3.3
+[7.3.2]: https://github.com/ToucanToco/toucan-connectors/compare/v7.3.1...v7.3.2
+[7.3.1]: https://github.com/ToucanToco/toucan-connectors/compare/v7.3.0...v7.3.1
+[7.3.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.2.0...v7.3.0
+[7.2.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.1.1...v7.2.0
+[7.1.1]: https://github.com/ToucanToco/toucan-connectors/compare/v7.1.0...v7.1.1
+[7.1.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.0.3...v7.1.0
+[7.0.3]: https://github.com/ToucanToco/toucan-connectors/compare/v7.0.2...v7.0.3
+[7.0.2]: https://github.com/ToucanToco/toucan-connectors/compare/v7.0.1...v7.0.2
+[7.0.1]: https://github.com/ToucanToco/toucan-connectors/compare/v7.0.0...v7.0.1
+[7.0.0]: https://github.com/ToucanToco/toucan-connectors/compare/v6.7.0...v7.0.0
+[6.7.0]: https://github.com/ToucanToco/toucan-connectors/compare/v6.6.0...v6.7.0
+[6.6.0]: https://github.com/ToucanToco/toucan-connectors/compare/v6.5.0...v6.6.0
+[6.5.0]: https://github.com/ToucanToco/toucan-connectors/compare/v6.4.0...v6.5.0
+[6.4.0]: https://github.com/ToucanToco/toucan-connectors/compare/v6.3.2...v6.4.0
+[6.3.2]: https://github.com/ToucanToco/toucan-connectors/compare/v6.3.1...v6.3.2
+[6.3.1]: https://github.com/ToucanToco/toucan-connectors/compare/v6.3.0...v6.3.1
+[6.3.0]: https://github.com/ToucanToco/toucan-connectors/compare/v6.2.0...v6.3.0
+[6.2.0]: https://github.com/ToucanToco/toucan-connectors/compare/v6.1.3...v6.2.0
+[6.1.3]: https://github.com/ToucanToco/toucan-connectors/compare/v6.1.2...v6.1.3
+[6.1.2]: https://github.com/ToucanToco/toucan-connectors/compare/v6.1.1...v6.1.2
+[6.1.1]: https://github.com/ToucanToco/toucan-connectors/compare/v6.1.0...v6.1.1
+[6.1.0]: https://github.com/ToucanToco/toucan-connectors/compare/v6.0.0...v6.1.0
+[6.0.0]: https://github.com/ToucanToco/toucan-connectors/compare/v5.3.0...v6.0.0
+[5.3.0]: https://github.com/ToucanToco/toucan-connectors/compare/v5.2.0...v5.3.0
+[5.2.0]: https://github.com/ToucanToco/toucan-connectors/compare/v5.1.0...v5.2.0
+[5.1.0]: https://github.com/ToucanToco/toucan-connectors/compare/v5.0.0...v5.1.0
+[5.0.0]: https://github.com/ToucanToco/toucan-connectors/compare/v4.9.6...v5.0.0
+[4.9.6]: https://github.com/ToucanToco/toucan-connectors/compare/v4.9.5...v4.9.6
+[4.9.5]: https://github.com/ToucanToco/toucan-connectors/compare/v4.9.4...v4.9.5
+[4.9.4]: https://github.com/ToucanToco/toucan-connectors/compare/v4.9.2...v4.9.4
+[4.9.2]: https://github.com/ToucanToco/toucan-connectors/compare/v4.9.1...v4.9.2
+[4.9.1]: https://github.com/ToucanToco/toucan-connectors/compare/v4.9.0...v4.9.1
+[4.9.0]: https://github.com/ToucanToco/toucan-connectors/compare/v4.8.1...v4.9.0
+[4.8.1]: https://github.com/ToucanToco/toucan-connectors/compare/v4.8.0...v4.8.1
+[4.8.0]: https://github.com/ToucanToco/toucan-connectors/compare/v4.7.3...v4.8.0
+[4.7.3]: https://github.com/ToucanToco/toucan-connectors/compare/v4.7.2...v4.7.3
+[4.7.2]: https://github.com/ToucanToco/toucan-connectors/compare/v4.7.1...v4.7.2
+[4.7.1]: https://github.com/ToucanToco/toucan-connectors/compare/v4.7.0...v4.7.1
+[4.7.0]: https://github.com/ToucanToco/toucan-connectors/compare/v4.6.0...v4.7.0
+[4.6.0]: https://github.com/ToucanToco/toucan-connectors/compare/v4.5.1...v4.6.0
+[4.5.1]: https://github.com/ToucanToco/toucan-connectors/compare/v4.5.0...v4.5.1
+[4.5.0]: https://github.com/ToucanToco/toucan-connectors/compare/v4.4.1...v4.5.0
+[4.4.1]: https://github.com/ToucanToco/toucan-connectors/compare/v4.4.0...v4.4.1
+[4.4.0]: https://github.com/ToucanToco/toucan-connectors/compare/v4.3.3...v4.4.0
+[4.3.3]: https://github.com/ToucanToco/toucan-connectors/compare/v4.3.2...v4.3.3
+[4.3.2]: https://github.com/ToucanToco/toucan-connectors/compare/v4.3.1...v4.3.2
+[4.3.1]: https://github.com/ToucanToco/toucan-connectors/compare/v4.3.0...v4.3.1
+[4.3.0]: https://github.com/ToucanToco/toucan-connectors/compare/v4.2.2...v4.3.0
+[4.2.2]: https://github.com/ToucanToco/toucan-connectors/compare/v4.2.1...v4.2.2
+[4.2.1]: https://github.com/ToucanToco/toucan-connectors/compare/v4.2.0...v4.2.1
+[4.2.0]: https://github.com/ToucanToco/toucan-connectors/compare/v4.1.1...v4.2.0
+[4.1.1]: https://github.com/ToucanToco/toucan-connectors/compare/v4.1.0...v4.1.1
+[4.1.0]: https://github.com/ToucanToco/toucan-connectors/compare/v4.0.0...v4.1.0
+[4.0.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.25.0...v4.0.0
+[3.25.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.24.0...v3.25.0
+[3.24.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.23.4...v3.24.0
+[3.23.4]: https://github.com/ToucanToco/toucan-connectors/compare/v3.23.3...v3.23.4
+[3.23.3]: https://github.com/ToucanToco/toucan-connectors/compare/v3.23.2...v3.23.3
+[3.23.2]: https://github.com/ToucanToco/toucan-connectors/compare/v3.23.1...v3.23.2
+[3.23.1]: https://github.com/ToucanToco/toucan-connectors/compare/v3.23.0...v3.23.1
+[3.23.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.22.3...v3.23.0
+[3.22.3]: https://github.com/ToucanToco/toucan-connectors/compare/v3.22.2...v3.22.3
+[3.22.2]: https://github.com/ToucanToco/toucan-connectors/compare/v3.22.1...v3.22.2
+[3.22.1]: https://github.com/ToucanToco/toucan-connectors/compare/v3.22.0...v3.22.1
+[3.22.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.21.1...v3.22.0
+[3.21.1]: https://github.com/ToucanToco/toucan-connectors/compare/v3.21.0...v3.21.1
+[3.21.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.20.6...v3.21.0
+[3.20.6]: https://github.com/ToucanToco/toucan-connectors/compare/v3.20.5...v3.20.6
+[3.20.5]: https://github.com/ToucanToco/toucan-connectors/compare/v3.20.4...v3.20.5
+[3.20.4]: https://github.com/ToucanToco/toucan-connectors/compare/v3.20.3...v3.20.4
+[3.20.3]: https://github.com/ToucanToco/toucan-connectors/compare/v3.20.2...v3.20.3
+[3.20.2]: https://github.com/ToucanToco/toucan-connectors/compare/v3.20.1...v3.20.2
+[3.20.1]: https://github.com/ToucanToco/toucan-connectors/compare/v3.19.0...v3.20.1
+[3.19.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.18.4...v3.19.0
+[3.18.4]: https://github.com/ToucanToco/toucan-connectors/compare/v3.18.3...v3.18.4
+[3.18.3]: https://github.com/ToucanToco/toucan-connectors/compare/v3.18.2...v3.18.3
+[3.18.2]: https://github.com/ToucanToco/toucan-connectors/compare/v3.18.1...v3.18.2
+[3.18.1]: https://github.com/ToucanToco/toucan-connectors/compare/v3.18.0...v3.18.1
+[3.18.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.17.2...v3.18.0
+[3.17.2]: https://github.com/ToucanToco/toucan-connectors/compare/v3.17.1...v3.17.2
+[3.17.1]: https://github.com/ToucanToco/toucan-connectors/compare/v3.17.0...v3.17.1
+[3.17.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.16.0...v3.17.0
+[3.16.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.15.3...v3.16.0
+[3.15.3]: https://github.com/ToucanToco/toucan-connectors/compare/v3.15.2...v3.15.3
+[3.15.2]: https://github.com/ToucanToco/toucan-connectors/compare/v3.15.1...v3.15.2
+[3.15.1]: https://github.com/ToucanToco/toucan-connectors/compare/v3.15.0...v3.15.1
+[3.15.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.14.1...v3.15.0
 [3.14.1]: https://github.com/ToucanToco/toucan-connectors/compare/v3.14.0...v3.14.1
 [3.14.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.13.0...v3.14.0
 [3.13.0]: https://github.com/ToucanToco/toucan-connectors/compare/v3.12.0...v3.13.0
