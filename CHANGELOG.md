@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- MSSQL connector: possible to connect to servers with custom certificates thanks to the new parameter
+`trust_server_certificate`
+
+### Changed
+
+- **Breaking**: MSSQL connector: user attributes are now interpreted as regular SQL variables
+- Azure MSSQL connector: supports the printf style parameters
+
 ## [7.8.0] 2025-03-25
 
 ### Fixed
