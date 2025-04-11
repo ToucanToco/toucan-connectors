@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- MSSQL: get form even if database search is unsuccessful
+
 ## [8.0.0] 2025-04-09
 
 ### Added
