@@ -1,6 +1,9 @@
 import re
 
+from toucan_connectors.mssql.mssql_connector import CONNECTOR_OK as MSSQL_CONNECTOR_OK
 from toucan_connectors.mssql.mssql_connector import MSSQLConnector, MSSQLDataSource
+
+CONNECTOR_OK = MSSQL_CONNECTOR_OK
 
 CLOUD_HOST = "database.windows.net"
 

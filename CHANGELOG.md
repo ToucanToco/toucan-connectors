@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Azure MSSQL: The connector properly exports `CONNECTOR_OK` again
+
 ## [8.0.0] 2025-04-09
 
 ### Added
@@ -10,7 +14,7 @@
 
 ### Changed
 
-- **Breaking**: MSSQL user attributes are now interpreted as regular SQL variables
+- **Breaking**: MSSQL: user attributes are now interpreted as regular SQL variables
 
 ## [7.8.0] 2025-03-25
 
