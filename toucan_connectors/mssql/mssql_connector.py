@@ -1,11 +1,11 @@
 from logging import getLogger
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from pydantic import Field, StringConstraints, create_model, model_validator
 
 try:
     import pandas as pd
-    from sqlalchemy.orm import Session
+    import sqlalchemy as sa
 
     CONNECTOR_OK = True
 except ImportError as exc:  # pragma: no cover
@@ -25,9 +25,6 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
     strlist_to_enum,
 )
-
-if TYPE_CHECKING:
-    import sqlalchemy as sa
 
 
 class MSSQLDataSource(ToucanDataSource):
@@ -71,22 +68,16 @@ class MSSQLDataSource(ToucanDataSource):
         sa_engine = connector._create_engine(database=current_config.get("database", "tempdb"))
 
         # Always add the suggestions for the available databases
-        with Session(sa_engine) as session:
-            with session.connection() as connection:
-                cursor = connection.connection.cursor()
-                cursor.execute("SELECT name FROM sys.databases")
-                res = cursor.fetchall()
-                available_dbs = [r[0] for r in res]
+        with sa_engine.connect() as connection:
+            res = connection.execute(sa.text("SELECT name FROM sys.databases")).fetchall()
+            available_dbs = [r[0] for r in res]
 
-                constraints["database"] = strlist_to_enum("database", available_dbs)
+            constraints["database"] = strlist_to_enum("database", available_dbs)
 
-                if "database" in current_config:
-                    cursor.execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;")
-                    res = cursor.fetchall()
-                    available_tables = [table_name for (table_name,) in res]
-                    constraints["table"] = strlist_to_enum("table", available_tables, None)
-
-                cursor.close()
+            if "database" in current_config:
+                res = connection.execute(sa.text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;")).fetchall()
+                available_tables = [table_name for (table_name,) in res]
+                constraints["table"] = strlist_to_enum("table", available_tables, None)
 
         return create_model("FormSchema", **constraints, __base__=cls).schema()  # type:ignore[call-overload]
 

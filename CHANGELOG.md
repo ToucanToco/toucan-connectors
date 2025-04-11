@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- MSSQL: fixed the get_form route by using the same method as data retrieval
+
 ## [8.0.0] 2025-04-09
 
 ### Added
