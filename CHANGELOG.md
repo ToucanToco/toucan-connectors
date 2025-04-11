@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Azure MSSQL: database search added by accident in get_form, removed it
+
 ## [8.0.0] 2025-04-09
 
 ### Added
