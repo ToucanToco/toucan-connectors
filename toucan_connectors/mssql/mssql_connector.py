@@ -29,6 +29,8 @@ from toucan_connectors.toucan_connector import (
 if TYPE_CHECKING:
     import sqlalchemy as sa
 
+_LOGGER = getLogger(__name__)
+
 
 class MSSQLDataSource(ToucanDataSource):
     # By default SQL Server selects the database which is set
@@ -90,7 +92,7 @@ class MSSQLDataSource(ToucanDataSource):
 
                     cursor.close()
         except Exception as exc:
-            getLogger(__name__).warning(f"unable to fetch database and/or table lists for {__name__}: {exc}")
+            _LOGGER.warning(f"unable to fetch database and/or table lists for {__name__}", exc_info=exc)
 
         return create_model("FormSchema", **constraints, __base__=cls).schema()  # type:ignore[call-overload]
 
