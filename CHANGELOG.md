@@ -6,6 +6,7 @@
 
 - Azure MSSQL: The connector properly exports `CONNECTOR_OK` again
 - MSSQL: get form even if database or table search is unsuccessful
+- MSSQL: only wait 5 seconds for the database and table list in connector form
 
 ## [8.0.0] 2025-04-09
 

@@ -70,7 +70,9 @@ class MSSQLDataSource(ToucanDataSource):
         """
         constraints = {}
 
-        sa_engine = connector._create_engine(database=current_config.get("database", "tempdb"))
+        # We only wait for five seconds to make sure the AB don't think the connector form is broken.
+        # Worst case scenario, there is no autocomplete and AB has to fill database by hand, but they're not stuck.
+        sa_engine = connector._create_engine(database=current_config.get("database", "tempdb"), connect_timeout=5)
 
         # The user may not have rights to access `sys.databases`, in which case, we still want the form
         try:
@@ -124,7 +126,7 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
         "required for custom and self-signed certificates. Connection is still encrypted.",
     )
 
-    def _create_engine(self, database: str | None) -> "sa.Engine":
+    def _create_engine(self, database: str | None, connect_timeout: int | None = None) -> "sa.Engine":
         from sqlalchemy.engine import URL
 
         server = self.host
@@ -134,8 +136,13 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
             server += f",{self.port}"
 
         query_params: dict[str, str] = {"driver": "ODBC Driver 18 for SQL Server"}
-        if self.connect_timeout:
+
+        if connect_timeout is None:
+            connect_timeout = self.connect_timeout
+
+        if connect_timeout:
             query_params["timeout"] = str(self.connect_timeout)
+
         if self.trust_server_certificate:
             query_params["TrustServerCertificate"] = "yes"
 
