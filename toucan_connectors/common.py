@@ -557,14 +557,18 @@ def pandas_read_sql(
     return df
 
 
-def create_sqlalchemy_engine(url: "sa.URL") -> "sa.Engine":
+def create_sqlalchemy_engine(url: "sa.URL", connect_args: dict[str, Any] | None = None) -> "sa.Engine":
     """Creates an SQLAlchemy engine for the given URL.
 
     Sets sensible connector-specific defaults, such as disabling connection pooling.
     """
     import sqlalchemy as sa
 
-    return sa.create_engine(url, poolclass=sa.NullPool)
+    kwargs: dict[str, Any] = {"poolclass": sa.NullPool}
+    if connect_args is not None:
+        kwargs["connect_args"] = connect_args
+
+    return sa.create_engine(url, **kwargs)
 
 
 def pandas_read_sqlalchemy_query(

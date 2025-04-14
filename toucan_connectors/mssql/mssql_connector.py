@@ -140,8 +140,7 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
         if connect_timeout is None:
             connect_timeout = self.connect_timeout
 
-        if connect_timeout:
-            query_params["timeout"] = str(self.connect_timeout)
+        connect_args = {"timeout": connect_timeout} if connect_timeout else None
 
         if self.trust_server_certificate:
             query_params["TrustServerCertificate"] = "yes"
@@ -154,7 +153,7 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
             database=database,
             query=query_params,
         )
-        return create_sqlalchemy_engine(connection_url)
+        return create_sqlalchemy_engine(connection_url, connect_args=connect_args)
 
     def _retrieve_data(self, datasource: MSSQLDataSource) -> "pd.DataFrame":
         sa_engine = self._create_engine(database=datasource.database)
