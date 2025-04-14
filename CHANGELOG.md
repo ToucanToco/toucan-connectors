@@ -4,7 +4,6 @@
 
 ### Fixed
 
-
 - Azure MSSQL: The connector properly exports `CONNECTOR_OK` again
 - MSSQL: get form even if database or table search is unsuccessful
 
