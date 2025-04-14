@@ -1,4 +1,3 @@
-from contextlib import suppress
 from logging import getLogger
 from typing import TYPE_CHECKING, Annotated
 
@@ -72,7 +71,7 @@ class MSSQLDataSource(ToucanDataSource):
         sa_engine = connector._create_engine(database=current_config.get("database", "tempdb"))
 
         # The user may not have rights to access `sys.databases`, in which case, we still want the form
-        with suppress(Exception):
+        try:
             # Always add the suggestions for the available databases
             with Session(sa_engine) as session:
                 with session.connection() as connection:
@@ -90,6 +89,8 @@ class MSSQLDataSource(ToucanDataSource):
                         constraints["table"] = strlist_to_enum("table", available_tables, None)
 
                     cursor.close()
+        except Exception as exc:
+            getLogger(__name__).warning(f"unable to fetch database and/or table lists for {__name__}: {exc}")
 
         return create_model("FormSchema", **constraints, __base__=cls).schema()  # type:ignore[call-overload]
 
