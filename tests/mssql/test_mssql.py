@@ -227,3 +227,24 @@ def test_get_form_query_with_good_database(mssql_connector: MSSQLConnector):
     assert form["properties"]["table"] == {"$ref": "#/$defs/table", "default": None}
     assert "City" in form["$defs"]["table"]["enum"]
     assert form["required"] == ["domain", "name", "database"]
+
+
+def test_get_form_query_without_access_to_databases(mssql_connector: MSSQLConnector):
+    """It should give suggestions of the databases without changing the rest"""
+    current_config = {"database": "wrong_access"}
+    form = MSSQLDataSource.get_form(mssql_connector, current_config)
+
+    assert form["properties"]["database"] == {
+        "anyOf": [{"type": "string"}, {"type": "null"}],
+        "default": None,
+        "description": "The name of the database you want to query. By default SQL "
+        "Server selects the user's default database",
+        "title": "Database",
+    }
+    assert form["properties"]["table"] == {
+        "anyOf": [{"minLength": 1, "type": "string"}, {"type": "null"}],
+        "description": 'The name of the data table that you want to get (equivalent to "SELECT * FROM your_table")',
+        "title": "Table",
+        "default": None,
+    }
+    assert form["required"] == ["domain", "name"]

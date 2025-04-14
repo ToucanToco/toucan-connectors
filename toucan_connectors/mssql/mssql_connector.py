@@ -29,6 +29,8 @@ from toucan_connectors.toucan_connector import (
 if TYPE_CHECKING:
     import sqlalchemy as sa
 
+_LOGGER = getLogger(__name__)
+
 
 class MSSQLDataSource(ToucanDataSource):
     # By default SQL Server selects the database which is set
@@ -70,23 +72,27 @@ class MSSQLDataSource(ToucanDataSource):
 
         sa_engine = connector._create_engine(database=current_config.get("database", "tempdb"))
 
-        # Always add the suggestions for the available databases
-        with Session(sa_engine) as session:
-            with session.connection() as connection:
-                cursor = connection.connection.cursor()
-                cursor.execute("SELECT name FROM sys.databases")
-                res = cursor.fetchall()
-                available_dbs = [r[0] for r in res]
-
-                constraints["database"] = strlist_to_enum("database", available_dbs)
-
-                if "database" in current_config:
-                    cursor.execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;")
+        # The user may not have rights to access `sys.databases`, in which case, we still want the form
+        try:
+            # Always add the suggestions for the available databases
+            with Session(sa_engine) as session:
+                with session.connection() as connection:
+                    cursor = connection.connection.cursor()
+                    cursor.execute("SELECT name FROM sys.databases")
                     res = cursor.fetchall()
-                    available_tables = [table_name for (table_name,) in res]
-                    constraints["table"] = strlist_to_enum("table", available_tables, None)
+                    available_dbs = [r[0] for r in res]
 
-                cursor.close()
+                    constraints["database"] = strlist_to_enum("database", available_dbs)
+
+                    if "database" in current_config:
+                        cursor.execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;")
+                        res = cursor.fetchall()
+                        available_tables = [table_name for (table_name,) in res]
+                        constraints["table"] = strlist_to_enum("table", available_tables, None)
+
+                    cursor.close()
+        except Exception as exc:
+            _LOGGER.warning(f"unable to fetch database and/or table lists for {__name__}", exc_info=exc)
 
         return create_model("FormSchema", **constraints, __base__=cls).schema()  # type:ignore[call-overload]
 
