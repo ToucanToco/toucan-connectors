@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- MSSQL: actually only wait 5 seconds for the database and table list in connector form
+
 ## [8.0.1] 2025-04-14
 
 ### Fixed
