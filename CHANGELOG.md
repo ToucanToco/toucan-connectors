@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [8.0.2] 2025-04-14
+
 ### Fixed
 
 - MSSQL & Azure MSSQL: The connect timeout when retrieving the connector form now defaults to 5 seconds
@@ -814,6 +816,7 @@ Some DataStats properties changed in the naming and some of them was added, see 
 - Added filenames_to_match param to extract multiple files on connectors sharepoint and onedrive.
 - Added a dev container for developping safely on connectors.
 
+[8.0.2]: https://github.com/ToucanToco/toucan-connectors/compare/v8.0.1...v8.0.2
 [8.0.1]: https://github.com/ToucanToco/toucan-connectors/compare/v8.0.0...v8.0.1
 [8.0.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.8.0...v8.0.0
 [7.8.0]: https://github.com/ToucanToco/toucan-connectors/compare/v7.7.8...v7.8.0
