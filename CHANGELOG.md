@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- MSSQL: actually only wait 5 seconds for the database and table list in connector form
+- MSSQL & Azure MSSQL: The connect timeout when retrieving the connector form now defaults to 5 seconds
 
 ## [8.0.1] 2025-04-14
 
