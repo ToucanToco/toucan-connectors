@@ -45,7 +45,7 @@ def mssql_server(service_container: ServiceContainerStarter, request: pytest.Fix
 
                 cur.close()
 
-    return service_container(request.param, check_and_feed, OperationalError | InterfaceError)
+    return service_container(request.param, check_and_feed, (OperationalError, InterfaceError))
 
 
 @pytest.fixture
