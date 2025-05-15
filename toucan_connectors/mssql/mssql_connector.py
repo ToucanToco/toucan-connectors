@@ -142,6 +142,8 @@ class MSSQLConnector(ToucanConnector, data_source_model=MSSQLDataSource):
 
         connect_args = {"timeout": connect_timeout} if connect_timeout else None
 
+        if connect_timeout:
+            query_params["timeout"] = str(connect_timeout)
         if self.trust_server_certificate:
             query_params["TrustServerCertificate"] = "yes"
 
