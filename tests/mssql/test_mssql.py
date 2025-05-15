@@ -7,7 +7,7 @@ import pydantic
 import pytest
 from pandas.testing import assert_frame_equal
 from pytest_mock import MockerFixture
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import InterfaceError, OperationalError
 from sqlalchemy.orm import Session
 
 from tests.conftest import DockerContainer, ServiceContainerStarter
@@ -45,7 +45,7 @@ def mssql_server(service_container: ServiceContainerStarter, request: pytest.Fix
 
                 cur.close()
 
-    return service_container(request.param, check_and_feed, OperationalError)
+    return service_container(request.param, check_and_feed, (OperationalError, InterfaceError))
 
 
 @pytest.fixture
