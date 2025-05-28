@@ -31,11 +31,11 @@ def elasticsearch(service_container, request):
     return service_container(request.param, check_and_feed)
 
 
-# parametrizing all tests depending on elasticsearch to use both elasticsearch7 and elasticsearch8
-# containers
+# parametrizing all tests depending on elasticsearch to use both
+# elasticsearch 7, 8 and 9 containers
 def pytest_generate_tests(metafunc):
     if "elasticsearch" in metafunc.fixturenames:
-        metafunc.parametrize("elasticsearch", ["elasticsearch7", "elasticsearch8"], indirect=True)
+        metafunc.parametrize("elasticsearch", ["elasticsearch7", "elasticsearch8", "elasticsearch9"], indirect=True)
 
 
 def test_connector(mocker):
@@ -168,7 +168,10 @@ def test_get_agg(elasticsearch):
         },
     ]
     data_msearch = con.get_df(ds_msearch)
-    assert [v.dropna().to_dict() for k, v in data_msearch.iterrows()] == expected
+    results = [v.dropna().to_dict() for k, v in data_msearch.iterrows()]
+    results.sort(key=lambda d: d.get("music_buckets_doc_count", -1))
+
+    assert results == expected
 
     # Metric
     ds_search = ElasticsearchDataSource(

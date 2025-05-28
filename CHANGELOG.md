@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Loosened constraints on `elasticsearch` to allow using v9
+
 ## [8.0.2] 2025-04-14
 
 ### Fixed
