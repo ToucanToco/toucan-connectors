@@ -504,7 +504,7 @@ class DiscoverableConnector(ABC):
         if not unformatted_db_tree:
             return []
         df = pd.DataFrame(unformatted_db_tree)
-        df.columns = ["database", "schema", "type", "name", "columns"]  # type:ignore[assignment]
+        df.columns = ["database", "schema", "type", "name", "columns"]
         try:  # if columns is a string
             df["columns"] = df["columns"].apply(json.loads)
         except TypeError:  # else ignore

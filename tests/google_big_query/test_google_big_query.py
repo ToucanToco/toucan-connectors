@@ -954,7 +954,7 @@ def test_get_status(mocker: MockerFixture, fixture_credentials: GoogleCredential
         ("Sample BigQuery job", False),
     ]
     assert status.error is not None
-    assert "Could not deserialize key data" in status.error
+    assert "Unable to load PEM file" in status.error
 
     # Fix the key format
     connector.credentials.private_key = sanitized_pem_key

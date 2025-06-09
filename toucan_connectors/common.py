@@ -462,7 +462,7 @@ def rename_duplicate_columns(df: "pd.DataFrame") -> None:
     cols = pd.Series(df.columns)
     for dup in df.columns[df.columns.duplicated(keep=False)]:
         cols[df.columns.get_loc(dup)] = [f"{dup}_{d_idx}" for d_idx in range(df.columns.get_loc(dup).sum())]  # type:ignore[union-attr]
-    df.columns = cols  # type:ignore[assignment]
+    df.columns = cols
 
 
 def render_user_in_query(query: str, params: dict[str, Any]) -> str:
