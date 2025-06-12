@@ -7,7 +7,7 @@ if [[ -e ~/oracle-installed ]]; then
 fi
 
 apt-get update
-apt-get install -fyq libaio1 curl wget unzip
+apt-get install -fyq libaio1t64 curl wget unzip
 mkdir -p /opt/oracle
 wget 'https://public-package.toucantoco.com/connectors_sources/oracle/oracle_client_lib/instantclient-basiclite-linux.x64-12.2.0.1.0.zip' -O '/tmp/oracle_client_lib.zip'
 unzip /tmp/oracle_client_lib.zip -d /opt/oracle
