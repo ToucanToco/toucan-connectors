@@ -20,6 +20,6 @@ else
         | tee /etc/apt/sources.list.d/mssql-release.list
 fi
 apt-get update
-ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev
+ACCEPT_EULA=Y apt-get -y install msodbcsql18 unixodbc-dev
 
 touch ~/mssql-installed
