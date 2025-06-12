@@ -25,7 +25,7 @@ cached-property = "^1.5.2"
 Jinja2 = "^3.0.3"
 jq = "^1.2.2"
 pydantic = "^1.9.1"
-requests = "^2.28.0"
+requests = "^2.31"
 tenacity = "^8.0.1"
 toucan-data-sdk = "^7.4.2"
 
