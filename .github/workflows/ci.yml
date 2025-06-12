@@ -71,11 +71,3 @@ jobs:
       env:
         BEARER_API_KEY: ${{ secrets.BEARER_API_KEY }}
         BEARER_AIRCALL_AUTH_ID: ${{ secrets.BEARER_AIRCALL_AUTH_ID }}
-
-    - name: SonarCloud Scan
-      # Only executed for one of the tested python version
-      if: ${{ always() && matrix['python-version'] == 3.10 }}
-      uses: sonarsource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
