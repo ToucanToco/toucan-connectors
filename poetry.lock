@@ -3871,4 +3871,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "9343ceb720b71162cdf1689a24554665c0336f3fcb07286f8b5056fdea7cb6b1"
+content-hash = "14954ab161cb1c43a2ecf8af1dc906e062705dbf2f0d786b71f3365f49797541"
