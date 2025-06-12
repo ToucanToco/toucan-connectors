@@ -13,5 +13,5 @@ else
 fi
 
 
-MSSQL_INSTALLER_PATH="$(dirname $0)/mssql.sh"Add commentMore actions
+MSSQL_INSTALLER_PATH="$(dirname $0)/mssql.sh"
 exec $MSSQL_INSTALLER_PATH

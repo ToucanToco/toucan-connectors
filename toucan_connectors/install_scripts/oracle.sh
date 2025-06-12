@@ -8,7 +8,7 @@ fi
 
 apt-get update
 source /etc/os-release
-LIBAIO=""Add commentMore actions
+LIBAIO=""
 if [[ "$ID" == "debian" ]]; then
     LIBAIO="libaio1"
     apt-get install -fyq --no-install-recommends \
