@@ -98,7 +98,7 @@ class MSSQLConnector(ToucanConnector):
         if self.port is not None:
             server += f',{self.port}'
         con_params = {
-            'driver': '{ODBC Driver 17 for SQL Server}',
+            'driver': '{ODBC Driver 18 for SQL Server}',
             'server': server,
             'database': database,
             'user': self.user,
