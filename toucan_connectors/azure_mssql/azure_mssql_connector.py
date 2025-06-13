@@ -47,7 +47,7 @@ class AzureMSSQLConnector(ToucanConnector):
             self.password = SecretStr('')
 
         con_params = {
-            'driver': '{ODBC Driver 17 for SQL Server}',
+            'driver': '{ODBC Driver 18 for SQL Server}',
             'server': f'{base_host}.{CLOUD_HOST}',
             'database': database,
             'user': user,

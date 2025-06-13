@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed
+
+- MSSQL and Azure MSQQL connectors now use the ODBC 18 driver
+- The Oracle connector install script is now compatible with Ubuntu 24.04
+- Bumped `requests` to fix [CVE-2023-32681](https://avd.aquasec.com/nvd/cve-2023-32681
+
 ## [3.23.33] 2024-12-12
 
 ### Fix
