@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.23.35] 2025-06-19
+
 ### Changed
 
 - Bumped `snowflake-connector-python` to fix several CVEs:
