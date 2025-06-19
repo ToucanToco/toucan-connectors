@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+
+- Bumped `snowflake-connector-python` to fix several CVEs:
+    - [CVE-2025-24793](https://avd.aquasec.com/nvd/cve-2025-24793)
+    - [CVE-2025-24794](https://avd.aquasec.com/nvd/cve-2025-24794)
+    - [CVE-2025-24795](https://avd.aquasec.com/nvd/cve-2025-24795)
+
+
 ## [3.23.34] 2025-06-13
 
 ### Changed
