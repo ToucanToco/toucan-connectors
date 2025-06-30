@@ -60,7 +60,7 @@ mysql = ["PyMySQL<2.0.0,>=1.1.1"]
 odata = ["oauthlib==3.3.1", "requests-oauthlib==2.0.0", "tctc-odata<1.0,>=0.3"]
 odbc = ["pyodbc<6,>=4"]
 oracle_sql = ["cx-Oracle<9.0.0,>=8.3.0", "sqlalchemy<3,>=2"]
-Redshift = ["lxml<6.0.0,>=4.6.5", "redshift-connector<3.0.0,>=2.0.907"]
+Redshift = ["lxml<6.1.0,>=4.6.5", "redshift-connector<3.0.0,>=2.0.907"]
 peakina = ["peakina>=0.11"]
 postgres = ["psycopg2<3.0.0,>=2.7.4", "sqlalchemy<3,>=2"]
 sap_hana = ["pyhdb<1.0,>=0.3.4", "sqlalchemy<3,>=2"]
@@ -69,7 +69,7 @@ snowflake = [
     "PyJWT<3,>=1.5.3",
     "snowflake-connector-python<4.0.0,>=2.7.12",
 ]
-soap = ["zeep<5.0.0,>=4.1.0", "lxml<6.0.0,>=4.6.5"]
+soap = ["zeep<5.0.0,>=4.1.0", "lxml<6.1.0,>=4.6.5"]
 
 all = [
     "Authlib<2.0.0,>=1.3.2",
@@ -82,7 +82,7 @@ all = [
     "google-cloud-bigquery[bqstorage,pandas]<4,>=3",
     "hubspot-api-client>=7.4,<13",
     "jq<2.0.0,>=1.2.2",
-    "lxml<6.0.0,>=4.6.5",
+    "lxml<6.1.0,>=4.6.5",
     "numpy<2; python_version < \"3.12\"",
     "numpy>=2; python_version >= \"3.12\"",
     "oauth2client<5.0.0,>=4.1.3",
