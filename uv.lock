@@ -589,13 +589,13 @@ sdist = { url = "https://files.pythonhosted.org/packages/e8/16/13c265afc984796fe
 
 [[package]]
 name = "dataiku-api-client"
-version = "13.5.5"
+version = "14.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "python-dateutil" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/5b/8804655107b129b97882920325c87a036913767e2617e6ddc8ece77dac1c/dataiku_api_client-13.5.5.tar.gz", hash = "sha256:b212908a2fafc0b80042f5c1ac31cd67e74ed5c4812e926b8423ecfd7912c6f8", size = 321984, upload-time = "2025-06-10T15:11:11.853Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c7/5f/eab48f2e28d61c2d10b3f26d941d854aaf8294ff770b232b0183b4a7957a/dataiku-api-client-14.0.0.tar.gz", hash = "sha256:3f63fff6d2bbdc4020736cbd083d55cdd9a6cce09f5b00d0674689622f3b27c5", size = 322439, upload-time = "2025-06-27T16:30:56.564Z" }
 
 [[package]]
 name = "db-dtypes"
@@ -3116,8 +3116,8 @@ requires-dist = [
     { name = "clickhouse-driver", marker = "extra == 'clickhouse'", specifier = ">=0.2.3,<1.0" },
     { name = "cx-oracle", marker = "extra == 'all'", specifier = ">=8.3.0,<9.0.0" },
     { name = "cx-oracle", marker = "extra == 'oracle-sql'", specifier = ">=8.3.0,<9.0.0" },
-    { name = "dataiku-api-client", marker = "extra == 'all'", specifier = ">=9.0.1,<14.0.0" },
-    { name = "dataiku-api-client", marker = "extra == 'dataiku'", specifier = ">=9.0.1,<14.0.0" },
+    { name = "dataiku-api-client", marker = "extra == 'all'", specifier = ">=14.0.0,<14.0.1" },
+    { name = "dataiku-api-client", marker = "extra == 'dataiku'", specifier = ">=14.0.0,<14.0.1" },
     { name = "elasticsearch", marker = "extra == 'all'", specifier = ">=8,<9" },
     { name = "elasticsearch", marker = "extra == 'elasticsearch'", specifier = ">=8,<9" },
     { name = "google-api-python-client", marker = "extra == 'all'", specifier = ">=2,<3" },

@@ -38,7 +38,7 @@ base = [
 awsathena = ["awswrangler<4.0.0,>=3.3.0"]
 azure_mssql = ["pyodbc<6,>=4", "sqlalchemy<3,>=2"]
 clickhouse = ["clickhouse-driver<1.0,>=0.2.3", "sqlalchemy<3,>=2"]
-dataiku = ["dataiku-api-client<14.0.0,>=9.0.1"]
+dataiku = ["dataiku-api-client>=9.0.1"]
 elasticsearch = ["elasticsearch>=8,<9"]
 google_analytics = [
     "google-api-python-client<3,>=2",
@@ -76,7 +76,7 @@ all = [
     "awswrangler<4.0.0,>=3.3.0",
     "clickhouse-driver<1.0,>=0.2.3",
     "cx-Oracle<9.0.0,>=8.3.0",
-    "dataiku-api-client<14.0.0,>=9.0.1",
+    "dataiku-api-client>=9.0.1",
     "elasticsearch>=8,<9",
     "google-api-python-client<3,>=2",
     "google-cloud-bigquery[bqstorage,pandas]<4,>=3",
