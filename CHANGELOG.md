@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Bump `psycopg` to v3
+- **breaking** Using `sqlalchemy` to request Postgres databases. SQL array type parameters are no longer converted into `tuples` so queries must use the `ANY` operator instead of `IN`.
+
 ## [8.0.3] 2025-05-28
 
 ### Fixed
