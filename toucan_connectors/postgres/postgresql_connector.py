@@ -26,10 +26,9 @@ from toucan_connectors.toucan_connector import (
 _LOGGER = getLogger(__name__)
 
 try:
-    # from psycopg import Cursor
     from sqlalchemy import text as sa_text
     from sqlalchemy.engine import URL
-    from sqlalchemy.exc import OperationalError, SQLAlchemyError
+    from sqlalchemy.exc import OperationalError
     from sqlalchemy.orm import Session
 
     CONNECTOR_OK = True
@@ -87,15 +86,15 @@ class PostgresDataSource(ToucanDataSource):
             with Session(sa_engine) as session:
                 # # Always add the suggestions for the available databases
                 result = session.execute(
-                    sa_text("""select datname from pg_database where datistemplate = false;""")
+                    sa_text("""SELECT datname FROM pg_database WHERE datistemplate = false;""")
                 ).fetchall()
                 available_dbs = [db_name for (db_name,) in result]
                 constraints["database"] = strlist_to_enum("database", available_dbs)
                 if "database" in current_config:
                     result = session.execute(
                         sa_text(
-                            """select table_schema, table_name from information_schema.tables
-                    where table_schema NOT IN ('pg_catalog', 'information_schema');"""
+                            """SELECT table_schema, table_name FROM information_schema.tables
+                    WHERE table_schema NOT IN ('pg_catalog', 'information_schema');"""
                         )
                     ).fetchall()
                     available_tables = [table_name for (_, table_name) in result]
@@ -194,7 +193,7 @@ class PostgresConnector(
             sa_engine = self.create_engine(database=self.default_database, connect_timeout=1)
             conn = sa_engine.connect()
             conn.close()
-        except SQLAlchemyError as e:
+        except Exception as e:
             error_code = e.args[0]
             # Can't connect to full URI
             if "Connection refused" in error_code:
@@ -207,7 +206,7 @@ class PostgresConnector(
             with Session(sa_engine) as session:
                 session.execute(sa_text("""select 1;"""))
 
-        except SQLAlchemyError as e:
+        except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(4, False), error=e.args[0])
 
         return ConnectorStatus(status=True, details=self._get_details(4, True), error=None)
@@ -270,7 +269,7 @@ class PostgresConnector(
         sa_engine = self.create_engine(database=self.default_database)
         with Session(sa_engine) as session:
             results = session.execute(
-                sa_text("""select datname from pg_database where datistemplate = false;""")
+                sa_text("""SELECT datname FROM pg_database WHERE datistemplate = false;""")
             ).fetchall()
             return [db_name for (db_name,) in results]
 

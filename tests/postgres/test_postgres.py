@@ -166,7 +166,7 @@ def test_get_status_all_good(postgres_connector):
 
 
 def test_get_engine_version(postgres_connector):
-    # Should be a valide semver version converted to tuple
+    # Should be a valid semver version converted to tuple
     version = postgres_connector.get_engine_version()
     assert isinstance(version, tuple)
     assert version[0] >= 16
