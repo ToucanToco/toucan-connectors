@@ -477,7 +477,7 @@ WHERE
         datasets = client.list_datasets(timeout=10)
         dataset_ids = (ds.dataset_id for ds in datasets)
 
-        return pd.Series(dataset_ids).values  # type:ignore[call-overload]
+        return list(pd.Series(dataset_ids).values)
 
     def _get_project_structure(self, db_name: str | None = None, schema_name: str | None = None) -> list[TableInfo]:
         client = self._get_bigquery_client()
