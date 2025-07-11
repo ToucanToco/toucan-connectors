@@ -62,7 +62,7 @@ odbc = ["pyodbc<6,>=4"]
 oracle_sql = ["cx-Oracle<9.0.0,>=8.3.0", "sqlalchemy<3,>=2"]
 Redshift = ["lxml<6.1.0,>=4.6.5", "redshift-connector<3.0.0,>=2.0.907"]
 peakina = ["peakina>=0.11"]
-postgres = ["psycopg2<3.0.0,>=2.7.4", "sqlalchemy<3,>=2"]
+postgres = ["psycopg>=3.2.9,<4", "sqlalchemy<3,>=2"]
 sap_hana = ["pyhdb<1.0,>=0.3.4", "sqlalchemy<3,>=2"]
 snowflake = [
     "pyarrow",
@@ -90,7 +90,7 @@ all = [
     "pandas<2; python_version < \"3.12\"",
     "pandas>=2; python_version >= \"3.12\"",
     "peakina>=0.11",
-    "psycopg2<3.0.0,>=2.7.4",
+    "psycopg>=3.2.9,<4",
     "pyarrow",
     "pyhdb<1.0,>=0.3.4",
     "PyJWT<3,>=1.5.3",

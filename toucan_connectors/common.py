@@ -426,7 +426,7 @@ def extract_table_name(query: str) -> str | None:
 
 def is_interpolating_table_name(query: str) -> bool:
     table_name = extract_table_name(query)
-    return bool(table_name and table_name.startswith("%("))
+    return bool(table_name and (table_name.startswith("%(") or table_name.startswith(f":{_SQL_PARAMS_PREFIX}")))
 
 
 def infer_datetime_dtype(df: "pd.DataFrame") -> None:
@@ -478,6 +478,8 @@ _JINJA_PARAMS_REGEX = re.compile(r"{{\s*(.*?)\s*}}")
 # ignoring trailing whitespace
 _PYFORMAT_PARAMS_REGEX = re.compile(r"%\(\s*(.*?)\s*\)([sdf])")
 
+_SQL_PARAMS_PREFIX = "__QUERY_PARAM_"
+
 
 def pyformat_params_to_jinja(query: str) -> str:
     """Convert %()[sdf] params to {{}}"""
@@ -502,7 +504,7 @@ def unnest_sql_jinja_parameters(query: str, params: dict[str, Any]) -> tuple[str
     # Iterating over reversed matches, as we rebuild the string on-the-fly using match indices, so
     # we need to destroy the end first in order not to impact other matches
     for param_idx, match_ in reversed(list(enumerate(variable_matches))):
-        param_name = f"__QUERY_PARAM_{param_idx}__"
+        param_name = f"{_SQL_PARAMS_PREFIX}{param_idx}__"
         param_expr = match_.group()
         # evalutating the jinja expr to get the param value
         param_value = nosql_apply_parameters_to_query(param_expr, params)
@@ -575,14 +577,15 @@ def pandas_read_sqlalchemy_query(
     *, query: str, engine: "sa.Engine", params: dict[str, Any] | tuple[Any] | None = None
 ) -> "pd.DataFrame":
     import pandas as pd
-    import sqlalchemy as sa
+    from sqlalchemy import text as sa_text
+    from sqlalchemy.exc import SQLAlchemyError
 
-    sa_query = sa.text(query)
+    sa_query = sa_text(query)
 
     try:
-        conn = engine.connect()
-        df = pd.read_sql(sa_query, conn, params=params)
-    except (pd.errors.DatabaseError, sa.exc.SQLAlchemyError) as exc:
+        with engine.connect() as conn:
+            df = pd.read_sql(sa_query, conn, params=params)
+    except (pd.errors.DatabaseError, SQLAlchemyError) as exc:
         if is_interpolating_table_name(query):
             errmsg = f"Execution failed on sql '{query}': interpolating table name is forbidden"
             raise pd.errors.DatabaseError(errmsg) from exc

@@ -1,5 +1,5 @@
 import pandas as pd
-import psycopg2
+import psycopg
 import pyodbc
 import pytest
 from pydantic import ValidationError
@@ -17,19 +17,13 @@ def test_postgres_driver_installed():
 @pytest.fixture(scope="module")
 def postgres_server(service_container):
     def check(host_port):
-        conn = psycopg2.connect(
-            host="127.0.0.1",
-            port=host_port,
-            database="postgres_db",
-            user="ubuntu",
-            password="ilovetoucan",
-        )
+        conn = psycopg.connect(f"postgres://ubuntu:ilovetoucan@127.0.0.1:{host_port}/postgres_db")
         cur = conn.cursor()
         cur.execute("SELECT 1;")
         cur.close()
         conn.close()
 
-    return service_container("postgres", check, psycopg2.Error)
+    return service_container("postgres", check, psycopg.Error)
 
 
 @pytest.fixture
