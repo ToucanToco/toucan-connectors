@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [9.0.0] 2025-07-15
+
 ### Changed
 
 - **breaking** The Postgres connector's driver switched from `psycopg2` to `psycopg3`. As a consequence, array parameters are no longer interpolated as tuples in strings, meaning that in order to use query parameters, the `ANY()` function should be used instead of the `IN` operator: https://www.psycopg.org/psycopg3/docs/basic/from_pg2.html#you-cannot-use-in-s-with-a-tuple
