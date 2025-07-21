@@ -212,7 +212,7 @@ class HttpAPIConnector(ToucanConnector, data_source_model=HttpAPIDataSource):
                 raise
         if data_source.flatten_column:
             dfs = [json_to_table(df, columns=[data_source.flatten_column]) for df in dfs]
-        return pd.concat(dfs)
+        return pd.concat(dfs, ignore_index=True)
 
     def _render_query(self, data_source):
         query = nosql_apply_parameters_to_query(

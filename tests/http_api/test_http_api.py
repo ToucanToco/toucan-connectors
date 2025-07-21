@@ -1,8 +1,10 @@
 from xml.etree.ElementTree import ParseError
 
+import pandas as pd
 import pytest
 import requests
 import responses
+from pandas.testing import assert_frame_equal
 from pytest_mock import MockFixture
 from requests import Session
 
@@ -168,7 +170,14 @@ def test_get_df_with_offset_pagination(
 
     data_source.http_pagination_config = offset_pagination
     df = connector.get_df(data_source)
-    assert df.shape == (12, 2)
+
+    expected_df = pd.DataFrame(
+        {
+            "a": [1, 2, 3, 4, 5, 6, 7, 8, None, None, None, None],
+            "b": [None, None, None, None, None, None, None, None, 9, 10, 11, 12],
+        }
+    )
+    assert_frame_equal(df, expected_df)
     assert len(responses.calls) == 3
 
 
@@ -234,7 +243,18 @@ def test_get_df_with_offset_pagination_and_flatten_option(
     data_source.flatten_column = "products"
     data_source.http_pagination_config = offset_pagination
     df = connector.get_df(data_source)
+    expected_df = pd.DataFrame(
+        {
+            "products.name": [f"p{i}" for i in range(1, 13)],
+            "products.price": [1] * 12,
+            "product_category": ["sofa"] * 5 + ["kitchen"] * 5 + ["bedroom"] * 2,
+        }
+    )
+
     assert df.shape == (12, 4)
+    # Dropping the raw documents
+    df.drop(columns=["products"], inplace=True)
+    assert_frame_equal(df, expected_df)
     assert len(responses.calls) == 3
 
 
@@ -273,7 +293,9 @@ def test_get_df_with_page_pagination(
     data_source.filter = ".content"
     data_source.http_pagination_config = page_pagination
     df = connector.get_df(data_source)
-    assert df.shape == (4, 1)
+    expected_df = pd.DataFrame({"a": list(range(1, 5))})
+
+    assert_frame_equal(df, expected_df)
     assert len(responses.calls) == 2
 
 
@@ -318,7 +340,9 @@ def test_get_df_with_page_pagination_which_can_raise(
     data_source.filter = ".content"
     data_source.http_pagination_config = page_pagination
     df = connector.get_df(data_source)
-    assert df.shape == (4, 1)
+    expected_df = pd.DataFrame({"a": list(range(1, 5))})
+
+    assert_frame_equal(df, expected_df)
     assert len(responses.calls) == 3
 
 
@@ -354,7 +378,9 @@ def test_get_df_with_cursor_pagination(
     data_source.http_pagination_config = cursor_pagination
     data_source.filter = ".content"
     df = connector.get_df(data_source)
-    assert df.shape == (4, 1)
+    expected_df = pd.DataFrame({"a": list(range(1, 5))})
+
+    assert_frame_equal(df, expected_df)
     assert len(responses.calls) == 2
 
 
@@ -394,7 +420,9 @@ def test_get_df_with_hyper_media_pagination(
     data_source.filter = ".content"
     data_source.params = {"custom": "yes"}
     df = connector.get_df(data_source)
-    assert df.shape == (4, 1)
+    expected_df = pd.DataFrame({"a": list(range(1, 5))})
+
+    assert_frame_equal(df, expected_df)
     assert len(responses.calls) == 2
 
 
@@ -443,7 +471,9 @@ def test_ignore_if_cant_parse_next_pagination_info(
     data_source.http_pagination_config = hyper_media_pagination  # needs a 'metadata' field to retrieve the next link
     # Ok even if 'metadata' is missing in the API response
     df = connector.get_df(data_source)
-    assert df.shape == (2, 1)
+    expected_df = pd.DataFrame({"a": [1, 2]})
+
+    assert_frame_equal(df, expected_df)
     assert len(responses.calls) == 1
 
 
@@ -548,6 +578,7 @@ def test_e2e():
     ds = HttpAPIDataSource(**ds_params)
     df = con.get_df(ds)
     assert df.shape == (1000, 5)
+    assert df.index.equals(pd.RangeIndex(start=0, stop=1000, step=1))
 
 
 @responses.activate

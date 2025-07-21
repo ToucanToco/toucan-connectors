@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- HTTPApi connector: the DataFrame returned by `_retrieve_data` is now properly reindexed
+
 ## [9.0.0] 2025-07-15
 
 ### Changed
