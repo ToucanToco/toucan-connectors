@@ -9,7 +9,7 @@ dependencies = [
     "requests<3.0.0,>=2.28.0",
 ]
 name = "toucan-connectors"
-version = "9.0.0"
+version = "9.1.0"
 description = "Toucan Toco Connectors"
 readme = "README.md"
 
