@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [8.1.0] 2025-07-22
+
 ### Changed
 
 - Elasticsearch: we now depend on `elasticsearch-py>=9`. It is now possible to specify the target elasticsearch version
