@@ -663,16 +663,16 @@ wheels = [
 
 [[package]]
 name = "elasticsearch"
-version = "8.18.1"
+version = "9.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "elastic-transport" },
     { name = "python-dateutil" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2a/e4/40fc0e8d9a646889ac3f865cd35e41835f3cf888c716c7aae82248e022f0/elasticsearch-8.18.1.tar.gz", hash = "sha256:998035f17a8c1fba7ae26b183dca797dcf95db86da6a7ecba56d31afc40f07c7", size = 750746, upload-time = "2025-04-29T09:32:16.361Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7f/63/a296828c46fd162a95ed1c560a3fdcea6a68a3b7c45d2aa60594f33eaf1b/elasticsearch-9.0.2.tar.gz", hash = "sha256:290e790153500d9f3cb66d74918ac70e9f96b5cd88147213859edca6ab5013f5", size = 829474, upload-time = "2025-06-05T11:55:05.998Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/33/62/f62e8a5c7c6f7b27481c9ffc248fb32078ad88878aa4f3731a83a14cc797/elasticsearch-8.18.1-py3-none-any.whl", hash = "sha256:1a8c8b5ec3ce5be88f96d2f898375671648e96272978bce0dee3137d9326aabb", size = 906320, upload-time = "2025-04-29T09:32:12.527Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/81/eadbbc38011dd3380dac72a142b175b4a174fa671c584ec38701995b1991/elasticsearch-9.0.2-py3-none-any.whl", hash = "sha256:47cac1f0e5e7be8d8c6751a5d7818d416adfc11eac72f1b59e145930a87de880", size = 914307, upload-time = "2025-06-05T11:40:22.194Z" },
 ]
 
 [[package]]
@@ -3130,8 +3130,8 @@ requires-dist = [
     { name = "cx-oracle", marker = "extra == 'oracle-sql'", specifier = ">=8.3.0,<9.0.0" },
     { name = "dataiku-api-client", marker = "extra == 'all'", specifier = ">=9.0.1" },
     { name = "dataiku-api-client", marker = "extra == 'dataiku'", specifier = ">=9.0.1" },
-    { name = "elasticsearch", marker = "extra == 'all'", specifier = ">=8,<9" },
-    { name = "elasticsearch", marker = "extra == 'elasticsearch'", specifier = ">=8,<9" },
+    { name = "elasticsearch", marker = "extra == 'all'", specifier = ">=9" },
+    { name = "elasticsearch", marker = "extra == 'elasticsearch'", specifier = ">=9" },
     { name = "google-api-python-client", marker = "extra == 'all'", specifier = ">=2,<3" },
     { name = "google-api-python-client", marker = "extra == 'google-analytics'", specifier = ">=2,<3" },
     { name = "google-api-python-client", marker = "extra == 'google-sheets'", specifier = ">=2,<3" },
