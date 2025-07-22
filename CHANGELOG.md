@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+### Changed
+
+- Elasticsearch: we now depend on `elasticsearch-py>=9`. It is now possible to specify the target elasticsearch version
+  via the `es_version` parameter.
+
 ### Fixed
 
-- HTTPApi connector: the DataFrame returned by `_retrieve_data` is now properly reindexed
+- HTTPApi: the DataFrame returned by `_retrieve_data` is now properly reindexed
 
 ## [9.0.0] 2025-07-15
 

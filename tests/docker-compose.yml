@@ -1,7 +1,7 @@
 version: "3"
 services:
   elasticsearch7:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.28
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.29
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
@@ -10,7 +10,7 @@ services:
       - 9200:9200
 
   elasticsearch8:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.3
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
@@ -19,7 +19,7 @@ services:
       - 9200:9200
 
   elasticsearch9:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.3
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
