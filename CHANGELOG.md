@@ -5,6 +5,7 @@
 ### Fixed
 
 - Snowflake: use the default warehouse when retrieving the DB model
+- Snowflake: add `private_key` to the model schema
 
 ## [9.2.0] 2025-07-30
 

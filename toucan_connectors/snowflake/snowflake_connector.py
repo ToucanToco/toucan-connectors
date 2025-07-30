@@ -129,6 +129,7 @@ _SCHEMA_ORDERED_KEYS = (
     "authentication_method",
     "user",
     "password",
+    "private_key",
     "token_endpoint",
     "token_endpoint_content_type",
     "role",
