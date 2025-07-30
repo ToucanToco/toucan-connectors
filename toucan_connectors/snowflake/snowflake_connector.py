@@ -3,9 +3,10 @@ from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager, suppress
 from datetime import datetime
 from enum import Enum
+from tempfile import NamedTemporaryFile
 from typing import Any, Literal, overload
 
-from pydantic import Field, create_model
+from pydantic import Field, create_model, model_validator
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
 
 from toucan_connectors.common import UI_HIDDEN, ConnectorStatus
@@ -95,6 +96,7 @@ class SnowflakeDataSource(ToucanDataSource["SnowflakeConnector"]):
 class AuthenticationMethod(str, Enum):
     PLAIN = "Snowflake (ID + Password)"
     OAUTH = "oAuth"
+    KEYPAIR = "Key pair"
 
 
 class AuthenticationMethodValue(str, Enum):
@@ -104,16 +106,20 @@ class AuthenticationMethodValue(str, Enum):
 
 @contextmanager
 def _snowflake_connection(
-    **args: str | int | None,
+    *,
+    private_key_file: Any | None,
+    connect_args: dict[str, str | int | None],
 ) -> Generator["SnowflakeConnection", None, None]:
     """Returns a Snowflake connection and automatically closes it."""
     sf_connector.paramstyle = "qmark"
-    conn = SnowflakeConnection(**args)  # type:ignore[arg-type]
+    conn = SnowflakeConnection(**connect_args)  # type:ignore[arg-type]
     try:
         yield conn
     finally:
         # Entire method is already wrapped in a try/except block
         conn.close()
+        if private_key_file is not None:
+            private_key_file.close()
 
 
 _SCHEMA_ORDERED_KEYS = (
@@ -165,7 +171,11 @@ class SnowflakeConnector(
     )
 
     user: str = Field(..., description="Your login username")
-    password: PlainJsonSecretStr | None = Field(None, description="Your login password")
+    password: PlainJsonSecretStr | None = Field(
+        None, description="Your private key's password or your login password (deprecated)"
+    )
+    private_key: PlainJsonSecretStr | None = Field(None, description="Your private key")
+
     token_endpoint: str | None = Field(None, description="The token endpoint")
     token_endpoint_content_type: str = Field(
         "application/json",
@@ -186,6 +196,12 @@ class SnowflakeConnector(
         title="category",
         ui={"checkbox": False},
     )
+
+    @model_validator(mode="after")
+    def _validate_private_key(self) -> "SnowflakeConnector":
+        if self.authentication_method == AuthenticationMethod.KEYPAIR and self.private_key is None:
+            raise ValueError("private_key must be specified when using keypair authentication")
+        return self
 
     @classmethod
     def model_json_schema(
@@ -266,7 +282,8 @@ class SnowflakeConnector(
 
         return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
 
-    def get_connection_params(self) -> dict[str, str | int | None]:
+    def get_connection_params(self) -> tuple[dict[str, str | int | None], Any | None]:
+        """Returns connection params and an optional private key file"""
         params: dict[str, str | int | None] = {
             "user": ImmutableSandboxedEnvironment().from_string(self.user).render(),
             "account": self.account,
@@ -287,10 +304,25 @@ class SnowflakeConnector(
                 params["token"] = self.access_token
             params["authenticator"] = AuthenticationMethodValue.OAUTH
 
+        private_key_file = None
+        if self.authentication_method == AuthenticationMethod.KEYPAIR:
+            if self.private_key is None:
+                raise ValueError("private_key is required when the selected auth method is KeyPair")
+
+            private_key_file = NamedTemporaryFile(prefix="sf_private_key", delete=False)
+            private_key_file.write(self.private_key.get_secret_value().encode())
+            private_key_file.seek(0)
+
+            params["private_key_file"] = private_key_file.name
+            params["authenticator"] = "SNOWFLAKE_JWT"
+
+            if self.password is not None:
+                params["private_key_file_pwd"] = self.password.get_secret_value()
+
         if self.role:
             params["role"] = self.role
 
-        return params
+        return params, private_key_file
 
     def _refresh_oauth_token(self):
         """Regenerates an oauth token.
@@ -342,7 +374,11 @@ class SnowflakeConnector(
             self._refresh_oauth_token()
             _LOGGER.info("Done refreshing OAuth token")
 
-        return _snowflake_connection(**self.get_connection_params(), database=database, warehouse=warehouse)
+        connect_args, private_key_file = self.get_connection_params()
+        return _snowflake_connection(
+            private_key_file=private_key_file,
+            connect_args=connect_args | {"database": database, "warehouse": warehouse},
+        )
 
     def _set_warehouse(self, data_source: SnowflakeDataSource):
         return (

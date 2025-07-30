@@ -1,13 +1,17 @@
 from datetime import datetime, timedelta
+from os import environ
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 from urllib.error import HTTPError
 
 import jwt
+import pandas as pd
 import pytest
 import snowflake
 from pandas import DataFrame
-from pydantic import SecretStr
+from pandas.testing import assert_frame_equal
+from pydantic import SecretStr, ValidationError
 from pytest_mock import MockerFixture
 
 from toucan_connectors import DataSlice
@@ -571,3 +575,59 @@ def test_get_model_exception(snowflake_connector: SnowflakeConnector, snowflake_
         snowflake_connector.get_model()
 
     snowflake_cursor.execute.assert_called_once()
+
+
+@pytest.fixture
+def keypair_authenticated_snowflake_connector() -> SnowflakeConnector:
+    return SnowflakeConnector(
+        name="sf-connector",
+        user=environ["SNOWFLAKE_USER"],
+        password=environ["SNOWFLAKE_PASSWORD"],
+        account=environ["SNOWFLAKE_ACCOUNT"],
+        private_key=environ["SNOWFLAKE_PRIVATE_KEY"],
+        authentication_method=AuthenticationMethod.KEYPAIR,
+    )
+
+
+@pytest.fixture
+def keypair_authenticated_snowflake_datasource() -> SnowflakeDataSource:
+    return SnowflakeDataSource(
+        domain="sf-domain",
+        name="sf-datasource",
+        database=environ["SNOWFLAKE_DATABASE"],
+        warehouse=environ["SNOWFLAKE_WAREHOUSE"],
+        query="SELECT 1;",
+    )
+
+
+@pytest.fixture
+def beers_tiny_df() -> pd.DataFrame:
+    path = Path(__file__).parent / "fixture" / "beers_tiny.csv"
+    df = pd.read_csv(path)
+    df["brewing_date"] = pd.to_datetime(df["brewing_date"])
+    return df
+
+
+def test_retrieve_snowflake_data(
+    keypair_authenticated_snowflake_connector: SnowflakeConnector,
+    keypair_authenticated_snowflake_datasource: SnowflakeDataSource,
+    beers_tiny_df: pd.DataFrame,
+) -> None:
+    conn = keypair_authenticated_snowflake_connector
+    ds = keypair_authenticated_snowflake_datasource.model_copy(
+        update={"query": 'SELECT * FROM TOUCAN_INTEGRATION_TESTS.INTEGRATION_TESTS."beers_tiny";'}
+    )
+
+    df = conn.get_df(ds)
+    assert_frame_equal(df, beers_tiny_df)
+
+
+def test_instanciate_snowflake_connector_keypair_no_key() -> None:
+    with pytest.raises(ValidationError, match="private_key must be specified"):
+        SnowflakeConnector(
+            name="sf-connector",
+            user="user",
+            password="password",
+            account="account",
+            authentication_method=AuthenticationMethod.KEYPAIR,
+        )
