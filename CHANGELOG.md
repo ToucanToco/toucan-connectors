@@ -6,6 +6,7 @@
 
 - Snowflake: use the default warehouse when retrieving the DB model
 - Snowflake: add `private_key` to the model schema
+- Snowflake: sanitize the private key before connecting to the DB
 
 ## [9.2.0] 2025-07-30
 
