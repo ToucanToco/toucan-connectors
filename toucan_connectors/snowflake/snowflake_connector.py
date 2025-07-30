@@ -22,6 +22,7 @@ from toucan_connectors.toucan_connector import (
     ToucanDataSource,
     strlist_to_enum,
 )
+from toucan_connectors.utils.pem import sanitize_spaces_pem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -311,7 +312,8 @@ class SnowflakeConnector(
                 raise ValueError("private_key is required when the selected auth method is KeyPair")
 
             private_key_file = NamedTemporaryFile(prefix="sf_private_key", delete=False)
-            private_key_file.write(self.private_key.get_secret_value().encode())
+            sanitized = sanitize_spaces_pem(self.private_key.get_secret_value())
+            private_key_file.write(sanitized.encode())
             private_key_file.seek(0)
 
             params["private_key_file"] = private_key_file.name
