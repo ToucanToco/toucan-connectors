@@ -518,7 +518,7 @@ class SnowflakeConnector(
         # We need to execute the query for every database in case None is specified
         values: list[tuple] = []
         for db in databases:
-            with self._get_connection(database=db) as conn:
+            with self._get_connection(database=db, warehouse=self.default_warehouse) as conn:
                 values.extend(
                     [
                         tuple(elem.values())

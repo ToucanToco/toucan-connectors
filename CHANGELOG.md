@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Snowflake: use the default warehouse when retrieving the DB model
+
 ## [9.2.0] 2025-07-30
 
 ### Added
