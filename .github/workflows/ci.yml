@@ -95,3 +95,10 @@ jobs:
         AZURE_MSSQL_PASSWORD: '${{ secrets.AZURE_MSSQL_PASSWORD }}'
         AZURE_MSSQL_HOST: '${{ secrets.AZURE_MSSQL_HOST }}'
         AZURE_MSSQL_DATABASE: '${{ secrets.AZURE_MSSQL_DATABASE }}'
+        # Snowflake
+        SNOWFLAKE_USER: '${{ secrets.SNOWFLAKE_USER }}'
+        SNOWFLAKE_PASSWORD: '${{ secrets.SNOWFLAKE_PASSWORD }}'
+        SNOWFLAKE_ACCOUNT: '${{ secrets.SNOWFLAKE_ACCOUNT }}'
+        SNOWFLAKE_DATABASE: '${{ secrets.SNOWFLAKE_DATABASE }}'
+        SNOWFLAKE_PRIVATE_KEY: '${{ secrets.SNOWFLAKE_PRIVATE_KEY }}'
+        SNOWFLAKE_WAREHOUSE: '${{ secrets.SNOWFLAKE_WAREHOUSE }}'
