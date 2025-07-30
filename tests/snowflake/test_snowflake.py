@@ -278,6 +278,7 @@ def test_schema_fields_order():
         "authentication_method",
         "user",
         "password",
+        "private_key",
         "token_endpoint",
         "token_endpoint_content_type",
         "role",
