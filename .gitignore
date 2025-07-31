@@ -33,3 +33,5 @@ venv.bak/
 .vscode
 
 *.swp
+
+snowflake_rsa_key.*

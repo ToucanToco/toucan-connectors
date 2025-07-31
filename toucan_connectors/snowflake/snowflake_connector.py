@@ -1,9 +1,11 @@
+# flake8: noqa: Q000
 import concurrent
 import logging
 from contextlib import suppress
 from datetime import datetime
 from enum import Enum
 from os import path
+from tempfile import NamedTemporaryFile
 from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional, Type
 
@@ -30,13 +32,18 @@ from toucan_connectors.toucan_connector import (
     ToucanConnector,
     strlist_to_enum,
 )
+from toucan_connectors.utils.pem import sanitize_spaces_pem
 
 logger = logging.getLogger(__name__)
 
 snowflake_connection_manager = None
 if not snowflake_connection_manager:
     snowflake_connection_manager = ConnectionManager(
-        name='snowflake', timeout=10, wait=0.2, time_between_clean=10, time_keep_alive=600
+        name="snowflake",
+        timeout=10,
+        wait=0.2,
+        time_between_clean=10,
+        time_keep_alive=600,
     )
 
 
@@ -48,39 +55,40 @@ class Path(str):
     @classmethod
     def validate(cls, v):
         if not path.exists(v):  # pragma: no cover
-            raise ValueError(f'path does not exists: {v}')  # pragma: no cover
+            raise ValueError(f"path does not exists: {v}")  # pragma: no cover
         return v  # pragma: no cover
 
 
 class SnowflakeDataSource(SfDataSource):
     @classmethod
-    def _get_databases(cls, connector: 'SnowflakeConnector'):
+    def _get_databases(cls, connector: "SnowflakeConnector"):
         return connector._get_databases()
 
     @classmethod
-    def get_form(cls, connector: 'SnowflakeConnector', current_config):
+    def get_form(cls, connector: "SnowflakeConnector", current_config):
         constraints = {}
 
         with suppress(Exception):
             databases = connector._get_databases()
             warehouses = connector._get_warehouses()
             # Restrict some fields to lists of existing counterparts
-            constraints['database'] = strlist_to_enum('database', databases)
-            constraints['warehouse'] = strlist_to_enum('warehouse', warehouses)
+            constraints["database"] = strlist_to_enum("database", databases)
+            constraints["warehouse"] = strlist_to_enum("warehouse", warehouses)
 
-        res = create_model('FormSchema', **constraints, __base__=cls).schema()
-        res['properties']['warehouse']['default'] = connector.default_warehouse
+        res = create_model("FormSchema", **constraints, __base__=cls).schema()
+        res["properties"]["warehouse"]["default"] = connector.default_warehouse
         return res
 
 
 class AuthenticationMethod(str, Enum):
-    PLAIN: str = 'Snowflake (ID + Password)'
-    OAUTH: str = 'oAuth'
+    PLAIN: str = "Snowflake (ID + Password)"
+    OAUTH: str = "oAuth"
+    KEYPAIR: str = "Key pair"
 
 
 class AuthenticationMethodValue(str, Enum):
-    PLAIN: str = 'snowflake'
-    OAUTH: str = 'oauth'
+    PLAIN: str = "snowflake"
+    OAUTH: str = "oauth"
 
 
 class SnowflakeConnector(ToucanConnector):
@@ -97,59 +105,64 @@ class SnowflakeConnector(ToucanConnector):
 
     account: str = Field(
         ...,
-        description='The full name of your Snowflake account. '
-        'It might require the region and cloud platform where your account is located, '
+        description="The full name of your Snowflake account. "
+        "It might require the region and cloud platform where your account is located, "
         'in the form of: "your_account_name.region_id.cloud_platform". See more details '
         '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',
-        placeholder='your_account_name.region_id.cloud_platform',
+        placeholder="your_account_name.region_id.cloud_platform",
     )
 
     authentication_method: AuthenticationMethod = Field(
         AuthenticationMethod.PLAIN.value,
-        title='Authentication Method',
-        description='The authentication mechanism that will be used to connect to your snowflake data source',
-        **{'ui': {'checkbox': False}},
+        title="Authentication Method",
+        description="The authentication mechanism that will be used to connect to your snowflake data source",
+        **{"ui": {"checkbox": False}},
     )
 
-    user: str = Field(..., description='Your login username')
-    password: SecretStr = Field(None, description='Your login password')
-    token_endpoint: Optional[str] = Field(None, description='The token endpoint')
+    user: str = Field(..., description="Your login username")
+    password: SecretStr = Field(
+        None,
+        description="Your private key's password or your login password (deprecated)",
+    )
+    private_key: SecretStr = Field(None, description="Your private key")
+    token_endpoint: Optional[str] = Field(None, description="The token endpoint")
     token_endpoint_content_type: str = Field(
-        'application/json',
-        description='The content type to use when requesting the token endpoint',
+        "application/json",
+        description="The content type to use when requesting the token endpoint",
     )
 
     role: str = Field(
         None,
-        description='The user role that you want to connect with. '
+        description="The user role that you want to connect with. "
         'See more details <a href="https://docs.snowflake.com/en/user-guide/admin-user-management.html#user-roles" target="_blank">here</a>.',
     )
 
     default_warehouse: str = Field(
-        None, description='The default warehouse that shall be used for any data source'
+        None, description="The default warehouse that shall be used for any data source"
     )
-    category: Category = Field(Category.SNOWFLAKE, title='category', **{'ui': {'checkbox': False}})
+    category: Category = Field(Category.SNOWFLAKE, title="category", **{"ui": {"checkbox": False}})
 
     class Config:
         @staticmethod
-        def schema_extra(schema: Dict[str, Any], model: Type['SnowflakeConnector']) -> None:
+        def schema_extra(schema: Dict[str, Any], model: Type["SnowflakeConnector"]) -> None:
             ordered_keys = [
-                'type',
-                'name',
-                'account',
-                'authentication_method',
-                'user',
-                'password',
-                'token_endpoint',
-                'token_endpoint_content_type',
-                'role',
-                'default_warehouse',
-                'retry_policy',
-                'secrets_storage_version',
-                'sso_credentials_keeper',
-                'user_tokens_keeper',
+                "type",
+                "name",
+                "account",
+                "authentication_method",
+                "user",
+                "password",
+                "private_key",
+                "token_endpoint",
+                "token_endpoint_content_type",
+                "role",
+                "default_warehouse",
+                "retry_policy",
+                "secrets_storage_version",
+                "sso_credentials_keeper",
+                "user_tokens_keeper",
             ]
-            schema['properties'] = {k: schema['properties'][k] for k in ordered_keys}
+            schema["properties"] = {k: schema["properties"][k] for k in ordered_keys}
 
     @property
     def access_token(self) -> Optional[str]:
@@ -172,7 +185,7 @@ class SnowflakeConnector(ToucanConnector):
 
     @staticmethod
     def _get_status_details(index: int, status: Optional[bool]):
-        checks = ['Connection to Snowflake', 'Default warehouse exists']
+        checks = ["Connection to Snowflake", "Default warehouse exists"]
         ok_checks = [(check, True) for i, check in enumerate(checks) if i < index]
         new_check = (checks[index], status)
         not_validated_checks = [(check, None) for i, check in enumerate(checks) if i > index]
@@ -220,29 +233,42 @@ class SnowflakeConnector(ToucanConnector):
 
     def get_connection_params(self):
         params = {
-            'user': ImmutableSandboxedEnvironment().from_string(self.user).render(),
-            'account': self.account,
-            'authenticator': self.authentication_method,
+            "user": ImmutableSandboxedEnvironment().from_string(self.user).render(),
+            "account": self.account,
+            "authenticator": self.authentication_method,
             # hard Snowflake params
-            'application': 'ToucanToco',
-            'client_session_keep_alive_heartbeat_frequency': 59,
-            'client_prefetch_threads': 5,
-            'session_id': self.identifier,
+            "application": "ToucanToco",
+            "client_session_keep_alive_heartbeat_frequency": 59,
+            "client_prefetch_threads": 5,
+            "session_id": self.identifier,
         }
 
-        if params['authenticator'] == AuthenticationMethod.PLAIN and self.password:
-            params['authenticator'] = AuthenticationMethodValue.PLAIN
-            params['password'] = self.password.get_secret_value()
+        if params["authenticator"] == AuthenticationMethod.PLAIN and self.password:
+            params["authenticator"] = AuthenticationMethodValue.PLAIN
+            params["password"] = self.password.get_secret_value()
 
         if self.authentication_method == AuthenticationMethod.OAUTH:
             if self.access_token is not None:
-                params['token'] = self.access_token
-            params['authenticator'] = AuthenticationMethodValue.OAUTH
+                params["token"] = self.access_token
+            params["authenticator"] = AuthenticationMethodValue.OAUTH
 
-        if self.role != '':
-            params['role'] = self.role
+        private_key_file = None
+        if self.authentication_method == AuthenticationMethod.KEYPAIR:
+            if self.private_key is None:
+                raise ValueError("private_key is required when the selected auth method is KeyPair")
+            private_key_file = NamedTemporaryFile(prefix="sf_private_key")
+            sanitized = sanitize_spaces_pem(self.private_key.get_secret_value())
+            private_key_file.write(sanitized.encode())
+            private_key_file.seek(0)
+            params["private_key_file"] = private_key_file.name
+            params["authenticator"] = "SNOWFLAKE_JWT"
+            if self.password is not None:
+                params["private_key_file_pwd"] = self.password.get_secret_value()
 
-        return params
+        if self.role != "":
+            params["role"] = self.role
+
+        return params, private_key_file
 
     def _refresh_oauth_token(self):
         """Regenerates an oauth token if configuration was provided and if the given token has expired."""
@@ -252,15 +278,15 @@ class SnowflakeConnector(ToucanConnector):
                 access_token = jwt.decode(
                     self.access_token,
                     options={
-                        'verify_signature': False,  # this should be enough according to docs, but doesn't seem like it is
-                        'verify_exp': False,
-                        'verify_nbf': False,
-                        'verify_iat': False,
-                        'verify_aud': False,
-                        'verify_iss': False,
+                        "verify_signature": False,  # this should be enough according to docs, but doesn't seem like it is
+                        "verify_exp": False,
+                        "verify_nbf": False,
+                        "verify_iat": False,
+                        "verify_aud": False,
+                        "verify_iss": False,
                     },
                 )
-                is_expired = datetime.fromtimestamp(access_token['exp']) < datetime.now()
+                is_expired = datetime.fromtimestamp(access_token["exp"]) < datetime.now()
             except Exception:
                 is_expired = True
 
@@ -268,57 +294,60 @@ class SnowflakeConnector(ToucanConnector):
                 res = requests.post(
                     self.token_endpoint,
                     data={
-                        'grant_type': 'refresh_token',
-                        'client_id': self.client_id,
-                        'client_secret': self.client_secret,
-                        'refresh_token': self.refresh_token,
+                        "grant_type": "refresh_token",
+                        "client_id": self.client_id,
+                        "client_secret": self.client_secret,
+                        "refresh_token": self.refresh_token,
                     },
-                    headers={'Content-Type': self.token_endpoint_content_type},
+                    headers={"Content-Type": self.token_endpoint_content_type},
                 )
                 res.raise_for_status()
 
                 self.user_tokens_keeper.update_tokens(
-                    access_token=res.json().get('access_token'),
-                    refresh_token=res.json().get('refresh_token'),
+                    access_token=res.json().get("access_token"),
+                    refresh_token=res.json().get("refresh_token"),
                 )
 
     def _get_connection(self, database: str = None, warehouse: str = None) -> SnowflakeConnection:
         def connect_function() -> SnowflakeConnection:
-            logger.info('Connect at Snowflake')
-            snowflake.connector.paramstyle = 'qmark'
+            logger.info("Connect at Snowflake")
+            snowflake.connector.paramstyle = "qmark"
             if self.authentication_method == AuthenticationMethod.OAUTH:
                 token_start = timer()
                 self._refresh_oauth_token()
                 token_end = timer()
                 logger.info(
-                    f'[benchmark] - _refresh_oauth_token {token_end - token_start} seconds',
+                    f"[benchmark] - _refresh_oauth_token {token_end - token_start} seconds",
                     extra={
-                        'benchmark': {
-                            'operation': '_refresh_oauth_token',
-                            'execution_time': token_end - token_start,
-                            'connector': 'snowflake',
+                        "benchmark": {
+                            "operation": "_refresh_oauth_token",
+                            "execution_time": token_end - token_start,
+                            "connector": "snowflake",
                         }
                     },
                 )
 
-            connection_params = self.get_connection_params()
+            connection_params, private_key_file = self.get_connection_params()
+
             logger.info(
-                f'Connect at {connection_params["account"]} (database {database}, warehouse {warehouse} with '
-                f'authentication {connection_params["authenticator"]} for user {connection_params["user"]} and'
-                f' session_id {connection_params["session_id"]}'
+                f"Connect at {connection_params['account']} (database {database}, warehouse {warehouse} with "
+                f"authentication {connection_params['authenticator']} for user {connection_params['user']} and"
+                f" session_id {connection_params['session_id']}"
             )
             connect_start = timer()
             conn = snowflake.connector.connect(
                 **connection_params, database=database, warehouse=warehouse
             )
+            if private_key_file is not None:
+                private_key_file.close()
             connect_end = timer()
             logger.info(
-                f'[benchmark][snowflake] - connect {connect_end - connect_start} seconds',
+                f"[benchmark][snowflake] - connect {connect_end - connect_start} seconds",
                 extra={
-                    'benchmark': {
-                        'operation': 'connect',
-                        'execution_time': connect_end - connect_start,
-                        'connector': 'snowflake',
+                    "benchmark": {
+                        "operation": "connect",
+                        "execution_time": connect_end - connect_start,
+                        "connector": "snowflake",
                     }
                 },
             )
@@ -326,35 +355,35 @@ class SnowflakeConnector(ToucanConnector):
 
         def alive_function(conn):
             # logger.debug('Check Snowflake connection alive')
-            if hasattr(conn, 'is_closed'):
+            if hasattr(conn, "is_closed"):
                 try:
                     return not conn.is_closed()
                 except Exception:
-                    raise TypeError('is_closed is not a function')
+                    raise TypeError("is_closed is not a function")
 
         def close_function(conn):
-            logger.info('Close Snowflake connection')
-            if hasattr(conn, 'close'):
+            logger.info("Close Snowflake connection")
+            if hasattr(conn, "close"):
                 try:
                     close_start = timer()
                     r = conn.close()
                     close_end = timer()
                     logger.info(
-                        f'[benchmark][snowflake] - close {close_end - close_start} seconds',
+                        f"[benchmark][snowflake] - close {close_end - close_start} seconds",
                         extra={
-                            'benchmark': {
-                                'operation': 'close',
-                                'execution_time': close_end - close_start,
-                                'connector': 'snowflake',
+                            "benchmark": {
+                                "operation": "close",
+                                "execution_time": close_end - close_start,
+                                "connector": "snowflake",
                             }
                         },
                     )
                     return r
                 except Exception:
-                    raise TypeError('close is not a function')
+                    raise TypeError("close is not a function")
 
         connection = snowflake_connection_manager.get(
-            identifier=f'{self.get_identifier()}{database}{warehouse}',
+            identifier=f"{self.get_identifier()}{database}{warehouse}",
             connect_method=connect_function,
             alive_method=alive_function,
             close_method=close_function,
@@ -409,7 +438,11 @@ class SnowflakeConnector(ToucanConnector):
         data_source = self._set_warehouse(data_source)
         with self._get_connection(data_source.database, data_source.warehouse) as connection:
             result = SnowflakeCommon().get_slice(
-                connection, data_source, offset=offset, limit=limit, get_row_count=get_row_count
+                connection,
+                data_source,
+                offset=offset,
+                limit=limit,
+                get_row_count=get_row_count,
             )
         return result
 
@@ -433,7 +466,7 @@ class SnowflakeConnector(ToucanConnector):
         with self._get_connection(
             database=database, warehouse=self.default_warehouse
         ) as connection:
-            db_contents += SnowflakeCommon().get_db_content(connection).to_dict('records')
+            db_contents += SnowflakeCommon().get_db_content(connection).to_dict("records")
 
     def get_model(self, db_name: str | None = None):
         if db_name:
@@ -455,5 +488,5 @@ class SnowflakeConnector(ToucanConnector):
                 if future.exception():
                     raise future.exception()
                 else:
-                    self.logger.info('query finished')
+                    self.logger.info("query finished")
         return DiscoverableConnector.format_db_model(db_contents)
