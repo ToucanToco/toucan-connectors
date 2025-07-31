@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.23.36] 2025-07-31
+
 ### Added
 
 - Snowflake: The connector now supports keypair-based authentication.
