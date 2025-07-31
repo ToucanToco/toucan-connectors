@@ -71,3 +71,10 @@ jobs:
       env:
         BEARER_API_KEY: ${{ secrets.BEARER_API_KEY }}
         BEARER_AIRCALL_AUTH_ID: ${{ secrets.BEARER_AIRCALL_AUTH_ID }}
+        # Snowflake
+        SNOWFLAKE_USER: '${{ secrets.SNOWFLAKE_USER }}'
+        SNOWFLAKE_PASSWORD: '${{ secrets.SNOWFLAKE_PASSWORD }}'
+        SNOWFLAKE_ACCOUNT: '${{ secrets.SNOWFLAKE_ACCOUNT }}'
+        SNOWFLAKE_DATABASE: '${{ secrets.SNOWFLAKE_DATABASE }}'
+        SNOWFLAKE_PRIVATE_KEY: '${{ secrets.SNOWFLAKE_PRIVATE_KEY }}'
+        SNOWFLAKE_WAREHOUSE: '${{ secrets.SNOWFLAKE_WAREHOUSE }}'
