@@ -1,6 +1,7 @@
 import pandas as pd
 import psycopg
 import pytest
+from pandas.testing import assert_frame_equal
 from pydantic import ValidationError
 from pytest_mock import MockFixture
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
@@ -593,3 +594,57 @@ def test_connection_is_established_with_right_default_database(
     mocker.patch.object(PostgresConnector, "create_engine", new=create_engine)
     postgres_connector.default_database = "d3f4ult"
     postgres_connector.get_status()
+
+
+@pytest.mark.parametrize(
+    "ids,expected_df",
+    [
+        (
+            [1, 2, 3],
+            pd.DataFrame(
+                {
+                    "id": [1, 2, 3],
+                    "name": ["Kabul", "Qandahar", "Herat"],
+                    "countrycode": ["AFG", "AFG", "AFG"],
+                    "district": ["Kabol", "Qandahar", "Herat"],
+                    "population": [1780000, 237500, 186800],
+                }
+            ),
+        ),
+        (
+            None,
+            pd.DataFrame(
+                {
+                    "id": [1024, 2331, 206, 1890, 939],
+                    "name": ["Mumbai (Bombay)", "Seoul", "São Paulo", "Shanghai", "Jakarta"],
+                    "countrycode": ["IND", "KOR", "BRA", "CHN", "IDN"],
+                    "district": ["Maharashtra", "Seoul", "São Paulo", "Shanghai", "Jakarta Raya"],
+                    "population": [10500000, 9981619, 9968485, 9696300, 9604900],
+                }
+            ),
+        ),
+        (
+            "__VOID__",
+            pd.DataFrame(
+                {
+                    "id": [1024, 2331, 206, 1890, 939],
+                    "name": ["Mumbai (Bombay)", "Seoul", "São Paulo", "Shanghai", "Jakarta"],
+                    "countrycode": ["IND", "KOR", "BRA", "CHN", "IDN"],
+                    "district": ["Maharashtra", "Seoul", "São Paulo", "Shanghai", "Jakarta Raya"],
+                    "population": [10500000, 9981619, 9968485, 9696300, 9604900],
+                }
+            ),
+        ),
+    ],
+)
+def test_get_df_with_array_parameters(
+    postgres_connector: PostgresConnector, expected_df: pd.DataFrame, ids: list[int] | None
+):
+    query = (
+        "SELECT * FROM City WHERE CASE WHEN ({{ids}})::varchar[] IS NULL THEN TRUE ELSE id = ANY({{ids}}) END "
+        "ORDER BY Population DESC LIMIT 5"
+    )
+    params = {"ids": ids}
+    ds = PostgresDataSource(domain="test", name="test", database="postgres_db", query=query, parameters=params)
+    df = postgres_connector.get_df(ds)
+    assert_frame_equal(df, expected_df)

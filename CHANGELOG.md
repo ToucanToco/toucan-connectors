@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Postgres: Transform `__VOID__` parameters into `NULL` values following upgrade of `psycopg` from v2 to v3
+
 ## [9.2.1] 2025-07-30
 
 ### Fixed
