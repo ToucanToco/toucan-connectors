@@ -26,6 +26,7 @@ from toucan_connectors.toucan_connector import (
 _LOGGER = getLogger(__name__)
 
 try:
+    import pandas as pd
     from sqlalchemy import text as sa_text
     from sqlalchemy.engine import URL
     from sqlalchemy.exc import OperationalError
@@ -105,6 +106,10 @@ class PostgresDataSource(ToucanDataSource):
         return create_model("FormSchema", **constraints, __base__=cls).schema()  # type:ignore[call-overload]
 
 
+def _replace_void_params(params: dict[str, Any]) -> dict[str, Any]:
+    return {k: v if v != "__VOID__" else None for k, v in params.items()}
+
+
 class PostgresConnector(
     ToucanConnector,
     DiscoverableConnector,
@@ -154,12 +159,13 @@ class PostgresConnector(
         )
         return create_sqlalchemy_engine(connection_url, connect_args)
 
-    def _retrieve_data(self, data_source):
+    def _retrieve_data(self, data_source: PostgresDataSource) -> "pd.DataFrame":
         sa_engine = self.create_engine(database=data_source.database)
-        jinja_query = pyformat_params_to_jinja(data_source.query)
+        jinja_query = pyformat_params_to_jinja(data_source.query or "")
         flattened_query, flattened_params = unnest_sql_jinja_parameters(jinja_query, data_source.parameters or {})
+        params_no_void = _replace_void_params(flattened_params)
         final_query = convert_jinja_params_to_sqlalchemy_named(flattened_query)
-        return pandas_read_sqlalchemy_query(query=final_query, engine=sa_engine, params=flattened_params)
+        return pandas_read_sqlalchemy_query(query=final_query, engine=sa_engine, params=params_no_void)
 
     @staticmethod
     def _get_details(index: int, status: bool | None):
