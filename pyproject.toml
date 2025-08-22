@@ -1,7 +1,7 @@
 [project]
 authors = [{ name = "Toucan Toco", email = "dev@toucantoco.com" }]
 license = { text = "BSD" }
-requires-python = "<3.14,>=3.11"
+requires-python = "<3.14,>=3.13"
 dependencies = [
     "cached-property<3.0.0,>=1.5.2",
     "Jinja2<4.0.0,>=3.0.3",
@@ -30,10 +30,7 @@ base = [
     "jq<2.0.0,>=1.2.2",
     "python-slugify>=5.0.2",
     "tenacity<10.0.0,>=8.0.1",
-    "numpy<2; python_version < \"3.12\"",
-    "numpy>=2; python_version >= \"3.12\"",
-    "pandas<2; python_version < \"3.12\"",
-    "pandas>=2; python_version >= \"3.12\"",
+    "pandas>=2",
 ]
 awsathena = ["awswrangler<4.0.0,>=3.3.0"]
 azure_mssql = ["pyodbc<6,>=4", "sqlalchemy<3,>=2"]
@@ -140,7 +137,7 @@ dev = [
 ]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 plugins = "pydantic.mypy"
 follow_imports = "silent"
 show_error_codes = true
@@ -172,6 +169,7 @@ files = [
 
 [tool.ruff]
 line-length = 120
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "UP", "N", "C", "B", "I001", "S", "Q"]
