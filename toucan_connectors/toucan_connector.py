@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from enum import Enum
 from functools import reduce, wraps
 from types import ModuleType
-from typing import TYPE_CHECKING, Annotated, Any, Generic, NamedTuple, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, NamedTuple, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, SecretStr
 from pydantic.fields import ModelPrivateAttr
@@ -85,7 +85,7 @@ def strlist_to_enum(field: str, strlist: list[str], default_value=...) -> tuple[
 C = TypeVar("C")
 
 
-class ToucanDataSource(BaseModel, Generic[C]):
+class ToucanDataSource[C](BaseModel):
     domain: str
     name: str
     type: str | None = None
@@ -265,14 +265,12 @@ def get_connector_secrets_form(cls) -> ConnectorSecretsForm | None:
     return None
 
 
-DS = TypeVar("DS", bound=ToucanDataSource)
-
 PlainJsonSecretStr = Annotated[
     SecretStr, PlainSerializer(SecretStr.get_secret_value, return_type=str, when_used="json")
 ]
 
 
-class ToucanConnector(BaseModel, Generic[DS], metaclass=ABCMeta):
+class ToucanConnector[DS: ToucanDataSource](BaseModel, metaclass=ABCMeta):
     """Abstract base class for all toucan connectors.
 
     Each concrete connector should implement the `get_df` method that accepts a

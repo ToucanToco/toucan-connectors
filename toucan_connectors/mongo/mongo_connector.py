@@ -235,7 +235,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector, data_source_mo
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
     @contextmanager
-    def client(self, client_args: dict[str, Any] | None = None) -> Generator["pymongo.MongoClient", None, None]:
+    def client(self, client_args: dict[str, Any] | None = None) -> Generator["pymongo.MongoClient"]:
         client: pymongo.MongoClient = pymongo.MongoClient(
             **(self._get_mongo_client_kwargs() if client_args is None else client_args)
         )

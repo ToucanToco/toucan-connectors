@@ -2,11 +2,10 @@
 from ast import literal_eval
 from collections.abc import Callable
 from functools import wraps
-from typing import TypeAlias
 
 from toucan_connectors.condition_translator import ConditionTranslator, Number
 
-FnTakingNumber: TypeAlias = Callable[[type["PandasConditionTranslator"], str, Number], str]
+type FnTakingNumber = Callable[[type["PandasConditionTranslator"], str, Number], str]
 
 
 def requires_number(fn: Callable[[type, str, Number | str], str]) -> FnTakingNumber:
