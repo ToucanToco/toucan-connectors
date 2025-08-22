@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [10.0.0] 2025-08-22
+
 ### Changed
 
 - **breaking**: Support for Python<3.13 has been dropped.
