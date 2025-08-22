@@ -110,7 +110,7 @@ def _snowflake_connection(
     *,
     private_key_file: Any | None,
     connect_args: dict[str, str | int | None],
-) -> Generator["SnowflakeConnection", None, None]:
+) -> Generator["SnowflakeConnection"]:
     """Returns a Snowflake connection and automatically closes it."""
     sf_connector.paramstyle = "qmark"
     conn = SnowflakeConnection(**connect_args)  # type:ignore[arg-type]

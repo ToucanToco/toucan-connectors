@@ -235,7 +235,7 @@ class MySQLConnector(
                 db_name for (db_name,) in res if db_name not in ("information_schema", "mysql", "performance_schema")
             ]
 
-    def _get_project_structure(self, db_name: str | None = None) -> Generator[TableInfo, None, None]:
+    def _get_project_structure(self, db_name: str | None = None) -> Generator[TableInfo]:
         connection = self._connect(cursorclass=None, database=db_name)
 
         extraction_query = _DATABASE_MODEL_EXTRACTION_QUERY

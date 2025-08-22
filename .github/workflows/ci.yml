@@ -15,14 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.12', '3.13']
-        pandas-version: ['<2','>=2']
-        # Pandas<2 is not supported on Python 3.12
-        exclude:
-          - python-version: '3.12'
-            pandas-version: '<2'
-          - python-version: '3.13'
-            pandas-version: '<2'
+        python-version: ['3.13']
 
     steps:
     - uses: actions/checkout@v5
@@ -34,7 +27,7 @@ jobs:
 
     - name: Install uv
       env:
-        UV_VERSION: "0.6.9"
+        UV_VERSION: "0.8.12"
       run: |
         curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
 
@@ -60,9 +53,6 @@ jobs:
 
     - name: Install
       run: make install
-
-    - name: Install pandas ${{ matrix.pandas-version }}
-      run: uv pip install "pandas${{ matrix.pandas-version }}"
 
     - name: Lint
       run: make lint

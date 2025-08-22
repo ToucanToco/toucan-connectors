@@ -2,7 +2,7 @@ from collections.abc import Generator
 from contextlib import suppress
 from datetime import datetime
 from logging import getLogger
-from typing import Any, Protocol, TypeAlias
+from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, create_model
 
@@ -72,7 +72,7 @@ class _HubSpotResponse(BaseModel):
         return None if self.paging is None else self.paging.next_.after
 
 
-_RawHubSpotResult: TypeAlias = dict[str, str | None | list[Any]]
+type _RawHubSpotResult = dict[str, str | None | list[Any]]
 
 
 class _HubSpotObject(Protocol):  # pragma: no cover
@@ -111,7 +111,7 @@ class HubspotConnector(ToucanConnector, data_source_model=HubspotDataSource):
 
     def _result_iterator(
         self, dataset: str, properties: list[str], max_results: int | None, limit: int | None
-    ) -> Generator[_HubSpotResult, None, None]:
+    ) -> Generator[_HubSpotResult]:
         after = None
         count = 0
         # HubSpot returns a 400 HTTP error when trying to fetch more than 100 results
