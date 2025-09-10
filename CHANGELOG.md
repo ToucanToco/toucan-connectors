@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.23.37] 2025-09-10
+
 ### Changed
 
 - Mongo: maximal connection pool size is now configurable via the `max_pool_size` parameter. It defaults to 1
