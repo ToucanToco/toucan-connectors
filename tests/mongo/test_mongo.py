@@ -1,9 +1,7 @@
 import os
 import re
 from datetime import datetime
-
 from typing import TYPE_CHECKING, Callable
-
 
 import pandas as pd
 import pymongo
@@ -66,59 +64,75 @@ def mongo_datasource():
 
 def test_username_password():
     # password not set
-    mongo_connector = MongoConnector(name="mycon", host="localhost", port=22)
-    assert mongo_connector._get_mongo_client_kwargs() == {"host": "localhost", "port": 22, "maxPoolSize": 1}
+    mongo_connector = MongoConnector(name='mycon', host='localhost', port=22)
+    assert mongo_connector._get_mongo_client_kwargs() == {
+        'host': 'localhost',
+        'port': 22,
+        'maxPoolSize': 1,
+    }
 
     # password set to None
-    mongo_connector = MongoConnector(name="mycon", host="localhost", port=22, password=None)
-    assert mongo_connector._get_mongo_client_kwargs() == {"host": "localhost", "port": 22, "maxPoolSize": 1}
+    mongo_connector = MongoConnector(name='mycon', host='localhost', port=22, password=None)
+    assert mongo_connector._get_mongo_client_kwargs() == {
+        'host': 'localhost',
+        'port': 22,
+        'maxPoolSize': 1,
+    }
 
     # password set without username
-    with pytest.raises(ValueError, match="username must be set"):
-        MongoConnector(name="mycon", host="localhost", port=22, password="bibou")
+    with pytest.raises(ValueError, match='username must be set'):
+        MongoConnector(name='mycon', host='localhost', port=22, password='bibou')
 
     # password and user set
     mongo_connector = MongoConnector(
         name='mycon', host='localhost', port=22, username='pika', password='bibou'
     )
     assert mongo_connector._get_mongo_client_kwargs() == {
-        "host": "localhost",
-        "port": 22,
-        "username": "pika",
-        "password": "bibou",
-        "maxPoolSize": 1,
+        'host': 'localhost',
+        'port': 22,
+        'username': 'pika',
+        'password': 'bibou',
+        'maxPoolSize': 1,
     }
 
 
 def test_client_with_detailed_params():
-    connector = MongoConnector(name="my_mongo_con", host="myhost", port="123")
+    connector = MongoConnector(name='my_mongo_con', host='myhost', port='123')
     with connector.client() as client:
         assert isinstance(client, pymongo.MongoClient)
 
 
 def test_client_with_mongo_uri():
-    connector = MongoConnector(name="my_mongo_con", host="mongodb://myuser:mypassword@myhost:123")
+    connector = MongoConnector(name='my_mongo_con', host='mongodb://myuser:mypassword@myhost:123')
     with connector.client() as client:
         assert isinstance(client, pymongo.MongoClient)
 
 
 def test_client_args_with_mongo_uri(mocker):
     """It should not pass any other parameter than the host to MongoClient"""
-    mongo_client_mock = mocker.patch("toucan_connectors.mongo.mongo_connector.pymongo.MongoClient")
-    connector = MongoConnector(name="my_mongo_con", host="mongodb://myuser:mypassword@myhost:123")
+    mongo_client_mock = mocker.patch('toucan_connectors.mongo.mongo_connector.pymongo.MongoClient')
+    connector = MongoConnector(name='my_mongo_con', host='mongodb://myuser:mypassword@myhost:123')
     with connector.client():
-        mongo_client_mock.assert_called_with(host="mongodb://myuser:mypassword@myhost:123", maxPoolSize=1)
+        mongo_client_mock.assert_called_with(
+            host='mongodb://myuser:mypassword@myhost:123', maxPoolSize=1
+        )
 
 
 def test_client_args_with_ssl(mocker):
     """It should forward parameters to mongo client"""
-    mongo_client_mock = mocker.patch("toucan_connectors.mongo.mongo_connector.pymongo.MongoClient")
-    connector = MongoConnector(name="my_mongo_con", host="myhost", password="blah", username="jean", ssl=True)
+    mongo_client_mock = mocker.patch('toucan_connectors.mongo.mongo_connector.pymongo.MongoClient')
+    connector = MongoConnector(
+        name='my_mongo_con', host='myhost', password='blah', username='jean', ssl=True
+    )
     with connector.client():
-        mongo_client_mock.assert_called_with(host="myhost", ssl=True, password="blah", username="jean", maxPoolSize=1)
+        mongo_client_mock.assert_called_with(
+            host='myhost', ssl=True, password='blah', username='jean', maxPoolSize=1
+        )
 
 
-def test_get_df_no_query(mongo_connector: MongoConnector, mongo_datasource: Callable[..., MongoDataSource]):
+def test_get_df_no_query(
+    mongo_connector: MongoConnector, mongo_datasource: Callable[..., MongoDataSource]
+):
     """It should return the whole collection by default"""
     ds = mongo_datasource(collection='test_col')
     df = mongo_connector.get_df(ds)
@@ -143,7 +157,7 @@ def test_get_df(mocker):
         def __getitem__(self, row):
             return self.data[row]
 
-        def __enter__(self) -> "Self":
+        def __enter__(self) -> 'Self':
             return self
 
         def __exit__(self, *_) -> None:
@@ -181,7 +195,9 @@ def test_get_df(mocker):
     )
     mongo_connector.get_df(datasource)
 
-    snock.assert_called_with(host="localhost", username="ubuntu", password="ilovetoucan", port=22, maxPoolSize=1)
+    snock.assert_called_with(
+        host='localhost', username='ubuntu', password='ilovetoucan', port=22, maxPoolSize=1
+    )
     assert snock.call_count == 2  # Only one client should have been instanciated per call
 
     aggregate.assert_called_with([{'$match': {'domain': 'domain1'}}])
@@ -498,7 +514,7 @@ def test_get_df_with_regex_or(mongo_connector, mongo_datasource):
 
 
 def test_explain(mongo_connector: MongoConnector, mongo_datasource: Callable[..., MongoDataSource]):
-    datasource = mongo_datasource(collection="test_col", query={"domain": "domain1"})
+    datasource = mongo_datasource(collection='test_col', query={'domain': 'domain1'})
     res = mongo_connector.explain(datasource)
     assert list(res.keys()) == ['details', 'summary']
 
@@ -731,15 +747,17 @@ def test_validate_cache(mongo_connector: MongoConnector):
     """It should cache the validation of a database for the same instance only"""
     con1 = mongo_connector
     with con1.client() as client:
-        assert con1._validate_database(client, "toucan") is None
-        client.drop_database("toucan")
-        assert con1._validate_database(client, "toucan") is None, "the cache should validate the dropped db"
+        assert con1._validate_database(client, 'toucan') is None
+        client.drop_database('toucan')
+        assert (
+            con1._validate_database(client, 'toucan') is None
+        ), 'the cache should validate the dropped db'
 
     # A new connector should have a fresh cache
     con2 = con1.model_copy()
     with pytest.raises(UnkwownMongoDatabase):
         with con2.client() as client:
-            con2._validate_database(client, "toucan")
+            con2._validate_database(client, 'toucan')
 
 
 def test_format_no_explain_result():

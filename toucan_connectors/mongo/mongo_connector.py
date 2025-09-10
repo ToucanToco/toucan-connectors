@@ -7,7 +7,6 @@ from warnings import warn
 import pandas as pd
 import pymongo
 from bson.son import SON
-from cached_property import cached_property
 from pydantic import Field, SecretStr, create_model, validator
 
 from toucan_connectors.common import ConnectorStatus, nosql_apply_parameters_to_query
@@ -120,14 +119,14 @@ class MongoDataSource(ToucanDataSource):
         # Always add the suggestions for the available databases
         with connector.client() as client:
             available_databases = client.list_database_names()
-            constraints["database"] = strlist_to_enum("database", available_databases)
+            constraints['database'] = strlist_to_enum('database', available_databases)
 
-            if "database" in current_config:
-                validate_database(client, current_config["database"])
-                available_cols = client[current_config["database"]].list_collection_names()
-                constraints["collection"] = strlist_to_enum("collection", available_cols)
+            if 'database' in current_config:
+                validate_database(client, current_config['database'])
+                available_cols = client[current_config['database']].list_collection_names()
+                constraints['collection'] = strlist_to_enum('collection', available_cols)
 
-        return create_model("FormSchema", __base__=cls, **constraints).schema()  # type: ignore[call-overload]
+        return create_model('FormSchema', __base__=cls, **constraints).schema()  # type: ignore[call-overload]
 
 
 class MongoConnector(ToucanConnector, VersionableEngineConnector):
@@ -144,7 +143,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     username: Optional[str] = Field(None, description='Your login username')
     password: Optional[SecretStr] = Field(None, description='Your login password')
     ssl: Optional[bool] = Field(None, description='Create the connection to the server using SSL')
-    max_pool_size: int = Field(1, alias="maxPoolSize")
+    max_pool_size: int = Field(1, alias='maxPoolSize')
 
     class Config:
         keep_untouched = (cached_property, _lru_cache_wrapper)
@@ -159,7 +158,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         return hash(id(self)) + hash(JsonWrapper.dumps(self._get_mongo_client_kwargs()))
 
     def __enter__(self):
-        warn("Using MongoConnector as a context manager is deprecated", stacklevel=2)
+        warn('Using MongoConnector as a context manager is deprecated', stacklevel=2)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -176,13 +175,13 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     def _get_mongo_client_kwargs(self) -> dict[str, Any]:
         # We don't want parent class attributes nor the `client` property
         # nor attributes with `None` value
-        to_exclude = set(ToucanConnector.model_fields.keys()) | {"client", "max_pool_size"}
+        to_exclude = set(ToucanConnector.model_fields.keys()) | {'client', 'max_pool_size'}
         mongo_client_kwargs = self.model_dump(exclude=to_exclude, exclude_none=True).copy()
 
         if 'password' in mongo_client_kwargs:
             mongo_client_kwargs['password'] = mongo_client_kwargs['password'].get_secret_value()
 
-        mongo_client_kwargs["maxPoolSize"] = self.max_pool_size
+        mongo_client_kwargs['maxPoolSize'] = self.max_pool_size
 
         return mongo_client_kwargs
 
@@ -206,19 +205,25 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
 
         # Check databases access
         mongo_client_kwargs = self._get_mongo_client_kwargs()
-        mongo_client_kwargs["serverSelectionTimeoutMS"] = 500
+        mongo_client_kwargs['serverSelectionTimeoutMS'] = 500
         with self.client(mongo_client_kwargs) as client:
             try:
                 client.server_info()
             except pymongo.errors.ServerSelectionTimeoutError as e:
-                return ConnectorStatus(status=False, details=self._get_details(2, False), error=str(e))
+                return ConnectorStatus(
+                    status=False, details=self._get_details(2, False), error=str(e)
+                )
             except pymongo.errors.OperationFailure as e:
-                return ConnectorStatus(status=False, details=self._get_details(3, False), error=str(e))
+                return ConnectorStatus(
+                    status=False, details=self._get_details(3, False), error=str(e)
+                )
 
         return ConnectorStatus(status=True, details=self._get_details(3, True), error=None)
 
     @contextmanager
-    def client(self, client_args: dict[str, Any] | None = None) -> Generator[pymongo.MongoClient, None, None]:
+    def client(
+        self, client_args: dict[str, Any] | None = None
+    ) -> Generator[pymongo.MongoClient, None, None]:
         client: pymongo.MongoClient = pymongo.MongoClient(
             **(self._get_mongo_client_kwargs() if client_args is None else client_args)
         )
@@ -235,13 +240,17 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     def _validate_collection(self, client: pymongo.MongoClient, database: str, collection: str):
         return validate_collection(client, database, collection)
 
-    def validate_database_and_collection(self, client: pymongo.MongoClient, database: str, collection: str):
+    def validate_database_and_collection(
+        self, client: pymongo.MongoClient, database: str, collection: str
+    ):
         self._validate_database(client, database)
         self._validate_collection(client, database, collection)
 
     def _execute_query(self, data_source: MongoDataSource):
         with self.client() as client:
-            self.validate_database_and_collection(client, data_source.database, data_source.collection)
+            self.validate_database_and_collection(
+                client, data_source.database, data_source.collection
+            )
             col = client[data_source.database][data_source.collection]
             return col.aggregate(data_source.query)  # type: ignore[arg-type]
 
@@ -324,11 +333,11 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
         # Since Mongo '$regex' operator doesn't work with integer values, we need to check the stringified versions
         search_steps: dict[str, Any] = {}
         for condition in search:
-            search_steps[f'${condition}'] = []  # convert "and"/"or" to "$and"/"$or"
+            search_steps[f'${condition}'] = []  # convert 'and'/'or' to '$and'/'$or'
             for column in search[condition]:
                 search_steps[f'${condition}'].append(
                     {'$and': []}
-                )  # makes an "and" of all columns searches
+                )  # makes an 'and' of all columns searches
                 for col, regex in column.items():
                     search_steps[f'${condition}'][-1]['$and'].append(
                         {
@@ -339,8 +348,8 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
                             }
                         }
                     )
-        data_source.query.append({"$match": {"$expr": search_steps}})  # type:ignore[union-attr]
-        data_source.query.append({"$unset": ["_id"]})  # type:ignore[union-attr]
+        data_source.query.append({'$match': {'$expr': search_steps}})  # type:ignore[union-attr]
+        data_source.query.append({'$unset': ['_id']})  # type:ignore[union-attr]
 
         return self.get_slice(data_source, permissions, limit=limit, offset=offset)
 
@@ -363,18 +372,22 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     @decorate_func_with_retry
     def explain(self, data_source, permissions=None):
         with self.client() as client:
-            self.validate_database_and_collection(client, data_source.database, data_source.collection)
+            self.validate_database_and_collection(
+                client, data_source.database, data_source.collection
+            )
             data_source.query = apply_condition_filter(data_source.query, permissions)
             data_source.query = normalize_query(data_source.query, data_source.parameters)
 
             agg_cmd = SON(
                 [
-                    ("aggregate", data_source.collection),
-                    ("pipeline", data_source.query),
-                    ("cursor", {}),
+                    ('aggregate', data_source.collection),
+                    ('pipeline', data_source.query),
+                    ('cursor', {}),
                 ]
             )
-            result = client[data_source.database].command(command="explain", value=agg_cmd, verbosity="executionStats")
+            result = client[data_source.database].command(
+                command='explain', value=agg_cmd, verbosity='executionStats'
+            )
         return _format_explain_result(result)
 
     def get_unique_identifier(self) -> str:
@@ -392,7 +405,7 @@ class MongoConnector(ToucanConnector, VersionableEngineConnector):
     def get_engine_version(self) -> tuple:
         try:
             with self.client() as client:
-                version = client.server_info()["version"]
+                version = client.server_info()['version']
             return super()._format_version(version)
         except (TypeError, KeyError) as exc:
             raise UnavailableVersion from exc
