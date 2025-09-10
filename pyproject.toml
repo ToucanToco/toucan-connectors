@@ -171,3 +171,19 @@ all = [
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+python_version = "3.10"
+plugins = "pydantic.mypy"
+follow_imports = "silent"
+show_error_codes = true
+warn_no_return = true
+warn_unused_configs = true
+warn_unused_ignores = true
+files = [
+      "toucan_connectors/toucan_connector.py",
+      "toucan_connectors/hubspot_private_app/hubspot_connector.py",
+      "toucan_connectors/snowflake/snowflake_connector.py",
+      "toucan_connectors/peakina/peakina_connector.py",
+      "toucan_connectors/mongo/mongo_connector.py"
+]
