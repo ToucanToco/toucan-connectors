@@ -320,15 +320,15 @@ def test_get_slice_max_count(mongo_connector, mongo_datasource, mocker):
     We're not going to insert a million rows in mongo just for this test,
     so we mock the execution of the query.
     """
-    aggregate = mocker.spy(pymongo_collection.Collection, "aggregate")
+    aggregate = mocker.patch.object(pymongo_collection.Collection, "aggregate")
 
     datasource = mongo_datasource(collection="test_col", query={"domain": "unknown"})
     mongo_connector.get_slice(datasource, limit=50)
 
     aggregate.assert_called_once()
     # count facet must be limited
-    assert "$limit" in aggregate.call_args[0][1][1]["$facet"]["count"][0]
-    assert aggregate.call_args[0][1][1]["$facet"]["count"][0]["$limit"] > 0
+    assert "$limit" in aggregate.call_args.args[0][1]["$facet"]["count"][0]
+    assert aggregate.call_args.args[0][1]["$facet"]["count"][0]["$limit"] > 0
 
 
 def test_get_slice_with_regex(mongo_connector, mongo_datasource):
