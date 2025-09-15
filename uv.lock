@@ -1263,7 +1263,7 @@ wheels = [
 
 [[package]]
 name = "peakina"
-version = "0.18.0"
+version = "0.18.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
@@ -1282,9 +1282,9 @@ dependencies = [
     { name = "xlrd" },
     { name = "xmltodict" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e8/b7/052d2125ae7fee6427e3677c1184d677801c171e28d89eb9d9f72b13d224/peakina-0.18.0.tar.gz", hash = "sha256:a837fbd9da28b7f6c0b304388756cdce7db6f6c96369e10133bd7de46575c836", size = 27513, upload-time = "2025-08-22T09:43:44.192Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/b9/0f2bb94b560b9fc9b6182a84b2e6f7981dd9aa00297cd5d24312ce05b997/peakina-0.18.1.tar.gz", hash = "sha256:3e8cd80d49ab56017f467f979c6d4db15e50ed2890a0a17840160a1ece8b9a60", size = 27517, upload-time = "2025-09-15T09:21:14.102Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/67/1d/8c281c3b58247b48d7a2078e1082f20af1a53b64604e7aeed0390bbb9ca8/peakina-0.18.0-py3-none-any.whl", hash = "sha256:fcade2e9eafa81f1bb345ba28d6718f3e12d3a674ea4136fd82751f5bcad863d", size = 26463, upload-time = "2025-08-22T09:43:43.208Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/43/65209b558f9024239087069ad7a5dc485521520fb50b14cf5719842610f8/peakina-0.18.1-py3-none-any.whl", hash = "sha256:6815a56fca4a69d0e77a0f140174d54bf74609632a3d026e6edd0512b2c62a6a", size = 26463, upload-time = "2025-09-15T09:21:12.938Z" },
 ]
 
 [[package]]
@@ -2429,8 +2429,8 @@ requires-dist = [
     { name = "tctc-odata", marker = "extra == 'odata'", specifier = ">=0.3,<1.0" },
     { name = "tenacity", marker = "extra == 'all'", specifier = ">=8.0.1,<10.0.0" },
     { name = "tenacity", marker = "extra == 'base'", specifier = ">=8.0.1,<10.0.0" },
-    { name = "xmltodict", marker = "extra == 'all'", specifier = ">=0.13.0,<1.0" },
-    { name = "xmltodict", marker = "extra == 'http-api'", specifier = ">=0.13.0,<1.0" },
+    { name = "xmltodict", marker = "extra == 'all'", specifier = ">=1,<1.1" },
+    { name = "xmltodict", marker = "extra == 'http-api'", specifier = ">=1,<1.1" },
     { name = "zeep", marker = "extra == 'all'", specifier = ">=4.1.0,<5.0.0" },
     { name = "zeep", marker = "extra == 'soap'", specifier = ">=4.1.0,<5.0.0" },
 ]
@@ -2688,11 +2688,11 @@ wheels = [
 
 [[package]]
 name = "xmltodict"
-version = "0.14.2"
+version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/50/05/51dcca9a9bf5e1bce52582683ce50980bcadbc4fa5143b9f2b19ab99958f/xmltodict-0.14.2.tar.gz", hash = "sha256:201e7c28bb210e374999d1dde6382923ab0ed1a8a5faeece48ab525b7810a553", size = 51942, upload-time = "2024-10-16T06:10:29.683Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8b/79/1b8215b967eb66b92ba323a2d70ff820188b5dd18c8975326fa06e7d50ef/xmltodict-1.0.0.tar.gz", hash = "sha256:f50eb9020d28c673b40bbe3f43458ee165f0267c67f8ad8df0d70d9a4f3ac824", size = 71681, upload-time = "2025-09-12T18:48:45.93Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d6/45/fc303eb433e8a2a271739c98e953728422fa61a3c1f36077a49e395c972e/xmltodict-0.14.2-py2.py3-none-any.whl", hash = "sha256:20cc7d723ed729276e808f26fb6b3599f786cbc37e06c65e192ba77c40f20aac", size = 9981, upload-time = "2024-10-16T06:10:27.649Z" },
+    { url = "https://files.pythonhosted.org/packages/89/e1/719fc59777227614641f3103964c58c6c10203c72633ef0d5cdcb2d7f676/xmltodict-1.0.0-py3-none-any.whl", hash = "sha256:64316adb5e30ca21ad5cf391f4f0f6b34f673d96b79574f1db1e32b13b43ee34", size = 13292, upload-time = "2025-09-12T18:48:44.544Z" },
 ]
 
 [[package]]
