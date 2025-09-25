@@ -66,6 +66,7 @@ def test_connection_params():
         'driver': '{ODBC Driver 18 for SQL Server}',
         'server': 'myhost',
         'user': 'myuser',
+        'TrustServerCertificate': 'yes',
         'as_dict': True,
     }
     connector = MSSQLConnector(
@@ -80,6 +81,7 @@ def test_connection_params():
         'driver': '{ODBC Driver 18 for SQL Server}',
         'server': 'myhost,123',
         'user': 'myuser',
+        'TrustServerCertificate': 'yes',
         'as_dict': True,
         'password': 'mypass',
         'timeout': 60,
@@ -104,6 +106,7 @@ def test_mssql_get_df(mocker):
 
     snock.assert_called_once_with(
         driver='{ODBC Driver 18 for SQL Server}',
+        TrustServerCertificate='yes',
         as_dict=True,
         server='127.0.0.1,22',
         user='SA',
