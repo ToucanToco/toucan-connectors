@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- MsSql: server certificates are now trusted by default again, default value changed when bumping odbc driver to v18.
+
 ## [3.23.37] 2025-09-10
 
 ### Changed

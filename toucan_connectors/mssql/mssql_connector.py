@@ -104,6 +104,7 @@ class MSSQLConnector(ToucanConnector):
             'user': self.user,
             'password': self.password.get_secret_value() if self.password else None,
             'timeout': self.connect_timeout,
+            'TrustServerCertificate': "yes",
             'as_dict': True,
         }
         # remove None values
