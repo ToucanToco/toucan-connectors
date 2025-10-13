@@ -3,7 +3,7 @@ import re
 from contextlib import suppress
 from enum import Enum
 from functools import cached_property
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import (
     ConfigDict,
@@ -157,15 +157,18 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
         cls,
         by_alias: bool = True,
         ref_template: str = DEFAULT_REF_TEMPLATE,
-        # mypy thinkgs that `type` refers to ToucanConnector.type
+        # mypy misinterprets type as the ToucanConnector.type field rather than the type keyword
         schema_generator: type[GenerateJsonSchema] = GenerateJsonSchema,  # type:ignore[valid-type]
         mode: JsonSchemaMode = "validation",
+        *,
+        union_format: Literal["any_of", "primitive_type_array"] = "any_of",
     ) -> dict[str, Any]:
         schema = super().model_json_schema(
             by_alias=by_alias,
             ref_template=ref_template,
             schema_generator=schema_generator,
             mode=mode,
+            union_format=union_format,
         )
         schema["properties"] = {k: schema["properties"][k] for k in ORDERED_KEYS}
         return schema
