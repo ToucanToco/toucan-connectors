@@ -2163,7 +2163,7 @@ wheels = [
 
 [[package]]
 name = "toucan-connectors"
-version = "10.0.0"
+version = "10.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "cached-property" },
