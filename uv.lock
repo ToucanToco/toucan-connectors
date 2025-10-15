@@ -2376,7 +2376,7 @@ requires-dist = [
     { name = "psycopg", marker = "extra == 'postgres'", specifier = ">=3.2.9,<4" },
     { name = "pyarrow", marker = "extra == 'all'" },
     { name = "pyarrow", marker = "extra == 'snowflake'" },
-    { name = "pydantic", specifier = ">=2.4.2,<3.0.0" },
+    { name = "pydantic", specifier = ">=2.12,<3.0.0" },
     { name = "pyhdb", marker = "extra == 'all'", specifier = ">=0.3.4,<1.0" },
     { name = "pyhdb", marker = "extra == 'sap-hana'", specifier = ">=0.3.4,<1.0" },
     { name = "pyjwt", marker = "extra == 'all'", specifier = ">=1.5.3,<3" },
