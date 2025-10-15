@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [10.1.0] 2025-10-15
+
+### Changed
+
+- Upper and lower constraints on various dependencies have been raised
+
 ## [10.0.0] 2025-08-22
 
 ### Changed
