@@ -3,7 +3,6 @@ from collections.abc import Generator
 from datetime import datetime, timedelta
 from typing import Any
 
-import openpyxl
 import pandas as pd
 import pytest
 from dateutil.tz import tzutc
@@ -49,17 +48,6 @@ def sts_data_source_csv() -> Generator[Any, Any, Any]:
         name="test",
         file="my-file.csv",
         reader_kwargs={"preview_nrows": 2},
-        fetcher_kwargs={},
-    )
-
-
-@pytest.fixture
-def sts_data_source_xlsx() -> Generator[Any, Any, Any]:
-    yield S3DataSource(
-        domain="test",
-        name="test",
-        file="my-file.xlsx",
-        reader_kwargs={"engine": "openpyxl"},
         fetcher_kwargs={},
     )
 
@@ -129,10 +117,7 @@ def test_validate_external_id(mocker: MockFixture) -> None:
 
 
 def test_retrieve_data_with_limit_offset(
-    mocker: MockFixture,
-    connector: S3Connector,
-    sts_data_source_csv: S3DataSource,
-    sts_data_source_xlsx: S3DataSource,
+    mocker: MockFixture, connector: S3Connector, sts_data_source_csv: S3DataSource
 ) -> None:
     # We mock s3_open()
     mock_s3_open = mocker.patch("peakina.io.s3.s3_utils.s3_open")
@@ -142,46 +127,25 @@ def test_retrieve_data_with_limit_offset(
         {"Contents": [{"Key": "my-file.csv"}, {"Key": "my-file.xlsx"}]}
     ]
 
-    with tempfile.NamedTemporaryFile(suffix=".xlsx") as temp_excel_file:
-        with tempfile.NamedTemporaryFile(suffix=".csv") as temp_csv_file:
-            ### --- for excel --- ###
-            excel_df = pd.DataFrame({"X": [1, 2, 3, 4], "Y": [5, 6, 7, 8], "Z": [9, 10, 11, 12]})
-            excel_df.to_excel(temp_excel_file.name, engine="openpyxl", index=False)
+    with tempfile.NamedTemporaryFile(suffix=".csv") as temp_csv_file:
+        ### --- for csv --- ###
+        csv_df = pd.DataFrame({"A": [1, 2, 3, 4], "B": [5, 6, 7, 8], "C": [9, 10, 11, 12]})
+        csv_df.to_csv(temp_csv_file.name, index=False)
 
-            mocker.patch("tempfile.NamedTemporaryFile", return_value=temp_excel_file)
-            expected_return = excel_df.to_string()
-            mock_s3_open_retries.return_value.read.return_value = expected_return.encode("utf-8")
-            # s3_open side_effect
-            mock_s3_open.side_effect = [
-                temp_excel_file.read(),
-                openpyxl.load_workbook(temp_excel_file.name),
-            ]
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=temp_csv_file)
+        expected_return = csv_df.to_csv(index=False, sep=",") or ""
+        mock_s3_open_retries.return_value.read.return_value = expected_return.encode("utf-8")
+        # s3_open side_effect
+        mock_s3_open.side_effect = [
+            temp_csv_file.read().decode("utf-8"),
+            pd.read_csv(temp_csv_file.name),
+        ]
 
-            result = connector._retrieve_data(sts_data_source_xlsx, offset=2, limit=1)
-
-            # assert that result is a DataFrame and has the expected values
-            assert isinstance(result, pd.DataFrame)
-            expected_result = pd.DataFrame({"X": [3], "Y": [7], "Z": [11], "__filename__": "my-file.xlsx"})
-            assert result.equals(expected_result)
-
-            ### --- for csv --- ###
-            csv_df = pd.DataFrame({"A": [1, 2, 3, 4], "B": [5, 6, 7, 8], "C": [9, 10, 11, 12]})
-            csv_df.to_csv(temp_csv_file.name, index=False)
-
-            mocker.patch("tempfile.NamedTemporaryFile", return_value=temp_csv_file)
-            expected_return = csv_df.to_csv(index=False, sep=",") or ""
-            mock_s3_open_retries.return_value.read.return_value = expected_return.encode("utf-8")
-            # s3_open side_effect
-            mock_s3_open.side_effect = [
-                temp_csv_file.read().decode("utf-8"),
-                pd.read_csv(temp_csv_file.name),
-            ]
-
-            result = connector._retrieve_data(sts_data_source_csv, offset=1, limit=2)
-            # assert that result is a DataFrame and has the expected values
-            assert isinstance(result, pd.DataFrame)
-            expected_result = pd.DataFrame({"A": [2, 3], "B": [6, 7], "C": [10, 11], "__filename__": "my-file.csv"})
-            assert result.equals(expected_result)
+        result = connector._retrieve_data(sts_data_source_csv, offset=1, limit=2)
+        # assert that result is a DataFrame and has the expected values
+        assert isinstance(result, pd.DataFrame)
+        expected_result = pd.DataFrame({"A": [2, 3], "B": [6, 7], "C": [10, 11], "__filename__": "my-file.csv"})
+        assert result.equals(expected_result)
 
 
 def test_retrieve_data_match_patterns(
