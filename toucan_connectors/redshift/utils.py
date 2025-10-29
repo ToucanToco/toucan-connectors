@@ -50,7 +50,6 @@ def build_database_model_extraction_query(
     table_name: str | None,
 ) -> str:
     database_name = f"'{db_name}'" if db_name else "NULL"
-    # TODO: filter on schema name and db name
     # Redshift does not support JSON object creation functions nor ARRAY_AGG/JSON_ARRAY_AGG
     query = f"""
     SELECT
