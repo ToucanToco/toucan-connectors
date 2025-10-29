@@ -501,7 +501,7 @@ def integration_redshift_connector() -> RedshiftConnector:
         port=5439,
         user=_REDSHIFT_USER,
         password=_REDSHIFT_PASSWORD,
-        connect_timeout=10,
+        connect_timeout=20,
     )
     return _ready_connector(connector)
 
