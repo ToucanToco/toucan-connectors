@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [10.2.0] 2025-10-29
+
 ### Added
 
 - Redshift: `get_model` now supports filtering on the database, schema and table name.
