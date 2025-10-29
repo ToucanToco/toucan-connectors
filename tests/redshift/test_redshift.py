@@ -97,7 +97,7 @@ def test_redshiftdatasource_init_(redshift_datasource):
 
 def test_redshiftdatasource_get_form(redshift_connector, redshift_datasource, mocker: MockerFixture):
     current_config = {"database": "dev"}
-    mocker.patch.object(RedshiftConnector, "available_dbs", new=["one", "two"])
+    mocker.patch.object(RedshiftConnector, "_list_db_names", return_value=["one", "two"])
     result = redshift_datasource.get_form(redshift_connector, current_config)
     assert result["properties"]["parameters"]["title"] == "Parameters"
     assert result["properties"]["domain"]["title"] == "Domain"
@@ -273,17 +273,6 @@ def test_redshiftconnector_get_connection_tcp_keepalive(redshift_connector, opt:
 
 
 @patch.object(RedshiftConnector, "_get_connection")
-def test_redshiftconnector_retrieve_tables(mock_connection, redshift_connector, redshift_datasource):
-    mock_connection().cursor().__enter__().fetchall.return_value = (
-        ["table1"],
-        ["table2"],
-        ["table3"],
-    )
-    result = redshift_connector._retrieve_tables(database=redshift_datasource.database)
-    assert result == ["table1", "table2", "table3"]
-
-
-@patch.object(RedshiftConnector, "_get_connection")
 @patch("toucan_connectors.redshift.redshift_database_connector.SqlQueryHelper")
 def test_redshiftconnector_retrieve_data(
     mock_SqlQueryHelper,  # noqa: N803
@@ -436,78 +425,6 @@ def test_redshiftconnector_describe(mock_connection, redshift_connector, redshif
     assert result == expected
 
 
-def test_get_model(mocker, redshift_connector):
-    db_names_mock = mocker.patch.object(RedshiftConnector, "_list_db_names", return_value=["dev"])
-    table_info_mock = mocker.patch.object(RedshiftConnector, "_db_table_info_rows")
-    table_info_mock.return_value = [
-        ("pg_internal", "redshift_auto_health_check_436837", "a", "integer"),
-        ("public", "table_1", "label", "character varying"),
-        ("public", "table_1", "doum", "character varying"),
-        ("public", "table_1", "value1", "bigint"),
-        ("public", "table_2", "label", "character varying"),
-        ("public", "table_2", "doum", "character varying"),
-        ("public", "table_2", "value1", "bigint"),
-        ("public", "table_2", "value2", "bigint"),
-        ("public", "table_3", "label", "character varying"),
-        ("public", "table_3", "group", "character varying"),
-    ]
-    assert redshift_connector.get_model() == [
-        {
-            "database": "dev",
-            "schema": "pg_internal",
-            "name": "redshift_auto_health_check_436837",
-            "type": "table",
-            "columns": [{"name": "a", "type": "integer"}],
-        },
-        {
-            "database": "dev",
-            "schema": "public",
-            "name": "table_1",
-            "type": "table",
-            "columns": [
-                {"name": "label", "type": "character varying"},
-                {"name": "doum", "type": "character varying"},
-                {"name": "value1", "type": "bigint"},
-            ],
-        },
-        {
-            "database": "dev",
-            "schema": "public",
-            "name": "table_2",
-            "type": "table",
-            "columns": [
-                {"name": "label", "type": "character varying"},
-                {"name": "doum", "type": "character varying"},
-                {"name": "value1", "type": "bigint"},
-                {"name": "value2", "type": "bigint"},
-            ],
-        },
-        {
-            "database": "dev",
-            "schema": "public",
-            "name": "table_3",
-            "type": "table",
-            "columns": [
-                {"name": "label", "type": "character varying"},
-                {"name": "group", "type": "character varying"},
-            ],
-        },
-    ]
-    db_names_mock.assert_called_once()
-    table_info_mock.assert_called_once_with("dev")
-    db_names_mock.reset_mock()
-    table_info_mock.reset_mock()
-
-    redshift_connector.get_model("other-db")
-    db_names_mock.assert_not_called()
-    table_info_mock.assert_called_once_with("other-db")
-
-    for error in [OperationalError, ProgrammingError]:
-        mocker.patch.object(RedshiftConnector, "_db_tables_info", side_effect=error("oups"))
-
-        assert redshift_connector.get_model() == []
-
-
 def test_get_model_with_info(mocker, redshift_connector):
     db_names_mock = mocker.patch.object(RedshiftConnector, "_list_db_names", return_value=["dev"])
     list_table_info_mock = mocker.patch.object(
@@ -537,13 +454,17 @@ def test_get_model_with_info(mocker, redshift_connector):
         {},
     )
     db_names_mock.assert_called_once()
-    list_table_info_mock.assert_called_once_with("dev")
+    list_table_info_mock.assert_called_once_with(
+        database_name="dev", schema_name=None, table_name=None, exclude_columns=False
+    )
     db_names_mock.reset_mock()
     list_table_info_mock.reset_mock()
 
     redshift_connector.get_model_with_info("other-db")
     db_names_mock.assert_not_called()
-    list_table_info_mock.assert_called_once_with("other-db")
+    list_table_info_mock.assert_called_once_with(
+        database_name="other-db", schema_name=None, table_name=None, exclude_columns=False
+    )
 
     # on error
     for error in [OperationalError, ProgrammingError]:
