@@ -2,8 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- Redshift: `get_model` now supports filtering on the database, schema and table name.
+
 ### Fixed
 
+- Redshift: also return tables outside of the "public" schema in `get_model` methods.
 - Lower constraint on `pydantic` has been bumped to `>=2.12`, following the support of `union_format` introduced in #2058
 
 ## [10.1.0] 2025-10-15

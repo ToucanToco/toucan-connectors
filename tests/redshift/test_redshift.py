@@ -1,8 +1,12 @@
+import os
 from unittest.mock import Mock, patch
 
+import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 from pytest_mock import MockerFixture
 from redshift_connector.error import InterfaceError, OperationalError, ProgrammingError
+from tenacity import retry, stop_after_delay, wait_fixed
 
 from toucan_connectors.pagination import (
     KnownSizeDatasetPaginationInfo,
@@ -549,3 +553,106 @@ def test_get_model_with_info(mocker, redshift_connector):
             [],
             {"info": {"Could not reach databases": ["dev"]}},
         )
+
+
+# Retrying every 5 seconds for 60 seconds
+@retry(stop=stop_after_delay(60), wait=wait_fixed(5))
+def _ready_connector(connector: RedshiftConnector) -> RedshiftConnector:
+    datasource = RedshiftDataSource(database="weaverbird_integration_tests", domain="d", name="n")
+    datasource = datasource.model_copy(update={"query": 'SELECT 1 "1";'})
+    df = connector._retrieve_data(datasource)
+    assert_frame_equal(df, pd.DataFrame({"1": [1]}))
+
+    return connector
+
+
+_REDSHIFT_HOST = os.environ["REDSHIFT_HOST"]
+_REDSHIFT_USER = os.environ["REDSHIFT_USER"]
+_REDSHIFT_PASSWORD = os.environ["REDSHIFT_PASSWORD"]
+
+
+@pytest.fixture
+def integration_redshift_connector() -> RedshiftConnector:
+    connector = RedshiftConnector(
+        authentication_method=AuthenticationMethod.DB_CREDENTIALS.value,
+        name="test-connector",
+        host=_REDSHIFT_HOST,
+        port=5439,
+        user=_REDSHIFT_USER,
+        password=_REDSHIFT_PASSWORD,
+        connect_timeout=10,
+    )
+    return _ready_connector(connector)
+
+
+def test_get_model_integration_redshift_connector(integration_redshift_connector: RedshiftConnector) -> None:
+    # Default
+    model = integration_redshift_connector.get_model()
+    assert model == [
+        {
+            "columns": [
+                {"name": "id", "type": "int4"},
+                {"name": "name", "type": "varchar"},
+                {"name": "countrycode", "type": "bpchar"},
+                {"name": "district", "type": "varchar"},
+                {"name": "population", "type": "int4"},
+            ],
+            "database": "weaverbird_integration_tests",
+            "name": "city",
+            "schema": "other_schema",
+            "type": "table",
+        },
+        {
+            "columns": [
+                {"name": "price_per_l", "type": "float8"},
+                {"name": "alcohol_degree", "type": "float8"},
+                {"name": "name", "type": "varchar"},
+                {"name": "cost", "type": "float8"},
+                {"name": "beer_kind", "type": "varchar"},
+                {"name": "volume_ml", "type": "int8"},
+                {"name": "brewing_date", "type": "timestamp"},
+                {"name": "nullable_name", "type": "varchar"},
+            ],
+            "database": "weaverbird_integration_tests",
+            "name": "beers_tiny",
+            "schema": "public",
+            "type": "table",
+        },
+    ]
+    # Filter on schema
+    model = integration_redshift_connector.get_model(schema_name="public")
+    assert model == [
+        {
+            "columns": [
+                {"name": "price_per_l", "type": "float8"},
+                {"name": "alcohol_degree", "type": "float8"},
+                {"name": "name", "type": "varchar"},
+                {"name": "cost", "type": "float8"},
+                {"name": "beer_kind", "type": "varchar"},
+                {"name": "volume_ml", "type": "int8"},
+                {"name": "brewing_date", "type": "timestamp"},
+                {"name": "nullable_name", "type": "varchar"},
+            ],
+            "database": "weaverbird_integration_tests",
+            "name": "beers_tiny",
+            "schema": "public",
+            "type": "table",
+        },
+    ]
+    # Filter on DB + Table
+    model = integration_redshift_connector.get_model(db_name="weaverbird_integration_tests", table_name="city")
+    assert model == [
+        {
+            "columns": [
+                {"name": "id", "type": "int4"},
+                {"name": "name", "type": "varchar"},
+                {"name": "countrycode", "type": "bpchar"},
+                {"name": "district", "type": "varchar"},
+                {"name": "population", "type": "int4"},
+            ],
+            "database": "weaverbird_integration_tests",
+            "name": "city",
+            "schema": "other_schema",
+            "type": "table",
+        },
+    ]

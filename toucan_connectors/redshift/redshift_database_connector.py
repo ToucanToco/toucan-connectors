@@ -1,6 +1,6 @@
+import json
 import logging
 import re
-from contextlib import suppress
 from enum import Enum
 from functools import cached_property
 from typing import Annotated, Any, Literal
@@ -40,7 +40,8 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 
-TABLE_QUERY = """SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = 'public';"""
+_LOGGER = logging.getLogger(__name__)
+
 
 DESCRIBE_QUERY = """SELECT * FROM ({column}) AS q LIMIT 0;"""
 
@@ -105,9 +106,9 @@ class RedshiftDataSource(ToucanDataSource):
         default_db = current_config.get("database", DEFAULT_DATABASE)
         return create_model(
             "FormSchema",
-            database=strlist_to_enum("database", connector.available_dbs, default_db),
+            database=strlist_to_enum("database", connector._list_db_names(), default_db),
             __base__=cls,
-        ).schema()
+        ).model_json_schema()
 
 
 class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_model=RedshiftDataSource):
@@ -173,10 +174,6 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
         schema["properties"] = {k: schema["properties"][k] for k in ORDERED_KEYS}
         return schema
 
-    @cached_property
-    def available_dbs(self) -> list[str]:
-        return self._list_db_names()
-
     @field_validator("host")
     @classmethod
     def host_validator(cls, v):
@@ -227,7 +224,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
             con_params["region"] = self.region
         return {k: v for k, v in con_params.items() if v is not None}
 
-    def _get_connection(self, database) -> "redshift_connector.Connection":
+    def _get_connection(self, database: str | None) -> "redshift_connector.Connection":
         """Establish a connection to an Amazon Redshift cluster."""
         con = redshift_connector.connect(
             **self._get_connection_params(
@@ -237,12 +234,6 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
         con.autocommit = True  # see https://stackoverflow.com/q/22019154
         con.paramstyle = "pyformat"
         return con
-
-    def _retrieve_tables(self, database) -> list[str]:
-        with self._get_connection(database=database).cursor() as cursor:
-            cursor.execute(TABLE_QUERY)
-            res = cursor.fetchall()
-        return [table_name for (table_name,) in res]
 
     def _retrieve_data(
         self,
@@ -343,33 +334,19 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
             res = cursor.description
         return {col[0].decode("utf-8") if isinstance(col[0], bytes) else col[0]: types_map.get(col[1]) for col in res}
 
-    def _db_table_info_rows(self, database: str) -> list[tuple[str, str, str, str]]:
-        with self._get_connection(database).cursor() as cursor:
-            """Get rows of (schema, table name, column name, column type)"""
-            cursor.execute(
-                r"""SELECT "schemaname", "tablename", "column", "type" FROM PG_TABLE_DEF WHERE schemaname = 'public';"""
+    def _list_tables_info(
+        self, *, database_name: str, schema_name: str | None, table_name: str | None, exclude_columns: bool
+    ) -> list[Any]:
+        with self._get_connection(database=database_name).cursor() as cursor:
+            query = build_database_model_extraction_query(
+                db_name=database_name, schema_name=schema_name, table_name=table_name
             )
-            return cursor.fetchall()
 
-    def _db_tables_info(self, database: str) -> list[TableInfo]:
-        """Get rows of (database, schema, table name, column name, column type)"""
-        table_infos: list[Any] = []
-        for schema, table_name, column_name, column_type in self._db_table_info_rows(database):
-            for row in table_infos[::-1]:
-                if row["schema"] == schema and row["name"] == table_name:
-                    row["columns"].append({"name": column_name, "type": column_type})
-                    break
-            else:
-                table_infos.append(
-                    {
-                        "database": database,
-                        "schema": schema,
-                        "name": table_name,
-                        "type": "table",
-                        "columns": [{"name": column_name, "type": column_type}],
-                    }
-                )
-        return table_infos
+            results = cursor.execute(query).fetchall()
+            sanitized_results = [
+                (r[0].rstrip(), r[1].rstrip(), r[2].rstrip(), r[3].rstrip(), json.loads(r[4])) for r in results
+            ]
+            return sanitized_results
 
     def get_model(
         self,
@@ -379,13 +356,16 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
         exclude_columns: bool = False,
     ) -> list[TableInfo]:
         """Retrieves the database tree structure using current connection"""
-        tables_info = []
-        dbs = self.available_dbs if db_name is None else [db_name]
-        for db in dbs:
-            with suppress(redshift_connector.OperationalError, redshift_connector.ProgrammingError):
-                tables_info += self._db_tables_info(db)
-
-        return tables_info
+        available_dbs = self._list_db_names() if db_name is None else [db_name]
+        databases_tree: list[TableInfo] = []
+        for db in available_dbs:
+            try:
+                databases_tree += self._list_tables_info(
+                    database_name=db, schema_name=schema_name, table_name=table_name, exclude_columns=exclude_columns
+                )
+            except (redshift_connector.OperationalError, redshift_connector.ProgrammingError) as exc:
+                _LOGGER.warning(f"An error occured when retrieving table info for database {db}: {exc}", exc_info=exc)
+        return DiscoverableConnector.format_db_model(databases_tree)
 
     def get_model_with_info(
         self,
@@ -395,12 +375,14 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
         exclude_columns: bool = False,
     ) -> tuple[list[TableInfo], dict]:
         """Retrieves the database tree structure using current connection"""
-        databases_tree = []
+        available_dbs = self._list_db_names() if db_name is None else [db_name]
+        databases_tree: list[tuple] = []
         failed_databases = []
-        dbs = self.available_dbs if db_name is None else [db_name]
-        for db in dbs:
+        for db in available_dbs:
             try:
-                databases_tree += self._list_tables_info(db)
+                databases_tree += self._list_tables_info(
+                    database_name=db, schema_name=schema_name, table_name=table_name, exclude_columns=exclude_columns
+                )
             except (redshift_connector.OperationalError, redshift_connector.ProgrammingError):
                 failed_databases.append(db)
 
@@ -413,13 +395,8 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
     def _list_db_names(self) -> list[str]:
         with self._get_connection(database=self.default_database).cursor() as cursor:
             # redshift has a weird system db called padb_harvest duplicating the content of 'dev' database
-            # https://bit.ly/3GQJCdy, we have to filter it
             cursor.execute(
-                """select datname from pg_database where datistemplate = false and datname != 'padb_harvest';"""
+                """select datname from pg_database where datistemplate = false AND datname NOT IN """
+                """('padb_harvest', 'awsdatacatalog', 'sys:internal');"""
             )
             return [db_name for (db_name,) in cursor.fetchall()]
-
-    def _list_tables_info(self, database: str) -> list[tuple]:  # pragma: no cover
-        with self._get_connection(database=database).cursor() as cursor:
-            cursor.execute(build_database_model_extraction_query())
-            return cursor.fetchall()
