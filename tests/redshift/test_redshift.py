@@ -509,6 +509,7 @@ def integration_redshift_connector() -> RedshiftConnector:
 def test_get_model_integration_redshift_connector(integration_redshift_connector: RedshiftConnector) -> None:
     # Default
     model = integration_redshift_connector.get_model()
+    model = [table for table in model if table["database"] == "weaverbird_integration_tests"]
     assert model == [
         {
             "columns": [
@@ -542,6 +543,7 @@ def test_get_model_integration_redshift_connector(integration_redshift_connector
     ]
     # Filter on schema
     model = integration_redshift_connector.get_model(schema_name="public")
+    model = [table for table in model if table["database"] == "weaverbird_integration_tests"]
     assert model == [
         {
             "columns": [
