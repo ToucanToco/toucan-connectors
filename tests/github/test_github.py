@@ -191,6 +191,7 @@ def test_get_names(
     assert "oof" in slugs
 
 
+@pytest.mark.skip("event_loop fixture is deprecated")
 def test_error_get_pages(mocker, gc, error_response, client, event_loop):
     """
     Check that errors in response from members extraction are
@@ -220,6 +221,7 @@ def test_error_get_pages(mocker, gc, error_response, client, event_loop):
         )
 
 
+@pytest.mark.skip("event_loop fixture is deprecated")
 def test_corrupt_get_pages(mocker, gc, client, event_loop, extracted_team_page_1):
     """
     Check that previously retrieved data is returned if a page is corrupt
@@ -234,6 +236,7 @@ def test_corrupt_get_pages(mocker, gc, client, event_loop, extracted_team_page_1
     assert result == [{"bar": "foo", "foo": "foo", "ofo": "foo"}]
 
 
+@pytest.mark.skip("event_loop fixture is deprecated")
 def test_fetch_members_data(
     mocker,
     gc,
@@ -272,6 +275,7 @@ def test_fetch_members_data(
     assert len(members_dataset) == 5
 
 
+@pytest.mark.skip("event_loop fixture is deprecated")
 def test_fetch_pull_requests_data(
     mocker,
     gc,
@@ -302,6 +306,7 @@ def test_fetch_pull_requests_data(
     assert len(pr_dataset) == 5
 
 
+@pytest.mark.skip("event_loop fixture is deprecated")
 def test_get_pages(
     mocker,
     gc,
@@ -530,6 +535,7 @@ def test_get_organizations(gc):
     assert res == ["power_rangers", "teletubbies"]
 
 
+@pytest.mark.skip("event_loop fixture is deprecated")
 def test_get_rate_limit_exhausted(
     gc, mocker, mock_extraction_start_date, extracted_prs_4, extracted_prs_3, event_loop, client
 ):
