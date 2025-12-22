@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [10.2.1] 2025-12-22
+
 ### Fixed
 
 - HttpApi(oauth2): don't overwrite the refresh-token if it is returned by the provider.
