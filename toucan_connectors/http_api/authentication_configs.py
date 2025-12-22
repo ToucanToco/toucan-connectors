@@ -259,11 +259,10 @@ class AuthorizationCodeOauth2(BaseOAuth2Config):
             if datetime.fromtimestamp(oauth_token.expires_at) <= (datetime.utcnow() + relativedelta(seconds=30)):
                 client = self._init_oauth_client()
                 new_token = client.refresh_token(self.token_url, refresh_token=oauth_token.refresh_token)
-                oauth_token = self._secrets_keeper.save(
-                    self.auth_flow_id,
+                if not new_token.get("refresh_token"):
                     # refresh call doesn't always contain the refresh_token
-                    new_token | {"refresh_token": oauth_token.refresh_token},
-                )
+                    new_token["refresh_token"] = oauth_token.refresh_token
+                oauth_token = self._secrets_keeper.save(self.auth_flow_id, new_token)
         return oauth_token.access_token
 
     def retrieve_token(

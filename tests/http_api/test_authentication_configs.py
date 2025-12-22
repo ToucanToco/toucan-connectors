@@ -187,6 +187,51 @@ def test_authenticate_session_with_expired_access_token(
     assert retrieved_session.headers["Authorization"] == "Bearer new_access_token"
 
 
+@pytest.mark.usefixtures("clear_fake_secret_database")
+def test_refresh_call_can_return_new_refresh_token(
+    oauth2_authentication_config: AuthorizationCodeOauth2,
+    secret_keeper: HttpOauth2SecretsKeeper,
+    client_id: str,
+    client_secret: str,
+    token_url: str,
+    auth_flow_id: str,
+    mocker: MockFixture,
+) -> None:
+    oauth2_authentication_config.set_secret_keeper(secret_keeper=secret_keeper)
+
+    # Create and save fake secret data
+    secrets = OauthTokenSecretData(
+        access_token="old_access_token",
+        refresh_token="old_refresh_token",
+        expires_at=(datetime.now() - timedelta(0, 3600)).timestamp(),
+    ).model_dump()
+
+    # We are using directly the keeper callback because we can't save an expired token
+    _fake_saver(auth_flow_id, secrets, context={})
+
+    # Expects a call to refresh the expired access token
+    mocked_client = mocker.MagicMock(name="mocked_client")
+    mocked_client.refresh_token.return_value = {
+        "access_token": "new_access_token",
+        "expires_in": 3920,
+        "scope": "ACCESS::READ, ACCESS::WRITE",
+        "token_type": "Bearer",
+        "refresh_token": "new_refresh_token",
+    }
+    mock = mocker.patch("toucan_connectors.http_api.authentication_configs.oauth_client", return_value=mocked_client)
+    retrieved_session = oauth2_authentication_config.authenticate_session()
+    assert mock.call_count == 1
+    assert mock.call_args[1] == {"client_id": client_id, "client_secret": client_secret}
+    assert mocked_client.refresh_token.call_count == 1
+    assert mocked_client.refresh_token.call_args[0][0] == token_url
+    assert mocked_client.refresh_token.call_args[1]["refresh_token"] == "old_refresh_token"
+    assert retrieved_session.headers["Authorization"] == "Bearer new_access_token"
+
+    # Refresh token MUST be saved with new refresh token
+    token = secret_keeper.load(auth_flow_id)
+    assert token.refresh_token == "new_refresh_token"
+
+
 def test_validation_error_on_bad_oauth_tokens(secret_keeper: HttpOauth2SecretsKeeper) -> None:
     with pytest.raises(ValidationError):
         secret_keeper.save(key="random_key", value={"expires_at": "2025-01-25 00:00:00", "missing": "token"})
