@@ -289,7 +289,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
             )
 
             try:
-                df = pd.concat((df for df in result_iterator), ignore_index=True)  # type:ignore[misc]
+                df: pd.DataFrame = pd.concat((df for df in result_iterator), ignore_index=True)  # type:ignore[misc]
                 return _ensure_numeric_columns_dtypes(df, result.schema)
             except ValueError as excp:  # pragma: no cover
                 raise NoDataFoundException("No data found, please check your config again.") from excp
@@ -379,7 +379,7 @@ class GoogleBigQueryConnector(ToucanConnector, DiscoverableConnector, data_sourc
 
         unformatted_db_tree["type"] = unformatted_db_tree["type"].apply(lambda x: "view" if "VIEW" in x else "table")
         unformatted_db_tree["columns"] = (
-            unformatted_db_tree["column_name"] + " " + unformatted_db_tree["data_type"].apply(lambda x: x.lower())
+            unformatted_db_tree["column_name"] + " " + unformatted_db_tree["data_type"].apply(lambda x: x.lower())  # type:ignore[operator]
         )
 
         unformatted_db_tree["columns"] = unformatted_db_tree["columns"].apply(_format_columns)
