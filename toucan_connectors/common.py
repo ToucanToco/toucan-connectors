@@ -447,7 +447,7 @@ def infer_datetime_dtype(df: "pd.DataFrame") -> None:
                 first_value = s.loc[idx]
                 if isinstance(first_value, datetime.datetime | datetime.date):
                     with suppress(Exception):
-                        df[colname] = pd.to_datetime(df[colname], errors="coerce")  # type:ignore[call-overload]
+                        df[colname] = pd.to_datetime(df[colname], errors="coerce")
 
 
 def rename_duplicate_columns(df: "pd.DataFrame") -> None:
