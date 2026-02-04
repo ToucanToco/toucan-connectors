@@ -1,7 +1,7 @@
 import json
 import logging
 import re
-from enum import Enum
+from enum import StrEnum
 from functools import cached_property
 from typing import Annotated, Any, Literal
 
@@ -68,13 +68,13 @@ ORDERED_KEYS = [
 ]
 
 
-class AuthenticationMethod(str, Enum):
+class AuthenticationMethod(StrEnum):
     DB_CREDENTIALS = "db_credentials"
     AWS_CREDENTIALS = "aws_credentials"
     AWS_PROFILE = "aws_profile"
 
 
-class AuthenticationMethodError(str, Enum):
+class AuthenticationMethodError(StrEnum):
     DB_CREDENTIALS = f"User & Password are required for {AuthenticationMethod.DB_CREDENTIALS}"
     AWS_CREDENTIALS = f"AccessKeyId, SecretAccessKey & db_user are required for {AuthenticationMethod.AWS_CREDENTIALS}"
     AWS_PROFILE = f"Profile & db_user are required for {AuthenticationMethod.AWS_PROFILE}"

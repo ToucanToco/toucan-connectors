@@ -1,6 +1,6 @@
 import json
 from copy import deepcopy
-from enum import Enum
+from enum import StrEnum
 from logging import getLogger
 from typing import Any
 from urllib.parse import quote, urlparse
@@ -114,7 +114,7 @@ class ElasticsearchHost(BaseModel):
     headers: dict | None = None
 
 
-class SearchMethod(str, Enum):
+class SearchMethod(StrEnum):
     search = "search"
     msearch = "msearch"
 

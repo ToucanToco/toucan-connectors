@@ -2,7 +2,7 @@ import logging
 from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager, suppress
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from tempfile import NamedTemporaryFile
 from typing import Any, Literal, overload
 
@@ -94,13 +94,13 @@ class SnowflakeDataSource(ToucanDataSource["SnowflakeConnector"]):
         return res
 
 
-class AuthenticationMethod(str, Enum):
+class AuthenticationMethod(StrEnum):
     PLAIN = "Snowflake (ID + Password)"
     OAUTH = "oAuth"
     KEYPAIR = "Key pair"
 
 
-class AuthenticationMethodValue(str, Enum):
+class AuthenticationMethodValue(StrEnum):
     PLAIN = "snowflake"
     OAUTH = "oauth"
 
