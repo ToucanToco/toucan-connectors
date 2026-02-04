@@ -1,7 +1,7 @@
 import logging
 import os
 from collections.abc import Generator
-from enum import Enum
+from enum import StrEnum
 from itertools import groupby as groupby
 from tempfile import NamedTemporaryFile
 from typing import Annotated, Any
@@ -113,7 +113,7 @@ _DATABASE_MODEL_EXTRACTION_QUERY = (
 )
 
 
-class SSLMode(str, Enum):
+class SSLMode(StrEnum):
     VERIFY_IDENTITY = "VERIFY_IDENTITY"
     VERIFY_CA = "VERIFY_CA"
     REQUIRED = "REQUIRED"

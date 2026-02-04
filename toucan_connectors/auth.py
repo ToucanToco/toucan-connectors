@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from logging import getLogger
 
 from pydantic import BaseModel, Field
@@ -102,7 +102,7 @@ def oauth2_oidc(*args, **kwargs) -> "Session":
     return session
 
 
-class AuthType(str, Enum):
+class AuthType(StrEnum):
     basic = "basic"
     digest = "digest"
     oauth1 = "oauth1"

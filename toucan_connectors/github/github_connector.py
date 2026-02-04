@@ -3,7 +3,7 @@ import logging
 import os
 from contextlib import suppress
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 from dateutil import relativedelta
@@ -69,7 +69,7 @@ class NoCredentialsError(Exception):
     """Raised when no secrets available."""
 
 
-class GithubDataSet(str, Enum):
+class GithubDataSet(StrEnum):
     pull_requests = "pull requests"
     teams = "teams"
 

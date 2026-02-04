@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -15,7 +15,7 @@ from toucan_connectors.http_api.pagination_configs import (
 )
 
 
-class Method(str, Enum):
+class Method(StrEnum):
     GET = "GET"
     POST = "POST"
     PUT = "PUT"

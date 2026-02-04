@@ -1,5 +1,5 @@
 import json
-from enum import Enum
+from enum import StrEnum
 from logging import getLogger
 from typing import TYPE_CHECKING, Any
 
@@ -51,7 +51,7 @@ class HttpAPIConnectorError(Exception):
         self.original_exc = original_exc
 
 
-class ResponseType(str, Enum):
+class ResponseType(StrEnum):
     json = "json"
     xml = "xml"
 

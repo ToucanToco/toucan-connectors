@@ -2,7 +2,7 @@ import logging
 import re
 from collections.abc import Iterable
 from contextlib import suppress
-from enum import Enum
+from enum import StrEnum
 from functools import cached_property
 from itertools import groupby
 from timeit import default_timer as timer
@@ -76,7 +76,7 @@ class NoDataFoundException(Exception):
     """When there is no data to Concatenate and send back to the user"""
 
 
-class Dialect(str, Enum):
+class Dialect(StrEnum):
     legacy = "legacy"
     standard = "standard"
 

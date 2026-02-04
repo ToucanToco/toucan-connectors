@@ -6,7 +6,7 @@ import socket
 import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from collections.abc import Iterable
-from enum import Enum
+from enum import StrEnum
 from functools import reduce, wraps
 from types import ModuleType
 from typing import TYPE_CHECKING, Annotated, Any, NamedTuple, TypeVar
@@ -49,7 +49,7 @@ class QueryMetadata(NamedTuple):
     columns: dict[str, str] | None = None  # Stores column names and types
 
 
-class Category(str, Enum):
+class Category(StrEnum):
     SNOWFLAKE = "Snowflake"
 
 
@@ -67,18 +67,14 @@ class DataSlice(NamedTuple):
     query_metadata: QueryMetadata | None = None
 
 
-class StrEnum(str, Enum):
-    """Class to easily make schemas with enum values and type string"""
-
-
-def strlist_to_enum(field: str, strlist: list[str], default_value=...) -> tuple[type[StrEnum], Any]:
+def strlist_to_enum(field: str, strlist: list[str], default_value=...) -> tuple[StrEnum, Any]:
     """
     Convert a list of strings to a pydantic schema enum
     the value is either <default value> or a tuple ( <type>, <default value> )
     If the field is required, the <default value> has to be '...' (cf pydantic doc)
     By default, the field is considered required.
     """
-    return StrEnum(field, {v: v for v in strlist}), default_value  # type: ignore[call-overload]
+    return StrEnum(field, {v: v for v in strlist}), default_value
 
 
 # Binding C to ToucanConnector causes mypy to crash (last checked with mypy 0.991)
