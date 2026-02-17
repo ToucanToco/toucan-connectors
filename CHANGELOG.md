@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [10.3.0] 2025-02-17
+
 ### Changed
 
 - OracleSQL: replaced `cx_Oracle` with `oracledb`
