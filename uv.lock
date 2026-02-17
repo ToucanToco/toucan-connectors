@@ -452,12 +452,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cx-oracle"
-version = "8.3.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e8/16/13c265afc984796fe38ee928733569b599cfd657245ddd1afad238b66656/cx_Oracle-8.3.0.tar.gz", hash = "sha256:3b2d215af4441463c97ea469b9cc307460739f89fdfa8ea222ea3518f1a424d9", size = 363886, upload-time = "2021-11-04T22:08:34.141Z" }
-
-[[package]]
 name = "dataiku-api-client"
 version = "14.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1206,6 +1200,23 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/0b/5f/19930f824ffeb0ad4372da4812c50edbd1434f678c90c2733e1188edfc63/oauthlib-3.3.1.tar.gz", hash = "sha256:0f0f8aa759826a193cf66c12ea1af1637f87b9b4622d46e866952bb022e538c9", size = 185918, upload-time = "2025-06-19T22:48:08.269Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/be/9c/92789c596b8df838baa98fa71844d84283302f7604ed565dafe5a6b5041a/oauthlib-3.3.1-py3-none-any.whl", hash = "sha256:88119c938d2b8fb88561af5f6ee0eec8cc8d552b7bb1f712743136eb7523b7a1", size = 160065, upload-time = "2025-06-19T22:48:06.508Z" },
+]
+
+[[package]]
+name = "oracledb"
+version = "3.4.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cryptography" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f7/02/70a872d1a4a739b4f7371ab8d3d5ed8c6e57e142e2503531aafcb220893c/oracledb-3.4.2.tar.gz", hash = "sha256:46e0f2278ff1fe83fbc33a3b93c72d429323ec7eed47bc9484e217776cd437e5", size = 855467, upload-time = "2026-01-28T17:25:39.91Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/22/68/f7126f5d911c295b57720c6b1a0609a5a2667b4546946433552a4de46333/oracledb-3.4.2-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:643c25d301a289a371e37fcedb59e5fa5e54fb321708e5c12821c4b55bdd8a4d", size = 4205176, upload-time = "2026-01-28T17:26:12.463Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/93/2fced60f92dc82e66980a8a3ba5c1ea48110bf1dd81d030edb69d88f992e/oracledb-3.4.2-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:55397e7eb43bb7017c03a981c736c25724182f5210951181dfe3fab0e5d457fb", size = 2231298, upload-time = "2026-01-28T17:26:14.497Z" },
+    { url = "https://files.pythonhosted.org/packages/75/a7/4dd286f3a6348d786fef9e6ab2e6c9b74ca9195d9a756f2a67e45743cdf0/oracledb-3.4.2-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b26a10f9c790bd141ffc8af68520803ed4a44a9258bf7d1eea9bfdd36bd6df7f", size = 2439430, upload-time = "2026-01-28T17:26:16.044Z" },
+    { url = "https://files.pythonhosted.org/packages/19/28/94bc753e5e969c60ee5d9c914e2b4ef79999eaca8e91bcab2fbf0586b80b/oracledb-3.4.2-cp313-cp313-win32.whl", hash = "sha256:b974caec2c330c22bbe765705a5ac7d98ec3022811dec2042d561a3c65cb991b", size = 1458209, upload-time = "2026-01-28T17:26:17.652Z" },
+    { url = "https://files.pythonhosted.org/packages/cb/2b/593a9b2d4c12c9de3289e67d84fe023336d99f36ba51442a5a0f5ce6acf7/oracledb-3.4.2-cp313-cp313-win_amd64.whl", hash = "sha256:3df8eee1410d25360599968b1625b000f10c5ae0e47274031a7842a9dc418890", size = 1793558, upload-time = "2026-01-28T17:26:19.914Z" },
 ]
 
 [[package]]
@@ -2246,7 +2257,6 @@ all = [
     { name = "authlib" },
     { name = "awswrangler" },
     { name = "clickhouse-driver" },
-    { name = "cx-oracle" },
     { name = "dataiku-api-client" },
     { name = "elasticsearch" },
     { name = "google-api-python-client" },
@@ -2257,6 +2267,7 @@ all = [
     { name = "numpy" },
     { name = "oauth2client" },
     { name = "oauthlib" },
+    { name = "oracledb" },
     { name = "pandas" },
     { name = "peakina" },
     { name = "psycopg" },
@@ -2346,7 +2357,7 @@ odbc = [
     { name = "pyodbc" },
 ]
 oracle-sql = [
-    { name = "cx-oracle" },
+    { name = "oracledb" },
     { name = "sqlalchemy" },
 ]
 peakina = [
@@ -2411,8 +2422,6 @@ requires-dist = [
     { name = "cached-property", specifier = ">=1.5.2,<3.0.0" },
     { name = "clickhouse-driver", marker = "extra == 'all'", specifier = ">=0.2.3,<1.0" },
     { name = "clickhouse-driver", marker = "extra == 'clickhouse'", specifier = ">=0.2.3,<1.0" },
-    { name = "cx-oracle", marker = "extra == 'all'", specifier = ">=8.3.0,<9.0.0" },
-    { name = "cx-oracle", marker = "extra == 'oracle-sql'", specifier = ">=8.3.0,<9.0.0" },
     { name = "dataiku-api-client", marker = "extra == 'all'", specifier = ">=9.0.1" },
     { name = "dataiku-api-client", marker = "extra == 'dataiku'", specifier = ">=9.0.1" },
     { name = "elasticsearch", marker = "extra == 'all'", specifier = ">=9" },
@@ -2437,6 +2446,8 @@ requires-dist = [
     { name = "oauthlib", marker = "extra == 'all'", specifier = "==3.3.1" },
     { name = "oauthlib", marker = "extra == 'http-api'", specifier = "==3.3.1" },
     { name = "oauthlib", marker = "extra == 'odata'", specifier = "==3.3.1" },
+    { name = "oracledb", marker = "extra == 'all'", specifier = ">=3.4.2" },
+    { name = "oracledb", marker = "extra == 'oracle-sql'", specifier = ">=3.4.2" },
     { name = "pandas", marker = "extra == 'all'", specifier = ">=2" },
     { name = "pandas", marker = "extra == 'base'", specifier = ">=2" },
     { name = "peakina", marker = "extra == 'all'", specifier = ">=0.11" },

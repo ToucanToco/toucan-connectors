@@ -5,7 +5,7 @@ from typing import Annotated
 from pydantic import Field, StringConstraints, create_model
 
 try:
-    import cx_Oracle
+    import oracledb
     import pandas as pd
 
     CONNECTOR_OK = True
@@ -24,10 +24,10 @@ from toucan_connectors.toucan_connector import (
 
 
 class OracleSQLDataSource(ToucanDataSource):
-    query: Annotated[str, StringConstraints(min_length=1)] = Field(
+    query: Annotated[str | None, StringConstraints(min_length=1)] = Field(  # type:ignore[call-overload]
         None, description="You can write your SQL query here", widget="sql"
     )
-    table: Annotated[str, StringConstraints(min_length=1)] = Field(
+    table: Annotated[str | None, StringConstraints(min_length=1)] = Field(
         None,
         description='The name of the data table that you want to get (equivalent to "SELECT * FROM "your_table")',
     )
@@ -52,7 +52,7 @@ class OracleSQLDataSource(ToucanDataSource):
         constraints = {}
 
         with suppress(Exception):
-            connection = cx_Oracle.connect(**connector.get_connection_params())
+            connection = oracledb.connect(**connector.get_connection_params())
             with connection.cursor() as cursor:
                 cursor.execute("""select table_name from ALL_TABLES""")
                 res = cursor.fetchall()
@@ -61,7 +61,7 @@ class OracleSQLDataSource(ToucanDataSource):
                 available_tables = [table_name for (table_name,) in res if table_name[0] != "_"]
                 constraints["table"] = strlist_to_enum("table", available_tables, None)
 
-        return create_model("FormSchema", **constraints, __base__=cls).schema()
+        return create_model("FormSchema", **constraints, __base__=cls).model_json_schema()  # type:ignore[call-overload]
 
 
 class OracleSQLConnector(ToucanConnector, data_source_model=OracleSQLDataSource):
@@ -72,9 +72,11 @@ class OracleSQLConnector(ToucanConnector, data_source_model=OracleSQLDataSource)
         "The DSN host, port and service name are required.",
         examples=["localhost:80/service"],
     )
-    user: str = Field(None, description="Your login username")
-    password: PlainJsonSecretStr = Field(None, description="Your login password")
-    encoding: str = Field(None, title="Charset", description="If you need to specify a specific character encoding.")
+    user: str | None = Field(None, description="Your login username")
+    password: PlainJsonSecretStr | None = Field(None, description="Your login password")
+    encoding: str | None = Field(
+        None, title="Charset", description="If you need to specify a specific character encoding."
+    )
 
     def get_connection_params(self):
         con_params = {
@@ -86,8 +88,9 @@ class OracleSQLConnector(ToucanConnector, data_source_model=OracleSQLDataSource)
         return {k: v for k, v in con_params.items() if v is not None}
 
     def _retrieve_data(self, data_source: OracleSQLDataSource) -> "pd.DataFrame":
-        connection = cx_Oracle.connect(**self.get_connection_params())
+        connection = oracledb.connect(**self.get_connection_params())
 
+        assert data_source.query is not None, "Query cannot be None"
         query = data_source.query[:-1] if data_source.query.endswith(";") else data_source.query
         query_params = data_source.parameters or {}
         df = pandas_read_sql(
