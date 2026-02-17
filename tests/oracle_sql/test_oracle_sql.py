@@ -1,4 +1,4 @@
-import cx_Oracle
+import oracledb
 import pytest
 from pytest_mock import MockerFixture
 
@@ -7,24 +7,18 @@ from toucan_connectors.oracle_sql.oracle_sql_connector import (
     OracleSQLDataSource,
 )
 
-missing_oracle_lib = False
-try:
-    cx_Oracle.connect()
-except cx_Oracle.DatabaseError as e:
-    missing_oracle_lib = "DPI-1047" in str(e)
-
 
 @pytest.fixture(scope="module")
 def oracle_server(service_container):
     def check(host_port):
-        conn = cx_Oracle.connect(user="system", password="oracle", dsn=f"localhost:{host_port}/xe")
+        conn = oracledb.connect(user="system", password="oracle", dsn=f"localhost:{host_port}/xe")
         cursor = conn.cursor()
         cursor.execute("SELECT 1 FROM City")
         cursor.close()
         conn.close()
 
     # timeout is set to 5 min as the container takes a very long time to start
-    return service_container("oraclesql", check, cx_Oracle.Error, timeout=300)
+    return service_container("oraclesql", check, oracledb.Error, timeout=300)
 
 
 @pytest.fixture
@@ -38,7 +32,7 @@ def oracle_connector(oracle_server):
 
 
 def test_oracle_get_df(mocker: MockerFixture):
-    snock = mocker.patch("cx_Oracle.connect")
+    snock = mocker.patch("oracledb.connect")
     reasq = mocker.patch("pandas.read_sql")
     oracle_connector = OracleSQLConnector(
         name="my_oracle_sql_con", user="system", password="oracle", dsn="localhost:22/xe"
@@ -74,7 +68,7 @@ def test_oracle_get_df(mocker: MockerFixture):
 
 def test_oracle_get_df_with_variables(mocker):
     """It should connect to the database and retrieve the response to the query"""
-    snock = mocker.patch("cx_Oracle.connect")
+    snock = mocker.patch("oracledb.connect")
     reasq = mocker.patch("pandas.read_sql")
     oracle_connector = OracleSQLConnector(
         name="my_oracle_sql_con", user="system", password="oracle", dsn="localhost:22/xe"
@@ -113,7 +107,7 @@ def test_oracle_get_df_with_variables(mocker):
 
 def test_oracle_get_df_with_variables_jinja_syntax(mocker):
     """It should connect to the database and retrieve the response to the query"""
-    snock = mocker.patch("cx_Oracle.connect")
+    snock = mocker.patch("oracledb.connect")
     reasq = mocker.patch("pandas.read_sql")
     oracle_connector = OracleSQLConnector(
         name="my_oracle_sql_con", user="system", password="oracle", dsn="localhost:22/xe"
