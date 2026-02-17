@@ -11,7 +11,7 @@ from toucan_connectors.oracle_sql.oracle_sql_connector import (
 @pytest.fixture(scope="module")
 def oracle_server(service_container):
     def check(host_port):
-        conn = oracledb.connect(user="system", password="oracle", dsn=f"localhost:{host_port}/xe")
+        conn = oracledb.connect(user="testuser", password="oracle", dsn=f"localhost:{host_port}/FREEPDB1")
         cursor = conn.cursor()
         cursor.execute("SELECT 1 FROM City")
         cursor.close()
@@ -25,9 +25,9 @@ def oracle_server(service_container):
 def oracle_connector(oracle_server):
     return OracleSQLConnector(
         name="my_oracle_sql_con",
-        user="system",
+        user="testuser",
         password="oracle",
-        dsn=f"localhost:{oracle_server['port']}/xe",
+        dsn=f"localhost:{oracle_server['port']}/FREEPDB1",
     )
 
 
