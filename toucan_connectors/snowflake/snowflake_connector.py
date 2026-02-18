@@ -158,11 +158,9 @@ class SnowflakeConnector(
 
     account: str = Field(  # type:ignore[call-overload]
         ...,
-        description="The full name of your Snowflake account. "
-        "It might require the region and cloud platform where your account is located, "
-        'in the form of: "your_account_name.region_id.cloud_platform". See more details '
-        '<a href="https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info" target="_blank">here</a>.',  # noqa: E501
-        placeholder="your_account_name.region_id.cloud_platform",
+        description="Your Snowflake account, in the orgname-accountname format. "
+        "https://docs.snowflake.net/manuals/user-guide/python-connector-api.html#label-account-format-info",
+        placeholder="yourorg-youraccount",
     )
 
     authentication_method: AuthenticationMethod = Field(  # type:ignore[call-overload]
