@@ -96,7 +96,7 @@ all = [
     "python-slugify>=5.0.2",
     "redshift-connector<3.0.0,>=2.0.907",
     "requests-oauthlib==2.0.0",
-    "simplejson>=4.0.1,<5",
+    "simplejson>=3.17.6,<5",
     "snowflake-connector-python<4.2,>=3.0.0",
     "sqlalchemy<3,>=2",
     "tctc-odata<1.0,>=0.3",
