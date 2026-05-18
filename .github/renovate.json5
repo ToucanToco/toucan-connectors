@@ -4,6 +4,7 @@
     "config:recommended",
     // "schedule:earlyMondays"
   ],
+  "minimumReleaseAge": "10 days",
   "packageRules": [
     {
       "matchDepTypes": ["dependency-groups"],
@@ -17,17 +18,17 @@
     {
       // We pin specific versions in our docker-compose files because we want to match the infra versions
       "matchManagers": ["docker-compose"],
-      "enabled": false
+      "enabled": false,
     },
     {
       "matchPackageNames": ["*"],
-      "semanticCommitType": "chore"
-    }
+      "semanticCommitType": "chore",
+    },
   ],
   "rebaseWhen": "conflicted",
   // Periodic update for uv.lock
   "lockFileMaintenance": {
     "enabled": true,
   },
-  "prHourlyLimit": 5
+  "prHourlyLimit": 5,
 }
