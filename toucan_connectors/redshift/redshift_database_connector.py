@@ -232,7 +232,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
             ),
         )
         con.autocommit = True  # see https://stackoverflow.com/q/22019154
-        con.paramstyle = "pyformat"  # type:ignore[attr-defined]
+        con.paramstyle = "pyformat"
         return con
 
     def _retrieve_data(
