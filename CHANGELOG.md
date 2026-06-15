@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Dependencies: relaxed upper constraints on `lxml`, `snowflake-connector-python` and `redshift-connector-python`
+
 ## [10.3.1] 2025-02-24
 
 ### Fixed
