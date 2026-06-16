@@ -232,7 +232,6 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
             ),
         )
         con.autocommit = True  # see https://stackoverflow.com/q/22019154
-        con.paramstyle = "pyformat"
         return con
 
     def _retrieve_data(
@@ -251,6 +250,7 @@ class RedshiftConnector(ToucanConnector, DiscoverableConnector, data_source_mode
                 datasource.query, datasource.parameters, offset, limit
             )
         with self._get_connection(database=datasource.database).cursor() as cursor:
+            cursor.paramstyle = "pyformat"
             cursor.execute(prepared_query, prepared_query_parameters)
             result: pd.DataFrame = cursor.fetch_dataframe()
             if result is None:
