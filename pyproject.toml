@@ -1,7 +1,7 @@
 [project]
 authors = [{ name = "Toucan Toco", email = "dev@toucantoco.com" }]
 license = { text = "BSD" }
-requires-python = "<3.14,>=3.13"
+requires-python = "<3.15,>=3.14"
 dependencies = [
     "cached-property<3.0.0,>=1.5.2",
     "Jinja2<4.0.0,>=3.0.3",
