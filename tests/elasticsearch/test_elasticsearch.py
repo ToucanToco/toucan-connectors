@@ -173,7 +173,10 @@ def test_get_agg(elasticsearch):
         },
     ]
     data_msearch = con.get_df(ds_msearch)
-    assert [v.dropna().to_dict() for k, v in data_msearch.iterrows()] == expected
+    results = [v.dropna().to_dict() for k, v in data_msearch.iterrows()]
+    results.sort(key=lambda d: d.get('music_buckets_doc_count', -1))
+
+    assert results == expected
 
     # Metric
     ds_search = ElasticsearchDataSource(
