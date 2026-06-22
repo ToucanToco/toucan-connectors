@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- deps: loosened upper constraints
+- build: switched to poetry 2
+
 ## [3.23.38] 2025-09-25
 
 ### Fixed
