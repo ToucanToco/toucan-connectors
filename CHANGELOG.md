@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Removed
+
+- Revinate and Wootric connectors have been removed as they are not used anymore.
+
 ### Changed
 
 - deps: loosened upper constraints
