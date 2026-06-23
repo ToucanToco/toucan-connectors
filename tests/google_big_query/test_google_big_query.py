@@ -704,7 +704,7 @@ def test_get_status(
     assert status.status is False
     assert status.details == [('Private key validity', False)]
     assert status.error is not None
-    assert 'Could not deserialize key data' in status.error
+    assert 'Unable to load PEM file' in status.error
 
     connector.credentials.private_key = SecretStr(sanitized_pem_key)
     status = connector.get_status()

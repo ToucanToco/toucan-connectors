@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Added
+
+- Elasticsearch: the connector now supports the `elasticsearch` 8 client.
+
+### Removed
+
+- Revinate and Wootric connectors have been removed as they are not used anymore.
+
+### Changed
+
+- deps: loosened upper constraints
+- build: switched to poetry 2
+
 ## [3.23.38] 2025-09-25
 
 ### Fixed

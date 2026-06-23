@@ -1,11 +1,12 @@
+import json
 from copy import deepcopy
 from enum import Enum
-from typing import List, Union
-from urllib.parse import urlparse
+from typing import Any, List, Union
+from urllib.parse import quote, urlparse
 
 import pandas as pd
 from elasticsearch import Elasticsearch
-from pandas.io.json import json_normalize
+from pandas import json_normalize
 from pydantic import BaseModel, Field, SecretStr
 
 from toucan_connectors.common import nosql_apply_parameters_to_query
@@ -120,41 +121,64 @@ class ElasticsearchDataSource(ToucanDataSource):
 class ElasticsearchConnector(ToucanConnector):
     data_source_model: ElasticsearchDataSource
     hosts: List[ElasticsearchHost]
+    es_version: int = 8
 
     def _retrieve_data(self, data_source: ElasticsearchDataSource) -> pd.DataFrame:
         data_source.body = nosql_apply_parameters_to_query(data_source.body, data_source.parameters)
         connection_params = []
+        basic_auth = None
+        headers = None
         for host in self.hosts:
             parsed_url = urlparse(host.url)
-            h = {'host': parsed_url.hostname}
+            h: dict = {'host': parsed_url.hostname}
 
             if parsed_url.path and parsed_url.path != '/':
                 h['url_prefix'] = parsed_url.path
             if parsed_url.scheme == 'https':
                 h['port'] = host.port or 443
-                h['use_ssl'] = True
                 h['scheme'] = parsed_url.scheme
             elif host.port:
                 h['port'] = host.port
                 h['scheme'] = parsed_url.scheme
 
             if host.username or host.password:
-                h['http_auth'] = f'{host.username}:{host.password.get_secret_value()}'
+                password = host.password.get_secret_value() if host.password is not None else ''
+                username = host.username or ''
+                # the "username:password" form is not supported by esclient 8+
+                basic_auth = (username, password)
             if host.headers:
-                h['headers'] = host.headers
+                headers = host.headers
             connection_params.append(h)
 
-        esclient = Elasticsearch(connection_params)
+        request_headers = {
+            'accept': f'application/vnd.elasticsearch+json; compatible-with={self.es_version}',
+            'content-type': f'application/vnd.elasticsearch+json; compatible-with={self.es_version}',
+        }
+        if headers:
+            request_headers.update({k.lower(): v for k, v in headers.items()})
+
+        esclient = Elasticsearch(connection_params, basic_auth=basic_auth, headers=request_headers)
         # We need to set this flag as some customers force auth and refuse the connection if no auth
-        # header is present. Elasticsearch-py accepts 401/403s
-        # (https://github.com/elastic/elasticsearch-py/blob/v7.17.6/elasticsearch/transport.py#L586),
-        # but not connection errors. In consequence, we set the flag to True, which means that we
-        # couldn't figure out wether we are talking to Elasticsearch or not due to an auth error:
-        # https://github.com/elastic/elasticsearch-py/blob/v7.17.6/elasticsearch/transport.py#L216.
-        # If we are indded not talking to Elasticsearch, the query will fail later on.
-        esclient.transport._verified_elasticsearch = True
-        response = getattr(esclient, data_source.search_method)(
-            index=data_source.index, body=data_source.body
+        # header is present. Elasticsearch-py accepts 401/403s but not connection errors. In
+        # consequence, we set the flag to True, which means that we couldn't figure out whether we
+        # are talking to Elasticsearch or not due to an auth error. If we are indeed not talking to
+        # Elasticsearch, the query will fail later on.
+        esclient._verified_elasticsearch = True
+
+        quoted_index = quote(data_source.index or '', ',*')
+        path = f'/{quoted_index}/_{data_source.search_method.value}'
+        if data_source.search_method == SearchMethod.search:
+            body: Any = data_source.body
+        else:
+            # msearch expects ndjson, which must be terminated by a newline
+            body = '\n'.join(json.dumps(item) for item in data_source.body) + '\n'
+
+        response = esclient.perform_request(
+            'POST',
+            path,
+            body=body,
+            headers=request_headers,
+            endpoint_id=data_source.search_method.value,
         )
 
         if data_source.search_method == SearchMethod.msearch:

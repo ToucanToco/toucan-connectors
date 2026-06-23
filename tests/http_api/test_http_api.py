@@ -112,7 +112,9 @@ def test_get_df_with_parameters_and_auth(connector, data_source, auth, mocker):
     assert responses.calls[0].request.headers['name'] == 'raphael'
 
 
+@responses.activate
 def test_exceptions_not_json():
+    responses.add(responses.GET, 'https://demo.toucantoco.com/', body='<html>not json</html>')
     connector = HttpAPIConnector(
         name='myHttpConnector', type='HttpAPI', baseroute='https://demo.toucantoco.com'
     )
