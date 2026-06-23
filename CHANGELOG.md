@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Elasticsearch: the connector now supports the `elasticsearch` 8 client.
+
 ### Removed
 
 - Revinate and Wootric connectors have been removed as they are not used anymore.

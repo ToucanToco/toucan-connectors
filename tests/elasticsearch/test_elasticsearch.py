@@ -42,7 +42,9 @@ def test_connector(mocker):
 
     module = 'toucan_connectors.elasticsearch.elasticsearch_connector'
     mock_es = mocker.patch(f'{module}.Elasticsearch')
-    mock_es.return_value.search.return_value = {'hits': {'hits': [{'_source': {'yo': 'la'}}]}}
+    mock_es.return_value.perform_request.return_value = {
+        'hits': {'hits': [{'_source': {'yo': 'la'}}]}
+    }
 
     con = ElasticsearchConnector(
         name='test',
@@ -52,7 +54,7 @@ def test_connector(mocker):
                 'username': 'test',
                 'scheme': 'https',
                 'password': 'pikapika',
-                'headers': {'truc': ''},
+                'headers': {'truc': 'bidule', 'Accept': 'override'},
             }
         ],
     )
@@ -66,12 +68,28 @@ def test_connector(mocker):
                 'host': 'toto.com',
                 'url_prefix': '/lu',
                 'port': 443,
-                'use_ssl': True,
                 'scheme': 'https',
-                'http_auth': 'test:pikapika',
-                'headers': {'truc': ''},
             }
         ],
+        basic_auth=('test', 'pikapika'),
+        headers={
+            'truc': 'bidule',
+            # Accept header should have been converted to lowercase and overridden
+            'accept': 'override',
+            # Content-type should have been added
+            'content-type': 'application/vnd.elasticsearch+json; compatible-with=8',
+        },
+    )
+    mock_es.return_value.perform_request.assert_called_once_with(
+        'POST',
+        '/_all/_search',
+        body={'_source': True},
+        endpoint_id='search',
+        headers={
+            'truc': 'bidule',
+            'accept': 'override',
+            'content-type': 'application/vnd.elasticsearch+json; compatible-with=8',
+        },
     )
 
 
