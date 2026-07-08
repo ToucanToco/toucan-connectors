@@ -121,7 +121,7 @@ class PostgresConnector(
     """
 
     host: str | None = Field(None, description="The listening address of your database server (IP adress or hostname)")
-    port: int | None = Field(None, description="The listening port of your database server")
+    port: int | str | None = Field(None, description="The listening port of your database server")
     user: str = Field(..., description="Your login username")
     password: PlainJsonSecretStr | None = Field(None, description="Your login password")
     default_database: str = Field(DEFAULT_DATABASE, description="Your default database")
@@ -138,6 +138,12 @@ class PostgresConnector(
         False, description="Wether materialized views should be listed in the query builder or not."
     )
 
+    def _get_port(self) -> int | None:
+        port = self.port
+        if isinstance(port, str):
+            port = int(port)
+        return port
+
     def create_engine(self, database: str | None, connect_timeout: int | None = None) -> "sa.Engine":
         server = self.host
         if connect_timeout is None:
@@ -153,7 +159,7 @@ class PostgresConnector(
             username=self.user,
             password=self.password.get_secret_value() if self.password else None,
             host=server,
-            port=self.port,
+            port=self._get_port(),
             database=database or self.default_database,
             query=query_params,
         )
@@ -190,7 +196,7 @@ class PostgresConnector(
 
         # Check port
         try:
-            self.check_port(self.host, self.port)
+            self.check_port(self.host, self._get_port())
         except Exception as e:
             return ConnectorStatus(status=False, details=self._get_details(1, False), error=str(e))
 

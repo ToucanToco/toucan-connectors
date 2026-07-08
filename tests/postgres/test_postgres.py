@@ -166,6 +166,20 @@ def test_get_status_all_good(postgres_connector):
     )
 
 
+def test_get_status_with_string_port(postgres_connector, postgres_server):
+    postgres_connector = postgres_connector.model_copy(update={"port": str(postgres_server["port"])})
+    assert postgres_connector.get_status() == ConnectorStatus(
+        status=True,
+        details=[
+            ("Host resolved", True),
+            ("Port opened", True),
+            ("Connected to PostgreSQL", True),
+            ("Authenticated", True),
+            ("Default Database connection", True),
+        ],
+    )
+
+
 def test_get_engine_version(postgres_connector):
     # Should be a valid semver version converted to tuple
     version = postgres_connector.get_engine_version()
