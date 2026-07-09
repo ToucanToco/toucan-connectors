@@ -1,7 +1,7 @@
 from logging import getLogger
 from typing import TYPE_CHECKING, Annotated, Any
 
-from pydantic import Field, StringConstraints, create_model
+from pydantic import BeforeValidator, Field, StringConstraints, create_model
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -121,7 +121,9 @@ class PostgresConnector(
     """
 
     host: str | None = Field(None, description="The listening address of your database server (IP adress or hostname)")
-    port: int | str | None = Field(None, description="The listening port of your database server")
+    port: Annotated[int | str | None, BeforeValidator(lambda x: int(x) if isinstance(x, str) else x)] = Field(
+        None, description="The listening port of your database server"
+    )
     user: str = Field(..., description="Your login username")
     password: PlainJsonSecretStr | None = Field(None, description="Your login password")
     default_database: str = Field(DEFAULT_DATABASE, description="Your default database")
@@ -139,10 +141,10 @@ class PostgresConnector(
     )
 
     def _get_port(self) -> int | None:
-        port = self.port
-        if isinstance(port, str):
-            port = int(port)
-        return port
+        if self.port and isinstance(self.port, str):
+            return int(self.port)
+        else:
+            return self.port
 
     def create_engine(self, database: str | None, connect_timeout: int | None = None) -> "sa.Engine":
         server = self.host

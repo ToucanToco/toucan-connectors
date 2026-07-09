@@ -272,6 +272,19 @@ def test_no_user():
         PostgresConnector(host="some_host", name="test")
 
 
+def test_bad_string_port():
+    """It should raise an error as the port is not a number"""
+    with pytest.raises(ValidationError):
+        PostgresConnector(
+            name="test",
+            host="localhost",
+            user="ubuntu",
+            password="ilovetoucan",
+            default_database="postgres_db",
+            port="not_a_number",
+        )
+
+
 def test_open_connection():
     """It should not open a connection"""
     with pytest.raises(OperationalError):
@@ -281,7 +294,7 @@ def test_open_connection():
 
 def test_raise_on_empty_query():
     with pytest.raises(ValidationError):
-        PostgresDataSource(domaine="test", name="test", database="ubuntu", query="")
+        PostgresDataSource(domain="test", name="test", database="ubuntu", query="")
 
 
 def test_datasource():
