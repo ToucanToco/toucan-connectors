@@ -275,7 +275,7 @@ def test_no_user():
 
 
 def test_bad_string_port():
-    """It should raise an error as the port is not a number"""
+    """It should raise an error when the port is not a number"""
     with pytest.raises(ValidationError):
         PostgresConnector(
             name="test",
