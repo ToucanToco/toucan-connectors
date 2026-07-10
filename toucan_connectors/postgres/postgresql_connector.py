@@ -1,7 +1,7 @@
 from logging import getLogger
 from typing import TYPE_CHECKING, Annotated, Any
 
-from pydantic import Field, StringConstraints, create_model
+from pydantic import BeforeValidator, Field, StringConstraints, create_model
 
 from toucan_connectors.common import (
     ConnectorStatus,
@@ -121,7 +121,10 @@ class PostgresConnector(
     """
 
     host: str | None = Field(None, description="The listening address of your database server (IP adress or hostname)")
-    port: int | None = Field(None, description="The listening port of your database server")
+    port: Annotated[
+        int | None,
+        BeforeValidator(lambda x: int(x) if x is not None else None, json_schema_input_type=str),
+    ] = Field(None, description="The listening port of your database server")
     user: str = Field(..., description="Your login username")
     password: PlainJsonSecretStr | None = Field(None, description="Your login password")
     default_database: str = Field(DEFAULT_DATABASE, description="Your default database")

@@ -166,6 +166,22 @@ def test_get_status_all_good(postgres_connector):
     )
 
 
+def test_get_status_with_string_port(postgres_connector, postgres_server):
+    postgres_connector = PostgresConnector.model_validate(
+        {**postgres_connector.model_dump(), "port": str(postgres_server["port"])}
+    )
+    assert postgres_connector.get_status() == ConnectorStatus(
+        status=True,
+        details=[
+            ("Host resolved", True),
+            ("Port opened", True),
+            ("Connected to PostgreSQL", True),
+            ("Authenticated", True),
+            ("Default Database connection", True),
+        ],
+    )
+
+
 def test_get_engine_version(postgres_connector):
     # Should be a valid semver version converted to tuple
     version = postgres_connector.get_engine_version()
@@ -258,6 +274,19 @@ def test_no_user():
         PostgresConnector(host="some_host", name="test")
 
 
+def test_bad_string_port():
+    """It should raise an error when the port is not a number"""
+    with pytest.raises(ValidationError):
+        PostgresConnector(
+            name="test",
+            host="localhost",
+            user="ubuntu",
+            password="ilovetoucan",
+            default_database="postgres_db",
+            port="not_a_number",
+        )
+
+
 def test_open_connection():
     """It should not open a connection"""
     with pytest.raises(OperationalError):
@@ -267,7 +296,7 @@ def test_open_connection():
 
 def test_raise_on_empty_query():
     with pytest.raises(ValidationError):
-        PostgresDataSource(domaine="test", name="test", database="ubuntu", query="")
+        PostgresDataSource(domain="test", name="test", database="ubuntu", query="")
 
 
 def test_datasource():
