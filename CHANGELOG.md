@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Postgres: `port` can be passed as a string and will be converted to an integer before checking the port
+- Postgres: `port` can be passed as a string and is converted to an integer during validation
 
 ## [10.3.2] 2026-06-15
 
