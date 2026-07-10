@@ -1,7 +1,7 @@
 from logging import getLogger
 from typing import TYPE_CHECKING, Annotated, Any
 
-from pydantic import BeforeValidator, Field, PlainSerializer, StringConstraints, create_model
+from pydantic import BeforeValidator, Field, StringConstraints, create_model
 
 from toucan_connectors.common import (
     ConnectorStatus,
