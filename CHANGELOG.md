@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [10.4.0] 2026-07-21
+
 ### Changed
 
 - Postgres: `port` can be passed as a string and is converted to an integer during validation
