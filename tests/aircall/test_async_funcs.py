@@ -34,9 +34,9 @@ async def send_rate_limit(req: web.Request):
     )
 
 
-async def test_fetch(aiohttp_client, loop):
+async def test_fetch(aiohttp_client):
     """It should return a properly-formed dictionary."""
-    app = web.Application(loop=loop)
+    app = web.Application()
     app.router.add_get('/foo', send_200_success)
 
     client = await aiohttp_client(app)
@@ -45,9 +45,9 @@ async def test_fetch(aiohttp_client, loop):
     assert res == FAKE_DATA
 
 
-async def test_fetch_limit(aiohttp_client, loop):
+async def test_fetch_limit(aiohttp_client):
     """It should raise an AircallRateLimitExhaustedException"""
-    app = web.Application(loop=loop)
+    app = web.Application()
     app.router.add_get('/foo', send_rate_limit)
 
     client = await aiohttp_client(app)
@@ -55,9 +55,9 @@ async def test_fetch_limit(aiohttp_client, loop):
         await fetch('/foo', client)
 
 
-async def test_fetch_with_params(aiohttp_client, loop):
+async def test_fetch_with_params(aiohttp_client):
     """It should return a properly-formed dictionary."""
-    app = web.Application(loop=loop)
+    app = web.Application()
     app.router.add_get('/foo', send_200_success)
 
     client = await aiohttp_client(app)

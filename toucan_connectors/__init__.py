@@ -208,11 +208,6 @@ CONNECTORS_REGISTRY = {
         'label': 'Redshift',
         'logo': 'redshift/redshift.png',
     },
-    'Revinate': {
-        'connector': 'revinate.revinate_connector.RevinateConnector',
-        'label': 'Revinate',
-        'logo': 'revinate/revinate.png',
-    },
     'ROK': {
         'connector': 'rok.rok_connector.RokConnector',
         'logo': 'rok/rok.png',
@@ -259,10 +254,6 @@ CONNECTORS_REGISTRY = {
     'Trello': {
         'connector': 'trello.trello_connector.TrelloConnector',
         'logo': 'trello/trello.png',
-    },
-    'Wootric': {
-        'connector': 'wootric.wootric_connector.WootricConnector',
-        'logo': 'wootric/wootric.png',
     },
 }
 

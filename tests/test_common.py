@@ -326,9 +326,9 @@ async def send_401_error(req: web.Request) -> dict:
     return web.Response(reason='Unauthorized', status=401)
 
 
-async def test_fetch_happy(aiohttp_client, loop):
+async def test_fetch_happy(aiohttp_client):
     """It should return a properly-formed dictionary."""
-    app = web.Application(loop=loop)
+    app = web.Application()
     app.router.add_get('/foo', send_200_success)
 
     client = await aiohttp_client(app)
@@ -337,9 +337,9 @@ async def test_fetch_happy(aiohttp_client, loop):
     assert res == FAKE_DATA
 
 
-async def test_fetch_bad_response(aiohttp_client, loop):
+async def test_fetch_bad_response(aiohttp_client):
     """It should throw an Exception with a message if there is an error."""
-    app = web.Application(loop=loop)
+    app = web.Application()
     app.router.add_get('/hotels', send_401_error)
 
     client = await aiohttp_client(app)

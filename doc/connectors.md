@@ -64,8 +64,6 @@
 
 * [OracleSQLConnector](connectors/oracle_sql.md)
 
-* [RevinateConnector](connectors/revinate.md)
-
 * [RokConnector](connectors/rok.md)
 
 * [SalesforceConnector](connectors/salesforce.md)
@@ -79,5 +77,3 @@
 * [ToucanTocoConnector](connectors/toucan_toco.md)
 
 * [TrelloConnector](connectors/trello.md)
-
-* [WootricConnector](connectors/wootric.md)

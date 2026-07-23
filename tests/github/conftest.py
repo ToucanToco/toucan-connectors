@@ -1,9 +1,20 @@
+import asyncio
 import datetime
 from typing import Any
 
 import pytest
 
 from toucan_connectors.oauth2_connector.oauth2connector import SecretsKeeper
+
+
+@pytest.fixture
+def event_loop():
+    # pytest-asyncio >=1.0 no longer ships the `event_loop` fixture. These tests
+    # drive coroutines manually via `event_loop.run_until_complete(...)`, so we
+    # provide a fresh loop ourselves.
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest.fixture
