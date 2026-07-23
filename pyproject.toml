@@ -13,7 +13,7 @@ asyncio_mode = "auto"
 
 [tool.poetry]
 name = "toucan-connectors"
-version = "3.23.38"
+version = "3.23.39"
 description = "Toucan Toco Connectors"
 authors = ["Toucan Toco <dev@toucantoco.com>"]
 license = "BSD"

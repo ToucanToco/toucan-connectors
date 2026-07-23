@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.23.39] 2026-07-23
+
 ### Added
 
 - Elasticsearch: the connector now supports the `elasticsearch` 8 client.
