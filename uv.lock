@@ -2587,7 +2587,7 @@ dev = [
     { name = "types-python-dateutil", specifier = ">=2.9.0,<2.10.0" },
     { name = "types-python-slugify", specifier = ">=8.0.2.20240310,<9.0.0.0" },
     { name = "types-requests", specifier = ">=2.31.0.6,<3.0.0.0" },
-    { name = "types-simplejson", specifier = ">=3.19.0.20241221,<4.0.0.0" },
+    { name = "types-simplejson", specifier = ">=4.1.0.20260724,<4.2.0.0" },
 ]
 
 [[package]]
@@ -2683,11 +2683,11 @@ wheels = [
 
 [[package]]
 name = "types-simplejson"
-version = "3.20.0.20260402"
+version = "4.1.0.20260724"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/94/93/2ff2f4b8ccd942ee3a4b62c013d2c1779e416d303950060ed8b3f1a4fc11/types_simplejson-3.20.0.20260402.tar.gz", hash = "sha256:ee2bbf65830fe93270a1c0406f3474c952fe1232532c7b6f3eb9500edb308c5a", size = 10650, upload-time = "2026-04-02T04:19:26.266Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1d/42/1916db531db4130e4c3dc5df35144d2cb018c9f24895743f36c5cb35da6f/types_simplejson-4.1.0.20260724.tar.gz", hash = "sha256:62045f0b81581e714641c486c9238088eacaa3310b7873e05b89999664b64934", size = 11069, upload-time = "2026-07-24T04:58:39.843Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2c/2a/7ba2bede9c2b25fb338d0bda9925a23b73a5ac99fd97304ebe067c090e33/types_simplejson-3.20.0.20260402-py3-none-any.whl", hash = "sha256:b3bdef21bc24fee26b80385ffea5163b6b10381089aa619fe2f8f8d3790e6148", size = 10419, upload-time = "2026-04-02T04:19:25.464Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/fc/64b8f433237ba4bb1b204f83be37b4954de187e334e36ecce78851045f60/types_simplejson-4.1.0.20260724-py3-none-any.whl", hash = "sha256:160e894bb546ccf8455d34512f5fa7edf2aa25c047a43be840dde3a7bf3e4388", size = 10583, upload-time = "2026-07-24T04:58:38.994Z" },
 ]
 
 [[package]]
