@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from datetime import datetime, timedelta
 from os import environ
 from pathlib import Path
@@ -8,7 +10,7 @@ from urllib.error import HTTPError
 import jwt
 import pandas as pd
 import pytest
-import snowflake
+import snowflake.connector
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 from pydantic import SecretStr, ValidationError
@@ -93,7 +95,18 @@ def snowflake_datasource():
 
 @pytest.fixture
 def snowflake_connect(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch("toucan_connectors.snowflake.snowflake_connector.SnowflakeConnection")
+    return mocker.patch("snowflake.connector.SnowflakeConnection")
+
+
+def test_import_does_not_load_driver():
+    """The driver's runtime does not survive a fork, so it must not be loaded before laputa forks its workers."""
+    code = (
+        "import sys, toucan_connectors\n"
+        "assert toucan_connectors.CONNECTORS_REGISTRY['Snowflake'].get('connector')\n"
+        "assert toucan_connectors.CONNECTORS_REGISTRY['SnowflakeoAuth2'].get('connector')\n"
+        "assert 'snowflake.connector' not in sys.modules\n"
+    )
+    subprocess.run([sys.executable, "-c", code], check=True)  # noqa: S603
 
 
 class _SFCursor(MagicMock):

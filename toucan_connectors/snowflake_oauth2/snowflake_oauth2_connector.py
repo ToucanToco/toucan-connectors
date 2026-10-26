@@ -2,8 +2,9 @@ import concurrent
 import logging
 import uuid
 from contextlib import suppress
+from importlib.util import find_spec
 from timeit import default_timer as timer
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import Field, PrivateAttr, create_model
 
@@ -29,12 +30,17 @@ from toucan_connectors.toucan_connector import (
     strlist_to_enum,
 )
 
+if TYPE_CHECKING:  # pragma: no cover
+    from snowflake.connector import SnowflakeConnection
+
 _LOGGER = logging.getLogger(__name__)
 
 try:
     import pandas as pd
-    import snowflake
-    from snowflake.connector import SnowflakeConnection
+
+    # Imported lazily, see toucan_connectors.snowflake.snowflake_connector
+    if find_spec("snowflake.connector") is None:
+        raise ImportError("No module named 'snowflake.connector'")
 
     CONNECTOR_OK = True
 except ImportError as exc:  # pragma: no cover
@@ -138,6 +144,8 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
 
     def _get_connection(self, database: str | None = None, warehouse: str | None = None) -> "SnowflakeConnection":
         def connect_function() -> "SnowflakeConnection":
+            import snowflake.connector
+
             _LOGGER.info("Connect at Snowflake")
             token_start = timer()
             tokens = self.get_access_token()
@@ -180,7 +188,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
             )
             return connection
 
-        def alive_function(conn: SnowflakeConnection) -> Any:
+        def alive_function(conn: "SnowflakeConnection") -> Any:
             _LOGGER.debug("Check Snowflake connection")
             if hasattr(conn, "is_closed"):
                 try:
@@ -188,7 +196,7 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                 except Exception as exc:
                     raise TypeError("is_closed is not a function") from exc
 
-        def close_function(conn: SnowflakeConnection) -> None:
+        def close_function(conn: "SnowflakeConnection") -> None:
             _LOGGER.debug("Close Snowflake connection")
             if hasattr(conn, "close"):
                 try:
