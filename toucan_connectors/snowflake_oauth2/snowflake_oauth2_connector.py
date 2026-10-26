@@ -148,8 +148,9 @@ class SnowflakeoAuth2Connector(ToucanConnector, data_source_model=SnowflakeoAuth
                 "authenticator": AuthenticationMethod.OAUTH,
                 "application": "ToucanToco",
                 "token": tokens,
-                "role": self.role if self.role else "",
             }
+            if self.role:
+                connection_params["role"] = self.role
             _LOGGER.info(
                 f"[benchmark][snowflake] - get_access_token {token_end - token_start} seconds",
                 extra={

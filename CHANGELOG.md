@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- **Breaking**: Snowflake: `snowflake-connector-python` v5 is now required (v4 is no longer supported).
+- Snowflake: connector status error messages now include the underlying driver error. The dedicated "Access forbidden" message has been removed, since v5 no longer raises `ForbiddenError`.
+
 ## [10.4.0] 2026-07-21
 
 ### Changed

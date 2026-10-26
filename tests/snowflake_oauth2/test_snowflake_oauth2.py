@@ -1,12 +1,12 @@
-import time
 from unittest.mock import patch
 
 import pandas as pd
 import pytest
 from pandas import DataFrame
-from snowflake.connector import SnowflakeConnection
+from pytest_mock import MockerFixture
 
 from toucan_connectors import DataSlice
+from toucan_connectors.connection_manager import ConnectionManager
 from toucan_connectors.json_wrapper import JsonWrapper
 from toucan_connectors.oauth2_connector.oauth2connector import OAuth2Connector, SecretsKeeper
 from toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector import (
@@ -38,6 +38,15 @@ def snowflake_oauth2_connector():
         account="toucantocopartner.west-europe.azure",
         identifier="small_app_test" + "_" + "snowflake",
     )
+
+
+@pytest.fixture
+def connection_manager(mocker: MockerFixture) -> ConnectionManager:
+    """Isolated manager whose cleanup runs only when the test calls `_clean()`, not on a background timer."""
+    cm = ConnectionManager(name="snowflake_oauth2_test")
+    mocker.patch.object(cm, "_activate_clean")
+    mocker.patch("toucan_connectors.snowflake_oauth2.snowflake_oauth2_connector.connection_manager", cm)
+    return cm
 
 
 @pytest.fixture
@@ -79,7 +88,7 @@ df = pd.DataFrame(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch(
@@ -98,7 +107,7 @@ def test_get_database_without_filter(gd, is_closed, close, connect, get_token, s
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch("toucan_connectors.snowflake_common.SnowflakeCommon.get_databases", return_value=["database_1"])
@@ -113,7 +122,7 @@ def test_get_database_with_filter_found(gd, is_closed, close, connect, get_token
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch("toucan_connectors.snowflake_common.SnowflakeCommon.get_databases", return_value=[])
@@ -127,7 +136,7 @@ def test_get_database_with_filter_not_found(gd, is_closed, close, connect, get_t
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch(
@@ -145,7 +154,7 @@ def test_get_warehouse_without_filter(gw, is_closed, close, connect, get_token, 
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch(
@@ -163,7 +172,7 @@ def test_get_warehouse_with_filter_found(gw, is_closed, close, connect, get_toke
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch("toucan_connectors.snowflake_common.SnowflakeCommon.get_warehouses", return_value=[])
@@ -177,7 +186,7 @@ def test_get_warehouse_with_filter_not_found(gw, is_closed, close, connect, get_
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch("toucan_connectors.snowflake_common.SnowflakeCommon._execute_query", return_value=df)
@@ -200,7 +209,7 @@ def test_retrieve_data(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch("toucan_connectors.snowflake_common.SnowflakeCommon._execute_query", return_value=df)
@@ -224,7 +233,7 @@ def test_retrieve_data_slice(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch("toucan_connectors.snowflake_common.SnowflakeCommon._execute_query", return_value=df)
@@ -248,7 +257,7 @@ def test_retrieve_data_slice_with_limit(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch("toucan_connectors.snowflake_common.SnowflakeCommon._execute_query", return_value=df)
@@ -272,7 +281,7 @@ def test_retrieve_data_slice_too_much(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch(
@@ -302,7 +311,7 @@ def test_datasource_get_form(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 @patch(
@@ -328,7 +337,7 @@ def test_datasource_get_databases(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 def test_snowflake_connection_success(is_closed, close, connect, get_token, snowflake_oauth2_connector):
@@ -346,96 +355,90 @@ def test_snowflake_connection_success(is_closed, close, connect, get_token, snow
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
-@patch("snowflake.connector.connection.SnowflakeConnection.close", return_value=None)
-@patch("snowflake.connector.connection.SnowflakeConnection.is_closed", return_value=None)
-def test_snowflake_connection_alive(is_closed, close, connect, get_token, snowflake_oauth2_connector):
-    cm = SnowflakeoAuth2Connector.get_connection_manager()
-    t1 = cm.time_between_clean
-    t2 = cm.time_keep_alive
-    cm.time_between_clean = 1
-    cm.time_keep_alive = 1
+@patch("snowflake.connector.connect")
+@patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
+@patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
+def test_snowflake_connection_without_role(is_closed, close, connect, get_token, snowflake_oauth2_connector):
+    snowflake_oauth2_connector.role = ""
     snowflake_oauth2_connector._get_connection("test_database", "test_warehouse")
-    time.sleep(4)
-    assert is_closed.call_count >= 1
-    cm.time_between_clean = t1
-    cm.time_keep_alive = t2
-    cm.force_clean()
+    assert "role" not in connect.call_args_list[0][1]
+    SnowflakeoAuth2Connector.get_connection_manager().force_clean()
 
 
 @patch(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
-@patch("snowflake.connector.connection.SnowflakeConnection.close", return_value=None)
-@patch(
-    "snowflake.connector.connection.SnowflakeConnection.is_closed",
-    side_effect=TypeError("is_closed is not a function"),
-)
-def test_snowflake_connection_alive_exception(is_closed, close, connect, get_token, snowflake_oauth2_connector):
-    cm = SnowflakeoAuth2Connector.get_connection_manager()
-    t1 = cm.time_between_clean
-    t2 = cm.time_keep_alive
-    cm.time_between_clean = 1
-    cm.time_keep_alive = 1
+@patch("snowflake.connector.connect")
+def test_snowflake_connection_alive(connect, get_token, snowflake_oauth2_connector, connection_manager):
+    is_closed = connect.return_value.is_closed
+    is_closed.return_value = False
     snowflake_oauth2_connector._get_connection("test_database", "test_warehouse")
-    time.sleep(4)
-    assert is_closed.call_count >= 1
-    cm.time_between_clean = t1
-    cm.time_keep_alive = t2
-    cm.force_clean()
+
+    connection_manager._clean()
+
+    is_closed.assert_called_once()
+    connect.return_value.close.assert_not_called()
+    assert len(connection_manager.connection_list) == 1
 
 
 @patch(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
-@patch("snowflake.connector.connection.SnowflakeConnection.close", return_value=None)
-@patch("snowflake.connector.connection.SnowflakeConnection.is_closed", return_value=None)
-def test_snowflake_connection_close(is_closed, close, connect, get_token, snowflake_oauth2_connector):
-    cm = SnowflakeoAuth2Connector.get_connection_manager()
-    t1 = cm.time_between_clean
-    t2 = cm.time_keep_alive
-    cm.time_between_clean = 1
-    cm.time_keep_alive = 1
+@patch("snowflake.connector.connect")
+def test_snowflake_connection_alive_exception(connect, get_token, snowflake_oauth2_connector, connection_manager):
+    is_closed = connect.return_value.is_closed
+    is_closed.side_effect = TypeError("is_closed is not a function")
+    connection_manager.time_keep_alive = -1
     snowflake_oauth2_connector._get_connection("test_database", "test_warehouse")
-    assert len(cm.connection_list) == 1
-    time.sleep(4)
-    assert close.call_count == 1
-    cm.time_between_clean = t1
-    cm.time_keep_alive = t2
-    cm.force_clean()
+
+    connection_manager._clean()
+
+    is_closed.assert_called_once()
+    connect.return_value.close.assert_called_once()
+    assert len(connection_manager.connection_list) == 0
 
 
 @patch(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
+def test_snowflake_connection_close(connect, get_token, snowflake_oauth2_connector, connection_manager):
+    connect.return_value.is_closed.return_value = False
+    connection_manager.time_keep_alive = -1
+    snowflake_oauth2_connector._get_connection("test_database", "test_warehouse")
+    assert len(connection_manager.connection_list) == 1
+
+    connection_manager._clean()
+
+    connect.return_value.close.assert_called_once()
+    assert len(connection_manager.connection_list) == 0
+
+
 @patch(
-    "snowflake.connector.connection.SnowflakeConnection.close",
-    side_effect=TypeError("close is not a function"),
+    "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
+    return_value="tortank",
 )
-@patch("snowflake.connector.connection.SnowflakeConnection.is_closed", return_value=True)
-def test_snowflake_connection_close_exception(is_closed, close, connect, get_token, snowflake_oauth2_connector):
-    cm = SnowflakeoAuth2Connector.get_connection_manager()
-    t1 = cm.time_between_clean
-    t2 = cm.time_keep_alive
-    cm.time_between_clean = 1
-    cm.time_keep_alive = 1
+@patch("snowflake.connector.connect")
+def test_snowflake_connection_close_exception(connect, get_token, snowflake_oauth2_connector, connection_manager):
+    close = connect.return_value.close
+    close.side_effect = TypeError("close is not a function")
+    connect.return_value.is_closed.return_value = True
     with snowflake_oauth2_connector._get_connection("test_database", "test_warehouse"):
-        assert len(cm.connection_list) == 1
-    time.sleep(1)
-    assert close.call_count == 1
-    assert len(cm.connection_list) == 1
-    time.sleep(5)
-    assert len(cm.connection_list) == 0
+        assert len(connection_manager.connection_list) == 1
+
+    # A failed close keeps the connection and is retried on the next clean
+    for _ in range(3):
+        connection_manager._clean()
     assert close.call_count == 3
-    cm.time_between_clean = t1
-    cm.time_keep_alive = t2
-    cm.force_clean()
+    assert len(connection_manager.connection_list) == 1
+
+    # After 3 failed attempts, the connection is dropped without calling close again
+    connection_manager._clean()
+    assert close.call_count == 3
+    assert len(connection_manager.connection_list) == 0
 
 
 def test_build_authorization_url(mocker, snowflake_oauth2_connector):
@@ -467,7 +470,7 @@ def test_retrieve_tokens(mocker, snowflake_oauth2_connector):
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 def test_describe(
@@ -499,7 +502,7 @@ def test_set_warehouse(snowflake_oauth2_connector, snowflake_oauth2_datasource):
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 def test_get_model(
@@ -570,7 +573,7 @@ def test_get_model(
     "toucan_connectors.oauth2_connector.oauth2connector.OAuth2Connector.get_access_token",
     return_value="tortank",
 )
-@patch("snowflake.connector.connect", return_value=SnowflakeConnection)
+@patch("snowflake.connector.connect")
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_close", return_value=True)
 @patch("toucan_connectors.connection_manager.ConnectionBO.exec_alive", return_value=True)
 def test_get_model_exception(
