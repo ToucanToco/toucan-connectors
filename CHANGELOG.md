@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [11.0.0] 2026-10-26
+
 ### Changed
 
 - **Breaking**: Snowflake: `snowflake-connector-python` v5 is now required (v4 is no longer supported).
