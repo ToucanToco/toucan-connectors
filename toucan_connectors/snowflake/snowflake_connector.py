@@ -3,8 +3,9 @@ from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager, suppress
 from datetime import datetime
 from enum import StrEnum
+from importlib.util import find_spec
 from tempfile import NamedTemporaryFile
-from typing import Any, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 from pydantic import Field, create_model, model_validator
 from pydantic.json_schema import DEFAULT_REF_TEMPLATE, GenerateJsonSchema, JsonSchemaMode
@@ -24,17 +25,21 @@ from toucan_connectors.toucan_connector import (
 )
 from toucan_connectors.utils.pem import sanitize_spaces_pem
 
+if TYPE_CHECKING:  # pragma: no cover
+    from snowflake.connector import SnowflakeConnection
+
 _LOGGER = logging.getLogger(__name__)
 
 try:
     import jwt
     import pandas as pd
     import requests
-    import snowflake
     from jinja2.sandbox import ImmutableSandboxedEnvironment
-    from snowflake import connector as sf_connector
-    from snowflake.connector import SnowflakeConnection
-    from snowflake.connector.cursor import DictCursor as SfDictCursor
+
+    # snowflake.connector must be imported lazily: importing it starts the driver's tokio runtime,
+    # which does not survive a fork (e.g. gunicorn --preload), leaving forked workers hanging forever.
+    if find_spec("snowflake.connector") is None:
+        raise ImportError("No module named 'snowflake.connector'")
 
     from toucan_connectors.snowflake_common import (
         build_database_model_extraction_query,
@@ -112,6 +117,9 @@ def _snowflake_connection(
     connect_args: dict[str, str | int | None],
 ) -> Generator["SnowflakeConnection"]:
     """Returns a Snowflake connection and automatically closes it."""
+    from snowflake import connector as sf_connector
+    from snowflake.connector import SnowflakeConnection
+
     sf_connector.paramstyle = "qmark"
     conn = SnowflakeConnection(**connect_args)  # type:ignore[arg-type]
     try:
@@ -251,6 +259,8 @@ class SnowflakeConnector(
         return ok_checks + [new_check] + not_validated_checks
 
     def get_status(self) -> ConnectorStatus:
+        import snowflake.connector
+
         try:
             res = self._get_warehouses(self.default_warehouse)
             if len(res) == 0:
@@ -259,28 +269,22 @@ class SnowflakeConnector(
                     details=self._get_status_details(1, False),
                     error=f"The warehouse '{self.default_warehouse}' does not exist.",
                 )
-        except snowflake.connector.errors.OperationalError:
+        except snowflake.connector.errors.OperationalError as e:
             # Raised when the provided account does not exists or when the
             # provided User does not have access to the provided account
             return ConnectorStatus(
                 status=False,
                 details=self._get_status_details(0, False),
-                error=f"Connection failed for the account '{self.account}', please check the Account field",
-            )
-        except snowflake.connector.errors.ForbiddenError:
-            return ConnectorStatus(
-                status=False,
-                details=self._get_status_details(0, False),
-                error=f"Access forbidden, please check that you have access to the '{self.account}' account or try again later.",  # noqa: E501
+                error=f"Connection failed for the account '{self.account}', please check the Account field: {e}",
             )
         except snowflake.connector.errors.ProgrammingError as e:
             return ConnectorStatus(status=False, details=self._get_status_details(0, False), error=str(e))
-        except snowflake.connector.errors.DatabaseError:
+        except snowflake.connector.errors.DatabaseError as e:
             # Raised when the provided User/Password aren't correct
             return ConnectorStatus(
                 status=False,
                 details=self._get_status_details(0, False),
-                error=f"Connection failed for the user '{self.user}', please check your credentials",
+                error=f"Connection failed for the user '{self.user}', please check your credentials: {e}",
             )
 
         return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
@@ -295,7 +299,6 @@ class SnowflakeConnector(
             "application": "ToucanToco",
             "client_session_keep_alive_heartbeat_frequency": 59,
             "client_prefetch_threads": 5,
-            "session_id": self.identifier,
         }
 
         if params["authenticator"] == AuthenticationMethod.PLAIN and self.password:
@@ -321,7 +324,7 @@ class SnowflakeConnector(
             params["authenticator"] = "SNOWFLAKE_JWT"
 
             if self.password is not None:
-                params["private_key_file_pwd"] = self.password.get_secret_value()
+                params["private_key_password"] = self.password.get_secret_value()
 
         if self.role:
             params["role"] = self.role
@@ -423,7 +426,9 @@ class SnowflakeConnector(
         as_df: bool = True,
         snowflake_connection: "SnowflakeConnection | None" = None,
     ) -> "pd.DataFrame | list[dict]":
-        def _execute(conn: SnowflakeConnection) -> pd.DataFrame | list[dict]:
+        from snowflake.connector import DictCursor as SfDictCursor
+
+        def _execute(conn: "SnowflakeConnection") -> pd.DataFrame | list[dict]:
             curs = conn.cursor(SfDictCursor)
             query_result = curs.execute(query, parameters)
             assert query_result is not None
@@ -437,9 +442,12 @@ class SnowflakeConnector(
             return _execute(conn)
 
     def _describe_query(self, query: str) -> dict[str, str]:
+        from snowflake.connector import DictCursor as SfDictCursor
+
         with self._get_connection() as conn:
             curs = conn.cursor(SfDictCursor)
-            return {r.name: _TYPE_CODE_MAPPING[r.type_code] for r in curs.describe(query)}
+            # describe() returns None for statements without a result set
+            return {r.name: _TYPE_CODE_MAPPING[r.type_code] for r in curs.describe(query) or []}
 
     def _get_warehouses(self, warehouse_name: str | None = None) -> list[str]:
         query = "SHOW WAREHOUSES"

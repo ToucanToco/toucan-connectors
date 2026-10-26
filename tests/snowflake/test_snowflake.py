@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from datetime import datetime, timedelta
 from os import environ
 from pathlib import Path
@@ -8,7 +10,7 @@ from urllib.error import HTTPError
 import jwt
 import pandas as pd
 import pytest
-import snowflake
+import snowflake.connector
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 from pydantic import SecretStr, ValidationError
@@ -22,7 +24,6 @@ from toucan_connectors.snowflake import (
     SnowflakeConnector,
     SnowflakeDataSource,
 )
-from toucan_connectors.snowflake.snowflake_connector import SnowflakeConnection
 
 OAUTH_TOKEN_ENDPOINT = "http://example.com/endpoint"
 OAUTH_TOKEN_ENDPOINT_CONTENT_TYPE = "application/x-www-form-urlencoded"
@@ -94,7 +95,18 @@ def snowflake_datasource():
 
 @pytest.fixture
 def snowflake_connect(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch.object(SnowflakeConnection, "connect")
+    return mocker.patch("snowflake.connector.SnowflakeConnection")
+
+
+def test_import_does_not_load_driver():
+    """The driver's runtime does not survive a fork, so it must not be loaded before laputa forks its workers."""
+    code = (
+        "import sys, toucan_connectors\n"
+        "assert toucan_connectors.CONNECTORS_REGISTRY['Snowflake'].get('connector')\n"
+        "assert toucan_connectors.CONNECTORS_REGISTRY['SnowflakeoAuth2'].get('connector')\n"
+        "assert 'snowflake.connector' not in sys.modules\n"
+    )
+    subprocess.run([sys.executable, "-c", code], check=True)  # noqa: S603
 
 
 class _SFCursor(MagicMock):
@@ -109,9 +121,9 @@ class _SFCursor(MagicMock):
 
 
 @pytest.fixture
-def snowflake_cursor(mocker: MockerFixture, snowflake_connect: MagicMock) -> _SFCursor:
+def snowflake_cursor(snowflake_connect: MagicMock) -> _SFCursor:
     cursor = _SFCursor()
-    mocker.patch.object(SnowflakeConnection, "cursor", return_value=cursor)
+    snowflake_connect.return_value.cursor.return_value = cursor
     return cursor
 
 
@@ -306,41 +318,34 @@ def test_get_status_without_warehouses(snowflake_connector: SnowflakeConnector, 
 
 
 def test_get_status_account_nok(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
-    snowflake_cursor.set_side_effect(snowflake.connector.errors.ProgrammingError("Account nok"))
+    error = snowflake.connector.errors.ProgrammingError("Account nok")
+    snowflake_cursor.set_side_effect(error)
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
         status=False,
-        error="Account nok",
+        error=str(error),
         details=[("Connection to Snowflake", False), ("Default warehouse exists", None)],
     )
 
 
 def test_account_does_not_exists(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
-    snowflake_cursor.set_side_effect(snowflake.connector.errors.OperationalError())
+    error = snowflake.connector.errors.OperationalError("account not found")
+    snowflake_cursor.set_side_effect(error)
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
         status=False,
-        error=f"Connection failed for the account '{snowflake_connector.account}', please check the Account field",
-        details=[("Connection to Snowflake", False), ("Default warehouse exists", None)],
-    )
-
-
-def test_account_forbidden(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
-    snowflake_cursor.set_side_effect(snowflake.connector.errors.ForbiddenError())
-    result = snowflake_connector.get_status()
-    assert result == ConnectorStatus(
-        status=False,
-        error=f"Access forbidden, please check that you have access to the '{snowflake_connector.account}' account or try again later.",  # noqa: E501
+        error=f"Connection failed for the account '{snowflake_connector.account}', please check the Account field: {error}",  # noqa: E501
         details=[("Connection to Snowflake", False), ("Default warehouse exists", None)],
     )
 
 
 def test_account_failed_for_user(snowflake_connector: SnowflakeConnector, snowflake_cursor: _SFCursor):
-    snowflake_cursor.set_side_effect(snowflake.connector.errors.DatabaseError())
+    error = snowflake.connector.errors.DatabaseError("incorrect username or password")
+    snowflake_cursor.set_side_effect(error)
     result = snowflake_connector.get_status()
     assert result == ConnectorStatus(
         status=False,
-        error=f"Connection failed for the user '{snowflake_connector.user}', please check your credentials",
+        error=f"Connection failed for the user '{snowflake_connector.user}', please check your credentials: {error}",
         details=[("Connection to Snowflake", False), ("Default warehouse exists", None)],
     )
 
@@ -439,6 +444,15 @@ def test_describe(
     resp.type_code = 4
     snowflake_cursor.set_describe_return_value([resp])
     assert snowflake_connector.describe(snowflake_datasource) == {"ts": "timestamp"}
+
+
+def test_describe_no_result_set(
+    snowflake_datasource: SnowflakeDataSource,
+    snowflake_connector: SnowflakeConnector,
+    snowflake_cursor: _SFCursor,
+):
+    snowflake_cursor.set_describe_return_value(None)
+    assert snowflake_connector.describe(snowflake_datasource) == {}
 
 
 def test_get_unique_datasource_identifier():
@@ -621,6 +635,27 @@ def test_retrieve_snowflake_data(
 
     df = conn.get_df(ds)
     assert_frame_equal(df, beers_tiny_df)
+
+
+def test_get_connection_params_keypair() -> None:
+    connector = SnowflakeConnector(
+        identifier="snowflake_test",
+        name="sf-connector",
+        user="user",
+        password="key_password",
+        account="account",
+        private_key="-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----",
+        authentication_method=AuthenticationMethod.KEYPAIR,
+    )
+    params, private_key_file = connector.get_connection_params()
+    private_key_file.close()
+    Path(private_key_file.name).unlink()
+
+    assert params["authenticator"] == "SNOWFLAKE_JWT"
+    assert params["private_key_file"] == private_key_file.name
+    assert params["private_key_password"] == "key_password"
+    assert "private_key_file_pwd" not in params
+    assert "session_id" not in params
 
 
 def test_instanciate_snowflake_connector_keypair_no_key() -> None:
