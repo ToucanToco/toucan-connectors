@@ -2534,7 +2534,7 @@ dev = [
     { name = "pyyaml", specifier = ">=6.0.1,<7" },
     { name = "responses", specifier = ">=0.21.0,<1" },
     { name = "ruff", specifier = ">=0.17.1,<0.17.2" },
-    { name = "types-oauthlib", specifier = ">=3.2.0.20240217,<4.0.0.0" },
+    { name = "types-oauthlib", specifier = ">=4.0.0.20261018,<4.1.0.0" },
     { name = "types-pymysql", specifier = ">=1.1.0.20241103,<2.0.0.0" },
     { name = "types-pyopenssl", specifier = ">=24.1.0.20240722,<25.0.0.0" },
     { name = "types-python-dateutil", specifier = ">=2.9.0,<2.10.0" },
@@ -2557,11 +2557,11 @@ wheels = [
 
 [[package]]
 name = "types-oauthlib"
-version = "3.3.0.20260324"
+version = "4.0.0.20261018"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/91/38/543938f86d81bd6a78b8c355fe81bb8da0a26e4c28addfe3443e38a683d2/types_oauthlib-3.3.0.20260324.tar.gz", hash = "sha256:3c4cc07fa33886f881682237c1e445c5f1778b44efea118f4c1e4ede82cb52f2", size = 26030, upload-time = "2026-03-24T04:06:30.898Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/38/e32639d913e3724fa1a549a57f8949197fb443fffde5cdbc1af1e5bf165f/types_oauthlib-4.0.0.20261018.tar.gz", hash = "sha256:ac55ffe9b92ab9c532974d2d85044aaa698c97e4b141be5f54ef00cd86c23326", size = 26413, upload-time = "2026-10-18T06:44:05.098Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/60/26f0ddade4b2bb17b3d8f3ebaac436e5487caec28831da3d7ea309fe93b9/types_oauthlib-3.3.0.20260324-py3-none-any.whl", hash = "sha256:d24662033b04f4d50a2f1fed04c1b43ff2554aa037c1dafa0424f87100a46ccd", size = 48984, upload-time = "2026-03-24T04:06:29.696Z" },
+    { url = "https://files.pythonhosted.org/packages/12/12/cbba6aee6c388f974fe8cae06b6bb1ffedc41688ed79062e5242e998e46f/types_oauthlib-4.0.0.20261018-py3-none-any.whl", hash = "sha256:6caa69c277144451f8c6e7d964571fc9b97e6841f2a1cf2e1ecf4ef856b9c736", size = 48952, upload-time = "2026-10-18T06:44:03.977Z" },
 ]
 
 [[package]]
