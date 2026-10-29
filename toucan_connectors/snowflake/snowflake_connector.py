@@ -4,7 +4,6 @@ from contextlib import AbstractContextManager, contextmanager, suppress
 from datetime import datetime
 from enum import StrEnum
 from importlib.util import find_spec
-from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Literal, overload
 
 from pydantic import Field, create_model, model_validator
@@ -34,6 +33,8 @@ try:
     import jwt
     import pandas as pd
     import requests
+    from cryptography.exceptions import UnsupportedAlgorithm
+    from cryptography.hazmat.primitives import serialization
     from jinja2.sandbox import ImmutableSandboxedEnvironment
 
     # snowflake.connector must be imported lazily: importing it starts the driver's tokio runtime,
@@ -110,25 +111,40 @@ class AuthenticationMethodValue(StrEnum):
     OAUTH = "oauth"
 
 
+class InvalidPrivateKeyError(ValueError):
+    """Raised when the private key cannot be loaded or decrypted"""
+
+
+def _private_key_to_der(private_key: str, password: str | None) -> bytes:
+    # The v5 driver's Rust core fails to parse some encrypted keys that v4 accepted, so we decrypt
+    # the key with cryptography, as v4 did, and hand the driver an unencrypted one.
+    try:
+        key = serialization.load_pem_private_key(
+            sanitize_spaces_pem(private_key).encode(),
+            password=password.encode() if password is not None else None,
+        )
+    except (ValueError, TypeError, UnsupportedAlgorithm) as exc:
+        raise InvalidPrivateKeyError(str(exc)) from exc
+    return key.private_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+
+
 @contextmanager
-def _snowflake_connection(
-    *,
-    private_key_file: Any | None,
-    connect_args: dict[str, str | int | None],
-) -> Generator["SnowflakeConnection"]:
+def _snowflake_connection(connect_args: dict[str, Any]) -> Generator["SnowflakeConnection"]:
     """Returns a Snowflake connection and automatically closes it."""
     from snowflake import connector as sf_connector
     from snowflake.connector import SnowflakeConnection
 
     sf_connector.paramstyle = "qmark"
-    conn = SnowflakeConnection(**connect_args)  # type:ignore[arg-type]
+    conn = SnowflakeConnection(**connect_args)
     try:
         yield conn
     finally:
         # Entire method is already wrapped in a try/except block
         conn.close()
-        if private_key_file is not None:
-            private_key_file.close()
 
 
 _SCHEMA_ORDERED_KEYS = (
@@ -269,6 +285,12 @@ class SnowflakeConnector(
                     details=self._get_status_details(1, False),
                     error=f"The warehouse '{self.default_warehouse}' does not exist.",
                 )
+        except InvalidPrivateKeyError as e:
+            return ConnectorStatus(
+                status=False,
+                details=self._get_status_details(0, False),
+                error=f"Could not load the private key, please check it and its password: {e}",
+            )
         except snowflake.connector.errors.OperationalError as e:
             # Raised when the provided account does not exists or when the
             # provided User does not have access to the provided account
@@ -289,9 +311,8 @@ class SnowflakeConnector(
 
         return ConnectorStatus(status=True, details=self._get_status_details(1, True), error=None)
 
-    def get_connection_params(self) -> tuple[dict[str, str | int | None], Any | None]:
-        """Returns connection params and an optional private key file"""
-        params: dict[str, str | int | None] = {
+    def get_connection_params(self) -> dict[str, Any]:
+        params: dict[str, Any] = {
             "user": ImmutableSandboxedEnvironment().from_string(self.user).render(),
             "account": self.account,
             "authenticator": self.authentication_method,
@@ -310,26 +331,20 @@ class SnowflakeConnector(
                 params["token"] = self.access_token
             params["authenticator"] = AuthenticationMethodValue.OAUTH
 
-        private_key_file = None
         if self.authentication_method == AuthenticationMethod.KEYPAIR:
             if self.private_key is None:
                 raise ValueError("private_key is required when the selected auth method is KeyPair")
 
-            private_key_file = NamedTemporaryFile(prefix="sf_private_key", delete=False)
-            sanitized = sanitize_spaces_pem(self.private_key.get_secret_value())
-            private_key_file.write(sanitized.encode())
-            private_key_file.seek(0)
-
-            params["private_key_file"] = private_key_file.name
+            params["private_key"] = _private_key_to_der(
+                self.private_key.get_secret_value(),
+                self.password.get_secret_value() if self.password is not None else None,
+            )
             params["authenticator"] = "SNOWFLAKE_JWT"
-
-            if self.password is not None:
-                params["private_key_password"] = self.password.get_secret_value()
 
         if self.role:
             params["role"] = self.role
 
-        return params, private_key_file
+        return params
 
     def _refresh_oauth_token(self):
         """Regenerates an oauth token.
@@ -381,11 +396,7 @@ class SnowflakeConnector(
             self._refresh_oauth_token()
             _LOGGER.info("Done refreshing OAuth token")
 
-        connect_args, private_key_file = self.get_connection_params()
-        return _snowflake_connection(
-            private_key_file=private_key_file,
-            connect_args=connect_args | {"database": database, "warehouse": warehouse},
-        )
+        return _snowflake_connection(self.get_connection_params() | {"database": database, "warehouse": warehouse})
 
     def _set_warehouse(self, data_source: SnowflakeDataSource):
         return (

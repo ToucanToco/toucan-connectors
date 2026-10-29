@@ -11,6 +11,8 @@ import jwt
 import pandas as pd
 import pytest
 import snowflake.connector
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 from pydantic import SecretStr, ValidationError
@@ -637,25 +639,86 @@ def test_retrieve_snowflake_data(
     assert_frame_equal(df, beers_tiny_df)
 
 
-def test_get_connection_params_keypair() -> None:
-    connector = SnowflakeConnector(
+@pytest.fixture(scope="module")
+def rsa_key() -> rsa.RSAPrivateKey:
+    return rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+
+def _pem(key: rsa.RSAPrivateKey, encryption: serialization.KeySerializationEncryption) -> str:
+    return key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, encryption).decode()
+
+
+def _keypair_connector(private_key: str, password: str | None) -> SnowflakeConnector:
+    return SnowflakeConnector(
         identifier="snowflake_test",
         name="sf-connector",
         user="user",
-        password="key_password",
+        password=password,
         account="account",
-        private_key="-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----",
+        private_key=private_key,
         authentication_method=AuthenticationMethod.KEYPAIR,
     )
-    params, private_key_file = connector.get_connection_params()
-    private_key_file.close()
-    Path(private_key_file.name).unlink()
+
+
+def _der(key: Any) -> bytes:
+    return key.private_bytes(
+        serialization.Encoding.DER, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()
+    )
+
+
+@pytest.mark.parametrize(
+    "password,encryption",
+    [
+        (None, serialization.NoEncryption()),
+        ("key_password", serialization.BestAvailableEncryption(b"key_password")),
+    ],
+)
+def test_get_connection_params_keypair(
+    rsa_key: rsa.RSAPrivateKey, password: str | None, encryption: serialization.KeySerializationEncryption
+) -> None:
+    params = _keypair_connector(_pem(rsa_key, encryption), password).get_connection_params()
 
     assert params["authenticator"] == "SNOWFLAKE_JWT"
-    assert params["private_key_file"] == private_key_file.name
-    assert params["private_key_password"] == "key_password"
-    assert "private_key_file_pwd" not in params
+    assert params["private_key"] == _der(rsa_key)
+    assert "private_key_file" not in params
+    assert "private_key_password" not in params
     assert "session_id" not in params
+
+
+def test_get_connection_params_keypair_legacy_encryption() -> None:
+    """Keys encrypted with legacy PKCS#12 schemes (here pbeWithSHA1And128BitRC4), which the driver cannot parse"""
+    pem = (Path(__file__).parent / "fixture" / "private_key_pbe_sha1_rc4_128.pem").read_bytes()
+    expected = _der(serialization.load_pem_private_key(pem, password=b"key_password"))
+
+    params = _keypair_connector(pem.decode(), "key_password").get_connection_params()
+
+    assert params["private_key"] == expected
+
+
+@pytest.mark.parametrize(
+    "encryption,password",
+    [
+        (serialization.BestAvailableEncryption(b"key_password"), "wrong_password"),
+        (serialization.BestAvailableEncryption(b"key_password"), None),
+        (serialization.BestAvailableEncryption(b"key_password"), ""),
+        # Rejected by snowflake-connector-python v4 as well
+        (serialization.NoEncryption(), "login_password"),
+    ],
+)
+def test_get_status_invalid_private_key(
+    rsa_key: rsa.RSAPrivateKey,
+    snowflake_connect: MagicMock,
+    encryption: serialization.KeySerializationEncryption,
+    password: str | None,
+) -> None:
+    connector = _keypair_connector(_pem(rsa_key, encryption), password)
+    status = connector.get_status()
+
+    assert status.status is False
+    assert status.details == [("Connection to Snowflake", False), ("Default warehouse exists", None)]
+    assert status.error is not None
+    assert status.error.startswith("Could not load the private key, please check it and its password: ")
+    snowflake_connect.assert_not_called()
 
 
 def test_instanciate_snowflake_connector_keypair_no_key() -> None:
