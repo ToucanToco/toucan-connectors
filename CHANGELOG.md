@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [11.0.1] 2026-10-30
+
 ### Fixed
 
 - Snowflake: key pair authentication works again with encrypted private keys that `snowflake-connector-python` v5 fails to parse ("Could not parse the encrypted private-key envelope"). The key is now decrypted by the connector and no longer written to a temporary file.
