@@ -129,7 +129,7 @@ dev = [
     "types-pymysql<2.0.0.0,>=1.1.0.20241103",
     "ruff<0.17.2,>=0.17.1",
     "pre-commit<5.0,>=3.6",
-    "types-oauthlib<4.0.0.0,>=3.2.0.20240217",
+    "types-oauthlib<4.1.0.0,>=4.0.0.20261018",
     "types-python-dateutil<2.10.0,>=2.9.0",
 ]
 
