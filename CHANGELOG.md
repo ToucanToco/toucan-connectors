@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Fixed
+
+- Snowflake: key pair authentication works again with encrypted private keys that `snowflake-connector-python` v5 fails to parse ("Could not parse the encrypted private-key envelope"). The key is now decrypted by the connector and no longer written to a temporary file.
+
+### Deprecated
+
+- Snowflake: support for private keys encrypted with schemes that `snowflake-connector-python` v5 does not support (e.g. legacy PKCS#12 schemes such as `pbeWithSHA1And128BitRC4`) will be dropped in a future release. Such keys should be re-encrypted with PBES2, for instance with `openssl pkcs8 -topk8 -provider legacy -provider default -in old_key.pem -v2 aes-256-cbc -v2prf hmacWithSHA256 -out new_key.pem`. The public key does not change, so nothing needs to be updated on the Snowflake side.
+
 ## [11.0.0] 2026-10-26
 
 ### Changed
