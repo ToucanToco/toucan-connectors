@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Security
+
+- deps: bumped `oauthlib` to `^4` to fix CVE-2026-118669.
+
 ## [3.23.39] 2026-07-23
 
 ### Added

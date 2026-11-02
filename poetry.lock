@@ -2412,15 +2412,15 @@ six = ">=1.6.1"
 
 [[package]]
 name = "oauthlib"
-version = "3.2.2"
+version = "4.0.1"
 description = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
 optional = true
-python-versions = ">=3.6"
+python-versions = ">=3.9"
 groups = ["main"]
 markers = "extra == \"http-api\" or extra == \"odata\" or extra == \"all\" or extra == \"google-spreadsheet\""
 files = [
-    {file = "oauthlib-3.2.2-py3-none-any.whl", hash = "sha256:8139f29aac13e25d502680e9e19963e83f16838d48a0d71c287fe40e7067fbca"},
-    {file = "oauthlib-3.2.2.tar.gz", hash = "sha256:9859c40929662bec5d64f34d01c99e093149682a3f38915dc0655d5a633dd918"},
+    {file = "oauthlib-4.0.1-py3-none-any.whl", hash = "sha256:498a298876e996301950a5b053d12c31628bb7b895db03666430c69ce182eb61"},
+    {file = "oauthlib-4.0.1.tar.gz", hash = "sha256:3d73febdb6faa00f277c81fb04be7b7586fb96fc3b7f0b9c772dada69a25ede7"},
 ]
 
 [package.extras]
@@ -4574,4 +4574,4 @@ toucan-toco = ["toucan-client"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "cf91493df80e78bc7fd235df8e9af249cfaf99dbfca6da557acbe2546dadb4ff"
+content-hash = "403c56a1e75626a2b68fe42c16c967430c8a2968b34cc86a2b8811448fa2bcb4"
