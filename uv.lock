@@ -918,7 +918,7 @@ wheels = [
 
 [[package]]
 name = "hubspot-api-client"
-version = "12.0.0"
+version = "13.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
@@ -927,9 +927,9 @@ dependencies = [
     { name = "six" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/33/b4/8bfa11b523586108eb526abeca6a214eed3b3534ab10c8a3314fa7e488d5/hubspot_api_client-12.0.0.tar.gz", hash = "sha256:ddfc60f3a80565dd5bf7fc7554d0d2dabad37926f547436158258772f1a04e69", size = 1882105, upload-time = "2025-05-07T12:56:15.686Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d7/2d/3eb4088be3fb93ad94831c3aafa6432cc03f294a598cc1d766d1102d2440/hubspot_api_client-13.0.0.tar.gz", hash = "sha256:ee9bc41dbd6a424ba776780b861335a35f8aa849207d8c995b9879e416da8596", size = 1947138, upload-time = "2026-11-02T20:13:23.21Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d3/bf/b417bcf30d6fc4f473f3c1ab13cbffc3a809caa464d5aa2ae43de96416d9/hubspot_api_client-12.0.0-py3-none-any.whl", hash = "sha256:5426627ff808fdf259d5b5e4791667a323a2a82d36a834e7e43ec8e8f021aa08", size = 4295367, upload-time = "2025-05-07T12:56:12.203Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/50/cebbd476c313d1e4a62bbe51b660212f38fd9132c142ebca8b93e27ba010/hubspot_api_client-13.0.0-py3-none-any.whl", hash = "sha256:99e19433f2bb7accb53bd2d0f5578ae3443274cff5a4f96bd4adbb6a74dba0ae", size = 4338050, upload-time = "2026-11-02T20:13:20.817Z" },
 ]
 
 [[package]]
@@ -2446,8 +2446,8 @@ requires-dist = [
     { name = "google-api-python-client", marker = "extra == 'google-sheets'", specifier = ">=2,<3" },
     { name = "google-cloud-bigquery", extras = ["bqstorage", "pandas"], marker = "extra == 'all'", specifier = ">=3,<4" },
     { name = "google-cloud-bigquery", extras = ["bqstorage", "pandas"], marker = "extra == 'google-big-query'", specifier = ">=3,<4" },
-    { name = "hubspot-api-client", marker = "extra == 'all'", specifier = ">=7.4,<13" },
-    { name = "hubspot-api-client", marker = "extra == 'hubspot'", specifier = ">=7.4,<13" },
+    { name = "hubspot-api-client", marker = "extra == 'all'", specifier = ">=13,<14" },
+    { name = "hubspot-api-client", marker = "extra == 'hubspot'", specifier = ">=13,<14" },
     { name = "jinja2", specifier = ">=3.0.3,<4.0.0" },
     { name = "jq", marker = "extra == 'all'", specifier = ">=1.2.2,<2.0.0" },
     { name = "jq", marker = "extra == 'base'", specifier = ">=1.2.2,<2.0.0" },
