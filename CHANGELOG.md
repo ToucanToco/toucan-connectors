@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [11.0.2] 2026-11-25
+
 ### Fixed
 
 - ODBC install script: unixODBC is now always installed from the distribution's repositories. When Microsoft's repository for an older distribution was configured (e.g. `debian/11` on Debian 12), apt picked Microsoft's unixODBC packages, which made dpkg fail with file conflicts on `odbcinst1debian2` / `odbcinst`.
