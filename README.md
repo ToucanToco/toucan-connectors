@@ -90,7 +90,7 @@ To install the testing dependencies, run:
 pip install -r requirements-testing.txt
 ```
 
-As each connector is an independant plugin, its tests are written independently from the rest of the codebase.
+As each connector is an independent plugin, its tests are written independently from the rest of the codebase.
 Run the tests for a specifc connector (`http_api` in this example) like this:
 
 ```bash
